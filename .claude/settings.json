@@ -1,0 +1,117 @@
+{
+  "permissions": {
+    "defaultMode": "default",
+    "allow": [
+      "Bash(dart format:*)",
+      "Bash(dart analyze:*)",
+      "Bash(dart fix:*)",
+      "Bash(dart run build_runner:*)",
+      "Bash(flutter test:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(flutter pub get:*)",
+      "Bash(flutter pub add:*)",
+      "Bash(flutter gen-l10n:*)",
+      "mcp__stitch__*",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Read(./**)",
+      "Edit(lib/**)",
+      "Edit(test/**)",
+      "Edit(problem/**)",
+      "Edit(pubspec.yaml)",
+      "Edit(build.yaml)",
+      "Edit(analysis_options.yaml)",
+      "Write(lib/**)",
+      "Write(test/**)",
+      "Write(problem/**)"
+    ],
+    "ask": [
+      "Bash(git commit:*)",
+      "Bash(flutter build:*)",
+      "Bash(flutter run:*)",
+      "Bash(flutter clean:*)",
+      "Bash(flutter pub upgrade:*)",
+      "Bash(dart pub upgrade:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./**/.env)",
+      "Read(./**/.env.*)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.p12)",
+      "Read(./**/*.jks)",
+      "Read(./**/*.keystore)",
+      "Read(./**/key.properties)",
+      "Read(./**/google-services.json)",
+      "Read(./**/GoogleService-Info.plist)",
+      "Read(./**/*.mobileprovision)",
+      "Edit(./**/*.keystore)",
+      "Edit(./**/key.properties)",
+      "Edit(./**/google-services.json)",
+      "Edit(./**/GoogleService-Info.plist)",
+      "Bash(git push:*)",
+      "Bash(rm -rf:*)",
+      "Bash(sudo:*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)",
+      "Bash(flutter pub publish:*)",
+      "Bash(dart pub publish:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/block-sensitive-paths.sh\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/block-layer-violations.sh\""
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/block-insecure-storage.sh\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/format-and-analyze.sh\"",
+            "timeout": 60
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/run-tests-after-edit.sh\"",
+            "timeout": 120
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/block-stop-without-tests.sh\"",
+            "timeout": 180
+          }
+        ]
+      }
+    ]
+  }
+}
