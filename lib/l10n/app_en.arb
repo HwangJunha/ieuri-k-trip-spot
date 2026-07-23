@@ -1,0 +1,34 @@
+{
+  "@@locale": "en",
+  "appTitle": "K-Trip Spot",
+
+  "splashTagline": "Discover Korea's vibrant spots, real-time.",
+  "splashSubTagline": "Your smart gateway to Seoul & beyond.",
+  "splashLoading": "Initializing...",
+
+  "languageSelectionSubtitle": "Select your language",
+  "languageSelectionInstruction": "Choose your preferred language to explore the best spots in South Korea.",
+  "languageDefaultBadge": "Default",
+  "confirmSelection": "Confirm Selection",
+  "changeLaterHint": "You can change this later in Settings.",
+
+  "skip": "Skip",
+  "next": "Next",
+  "getStarted": "Get started",
+
+  "onboardingTitle1": "Swipe to Discover",
+  "onboardingBody1": "Find your perfect Korean adventure with a simple swipe. Like what you see? Swipe right to save!",
+  "onboardingTitle2": "Avoid the Crowds",
+  "onboardingBody2": "Plan smarter with real-time congestion data. Know when spots are quiet or buzzing before you go.",
+  "onboardingTitle3": "Travel Together",
+  "onboardingBody3": "Connect with fellow global travelers in real-time. Share tips, meet up, and make memories.",
+
+  "onboardingCaption1": "Myeongdong Street Food",
+  "onboardingLocation1": "Seoul, KR",
+  "onboardingCaption2": "Gyeongbokgung Palace",
+  "onboardingLocation2": "Seoul, KR",
+  "onboardingCaption3": "Hangang Park",
+  "onboardingLocation3": "Seoul, KR",
+
+  "homePlaceholder": "Sign-in arrives in the next step."
+}
