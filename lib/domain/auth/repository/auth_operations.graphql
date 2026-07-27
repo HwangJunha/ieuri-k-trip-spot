@@ -1,0 +1,122 @@
+# Auth GraphQL operations (real server schema — schema/schema.graphql).
+# graphql_codegen turns each operation into typed classes in
+# auth_operations.graphql.dart. These generated types stay inside the
+# repository (CLAUDE.md §3) — the repository maps them to domain models.
+
+mutation RegisterEmailMember($input: RegisterEmailMemberInput!) {
+  registerEmailMember(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    verificationId
+  }
+}
+
+mutation VerifyEmail($input: VerifyEmailInput!) {
+  verifyEmail(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    verified
+    failureReason
+  }
+}
+
+mutation ResendVerification($input: ResendVerificationInput!) {
+  resendVerification(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    verificationId
+    expiresAt
+  }
+}
+
+mutation LoginEmail($input: LoginEmailInput!) {
+  loginEmail(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    accessToken
+    refreshToken
+    tokenType
+    accessTokenExpiresIn
+    refreshTokenExpiresIn
+  }
+}
+
+mutation RefreshToken($input: RefreshTokenInput!) {
+  refreshToken(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    accessToken
+    refreshToken
+    tokenType
+    accessTokenExpiresIn
+    refreshTokenExpiresIn
+  }
+}
+
+mutation Logout($input: LogoutInput!) {
+  logout(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+mutation RequestPasswordReset($input: RequestPasswordResetInput!) {
+  requestPasswordReset(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+mutation ResetPassword($input: ResetPasswordInput!) {
+  resetPassword(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    failureReason
+  }
+}
+
+query Me {
+  me {
+    id
+    email
+    nickname
+    profileImageUrl
+    status
+    emailVerified
+    roles
+    permissions
+    createdAt
+  }
+}

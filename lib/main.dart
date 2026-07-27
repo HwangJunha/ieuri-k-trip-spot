@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'common/localization/app_language.dart';
 import 'common/localization/locale_controller.dart';
 import 'common/storage/app_preferences.dart';
+import 'common/storage/secure_storage.dart';
 import 'common/theme/app_theme.dart';
 import 'l10n/gen/app_localizations.dart';
 import 'router/app_router.dart';
@@ -19,6 +20,7 @@ Future<void> main() async {
     ProviderScope(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
+        secureStorageProvider.overrideWithValue(SecureStorage.platform()),
       ],
       child: const KTripSpotApp(),
     ),

@@ -1,0 +1,283 @@
+type AdminActionPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+input AgreementInput {
+  termsCode: TermsCode!
+  agreed: Boolean!
+}
+
+input AssignRoleInput {
+  memberId: ID!
+  roleCode: String!
+}
+
+type AuthTokenPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  accessToken: String
+  refreshToken: String
+  tokenType: String
+  accessTokenExpiresIn: Int
+  refreshTokenExpiresIn: Int
+}
+
+enum ErrorDetail {
+  UNKNOWN
+  FIELD_NOT_FOUND
+  INVALID_CURSOR
+  UNIMPLEMENTED
+  INVALID_ARGUMENT
+  DEADLINE_EXCEEDED
+  SERVICE_ERROR
+  THROTTLED_CPU
+  THROTTLED_CONCURRENCY
+  ENHANCE_YOUR_CALM
+  TOO_MANY_REQUESTS
+  TCP_FAILURE
+  MISSING_RESOURCE
+}
+
+enum ErrorType {
+  UNKNOWN
+  INTERNAL
+  NOT_FOUND
+  UNAUTHENTICATED
+  PERMISSION_DENIED
+  BAD_REQUEST
+  UNAVAILABLE
+  FAILED_PRECONDITION
+}
+
+input LoginEmailInput {
+  email: String!
+  password: String!
+}
+
+input LoginSnsInput {
+  provider: Provider!
+  idToken: String!
+}
+
+input LogoutInput {
+  refreshToken: String!
+}
+
+type LogoutPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+type Me {
+  id: ID!
+  email: String!
+  nickname: String!
+  profileImageUrl: String
+  status: MemberStatus!
+  emailVerified: Boolean!
+  roles: [String!]!
+  permissions: [String!]!
+  createdAt: String!
+}
+
+type MemberConnection {
+  edges: [MemberEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+
+type MemberDetail {
+  id: ID!
+  email: String!
+  nickname: String!
+  profileImageUrl: String
+  status: MemberStatus!
+  emailVerified: Boolean!
+  suspendedAt: String
+  suspendedUntil: String
+  suspensionReason: String
+  roles: [String!]!
+  createdAt: String!
+}
+
+type MemberEdge {
+  cursor: String!
+  node: MemberSummary!
+}
+
+enum MemberStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+type MemberSummary {
+  id: ID!
+  nickname: String!
+  status: MemberStatus!
+  roles: [String!]!
+  createdAt: String!
+}
+
+type Mutation {
+  registerSnsMember(input: RegisterSnsMemberInput!): RegisterSnsMemberPayload!
+  registerEmailMember(input: RegisterEmailMemberInput!): RegisterEmailMemberPayload!
+  verifyEmail(input: VerifyEmailInput!): VerifyEmailPayload!
+  resendVerification(input: ResendVerificationInput!): ResendVerificationPayload!
+  loginSns(input: LoginSnsInput!): AuthTokenPayload!
+  loginEmail(input: LoginEmailInput!): AuthTokenPayload!
+  requestPasswordReset(input: RequestPasswordResetInput!): RequestPasswordResetPayload!
+  resetPassword(input: ResetPasswordInput!): ResetPasswordPayload!
+  refreshToken(input: RefreshTokenInput!): AuthTokenPayload!
+  logout(input: LogoutInput!): LogoutPayload!
+  withdrawMember: WithdrawMemberPayload!
+  suspendMember(input: SuspendMemberInput!): AdminActionPayload!
+  reactivateMember(input: ReactivateMemberInput!): AdminActionPayload!
+  assignRole(input: AssignRoleInput!): RoleChangePayload!
+  revokeRole(input: RevokeRoleInput!): RoleChangePayload!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+enum Provider {
+  APPLE
+  GOOGLE
+  KAKAO
+}
+
+type Query {
+  authHealth: String!
+  me: Me!
+  member(id: ID!): MemberDetail!
+  members(status: MemberStatus, roleCode: String, first: Int, after: String): MemberConnection!
+  assignableRoles: [RoleInfo!]!
+  _service: _Service!
+}
+
+input ReactivateMemberInput {
+  memberId: ID!
+}
+
+input RefreshTokenInput {
+  refreshToken: String!
+}
+
+input RegisterEmailMemberInput {
+  email: String!
+  password: String!
+  ageVerified: Boolean!
+  agreements: [AgreementInput!]!
+}
+
+type RegisterEmailMemberPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  verificationId: ID
+}
+
+input RegisterSnsMemberInput {
+  provider: Provider!
+  idToken: String!
+  email: String!
+  ageVerified: Boolean!
+  agreements: [AgreementInput!]!
+}
+
+type RegisterSnsMemberPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  emailVerified: Boolean
+  verificationId: ID
+}
+
+input RequestPasswordResetInput {
+  email: String!
+}
+
+type RequestPasswordResetPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+input ResendVerificationInput {
+  verificationId: ID!
+}
+
+type ResendVerificationPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  verificationId: ID
+  expiresAt: String
+}
+
+input ResetPasswordInput {
+  email: String!
+  code: String!
+  newPassword: String!
+}
+
+type ResetPasswordPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  failureReason: String
+}
+
+input RevokeRoleInput {
+  memberId: ID!
+  roleCode: String!
+}
+
+type RoleChangePayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  changed: Boolean
+}
+
+type RoleInfo {
+  code: String!
+  name: String!
+  description: String
+}
+
+input SuspendMemberInput {
+  memberId: ID!
+  reason: String!
+  suspendedUntil: String
+}
+
+enum TermsCode {
+  SERVICE
+  PRIVACY
+  LOCATION
+  MARKETING
+}
+
+type UserError {
+  code: String!
+  message: String!
+  field: String
+}
+
+input VerifyEmailInput {
+  verificationId: ID!
+  code: String!
+}
+
+type VerifyEmailPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  verified: Boolean
+  failureReason: String
+}
+
+type WithdrawMemberPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+scalar _FieldSet
