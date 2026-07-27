@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../onboarding/provider/onboarding_controller.dart';
-import '../../router/app_router.dart';
+import '../domain/auth/provider/auth_controller.dart';
+import 'app_router.dart';
 
 /// TEMPORARY testing aid — a back button pinned to the top-left that steps back
 /// through the first-run flow (onboarding → language, home → onboarding).
@@ -22,14 +22,21 @@ class DebugBackButton extends ConsumerWidget {
   final Widget child;
 
   static const Map<String, String> _previousOf = <String, String>{
-    Routes.onboarding: Routes.language,
-    Routes.home: Routes.onboarding,
+    Routes.login: Routes.language,
+    Routes.onboarding: Routes.login,
+    Routes.home: Routes.login,
   };
 
-  Future<void> _onBack(BuildContext context, WidgetRef ref, String target) async {
-    // Leaving home means the flow was completed — re-open it before navigating.
-    if (location == Routes.home) {
-      await ref.read(onboardingControllerProvider.notifier).reset();
+  Future<void> _onBack(
+    BuildContext context,
+    WidgetRef ref,
+    String target,
+  ) async {
+    // Stepping back past the auth gate means signing out so the flow replays
+    // (spec §10 — the router redirect otherwise bounces authenticated users
+    // straight back to home/onboarding).
+    if (location == Routes.home || location == Routes.onboarding) {
+      await ref.read(authControllerProvider.notifier).signOut();
     }
     if (context.mounted) context.go(target);
   }

@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../app_assets.dart';
-import '../provider/onboarding_controller.dart';
+import '../../../common/app_assets.dart';
+import '../../auth/provider/auth_controller.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../router/app_router.dart';
 
@@ -59,7 +59,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       ];
 
   Future<void> _finish() async {
-    await ref.read(onboardingControllerProvider.notifier).complete();
+    // Account-bound completion (spec §4.3): mark the signed-in account done;
+    // the router redirect then lets it through to home.
+    await ref.read(authControllerProvider.notifier).completeOnboarding();
     if (mounted) context.go(Routes.home);
   }
 
@@ -209,7 +211,11 @@ class _MediaCard extends StatelessWidget {
               child: CircleAvatar(
                 radius: 20,
                 backgroundColor: _badgeGreen,
-                child: const Icon(Icons.favorite, color: Colors.white, size: 20),
+                child: const Icon(
+                  Icons.favorite,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
             ),
             Positioned(
@@ -230,8 +236,11 @@ class _MediaCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: <Widget>[
-                      const Icon(Icons.location_on,
-                          color: Colors.white70, size: 16),
+                      const Icon(
+                        Icons.location_on,
+                        color: Colors.white70,
+                        size: 16,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         page.location,
