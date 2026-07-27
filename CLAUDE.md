@@ -163,3 +163,30 @@ For a new feature, the intended flow mirrors the backend harness:
 Reviews are read-only: they report, the parent agent (or `slice-builder`) applies fixes.
 
 ---
+
+## 12. Branch policy (hook-enforced)
+
+**Never work directly on a protected branch.** `master`, `main`, and `dev` are protected. Every change — code, tests, specs — happens on a **topic branch** created first:
+
+```
+git checkout -b feature/<short-kebab-name>
+```
+
+- `feature/<name>` is the **required convention** for new work. `fix/`, `hotfix/`, `chore/`, and `refactor/` prefixes are also accepted for their respective purposes.
+- **Name the branch by the feature, never by a step number.** `feature/home-screen` — not `feature/step3-home-screen`. Step numbers live in the specs, not in branch names.
+- This is enforced by the `require-feature-branch.sh` PreToolUse hook: while on a protected branch, `Edit`/`Write` and **git-mutating** Bash commands (`commit`/`merge`/`rebase`/`push`/…) are **blocked** (exit 2). Read-only git (`status`/`diff`/`log`) and `git checkout -b` / `git switch -c` / `git branch` are allowed so you can get onto a topic branch.
+- When a task starts on a protected branch, create the topic branch **before** the first edit. The hook wins over this text — if it blocks you, switch branches, don't work around it.
+- Commit/push remain gated by the permission policy (`ask`/`deny`); the branch hook is an additional, independent guard.
+
+---
+
+## 13. Schema-first workflow (hook-enforced)
+
+The GraphQL schema is the contract every operation and model is written against. Writing code against a guessed or stale schema is how operations drift from the server (a real hallucination happened: `signUp`/`login` were invented when the server actually has `registerEmailMember`/`loginEmail`). So **before authoring Dart code under `lib/`, refresh the live schema.**
+
+- **Refresh into `schema/schema.introspection.json`** by introspecting the running server (`http://localhost:8888/graphql`). This file is a **per-session snapshot that changes over time — it is gitignored, never committed.** Regenerate it each session (and whenever the server schema may have changed).
+- **The server blocks standard introspection** as `BadFaithIntrospection` (it rejects recursive `__Type.fields`). Use the *flattened* introspection query (each of `fields`/`inputFields` referenced once) — the exact query is printed by the hook when it blocks. curl is sandboxed for the agent, so run it in the terminal with the `!` prefix.
+- **Enforcement:** the `require-fresh-schema.sh` PreToolUse hook blocks `Edit`/`Write` on `lib/**.dart` (excluding generated `*.g.dart` / `*.graphql.dart`) unless the snapshot exists, actually contains a `__schema` (not an error response), and is fresh (mtime within `SCHEMA_MAX_AGE_MIN`, default 10 min). Specs, docs, tests, and ARBs are **not** gated. If blocked, re-introspect and retry — don't work around it.
+- **codegen input vs. snapshot are different files.** `graphql_codegen` reads a committed SDL that lives beside the operations in the repository (e.g. `lib/domain/<feature>/repository/*_schema.graphql`); that is a stable, committed build input you update by hand from the introspection snapshot. The gitignored `schema/schema.introspection.json` is only the freshness/verification source — do not point codegen at it.
+
+---
