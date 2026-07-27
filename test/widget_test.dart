@@ -26,8 +26,9 @@ class _Harness extends ConsumerWidget {
 }
 
 void main() {
-  testWidgets('selecting a language re-renders the screen in that language',
-      (WidgetTester tester) async {
+  testWidgets('selecting a language re-renders the screen in that language', (
+    WidgetTester tester,
+  ) async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
     final prefs = await SharedPreferences.getInstance();
 

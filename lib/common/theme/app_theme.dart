@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
+import 'congestion_colors.dart';
 
 /// Light and dark [ThemeData] for the app.
 ///
@@ -26,12 +27,15 @@ class AppTheme {
   static final ThemeData dark = _build(_darkScheme);
 
   static ThemeData _build(ColorScheme scheme) => ThemeData(
-        useMaterial3: true,
-        colorScheme: scheme,
-        scaffoldBackgroundColor: scheme.surface,
-        fontFamily: _fontFamily,
-        fontFamilyFallback: _fontFamilyFallback,
-      );
+    useMaterial3: true,
+    colorScheme: scheme,
+    scaffoldBackgroundColor: scheme.surface,
+    fontFamily: _fontFamily,
+    fontFamilyFallback: _fontFamilyFallback,
+    // Congestion badges are semantic (DESIGN.md §5) — same tokens on both
+    // brightnesses; cards read them via Theme.of(context).extension().
+    extensions: const <ThemeExtension<dynamic>>[CongestionColors.brand],
+  );
 
   /// Exact Stitch light color roles.
   static const ColorScheme _lightScheme = ColorScheme(
@@ -87,8 +91,5 @@ class AppTheme {
   static final ColorScheme _darkScheme = ColorScheme.fromSeed(
     seedColor: AppColors.primary,
     brightness: Brightness.dark,
-  ).copyWith(
-    secondary: AppColors.secondary,
-    tertiary: AppColors.tertiary,
-  );
+  ).copyWith(secondary: AppColors.secondary, tertiary: AppColors.tertiary);
 }

@@ -30,5 +30,86 @@
   "onboardingCaption3": "Hangang Park",
   "onboardingLocation3": "Seoul, KR",
 
-  "homePlaceholder": "Sign-in arrives in the next step."
+  "homeSearchHint": "Search for spots, hidden gems…",
+  "homeFavoritesTooltip": "Favorites",
+  "homeSectionRecommended": "Recommended for You",
+  "homeSectionHappeningNow": "Happening Now",
+  "homeSectionPopular": "Popular Spots",
+  "viewAll": "View all",
+
+  "congestionLow": "Low",
+  "congestionModerate": "Moderate",
+  "congestionHigh": "High",
+
+  "eventCategoryFestival": "Festival",
+  "eventCategoryLive": "Live",
+  "eventCategoryArt": "Art",
+
+  "distanceAway": "{distance}km away",
+
+  "navHome": "Home",
+  "navMap": "Map",
+  "navDiscover": "Discover",
+  "navEvents": "Events",
+  "navChat": "Chat",
+
+  "comingSoon": "Coming soon.",
+
+  "loginTitle": "Welcome back",
+  "loginSubtitle": "Sign in to continue.",
+  "emailLabel": "Email",
+  "passwordLabel": "Password",
+  "confirmPasswordLabel": "Confirm password",
+  "loginButton": "Log in",
+  "signUpButton": "Sign up",
+  "noAccountPrompt": "Don't have an account?",
+  "haveAccountPrompt": "Already have an account?",
+  "goToSignUp": "Sign up",
+  "goToLogin": "Log in",
+  "forgotPassword": "Forgot your password?",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
+
+  "signUpTitle": "Create account",
+  "signUpSubtitle": "Get started with your email and password.",
+
+  "agreementSelectAll": "Agree to all",
+  "agreementAge": "I am 14 years or older.",
+  "agreementService": "Terms of Service",
+  "agreementPrivacy": "Collection & use of personal data",
+  "agreementLocation": "Location data terms",
+  "agreementMarketing": "Marketing communications",
+  "agreementRequiredBadge": "Required",
+  "agreementOptionalBadge": "Optional",
+  "agreementViewDetail": "View",
+  "agreementDetailPlaceholder": "Full terms text coming soon.",
+
+  "passwordResetTitle": "Reset password",
+  "passwordResetSubtitle": "Enter your account email and we'll send a verification code.",
+  "passwordResetRequestButton": "Send code",
+  "passwordResetCodeSent": "Verification code sent. Check your email.",
+  "passwordResetConfirmButton": "Change password",
+  "passwordResetDone": "Password changed. Please log in.",
+  "newPasswordLabel": "New password",
+  "verificationCodeLabel": "Verification code",
+
+  "emailVerificationTitle": "Verify email",
+  "emailVerificationSubtitle": "Enter the verification code we emailed you.",
+  "emailVerificationButton": "Verify",
+  "emailVerificationResend": "Resend code",
+  "emailVerificationResent": "Verification code resent.",
+  "validationCodeRequired": "Enter the verification code.",
+
+  "validationEmailRequired": "Enter your email.",
+  "validationEmailInvalid": "That doesn't look like a valid email.",
+  "validationPasswordRequired": "Enter your password.",
+  "validationPasswordPolicy": "Use 8+ characters with a letter, a number, and a special character.",
+  "validationPasswordMismatch": "Passwords don't match.",
+
+  "errorInvalidCredentials": "Incorrect email or password.",
+  "errorEmailAlreadyInUse": "That email is already in use.",
+  "errorNetwork": "Network error. Please try again.",
+  "errorUnknown": "Something went wrong. Please try again.",
+
+  "signUpSuccessLoginPrompt": "Account created. Please log in."
 }

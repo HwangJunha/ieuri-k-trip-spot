@@ -1,0 +1,19 @@
+targets:
+  $default:
+    builders:
+      graphql_codegen:
+        options:
+          # Match the shared client (common/network): no cache/normalization,
+          # so responses need not carry __typename.
+          addTypename: false
+          # Generated code follows GraphQL naming ($, SCREAMING_CASE), not Dart
+          # lint style — silence the analyzer for these files.
+          generatedFileHeader: |
+            // GENERATED CODE - DO NOT MODIFY BY HAND
+            // ignore_for_file: type=lint, unused_import, unused_element
+          scalars:
+            _FieldSet:
+              type: Object
+        generate_for:
+          - lib/domain/auth/repository/auth_operations.graphql
+          - lib/domain/auth/repository/auth_schema.graphql

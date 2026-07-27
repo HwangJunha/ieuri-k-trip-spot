@@ -19,8 +19,9 @@ class LanguageSelectionScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final ThemeData theme = Theme.of(context);
-    final AppLanguage current =
-        ref.watch(localeControllerProvider.notifier).current;
+    final AppLanguage current = ref
+        .watch(localeControllerProvider.notifier)
+        .current;
 
     return Scaffold(
       body: SafeArea(
@@ -30,7 +31,10 @@ class LanguageSelectionScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               const SizedBox(height: 16),
-              SvgPicture.asset(AppAssets.lockupFor(theme.brightness), height: 44),
+              SvgPicture.asset(
+                AppAssets.lockupFor(theme.brightness),
+                height: 44,
+              ),
               const SizedBox(height: 32),
               Text(
                 l10n.languageSelectionSubtitle,
@@ -107,13 +111,13 @@ class _LanguageTile extends StatelessWidget {
       child: ListTile(
         onTap: onTap,
         leading: CircleAvatar(
-          backgroundColor:
-              selected ? scheme.primary : scheme.surfaceContainerHighest,
-          foregroundColor: selected ? scheme.onPrimary : scheme.onSurfaceVariant,
-          child: Text(
-            language.badge,
-            style: theme.textTheme.labelMedium,
-          ),
+          backgroundColor: selected
+              ? scheme.primary
+              : scheme.surfaceContainerHighest,
+          foregroundColor: selected
+              ? scheme.onPrimary
+              : scheme.onSurfaceVariant,
+          child: Text(language.badge, style: theme.textTheme.labelMedium),
         ),
         title: Text(language.nativeName),
         subtitle: Text(language.englishName),

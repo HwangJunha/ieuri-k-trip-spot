@@ -30,5 +30,86 @@
   "onboardingCaption3": "汉江公园",
   "onboardingLocation3": "首尔, 韩国",
 
-  "homePlaceholder": "登录将在下一步提供。"
+  "homeSearchHint": "搜索景点、隐藏胜地…",
+  "homeFavoritesTooltip": "收藏",
+  "homeSectionRecommended": "为你推荐",
+  "homeSectionHappeningNow": "正在举办",
+  "homeSectionPopular": "热门景点",
+  "viewAll": "查看全部",
+
+  "congestionLow": "空闲",
+  "congestionModerate": "适中",
+  "congestionHigh": "拥挤",
+
+  "eventCategoryFestival": "节庆",
+  "eventCategoryLive": "现场",
+  "eventCategoryArt": "艺术",
+
+  "distanceAway": "距离{distance}km",
+
+  "navHome": "首页",
+  "navMap": "地图",
+  "navDiscover": "发现",
+  "navEvents": "活动",
+  "navChat": "聊天",
+
+  "comingSoon": "敬请期待。",
+
+  "loginTitle": "欢迎回来",
+  "loginSubtitle": "登录以继续。",
+  "emailLabel": "邮箱",
+  "passwordLabel": "密码",
+  "confirmPasswordLabel": "确认密码",
+  "loginButton": "登录",
+  "signUpButton": "注册",
+  "noAccountPrompt": "还没有账户？",
+  "haveAccountPrompt": "已有账户？",
+  "goToSignUp": "注册",
+  "goToLogin": "登录",
+  "forgotPassword": "忘记密码？",
+  "showPassword": "显示密码",
+  "hidePassword": "隐藏密码",
+
+  "signUpTitle": "创建账户",
+  "signUpSubtitle": "使用邮箱和密码开始吧。",
+
+  "agreementSelectAll": "全部同意",
+  "agreementAge": "我已年满14周岁。",
+  "agreementService": "服务使用条款",
+  "agreementPrivacy": "收集与使用个人信息",
+  "agreementLocation": "位置信息使用条款",
+  "agreementMarketing": "同意用于营销目的的收集与使用",
+  "agreementRequiredBadge": "必选",
+  "agreementOptionalBadge": "可选",
+  "agreementViewDetail": "查看",
+  "agreementDetailPlaceholder": "条款全文即将提供。",
+
+  "passwordResetTitle": "重置密码",
+  "passwordResetSubtitle": "输入注册邮箱，我们将发送验证码。",
+  "passwordResetRequestButton": "发送验证码",
+  "passwordResetCodeSent": "验证码已发送，请查收邮件。",
+  "passwordResetConfirmButton": "更改密码",
+  "passwordResetDone": "密码已更改，请登录。",
+  "newPasswordLabel": "新密码",
+  "verificationCodeLabel": "验证码",
+
+  "emailVerificationTitle": "验证邮箱",
+  "emailVerificationSubtitle": "请输入我们发送到您邮箱的验证码。",
+  "emailVerificationButton": "验证",
+  "emailVerificationResend": "重新发送验证码",
+  "emailVerificationResent": "验证码已重新发送。",
+  "validationCodeRequired": "请输入验证码。",
+
+  "validationEmailRequired": "请输入邮箱。",
+  "validationEmailInvalid": "邮箱格式不正确。",
+  "validationPasswordRequired": "请输入密码。",
+  "validationPasswordPolicy": "需包含字母、数字和特殊字符，且至少8位。",
+  "validationPasswordMismatch": "两次输入的密码不一致。",
+
+  "errorInvalidCredentials": "邮箱或密码不正确。",
+  "errorEmailAlreadyInUse": "该邮箱已被使用。",
+  "errorNetwork": "网络错误，请重试。",
+  "errorUnknown": "出现问题，请重试。",
+
+  "signUpSuccessLoginPrompt": "账户已创建，请登录。"
 }

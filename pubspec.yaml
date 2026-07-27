@@ -31,6 +31,14 @@ dependencies:
   # Local (non-secret) persistence: locale + onboarding flag
   shared_preferences: ^2.3.0
 
+  # GraphQL data layer (repository only)
+  graphql_flutter: ^5.1.2
+  # DocumentNode type for the graphql_codegen-generated operations (repo only)
+  gql: any
+
+  # Secure storage for tokens (via common/storage wrapper only)
+  flutter_secure_storage: ^9.2.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -39,6 +47,9 @@ dev_dependencies:
   # Riverpod codegen
   build_runner: ^2.4.13
   riverpod_generator: ^3.0.0
+
+  # GraphQL typed operation codegen (repository only)
+  graphql_codegen: ^3.0.2
 
   # Native splash generation
   flutter_native_splash: ^2.4.0

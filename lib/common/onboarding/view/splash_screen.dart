@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../app_assets.dart';
 import '../../theme/app_colors.dart';
-import '../provider/onboarding_controller.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../router/app_router.dart';
 
@@ -33,8 +32,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   Future<void> _bootstrap() async {
     await Future<void>.delayed(_delay);
     if (!mounted) return;
-    final bool completed = ref.read(onboardingControllerProvider);
-    context.go(completed ? Routes.home : Routes.language);
+    // Hand off to the router: its redirect (spec §10) resolves language →
+    // login → onboarding → home from the auth/onboarding state.
+    context.go(Routes.language);
   }
 
   @override
