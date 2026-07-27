@@ -1,0 +1,115 @@
+{
+  "@@locale": "ja",
+  "appTitle": "K-トリップスポット",
+
+  "splashTagline": "リアルタイムで出会う、韓国の活気あるスポット。",
+  "splashSubTagline": "ソウル、そしてその先へのスマートな入口。",
+  "splashLoading": "準備中...",
+
+  "languageSelectionSubtitle": "言語を選択",
+  "languageSelectionInstruction": "韓国のおすすめスポットを楽しむための言語を選んでください。",
+  "languageDefaultBadge": "デフォルト",
+  "confirmSelection": "選択を確定",
+  "changeLaterHint": "設定でいつでも変更できます。",
+
+  "skip": "スキップ",
+  "next": "次へ",
+  "getStarted": "はじめる",
+
+  "onboardingTitle1": "スワイプで発見",
+  "onboardingBody1": "簡単なスワイプであなたにぴったりの韓国旅行を見つけよう。気に入ったら右スワイプで保存！",
+  "onboardingTitle2": "混雑を避けよう",
+  "onboardingBody2": "リアルタイムの混雑データで賢く計画。空いているか混んでいるか、行く前に確認できます。",
+  "onboardingTitle3": "一緒に旅しよう",
+  "onboardingBody3": "世界中の旅行者とリアルタイムでつながろう。情報を共有し、出会い、思い出を作ろう。",
+
+  "onboardingCaption1": "明洞の屋台グルメ",
+  "onboardingLocation1": "ソウル, 韓国",
+  "onboardingCaption2": "景福宮",
+  "onboardingLocation2": "ソウル, 韓国",
+  "onboardingCaption3": "漢江公園",
+  "onboardingLocation3": "ソウル, 韓国",
+
+  "homeSearchHint": "スポットや隠れた名所を検索…",
+  "homeFavoritesTooltip": "お気に入り",
+  "homeSectionRecommended": "あなたへのおすすめ",
+  "homeSectionHappeningNow": "開催中のイベント",
+  "homeSectionPopular": "人気のスポット",
+  "viewAll": "すべて見る",
+
+  "congestionLow": "空いている",
+  "congestionModerate": "普通",
+  "congestionHigh": "混雑",
+
+  "eventCategoryFestival": "フェス",
+  "eventCategoryLive": "ライブ",
+  "eventCategoryArt": "アート",
+
+  "distanceAway": "{distance}km先",
+
+  "navHome": "ホーム",
+  "navMap": "マップ",
+  "navDiscover": "発見",
+  "navEvents": "イベント",
+  "navChat": "チャット",
+
+  "comingSoon": "近日公開予定です。",
+
+  "loginTitle": "おかえりなさい",
+  "loginSubtitle": "続けるにはログインしてください。",
+  "emailLabel": "メールアドレス",
+  "passwordLabel": "パスワード",
+  "confirmPasswordLabel": "パスワード確認",
+  "loginButton": "ログイン",
+  "signUpButton": "登録する",
+  "noAccountPrompt": "アカウントをお持ちでないですか？",
+  "haveAccountPrompt": "すでにアカウントをお持ちですか？",
+  "goToSignUp": "新規登録",
+  "goToLogin": "ログイン",
+  "forgotPassword": "パスワードをお忘れですか？",
+  "showPassword": "パスワードを表示",
+  "hidePassword": "パスワードを非表示",
+
+  "signUpTitle": "アカウント作成",
+  "signUpSubtitle": "メールアドレスとパスワードで始めましょう。",
+
+  "agreementSelectAll": "すべての規約に同意",
+  "agreementAge": "満14歳以上です。",
+  "agreementService": "サービス利用規約",
+  "agreementPrivacy": "個人情報の収集・利用",
+  "agreementLocation": "位置情報利用規約",
+  "agreementMarketing": "マーケティング目的の収集・利用に同意",
+  "agreementRequiredBadge": "必須",
+  "agreementOptionalBadge": "任意",
+  "agreementViewDetail": "内容を見る",
+  "agreementDetailPlaceholder": "規約の全文は後日提供されます。",
+
+  "passwordResetTitle": "パスワード再設定",
+  "passwordResetSubtitle": "登録したメールアドレスを入力すると認証コードを送ります。",
+  "passwordResetRequestButton": "認証コードを受け取る",
+  "passwordResetCodeSent": "認証コードを送信しました。メールをご確認ください。",
+  "passwordResetConfirmButton": "パスワードを変更",
+  "passwordResetDone": "パスワードを変更しました。ログインしてください。",
+  "newPasswordLabel": "新しいパスワード",
+  "verificationCodeLabel": "認証コード",
+
+  "emailVerificationTitle": "メール認証",
+  "emailVerificationSubtitle": "メールで届いた認証コードを入力してください。",
+  "emailVerificationButton": "認証する",
+  "emailVerificationResend": "コードを再送信",
+  "emailVerificationResent": "認証コードを再送信しました。",
+  "validationCodeRequired": "認証コードを入力してください。",
+
+  "validationEmailRequired": "メールアドレスを入力してください。",
+  "validationEmailInvalid": "メールアドレスの形式が正しくありません。",
+  "validationPasswordRequired": "パスワードを入力してください。",
+  "validationPasswordPolicy": "英字・数字・記号を含む8文字以上で入力してください。",
+  "validationPasswordMismatch": "パスワードが一致しません。",
+
+  "errorInvalidCredentials": "メールアドレスまたはパスワードが正しくありません。",
+  "errorEmailAlreadyInUse": "このメールアドレスは既に使用されています。",
+  "errorNetwork": "ネットワークエラーが発生しました。もう一度お試しください。",
+  "errorUnknown": "問題が発生しました。もう一度お試しください。",
+
+  "signUpSuccessLoginPrompt": "登録が完了しました。ログインしてください。"
+}

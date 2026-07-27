@@ -381,3 +381,6 @@ hs_err_pid*
 !/gradle/wrapper/gradle-wrapper.jar
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,androidstudio,flutter,intellij
+# GraphQL introspection snapshot — regenerated per session from the live server,
+# never committed (see hooks/require-fresh-schema.sh + CLAUDE.md §13).
+/schema/schema.introspection.json
