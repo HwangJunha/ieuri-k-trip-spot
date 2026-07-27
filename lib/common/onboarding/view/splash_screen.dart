@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../l10n/gen/app_localizations.dart';
 import '../../app_assets.dart';
 import '../../theme/app_colors.dart';
-import '../../../l10n/gen/app_localizations.dart';
-import '../../../router/app_router.dart';
+import 'language_selection_screen.dart';
 
 /// In-app splash (Stitch design): a full coral brand screen with a large white
 /// app icon and white text, shown for a fixed delay before routing to
@@ -14,6 +14,8 @@ import '../../../router/app_router.dart';
 /// brand splash is always coral. Rendered in the active locale.
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
+
+  static String get routeName => 'splash';
 
   @override
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
@@ -34,7 +36,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     if (!mounted) return;
     // Hand off to the router: its redirect (spec §10) resolves language →
     // login → onboarding → home from the auth/onboarding state.
-    context.go(Routes.language);
+    context.goNamed(LanguageSelectionScreen.routeName);
   }
 
   @override

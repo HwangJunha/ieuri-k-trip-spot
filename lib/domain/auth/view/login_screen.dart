@@ -3,18 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
-import '../../../router/app_router.dart';
 import '../component/auth_failure_message.dart';
 import '../component/auth_text_field.dart';
 import '../model/auth_state.dart';
 import '../model/password_policy.dart';
 import '../provider/auth_controller.dart';
+import 'password_reset_screen.dart';
+import 'sign_up_screen.dart';
 
 /// Email/password login (spec §5.1). Shows inline validation before submit,
 /// a server-error banner from `userErrors`, and a loading state on the button.
 /// An email passed via `extra` (from the sign-up flow) is prefilled.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key, this.prefilledEmail});
+
+  static String get routeName => 'login';
 
   final String? prefilledEmail;
 
@@ -119,7 +122,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: TextButton(
                   onPressed: loading
                       ? null
-                      : () => context.push(Routes.passwordReset),
+                      : () => context.pushNamed(PasswordResetScreen.routeName),
                   child: Text(l10n.forgotPassword),
                 ),
               ),
@@ -142,7 +145,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   TextButton(
                     onPressed: loading
                         ? null
-                        : () => context.push(Routes.signUp),
+                        : () => context.pushNamed(SignUpScreen.routeName),
                     child: Text(l10n.goToSignUp),
                   ),
                 ],

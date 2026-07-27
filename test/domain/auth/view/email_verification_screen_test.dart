@@ -6,24 +6,25 @@ import 'package:ieuri_k_trip_spot/common/storage/secure_storage.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/provider/auth_repository_provider.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/view/email_verification_screen.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
-import 'package:ieuri_k_trip_spot/router/app_router.dart';
 
 import '../auth_test_doubles.dart';
 
 /// A router starting on the verification screen with a stub login screen, so we
 /// can assert the verify→login(prefill) transition.
 GoRouter _router() => GoRouter(
-  initialLocation: Routes.emailVerification,
+  initialLocation: '/email-verification',
   routes: [
     GoRoute(
-      path: Routes.emailVerification,
+      path: '/email-verification',
+      name: 'emailVerification',
       builder: (_, _) => const EmailVerificationScreen(
         verificationId: 'v1',
         email: 'user@example.com',
       ),
     ),
     GoRoute(
-      path: Routes.login,
+      path: '/login',
+      name: 'login',
       builder: (_, state) => Scaffold(body: Text('LOGIN:${state.extra}')),
     ),
   ],

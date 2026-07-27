@@ -58,21 +58,21 @@ void main() {
     tester,
   ) async {
     final container = await _container(authed: false, onboarded: false);
-    container.read(goRouterProvider).go(Routes.home);
-    expect(await _land(tester, container), Routes.login);
+    container.read(goRouterProvider).goNamed('home');
+    expect(await _land(tester, container), '/login');
   });
 
   testWidgets('authenticated but not onboarded goes to onboarding', (
     tester,
   ) async {
     final container = await _container(authed: true, onboarded: false);
-    container.read(goRouterProvider).go(Routes.home);
-    expect(await _land(tester, container), Routes.onboarding);
+    container.read(goRouterProvider).goNamed('home');
+    expect(await _land(tester, container), '/onboarding');
   });
 
   testWidgets('authenticated and onboarded reaches home', (tester) async {
     final container = await _container(authed: true, onboarded: true);
-    container.read(goRouterProvider).go(Routes.login);
-    expect(await _land(tester, container), Routes.home);
+    container.read(goRouterProvider).goNamed('login');
+    expect(await _land(tester, container), '/home');
   });
 }
