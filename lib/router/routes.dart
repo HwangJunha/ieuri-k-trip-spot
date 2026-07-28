@@ -6,8 +6,10 @@ import '../common/onboarding/view/splash_screen.dart';
 import '../common/widget/floating_bottom_nav_scaffold.dart';
 import '../domain/auth/view/email_verification_screen.dart';
 import '../domain/auth/view/login_screen.dart';
+import '../domain/auth/model/sns_credential.dart';
 import '../domain/auth/view/password_reset_screen.dart';
 import '../domain/auth/view/sign_up_screen.dart';
+import '../domain/auth/view/sns_sign_up_screen.dart';
 import '../domain/event/view/events_screen.dart';
 import '../domain/onboarding/view/onboarding_screen.dart';
 import '../domain/spot/view/chat_screen.dart';
@@ -59,6 +61,14 @@ List<RouteBase> buildRoutes() => <RouteBase>[
     path: '/password-reset',
     name: PasswordResetScreen.routeName,
     builder: (_, _) => const PasswordResetScreen(),
+  ),
+  GoRoute(
+    path: '/sns-sign-up',
+    name: SnsSignUpScreen.routeName,
+    // Entered after SNS auth with the verified credential passed via `extra`.
+    builder: (_, GoRouterState state) => SnsSignUpScreen(
+      credential: state.extra! as SnsCredential,
+    ),
   ),
   GoRoute(
     path: '/onboarding',

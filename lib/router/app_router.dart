@@ -21,6 +21,7 @@ const String _home = '/home';
 const Set<String> _authPaths = <String>{
   _login,
   '/sign-up',
+  '/sns-sign-up',
   '/email-verification',
   '/password-reset',
 };

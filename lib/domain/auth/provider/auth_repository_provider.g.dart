@@ -59,3 +59,60 @@ final class AuthRepositoryProvider
 }
 
 String _$authRepositoryHash() => r'1769c5febc2e0977af963bf9f349ea6109b1b66a';
+
+/// Exposes the [SnsAuthenticator] (the provider-SDK isolation point). Kept
+/// behind a provider so tests can override it with a fake instead of driving
+/// the real Google/Apple/Kakao SDKs.
+
+@ProviderFor(snsAuthenticator)
+const snsAuthenticatorProvider = SnsAuthenticatorProvider._();
+
+/// Exposes the [SnsAuthenticator] (the provider-SDK isolation point). Kept
+/// behind a provider so tests can override it with a fake instead of driving
+/// the real Google/Apple/Kakao SDKs.
+
+final class SnsAuthenticatorProvider
+    extends
+        $FunctionalProvider<
+          SnsAuthenticator,
+          SnsAuthenticator,
+          SnsAuthenticator
+        >
+    with $Provider<SnsAuthenticator> {
+  /// Exposes the [SnsAuthenticator] (the provider-SDK isolation point). Kept
+  /// behind a provider so tests can override it with a fake instead of driving
+  /// the real Google/Apple/Kakao SDKs.
+  const SnsAuthenticatorProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'snsAuthenticatorProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$snsAuthenticatorHash();
+
+  @$internal
+  @override
+  $ProviderElement<SnsAuthenticator> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  SnsAuthenticator create(Ref ref) {
+    return snsAuthenticator(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SnsAuthenticator value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SnsAuthenticator>(value),
+    );
+  }
+}
+
+String _$snsAuthenticatorHash() => r'6c96e908b0c35011d022ae31c82ba28a2f24f336';

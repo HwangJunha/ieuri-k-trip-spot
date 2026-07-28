@@ -7,10 +7,13 @@ import '../model/auth_session.dart';
 import '../model/auth_state.dart';
 import '../model/email_verification_handle.dart';
 import '../model/me.dart';
+import '../model/sns_credential.dart';
 import '../model/sns_provider.dart';
 import '../model/sns_registration_result.dart';
+import '../model/sns_sign_in_outcome.dart';
 import '../model/terms_code.dart';
 import '../repository/auth_repository.dart';
+import '../repository/sns_authenticator.dart';
 import 'auth_repository_provider.dart';
 
 part 'auth_controller.g.dart';
@@ -106,34 +109,42 @@ class AuthController extends _$AuthController {
     return AuthState(session: session, onboardingCompleted: onboarded);
   }
 
-  /// SNS login (spec §4): exchange the provider `idToken` for tokens via
-  /// `loginSns`, then establish the account like [signIn]. Emits loading →
-  /// data/error, so a real login failure surfaces on the login screen.
-  ///
-  /// A `memberNotFound` failure is NOT an error to display — it means the
-  /// identity isn't registered yet. In that case we restore the prior state
-  /// (so the router doesn't see an error) and rethrow, so the view can route to
-  /// SNS sign-up carrying the credential.
-  Future<void> signInSns({
-    required SnsProvider provider,
-    required String idToken,
-  }) async {
+  SnsAuthenticator get _snsAuth => ref.read(snsAuthenticatorProvider);
+
+  /// SNS login (spec §4). Drives the provider SDK to get a credential, then
+  /// `loginSns` for tokens and establishes the account like [signIn]. Returns an
+  /// [SnsSignInOutcome] telling the view how to navigate:
+  ///   - [SnsAuthenticated] on success (state updated → router navigates),
+  ///   - [SnsNeedsSignUp] when the identity isn't registered (carry the
+  ///     credential to the SNS sign-up screen),
+  ///   - [SnsCancelled] when the user backs out (silent).
+  /// A real login/network failure rethrows for the login screen to show.
+  Future<SnsSignInOutcome> signInSns(SnsProvider provider) async {
+    final SnsCredential credential;
+    try {
+      credential = await _snsAuth.authenticate(provider);
+    } on SnsCancelledException {
+      return const SnsCancelled();
+    }
+
     final AsyncValue<AuthState> previous = state;
     state = const AsyncValue<AuthState>.loading();
     try {
       final AuthSession tokens = await _repo.loginSns(
         provider: provider,
-        idToken: idToken,
+        idToken: credential.idToken,
       );
       state = await AsyncValue.guard(() => _establishSession(tokens));
+      return const SnsAuthenticated();
     } on AuthFailure catch (failure) {
+      // Not registered yet → route to SNS sign-up. Restore the prior state so
+      // the router doesn't see a spurious error/loading.
       if (failure.kind == AuthFailureKind.memberNotFound) {
-        // Routing signal, not an auth error: don't leave the app in an error
-        // state. Restore and let the view navigate to sign-up.
         state = previous;
-        rethrow;
+        return SnsNeedsSignUp(credential);
       }
-      state = AsyncValue<AuthState>.error(failure, StackTrace.current);
+      state = previous;
+      rethrow;
     }
   }
 
@@ -142,14 +153,13 @@ class AuthController extends _$AuthController {
   /// [SnsRegistrationResult] so the caller routes to verification-or-login;
   /// failures rethrow for the SNS sign-up view to show locally.
   Future<SnsRegistrationResult> signUpSns({
-    required SnsProvider provider,
-    required String idToken,
+    required SnsCredential credential,
     required String email,
     required bool ageVerified,
     required List<Agreement> agreements,
   }) => _repo.registerSnsMember(
-    provider: provider,
-    idToken: idToken,
+    provider: credential.provider,
+    idToken: credential.idToken,
     email: email,
     ageVerified: ageVerified,
     agreements: agreements,

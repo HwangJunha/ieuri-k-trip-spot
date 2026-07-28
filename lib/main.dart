@@ -9,11 +9,13 @@ import 'common/localization/locale_controller.dart';
 import 'common/storage/app_preferences.dart';
 import 'common/storage/secure_storage.dart';
 import 'common/theme/app_theme.dart';
+import 'domain/auth/repository/sns_initializer.dart';
 import 'l10n/gen/app_localizations.dart';
 import 'router/app_router.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SnsInitializer.ensureInitialized();
   final SharedPreferences prefs = await SharedPreferences.getInstance();
 
   runApp(
