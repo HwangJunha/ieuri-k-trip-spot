@@ -68,6 +68,12 @@
 		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<!-- Google Sign-In (google_sign_in v7): the iOS OAuth client id. Without
+		     this (or a bundled GoogleService-Info.plist / a clientId passed to
+		     initialize) the SDK has no client id and the sign-in throws. This is
+		     the iOS CLIENT_ID from GoogleService-Info.plist. -->
+		<key>GIDClientID</key>
+		<string>504325192446-vvqljuqs07v73fq5093ekl1ijt6q1cm7.apps.googleusercontent.com</string>
 		<!-- SNS login (spec §7): custom URL schemes the providers redirect back to.
 		     Google uses its REVERSED_CLIENT_ID; Kakao uses kakao{NATIVE_APP_KEY}. -->
 		<key>CFBundleURLTypes</key>

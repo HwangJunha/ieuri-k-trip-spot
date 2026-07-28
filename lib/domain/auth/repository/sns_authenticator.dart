@@ -40,9 +40,13 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
   Future<SnsCredential> _google() async {
     try {
       // v7 requires initialize() exactly once before any other call; calling it
-      // again is safe. serverClientId makes the id_token's `aud` the web client
-      // id the server verifies (spec §6.1).
+      // again is safe. clientId is the iOS OAuth client the SDK needs to present
+      // sign-in (falls back to Info.plist GIDClientID when null); serverClientId
+      // makes the id_token's `aud` the web client id the server verifies (§6.1).
       await GoogleSignIn.instance.initialize(
+        clientId: SnsConfig.googleIosClientId.isEmpty
+            ? null
+            : SnsConfig.googleIosClientId,
         serverClientId: SnsConfig.googleServerClientId.isEmpty
             ? null
             : SnsConfig.googleServerClientId,
