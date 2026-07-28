@@ -435,10 +435,16 @@ org/around/ieuri/auth/
 | D6 | 서버 SNS 로직 | 이미 구현·확정 → **재구현 안 함**. 이번 서버 작업은 검증기·설정·의존성뿐(§2.3, §8). |
 
 ### 구현 착수 시 런타임/콘솔로 확정할 것
-1. **`loginSns` 미가입 code의 실제 문자열**(예상 `MEMBER_NOT_FOUND`) — §4 회원가입 유도 분기의 트리거. 디버그 로그로 수집 확정(§6.4).
-2. **`registerSnsMember` 이메일 중복·`id_token` 무효/만료 code** 문자열.
-3. **콘솔 발급값**: 구글 OAuth 클라이언트 ID(Android SHA-1 포함)·애플 App ID(Sign in with Apple)·카카오 네이티브/REST 키 — §7 설정 주입값. **준비물 상세는 §16.**
-4. **`id_token` 만료 대응 폴백** 필요 여부(회원가입 화면 체류 중 만료) — §4.1.
+1. ~~**`loginSns` 미가입 code의 실제 문자열**~~ — **확정: `MEMBER_NOT_FOUND`.** 로컬 서버 e2e로 검증(loginSns 미가입 → `success:false`, `userErrors[].code = MEMBER_NOT_FOUND`). `AuthFailure.fromCode`가 이를 `memberNotFound`로 매핑해 §4 회원가입 유도 분기를 구동한다.
+2. **`registerSnsMember` 이메일 중복·`id_token` 무효/만료 code** 문자열 — 실검증기(§8)의 무효 토큰은 `SNS_VERIFICATION_FAILED`. 이메일 중복 code는 실사용 시 추가 수집.
+3. **콘솔 발급값**: 구글 OAuth 클라이언트 ID(Android SHA-1 포함)·애플 App ID(Sign in with Apple)·카카오 네이티브/REST 키 — §7 설정 주입값. **준비물 상세는 §16.** **→ 모두 발급 완료(§16).**
+4. **`id_token` 만료 대응 폴백** 필요 여부(회원가입 화면 체류 중 만료) — §4.1. (미구현, 필요 시 후속.)
+
+### 구현 완료 (2026-07-28)
+- **앱 식별자 통일** `kr.ieuri.ktripspot`(전 플랫폼) + Android 빌드 차단(jni/AGP9) 해결. APK packagename 검증.
+- **클라이언트**: SNS 모델·`LoginSns`/`RegisterSnsMember` 오퍼레이션·repository·`AuthController`(signInSns/signUpSns)·`SnsAuthenticator`(google_sign_in v7 / sign_in_with_apple / kakao) + 네이티브 설정(iOS URL 스킴·Apple entitlement·Android Kakao) + 로그인 버튼·SNS 회원가입 화면·라우팅·4개 언어 l10n. `flutter analyze` clean, 81 테스트 통과, APK 빌드 성공.
+- **서버**: `DevSnsIdentityVerifier`→실검증기(Google/Apple/Kakao JWKS 서명+iss+aud+exp, Nimbus) 교체, `@Profile("local")`/`!local` 분리, `SnsProperties`+config, `SNS_VERIFICATION_FAILED` 예외. 검증기 5 케이스 + ArchUnit 통과.
+- **e2e(로컬 서버)**: loginSns 미가입→`MEMBER_NOT_FOUND`, registerSnsMember(provider 이메일)→`emailVerified:true`, 로그인→토큰(access 299s/refresh 2591999s), registerSnsMember(수정 이메일)→`emailVerified:false`+verificationId. 전 경로 확인.
 
 ---
 
