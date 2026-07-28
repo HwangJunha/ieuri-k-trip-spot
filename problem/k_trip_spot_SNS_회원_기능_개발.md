@@ -311,7 +311,7 @@ mutation RegisterSnsMember($input: RegisterSnsMemberInput!) {
 
 - **`GoogleIdTokenVerifier`** — Google JWK(`https://www.googleapis.com/oauth2/v3/certs`)로 서명 검증, `iss ∈ {accounts.google.com, https://accounts.google.com}`, `aud == 구글 OAuth 클라이언트 ID`(설정), `exp` 유효. 클레임 → `SnsIdentity`(sub=providerUserId, email, email_verified, name/given_name, picture).
 - **`AppleIdTokenVerifier`** — Apple JWK(`https://appleid.apple.com/auth/keys`)로 서명 검증, `iss == https://appleid.apple.com`, **`aud == kr.ieuri.ktripspot`(Bundle ID, 확정)**, `exp` 유효, (전달되면)`nonce` 대조. Apple은 최초만 email 제공 → 없으면 `SnsIdentity.email=null`(폼에서 직접 입력).
-- **`KakaoIdTokenVerifier`** — 카카오 OIDC JWK로 서명 검증, `iss`(카카오 OIDC issuer), `aud == 카카오 앱 키`(설정), `exp` 유효. (또는 access token 방식이면 카카오 userinfo API 조회 — 단, §6.1에서 OIDC id_token 확정이므로 JWK 경로.)
+- **`KakaoIdTokenVerifier`** — 카카오 OIDC JWK로 서명 검증, `iss`(카카오 OIDC issuer), **`aud == 카카오 네이티브 앱 키`**(e2e 확정: id_token의 aud는 로그인에 쓴 **네이티브 앱 키**이지 REST API 키가 아니다), `exp` 유효.
 - **디스패치**: `SnsIdentityVerifierPort` 구현이 `provider`로 3개 검증기에 위임(예: `CompositeSnsIdentityVerifier`가 `Map<Provider, ProviderVerifier>` 주입), 또는 각 provider별 검증 로직을 한 어댑터에서 `when(provider)` 분기.
 
 ### 8.3 프로파일 & 설정
@@ -445,6 +445,17 @@ org/around/ieuri/auth/
 - **클라이언트**: SNS 모델·`LoginSns`/`RegisterSnsMember` 오퍼레이션·repository·`AuthController`(signInSns/signUpSns)·`SnsAuthenticator`(google_sign_in v7 / sign_in_with_apple / kakao) + 네이티브 설정(iOS URL 스킴·Apple entitlement·Android Kakao) + 로그인 버튼·SNS 회원가입 화면·라우팅·4개 언어 l10n. `flutter analyze` clean, 81 테스트 통과, APK 빌드 성공.
 - **서버**: `DevSnsIdentityVerifier`→실검증기(Google/Apple/Kakao JWKS 서명+iss+aud+exp, Nimbus) 교체, `@Profile("local")`/`!local` 분리, `SnsProperties`+config, `SNS_VERIFICATION_FAILED` 예외. 검증기 5 케이스 + ArchUnit 통과.
 - **e2e(로컬 서버)**: loginSns 미가입→`MEMBER_NOT_FOUND`, registerSnsMember(provider 이메일)→`emailVerified:true`, 로그인→토큰(access 299s/refresh 2591999s), registerSnsMember(수정 이메일)→`emailVerified:false`+verificationId. 전 경로 확인.
+
+### ⚠️ id_token의 aud는 provider·플랫폼마다 다르다 (실기기 e2e로 확정)
+서버가 검증하는 `aud`는 provider가 발급하는 값으로 정해진다. **처음엔 이걸 잘못 넣어 iOS Google·Kakao 로그인이 `audience rejected`로 거부됐다.** 확정된 실제 값:
+
+| Provider | id_token의 실제 `aud` | 서버 허용값(`ieuri.sns.*`) | 비고 |
+|---|---|---|---|
+| **Google** | **iOS 앱** → iOS 클라이언트 ID / **Android** → 웹 클라이언트 ID | `google.client-ids` = [웹, iOS, Android] | `serverClientId`는 id_token aud를 **안 바꾼다**(serverAuthCode용). 플랫폼마다 실제로 달라 복수 허용이 정당. |
+| **Kakao** | **네이티브 앱 키** (iOS/Android 공통) | `kakao.app-keys` = [네이티브 앱 키] | **REST API 키가 아님.** 네이티브 SDK로 로그인하므로 aud=네이티브 앱 키. REST 키는 이 플로우에서 안 쓰임 → 허용목록에서 제외(최소 허용). |
+| **Apple** | 앱 Bundle ID `kr.ieuri.ktripspot` | `apple.audiences` = [Bundle ID] | iOS 네이티브 방식 확정값과 일치. |
+
+클라이언트 iOS Google 설정: `Info.plist`의 `GIDClientID` = **iOS 클라이언트 ID**(`GoogleService-Info.plist`의 `CLIENT_ID`) — 이게 없으면 로그인 창이 안 뜬다(무반응). `serverClientId`(웹 ID)는 서버 검증용으로 별도 주입.
 
 ---
 
