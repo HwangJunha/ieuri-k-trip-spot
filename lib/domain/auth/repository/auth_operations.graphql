@@ -41,6 +41,35 @@ mutation ResendVerification($input: ResendVerificationInput!) {
   }
 }
 
+mutation RegisterSnsMember($input: RegisterSnsMemberInput!) {
+  registerSnsMember(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    emailVerified
+    verificationId
+  }
+}
+
+mutation LoginSns($input: LoginSnsInput!) {
+  loginSns(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    accessToken
+    refreshToken
+    tokenType
+    accessTokenExpiresIn
+    refreshTokenExpiresIn
+  }
+}
+
 mutation LoginEmail($input: LoginEmailInput!) {
   loginEmail(input: $input) {
     success

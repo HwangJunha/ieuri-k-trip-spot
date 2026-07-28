@@ -1,6 +1,8 @@
 import '../model/auth_session.dart';
 import '../model/email_verification_handle.dart';
 import '../model/me.dart';
+import '../model/sns_provider.dart';
+import '../model/sns_registration_result.dart';
 import '../model/terms_code.dart';
 
 /// Data-access contract for authentication (spec §6). Returns domain models;
@@ -35,6 +37,27 @@ abstract interface class AuthRepository {
   Future<AuthSession> loginEmail({
     required String email,
     required String password,
+  });
+
+  /// SNS login (spec §4/§6.2) for an existing member. On success returns an
+  /// [AuthSession] with the token pair (no user — the caller fetches [fetchMe]),
+  /// exactly like [loginEmail]. Throws `AuthFailure`; a `memberNotFound` kind
+  /// means the identity isn't registered and the caller routes to SNS sign-up.
+  Future<AuthSession> loginSns({
+    required SnsProvider provider,
+    required String idToken,
+  });
+
+  /// SNS sign-up (spec §5.2). Issues NO tokens — returns an
+  /// [SnsRegistrationResult] telling the caller whether email verification is
+  /// still needed. [email] is required (provider-prefilled but user-editable).
+  /// Throws `AuthFailure` on e.g. a taken email or an invalid/expired idToken.
+  Future<SnsRegistrationResult> registerSnsMember({
+    required SnsProvider provider,
+    required String idToken,
+    required String email,
+    required bool ageVerified,
+    required List<Agreement> agreements,
   });
 
   /// Fetches the authenticated account via the `me` query (spec §6.2). Throws

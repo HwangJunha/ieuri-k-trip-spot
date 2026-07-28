@@ -2,10 +2,13 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/network/graphql_client.dart';
 import '../../../common/storage/secure_storage.dart';
+import '../model/auth_failure.dart';
 import '../model/auth_session.dart';
 import '../model/auth_state.dart';
 import '../model/email_verification_handle.dart';
 import '../model/me.dart';
+import '../model/sns_provider.dart';
+import '../model/sns_registration_result.dart';
 import '../model/terms_code.dart';
 import '../repository/auth_repository.dart';
 import 'auth_repository_provider.dart';
@@ -74,8 +77,8 @@ class AuthController extends _$AuthController {
     }
   }
 
-  /// Logs in (spec §5.1): `loginEmail` for tokens, then `me` to establish the
-  /// account. Emits loading → data/error.
+  /// Logs in (spec §5.1): `loginEmail` for tokens, then establishes the account.
+  /// Emits loading → data/error.
   Future<void> signIn({required String email, required String password}) async {
     state = const AsyncValue<AuthState>.loading();
     state = await AsyncValue.guard(() async {
@@ -83,17 +86,74 @@ class AuthController extends _$AuthController {
         email: email,
         password: password,
       );
-      // Persist tokens BEFORE fetching `me`: AuthLink reads the access token
-      // from secure storage on every request, so `me` is unauthenticated
-      // unless the token is already stored.
-      await _persist(tokens);
-      final Me me = await _repo.fetchMe();
-      final AuthSession session = tokens.copyWith(user: me);
-      await _persistUser(me);
-      final bool onboarded = await _storage.isOnboardingCompleted(me.id);
-      return AuthState(session: session, onboardingCompleted: onboarded);
+      return _establishSession(tokens);
     });
   }
+
+  /// Persists a freshly issued token pair, fetches `me`, and builds the
+  /// authenticated [AuthState]. Shared by email [signIn] and SNS [signInSns] —
+  /// the token pair is identical regardless of how it was issued.
+  ///
+  /// Tokens are persisted BEFORE fetching `me`: AuthLink reads the access token
+  /// from secure storage on every request, so `me` is unauthenticated unless the
+  /// token is already stored.
+  Future<AuthState> _establishSession(AuthSession tokens) async {
+    await _persist(tokens);
+    final Me me = await _repo.fetchMe();
+    final AuthSession session = tokens.copyWith(user: me);
+    await _persistUser(me);
+    final bool onboarded = await _storage.isOnboardingCompleted(me.id);
+    return AuthState(session: session, onboardingCompleted: onboarded);
+  }
+
+  /// SNS login (spec §4): exchange the provider `idToken` for tokens via
+  /// `loginSns`, then establish the account like [signIn]. Emits loading →
+  /// data/error, so a real login failure surfaces on the login screen.
+  ///
+  /// A `memberNotFound` failure is NOT an error to display — it means the
+  /// identity isn't registered yet. In that case we restore the prior state
+  /// (so the router doesn't see an error) and rethrow, so the view can route to
+  /// SNS sign-up carrying the credential.
+  Future<void> signInSns({
+    required SnsProvider provider,
+    required String idToken,
+  }) async {
+    final AsyncValue<AuthState> previous = state;
+    state = const AsyncValue<AuthState>.loading();
+    try {
+      final AuthSession tokens = await _repo.loginSns(
+        provider: provider,
+        idToken: idToken,
+      );
+      state = await AsyncValue.guard(() => _establishSession(tokens));
+    } on AuthFailure catch (failure) {
+      if (failure.kind == AuthFailureKind.memberNotFound) {
+        // Routing signal, not an auth error: don't leave the app in an error
+        // state. Restore and let the view navigate to sign-up.
+        state = previous;
+        rethrow;
+      }
+      state = AsyncValue<AuthState>.error(failure, StackTrace.current);
+    }
+  }
+
+  /// SNS sign-up (spec §5.2). Like [signUp] this issues no tokens and is NOT
+  /// wrapped in `state`: it must not flip the app-global auth state. Returns the
+  /// [SnsRegistrationResult] so the caller routes to verification-or-login;
+  /// failures rethrow for the SNS sign-up view to show locally.
+  Future<SnsRegistrationResult> signUpSns({
+    required SnsProvider provider,
+    required String idToken,
+    required String email,
+    required bool ageVerified,
+    required List<Agreement> agreements,
+  }) => _repo.registerSnsMember(
+    provider: provider,
+    idToken: idToken,
+    email: email,
+    ageVerified: ageVerified,
+    agreements: agreements,
+  );
 
   /// Registers a member (spec §4.2/§5.2). Returns the [EmailVerificationHandle]
   /// so the caller routes to the verification screen. Deliberately NOT wrapped

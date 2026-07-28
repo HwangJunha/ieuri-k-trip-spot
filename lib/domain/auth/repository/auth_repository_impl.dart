@@ -7,6 +7,8 @@ import '../model/auth_failure.dart';
 import '../model/auth_session.dart';
 import '../model/email_verification_handle.dart';
 import '../model/me.dart';
+import '../model/sns_provider.dart';
+import '../model/sns_registration_result.dart';
 import '../model/terms_code.dart';
 import 'auth_operations.graphql.dart';
 import 'auth_repository.dart';
@@ -128,6 +130,70 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<AuthSession> loginSns({
+    required SnsProvider provider,
+    required String idToken,
+  }) async {
+    final Map<String, dynamic> data = await _mutate(
+      documentNodeMutationLoginSns,
+      Variables$Mutation$LoginSns(
+        input: Input$LoginSnsInput(
+          provider: _provider(provider),
+          idToken: idToken,
+        ),
+      ).toJson(),
+      'loginSns',
+    );
+    final payload = Mutation$LoginSns.fromJson(data).loginSns;
+    _check('loginSns', payload.success, payload.userErrors);
+    return _sessionFrom(
+      accessToken: payload.accessToken,
+      refreshToken: payload.refreshToken,
+      tokenType: payload.tokenType,
+      accessTokenExpiresIn: payload.accessTokenExpiresIn,
+      refreshTokenExpiresIn: payload.refreshTokenExpiresIn,
+    );
+  }
+
+  @override
+  Future<SnsRegistrationResult> registerSnsMember({
+    required SnsProvider provider,
+    required String idToken,
+    required String email,
+    required bool ageVerified,
+    required List<Agreement> agreements,
+  }) async {
+    final Map<String, dynamic> data = await _mutate(
+      documentNodeMutationRegisterSnsMember,
+      Variables$Mutation$RegisterSnsMember(
+        input: Input$RegisterSnsMemberInput(
+          provider: _provider(provider),
+          idToken: idToken,
+          email: email,
+          ageVerified: ageVerified,
+          agreements: agreements
+              .map(
+                (Agreement a) => Input$AgreementInput(
+                  termsCode: _termsCode(a.termsCode),
+                  agreed: a.agreed,
+                ),
+              )
+              .toList(),
+        ),
+      ).toJson(),
+      'registerSnsMember',
+    );
+    final payload = Mutation$RegisterSnsMember.fromJson(
+      data,
+    ).registerSnsMember;
+    _check('registerSnsMember', payload.success, payload.userErrors);
+    return SnsRegistrationResult(
+      emailVerified: payload.emailVerified ?? false,
+      verificationId: payload.verificationId,
+    );
+  }
+
+  @override
   Future<Me> fetchMe() async {
     final Map<String, dynamic> data = await _query(documentNodeQueryMe, 'me');
     return Me.fromJson(Query$Me.fromJson(data).me.toJson());
@@ -220,6 +286,12 @@ class AuthRepositoryImpl implements AuthRepository {
     TermsCode.privacy => Enum$TermsCode.PRIVACY,
     TermsCode.location => Enum$TermsCode.LOCATION,
     TermsCode.marketing => Enum$TermsCode.MARKETING,
+  };
+
+  Enum$Provider _provider(SnsProvider provider) => switch (provider) {
+    SnsProvider.google => Enum$Provider.GOOGLE,
+    SnsProvider.apple => Enum$Provider.APPLE,
+    SnsProvider.kakao => Enum$Provider.KAKAO,
   };
 
   AuthSession _sessionFrom({

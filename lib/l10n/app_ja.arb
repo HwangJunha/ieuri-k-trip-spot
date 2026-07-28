@@ -111,5 +111,16 @@
   "errorNetwork": "ネットワークエラーが発生しました。もう一度お試しください。",
   "errorUnknown": "問題が発生しました。もう一度お試しください。",
 
-  "signUpSuccessLoginPrompt": "登録が完了しました。ログインしてください。"
+  "signUpSuccessLoginPrompt": "登録が完了しました。ログインしてください。",
+
+  "orDivider": "または",
+  "continueWithGoogle": "Googleで続ける",
+  "continueWithApple": "Appleで続ける",
+  "continueWithKakao": "カカオで続ける",
+  "snsSignUpTitle": "SNSで登録",
+  "snsSignUpSubtitle": "SNSアカウントで認証されました。登録を完了するには、メールアドレスの確認と規約への同意が必要です。",
+  "snsEmailPrefillHint": "メールアドレスを入力してください。",
+  "snsSignUpButton": "登録を完了",
+  "snsCancelled": "ログインがキャンセルされました。",
+  "errorSnsMemberNotFound": "登録されていないアカウントです。会員登録を行ってください。"
 }

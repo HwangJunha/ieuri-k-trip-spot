@@ -1966,6 +1966,1374 @@ class _CopyWithStubImpl$Mutation$ResendVerification$resendVerification$userError
   call({String? code, String? message, String? field}) => _res;
 }
 
+class Variables$Mutation$RegisterSnsMember {
+  factory Variables$Mutation$RegisterSnsMember({
+    required Input$RegisterSnsMemberInput input,
+  }) => Variables$Mutation$RegisterSnsMember._({r'input': input});
+
+  Variables$Mutation$RegisterSnsMember._(this._$data);
+
+  factory Variables$Mutation$RegisterSnsMember.fromJson(
+    Map<String, dynamic> data,
+  ) {
+    final result$data = <String, dynamic>{};
+    final l$input = data['input'];
+    result$data['input'] = Input$RegisterSnsMemberInput.fromJson(
+      (l$input as Map<String, dynamic>),
+    );
+    return Variables$Mutation$RegisterSnsMember._(result$data);
+  }
+
+  Map<String, dynamic> _$data;
+
+  Input$RegisterSnsMemberInput get input =>
+      (_$data['input'] as Input$RegisterSnsMemberInput);
+
+  Map<String, dynamic> toJson() {
+    final result$data = <String, dynamic>{};
+    final l$input = input;
+    result$data['input'] = l$input.toJson();
+    return result$data;
+  }
+
+  CopyWith$Variables$Mutation$RegisterSnsMember<
+    Variables$Mutation$RegisterSnsMember
+  >
+  get copyWith => CopyWith$Variables$Mutation$RegisterSnsMember(this, (i) => i);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Variables$Mutation$RegisterSnsMember ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$input = input;
+    final lOther$input = other.input;
+    if (l$input != lOther$input) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    final l$input = input;
+    return Object.hashAll([l$input]);
+  }
+}
+
+abstract class CopyWith$Variables$Mutation$RegisterSnsMember<TRes> {
+  factory CopyWith$Variables$Mutation$RegisterSnsMember(
+    Variables$Mutation$RegisterSnsMember instance,
+    TRes Function(Variables$Mutation$RegisterSnsMember) then,
+  ) = _CopyWithImpl$Variables$Mutation$RegisterSnsMember;
+
+  factory CopyWith$Variables$Mutation$RegisterSnsMember.stub(TRes res) =
+      _CopyWithStubImpl$Variables$Mutation$RegisterSnsMember;
+
+  TRes call({Input$RegisterSnsMemberInput? input});
+}
+
+class _CopyWithImpl$Variables$Mutation$RegisterSnsMember<TRes>
+    implements CopyWith$Variables$Mutation$RegisterSnsMember<TRes> {
+  _CopyWithImpl$Variables$Mutation$RegisterSnsMember(
+    this._instance,
+    this._then,
+  );
+
+  final Variables$Mutation$RegisterSnsMember _instance;
+
+  final TRes Function(Variables$Mutation$RegisterSnsMember) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? input = _undefined}) => _then(
+    Variables$Mutation$RegisterSnsMember._({
+      ..._instance._$data,
+      if (input != _undefined && input != null)
+        'input': (input as Input$RegisterSnsMemberInput),
+    }),
+  );
+}
+
+class _CopyWithStubImpl$Variables$Mutation$RegisterSnsMember<TRes>
+    implements CopyWith$Variables$Mutation$RegisterSnsMember<TRes> {
+  _CopyWithStubImpl$Variables$Mutation$RegisterSnsMember(this._res);
+
+  TRes _res;
+
+  call({Input$RegisterSnsMemberInput? input}) => _res;
+}
+
+class Mutation$RegisterSnsMember {
+  Mutation$RegisterSnsMember({required this.registerSnsMember});
+
+  factory Mutation$RegisterSnsMember.fromJson(Map<String, dynamic> json) {
+    final l$registerSnsMember = json['registerSnsMember'];
+    return Mutation$RegisterSnsMember(
+      registerSnsMember: Mutation$RegisterSnsMember$registerSnsMember.fromJson(
+        (l$registerSnsMember as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final Mutation$RegisterSnsMember$registerSnsMember registerSnsMember;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$registerSnsMember = registerSnsMember;
+    _resultData['registerSnsMember'] = l$registerSnsMember.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$registerSnsMember = registerSnsMember;
+    return Object.hashAll([l$registerSnsMember]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$RegisterSnsMember ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$registerSnsMember = registerSnsMember;
+    final lOther$registerSnsMember = other.registerSnsMember;
+    if (l$registerSnsMember != lOther$registerSnsMember) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$RegisterSnsMember
+    on Mutation$RegisterSnsMember {
+  CopyWith$Mutation$RegisterSnsMember<Mutation$RegisterSnsMember>
+  get copyWith => CopyWith$Mutation$RegisterSnsMember(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$RegisterSnsMember<TRes> {
+  factory CopyWith$Mutation$RegisterSnsMember(
+    Mutation$RegisterSnsMember instance,
+    TRes Function(Mutation$RegisterSnsMember) then,
+  ) = _CopyWithImpl$Mutation$RegisterSnsMember;
+
+  factory CopyWith$Mutation$RegisterSnsMember.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$RegisterSnsMember;
+
+  TRes call({Mutation$RegisterSnsMember$registerSnsMember? registerSnsMember});
+  CopyWith$Mutation$RegisterSnsMember$registerSnsMember<TRes>
+  get registerSnsMember;
+}
+
+class _CopyWithImpl$Mutation$RegisterSnsMember<TRes>
+    implements CopyWith$Mutation$RegisterSnsMember<TRes> {
+  _CopyWithImpl$Mutation$RegisterSnsMember(this._instance, this._then);
+
+  final Mutation$RegisterSnsMember _instance;
+
+  final TRes Function(Mutation$RegisterSnsMember) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? registerSnsMember = _undefined}) => _then(
+    Mutation$RegisterSnsMember(
+      registerSnsMember:
+          registerSnsMember == _undefined || registerSnsMember == null
+          ? _instance.registerSnsMember
+          : (registerSnsMember as Mutation$RegisterSnsMember$registerSnsMember),
+    ),
+  );
+
+  CopyWith$Mutation$RegisterSnsMember$registerSnsMember<TRes>
+  get registerSnsMember {
+    final local$registerSnsMember = _instance.registerSnsMember;
+    return CopyWith$Mutation$RegisterSnsMember$registerSnsMember(
+      local$registerSnsMember,
+      (e) => call(registerSnsMember: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Mutation$RegisterSnsMember<TRes>
+    implements CopyWith$Mutation$RegisterSnsMember<TRes> {
+  _CopyWithStubImpl$Mutation$RegisterSnsMember(this._res);
+
+  TRes _res;
+
+  call({Mutation$RegisterSnsMember$registerSnsMember? registerSnsMember}) =>
+      _res;
+
+  CopyWith$Mutation$RegisterSnsMember$registerSnsMember<TRes>
+  get registerSnsMember =>
+      CopyWith$Mutation$RegisterSnsMember$registerSnsMember.stub(_res);
+}
+
+const documentNodeMutationRegisterSnsMember = DocumentNode(
+  definitions: [
+    OperationDefinitionNode(
+      type: OperationType.mutation,
+      name: NameNode(value: 'RegisterSnsMember'),
+      variableDefinitions: [
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'input')),
+          type: NamedTypeNode(
+            name: NameNode(value: 'RegisterSnsMemberInput'),
+            isNonNull: true,
+          ),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+      ],
+      directives: [],
+      selectionSet: SelectionSetNode(
+        selections: [
+          FieldNode(
+            name: NameNode(value: 'registerSnsMember'),
+            alias: null,
+            arguments: [
+              ArgumentNode(
+                name: NameNode(value: 'input'),
+                value: VariableNode(name: NameNode(value: 'input')),
+              ),
+            ],
+            directives: [],
+            selectionSet: SelectionSetNode(
+              selections: [
+                FieldNode(
+                  name: NameNode(value: 'success'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'userErrors'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'code'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'message'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'field'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
+                FieldNode(
+                  name: NameNode(value: 'emailVerified'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'verificationId'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+);
+
+class Mutation$RegisterSnsMember$registerSnsMember {
+  Mutation$RegisterSnsMember$registerSnsMember({
+    required this.success,
+    required this.userErrors,
+    this.emailVerified,
+    this.verificationId,
+  });
+
+  factory Mutation$RegisterSnsMember$registerSnsMember.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$success = json['success'];
+    final l$userErrors = json['userErrors'];
+    final l$emailVerified = json['emailVerified'];
+    final l$verificationId = json['verificationId'];
+    return Mutation$RegisterSnsMember$registerSnsMember(
+      success: (l$success as bool),
+      userErrors: (l$userErrors as List<dynamic>)
+          .map(
+            (e) =>
+                Mutation$RegisterSnsMember$registerSnsMember$userErrors.fromJson(
+                  (e as Map<String, dynamic>),
+                ),
+          )
+          .toList(),
+      emailVerified: (l$emailVerified as bool?),
+      verificationId: (l$verificationId as String?),
+    );
+  }
+
+  final bool success;
+
+  final List<Mutation$RegisterSnsMember$registerSnsMember$userErrors>
+  userErrors;
+
+  final bool? emailVerified;
+
+  final String? verificationId;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$success = success;
+    _resultData['success'] = l$success;
+    final l$userErrors = userErrors;
+    _resultData['userErrors'] = l$userErrors.map((e) => e.toJson()).toList();
+    final l$emailVerified = emailVerified;
+    _resultData['emailVerified'] = l$emailVerified;
+    final l$verificationId = verificationId;
+    _resultData['verificationId'] = l$verificationId;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$success = success;
+    final l$userErrors = userErrors;
+    final l$emailVerified = emailVerified;
+    final l$verificationId = verificationId;
+    return Object.hashAll([
+      l$success,
+      Object.hashAll(l$userErrors.map((v) => v)),
+      l$emailVerified,
+      l$verificationId,
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$RegisterSnsMember$registerSnsMember ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$success = success;
+    final lOther$success = other.success;
+    if (l$success != lOther$success) {
+      return false;
+    }
+    final l$userErrors = userErrors;
+    final lOther$userErrors = other.userErrors;
+    if (l$userErrors.length != lOther$userErrors.length) {
+      return false;
+    }
+    for (int i = 0; i < l$userErrors.length; i++) {
+      final l$userErrors$entry = l$userErrors[i];
+      final lOther$userErrors$entry = lOther$userErrors[i];
+      if (l$userErrors$entry != lOther$userErrors$entry) {
+        return false;
+      }
+    }
+    final l$emailVerified = emailVerified;
+    final lOther$emailVerified = other.emailVerified;
+    if (l$emailVerified != lOther$emailVerified) {
+      return false;
+    }
+    final l$verificationId = verificationId;
+    final lOther$verificationId = other.verificationId;
+    if (l$verificationId != lOther$verificationId) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$RegisterSnsMember$registerSnsMember
+    on Mutation$RegisterSnsMember$registerSnsMember {
+  CopyWith$Mutation$RegisterSnsMember$registerSnsMember<
+    Mutation$RegisterSnsMember$registerSnsMember
+  >
+  get copyWith =>
+      CopyWith$Mutation$RegisterSnsMember$registerSnsMember(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$RegisterSnsMember$registerSnsMember<TRes> {
+  factory CopyWith$Mutation$RegisterSnsMember$registerSnsMember(
+    Mutation$RegisterSnsMember$registerSnsMember instance,
+    TRes Function(Mutation$RegisterSnsMember$registerSnsMember) then,
+  ) = _CopyWithImpl$Mutation$RegisterSnsMember$registerSnsMember;
+
+  factory CopyWith$Mutation$RegisterSnsMember$registerSnsMember.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$RegisterSnsMember$registerSnsMember;
+
+  TRes call({
+    bool? success,
+    List<Mutation$RegisterSnsMember$registerSnsMember$userErrors>? userErrors,
+    bool? emailVerified,
+    String? verificationId,
+  });
+  TRes userErrors(
+    Iterable<Mutation$RegisterSnsMember$registerSnsMember$userErrors> Function(
+      Iterable<
+        CopyWith$Mutation$RegisterSnsMember$registerSnsMember$userErrors<
+          Mutation$RegisterSnsMember$registerSnsMember$userErrors
+        >
+      >,
+    )
+    _fn,
+  );
+}
+
+class _CopyWithImpl$Mutation$RegisterSnsMember$registerSnsMember<TRes>
+    implements CopyWith$Mutation$RegisterSnsMember$registerSnsMember<TRes> {
+  _CopyWithImpl$Mutation$RegisterSnsMember$registerSnsMember(
+    this._instance,
+    this._then,
+  );
+
+  final Mutation$RegisterSnsMember$registerSnsMember _instance;
+
+  final TRes Function(Mutation$RegisterSnsMember$registerSnsMember) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? success = _undefined,
+    Object? userErrors = _undefined,
+    Object? emailVerified = _undefined,
+    Object? verificationId = _undefined,
+  }) => _then(
+    Mutation$RegisterSnsMember$registerSnsMember(
+      success: success == _undefined || success == null
+          ? _instance.success
+          : (success as bool),
+      userErrors: userErrors == _undefined || userErrors == null
+          ? _instance.userErrors
+          : (userErrors
+                as List<
+                  Mutation$RegisterSnsMember$registerSnsMember$userErrors
+                >),
+      emailVerified: emailVerified == _undefined
+          ? _instance.emailVerified
+          : (emailVerified as bool?),
+      verificationId: verificationId == _undefined
+          ? _instance.verificationId
+          : (verificationId as String?),
+    ),
+  );
+
+  TRes userErrors(
+    Iterable<Mutation$RegisterSnsMember$registerSnsMember$userErrors> Function(
+      Iterable<
+        CopyWith$Mutation$RegisterSnsMember$registerSnsMember$userErrors<
+          Mutation$RegisterSnsMember$registerSnsMember$userErrors
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    userErrors: _fn(
+      _instance.userErrors.map(
+        (e) => CopyWith$Mutation$RegisterSnsMember$registerSnsMember$userErrors(
+          e,
+          (i) => i,
+        ),
+      ),
+    ).toList(),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$RegisterSnsMember$registerSnsMember<TRes>
+    implements CopyWith$Mutation$RegisterSnsMember$registerSnsMember<TRes> {
+  _CopyWithStubImpl$Mutation$RegisterSnsMember$registerSnsMember(this._res);
+
+  TRes _res;
+
+  call({
+    bool? success,
+    List<Mutation$RegisterSnsMember$registerSnsMember$userErrors>? userErrors,
+    bool? emailVerified,
+    String? verificationId,
+  }) => _res;
+
+  userErrors(_fn) => _res;
+}
+
+class Mutation$RegisterSnsMember$registerSnsMember$userErrors {
+  Mutation$RegisterSnsMember$registerSnsMember$userErrors({
+    required this.code,
+    required this.message,
+    this.field,
+  });
+
+  factory Mutation$RegisterSnsMember$registerSnsMember$userErrors.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$code = json['code'];
+    final l$message = json['message'];
+    final l$field = json['field'];
+    return Mutation$RegisterSnsMember$registerSnsMember$userErrors(
+      code: (l$code as String),
+      message: (l$message as String),
+      field: (l$field as String?),
+    );
+  }
+
+  final String code;
+
+  final String message;
+
+  final String? field;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$message = message;
+    _resultData['message'] = l$message;
+    final l$field = field;
+    _resultData['field'] = l$field;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$code = code;
+    final l$message = message;
+    final l$field = field;
+    return Object.hashAll([l$code, l$message, l$field]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$RegisterSnsMember$registerSnsMember$userErrors ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$message = message;
+    final lOther$message = other.message;
+    if (l$message != lOther$message) {
+      return false;
+    }
+    final l$field = field;
+    final lOther$field = other.field;
+    if (l$field != lOther$field) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$RegisterSnsMember$registerSnsMember$userErrors
+    on Mutation$RegisterSnsMember$registerSnsMember$userErrors {
+  CopyWith$Mutation$RegisterSnsMember$registerSnsMember$userErrors<
+    Mutation$RegisterSnsMember$registerSnsMember$userErrors
+  >
+  get copyWith =>
+      CopyWith$Mutation$RegisterSnsMember$registerSnsMember$userErrors(
+        this,
+        (i) => i,
+      );
+}
+
+abstract class CopyWith$Mutation$RegisterSnsMember$registerSnsMember$userErrors<
+  TRes
+> {
+  factory CopyWith$Mutation$RegisterSnsMember$registerSnsMember$userErrors(
+    Mutation$RegisterSnsMember$registerSnsMember$userErrors instance,
+    TRes Function(Mutation$RegisterSnsMember$registerSnsMember$userErrors) then,
+  ) = _CopyWithImpl$Mutation$RegisterSnsMember$registerSnsMember$userErrors;
+
+  factory CopyWith$Mutation$RegisterSnsMember$registerSnsMember$userErrors.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Mutation$RegisterSnsMember$registerSnsMember$userErrors;
+
+  TRes call({String? code, String? message, String? field});
+}
+
+class _CopyWithImpl$Mutation$RegisterSnsMember$registerSnsMember$userErrors<
+  TRes
+>
+    implements
+        CopyWith$Mutation$RegisterSnsMember$registerSnsMember$userErrors<TRes> {
+  _CopyWithImpl$Mutation$RegisterSnsMember$registerSnsMember$userErrors(
+    this._instance,
+    this._then,
+  );
+
+  final Mutation$RegisterSnsMember$registerSnsMember$userErrors _instance;
+
+  final TRes Function(Mutation$RegisterSnsMember$registerSnsMember$userErrors)
+  _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? code = _undefined,
+    Object? message = _undefined,
+    Object? field = _undefined,
+  }) => _then(
+    Mutation$RegisterSnsMember$registerSnsMember$userErrors(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      message: message == _undefined || message == null
+          ? _instance.message
+          : (message as String),
+      field: field == _undefined ? _instance.field : (field as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$RegisterSnsMember$registerSnsMember$userErrors<
+  TRes
+>
+    implements
+        CopyWith$Mutation$RegisterSnsMember$registerSnsMember$userErrors<TRes> {
+  _CopyWithStubImpl$Mutation$RegisterSnsMember$registerSnsMember$userErrors(
+    this._res,
+  );
+
+  TRes _res;
+
+  call({String? code, String? message, String? field}) => _res;
+}
+
+class Variables$Mutation$LoginSns {
+  factory Variables$Mutation$LoginSns({required Input$LoginSnsInput input}) =>
+      Variables$Mutation$LoginSns._({r'input': input});
+
+  Variables$Mutation$LoginSns._(this._$data);
+
+  factory Variables$Mutation$LoginSns.fromJson(Map<String, dynamic> data) {
+    final result$data = <String, dynamic>{};
+    final l$input = data['input'];
+    result$data['input'] = Input$LoginSnsInput.fromJson(
+      (l$input as Map<String, dynamic>),
+    );
+    return Variables$Mutation$LoginSns._(result$data);
+  }
+
+  Map<String, dynamic> _$data;
+
+  Input$LoginSnsInput get input => (_$data['input'] as Input$LoginSnsInput);
+
+  Map<String, dynamic> toJson() {
+    final result$data = <String, dynamic>{};
+    final l$input = input;
+    result$data['input'] = l$input.toJson();
+    return result$data;
+  }
+
+  CopyWith$Variables$Mutation$LoginSns<Variables$Mutation$LoginSns>
+  get copyWith => CopyWith$Variables$Mutation$LoginSns(this, (i) => i);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Variables$Mutation$LoginSns ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$input = input;
+    final lOther$input = other.input;
+    if (l$input != lOther$input) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    final l$input = input;
+    return Object.hashAll([l$input]);
+  }
+}
+
+abstract class CopyWith$Variables$Mutation$LoginSns<TRes> {
+  factory CopyWith$Variables$Mutation$LoginSns(
+    Variables$Mutation$LoginSns instance,
+    TRes Function(Variables$Mutation$LoginSns) then,
+  ) = _CopyWithImpl$Variables$Mutation$LoginSns;
+
+  factory CopyWith$Variables$Mutation$LoginSns.stub(TRes res) =
+      _CopyWithStubImpl$Variables$Mutation$LoginSns;
+
+  TRes call({Input$LoginSnsInput? input});
+}
+
+class _CopyWithImpl$Variables$Mutation$LoginSns<TRes>
+    implements CopyWith$Variables$Mutation$LoginSns<TRes> {
+  _CopyWithImpl$Variables$Mutation$LoginSns(this._instance, this._then);
+
+  final Variables$Mutation$LoginSns _instance;
+
+  final TRes Function(Variables$Mutation$LoginSns) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? input = _undefined}) => _then(
+    Variables$Mutation$LoginSns._({
+      ..._instance._$data,
+      if (input != _undefined && input != null)
+        'input': (input as Input$LoginSnsInput),
+    }),
+  );
+}
+
+class _CopyWithStubImpl$Variables$Mutation$LoginSns<TRes>
+    implements CopyWith$Variables$Mutation$LoginSns<TRes> {
+  _CopyWithStubImpl$Variables$Mutation$LoginSns(this._res);
+
+  TRes _res;
+
+  call({Input$LoginSnsInput? input}) => _res;
+}
+
+class Mutation$LoginSns {
+  Mutation$LoginSns({required this.loginSns});
+
+  factory Mutation$LoginSns.fromJson(Map<String, dynamic> json) {
+    final l$loginSns = json['loginSns'];
+    return Mutation$LoginSns(
+      loginSns: Mutation$LoginSns$loginSns.fromJson(
+        (l$loginSns as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final Mutation$LoginSns$loginSns loginSns;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$loginSns = loginSns;
+    _resultData['loginSns'] = l$loginSns.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$loginSns = loginSns;
+    return Object.hashAll([l$loginSns]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$LoginSns || runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$loginSns = loginSns;
+    final lOther$loginSns = other.loginSns;
+    if (l$loginSns != lOther$loginSns) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$LoginSns on Mutation$LoginSns {
+  CopyWith$Mutation$LoginSns<Mutation$LoginSns> get copyWith =>
+      CopyWith$Mutation$LoginSns(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$LoginSns<TRes> {
+  factory CopyWith$Mutation$LoginSns(
+    Mutation$LoginSns instance,
+    TRes Function(Mutation$LoginSns) then,
+  ) = _CopyWithImpl$Mutation$LoginSns;
+
+  factory CopyWith$Mutation$LoginSns.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$LoginSns;
+
+  TRes call({Mutation$LoginSns$loginSns? loginSns});
+  CopyWith$Mutation$LoginSns$loginSns<TRes> get loginSns;
+}
+
+class _CopyWithImpl$Mutation$LoginSns<TRes>
+    implements CopyWith$Mutation$LoginSns<TRes> {
+  _CopyWithImpl$Mutation$LoginSns(this._instance, this._then);
+
+  final Mutation$LoginSns _instance;
+
+  final TRes Function(Mutation$LoginSns) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? loginSns = _undefined}) => _then(
+    Mutation$LoginSns(
+      loginSns: loginSns == _undefined || loginSns == null
+          ? _instance.loginSns
+          : (loginSns as Mutation$LoginSns$loginSns),
+    ),
+  );
+
+  CopyWith$Mutation$LoginSns$loginSns<TRes> get loginSns {
+    final local$loginSns = _instance.loginSns;
+    return CopyWith$Mutation$LoginSns$loginSns(
+      local$loginSns,
+      (e) => call(loginSns: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Mutation$LoginSns<TRes>
+    implements CopyWith$Mutation$LoginSns<TRes> {
+  _CopyWithStubImpl$Mutation$LoginSns(this._res);
+
+  TRes _res;
+
+  call({Mutation$LoginSns$loginSns? loginSns}) => _res;
+
+  CopyWith$Mutation$LoginSns$loginSns<TRes> get loginSns =>
+      CopyWith$Mutation$LoginSns$loginSns.stub(_res);
+}
+
+const documentNodeMutationLoginSns = DocumentNode(
+  definitions: [
+    OperationDefinitionNode(
+      type: OperationType.mutation,
+      name: NameNode(value: 'LoginSns'),
+      variableDefinitions: [
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'input')),
+          type: NamedTypeNode(
+            name: NameNode(value: 'LoginSnsInput'),
+            isNonNull: true,
+          ),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+      ],
+      directives: [],
+      selectionSet: SelectionSetNode(
+        selections: [
+          FieldNode(
+            name: NameNode(value: 'loginSns'),
+            alias: null,
+            arguments: [
+              ArgumentNode(
+                name: NameNode(value: 'input'),
+                value: VariableNode(name: NameNode(value: 'input')),
+              ),
+            ],
+            directives: [],
+            selectionSet: SelectionSetNode(
+              selections: [
+                FieldNode(
+                  name: NameNode(value: 'success'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'userErrors'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'code'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'message'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'field'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
+                FieldNode(
+                  name: NameNode(value: 'accessToken'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'refreshToken'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'tokenType'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'accessTokenExpiresIn'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'refreshTokenExpiresIn'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+);
+
+class Mutation$LoginSns$loginSns {
+  Mutation$LoginSns$loginSns({
+    required this.success,
+    required this.userErrors,
+    this.accessToken,
+    this.refreshToken,
+    this.tokenType,
+    this.accessTokenExpiresIn,
+    this.refreshTokenExpiresIn,
+  });
+
+  factory Mutation$LoginSns$loginSns.fromJson(Map<String, dynamic> json) {
+    final l$success = json['success'];
+    final l$userErrors = json['userErrors'];
+    final l$accessToken = json['accessToken'];
+    final l$refreshToken = json['refreshToken'];
+    final l$tokenType = json['tokenType'];
+    final l$accessTokenExpiresIn = json['accessTokenExpiresIn'];
+    final l$refreshTokenExpiresIn = json['refreshTokenExpiresIn'];
+    return Mutation$LoginSns$loginSns(
+      success: (l$success as bool),
+      userErrors: (l$userErrors as List<dynamic>)
+          .map(
+            (e) => Mutation$LoginSns$loginSns$userErrors.fromJson(
+              (e as Map<String, dynamic>),
+            ),
+          )
+          .toList(),
+      accessToken: (l$accessToken as String?),
+      refreshToken: (l$refreshToken as String?),
+      tokenType: (l$tokenType as String?),
+      accessTokenExpiresIn: (l$accessTokenExpiresIn as int?),
+      refreshTokenExpiresIn: (l$refreshTokenExpiresIn as int?),
+    );
+  }
+
+  final bool success;
+
+  final List<Mutation$LoginSns$loginSns$userErrors> userErrors;
+
+  final String? accessToken;
+
+  final String? refreshToken;
+
+  final String? tokenType;
+
+  final int? accessTokenExpiresIn;
+
+  final int? refreshTokenExpiresIn;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$success = success;
+    _resultData['success'] = l$success;
+    final l$userErrors = userErrors;
+    _resultData['userErrors'] = l$userErrors.map((e) => e.toJson()).toList();
+    final l$accessToken = accessToken;
+    _resultData['accessToken'] = l$accessToken;
+    final l$refreshToken = refreshToken;
+    _resultData['refreshToken'] = l$refreshToken;
+    final l$tokenType = tokenType;
+    _resultData['tokenType'] = l$tokenType;
+    final l$accessTokenExpiresIn = accessTokenExpiresIn;
+    _resultData['accessTokenExpiresIn'] = l$accessTokenExpiresIn;
+    final l$refreshTokenExpiresIn = refreshTokenExpiresIn;
+    _resultData['refreshTokenExpiresIn'] = l$refreshTokenExpiresIn;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$success = success;
+    final l$userErrors = userErrors;
+    final l$accessToken = accessToken;
+    final l$refreshToken = refreshToken;
+    final l$tokenType = tokenType;
+    final l$accessTokenExpiresIn = accessTokenExpiresIn;
+    final l$refreshTokenExpiresIn = refreshTokenExpiresIn;
+    return Object.hashAll([
+      l$success,
+      Object.hashAll(l$userErrors.map((v) => v)),
+      l$accessToken,
+      l$refreshToken,
+      l$tokenType,
+      l$accessTokenExpiresIn,
+      l$refreshTokenExpiresIn,
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$LoginSns$loginSns ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$success = success;
+    final lOther$success = other.success;
+    if (l$success != lOther$success) {
+      return false;
+    }
+    final l$userErrors = userErrors;
+    final lOther$userErrors = other.userErrors;
+    if (l$userErrors.length != lOther$userErrors.length) {
+      return false;
+    }
+    for (int i = 0; i < l$userErrors.length; i++) {
+      final l$userErrors$entry = l$userErrors[i];
+      final lOther$userErrors$entry = lOther$userErrors[i];
+      if (l$userErrors$entry != lOther$userErrors$entry) {
+        return false;
+      }
+    }
+    final l$accessToken = accessToken;
+    final lOther$accessToken = other.accessToken;
+    if (l$accessToken != lOther$accessToken) {
+      return false;
+    }
+    final l$refreshToken = refreshToken;
+    final lOther$refreshToken = other.refreshToken;
+    if (l$refreshToken != lOther$refreshToken) {
+      return false;
+    }
+    final l$tokenType = tokenType;
+    final lOther$tokenType = other.tokenType;
+    if (l$tokenType != lOther$tokenType) {
+      return false;
+    }
+    final l$accessTokenExpiresIn = accessTokenExpiresIn;
+    final lOther$accessTokenExpiresIn = other.accessTokenExpiresIn;
+    if (l$accessTokenExpiresIn != lOther$accessTokenExpiresIn) {
+      return false;
+    }
+    final l$refreshTokenExpiresIn = refreshTokenExpiresIn;
+    final lOther$refreshTokenExpiresIn = other.refreshTokenExpiresIn;
+    if (l$refreshTokenExpiresIn != lOther$refreshTokenExpiresIn) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$LoginSns$loginSns
+    on Mutation$LoginSns$loginSns {
+  CopyWith$Mutation$LoginSns$loginSns<Mutation$LoginSns$loginSns>
+  get copyWith => CopyWith$Mutation$LoginSns$loginSns(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$LoginSns$loginSns<TRes> {
+  factory CopyWith$Mutation$LoginSns$loginSns(
+    Mutation$LoginSns$loginSns instance,
+    TRes Function(Mutation$LoginSns$loginSns) then,
+  ) = _CopyWithImpl$Mutation$LoginSns$loginSns;
+
+  factory CopyWith$Mutation$LoginSns$loginSns.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$LoginSns$loginSns;
+
+  TRes call({
+    bool? success,
+    List<Mutation$LoginSns$loginSns$userErrors>? userErrors,
+    String? accessToken,
+    String? refreshToken,
+    String? tokenType,
+    int? accessTokenExpiresIn,
+    int? refreshTokenExpiresIn,
+  });
+  TRes userErrors(
+    Iterable<Mutation$LoginSns$loginSns$userErrors> Function(
+      Iterable<
+        CopyWith$Mutation$LoginSns$loginSns$userErrors<
+          Mutation$LoginSns$loginSns$userErrors
+        >
+      >,
+    )
+    _fn,
+  );
+}
+
+class _CopyWithImpl$Mutation$LoginSns$loginSns<TRes>
+    implements CopyWith$Mutation$LoginSns$loginSns<TRes> {
+  _CopyWithImpl$Mutation$LoginSns$loginSns(this._instance, this._then);
+
+  final Mutation$LoginSns$loginSns _instance;
+
+  final TRes Function(Mutation$LoginSns$loginSns) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? success = _undefined,
+    Object? userErrors = _undefined,
+    Object? accessToken = _undefined,
+    Object? refreshToken = _undefined,
+    Object? tokenType = _undefined,
+    Object? accessTokenExpiresIn = _undefined,
+    Object? refreshTokenExpiresIn = _undefined,
+  }) => _then(
+    Mutation$LoginSns$loginSns(
+      success: success == _undefined || success == null
+          ? _instance.success
+          : (success as bool),
+      userErrors: userErrors == _undefined || userErrors == null
+          ? _instance.userErrors
+          : (userErrors as List<Mutation$LoginSns$loginSns$userErrors>),
+      accessToken: accessToken == _undefined
+          ? _instance.accessToken
+          : (accessToken as String?),
+      refreshToken: refreshToken == _undefined
+          ? _instance.refreshToken
+          : (refreshToken as String?),
+      tokenType: tokenType == _undefined
+          ? _instance.tokenType
+          : (tokenType as String?),
+      accessTokenExpiresIn: accessTokenExpiresIn == _undefined
+          ? _instance.accessTokenExpiresIn
+          : (accessTokenExpiresIn as int?),
+      refreshTokenExpiresIn: refreshTokenExpiresIn == _undefined
+          ? _instance.refreshTokenExpiresIn
+          : (refreshTokenExpiresIn as int?),
+    ),
+  );
+
+  TRes userErrors(
+    Iterable<Mutation$LoginSns$loginSns$userErrors> Function(
+      Iterable<
+        CopyWith$Mutation$LoginSns$loginSns$userErrors<
+          Mutation$LoginSns$loginSns$userErrors
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    userErrors: _fn(
+      _instance.userErrors.map(
+        (e) => CopyWith$Mutation$LoginSns$loginSns$userErrors(e, (i) => i),
+      ),
+    ).toList(),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$LoginSns$loginSns<TRes>
+    implements CopyWith$Mutation$LoginSns$loginSns<TRes> {
+  _CopyWithStubImpl$Mutation$LoginSns$loginSns(this._res);
+
+  TRes _res;
+
+  call({
+    bool? success,
+    List<Mutation$LoginSns$loginSns$userErrors>? userErrors,
+    String? accessToken,
+    String? refreshToken,
+    String? tokenType,
+    int? accessTokenExpiresIn,
+    int? refreshTokenExpiresIn,
+  }) => _res;
+
+  userErrors(_fn) => _res;
+}
+
+class Mutation$LoginSns$loginSns$userErrors {
+  Mutation$LoginSns$loginSns$userErrors({
+    required this.code,
+    required this.message,
+    this.field,
+  });
+
+  factory Mutation$LoginSns$loginSns$userErrors.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$code = json['code'];
+    final l$message = json['message'];
+    final l$field = json['field'];
+    return Mutation$LoginSns$loginSns$userErrors(
+      code: (l$code as String),
+      message: (l$message as String),
+      field: (l$field as String?),
+    );
+  }
+
+  final String code;
+
+  final String message;
+
+  final String? field;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$message = message;
+    _resultData['message'] = l$message;
+    final l$field = field;
+    _resultData['field'] = l$field;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$code = code;
+    final l$message = message;
+    final l$field = field;
+    return Object.hashAll([l$code, l$message, l$field]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$LoginSns$loginSns$userErrors ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$message = message;
+    final lOther$message = other.message;
+    if (l$message != lOther$message) {
+      return false;
+    }
+    final l$field = field;
+    final lOther$field = other.field;
+    if (l$field != lOther$field) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$LoginSns$loginSns$userErrors
+    on Mutation$LoginSns$loginSns$userErrors {
+  CopyWith$Mutation$LoginSns$loginSns$userErrors<
+    Mutation$LoginSns$loginSns$userErrors
+  >
+  get copyWith =>
+      CopyWith$Mutation$LoginSns$loginSns$userErrors(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$LoginSns$loginSns$userErrors<TRes> {
+  factory CopyWith$Mutation$LoginSns$loginSns$userErrors(
+    Mutation$LoginSns$loginSns$userErrors instance,
+    TRes Function(Mutation$LoginSns$loginSns$userErrors) then,
+  ) = _CopyWithImpl$Mutation$LoginSns$loginSns$userErrors;
+
+  factory CopyWith$Mutation$LoginSns$loginSns$userErrors.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$LoginSns$loginSns$userErrors;
+
+  TRes call({String? code, String? message, String? field});
+}
+
+class _CopyWithImpl$Mutation$LoginSns$loginSns$userErrors<TRes>
+    implements CopyWith$Mutation$LoginSns$loginSns$userErrors<TRes> {
+  _CopyWithImpl$Mutation$LoginSns$loginSns$userErrors(
+    this._instance,
+    this._then,
+  );
+
+  final Mutation$LoginSns$loginSns$userErrors _instance;
+
+  final TRes Function(Mutation$LoginSns$loginSns$userErrors) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? code = _undefined,
+    Object? message = _undefined,
+    Object? field = _undefined,
+  }) => _then(
+    Mutation$LoginSns$loginSns$userErrors(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      message: message == _undefined || message == null
+          ? _instance.message
+          : (message as String),
+      field: field == _undefined ? _instance.field : (field as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$LoginSns$loginSns$userErrors<TRes>
+    implements CopyWith$Mutation$LoginSns$loginSns$userErrors<TRes> {
+  _CopyWithStubImpl$Mutation$LoginSns$loginSns$userErrors(this._res);
+
+  TRes _res;
+
+  call({String? code, String? message, String? field}) => _res;
+}
+
 class Variables$Mutation$LoginEmail {
   factory Variables$Mutation$LoginEmail({
     required Input$LoginEmailInput input,
