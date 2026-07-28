@@ -3,10 +3,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
-import '../../../router/app_router.dart';
 import '../component/auth_failure_message.dart';
 import '../component/auth_text_field.dart';
 import '../provider/auth_controller.dart';
+import 'login_screen.dart';
+
+/// Typed arguments for the email-verification route (spec §10 — pass values via
+/// `extra`, not a model). Carries the server `verificationId` and the email to
+/// prefill on the login screen after verification.
+class EmailVerificationArgs {
+  const EmailVerificationArgs({
+    required this.verificationId,
+    required this.email,
+  });
+
+  final String verificationId;
+  final String email;
+}
 
 /// Email verification (spec §5.3): the mandatory step after sign-up. Enters the
 /// emailed code and calls `verifyEmail`; on success routes to login with the
@@ -17,6 +30,8 @@ class EmailVerificationScreen extends ConsumerStatefulWidget {
     required this.verificationId,
     required this.email,
   });
+
+  static String get routeName => 'emailVerification';
 
   final String verificationId;
   final String email;
@@ -55,7 +70,7 @@ class _EmailVerificationScreenState
           .verifyEmail(verificationId: _verificationId, code: code);
       if (!mounted) return;
       // Verified — go to login with the email prefilled (spec §5.3).
-      context.go(Routes.login, extra: widget.email);
+      context.goNamed(LoginScreen.routeName, extra: widget.email);
     } on Object catch (error) {
       if (!mounted) return;
       setState(() => _serverError = authFailureMessage(l10n, error));

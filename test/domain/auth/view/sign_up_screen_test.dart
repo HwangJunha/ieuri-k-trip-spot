@@ -5,20 +5,25 @@ import 'package:go_router/go_router.dart';
 import 'package:ieuri_k_trip_spot/common/storage/secure_storage.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/component/agreement_checklist.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/provider/auth_repository_provider.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/view/email_verification_screen.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/view/sign_up_screen.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
-import 'package:ieuri_k_trip_spot/router/app_router.dart';
 
 import '../auth_test_doubles.dart';
 
 /// A tiny router with the sign-up screen and a stub email-verification screen so
 /// we can assert the post-sign-up transition carries the verificationId/email.
 GoRouter _router() => GoRouter(
-  initialLocation: Routes.signUp,
+  initialLocation: '/sign-up',
   routes: [
-    GoRoute(path: Routes.signUp, builder: (_, _) => const SignUpScreen()),
     GoRoute(
-      path: Routes.emailVerification,
+      path: '/sign-up',
+      name: 'signUp',
+      builder: (_, _) => const SignUpScreen(),
+    ),
+    GoRoute(
+      path: '/email-verification',
+      name: 'emailVerification',
       builder: (_, state) {
         final EmailVerificationArgs args =
             state.extra! as EmailVerificationArgs;

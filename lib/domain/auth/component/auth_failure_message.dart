@@ -10,6 +10,10 @@ String authFailureMessage(AppLocalizations l10n, Object error) {
       return l10n.errorInvalidCredentials;
     case AuthFailureKind.emailAlreadyInUse:
       return l10n.errorEmailAlreadyInUse;
+    // Normally intercepted by the SNS login flow to route to sign-up (spec §4);
+    // this message is only a fallback if it ever reaches the UI.
+    case AuthFailureKind.memberNotFound:
+      return l10n.errorSnsMemberNotFound;
     case AuthFailureKind.network:
       return l10n.errorNetwork;
     case AuthFailureKind.unknown:

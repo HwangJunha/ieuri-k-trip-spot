@@ -111,5 +111,17 @@
   "errorNetwork": "Network error. Please try again.",
   "errorUnknown": "Something went wrong. Please try again.",
 
-  "signUpSuccessLoginPrompt": "Account created. Please log in."
+  "signUpSuccessLoginPrompt": "Account created. Please log in.",
+
+  "orDivider": "or",
+  "continueWithGoogle": "Continue with Google",
+  "continueWithApple": "Continue with Apple",
+  "continueWithKakao": "Continue with Kakao",
+  "snsSignUpTitle": "Sign up with SNS",
+  "snsSignUpSubtitle": "You're verified with your SNS account. To finish signing up, confirm your email and agree to the terms.",
+  "snsEmailPrefillHint": "Please enter your email.",
+  "snsSignUpButton": "Complete sign-up",
+  "snsCancelled": "Sign-in was cancelled.",
+  "errorSnsMemberNotFound": "This account isn't registered yet. Please sign up.",
+  "logoutTooltip": "Log out"
 }

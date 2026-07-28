@@ -111,5 +111,17 @@
   "errorNetwork": "网络错误，请重试。",
   "errorUnknown": "出现问题，请重试。",
 
-  "signUpSuccessLoginPrompt": "账户已创建，请登录。"
+  "signUpSuccessLoginPrompt": "账户已创建，请登录。",
+
+  "orDivider": "或",
+  "continueWithGoogle": "使用 Google 继续",
+  "continueWithApple": "使用 Apple 继续",
+  "continueWithKakao": "使用 Kakao 继续",
+  "snsSignUpTitle": "社交账号注册",
+  "snsSignUpSubtitle": "已通过社交账号验证。若要完成注册，请确认邮箱并同意条款。",
+  "snsEmailPrefillHint": "请输入您的邮箱。",
+  "snsSignUpButton": "完成注册",
+  "snsCancelled": "已取消登录。",
+  "errorSnsMemberNotFound": "该账户尚未注册，请先注册。",
+  "logoutTooltip": "退出登录"
 }

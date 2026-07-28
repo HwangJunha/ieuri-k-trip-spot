@@ -4,6 +4,8 @@ import 'package:ieuri_k_trip_spot/domain/auth/model/auth_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/auth_session.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/email_verification_handle.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/me.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/model/sns_provider.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/model/sns_registration_result.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/repository/auth_repository_impl.dart';
 
 /// A link that returns one canned [Response] (or throws a link exception),
@@ -253,5 +255,116 @@ void main() {
         ),
       ),
     );
+  });
+
+  test('loginSns maps AuthTokenPayload to an AuthSession', () async {
+    final AuthRepositoryImpl repo = _repo(
+      _FakeLink(
+        data: <String, dynamic>{
+          'loginSns': <String, dynamic>{
+            'success': true,
+            'userErrors': <dynamic>[],
+            'accessToken': 'access',
+            'refreshToken': 'refresh',
+            'tokenType': 'Bearer',
+            'accessTokenExpiresIn': 300,
+            'refreshTokenExpiresIn': 2592000,
+          },
+        },
+      ),
+    );
+
+    final AuthSession session = await repo.loginSns(
+      provider: SnsProvider.google,
+      idToken: 'id-token',
+    );
+
+    expect(session.accessToken, 'access');
+    expect(session.refreshToken, 'refresh');
+    expect(session.accessTokenExpiresIn, 300);
+  });
+
+  test('loginSns for an unregistered identity is a memberNotFound failure', () {
+    final AuthRepositoryImpl repo = _repo(
+      _FakeLink(
+        data: <String, dynamic>{
+          'loginSns': <String, dynamic>{
+            'success': false,
+            'userErrors': _oneUserError(code: 'MEMBER_NOT_FOUND'),
+            'accessToken': null,
+            'refreshToken': null,
+            'tokenType': null,
+            'accessTokenExpiresIn': null,
+            'refreshTokenExpiresIn': null,
+          },
+        },
+      ),
+    );
+
+    expect(
+      repo.loginSns(provider: SnsProvider.google, idToken: 'id-token'),
+      throwsA(
+        isA<AuthFailure>().having(
+          (AuthFailure f) => f.kind,
+          'kind',
+          AuthFailureKind.memberNotFound,
+        ),
+      ),
+    );
+  });
+
+  test(
+    'registerSnsMember maps an already-verified payload (no verificationId)',
+    () async {
+      final AuthRepositoryImpl repo = _repo(
+        _FakeLink(
+          data: <String, dynamic>{
+            'registerSnsMember': <String, dynamic>{
+              'success': true,
+              'userErrors': <dynamic>[],
+              'emailVerified': true,
+              'verificationId': null,
+            },
+          },
+        ),
+      );
+
+      final SnsRegistrationResult result = await repo.registerSnsMember(
+        provider: SnsProvider.kakao,
+        idToken: 'id-token',
+        email: 'a@b.com',
+        ageVerified: true,
+        agreements: const [],
+      );
+
+      expect(result.emailVerified, isTrue);
+      expect(result.needsVerification, isFalse);
+    },
+  );
+
+  test('registerSnsMember maps an unverified payload with a handle', () async {
+    final AuthRepositoryImpl repo = _repo(
+      _FakeLink(
+        data: <String, dynamic>{
+          'registerSnsMember': <String, dynamic>{
+            'success': true,
+            'userErrors': <dynamic>[],
+            'emailVerified': false,
+            'verificationId': 'verify-9',
+          },
+        },
+      ),
+    );
+
+    final SnsRegistrationResult result = await repo.registerSnsMember(
+      provider: SnsProvider.apple,
+      idToken: 'id-token',
+      email: 'edited@b.com',
+      ageVerified: true,
+      agreements: const [],
+    );
+
+    expect(result.needsVerification, isTrue);
+    expect(result.verificationId, 'verify-9');
   });
 }

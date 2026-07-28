@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
-import '../../../router/app_router.dart';
 import '../component/agreement_checklist.dart';
 import '../component/auth_failure_message.dart';
 import '../component/auth_text_field.dart';
@@ -11,6 +10,7 @@ import '../model/email_verification_handle.dart';
 import '../model/password_policy.dart';
 import '../model/terms_code.dart';
 import '../provider/auth_controller.dart';
+import 'email_verification_screen.dart';
 
 /// Account creation (spec §5.2): email + password + confirm, plus the inline
 /// agreements/age checklist. The submit button stays disabled until the
@@ -19,6 +19,8 @@ import '../provider/auth_controller.dart';
 /// to the email-verification screen.
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
+
+  static String get routeName => 'signUp';
 
   @override
   ConsumerState<SignUpScreen> createState() => _SignUpScreenState();
@@ -102,8 +104,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           );
       if (!mounted) return;
       // No tokens on sign-up (§4.2) — go to email verification with the handle.
-      context.push(
-        Routes.emailVerification,
+      context.pushNamed(
+        EmailVerificationScreen.routeName,
         extra: EmailVerificationArgs(
           verificationId: handle.verificationId,
           email: email,

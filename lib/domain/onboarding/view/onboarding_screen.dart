@@ -4,9 +4,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../common/app_assets.dart';
-import '../../auth/provider/auth_controller.dart';
 import '../../../l10n/gen/app_localizations.dart';
-import '../../../router/app_router.dart';
+import '../../auth/provider/auth_controller.dart';
+import '../../spot/view/home_screen.dart';
 
 /// Three-page onboarding carousel (Stitch design): a top bar with the brand
 /// logo + Skip, a large media card per page (placeholder gradient + location
@@ -15,6 +15,8 @@ import '../../../router/app_router.dart';
 /// photos later; all text is localized.
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
+
+  static String get routeName => 'onboarding';
 
   @override
   ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -62,7 +64,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     // Account-bound completion (spec §4.3): mark the signed-in account done;
     // the router redirect then lets it through to home.
     await ref.read(authControllerProvider.notifier).completeOnboarding();
-    if (mounted) context.go(Routes.home);
+    if (mounted) context.goNamed(HomeScreen.routeName);
   }
 
   void _next(int pageCount) {

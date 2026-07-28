@@ -3,17 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
-import '../../../router/app_router.dart';
 import '../component/auth_failure_message.dart';
 import '../component/auth_text_field.dart';
 import '../model/password_policy.dart';
 import '../provider/auth_controller.dart';
+import 'login_screen.dart';
 
 /// Code-based two-stage password reset (spec §5.4):
 /// 1. Enter the account email → `requestPasswordReset` sends a code.
 /// 2. Enter email + code + new password → `resetPassword` completes it.
 class PasswordResetScreen extends ConsumerStatefulWidget {
   const PasswordResetScreen({super.key});
+
+  static String get routeName => 'passwordReset';
 
   @override
   ConsumerState<PasswordResetScreen> createState() =>
@@ -95,7 +97,7 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.passwordResetDone)));
-      context.go(Routes.login, extra: _email.text.trim());
+      context.goNamed(LoginScreen.routeName, extra: _email.text.trim());
     } on Object catch (error) {
       if (!mounted) return;
       setState(() => _serverError = authFailureMessage(l10n, error));

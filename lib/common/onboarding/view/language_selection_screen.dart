@@ -3,17 +3,30 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../domain/auth/view/login_screen.dart';
+import '../../../l10n/gen/app_localizations.dart';
 import '../../app_assets.dart';
 import '../../localization/app_language.dart';
 import '../../localization/locale_controller.dart';
-import '../../../l10n/gen/app_localizations.dart';
-import '../../../router/app_router.dart';
 
 /// First-run language picker. Selecting a language switches the app locale
 /// immediately (so this very screen re-renders in that language); Confirm
-/// proceeds to onboarding.
+/// persists the choice and hands off to the router gate, which resolves the
+/// next screen (login first, per spec §10 flow order).
 class LanguageSelectionScreen extends ConsumerWidget {
   const LanguageSelectionScreen({super.key});
+
+  static String get routeName => 'language';
+
+  /// Persist the selected language *before* navigating. The router's redirect
+  /// gate keys off `savedLanguage`; navigating before the async save completes
+  /// left the user stuck on this screen (the gate still saw no language).
+  Future<void> _confirm(BuildContext context, WidgetRef ref) async {
+    await ref
+        .read(localeControllerProvider.notifier)
+        .select(ref.read(localeControllerProvider.notifier).current);
+    if (context.mounted) context.goNamed(LoginScreen.routeName);
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -63,7 +76,7 @@ class LanguageSelectionScreen extends ConsumerWidget {
                 ),
               ),
               FilledButton(
-                onPressed: () => context.go(Routes.onboarding),
+                onPressed: () => _confirm(context, ref),
                 child: Text(l10n.confirmSelection),
               ),
               const SizedBox(height: 12),
