@@ -8,7 +8,7 @@
 PRODUCT_NAME = ieuri_k_trip_spot
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.around.ieuriFlutter
+PRODUCT_BUNDLE_IDENTIFIER = kr.ieuri.ktripspot
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.around. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 ieuri. All rights reserved.
