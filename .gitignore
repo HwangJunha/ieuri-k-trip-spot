@@ -230,8 +230,13 @@ fabric.properties
 .AppleDouble
 .LSOverride
 
-# Icon must end with two \r
-Icon
+# Icon must end with two \r (macOS Finder folder-icon file). Anchor it to the
+# filename so it doesn't also swallow paths under asset/icon/ on case-insensitive
+# filesystems (core.ignorecase makes bare `Icon` match the `icon/` directory).
+Icon[\r]
+# Keep the SNS provider logos (they live under asset/icon/, which the above would
+# otherwise ignore case-insensitively).
+!asset/icon/
 
 
 # Thumbnails

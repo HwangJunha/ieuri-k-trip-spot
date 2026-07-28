@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/sns_provider.dart';
@@ -45,6 +46,8 @@ class SnsLoginButtons extends StatelessWidget {
         const SizedBox(height: 16),
         _SnsButton(
           label: l10n.continueWithGoogle,
+          // Google's multicolor mark is drawn as-is (no tint).
+          icon: SvgPicture.asset('asset/icon/sns_google.svg', width: 20, height: 20),
           background: Colors.white,
           foreground: Colors.black87,
           side: BorderSide(color: theme.dividerColor),
@@ -53,6 +56,13 @@ class SnsLoginButtons extends StatelessWidget {
         const SizedBox(height: 12),
         _SnsButton(
           label: l10n.continueWithApple,
+          // Monochrome marks use currentColor → tinted to the button foreground.
+          icon: SvgPicture.asset(
+            'asset/icon/sns_apple.svg',
+            width: 20,
+            height: 20,
+            colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+          ),
           background: Colors.black,
           foreground: Colors.white,
           onPressed: loading ? null : () => onProvider(SnsProvider.apple),
@@ -60,8 +70,17 @@ class SnsLoginButtons extends StatelessWidget {
         const SizedBox(height: 12),
         _SnsButton(
           label: l10n.continueWithKakao,
+          icon: SvgPicture.asset(
+            'asset/icon/sns_kakao.svg',
+            width: 20,
+            height: 20,
+            colorFilter: const ColorFilter.mode(
+              Color(0xFF3C1E1E),
+              BlendMode.srcIn,
+            ),
+          ),
           background: const Color(0xFFFEE500),
-          foreground: Colors.black87,
+          foreground: const Color(0xFF3C1E1E),
           onPressed: loading ? null : () => onProvider(SnsProvider.kakao),
         ),
       ],
@@ -72,6 +91,7 @@ class SnsLoginButtons extends StatelessWidget {
 class _SnsButton extends StatelessWidget {
   const _SnsButton({
     required this.label,
+    required this.icon,
     required this.background,
     required this.foreground,
     required this.onPressed,
@@ -79,6 +99,7 @@ class _SnsButton extends StatelessWidget {
   });
 
   final String label;
+  final Widget icon;
   final Color background;
   final Color foreground;
   final VoidCallback? onPressed;
@@ -96,7 +117,17 @@ class _SnsButton extends StatelessWidget {
           side: side,
           minimumSize: const Size.fromHeight(48),
         ),
-        child: Text(label),
+        // Icon at the leading edge, label centered in the remaining space so the
+        // three buttons align regardless of label width.
+        child: Row(
+          children: <Widget>[
+            icon,
+            Expanded(
+              child: Text(label, textAlign: TextAlign.center),
+            ),
+            const SizedBox(width: 20),
+          ],
+        ),
       ),
     );
   }
