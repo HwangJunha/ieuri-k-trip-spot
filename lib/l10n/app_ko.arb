@@ -228,5 +228,8 @@
   "snsCancelled": "로그인이 취소되었습니다.",
   "@snsCancelled": { "description": "SNS 인증 취소 문구" },
   "errorSnsMemberNotFound": "가입되지 않은 계정입니다. 회원가입을 진행해 주세요.",
-  "@errorSnsMemberNotFound": { "description": "SNS 로그인 시 미가입 계정 문구(폴백)" }
+  "@errorSnsMemberNotFound": { "description": "SNS 로그인 시 미가입 계정 문구(폴백)" },
+
+  "logoutTooltip": "로그아웃",
+  "@logoutTooltip": { "description": "홈 상단 로그아웃 버튼 툴팁" }
 }

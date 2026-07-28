@@ -122,5 +122,6 @@
   "snsEmailPrefillHint": "メールアドレスを入力してください。",
   "snsSignUpButton": "登録を完了",
   "snsCancelled": "ログインがキャンセルされました。",
-  "errorSnsMemberNotFound": "登録されていないアカウントです。会員登録を行ってください。"
+  "errorSnsMemberNotFound": "登録されていないアカウントです。会員登録を行ってください。",
+  "logoutTooltip": "ログアウト"
 }

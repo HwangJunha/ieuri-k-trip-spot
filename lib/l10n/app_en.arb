@@ -122,5 +122,6 @@
   "snsEmailPrefillHint": "Please enter your email.",
   "snsSignUpButton": "Complete sign-up",
   "snsCancelled": "Sign-in was cancelled.",
-  "errorSnsMemberNotFound": "This account isn't registered yet. Please sign up."
+  "errorSnsMemberNotFound": "This account isn't registered yet. Please sign up.",
+  "logoutTooltip": "Log out"
 }

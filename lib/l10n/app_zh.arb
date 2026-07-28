@@ -122,5 +122,6 @@
   "snsEmailPrefillHint": "请输入您的邮箱。",
   "snsSignUpButton": "完成注册",
   "snsCancelled": "已取消登录。",
-  "errorSnsMemberNotFound": "该账户尚未注册，请先注册。"
+  "errorSnsMemberNotFound": "该账户尚未注册，请先注册。",
+  "logoutTooltip": "退出登录"
 }
