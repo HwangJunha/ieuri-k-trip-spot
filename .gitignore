@@ -10,6 +10,8 @@
 .history
 .svn/
 .swiftpm/
+# Xcode SwiftPM resolution artifacts inside the workspace (auto-generated).
+**/xcshareddata/swiftpm/
 migrate_working_dir/
 
 # IntelliJ related
