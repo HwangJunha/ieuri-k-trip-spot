@@ -146,8 +146,47 @@ One behavior per test. Minimal mocks. Arrange–Act–Assert. Per-layer shape:
 
 ## 10. Specs & design workflow
 
-- **Feature specs live in `problem/*.md`.** Before implementing a feature, read its spec in `problem/`. The spec is the source of truth; if code and spec disagree, ask before diverging.
-- **Design comes from Google Stitch via MCP.** When a screen needs a design, use the Stitch MCP tools (see the `ui-designer` subagent). Translate the Stitch output into `component/` and `view/` widgets that respect the layer rules above — do not paste generated markup that violates §3.
+Requirements originate in the planner harness (`ieuri-planner`), not here. Two documents:
+
+- **`Specs/SPEC-XXXX/spec.md`** (Obsidian vault) — requirements, acceptance criteria, applied
+  policies. The authority on *what must be true*.
+- **`problem/SPEC-XXXX-client.md`** (this repo) — the client-side design: screens, state
+  transitions, navigation, which repository consumes which operation. The entry point for
+  implementation.
+
+**Read both before implementing.** The design document is where you start; the acceptance
+criteria in the linked spec are what the widget and provider tests must satisfy. Satisfying the
+design while missing an acceptance criterion is not done.
+
+`problem/SPEC-*.md` is produced by the planner — **do not edit it**, a hook blocks it. Everything
+else under `problem/` (including `problem/design/`) stays yours.
+
+### When the spec is wrong
+
+**Do not fix it in code.** On hitting an uncovered case, a technical impossibility, or a needed
+contract change:
+
+1. Stop.
+2. Comment on the issue: `[AMEND] SPEC-XXXX: <what you hit and why>`
+3. Wait for the planner's `/amend`.
+
+The deviation that feels too small to report is exactly the one that makes the spec unreliable.
+
+### Contract
+
+`Specs/SPEC-XXXX/contract.graphql` is the planner's proposal; the server owns the final schema.
+Write operations against the **live introspection snapshot** (§13), never against the proposal —
+the proposal is what was asked for, the snapshot is what exists.
+
+### Issues and branches
+
+One issue per repo per spec, opened by the planner with the background, spec link, acceptance
+conditions, and branch name. Branches are `feature/SPEC-XXXX-<short-kebab-name>` — see §12.
+
+### Design
+
+Design still comes from Google Stitch via MCP (see the `ui-designer` subagent), driven from
+`problem/SPEC-XXXX-client.md` rather than a free-standing feature spec.
 
 ---
 
@@ -166,7 +205,30 @@ Reviews are read-only: they report, the parent agent (or `slice-builder`) applie
 
 ## 12. Branch policy (hook-enforced)
 
-**Never work directly on a protected branch.** `master`, `main`, and `dev` are protected. Every change — code, tests, specs — happens on a **topic branch** created first:
+**Never work directly on a protected branch.** `master`, `main`, and `dev` are protected. Every
+change — code, tests, specs — happens on a **topic branch** created first:
+
+```
+git checkout -b feature/SPEC-0007-home-screen
+```
+
+- `feature/SPEC-XXXX-<short-kebab-name>` is the **required convention** for spec-driven work.
+  `fix/`, `hotfix/`, `chore/`, and `refactor/` take the same shape for their respective purposes.
+- **The spec id belongs in the branch name; a step number does not.** SPEC-0007 is a permanent
+  identifier shared by the spec, the issue, the working log, and the published post — carrying it
+  in the branch makes the whole chain greppable from any one of them. A step number
+  (`feature/step3-home-screen`) encodes a plan ordering that stops being true the moment the plan
+  changes, which is why it stays out.
+- Work with no spec behind it — a chore, a dependency bump, an experiment — uses
+  `chore/<short-kebab-name>` with no id. Do not invent a spec id to satisfy the convention.
+- This is enforced by the `require-feature-branch.sh` PreToolUse hook: while on a protected
+  branch, `Edit`/`Write` and **git-mutating** Bash commands (`commit`/`merge`/`rebase`/`push`/…)
+  are **blocked** (exit 2). Read-only git (`status`/`diff`/`log`) and `git checkout -b` /
+  `git switch -c` / `git branch` are allowed so you can get onto a topic branch.
+- When a task starts on a protected branch, create the topic branch **before** the first edit.
+  The hook wins over this text — if it blocks you, switch branches, don't work around it.
+- Commit/push remain gated by the permission policy (`ask`/`deny`); the branch hook is an
+  additional, independent guard.
 
 ```
 git checkout -b feature/<short-kebab-name>

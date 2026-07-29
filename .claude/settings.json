@@ -60,6 +60,7 @@
       "Bash(dart pub publish:*)"
     ]
   },
+  "env": { "IEURI_VAULT": "/Users/junha/Documents/Obsidian Vault" },
   "hooks": {
     "PreToolUse": [
       {
@@ -83,6 +84,11 @@
       {
         "matcher": "Edit|Write",
         "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-spec-docs.sh\""
+          }
+          ,
           {
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/require-fresh-schema.sh\""
