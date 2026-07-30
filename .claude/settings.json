@@ -26,14 +26,19 @@
       "Edit(analysis_options.yaml)",
       "Write(lib/**)",
       "Write(test/**)",
-      "Write(problem/**)"
-    ],
-    "ask": [
-      "Bash(git commit:*)",
+      "Write(problem/**)",
+      "Bash(flutter pub publish:*)",
       "Bash(flutter build:*)",
       "Bash(flutter run:*)",
       "Bash(flutter clean:*)",
       "Bash(flutter pub upgrade:*)",
+      "Bash(flutter devices:*)",
+      "Bash(flutter test integration_test:*)",
+      "Bash(patrol test:*)",
+      "Bash(patrol develop:*)"
+    ],
+    "ask": [
+      "Bash(git commit:*)",
       "Bash(dart pub upgrade:*)"
     ],
     "deny": [
@@ -56,7 +61,6 @@
       "Bash(sudo:*)",
       "Bash(curl:*)",
       "Bash(wget:*)",
-      "Bash(flutter pub publish:*)",
       "Bash(dart pub publish:*)"
     ]
   },
