@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ieuri_k_trip_spot/common/permission/component/permission_boot_gate.dart';
+import 'package:ieuri_k_trip_spot/common/permission/model/permission_kind.dart';
+import 'package:ieuri_k_trip_spot/common/permission/model/permission_state.dart';
+import 'package:ieuri_k_trip_spot/common/permission/provider/permission_providers.dart';
+import 'package:ieuri_k_trip_spot/common/navigation/root_navigator_key.dart';
 import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
 import 'package:ieuri_k_trip_spot/common/storage/secure_storage.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/provider/auth_controller.dart';
@@ -10,6 +15,7 @@ import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
 import 'package:ieuri_k_trip_spot/router/app_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../common/permission/permission_test_doubles.dart';
 import '../domain/auth/auth_test_doubles.dart';
 
 /// Regression: on first run (no saved language, not signed in), picking a
@@ -30,11 +36,22 @@ void main() {
       onboarded: false,
     );
 
+    // Both permissions already decided → the boot sequence skips every prompt
+    // and completes immediately, so the splash advances. This test exercises
+    // the language→login redirect, not the permission sequence.
     final container = ProviderContainer(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
         secureStorageProvider.overrideWithValue(secure),
         authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
+        permissionServiceProvider.overrideWithValue(
+          FakePermissionService(
+            initial: {
+              PermissionKind.location: PermissionState.granted,
+              PermissionKind.notification: PermissionState.granted,
+            },
+          ),
+        ),
       ],
     );
     addTearDown(container.dispose);
@@ -48,6 +65,10 @@ void main() {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           routerConfig: router,
+          builder: (context, child) => PermissionBootGate(
+            navigatorKey: rootNavigatorKey,
+            child: child ?? const SizedBox.shrink(),
+          ),
         ),
       ),
     );

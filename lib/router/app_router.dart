@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../common/navigation/root_navigator_key.dart';
 import '../common/storage/app_preferences.dart';
 import '../domain/auth/model/auth_state.dart';
 import '../domain/auth/provider/auth_controller.dart';
@@ -30,6 +31,7 @@ const Set<String> _authPaths = <String>{
 GoRouter goRouter(Ref ref) {
   return GoRouter(
     initialLocation: _splash,
+    navigatorKey: rootNavigatorKey,
     refreshListenable: GoRouterRefreshStream(ref),
     redirect: (_, GoRouterState state) {
       final String location = state.matchedLocation;

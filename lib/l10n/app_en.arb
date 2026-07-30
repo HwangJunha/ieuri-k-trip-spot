@@ -123,5 +123,18 @@
   "snsSignUpButton": "Complete sign-up",
   "snsCancelled": "Sign-in was cancelled.",
   "errorSnsMemberNotFound": "This account isn't registered yet. Please sign up.",
-  "logoutTooltip": "Log out"
+  "logoutTooltip": "Log out",
+
+  "permissionLocationRationaleTitle": "Find spots around you",
+  "permissionLocationRationaleBody": "K-Trip Spot uses your location while you use the app to show nearby attractions and real-time crowd levels. We never track you in the background.",
+  "permissionNotificationRationaleTitle": "Stay in the loop",
+  "permissionNotificationRationaleBody": "Turn on notifications to get real-time crowd alerts and updates for the spots you care about. You can change this anytime.",
+  "permissionContinue": "Continue",
+  "permissionNotNow": "Not now",
+  "permissionLocationBlockedMessage": "Location is turned off. Enable it in Settings to see nearby spots.",
+  "permissionNotificationBlockedMessage": "Notifications are turned off. Enable them in Settings to get updates.",
+  "permissionOpenSettings": "Open Settings",
+
+  "splashLocationRequired": "Location access is required to continue.",
+  "splashLocationBlockedHint": "Location is turned off. Enable it in Settings to continue."
 }
