@@ -141,6 +141,7 @@ One behavior per test. Minimal mocks. Arrange–Act–Assert. Per-layer shape:
 - `const` constructors wherever the analyzer allows.
 - Small widgets; extract a `component` when a widget grows past a screenful or is reused.
 - No dead code, no commented-out blocks, no `print` in committed code.
+- **주석은 한글로 작성한다.** 코드·식별자·API 이름은 영어를 유지하되, 설명 주석(`//`, `///` doc comment)은 한글로 쓴다.
 
 ---
 

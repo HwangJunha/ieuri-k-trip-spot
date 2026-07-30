@@ -123,5 +123,18 @@
   "snsSignUpButton": "完成注册",
   "snsCancelled": "已取消登录。",
   "errorSnsMemberNotFound": "该账户尚未注册，请先注册。",
-  "logoutTooltip": "退出登录"
+  "logoutTooltip": "退出登录",
+
+  "permissionLocationRationaleTitle": "发现你周边的景点",
+  "permissionLocationRationaleBody": "K-Trip Spot 仅在你使用应用时使用你的位置，以显示附近的景点和实时拥挤度。我们绝不会在后台追踪你。",
+  "permissionNotificationRationaleTitle": "掌握最新动态",
+  "permissionNotificationRationaleBody": "开启通知即可获取你关注景点的实时拥挤提醒和动态。你可以随时更改。",
+  "permissionContinue": "继续",
+  "permissionNotNow": "以后再说",
+  "permissionLocationBlockedMessage": "定位已关闭。请在设置中开启以查看附近景点。",
+  "permissionNotificationBlockedMessage": "通知已关闭。请在设置中开启以接收动态。",
+  "permissionOpenSettings": "打开设置",
+
+  "splashLocationRequired": "需要位置权限才能继续。",
+  "splashLocationBlockedHint": "定位已关闭。请在设置中开启以继续。"
 }
