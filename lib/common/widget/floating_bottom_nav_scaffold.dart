@@ -47,26 +47,40 @@ class FloatingBottomNavScaffold extends StatelessWidget {
                 backgroundColor: Colors.transparent,
                 surfaceTintColor: Colors.transparent,
                 elevation: 0,
+                // 선택 탭 뒤의 하늘색 pill(기본 인디케이터)을 제거한다.
+                indicatorColor: Colors.transparent,
+                // 선택된 탭 아이콘은 브랜드 빨강, 미선택은 기존 muted 색을 유지한다.
+                iconTheme: WidgetStateProperty.resolveWith<IconThemeData>(
+                  (Set<WidgetState> states) => IconThemeData(
+                    color: states.contains(WidgetState.selected)
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
                 labelBehavior:
                     NavigationDestinationLabelBehavior.onlyShowSelected,
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(999),
                 child: NavigationBar(
+                  key: const Key('bottom_nav_bar'),
                   selectedIndex: navigationShell.currentIndex,
                   onDestinationSelected: _onTap,
                   destinations: <Widget>[
                     NavigationDestination(
+                      key: const Key('bottom_nav_home'),
                       icon: const Icon(Icons.home_outlined),
                       selectedIcon: const Icon(Icons.home),
                       label: l10n.navHome,
                     ),
                     NavigationDestination(
+                      key: const Key('bottom_nav_map'),
                       icon: const Icon(Icons.map_outlined),
                       selectedIcon: const Icon(Icons.map),
                       label: l10n.navMap,
                     ),
                     NavigationDestination(
+                      key: const Key('bottom_nav_discover'),
                       // Discover is center-emphasized (§8): filled accent puck.
                       icon: _DiscoverIcon(
                         selected:

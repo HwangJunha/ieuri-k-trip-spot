@@ -1,6 +1,7 @@
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../localization/locale_controller.dart';
 import '../storage/secure_storage.dart';
 import 'graphql_endpoint.dart';
 
@@ -28,8 +29,9 @@ TokenRefreshBridge tokenRefreshBridge(Ref ref) => TokenRefreshBridge();
 
 /// The shared `graphql_flutter` client (CLAUDE.md §4 — lives only in
 /// `common/network`). Injects `Authorization: Bearer <accessToken>` from
-/// [SecureStorage] on every request, and on an auth error tries one refresh via
-/// the [TokenRefreshBridge] before retrying the original operation.
+/// [SecureStorage] on every request, sends the app's active language as an
+/// `Accept-Language` header (the server localizes content from it — spec §2), and
+/// on an auth error tries one refresh via the [TokenRefreshBridge] before retrying.
 @Riverpod(keepAlive: true)
 GraphQLClient graphqlClient(Ref ref) {
   final SecureStorage storage = ref.watch(secureStorageProvider);
@@ -44,16 +46,47 @@ GraphQLClient graphqlClient(Ref ref) {
     },
   );
 
+  // 매 요청마다 현재 활성 언어를 읽어 헤더에 싣는다(언어 변경 시 클라이언트 재생성
+  // 없이 반영). 이 provider가 살아있는 동안 ref.read는 안전하다.
+  final Link languageLink = _AcceptLanguageLink(
+    () => ref.read(localeControllerProvider).languageCode,
+  );
+
   final Link refreshLink = _RefreshLink(bridge);
 
   return GraphQLClient(
-    link: refreshLink.concat(authLink).concat(httpLink),
+    link: languageLink.concat(refreshLink).concat(authLink).concat(httpLink),
     cache: GraphQLCache(),
     defaultPolicies: DefaultPolicies(
       mutate: Policies(fetch: FetchPolicy.noCache),
       query: Policies(fetch: FetchPolicy.noCache),
     ),
   );
+}
+
+/// 앱 활성 언어를 `Accept-Language` 요청 헤더로 실어 서버가 언어별 콘텐츠를
+/// 내려주게 한다(spec §2). 요청 컨텍스트의 [HttpLinkHeaders]에 얹어 HttpLink가
+/// 정적 헤더와 병합한다 — AuthLink가 토큰을 다루는 방식과 동일.
+class _AcceptLanguageLink extends Link {
+  _AcceptLanguageLink(this._currentLanguageCode);
+
+  final String Function() _currentLanguageCode;
+
+  @override
+  Stream<Response> request(Request request, [NextLink? forward]) {
+    final HttpLinkHeaders existing =
+        request.context.entry<HttpLinkHeaders>() ??
+        const HttpLinkHeaders(headers: <String, String>{});
+    final Request updated = request.updateContextEntry<HttpLinkHeaders>(
+      (HttpLinkHeaders? headers) => HttpLinkHeaders(
+        headers: <String, String>{
+          ...existing.headers,
+          'Accept-Language': _currentLanguageCode(),
+        },
+      ),
+    );
+    return forward!(updated);
+  }
 }
 
 /// On an auth error from downstream, calls the registered refresher once and

@@ -1,0 +1,74 @@
+# SPEC-0002 spots 슬라이스가 쓰는 서버 스키마 조각(committed codegen 입력).
+# `schema/schema.introspection.json` 스냅샷에서 손으로 추린 안정 빌드 입력이며,
+# gitignore된 스냅샷을 codegen이 직접 읽지 않는다(CLAUDE.md §13).
+
+enum SpotCategory {
+  TOURIST_SPOT
+  CULTURAL_FACILITY
+  FESTIVAL_EVENT
+  TRAVEL_COURSE
+  LEISURE_SPORTS
+  LODGING
+  SHOPPING
+  RESTAURANT
+  TRANSPORT
+}
+
+enum CopyrightType {
+  TYPE1
+  TYPE3
+  UNSPECIFIED
+}
+
+enum SpotReaction {
+  LIKE
+  DISLIKE
+}
+
+type Spot {
+  id: ID!
+  title: String!
+  address: String
+  thumbnailImageUrl: String!
+  distanceMeters: Float!
+  category: SpotCategory!
+  copyright: CopyrightType!
+  attributionText: String!
+  mapX: Float!
+  mapY: Float!
+}
+
+type SpotPage {
+  items: [Spot!]!
+  page: Int!
+  hasNext: Boolean!
+  totalCount: Int
+}
+
+input ReactToSpotInput {
+  spotId: ID!
+  reaction: SpotReaction!
+}
+
+type ReactToSpotPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+# auth_schema.graphql가 base Query/Mutation를 소유하므로 여기선 extend로 이어 붙인다
+# (graphql_codegen은 모든 스키마 파일을 하나로 병합한다 — 중복 정의 시 충돌).
+extend type Query {
+  spots(
+    latitude: Float!
+    longitude: Float!
+    radiusMeters: Int
+    category: SpotCategory
+    page: Int
+    size: Int
+  ): SpotPage!
+  availableSpotCategories: [SpotCategory!]!
+}
+
+extend type Mutation {
+  reactToSpot(input: ReactToSpotInput!): ReactToSpotPayload!
+}

@@ -255,5 +255,58 @@
   "splashLocationRequired": "계속하려면 위치 접근 권한이 필요해요.",
   "@splashLocationRequired": { "description": "스플래시에서 위치 권한 대기 중 안내" },
   "splashLocationBlockedHint": "위치가 꺼져 있어요. 계속하려면 설정에서 켜 주세요.",
-  "@splashLocationBlockedHint": { "description": "스플래시에서 위치 영구거부 시 설정 이동 안내" }
+  "@splashLocationBlockedHint": { "description": "스플래시에서 위치 영구거부 시 설정 이동 안내" },
+
+  "discoverLikeLabel": "좋아요",
+  "@discoverLikeLabel": { "description": "스와이프 오른쪽 드래그 피드백 라벨 (LIKE)" },
+  "discoverNopeLabel": "패스",
+  "@discoverNopeLabel": { "description": "스와이프 왼쪽 드래그 피드백 라벨 (NOPE)" },
+
+  "discoverCategoryTouristSpot": "관광지",
+  "@discoverCategoryTouristSpot": { "description": "스팟 카테고리 - 관광지" },
+  "discoverCategoryCulturalFacility": "문화시설",
+  "@discoverCategoryCulturalFacility": { "description": "스팟 카테고리 - 문화시설" },
+  "discoverCategoryFestivalEvent": "축제·행사",
+  "@discoverCategoryFestivalEvent": { "description": "스팟 카테고리 - 축제·행사" },
+  "discoverCategoryTravelCourse": "여행코스",
+  "@discoverCategoryTravelCourse": { "description": "스팟 카테고리 - 여행코스" },
+  "discoverCategoryLeisureSports": "레포츠",
+  "@discoverCategoryLeisureSports": { "description": "스팟 카테고리 - 레포츠" },
+  "discoverCategoryLodging": "숙박",
+  "@discoverCategoryLodging": { "description": "스팟 카테고리 - 숙박" },
+  "discoverCategoryShopping": "쇼핑",
+  "@discoverCategoryShopping": { "description": "스팟 카테고리 - 쇼핑" },
+  "discoverCategoryRestaurant": "음식점",
+  "@discoverCategoryRestaurant": { "description": "스팟 카테고리 - 음식점" },
+  "discoverCategoryTransport": "교통",
+  "@discoverCategoryTransport": { "description": "스팟 카테고리 - 교통" },
+
+  "distanceKilometers": "{distance}km",
+  "@distanceKilometers": {
+    "description": "스와이프 카드 거리 표시 (km 단위)",
+    "placeholders": { "distance": { "type": "String" } }
+  },
+  "distanceMeters": "{distance}m",
+  "@distanceMeters": {
+    "description": "스와이프 카드 거리 표시 (m 단위, 1km 미만)",
+    "placeholders": { "distance": { "type": "String" } }
+  },
+
+  "discoverEmptyTitle": "이 근처는 다 둘러봤어요",
+  "@discoverEmptyTitle": { "description": "스와이프 결과 소진/0건 빈 상태 제목" },
+  "discoverEmptyBody": "반경을 넓히거나 카테고리를 바꿔 더 많은 여행지를 찾아보세요.",
+  "@discoverEmptyBody": { "description": "스와이프 빈 상태 본문" },
+  "discoverWidenRadius": "반경 넓히기",
+  "@discoverWidenRadius": { "description": "빈 상태 - 반경 확대 CTA" },
+  "discoverChangeCategory": "카테고리 변경",
+  "@discoverChangeCategory": { "description": "빈 상태 - 카테고리 변경 CTA" },
+
+  "discoverRetryBanner": "여행지를 불러오지 못했어요. 잠시 후 다시 시도합니다.",
+  "@discoverRetryBanner": { "description": "UPSTREAM_UNAVAILABLE 재시도 배너 문구" },
+  "discoverRetryButton": "다시 시도",
+  "@discoverRetryButton": { "description": "재시도 버튼" },
+  "discoverLoadError": "여행지를 불러오는 중 문제가 발생했어요.",
+  "@discoverLoadError": { "description": "네트워크/조회 오류 문구" },
+  "discoverLoading": "주변 여행지를 찾는 중…",
+  "@discoverLoading": { "description": "초기 로딩 안내" }
 }

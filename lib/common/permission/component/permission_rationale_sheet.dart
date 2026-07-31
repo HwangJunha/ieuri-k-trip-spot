@@ -85,6 +85,7 @@ class PermissionRationaleSheet extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             FilledButton(
+              key: const Key('permission_rationale_continue'),
               onPressed: () => Navigator.of(context).pop(true),
               child: Text(l10n.permissionContinue),
             ),
@@ -92,6 +93,7 @@ class PermissionRationaleSheet extends StatelessWidget {
             if (_dismissible) ...<Widget>[
               const SizedBox(height: 8),
               TextButton(
+                key: const Key('permission_rationale_not_now'),
                 onPressed: () => Navigator.of(context).pop(false),
                 child: Text(l10n.permissionNotNow),
               ),
