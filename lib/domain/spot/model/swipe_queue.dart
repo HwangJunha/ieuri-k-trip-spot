@@ -1,0 +1,56 @@
+import '../../../common/model/list_equality.dart';
+import 'tourist_spot.dart';
+
+/// Discover 스와이프 카드 스택의 상태(spec §4). SwipeController가 노출하는 값으로,
+/// 남은 카드 큐와 오프셋 페이지네이션 진행 상태(마지막으로 받은 페이지 번호·다음
+/// 페이지 존재 여부)를 담는다. 순수 도메인.
+///
+/// 서버가 커서를 지원하지 않아 페이지 번호(0-based)로 이어 조회한다. [cards]의
+/// 첫 번째가 맨 위(사용자가 지금 보는) 카드이며, 스와이프 시 앞에서 제거한다.
+class SwipeQueue {
+  const SwipeQueue({
+    required this.cards,
+    required this.loadedPage,
+    required this.hasNextPage,
+  });
+
+  /// 현재 스택. `cards.first`가 맨 위 카드.
+  final List<TouristSpot> cards;
+
+  /// 지금까지 이어 붙인 마지막 페이지 번호(0-based). 다음 선제 조회는
+  /// [nextPage]를 넘긴다.
+  final int loadedPage;
+
+  /// 다음 페이지 존재 여부. false + 큐 소진이면 빈 상태로 넘어간다.
+  final bool hasNextPage;
+
+  /// 다음 선제 조회에 넘길 페이지 번호. 다음이 없으면 null.
+  int? get nextPage => hasNextPage ? loadedPage + 1 : null;
+
+  /// 스택이 비었고 더 가져올 게 없는 소진 상태 여부(spec §4 — 자동 재조회 안 함).
+  bool get isExhausted => cards.isEmpty && !hasNextPage;
+
+  /// 맨 위 카드, 비었으면 null.
+  TouristSpot? get top => cards.isEmpty ? null : cards.first;
+
+  SwipeQueue copyWith({
+    List<TouristSpot>? cards,
+    int? loadedPage,
+    bool? hasNextPage,
+  }) => SwipeQueue(
+    cards: cards ?? this.cards,
+    loadedPage: loadedPage ?? this.loadedPage,
+    hasNextPage: hasNextPage ?? this.hasNextPage,
+  );
+
+  @override
+  bool operator ==(Object other) =>
+      other is SwipeQueue &&
+      listEquals(other.cards, cards) &&
+      other.loadedPage == loadedPage &&
+      other.hasNextPage == hasNextPage;
+
+  @override
+  int get hashCode =>
+      Object.hash(Object.hashAll(cards), loadedPage, hasNextPage);
+}

@@ -136,5 +136,31 @@
   "permissionOpenSettings": "設定を開く",
 
   "splashLocationRequired": "続けるには位置情報へのアクセスが必要です。",
-  "splashLocationBlockedHint": "位置情報がオフになっています。続けるには設定でオンにしてください。"
+  "splashLocationBlockedHint": "位置情報がオフになっています。続けるには設定でオンにしてください。",
+
+  "discoverLikeLabel": "いいね",
+  "discoverNopeLabel": "パス",
+
+  "discoverCategoryTouristSpot": "観光地",
+  "discoverCategoryCulturalFacility": "文化施設",
+  "discoverCategoryFestivalEvent": "祭り・イベント",
+  "discoverCategoryTravelCourse": "旅行コース",
+  "discoverCategoryLeisureSports": "レジャー・スポーツ",
+  "discoverCategoryLodging": "宿泊",
+  "discoverCategoryShopping": "ショッピング",
+  "discoverCategoryRestaurant": "飲食店",
+  "discoverCategoryTransport": "交通",
+
+  "distanceKilometers": "{distance}キロ",
+  "distanceMeters": "{distance}メートル",
+
+  "discoverEmptyTitle": "近くはすべて見終わりました",
+  "discoverEmptyBody": "範囲を広げるかカテゴリーを変えて、もっと探しましょう。",
+  "discoverWidenRadius": "範囲を広げる",
+  "discoverChangeCategory": "カテゴリー変更",
+
+  "discoverRetryBanner": "スポットを読み込めませんでした。まもなく再試行します。",
+  "discoverRetryButton": "再試行",
+  "discoverLoadError": "スポットの読み込み中に問題が発生しました。",
+  "discoverLoading": "近くのスポットを探しています…"
 }

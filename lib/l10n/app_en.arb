@@ -136,5 +136,31 @@
   "permissionOpenSettings": "Open Settings",
 
   "splashLocationRequired": "Location access is required to continue.",
-  "splashLocationBlockedHint": "Location is turned off. Enable it in Settings to continue."
+  "splashLocationBlockedHint": "Location is turned off. Enable it in Settings to continue.",
+
+  "discoverLikeLabel": "LIKE",
+  "discoverNopeLabel": "NOPE",
+
+  "discoverCategoryTouristSpot": "Tourist Spots",
+  "discoverCategoryCulturalFacility": "Cultural Facilities",
+  "discoverCategoryFestivalEvent": "Festivals & Events",
+  "discoverCategoryTravelCourse": "Travel Courses",
+  "discoverCategoryLeisureSports": "Leisure & Sports",
+  "discoverCategoryLodging": "Lodging",
+  "discoverCategoryShopping": "Shopping",
+  "discoverCategoryRestaurant": "Restaurants",
+  "discoverCategoryTransport": "Transport",
+
+  "distanceKilometers": "{distance} km",
+  "distanceMeters": "{distance} m",
+
+  "discoverEmptyTitle": "You've seen everything nearby",
+  "discoverEmptyBody": "Widen your radius or switch category to find more spots.",
+  "discoverWidenRadius": "Widen radius",
+  "discoverChangeCategory": "Change category",
+
+  "discoverRetryBanner": "Couldn't load spots. Retrying shortly.",
+  "discoverRetryButton": "Retry",
+  "discoverLoadError": "Something went wrong while loading spots.",
+  "discoverLoading": "Finding spots near you…"
 }

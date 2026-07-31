@@ -136,5 +136,31 @@
   "permissionOpenSettings": "打开设置",
 
   "splashLocationRequired": "需要位置权限才能继续。",
-  "splashLocationBlockedHint": "定位已关闭。请在设置中开启以继续。"
+  "splashLocationBlockedHint": "定位已关闭。请在设置中开启以继续。",
+
+  "discoverLikeLabel": "喜欢",
+  "discoverNopeLabel": "跳过",
+
+  "discoverCategoryTouristSpot": "旅游景点",
+  "discoverCategoryCulturalFacility": "文化设施",
+  "discoverCategoryFestivalEvent": "庆典·活动",
+  "discoverCategoryTravelCourse": "旅行路线",
+  "discoverCategoryLeisureSports": "休闲·运动",
+  "discoverCategoryLodging": "住宿",
+  "discoverCategoryShopping": "购物",
+  "discoverCategoryRestaurant": "餐饮",
+  "discoverCategoryTransport": "交通",
+
+  "distanceKilometers": "{distance}公里",
+  "distanceMeters": "{distance}米",
+
+  "discoverEmptyTitle": "附近的都看完啦",
+  "discoverEmptyBody": "扩大范围或切换类别，发现更多景点。",
+  "discoverWidenRadius": "扩大范围",
+  "discoverChangeCategory": "更改类别",
+
+  "discoverRetryBanner": "无法加载景点，稍后重试。",
+  "discoverRetryButton": "重试",
+  "discoverLoadError": "加载景点时出现问题。",
+  "discoverLoading": "正在查找您附近的景点…"
 }

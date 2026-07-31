@@ -1,0 +1,53 @@
+# SPEC-0002 Discover 스와이프 피드 오퍼레이션. 생성 타입은 repository 안에서만
+# 쓰이고 도메인 모델로 매핑된다(CLAUDE.md §3, POL-020).
+
+# 위치 기반 스팟 한 페이지(오프셋). 언어는 인자로 보내지 않고 Accept-Language
+# 헤더로 전달된다(spec §2).
+query Spots(
+  $latitude: Float!
+  $longitude: Float!
+  $radiusMeters: Int
+  $category: SpotCategory
+  $page: Int
+  $size: Int
+) {
+  spots(
+    latitude: $latitude
+    longitude: $longitude
+    radiusMeters: $radiusMeters
+    category: $category
+    page: $page
+    size: $size
+  ) {
+    items {
+      id
+      title
+      address
+      thumbnailImageUrl
+      distanceMeters
+      category
+      copyright
+      attributionText
+    }
+    page
+    hasNext
+    totalCount
+  }
+}
+
+# 활성 언어에서 서버가 노출하는 카테고리(spec §5). 언어는 헤더로 전달된다.
+query AvailableSpotCategories {
+  availableSpotCategories
+}
+
+# 스와이프 반응 기록(낙관적). userErrors를 실패로 번역한다(spec §2).
+mutation ReactToSpot($input: ReactToSpotInput!) {
+  reactToSpot(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
