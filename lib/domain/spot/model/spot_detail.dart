@@ -1,6 +1,8 @@
 import 'copyright_type.dart';
 import 'spot_category.dart';
 import 'spot_image.dart';
+import 'spot_info_item.dart';
+import 'spot_intro.dart';
 
 /// 관광지 상세(SPEC-0003). Discover 스와이프의 [TouristSpot]과 별개인 상세 전용
 /// read shape다 — 스와이프는 대량 리스트라 상세 필드를 얹지 않는다(contract §SpotDetail).
@@ -26,6 +28,8 @@ class SpotDetail {
     this.address,
     this.homepage,
     this.tel,
+    this.intro,
+    this.infoItems = const <SpotInfoItem>[],
   });
 
   /// contentId — [TouristSpot.id]와 동일 식별자 공간(언어별로 갈림).
@@ -58,6 +62,13 @@ class SpotDetail {
   /// 현재 요청 언어의 이 contentId LIKE 수. 상세 화면에 보이는 값이라 반응 실패 시
   /// provider가 롤백한다(AC-30).
   final int likeCount;
+
+  /// 운영 정보(detailIntro2). 서버가 카테고리별 필드를 공통 이름으로 정규화해 준다.
+  /// 항목이 하나도 없거나 응답 자체가 null이면 운영 정보 섹션을 숨긴다.
+  final SpotIntro? intro;
+
+  /// 이용안내 항목들(detailInfo2). 없으면 빈 리스트이고 섹션을 숨긴다.
+  final List<SpotInfoItem> infoItems;
 
   // --- 표시 여부 (AC-25) ------------------------------------------------------
   // TourAPI는 값이 없을 때 null이 아니라 빈 문자열/공백을 주는 경우가 있다. null만
@@ -109,6 +120,21 @@ class SpotDetail {
   /// 연락처 섹션 자체를 그릴지 — 홈페이지·전화가 모두 없으면 섹션을 숨긴다.
   bool get hasContact => hasHomepage || hasTel;
 
+  /// 운영 정보 섹션을 그릴지. 응답이 null이거나 항목이 전부 비어 있으면 false —
+  /// 카테고리에 따라 서버가 빈 [SpotIntro]를 줄 수 있어 null 검사만으론 부족하다.
+  bool get hasIntro => intro?.hasAny ?? false;
+
+  /// 표시할 운영 정보 항목들(없으면 빈 리스트).
+  List<SpotIntroEntry> get introEntries =>
+      intro?.presentEntries ?? const <SpotIntroEntry>[];
+
+  /// 실제 내용이 있는 이용안내 항목만(항목명·내용이 모두 공백인 건 제외).
+  List<SpotInfoItem> get presentInfoItems =>
+      infoItems.where((SpotInfoItem item) => item.hasContent).toList();
+
+  /// 이용안내 섹션을 그릴지.
+  bool get hasInfoItems => presentInfoItems.isNotEmpty;
+
   /// 항목 [attributionText]와 **다른** 갤러리 이미지 출처 문구(순서 유지, 중복 제거).
   /// 이미지 위에 배지를 얹지 않고도 이미지별 저작권을 표기하기 위한 값이다(AC-28).
   /// 모든 이미지가 항목과 같은 출처면 빈 리스트.
@@ -138,7 +164,9 @@ class SpotDetail {
       other.copyright == copyright &&
       other.attributionText == attributionText &&
       _listEquals(other.gallery, gallery) &&
-      other.likeCount == likeCount;
+      other.likeCount == likeCount &&
+      other.intro == intro &&
+      _listEquals(other.infoItems, infoItems);
 
   @override
   int get hashCode => Object.hash(
@@ -154,6 +182,8 @@ class SpotDetail {
     attributionText,
     Object.hashAll(gallery),
     likeCount,
+    intro,
+    Object.hashAll(infoItems),
   );
 
   /// [likeCount]만 바꾼 사본(낙관적 갱신·롤백용). 나머지 필드는 유지한다.
@@ -170,10 +200,12 @@ class SpotDetail {
     address: address,
     homepage: homepage,
     tel: tel,
+    intro: intro,
+    infoItems: infoItems,
   );
 }
 
-bool _listEquals(List<SpotImage> a, List<SpotImage> b) {
+bool _listEquals<T>(List<T> a, List<T> b) {
   if (a.length != b.length) return false;
   for (int i = 0; i < a.length; i++) {
     if (a[i] != b[i]) return false;

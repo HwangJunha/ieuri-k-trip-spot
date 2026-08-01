@@ -3,6 +3,8 @@ import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_detail.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_image.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/spot_info_item.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/spot_intro.dart';
 
 void main() {
   const SpotImage image = SpotImage(
@@ -125,6 +127,91 @@ void main() {
       expect(withHomepage('준비 중').homepageUrl, isNull);
       expect(withHomepage('준비 중').hasHomepage, isFalse);
     });
+  });
+
+  group('intro and infoItems presence', () {
+    // 테스트 더블의 detailSpot()과 달리 갤러리를 비워 둔다 — 모델 테스트는 갤러리와
+    // 무관하므로 여기선 별도 빌더를 쓴다.
+    SpotDetail withExtras({SpotIntro? intro, List<SpotInfoItem>? infoItems}) =>
+        SpotDetail(
+          id: 'c1',
+          title: 'T',
+          category: SpotCategory.touristSpot,
+          thumbnailImageUrl: 'https://img/t.jpg',
+          copyright: CopyrightType.type1,
+          attributionText: 'KTO',
+          gallery: const <SpotImage>[],
+          likeCount: 0,
+          intro: intro,
+          infoItems: infoItems ?? const <SpotInfoItem>[],
+        );
+
+    test('a missing intro hides the section', () {
+      expect(withExtras().hasIntro, isFalse);
+      expect(withExtras().introEntries, isEmpty);
+    });
+
+    test('an intro whose fields are all empty hides the section', () {
+      // 서버가 카테고리에 따라 필드가 전부 null인 intro를 줄 수 있어, null 검사만으론
+      // 부족하다 — 빈 껍데기도 숨긴다.
+      expect(withExtras(intro: const SpotIntro()).hasIntro, isFalse);
+      expect(
+        withExtras(intro: const SpotIntro(parking: '   ')).hasIntro,
+        isFalse,
+      );
+    });
+
+    test('an intro with any value shows the section', () {
+      final SpotDetail detail = withExtras(
+        intro: const SpotIntro(businessHours: '09:00 ~ 18:00'),
+      );
+
+      expect(detail.hasIntro, isTrue);
+      expect(detail.introEntries.single.value, '09:00 ~ 18:00');
+    });
+
+    test('blank info items are filtered out', () {
+      final SpotDetail detail = withExtras(
+        infoItems: const <SpotInfoItem>[
+          SpotInfoItem(name: '입장료', text: '3,000원'),
+          SpotInfoItem(name: '  ', text: ''),
+        ],
+      );
+
+      expect(detail.presentInfoItems, hasLength(1));
+      expect(detail.hasInfoItems, isTrue);
+    });
+
+    test('info items that are all blank hide the section', () {
+      final SpotDetail detail = withExtras(
+        infoItems: const <SpotInfoItem>[SpotInfoItem(name: '', text: '  ')],
+      );
+
+      expect(detail.presentInfoItems, isEmpty);
+      expect(detail.hasInfoItems, isFalse);
+    });
+  });
+
+  test('copyWithLikeCount preserves intro and infoItems', () {
+    // 좋아요 낙관적 갱신이 운영 정보·이용안내를 지워버리면 안 된다.
+    final SpotDetail original = SpotDetail(
+      id: 'c1',
+      title: 'T',
+      category: SpotCategory.touristSpot,
+      thumbnailImageUrl: 'https://img/t.jpg',
+      copyright: CopyrightType.type1,
+      attributionText: 'KTO',
+      gallery: const <SpotImage>[],
+      likeCount: 1,
+      intro: const SpotIntro(fee: '무료'),
+      infoItems: const <SpotInfoItem>[SpotInfoItem(name: 'a', text: 'b')],
+    );
+
+    final SpotDetail updated = original.copyWithLikeCount(2);
+
+    expect(updated.intro, const SpotIntro(fee: '무료'));
+    expect(updated.infoItems, hasLength(1));
+    expect(updated.copyWithLikeCount(1), original);
   });
 
   test('distinctImageAttributions excludes the item attribution', () {

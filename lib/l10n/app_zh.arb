@@ -183,5 +183,15 @@
   "spotDetailUnavailableBody": "加载详情时出现问题，请重试。",
   "spotDetailRetryButton": "重试",
   "spotDetailReactionFailed": "无法保存您的反应，请重试。",
-  "spotDetailLinkFailed": "无法打开此链接。"
+  "spotDetailLinkFailed": "无法打开此链接。",
+
+  "spotDetailIntroTitle": "参观信息",
+  "spotDetailIntroBusinessHours": "开放时间",
+  "spotDetailIntroClosedDays": "休息日",
+  "spotDetailIntroFee": "门票",
+  "spotDetailIntroParking": "停车",
+  "spotDetailIntroPetAllowed": "宠物",
+  "spotDetailIntroCreditCard": "信用卡",
+  "spotDetailIntroInquiryPhone": "咨询",
+  "spotDetailInfoTitle": "须知"
 }

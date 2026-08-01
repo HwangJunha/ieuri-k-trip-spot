@@ -1395,6 +1395,89 @@ const documentNodeQuerySpotDetail = DocumentNode(
                   directives: [],
                   selectionSet: null,
                 ),
+                FieldNode(
+                  name: NameNode(value: 'intro'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'businessHours'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'closedDays'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'parking'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'inquiryPhone'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'fee'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'petAllowed'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'creditCardAccepted'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
+                FieldNode(
+                  name: NameNode(value: 'infoItems'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'name'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'text'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -1418,6 +1501,8 @@ class Query$SpotDetail$spotDetail {
     required this.attributionText,
     required this.gallery,
     required this.likeCount,
+    this.intro,
+    required this.infoItems,
   });
 
   factory Query$SpotDetail$spotDetail.fromJson(Map<String, dynamic> json) {
@@ -1433,6 +1518,8 @@ class Query$SpotDetail$spotDetail {
     final l$attributionText = json['attributionText'];
     final l$gallery = json['gallery'];
     final l$likeCount = json['likeCount'];
+    final l$intro = json['intro'];
+    final l$infoItems = json['infoItems'];
     return Query$SpotDetail$spotDetail(
       id: (l$id as String),
       title: (l$title as String),
@@ -1452,6 +1539,18 @@ class Query$SpotDetail$spotDetail {
           )
           .toList(),
       likeCount: (l$likeCount as int),
+      intro: l$intro == null
+          ? null
+          : Query$SpotDetail$spotDetail$intro.fromJson(
+              (l$intro as Map<String, dynamic>),
+            ),
+      infoItems: (l$infoItems as List<dynamic>)
+          .map(
+            (e) => Query$SpotDetail$spotDetail$infoItems.fromJson(
+              (e as Map<String, dynamic>),
+            ),
+          )
+          .toList(),
     );
   }
 
@@ -1479,6 +1578,10 @@ class Query$SpotDetail$spotDetail {
 
   final int likeCount;
 
+  final Query$SpotDetail$spotDetail$intro? intro;
+
+  final List<Query$SpotDetail$spotDetail$infoItems> infoItems;
+
   Map<String, dynamic> toJson() {
     final _resultData = <String, dynamic>{};
     final l$id = id;
@@ -1505,6 +1608,10 @@ class Query$SpotDetail$spotDetail {
     _resultData['gallery'] = l$gallery.map((e) => e.toJson()).toList();
     final l$likeCount = likeCount;
     _resultData['likeCount'] = l$likeCount;
+    final l$intro = intro;
+    _resultData['intro'] = l$intro?.toJson();
+    final l$infoItems = infoItems;
+    _resultData['infoItems'] = l$infoItems.map((e) => e.toJson()).toList();
     return _resultData;
   }
 
@@ -1522,6 +1629,8 @@ class Query$SpotDetail$spotDetail {
     final l$attributionText = attributionText;
     final l$gallery = gallery;
     final l$likeCount = likeCount;
+    final l$intro = intro;
+    final l$infoItems = infoItems;
     return Object.hashAll([
       l$id,
       l$title,
@@ -1535,6 +1644,8 @@ class Query$SpotDetail$spotDetail {
       l$attributionText,
       Object.hashAll(l$gallery.map((v) => v)),
       l$likeCount,
+      l$intro,
+      Object.hashAll(l$infoItems.map((v) => v)),
     ]);
   }
 
@@ -1614,6 +1725,23 @@ class Query$SpotDetail$spotDetail {
     if (l$likeCount != lOther$likeCount) {
       return false;
     }
+    final l$intro = intro;
+    final lOther$intro = other.intro;
+    if (l$intro != lOther$intro) {
+      return false;
+    }
+    final l$infoItems = infoItems;
+    final lOther$infoItems = other.infoItems;
+    if (l$infoItems.length != lOther$infoItems.length) {
+      return false;
+    }
+    for (int i = 0; i < l$infoItems.length; i++) {
+      final l$infoItems$entry = l$infoItems[i];
+      final lOther$infoItems$entry = lOther$infoItems[i];
+      if (l$infoItems$entry != lOther$infoItems$entry) {
+        return false;
+      }
+    }
     return true;
   }
 }
@@ -1646,12 +1774,25 @@ abstract class CopyWith$Query$SpotDetail$spotDetail<TRes> {
     String? attributionText,
     List<Query$SpotDetail$spotDetail$gallery>? gallery,
     int? likeCount,
+    Query$SpotDetail$spotDetail$intro? intro,
+    List<Query$SpotDetail$spotDetail$infoItems>? infoItems,
   });
   TRes gallery(
     Iterable<Query$SpotDetail$spotDetail$gallery> Function(
       Iterable<
         CopyWith$Query$SpotDetail$spotDetail$gallery<
           Query$SpotDetail$spotDetail$gallery
+        >
+      >,
+    )
+    _fn,
+  );
+  CopyWith$Query$SpotDetail$spotDetail$intro<TRes> get intro;
+  TRes infoItems(
+    Iterable<Query$SpotDetail$spotDetail$infoItems> Function(
+      Iterable<
+        CopyWith$Query$SpotDetail$spotDetail$infoItems<
+          Query$SpotDetail$spotDetail$infoItems
         >
       >,
     )
@@ -1682,6 +1823,8 @@ class _CopyWithImpl$Query$SpotDetail$spotDetail<TRes>
     Object? attributionText = _undefined,
     Object? gallery = _undefined,
     Object? likeCount = _undefined,
+    Object? intro = _undefined,
+    Object? infoItems = _undefined,
   }) => _then(
     Query$SpotDetail$spotDetail(
       id: id == _undefined || id == null ? _instance.id : (id as String),
@@ -1715,6 +1858,12 @@ class _CopyWithImpl$Query$SpotDetail$spotDetail<TRes>
       likeCount: likeCount == _undefined || likeCount == null
           ? _instance.likeCount
           : (likeCount as int),
+      intro: intro == _undefined
+          ? _instance.intro
+          : (intro as Query$SpotDetail$spotDetail$intro?),
+      infoItems: infoItems == _undefined || infoItems == null
+          ? _instance.infoItems
+          : (infoItems as List<Query$SpotDetail$spotDetail$infoItems>),
     ),
   );
 
@@ -1731,6 +1880,33 @@ class _CopyWithImpl$Query$SpotDetail$spotDetail<TRes>
     gallery: _fn(
       _instance.gallery.map(
         (e) => CopyWith$Query$SpotDetail$spotDetail$gallery(e, (i) => i),
+      ),
+    ).toList(),
+  );
+
+  CopyWith$Query$SpotDetail$spotDetail$intro<TRes> get intro {
+    final local$intro = _instance.intro;
+    return local$intro == null
+        ? CopyWith$Query$SpotDetail$spotDetail$intro.stub(_then(_instance))
+        : CopyWith$Query$SpotDetail$spotDetail$intro(
+            local$intro,
+            (e) => call(intro: e),
+          );
+  }
+
+  TRes infoItems(
+    Iterable<Query$SpotDetail$spotDetail$infoItems> Function(
+      Iterable<
+        CopyWith$Query$SpotDetail$spotDetail$infoItems<
+          Query$SpotDetail$spotDetail$infoItems
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    infoItems: _fn(
+      _instance.infoItems.map(
+        (e) => CopyWith$Query$SpotDetail$spotDetail$infoItems(e, (i) => i),
       ),
     ).toList(),
   );
@@ -1755,9 +1931,16 @@ class _CopyWithStubImpl$Query$SpotDetail$spotDetail<TRes>
     String? attributionText,
     List<Query$SpotDetail$spotDetail$gallery>? gallery,
     int? likeCount,
+    Query$SpotDetail$spotDetail$intro? intro,
+    List<Query$SpotDetail$spotDetail$infoItems>? infoItems,
   }) => _res;
 
   gallery(_fn) => _res;
+
+  CopyWith$Query$SpotDetail$spotDetail$intro<TRes> get intro =>
+      CopyWith$Query$SpotDetail$spotDetail$intro.stub(_res);
+
+  infoItems(_fn) => _res;
 }
 
 class Query$SpotDetail$spotDetail$gallery {
@@ -1939,6 +2122,338 @@ class _CopyWithStubImpl$Query$SpotDetail$spotDetail$gallery<TRes>
     Enum$CopyrightType? copyright,
     String? attributionText,
   }) => _res;
+}
+
+class Query$SpotDetail$spotDetail$intro {
+  Query$SpotDetail$spotDetail$intro({
+    this.businessHours,
+    this.closedDays,
+    this.parking,
+    this.inquiryPhone,
+    this.fee,
+    this.petAllowed,
+    this.creditCardAccepted,
+  });
+
+  factory Query$SpotDetail$spotDetail$intro.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$businessHours = json['businessHours'];
+    final l$closedDays = json['closedDays'];
+    final l$parking = json['parking'];
+    final l$inquiryPhone = json['inquiryPhone'];
+    final l$fee = json['fee'];
+    final l$petAllowed = json['petAllowed'];
+    final l$creditCardAccepted = json['creditCardAccepted'];
+    return Query$SpotDetail$spotDetail$intro(
+      businessHours: (l$businessHours as String?),
+      closedDays: (l$closedDays as String?),
+      parking: (l$parking as String?),
+      inquiryPhone: (l$inquiryPhone as String?),
+      fee: (l$fee as String?),
+      petAllowed: (l$petAllowed as String?),
+      creditCardAccepted: (l$creditCardAccepted as String?),
+    );
+  }
+
+  final String? businessHours;
+
+  final String? closedDays;
+
+  final String? parking;
+
+  final String? inquiryPhone;
+
+  final String? fee;
+
+  final String? petAllowed;
+
+  final String? creditCardAccepted;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$businessHours = businessHours;
+    _resultData['businessHours'] = l$businessHours;
+    final l$closedDays = closedDays;
+    _resultData['closedDays'] = l$closedDays;
+    final l$parking = parking;
+    _resultData['parking'] = l$parking;
+    final l$inquiryPhone = inquiryPhone;
+    _resultData['inquiryPhone'] = l$inquiryPhone;
+    final l$fee = fee;
+    _resultData['fee'] = l$fee;
+    final l$petAllowed = petAllowed;
+    _resultData['petAllowed'] = l$petAllowed;
+    final l$creditCardAccepted = creditCardAccepted;
+    _resultData['creditCardAccepted'] = l$creditCardAccepted;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$businessHours = businessHours;
+    final l$closedDays = closedDays;
+    final l$parking = parking;
+    final l$inquiryPhone = inquiryPhone;
+    final l$fee = fee;
+    final l$petAllowed = petAllowed;
+    final l$creditCardAccepted = creditCardAccepted;
+    return Object.hashAll([
+      l$businessHours,
+      l$closedDays,
+      l$parking,
+      l$inquiryPhone,
+      l$fee,
+      l$petAllowed,
+      l$creditCardAccepted,
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$SpotDetail$spotDetail$intro ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$businessHours = businessHours;
+    final lOther$businessHours = other.businessHours;
+    if (l$businessHours != lOther$businessHours) {
+      return false;
+    }
+    final l$closedDays = closedDays;
+    final lOther$closedDays = other.closedDays;
+    if (l$closedDays != lOther$closedDays) {
+      return false;
+    }
+    final l$parking = parking;
+    final lOther$parking = other.parking;
+    if (l$parking != lOther$parking) {
+      return false;
+    }
+    final l$inquiryPhone = inquiryPhone;
+    final lOther$inquiryPhone = other.inquiryPhone;
+    if (l$inquiryPhone != lOther$inquiryPhone) {
+      return false;
+    }
+    final l$fee = fee;
+    final lOther$fee = other.fee;
+    if (l$fee != lOther$fee) {
+      return false;
+    }
+    final l$petAllowed = petAllowed;
+    final lOther$petAllowed = other.petAllowed;
+    if (l$petAllowed != lOther$petAllowed) {
+      return false;
+    }
+    final l$creditCardAccepted = creditCardAccepted;
+    final lOther$creditCardAccepted = other.creditCardAccepted;
+    if (l$creditCardAccepted != lOther$creditCardAccepted) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$SpotDetail$spotDetail$intro
+    on Query$SpotDetail$spotDetail$intro {
+  CopyWith$Query$SpotDetail$spotDetail$intro<Query$SpotDetail$spotDetail$intro>
+  get copyWith => CopyWith$Query$SpotDetail$spotDetail$intro(this, (i) => i);
+}
+
+abstract class CopyWith$Query$SpotDetail$spotDetail$intro<TRes> {
+  factory CopyWith$Query$SpotDetail$spotDetail$intro(
+    Query$SpotDetail$spotDetail$intro instance,
+    TRes Function(Query$SpotDetail$spotDetail$intro) then,
+  ) = _CopyWithImpl$Query$SpotDetail$spotDetail$intro;
+
+  factory CopyWith$Query$SpotDetail$spotDetail$intro.stub(TRes res) =
+      _CopyWithStubImpl$Query$SpotDetail$spotDetail$intro;
+
+  TRes call({
+    String? businessHours,
+    String? closedDays,
+    String? parking,
+    String? inquiryPhone,
+    String? fee,
+    String? petAllowed,
+    String? creditCardAccepted,
+  });
+}
+
+class _CopyWithImpl$Query$SpotDetail$spotDetail$intro<TRes>
+    implements CopyWith$Query$SpotDetail$spotDetail$intro<TRes> {
+  _CopyWithImpl$Query$SpotDetail$spotDetail$intro(this._instance, this._then);
+
+  final Query$SpotDetail$spotDetail$intro _instance;
+
+  final TRes Function(Query$SpotDetail$spotDetail$intro) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? businessHours = _undefined,
+    Object? closedDays = _undefined,
+    Object? parking = _undefined,
+    Object? inquiryPhone = _undefined,
+    Object? fee = _undefined,
+    Object? petAllowed = _undefined,
+    Object? creditCardAccepted = _undefined,
+  }) => _then(
+    Query$SpotDetail$spotDetail$intro(
+      businessHours: businessHours == _undefined
+          ? _instance.businessHours
+          : (businessHours as String?),
+      closedDays: closedDays == _undefined
+          ? _instance.closedDays
+          : (closedDays as String?),
+      parking: parking == _undefined ? _instance.parking : (parking as String?),
+      inquiryPhone: inquiryPhone == _undefined
+          ? _instance.inquiryPhone
+          : (inquiryPhone as String?),
+      fee: fee == _undefined ? _instance.fee : (fee as String?),
+      petAllowed: petAllowed == _undefined
+          ? _instance.petAllowed
+          : (petAllowed as String?),
+      creditCardAccepted: creditCardAccepted == _undefined
+          ? _instance.creditCardAccepted
+          : (creditCardAccepted as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$SpotDetail$spotDetail$intro<TRes>
+    implements CopyWith$Query$SpotDetail$spotDetail$intro<TRes> {
+  _CopyWithStubImpl$Query$SpotDetail$spotDetail$intro(this._res);
+
+  TRes _res;
+
+  call({
+    String? businessHours,
+    String? closedDays,
+    String? parking,
+    String? inquiryPhone,
+    String? fee,
+    String? petAllowed,
+    String? creditCardAccepted,
+  }) => _res;
+}
+
+class Query$SpotDetail$spotDetail$infoItems {
+  Query$SpotDetail$spotDetail$infoItems({
+    required this.name,
+    required this.text,
+  });
+
+  factory Query$SpotDetail$spotDetail$infoItems.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$name = json['name'];
+    final l$text = json['text'];
+    return Query$SpotDetail$spotDetail$infoItems(
+      name: (l$name as String),
+      text: (l$text as String),
+    );
+  }
+
+  final String name;
+
+  final String text;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$name = name;
+    _resultData['name'] = l$name;
+    final l$text = text;
+    _resultData['text'] = l$text;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$name = name;
+    final l$text = text;
+    return Object.hashAll([l$name, l$text]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$SpotDetail$spotDetail$infoItems ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$name = name;
+    final lOther$name = other.name;
+    if (l$name != lOther$name) {
+      return false;
+    }
+    final l$text = text;
+    final lOther$text = other.text;
+    if (l$text != lOther$text) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$SpotDetail$spotDetail$infoItems
+    on Query$SpotDetail$spotDetail$infoItems {
+  CopyWith$Query$SpotDetail$spotDetail$infoItems<
+    Query$SpotDetail$spotDetail$infoItems
+  >
+  get copyWith =>
+      CopyWith$Query$SpotDetail$spotDetail$infoItems(this, (i) => i);
+}
+
+abstract class CopyWith$Query$SpotDetail$spotDetail$infoItems<TRes> {
+  factory CopyWith$Query$SpotDetail$spotDetail$infoItems(
+    Query$SpotDetail$spotDetail$infoItems instance,
+    TRes Function(Query$SpotDetail$spotDetail$infoItems) then,
+  ) = _CopyWithImpl$Query$SpotDetail$spotDetail$infoItems;
+
+  factory CopyWith$Query$SpotDetail$spotDetail$infoItems.stub(TRes res) =
+      _CopyWithStubImpl$Query$SpotDetail$spotDetail$infoItems;
+
+  TRes call({String? name, String? text});
+}
+
+class _CopyWithImpl$Query$SpotDetail$spotDetail$infoItems<TRes>
+    implements CopyWith$Query$SpotDetail$spotDetail$infoItems<TRes> {
+  _CopyWithImpl$Query$SpotDetail$spotDetail$infoItems(
+    this._instance,
+    this._then,
+  );
+
+  final Query$SpotDetail$spotDetail$infoItems _instance;
+
+  final TRes Function(Query$SpotDetail$spotDetail$infoItems) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? name = _undefined, Object? text = _undefined}) => _then(
+    Query$SpotDetail$spotDetail$infoItems(
+      name: name == _undefined || name == null
+          ? _instance.name
+          : (name as String),
+      text: text == _undefined || text == null
+          ? _instance.text
+          : (text as String),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$SpotDetail$spotDetail$infoItems<TRes>
+    implements CopyWith$Query$SpotDetail$spotDetail$infoItems<TRes> {
+  _CopyWithStubImpl$Query$SpotDetail$spotDetail$infoItems(this._res);
+
+  TRes _res;
+
+  call({String? name, String? text}) => _res;
 }
 
 class Variables$Mutation$ReactToSpot {

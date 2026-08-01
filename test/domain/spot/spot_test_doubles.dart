@@ -8,6 +8,8 @@ import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_detail.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_image.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/spot_info_item.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/spot_intro.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_reaction.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/tourist_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/repository/spot_repository.dart';
@@ -131,6 +133,9 @@ SpotDetail detailSpot(
   String? tel = '02-000-0000',
   int likeCount = 10,
   List<SpotImage>? gallery,
+  // 기본은 "운영 정보·이용안내 없음" — 이 섹션들을 검증하는 테스트만 값을 넘긴다.
+  SpotIntro? intro,
+  List<SpotInfoItem> infoItems = const <SpotInfoItem>[],
 }) => SpotDetail(
   id: id,
   title: title,
@@ -152,6 +157,8 @@ SpotDetail detailSpot(
         ),
       ],
   likeCount: likeCount,
+  intro: intro,
+  infoItems: infoItems,
 );
 
 /// 스와이프 카드 하나를 최소 필드로 만든다(테스트 데이터 생성 편의).

@@ -6,7 +6,11 @@ import 'package:ieuri_k_trip_spot/domain/spot/component/attribution_block.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/component/copyright_badge.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/component/detail_section.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/component/spot_gallery.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/component/spot_info_item_list.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/component/spot_intro_rows.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/spot_info_item.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/spot_intro.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/spot_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/view/spot_detail_view.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
@@ -144,6 +148,113 @@ void main() {
     // 열 수 있는 URL이 없으면 연락처 섹션까지 사라진다.
     expect(find.text(l10n.spotDetailHomepageLabel), findsNothing);
     expect(find.text(l10n.spotDetailContactTitle), findsNothing);
+  });
+
+  testWidgets('renders only the intro rows that have a value', (tester) async {
+    final repo = FakeSpotRepository(
+      detail: detailSpot(
+        'c1',
+        intro: const SpotIntro(
+          businessHours: '09:00 ~ 18:00',
+          // 이 카테고리엔 없는 개념 → 서버가 null. 라벨도 그려지면 안 된다.
+          parking: null,
+          fee: '',
+        ),
+      ),
+    );
+    await _pump(tester, repo);
+    await tester.pumpAndSettle();
+
+    final AppLocalizations l10n = AppLocalizations.of(
+      tester.element(find.byType(SpotDetailView)),
+    );
+    expect(find.text(l10n.spotDetailIntroTitle), findsOneWidget);
+    expect(find.text('09:00 ~ 18:00'), findsOneWidget);
+    expect(find.text(l10n.spotDetailIntroBusinessHours), findsOneWidget);
+    // 값 없는 항목의 라벨은 아예 없다.
+    expect(find.text(l10n.spotDetailIntroParking), findsNothing);
+    expect(find.text(l10n.spotDetailIntroFee), findsNothing);
+  });
+
+  testWidgets('hides the intro section when no field has a value', (
+    tester,
+  ) async {
+    final repo = FakeSpotRepository(
+      // 여행코스처럼 운영 정보 개념이 없는 상세 — 빈 껍데기가 와도 섹션이 없어야 한다.
+      detail: detailSpot('c1', intro: const SpotIntro()),
+    );
+    await _pump(tester, repo);
+    await tester.pumpAndSettle();
+
+    final AppLocalizations l10n = AppLocalizations.of(
+      tester.element(find.byType(SpotDetailView)),
+    );
+    expect(find.text(l10n.spotDetailIntroTitle), findsNothing);
+    expect(find.byType(SpotIntroRows), findsNothing);
+  });
+
+  testWidgets('renders info items and drops the blank ones', (tester) async {
+    final repo = FakeSpotRepository(
+      detail: detailSpot(
+        'c1',
+        infoItems: const <SpotInfoItem>[
+          SpotInfoItem(name: '입장료', text: '성인 3,000원'),
+          SpotInfoItem(name: '  ', text: ''),
+        ],
+      ),
+    );
+    await _pump(tester, repo);
+    await tester.pumpAndSettle();
+
+    final AppLocalizations l10n = AppLocalizations.of(
+      tester.element(find.byType(SpotDetailView)),
+    );
+    expect(find.text(l10n.spotDetailInfoTitle), findsOneWidget);
+    expect(find.text('입장료'), findsOneWidget);
+    expect(find.text('성인 3,000원'), findsOneWidget);
+    // 빈 항목은 줄이 생기지 않는다 — 걸러지지 않으면 공백 Text('  ')가 남는다.
+    expect(find.text('  '), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byType(SpotInfoItemList),
+        matching: find.byType(Text),
+      ),
+      findsNWidgets(2),
+    );
+  });
+
+  testWidgets('keeps spacing between info items that have identical values', (
+    tester,
+  ) async {
+    // TourAPI가 같은 항목을 중복으로 주기도 한다. 첫 항목을 값 비교로 가르면
+    // 중복 항목의 간격이 사라지므로 인덱스로 갈라야 한다.
+    final repo = FakeSpotRepository(
+      detail: detailSpot(
+        'c1',
+        infoItems: const <SpotInfoItem>[
+          SpotInfoItem(name: '안내', text: '동일 내용'),
+          SpotInfoItem(name: '안내', text: '동일 내용'),
+        ],
+      ),
+    );
+    await _pump(tester, repo);
+    await tester.pumpAndSettle();
+
+    // 값이 같아도 두 항목 모두 남는다(간격 위젯 개수 같은 내부 구조는 보지 않는다).
+    expect(find.text('동일 내용'), findsNWidgets(2));
+    expect(find.text('안내'), findsNWidgets(2));
+  });
+
+  testWidgets('hides the info section when there are no items', (tester) async {
+    final repo = FakeSpotRepository(detail: detailSpot('c1'));
+    await _pump(tester, repo);
+    await tester.pumpAndSettle();
+
+    final AppLocalizations l10n = AppLocalizations.of(
+      tester.element(find.byType(SpotDetailView)),
+    );
+    expect(find.text(l10n.spotDetailInfoTitle), findsNothing);
+    expect(find.byType(SpotInfoItemList), findsNothing);
   });
 
   testWidgets('shows the not-found error state (AC-26)', (tester) async {

@@ -184,5 +184,15 @@
   "spotDetailUnavailableBody": "Something went wrong loading the details. Please try again.",
   "spotDetailRetryButton": "Retry",
   "spotDetailReactionFailed": "Couldn't save your reaction. Please try again.",
-  "spotDetailLinkFailed": "Couldn't open this link."
+  "spotDetailLinkFailed": "Couldn't open this link.",
+
+  "spotDetailIntroTitle": "Visitor info",
+  "spotDetailIntroBusinessHours": "Hours",
+  "spotDetailIntroClosedDays": "Closed",
+  "spotDetailIntroFee": "Admission",
+  "spotDetailIntroParking": "Parking",
+  "spotDetailIntroPetAllowed": "Pets",
+  "spotDetailIntroCreditCard": "Credit cards",
+  "spotDetailIntroInquiryPhone": "Inquiries",
+  "spotDetailInfoTitle": "Guide"
 }

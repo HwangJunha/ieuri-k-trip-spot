@@ -254,6 +254,19 @@ void main() {
                 },
               ],
               'likeCount': 42,
+              'intro': <String, dynamic>{
+                'businessHours': '09:00 ~ 18:00',
+                'closedDays': '화요일',
+                // 이 카테고리에 없는 개념은 서버가 null로 준다.
+                'parking': null,
+                'inquiryPhone': '02-111',
+                'fee': '3,000원',
+                'petAllowed': null,
+                'creditCardAccepted': null,
+              },
+              'infoItems': <dynamic>[
+                <String, dynamic>{'name': '입장료', 'text': '성인 3,000원'},
+              ],
             },
           },
         ),
@@ -269,6 +282,13 @@ void main() {
       expect(detail.gallery.first.imageUrl, 'https://img/g1.jpg');
       // 저작권은 이미지별 — 부모 TYPE1과 별개로 갤러리 아이템은 TYPE3.
       expect(detail.gallery.first.copyright, CopyrightType.type3);
+      // 운영 정보는 서버가 카테고리별 필드를 공통 이름으로 정규화해 준 값이다.
+      expect(detail.intro?.businessHours, '09:00 ~ 18:00');
+      expect(detail.intro?.closedDays, '화요일');
+      expect(detail.intro?.parking, isNull);
+      expect(detail.infoItems, hasLength(1));
+      expect(detail.infoItems.first.name, '입장료');
+      expect(detail.infoItems.first.text, '성인 3,000원');
     },
   );
 
@@ -291,6 +311,9 @@ void main() {
               'attributionText': 'KTO',
               'gallery': <dynamic>[],
               'likeCount': 0,
+              // 운영 정보가 아예 없는 카테고리는 intro 자체가 null이다.
+              'intro': null,
+              'infoItems': <dynamic>[],
             },
           },
         ),
@@ -302,6 +325,11 @@ void main() {
       expect(detail.homepage, isNull);
       expect(detail.tel, isNull);
       expect(detail.gallery, isEmpty);
+      // intro가 null이어도 터지지 않고, 두 섹션 모두 숨김 대상이 된다.
+      expect(detail.intro, isNull);
+      expect(detail.hasIntro, isFalse);
+      expect(detail.infoItems, isEmpty);
+      expect(detail.hasInfoItems, isFalse);
     },
   );
 

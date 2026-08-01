@@ -330,5 +330,15 @@
   "spotDetailUnavailableBody": "상세 정보를 불러오는 중 문제가 발생했어요. 다시 시도해 주세요.",
   "spotDetailRetryButton": "다시 시도",
   "spotDetailReactionFailed": "반응을 저장하지 못했어요. 다시 시도해 주세요.",
-  "spotDetailLinkFailed": "링크를 열지 못했어요."
+  "spotDetailLinkFailed": "링크를 열지 못했어요.",
+
+  "spotDetailIntroTitle": "이용 안내",
+  "spotDetailIntroBusinessHours": "이용 시간",
+  "spotDetailIntroClosedDays": "휴무일",
+  "spotDetailIntroFee": "이용 요금",
+  "spotDetailIntroParking": "주차",
+  "spotDetailIntroPetAllowed": "반려동물",
+  "spotDetailIntroCreditCard": "신용카드",
+  "spotDetailIntroInquiryPhone": "문의",
+  "spotDetailInfoTitle": "안내 사항"
 }

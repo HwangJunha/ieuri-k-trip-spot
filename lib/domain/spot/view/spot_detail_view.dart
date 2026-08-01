@@ -8,6 +8,8 @@ import '../component/detail_reaction_bar.dart';
 import '../component/detail_section.dart';
 import '../component/like_count_badge.dart';
 import '../component/spot_gallery.dart';
+import '../component/spot_info_item_list.dart';
+import '../component/spot_intro_rows.dart';
 import '../model/spot_detail.dart';
 import '../model/spot_failure.dart';
 import '../model/spot_reaction.dart';
@@ -191,6 +193,26 @@ class _DetailBody extends ConsumerWidget {
                       detail.overview!,
                       style: theme.textTheme.bodyMedium,
                     ),
+                  ),
+                ],
+
+                // 운영 정보: 값이 있는 항목이 하나라도 있을 때만. 카테고리에 없는
+                // 개념은 서버가 null로 주므로 여행코스처럼 항목이 전무한 상세에선
+                // 섹션 자체가 사라진다(AC-25).
+                if (detail.hasIntro) ...<Widget>[
+                  const SizedBox(height: 24),
+                  DetailSection(
+                    title: l10n.spotDetailIntroTitle,
+                    child: SpotIntroRows(entries: detail.introEntries),
+                  ),
+                ],
+
+                // 이용안내: 내용이 있는 항목만 넘긴다(빈 항목은 모델이 걸러냈다).
+                if (detail.hasInfoItems) ...<Widget>[
+                  const SizedBox(height: 24),
+                  DetailSection(
+                    title: l10n.spotDetailInfoTitle,
+                    child: SpotInfoItemList(items: detail.presentInfoItems),
                   ),
                 ],
 

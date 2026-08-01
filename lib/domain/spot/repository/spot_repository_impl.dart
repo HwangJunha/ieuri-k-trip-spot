@@ -11,6 +11,8 @@ import '../model/spot_category.dart';
 import '../model/spot_detail.dart';
 import '../model/spot_failure.dart';
 import '../model/spot_image.dart';
+import '../model/spot_info_item.dart';
+import '../model/spot_intro.dart';
 import '../model/spot_reaction.dart';
 import '../model/tourist_spot.dart';
 import 'spot_operations.graphql.dart';
@@ -206,7 +208,24 @@ class SpotRepositoryImpl implements SpotRepository {
     attributionText: r.attributionText,
     gallery: r.gallery.map(_imageFromGallery).toList(growable: false),
     likeCount: r.likeCount,
+    intro: r.intro == null ? null : _introFromResult(r.intro!),
+    infoItems: r.infoItems.map(_infoItemFrom).toList(growable: false),
   );
+
+  /// 운영 정보 매핑. 서버가 카테고리별 필드를 공통 이름으로 정규화해 주므로
+  /// 카테고리 분기 없이 그대로 옮긴다 — 값 없는 항목의 숨김 판단은 모델이 한다.
+  SpotIntro _introFromResult(Query$SpotDetail$spotDetail$intro i) => SpotIntro(
+    businessHours: i.businessHours,
+    closedDays: i.closedDays,
+    parking: i.parking,
+    inquiryPhone: i.inquiryPhone,
+    fee: i.fee,
+    petAllowed: i.petAllowed,
+    creditCardAccepted: i.creditCardAccepted,
+  );
+
+  SpotInfoItem _infoItemFrom(Query$SpotDetail$spotDetail$infoItems item) =>
+      SpotInfoItem(name: item.name, text: item.text);
 
   SpotImage _imageFromGallery(Query$SpotDetail$spotDetail$gallery g) =>
       SpotImage(
