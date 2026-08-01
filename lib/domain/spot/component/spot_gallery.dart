@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../../../common/widget/image_placeholder.dart';
 import '../model/spot_image.dart';
-import 'copyright_badge.dart';
 
-/// 상세 헤더 갤러리(SPEC-0003 §3). [images]를 가로 페이저로 보여주고, 각 페이지
-/// 하단에 이미지별 저작권 배지를 얹는다(AC-28 — 저작권은 이미지별).
+/// 상세 헤더 갤러리(SPEC-0003 §3). [images]를 가로 페이저로 보여준다.
+///
+/// 이미지 위에는 저작권 배지를 얹지 않는다 — 사진을 가려 거슬리는 데다, 저작권 표기는
+/// 갤러리 아래 `AttributionBlock`이 전문으로 노출하므로 중복이다(AC-28 충족).
 ///
 /// [images]가 비면(갤러리 빈 배열) [fallbackImageUrl](=thumbnailImageUrl)로 한 장짜리
-/// 폴백을 렌더한다(AC-27). 폴백에는 이미지별 저작권 정보가 없어 배지를 생략한다.
+/// 폴백을 렌더한다(AC-27).
 ///
 /// 크롭 렌더링은 저작권 유형별 분기(`[TBD-1]`) 확정 전까지 SPEC-0002와 일관되게
 /// [BoxFit.cover]로 둔다(§7).
@@ -54,24 +55,10 @@ class _SpotGalleryState extends State<SpotGallery> {
               if (!hasGallery) {
                 return _GalleryImage(imageRef: widget.fallbackImageUrl);
               }
-              final SpotImage image = widget.images[i];
-              return Stack(
-                fit: StackFit.expand,
-                children: <Widget>[
-                  _GalleryImage(imageRef: image.imageUrl),
-                  Positioned(
-                    left: 12,
-                    bottom: 12,
-                    right: 12,
-                    child: Align(
-                      alignment: Alignment.bottomLeft,
-                      child: CopyrightBadge(
-                        attributionText: image.attributionText,
-                      ),
-                    ),
-                  ),
-                ],
-              );
+              // 이미지 위에는 아무것도 얹지 않는다 — 저작권 표기는 사진을 가리지 않게
+              // 갤러리 아래 [AttributionBlock]이 전담한다(AC-28은 전문 노출이 요건이라
+              // 배지 중복 없이 충족된다).
+              return _GalleryImage(imageRef: widget.images[i].imageUrl);
             },
           ),
           // 페이지 인디케이터: 2장 이상일 때만.

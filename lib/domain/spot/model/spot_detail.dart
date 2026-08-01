@@ -59,6 +59,41 @@ class SpotDetail {
   /// provider가 롤백한다(AC-30).
   final int likeCount;
 
+  // --- 표시 여부 (AC-25) ------------------------------------------------------
+  // TourAPI는 값이 없을 때 null이 아니라 빈 문자열/공백을 주는 경우가 있다. null만
+  // 검사하면 빈 라벨("웹사이트: ")이 그려지므로, 값의 유무 판단은 이 게터로 한 곳에
+  // 모은다 — 각 위젯이 제각기 검사하지 않는다.
+
+  /// 소개 섹션을 그릴지. 값이 없거나 공백뿐이면 false.
+  bool get hasOverview => _present(overview);
+
+  /// 주소 행을 그릴지.
+  bool get hasAddress => _present(address);
+
+  /// 홈페이지 행을 그릴지.
+  bool get hasHomepage => _present(homepage);
+
+  /// 전화 행을 그릴지.
+  bool get hasTel => _present(tel);
+
+  /// 연락처 섹션 자체를 그릴지 — 홈페이지·전화가 모두 없으면 섹션을 숨긴다.
+  bool get hasContact => hasHomepage || hasTel;
+
+  /// 항목 [attributionText]와 **다른** 갤러리 이미지 출처 문구(순서 유지, 중복 제거).
+  /// 이미지 위에 배지를 얹지 않고도 이미지별 저작권을 표기하기 위한 값이다(AC-28).
+  /// 모든 이미지가 항목과 같은 출처면 빈 리스트.
+  List<String> get distinctImageAttributions {
+    final Set<String> seen = <String>{attributionText};
+    final List<String> result = <String>[];
+    for (final SpotImage image in gallery) {
+      if (seen.add(image.attributionText)) result.add(image.attributionText);
+    }
+    return result;
+  }
+
+  static bool _present(String? value) =>
+      value != null && value.trim().isNotEmpty;
+
   @override
   bool operator ==(Object other) =>
       other is SpotDetail &&

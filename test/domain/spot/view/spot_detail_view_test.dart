@@ -3,7 +3,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/component/attribution_block.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/component/copyright_badge.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/component/detail_section.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/component/spot_gallery.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/spot_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/view/spot_detail_view.dart';
@@ -61,6 +63,42 @@ void main() {
     // overview·연락처 없음 → DetailSection 자체가 렌더되지 않는다(AC-25).
     expect(find.byType(DetailSection), findsNothing);
     // 저작권 블록은 항상 노출.
+    expect(find.byType(AttributionBlock), findsOneWidget);
+  });
+
+  testWidgets('hides contact/overview when values are empty strings', (
+    tester,
+  ) async {
+    // 서버가 null이 아니라 빈 문자열을 줘도 섹션이 렌더되면 안 된다.
+    final repo = FakeSpotRepository(
+      detail: detailSpot('c1', overview: '', homepage: '', tel: '   '),
+    );
+    await _pump(tester, repo);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DetailSection), findsNothing);
+    final AppLocalizations l10n = AppLocalizations.of(
+      tester.element(find.byType(SpotDetailView)),
+    );
+    expect(find.text(l10n.spotDetailContactTitle), findsNothing);
+    expect(find.text(l10n.spotDetailHomepageLabel), findsNothing);
+  });
+
+  testWidgets('no copyright badge is overlaid on the gallery image', (
+    tester,
+  ) async {
+    final repo = FakeSpotRepository(detail: detailSpot('c1'));
+    await _pump(tester, repo);
+    await tester.pumpAndSettle();
+
+    // 출처는 이미지 위가 아니라 아래 AttributionBlock에만 있다.
+    expect(
+      find.descendant(
+        of: find.byType(SpotGallery),
+        matching: find.byType(CopyrightBadge),
+      ),
+      findsNothing,
+    );
     expect(find.byType(AttributionBlock), findsOneWidget);
   });
 

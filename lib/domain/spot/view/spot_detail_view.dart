@@ -154,7 +154,7 @@ class _DetailBody extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(detail.title, style: theme.textTheme.headlineSmall),
-                if (detail.address != null) ...<Widget>[
+                if (detail.hasAddress) ...<Widget>[
                   const SizedBox(height: 8),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,8 +181,8 @@ class _DetailBody extends ConsumerWidget {
                 // 다시 그리고, 갤러리·소개 등 정적 서브트리는 건드리지 않는다(§5 select).
                 _LikeCount(contentId: contentId),
 
-                // 소개글: overview 있을 때만(AC-25).
-                if (detail.overview != null) ...<Widget>[
+                // 소개글: overview 값이 있을 때만(AC-25).
+                if (detail.hasOverview) ...<Widget>[
                   const SizedBox(height: 24),
                   DetailSection(
                     title: l10n.spotDetailOverviewTitle,
@@ -193,20 +193,20 @@ class _DetailBody extends ConsumerWidget {
                   ),
                 ],
 
-                // 연락처: homepage·tel 중 하나라도 있을 때만.
-                if (detail.homepage != null || detail.tel != null) ...<Widget>[
+                // 연락처: homepage·tel 중 하나라도 값이 있을 때만(빈 문자열 제외).
+                if (detail.hasContact) ...<Widget>[
                   const SizedBox(height: 24),
                   DetailSection(
                     title: l10n.spotDetailContactTitle,
-                    child: _ContactRows(
-                      homepage: detail.homepage,
-                      tel: detail.tel,
-                    ),
+                    child: _ContactRows(detail: detail),
                   ),
                 ],
 
                 const SizedBox(height: 24),
-                AttributionBlock(attributionText: detail.attributionText),
+                AttributionBlock(
+                  attributionText: detail.attributionText,
+                  imageAttributions: detail.distinctImageAttributions,
+                ),
 
                 const SizedBox(height: 24),
                 DetailReactionBar(
@@ -259,12 +259,12 @@ class _LikeCount extends ConsumerWidget {
   }
 }
 
-/// 연락처 행들: 값 있는 것만 렌더한다(homepage/tel 각각).
+/// 연락처 행들: 값 있는 것만 렌더한다(homepage/tel 각각). 값의 유무 판단은
+/// [SpotDetail]의 게터에 맡겨 빈 문자열도 "없음"으로 처리한다.
 class _ContactRows extends StatelessWidget {
-  const _ContactRows({required this.homepage, required this.tel});
+  const _ContactRows({required this.detail});
 
-  final String? homepage;
-  final String? tel;
+  final SpotDetail detail;
 
   @override
   Widget build(BuildContext context) {
@@ -272,18 +272,18 @@ class _ContactRows extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        if (homepage != null)
+        if (detail.hasHomepage)
           _ContactRow(
             icon: Icons.language_outlined,
             label: l10n.spotDetailHomepageLabel,
-            value: homepage!,
+            value: detail.homepage!,
           ),
-        if (homepage != null && tel != null) const SizedBox(height: 8),
-        if (tel != null)
+        if (detail.hasHomepage && detail.hasTel) const SizedBox(height: 8),
+        if (detail.hasTel)
           _ContactRow(
             icon: Icons.phone_outlined,
             label: l10n.spotDetailTelLabel,
-            value: tel!,
+            value: detail.tel!,
           ),
       ],
     );
