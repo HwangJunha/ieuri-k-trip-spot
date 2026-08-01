@@ -45,6 +45,36 @@ type SpotPage {
   totalCount: Int
 }
 
+# SPEC-0003 상세 전용 read shape. contract.graphql(제안)에서 옮긴 committed codegen
+# 입력이다. 라이브 서버가 아직 spotDetail을 서빙하지 않으므로(스냅샷 확인) 이 조각은
+# codegen 입력으로만 쓰이고, 실제 쿼리는 서버 이슈 #23이 spotDetail을 올린 뒤 동작한다.
+
+# 갤러리 이미지 한 장. TourAPI detailImage2가 이미지별 cpyrhtDivCd를 주므로
+# 저작권/문구는 이미지별이며 부모 Spot에서 상속하지 않는다.
+type SpotImage {
+  imageUrl: String!
+  thumbnailUrl: String
+  caption: String
+  copyright: CopyrightType!
+  attributionText: String!
+}
+
+# 상세 전용 반환 타입. Spot의 확장이 아니라 별도 shape다(어떤 인터페이스도 구현 안 함).
+type SpotDetail {
+  id: ID!
+  title: String!
+  category: SpotCategory!
+  thumbnailImageUrl: String!
+  overview: String
+  address: String
+  homepage: String
+  tel: String
+  copyright: CopyrightType!
+  attributionText: String!
+  gallery: [SpotImage!]!
+  likeCount: Int!
+}
+
 input ReactToSpotInput {
   spotId: ID!
   reaction: SpotReaction!
@@ -67,6 +97,10 @@ extend type Query {
     size: Int
   ): SpotPage!
   availableSpotCategories: [SpotCategory!]!
+  # contentId(=Spot.id) 단건 상세 조회. 로케일은 Accept-Language 헤더로 전달(SPEC-0002
+  # 규약) — 로케일 인자 없음. 유효 id는 항상 SpotDetail을 반환하고, 해소 실패는 최상위
+  # errors[](SPOT_NOT_FOUND)이므로 non-null.
+  spotDetail(id: ID!): SpotDetail!
 }
 
 extend type Mutation {

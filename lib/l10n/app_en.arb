@@ -162,5 +162,26 @@
   "discoverRetryBanner": "Couldn't load spots. Retrying shortly.",
   "discoverRetryButton": "Retry",
   "discoverLoadError": "Something went wrong while loading spots.",
-  "discoverLoading": "Finding spots near you…"
+  "discoverLoading": "Finding spots near you…",
+
+  "spotDetailOverviewTitle": "About",
+  "spotDetailContactTitle": "Contact",
+  "spotDetailHomepageLabel": "Website",
+  "spotDetailTelLabel": "Phone",
+  "spotDetailLikeCount": "{count, plural, =0{No likes yet} =1{1 like} other{{count} likes}}",
+  "@spotDetailLikeCount": {
+    "description": "상세 좋아요 개수 배지 (현재 언어의 실시간 LIKE 수)",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "spotDetailLikeAction": "Like",
+  "spotDetailDislikeAction": "Nope",
+  "spotDetailLoading": "Loading spot…",
+  "spotDetailNotFoundTitle": "Spot not found",
+  "spotDetailNotFoundBody": "We couldn't find this spot. It may have been removed or isn't available in your language.",
+  "spotDetailRateLimitedTitle": "Too many requests",
+  "spotDetailRateLimitedBody": "We're a bit busy right now. Please try again in a moment.",
+  "spotDetailUnavailableTitle": "Couldn't load this spot",
+  "spotDetailUnavailableBody": "Something went wrong loading the details. Please try again.",
+  "spotDetailRetryButton": "Retry",
+  "spotDetailReactionFailed": "Couldn't save your reaction. Please try again."
 }

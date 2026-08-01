@@ -40,6 +40,32 @@ query AvailableSpotCategories {
   availableSpotCategories
 }
 
+# SPEC-0003 상세 단건 조회. 언어는 Accept-Language 헤더로 전달(인자 없음, spec §2).
+# 생성 타입은 repository 안에서만 쓰이고 도메인 모델(SpotDetail/SpotImage)로 매핑된다
+# (POL-020, AC-32).
+query SpotDetail($id: ID!) {
+  spotDetail(id: $id) {
+    id
+    title
+    category
+    thumbnailImageUrl
+    overview
+    address
+    homepage
+    tel
+    copyright
+    attributionText
+    gallery {
+      imageUrl
+      thumbnailUrl
+      caption
+      copyright
+      attributionText
+    }
+    likeCount
+  }
+}
+
 # 스와이프 반응 기록(낙관적). userErrors를 실패로 번역한다(spec §2).
 mutation ReactToSpot($input: ReactToSpotInput!) {
   reactToSpot(input: $input) {

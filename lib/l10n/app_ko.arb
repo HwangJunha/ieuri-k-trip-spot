@@ -308,5 +308,26 @@
   "discoverLoadError": "여행지를 불러오는 중 문제가 발생했어요.",
   "@discoverLoadError": { "description": "네트워크/조회 오류 문구" },
   "discoverLoading": "주변 여행지를 찾는 중…",
-  "@discoverLoading": { "description": "초기 로딩 안내" }
+  "@discoverLoading": { "description": "초기 로딩 안내" },
+
+  "spotDetailOverviewTitle": "소개",
+  "spotDetailContactTitle": "연락처",
+  "spotDetailHomepageLabel": "웹사이트",
+  "spotDetailTelLabel": "전화",
+  "spotDetailLikeCount": "{count, plural, =0{아직 좋아요 없음} other{좋아요 {count}개}}",
+  "@spotDetailLikeCount": {
+    "description": "상세 좋아요 개수 배지",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "spotDetailLikeAction": "좋아요",
+  "spotDetailDislikeAction": "싫어요",
+  "spotDetailLoading": "여행지를 불러오는 중…",
+  "spotDetailNotFoundTitle": "여행지를 찾을 수 없어요",
+  "spotDetailNotFoundBody": "이 여행지를 찾지 못했어요. 삭제되었거나 현재 언어에서 제공되지 않을 수 있어요.",
+  "spotDetailRateLimitedTitle": "요청이 많아요",
+  "spotDetailRateLimitedBody": "지금 조금 붐벼요. 잠시 후 다시 시도해 주세요.",
+  "spotDetailUnavailableTitle": "여행지를 불러오지 못했어요",
+  "spotDetailUnavailableBody": "상세 정보를 불러오는 중 문제가 발생했어요. 다시 시도해 주세요.",
+  "spotDetailRetryButton": "다시 시도",
+  "spotDetailReactionFailed": "반응을 저장하지 못했어요. 다시 시도해 주세요."
 }

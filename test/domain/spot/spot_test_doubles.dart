@@ -5,6 +5,9 @@ import 'package:ieuri_k_trip_spot/common/pagination/offset_page.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/congestion_level.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/spot_detail.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/spot_image.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_reaction.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/tourist_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/repository/spot_repository.dart';
@@ -20,6 +23,8 @@ class FakeSpotRepository implements SpotRepository {
     this.categories,
     this.pageSize = 5,
     this.reactShouldFail = false,
+    this.detail,
+    this.detailFailure,
   }) : recommended = recommended ?? const <TouristSpot>[_spot],
        popular = popular ?? const <TouristSpot>[_spot],
        feed = feed ?? const <TouristSpot>[];
@@ -30,6 +35,12 @@ class FakeSpotRepository implements SpotRepository {
   final List<SpotCategory>? categories;
   final int pageSize;
   final bool reactShouldFail;
+
+  /// `fetchSpotDetail`이 돌려줄 상세(설정 시). [detailFailure]가 있으면 그게 우선한다.
+  final SpotDetail? detail;
+
+  /// `fetchSpotDetail`이 던질 실패(설정 시) — SPOT_NOT_FOUND 등 오류 경로 검증용.
+  final SpotFailure? detailFailure;
 
   /// 마지막으로 기록된 반응 (검증용).
   final List<(String, SpotReaction)> recordedReactions =
@@ -96,11 +107,52 @@ class FakeSpotRepository implements SpotRepository {
   }
 
   @override
+  Future<SpotDetail> fetchSpotDetail(String id) async {
+    if (detailFailure != null) throw detailFailure!;
+    return detail ?? detailSpot(id);
+  }
+
+  @override
   Future<void> reactToSpot(String spotId, SpotReaction reaction) async {
     if (reactShouldFail) throw StateError('react failed');
     recordedReactions.add((spotId, reaction));
   }
 }
+
+/// 상세 하나를 최소 필드로 만든다(테스트 데이터 생성 편의). null 인자를 넘겨 값 없는
+/// 섹션(overview/address/homepage/tel)이나 빈 갤러리를 검증할 수 있다.
+SpotDetail detailSpot(
+  String id, {
+  String title = 'Detail Spot',
+  SpotCategory? category = SpotCategory.touristSpot,
+  String? overview = 'A famous place.',
+  String? address = 'Seoul',
+  String? homepage = 'https://example.com',
+  String? tel = '02-000-0000',
+  int likeCount = 10,
+  List<SpotImage>? gallery,
+}) => SpotDetail(
+  id: id,
+  title: title,
+  category: category,
+  thumbnailImageUrl: 'https://img/$id.jpg',
+  overview: overview,
+  address: address,
+  homepage: homepage,
+  tel: tel,
+  copyright: CopyrightType.type1,
+  attributionText: 'Source: KTO',
+  gallery:
+      gallery ??
+      const <SpotImage>[
+        SpotImage(
+          imageUrl: 'https://img/g1.jpg',
+          copyright: CopyrightType.type1,
+          attributionText: 'Source: KTO',
+        ),
+      ],
+  likeCount: likeCount,
+);
 
 /// 스와이프 카드 하나를 최소 필드로 만든다(테스트 데이터 생성 편의).
 TouristSpot swipeSpot(

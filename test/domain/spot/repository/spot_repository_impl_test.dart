@@ -227,6 +227,155 @@ void main() {
     );
   });
 
+  test(
+    'fetchSpotDetail maps SpotDetail incl. gallery to a domain model',
+    () async {
+      final SpotRepositoryImpl repo = _repo(
+        _FakeLink(
+          data: <String, dynamic>{
+            'spotDetail': <String, dynamic>{
+              'id': 'c1',
+              'title': 'Gyeongbokgung',
+              'category': 'TOURIST_SPOT',
+              'thumbnailImageUrl': 'https://img/thumb.jpg',
+              'overview': 'A palace.',
+              'address': 'Seoul',
+              'homepage': 'https://example.com',
+              'tel': '02-000',
+              'copyright': 'TYPE1',
+              'attributionText': 'Source: KTO',
+              'gallery': <dynamic>[
+                <String, dynamic>{
+                  'imageUrl': 'https://img/g1.jpg',
+                  'thumbnailUrl': 'https://img/g1-s.jpg',
+                  'caption': 'front',
+                  'copyright': 'TYPE3',
+                  'attributionText': 'Photo: KTO',
+                },
+              ],
+              'likeCount': 42,
+            },
+          },
+        ),
+      );
+
+      final detail = await repo.fetchSpotDetail('c1');
+
+      expect(detail.id, 'c1');
+      expect(detail.category, SpotCategory.touristSpot);
+      expect(detail.overview, 'A palace.');
+      expect(detail.likeCount, 42);
+      expect(detail.gallery, hasLength(1));
+      expect(detail.gallery.first.imageUrl, 'https://img/g1.jpg');
+      // 저작권은 이미지별 — 부모 TYPE1과 별개로 갤러리 아이템은 TYPE3.
+      expect(detail.gallery.first.copyright, CopyrightType.type3);
+    },
+  );
+
+  test(
+    'fetchSpotDetail keeps nullable fields null and gallery empty',
+    () async {
+      final SpotRepositoryImpl repo = _repo(
+        _FakeLink(
+          data: <String, dynamic>{
+            'spotDetail': <String, dynamic>{
+              'id': 'c2',
+              'title': 'Sparse Spot',
+              'category': 'RESTAURANT',
+              'thumbnailImageUrl': 'https://img/t.jpg',
+              'overview': null,
+              'address': null,
+              'homepage': null,
+              'tel': null,
+              'copyright': 'UNSPECIFIED',
+              'attributionText': 'KTO',
+              'gallery': <dynamic>[],
+              'likeCount': 0,
+            },
+          },
+        ),
+      );
+
+      final detail = await repo.fetchSpotDetail('c2');
+
+      expect(detail.overview, isNull);
+      expect(detail.homepage, isNull);
+      expect(detail.tel, isNull);
+      expect(detail.gallery, isEmpty);
+    },
+  );
+
+  test(
+    'fetchSpotDetail translates SPOT_NOT_FOUND from extensions.code',
+    () async {
+      final SpotRepositoryImpl repo = _repo(
+        _FakeLink(
+          errors: const <GraphQLError>[
+            GraphQLError(
+              message: 'not found',
+              extensions: <String, dynamic>{'code': 'SPOT_NOT_FOUND'},
+            ),
+          ],
+        ),
+      );
+
+      await expectLater(
+        repo.fetchSpotDetail('missing'),
+        throwsA(
+          isA<SpotFailure>().having(
+            (SpotFailure f) => f.kind,
+            'kind',
+            SpotFailureKind.notFound,
+          ),
+        ),
+      );
+    },
+  );
+
+  test(
+    'fetchSpotDetail falls back to the message code when no extensions',
+    () async {
+      final SpotRepositoryImpl repo = _repo(
+        _FakeLink(
+          errors: const <GraphQLError>[
+            GraphQLError(message: 'UPSTREAM_RATE_LIMITED'),
+          ],
+        ),
+      );
+
+      await expectLater(
+        repo.fetchSpotDetail('c1'),
+        throwsA(
+          isA<SpotFailure>().having(
+            (SpotFailure f) => f.kind,
+            'kind',
+            SpotFailureKind.rateLimited,
+          ),
+        ),
+      );
+    },
+  );
+
+  test(
+    'fetchSpotDetail surfaces a link exception as network failure',
+    () async {
+      final SpotRepositoryImpl repo = _repo(
+        _FakeLink(throwLinkException: true),
+      );
+
+      await expectLater(
+        repo.fetchSpotDetail('c1'),
+        throwsA(
+          isA<SpotFailure>().having(
+            (SpotFailure f) => f.kind,
+            'kind',
+            SpotFailureKind.network,
+          ),
+        ),
+      );
+    },
+  );
+
   test('Home mock sections stay populated (no server API yet)', () async {
     final SpotRepositoryImpl repo = _repo(_FakeLink());
 

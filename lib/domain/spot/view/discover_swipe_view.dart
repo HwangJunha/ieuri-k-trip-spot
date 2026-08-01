@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../common/permission/component/permission_blocked_notice.dart';
 import '../../../common/permission/model/permission_kind.dart';
@@ -14,6 +15,7 @@ import '../model/spot_reaction.dart';
 import '../model/swipe_queue.dart';
 import '../model/tourist_spot.dart';
 import '../provider/swipe_providers.dart';
+import 'spot_detail_view.dart';
 
 /// Discover 스와이프 화면 본체(spec §3·§7). 상단 카테고리 바 + 카드 스택.
 ///
@@ -223,6 +225,14 @@ class _CardStackState extends ConsumerState<_CardStack> {
     setState(() => _dragX = 0);
   }
 
+  /// 카드 탭 → 상세로 push(§5, R9). id만 넘기고, Discover 스택은 셸에 보존된다.
+  void _openDetail(TouristSpot spot) {
+    context.pushNamed(
+      SpotDetailView.routeName,
+      pathParameters: <String, String>{'id': spot.id},
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<TouristSpot> cards = widget.queue.cards;
@@ -263,6 +273,7 @@ class _CardStackState extends ConsumerState<_CardStack> {
                   flingVelocity: _flingVelocity,
                   onDragUpdate: (double dx) => setState(() => _dragX = dx),
                   onReaction: _onReaction,
+                  onTap: () => _openDetail(top),
                 ),
               ),
             ],
@@ -285,6 +296,7 @@ class _DraggableTop extends StatelessWidget {
     required this.flingVelocity,
     required this.onDragUpdate,
     required this.onReaction,
+    required this.onTap,
   });
 
   final TouristSpot spot;
@@ -295,6 +307,9 @@ class _DraggableTop extends StatelessWidget {
   final ValueChanged<double> onDragUpdate;
   final ValueChanged<SpotReaction> onReaction;
 
+  /// 카드 탭(드래그 아님) 콜백 — 상세 진입.
+  final VoidCallback onTap;
+
   @override
   Widget build(BuildContext context) {
     // 변위 비례 회전(최대 ±0.12rad). 카드 폭 절반에서 최대치.
@@ -303,6 +318,7 @@ class _DraggableTop extends StatelessWidget {
         : (dragX / (width / 2)).clamp(-1.0, 1.0) * 0.12;
 
     return GestureDetector(
+      onTap: onTap,
       onHorizontalDragUpdate: (DragUpdateDetails d) =>
           onDragUpdate(dragX + d.delta.dx),
       onHorizontalDragEnd: (DragEndDetails d) {

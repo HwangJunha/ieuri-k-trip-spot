@@ -1,6 +1,7 @@
 import '../../../common/localization/app_language.dart';
 import '../../../common/pagination/offset_page.dart';
 import '../model/spot_category.dart';
+import '../model/spot_detail.dart';
 import '../model/spot_reaction.dart';
 import '../model/tourist_spot.dart';
 
@@ -31,6 +32,13 @@ abstract interface class SpotRepository {
     required int page,
     required int size,
   });
+
+  /// One tourist spot's full detail by [id] (=contentId, SPEC-0003). The active
+  /// language is carried by the client's `Accept-Language` header, not an
+  /// argument (spec §2). Maps the GraphQL response to a domain [SpotDetail];
+  /// query-level failures surface as a [SpotFailure] the provider translates to a
+  /// UI state (SPOT_NOT_FOUND / UPSTREAM_RATE_LIMITED / UPSTREAM_UNAVAILABLE, §6).
+  Future<SpotDetail> fetchSpotDetail(String id);
 
   /// The categories the server exposes for the active [language] (spec §5). The
   /// server is the single source of availability — the client renders exactly

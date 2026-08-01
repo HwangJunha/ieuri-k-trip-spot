@@ -1054,6 +1054,893 @@ const documentNodeQueryAvailableSpotCategories = DocumentNode(
   ],
 );
 
+class Variables$Query$SpotDetail {
+  factory Variables$Query$SpotDetail({required String id}) =>
+      Variables$Query$SpotDetail._({r'id': id});
+
+  Variables$Query$SpotDetail._(this._$data);
+
+  factory Variables$Query$SpotDetail.fromJson(Map<String, dynamic> data) {
+    final result$data = <String, dynamic>{};
+    final l$id = data['id'];
+    result$data['id'] = (l$id as String);
+    return Variables$Query$SpotDetail._(result$data);
+  }
+
+  Map<String, dynamic> _$data;
+
+  String get id => (_$data['id'] as String);
+
+  Map<String, dynamic> toJson() {
+    final result$data = <String, dynamic>{};
+    final l$id = id;
+    result$data['id'] = l$id;
+    return result$data;
+  }
+
+  CopyWith$Variables$Query$SpotDetail<Variables$Query$SpotDetail>
+  get copyWith => CopyWith$Variables$Query$SpotDetail(this, (i) => i);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Variables$Query$SpotDetail ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$id = id;
+    final lOther$id = other.id;
+    if (l$id != lOther$id) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    final l$id = id;
+    return Object.hashAll([l$id]);
+  }
+}
+
+abstract class CopyWith$Variables$Query$SpotDetail<TRes> {
+  factory CopyWith$Variables$Query$SpotDetail(
+    Variables$Query$SpotDetail instance,
+    TRes Function(Variables$Query$SpotDetail) then,
+  ) = _CopyWithImpl$Variables$Query$SpotDetail;
+
+  factory CopyWith$Variables$Query$SpotDetail.stub(TRes res) =
+      _CopyWithStubImpl$Variables$Query$SpotDetail;
+
+  TRes call({String? id});
+}
+
+class _CopyWithImpl$Variables$Query$SpotDetail<TRes>
+    implements CopyWith$Variables$Query$SpotDetail<TRes> {
+  _CopyWithImpl$Variables$Query$SpotDetail(this._instance, this._then);
+
+  final Variables$Query$SpotDetail _instance;
+
+  final TRes Function(Variables$Query$SpotDetail) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? id = _undefined}) => _then(
+    Variables$Query$SpotDetail._({
+      ..._instance._$data,
+      if (id != _undefined && id != null) 'id': (id as String),
+    }),
+  );
+}
+
+class _CopyWithStubImpl$Variables$Query$SpotDetail<TRes>
+    implements CopyWith$Variables$Query$SpotDetail<TRes> {
+  _CopyWithStubImpl$Variables$Query$SpotDetail(this._res);
+
+  TRes _res;
+
+  call({String? id}) => _res;
+}
+
+class Query$SpotDetail {
+  Query$SpotDetail({required this.spotDetail});
+
+  factory Query$SpotDetail.fromJson(Map<String, dynamic> json) {
+    final l$spotDetail = json['spotDetail'];
+    return Query$SpotDetail(
+      spotDetail: Query$SpotDetail$spotDetail.fromJson(
+        (l$spotDetail as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final Query$SpotDetail$spotDetail spotDetail;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$spotDetail = spotDetail;
+    _resultData['spotDetail'] = l$spotDetail.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$spotDetail = spotDetail;
+    return Object.hashAll([l$spotDetail]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$SpotDetail || runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$spotDetail = spotDetail;
+    final lOther$spotDetail = other.spotDetail;
+    if (l$spotDetail != lOther$spotDetail) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$SpotDetail on Query$SpotDetail {
+  CopyWith$Query$SpotDetail<Query$SpotDetail> get copyWith =>
+      CopyWith$Query$SpotDetail(this, (i) => i);
+}
+
+abstract class CopyWith$Query$SpotDetail<TRes> {
+  factory CopyWith$Query$SpotDetail(
+    Query$SpotDetail instance,
+    TRes Function(Query$SpotDetail) then,
+  ) = _CopyWithImpl$Query$SpotDetail;
+
+  factory CopyWith$Query$SpotDetail.stub(TRes res) =
+      _CopyWithStubImpl$Query$SpotDetail;
+
+  TRes call({Query$SpotDetail$spotDetail? spotDetail});
+  CopyWith$Query$SpotDetail$spotDetail<TRes> get spotDetail;
+}
+
+class _CopyWithImpl$Query$SpotDetail<TRes>
+    implements CopyWith$Query$SpotDetail<TRes> {
+  _CopyWithImpl$Query$SpotDetail(this._instance, this._then);
+
+  final Query$SpotDetail _instance;
+
+  final TRes Function(Query$SpotDetail) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? spotDetail = _undefined}) => _then(
+    Query$SpotDetail(
+      spotDetail: spotDetail == _undefined || spotDetail == null
+          ? _instance.spotDetail
+          : (spotDetail as Query$SpotDetail$spotDetail),
+    ),
+  );
+
+  CopyWith$Query$SpotDetail$spotDetail<TRes> get spotDetail {
+    final local$spotDetail = _instance.spotDetail;
+    return CopyWith$Query$SpotDetail$spotDetail(
+      local$spotDetail,
+      (e) => call(spotDetail: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Query$SpotDetail<TRes>
+    implements CopyWith$Query$SpotDetail<TRes> {
+  _CopyWithStubImpl$Query$SpotDetail(this._res);
+
+  TRes _res;
+
+  call({Query$SpotDetail$spotDetail? spotDetail}) => _res;
+
+  CopyWith$Query$SpotDetail$spotDetail<TRes> get spotDetail =>
+      CopyWith$Query$SpotDetail$spotDetail.stub(_res);
+}
+
+const documentNodeQuerySpotDetail = DocumentNode(
+  definitions: [
+    OperationDefinitionNode(
+      type: OperationType.query,
+      name: NameNode(value: 'SpotDetail'),
+      variableDefinitions: [
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'id')),
+          type: NamedTypeNode(name: NameNode(value: 'ID'), isNonNull: true),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+      ],
+      directives: [],
+      selectionSet: SelectionSetNode(
+        selections: [
+          FieldNode(
+            name: NameNode(value: 'spotDetail'),
+            alias: null,
+            arguments: [
+              ArgumentNode(
+                name: NameNode(value: 'id'),
+                value: VariableNode(name: NameNode(value: 'id')),
+              ),
+            ],
+            directives: [],
+            selectionSet: SelectionSetNode(
+              selections: [
+                FieldNode(
+                  name: NameNode(value: 'id'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'title'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'category'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'thumbnailImageUrl'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'overview'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'address'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'homepage'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'tel'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'copyright'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'attributionText'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'gallery'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'imageUrl'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'thumbnailUrl'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'caption'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'copyright'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'attributionText'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
+                FieldNode(
+                  name: NameNode(value: 'likeCount'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+);
+
+class Query$SpotDetail$spotDetail {
+  Query$SpotDetail$spotDetail({
+    required this.id,
+    required this.title,
+    required this.category,
+    required this.thumbnailImageUrl,
+    this.overview,
+    this.address,
+    this.homepage,
+    this.tel,
+    required this.copyright,
+    required this.attributionText,
+    required this.gallery,
+    required this.likeCount,
+  });
+
+  factory Query$SpotDetail$spotDetail.fromJson(Map<String, dynamic> json) {
+    final l$id = json['id'];
+    final l$title = json['title'];
+    final l$category = json['category'];
+    final l$thumbnailImageUrl = json['thumbnailImageUrl'];
+    final l$overview = json['overview'];
+    final l$address = json['address'];
+    final l$homepage = json['homepage'];
+    final l$tel = json['tel'];
+    final l$copyright = json['copyright'];
+    final l$attributionText = json['attributionText'];
+    final l$gallery = json['gallery'];
+    final l$likeCount = json['likeCount'];
+    return Query$SpotDetail$spotDetail(
+      id: (l$id as String),
+      title: (l$title as String),
+      category: fromJson$Enum$SpotCategory((l$category as String)),
+      thumbnailImageUrl: (l$thumbnailImageUrl as String),
+      overview: (l$overview as String?),
+      address: (l$address as String?),
+      homepage: (l$homepage as String?),
+      tel: (l$tel as String?),
+      copyright: fromJson$Enum$CopyrightType((l$copyright as String)),
+      attributionText: (l$attributionText as String),
+      gallery: (l$gallery as List<dynamic>)
+          .map(
+            (e) => Query$SpotDetail$spotDetail$gallery.fromJson(
+              (e as Map<String, dynamic>),
+            ),
+          )
+          .toList(),
+      likeCount: (l$likeCount as int),
+    );
+  }
+
+  final String id;
+
+  final String title;
+
+  final Enum$SpotCategory category;
+
+  final String thumbnailImageUrl;
+
+  final String? overview;
+
+  final String? address;
+
+  final String? homepage;
+
+  final String? tel;
+
+  final Enum$CopyrightType copyright;
+
+  final String attributionText;
+
+  final List<Query$SpotDetail$spotDetail$gallery> gallery;
+
+  final int likeCount;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$id = id;
+    _resultData['id'] = l$id;
+    final l$title = title;
+    _resultData['title'] = l$title;
+    final l$category = category;
+    _resultData['category'] = toJson$Enum$SpotCategory(l$category);
+    final l$thumbnailImageUrl = thumbnailImageUrl;
+    _resultData['thumbnailImageUrl'] = l$thumbnailImageUrl;
+    final l$overview = overview;
+    _resultData['overview'] = l$overview;
+    final l$address = address;
+    _resultData['address'] = l$address;
+    final l$homepage = homepage;
+    _resultData['homepage'] = l$homepage;
+    final l$tel = tel;
+    _resultData['tel'] = l$tel;
+    final l$copyright = copyright;
+    _resultData['copyright'] = toJson$Enum$CopyrightType(l$copyright);
+    final l$attributionText = attributionText;
+    _resultData['attributionText'] = l$attributionText;
+    final l$gallery = gallery;
+    _resultData['gallery'] = l$gallery.map((e) => e.toJson()).toList();
+    final l$likeCount = likeCount;
+    _resultData['likeCount'] = l$likeCount;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$id = id;
+    final l$title = title;
+    final l$category = category;
+    final l$thumbnailImageUrl = thumbnailImageUrl;
+    final l$overview = overview;
+    final l$address = address;
+    final l$homepage = homepage;
+    final l$tel = tel;
+    final l$copyright = copyright;
+    final l$attributionText = attributionText;
+    final l$gallery = gallery;
+    final l$likeCount = likeCount;
+    return Object.hashAll([
+      l$id,
+      l$title,
+      l$category,
+      l$thumbnailImageUrl,
+      l$overview,
+      l$address,
+      l$homepage,
+      l$tel,
+      l$copyright,
+      l$attributionText,
+      Object.hashAll(l$gallery.map((v) => v)),
+      l$likeCount,
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$SpotDetail$spotDetail ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$id = id;
+    final lOther$id = other.id;
+    if (l$id != lOther$id) {
+      return false;
+    }
+    final l$title = title;
+    final lOther$title = other.title;
+    if (l$title != lOther$title) {
+      return false;
+    }
+    final l$category = category;
+    final lOther$category = other.category;
+    if (l$category != lOther$category) {
+      return false;
+    }
+    final l$thumbnailImageUrl = thumbnailImageUrl;
+    final lOther$thumbnailImageUrl = other.thumbnailImageUrl;
+    if (l$thumbnailImageUrl != lOther$thumbnailImageUrl) {
+      return false;
+    }
+    final l$overview = overview;
+    final lOther$overview = other.overview;
+    if (l$overview != lOther$overview) {
+      return false;
+    }
+    final l$address = address;
+    final lOther$address = other.address;
+    if (l$address != lOther$address) {
+      return false;
+    }
+    final l$homepage = homepage;
+    final lOther$homepage = other.homepage;
+    if (l$homepage != lOther$homepage) {
+      return false;
+    }
+    final l$tel = tel;
+    final lOther$tel = other.tel;
+    if (l$tel != lOther$tel) {
+      return false;
+    }
+    final l$copyright = copyright;
+    final lOther$copyright = other.copyright;
+    if (l$copyright != lOther$copyright) {
+      return false;
+    }
+    final l$attributionText = attributionText;
+    final lOther$attributionText = other.attributionText;
+    if (l$attributionText != lOther$attributionText) {
+      return false;
+    }
+    final l$gallery = gallery;
+    final lOther$gallery = other.gallery;
+    if (l$gallery.length != lOther$gallery.length) {
+      return false;
+    }
+    for (int i = 0; i < l$gallery.length; i++) {
+      final l$gallery$entry = l$gallery[i];
+      final lOther$gallery$entry = lOther$gallery[i];
+      if (l$gallery$entry != lOther$gallery$entry) {
+        return false;
+      }
+    }
+    final l$likeCount = likeCount;
+    final lOther$likeCount = other.likeCount;
+    if (l$likeCount != lOther$likeCount) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$SpotDetail$spotDetail
+    on Query$SpotDetail$spotDetail {
+  CopyWith$Query$SpotDetail$spotDetail<Query$SpotDetail$spotDetail>
+  get copyWith => CopyWith$Query$SpotDetail$spotDetail(this, (i) => i);
+}
+
+abstract class CopyWith$Query$SpotDetail$spotDetail<TRes> {
+  factory CopyWith$Query$SpotDetail$spotDetail(
+    Query$SpotDetail$spotDetail instance,
+    TRes Function(Query$SpotDetail$spotDetail) then,
+  ) = _CopyWithImpl$Query$SpotDetail$spotDetail;
+
+  factory CopyWith$Query$SpotDetail$spotDetail.stub(TRes res) =
+      _CopyWithStubImpl$Query$SpotDetail$spotDetail;
+
+  TRes call({
+    String? id,
+    String? title,
+    Enum$SpotCategory? category,
+    String? thumbnailImageUrl,
+    String? overview,
+    String? address,
+    String? homepage,
+    String? tel,
+    Enum$CopyrightType? copyright,
+    String? attributionText,
+    List<Query$SpotDetail$spotDetail$gallery>? gallery,
+    int? likeCount,
+  });
+  TRes gallery(
+    Iterable<Query$SpotDetail$spotDetail$gallery> Function(
+      Iterable<
+        CopyWith$Query$SpotDetail$spotDetail$gallery<
+          Query$SpotDetail$spotDetail$gallery
+        >
+      >,
+    )
+    _fn,
+  );
+}
+
+class _CopyWithImpl$Query$SpotDetail$spotDetail<TRes>
+    implements CopyWith$Query$SpotDetail$spotDetail<TRes> {
+  _CopyWithImpl$Query$SpotDetail$spotDetail(this._instance, this._then);
+
+  final Query$SpotDetail$spotDetail _instance;
+
+  final TRes Function(Query$SpotDetail$spotDetail) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? id = _undefined,
+    Object? title = _undefined,
+    Object? category = _undefined,
+    Object? thumbnailImageUrl = _undefined,
+    Object? overview = _undefined,
+    Object? address = _undefined,
+    Object? homepage = _undefined,
+    Object? tel = _undefined,
+    Object? copyright = _undefined,
+    Object? attributionText = _undefined,
+    Object? gallery = _undefined,
+    Object? likeCount = _undefined,
+  }) => _then(
+    Query$SpotDetail$spotDetail(
+      id: id == _undefined || id == null ? _instance.id : (id as String),
+      title: title == _undefined || title == null
+          ? _instance.title
+          : (title as String),
+      category: category == _undefined || category == null
+          ? _instance.category
+          : (category as Enum$SpotCategory),
+      thumbnailImageUrl:
+          thumbnailImageUrl == _undefined || thumbnailImageUrl == null
+          ? _instance.thumbnailImageUrl
+          : (thumbnailImageUrl as String),
+      overview: overview == _undefined
+          ? _instance.overview
+          : (overview as String?),
+      address: address == _undefined ? _instance.address : (address as String?),
+      homepage: homepage == _undefined
+          ? _instance.homepage
+          : (homepage as String?),
+      tel: tel == _undefined ? _instance.tel : (tel as String?),
+      copyright: copyright == _undefined || copyright == null
+          ? _instance.copyright
+          : (copyright as Enum$CopyrightType),
+      attributionText: attributionText == _undefined || attributionText == null
+          ? _instance.attributionText
+          : (attributionText as String),
+      gallery: gallery == _undefined || gallery == null
+          ? _instance.gallery
+          : (gallery as List<Query$SpotDetail$spotDetail$gallery>),
+      likeCount: likeCount == _undefined || likeCount == null
+          ? _instance.likeCount
+          : (likeCount as int),
+    ),
+  );
+
+  TRes gallery(
+    Iterable<Query$SpotDetail$spotDetail$gallery> Function(
+      Iterable<
+        CopyWith$Query$SpotDetail$spotDetail$gallery<
+          Query$SpotDetail$spotDetail$gallery
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    gallery: _fn(
+      _instance.gallery.map(
+        (e) => CopyWith$Query$SpotDetail$spotDetail$gallery(e, (i) => i),
+      ),
+    ).toList(),
+  );
+}
+
+class _CopyWithStubImpl$Query$SpotDetail$spotDetail<TRes>
+    implements CopyWith$Query$SpotDetail$spotDetail<TRes> {
+  _CopyWithStubImpl$Query$SpotDetail$spotDetail(this._res);
+
+  TRes _res;
+
+  call({
+    String? id,
+    String? title,
+    Enum$SpotCategory? category,
+    String? thumbnailImageUrl,
+    String? overview,
+    String? address,
+    String? homepage,
+    String? tel,
+    Enum$CopyrightType? copyright,
+    String? attributionText,
+    List<Query$SpotDetail$spotDetail$gallery>? gallery,
+    int? likeCount,
+  }) => _res;
+
+  gallery(_fn) => _res;
+}
+
+class Query$SpotDetail$spotDetail$gallery {
+  Query$SpotDetail$spotDetail$gallery({
+    required this.imageUrl,
+    this.thumbnailUrl,
+    this.caption,
+    required this.copyright,
+    required this.attributionText,
+  });
+
+  factory Query$SpotDetail$spotDetail$gallery.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$imageUrl = json['imageUrl'];
+    final l$thumbnailUrl = json['thumbnailUrl'];
+    final l$caption = json['caption'];
+    final l$copyright = json['copyright'];
+    final l$attributionText = json['attributionText'];
+    return Query$SpotDetail$spotDetail$gallery(
+      imageUrl: (l$imageUrl as String),
+      thumbnailUrl: (l$thumbnailUrl as String?),
+      caption: (l$caption as String?),
+      copyright: fromJson$Enum$CopyrightType((l$copyright as String)),
+      attributionText: (l$attributionText as String),
+    );
+  }
+
+  final String imageUrl;
+
+  final String? thumbnailUrl;
+
+  final String? caption;
+
+  final Enum$CopyrightType copyright;
+
+  final String attributionText;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$imageUrl = imageUrl;
+    _resultData['imageUrl'] = l$imageUrl;
+    final l$thumbnailUrl = thumbnailUrl;
+    _resultData['thumbnailUrl'] = l$thumbnailUrl;
+    final l$caption = caption;
+    _resultData['caption'] = l$caption;
+    final l$copyright = copyright;
+    _resultData['copyright'] = toJson$Enum$CopyrightType(l$copyright);
+    final l$attributionText = attributionText;
+    _resultData['attributionText'] = l$attributionText;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$imageUrl = imageUrl;
+    final l$thumbnailUrl = thumbnailUrl;
+    final l$caption = caption;
+    final l$copyright = copyright;
+    final l$attributionText = attributionText;
+    return Object.hashAll([
+      l$imageUrl,
+      l$thumbnailUrl,
+      l$caption,
+      l$copyright,
+      l$attributionText,
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$SpotDetail$spotDetail$gallery ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$imageUrl = imageUrl;
+    final lOther$imageUrl = other.imageUrl;
+    if (l$imageUrl != lOther$imageUrl) {
+      return false;
+    }
+    final l$thumbnailUrl = thumbnailUrl;
+    final lOther$thumbnailUrl = other.thumbnailUrl;
+    if (l$thumbnailUrl != lOther$thumbnailUrl) {
+      return false;
+    }
+    final l$caption = caption;
+    final lOther$caption = other.caption;
+    if (l$caption != lOther$caption) {
+      return false;
+    }
+    final l$copyright = copyright;
+    final lOther$copyright = other.copyright;
+    if (l$copyright != lOther$copyright) {
+      return false;
+    }
+    final l$attributionText = attributionText;
+    final lOther$attributionText = other.attributionText;
+    if (l$attributionText != lOther$attributionText) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$SpotDetail$spotDetail$gallery
+    on Query$SpotDetail$spotDetail$gallery {
+  CopyWith$Query$SpotDetail$spotDetail$gallery<
+    Query$SpotDetail$spotDetail$gallery
+  >
+  get copyWith => CopyWith$Query$SpotDetail$spotDetail$gallery(this, (i) => i);
+}
+
+abstract class CopyWith$Query$SpotDetail$spotDetail$gallery<TRes> {
+  factory CopyWith$Query$SpotDetail$spotDetail$gallery(
+    Query$SpotDetail$spotDetail$gallery instance,
+    TRes Function(Query$SpotDetail$spotDetail$gallery) then,
+  ) = _CopyWithImpl$Query$SpotDetail$spotDetail$gallery;
+
+  factory CopyWith$Query$SpotDetail$spotDetail$gallery.stub(TRes res) =
+      _CopyWithStubImpl$Query$SpotDetail$spotDetail$gallery;
+
+  TRes call({
+    String? imageUrl,
+    String? thumbnailUrl,
+    String? caption,
+    Enum$CopyrightType? copyright,
+    String? attributionText,
+  });
+}
+
+class _CopyWithImpl$Query$SpotDetail$spotDetail$gallery<TRes>
+    implements CopyWith$Query$SpotDetail$spotDetail$gallery<TRes> {
+  _CopyWithImpl$Query$SpotDetail$spotDetail$gallery(this._instance, this._then);
+
+  final Query$SpotDetail$spotDetail$gallery _instance;
+
+  final TRes Function(Query$SpotDetail$spotDetail$gallery) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? imageUrl = _undefined,
+    Object? thumbnailUrl = _undefined,
+    Object? caption = _undefined,
+    Object? copyright = _undefined,
+    Object? attributionText = _undefined,
+  }) => _then(
+    Query$SpotDetail$spotDetail$gallery(
+      imageUrl: imageUrl == _undefined || imageUrl == null
+          ? _instance.imageUrl
+          : (imageUrl as String),
+      thumbnailUrl: thumbnailUrl == _undefined
+          ? _instance.thumbnailUrl
+          : (thumbnailUrl as String?),
+      caption: caption == _undefined ? _instance.caption : (caption as String?),
+      copyright: copyright == _undefined || copyright == null
+          ? _instance.copyright
+          : (copyright as Enum$CopyrightType),
+      attributionText: attributionText == _undefined || attributionText == null
+          ? _instance.attributionText
+          : (attributionText as String),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$SpotDetail$spotDetail$gallery<TRes>
+    implements CopyWith$Query$SpotDetail$spotDetail$gallery<TRes> {
+  _CopyWithStubImpl$Query$SpotDetail$spotDetail$gallery(this._res);
+
+  TRes _res;
+
+  call({
+    String? imageUrl,
+    String? thumbnailUrl,
+    String? caption,
+    Enum$CopyrightType? copyright,
+    String? attributionText,
+  }) => _res;
+}
+
 class Variables$Mutation$ReactToSpot {
   factory Variables$Mutation$ReactToSpot({
     required Input$ReactToSpotInput input,
