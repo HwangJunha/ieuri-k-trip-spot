@@ -182,5 +182,6 @@
   "spotDetailUnavailableTitle": "无法加载该景点",
   "spotDetailUnavailableBody": "加载详情时出现问题，请重试。",
   "spotDetailRetryButton": "重试",
-  "spotDetailReactionFailed": "无法保存您的反应，请重试。"
+  "spotDetailReactionFailed": "无法保存您的反应，请重试。",
+  "spotDetailLinkFailed": "无法打开此链接。"
 }

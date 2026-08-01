@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/attribution_block.dart';
@@ -259,6 +260,24 @@ class _LikeCount extends ConsumerWidget {
   }
 }
 
+/// 홈페이지 [url]을 외부 브라우저로 연다. 열지 못하면(잘못된 URL·처리 앱 없음)
+/// 스낵바로 알린다 — 탭했는데 아무 일도 안 일어나는 상태를 남기지 않는다.
+Future<void> _openUrl(BuildContext context, String url) async {
+  final messenger = ScaffoldMessenger.of(context);
+  final String failedText = AppLocalizations.of(context).spotDetailLinkFailed;
+
+  final Uri? uri = Uri.tryParse(url);
+  bool opened = false;
+  if (uri != null) {
+    try {
+      opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } on Exception {
+      opened = false;
+    }
+  }
+  if (!opened) messenger.showSnackBar(SnackBar(content: Text(failedText)));
+}
+
 /// 연락처 행들: 값 있는 것만 렌더한다(homepage/tel 각각). 값의 유무 판단은
 /// [SpotDetail]의 게터에 맡겨 빈 문자열도 "없음"으로 처리한다.
 class _ContactRows extends StatelessWidget {
@@ -272,11 +291,14 @@ class _ContactRows extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
+        // 홈페이지는 원문(앵커 태그)이 아니라 추출한 URL을 보여주고, 탭하면 브라우저로
+        // 연다. URL을 못 뽑으면 hasHomepage가 false라 행 자체가 없다.
         if (detail.hasHomepage)
           _ContactRow(
             icon: Icons.language_outlined,
             label: l10n.spotDetailHomepageLabel,
-            value: detail.homepage!,
+            value: detail.homepageUrl!,
+            onTap: () => _openUrl(context, detail.homepageUrl!),
           ),
         if (detail.hasHomepage && detail.hasTel) const SizedBox(height: 8),
         if (detail.hasTel)
@@ -295,15 +317,29 @@ class _ContactRow extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    this.onTap,
   });
 
   final IconData icon;
   final String label;
   final String value;
 
+  /// 값을 탭했을 때 동작(홈페이지는 브라우저 열기). null이면 일반 텍스트.
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    // 링크는 밑줄로 눌러지는 대상임을 알린다(색만으로 구분하지 않는다).
+    final Text valueText = Text(
+      value,
+      style: theme.textTheme.bodyMedium?.copyWith(
+        color: theme.colorScheme.primary,
+        decoration: onTap == null ? null : TextDecoration.underline,
+        decorationColor: theme.colorScheme.primary,
+      ),
+    );
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -311,12 +347,9 @@ class _ContactRow extends StatelessWidget {
         const SizedBox(width: 8),
         Text('$label: ', style: theme.textTheme.bodyMedium),
         Expanded(
-          child: Text(
-            value,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.primary,
-            ),
-          ),
+          child: onTap == null
+              ? valueText
+              : InkWell(onTap: onTap, child: valueText),
         ),
       ],
     );

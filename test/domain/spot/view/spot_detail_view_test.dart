@@ -102,6 +102,50 @@ void main() {
     expect(find.byType(AttributionBlock), findsOneWidget);
   });
 
+  testWidgets('homepage row shows the extracted URL, not the raw anchor tag', (
+    tester,
+  ) async {
+    final repo = FakeSpotRepository(
+      detail: detailSpot(
+        'c1',
+        homepage:
+            '<a href="http://www.i-etland.co.kr " target="_blank" '
+            'title="용산전자랜드 홈페이지로 이동">http://www.i-etland.co.kr</a>',
+      ),
+    );
+    await _pump(tester, repo);
+    await tester.pumpAndSettle();
+
+    expect(find.text('http://www.i-etland.co.kr'), findsOneWidget);
+    // 태그 원문은 화면에 남지 않는다.
+    expect(find.textContaining('<a href'), findsNothing);
+    // 링크는 탭 가능해야 한다.
+    expect(
+      find.descendant(
+        of: find.byType(InkWell),
+        matching: find.text('http://www.i-etland.co.kr'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('homepage row is hidden when the value has no usable URL', (
+    tester,
+  ) async {
+    final repo = FakeSpotRepository(
+      detail: detailSpot('c1', homepage: '준비 중', tel: null),
+    );
+    await _pump(tester, repo);
+    await tester.pumpAndSettle();
+
+    final AppLocalizations l10n = AppLocalizations.of(
+      tester.element(find.byType(SpotDetailView)),
+    );
+    // 열 수 있는 URL이 없으면 연락처 섹션까지 사라진다.
+    expect(find.text(l10n.spotDetailHomepageLabel), findsNothing);
+    expect(find.text(l10n.spotDetailContactTitle), findsNothing);
+  });
+
   testWidgets('shows the not-found error state (AC-26)', (tester) async {
     final repo = FakeSpotRepository(detailFailure: SpotFailure.notFound);
     await _pump(tester, repo);

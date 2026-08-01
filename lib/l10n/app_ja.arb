@@ -182,5 +182,6 @@
   "spotDetailUnavailableTitle": "スポットを読み込めませんでした",
   "spotDetailUnavailableBody": "詳細の読み込み中に問題が発生しました。もう一度お試しください。",
   "spotDetailRetryButton": "再試行",
-  "spotDetailReactionFailed": "リアクションを保存できませんでした。もう一度お試しください。"
+  "spotDetailReactionFailed": "リアクションを保存できませんでした。もう一度お試しください。",
+  "spotDetailLinkFailed": "リンクを開けませんでした。"
 }

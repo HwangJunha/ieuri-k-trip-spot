@@ -45,6 +45,7 @@ dependencies:
 
   # Device GPS coordinates for the location-based spot feed (SPEC-0002)
   geolocator: ^13.0.1
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:

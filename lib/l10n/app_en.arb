@@ -183,5 +183,6 @@
   "spotDetailUnavailableTitle": "Couldn't load this spot",
   "spotDetailUnavailableBody": "Something went wrong loading the details. Please try again.",
   "spotDetailRetryButton": "Retry",
-  "spotDetailReactionFailed": "Couldn't save your reaction. Please try again."
+  "spotDetailReactionFailed": "Couldn't save your reaction. Please try again.",
+  "spotDetailLinkFailed": "Couldn't open this link."
 }

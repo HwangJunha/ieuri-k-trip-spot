@@ -67,6 +67,66 @@ void main() {
     expect(full.hasContact, isTrue);
   });
 
+  group('homepageUrl', () {
+    SpotDetail withHomepage(String? homepage) => SpotDetail(
+      id: 'c1',
+      title: 'T',
+      category: SpotCategory.touristSpot,
+      thumbnailImageUrl: 'https://img/t.jpg',
+      homepage: homepage,
+      copyright: CopyrightType.type1,
+      attributionText: 'KTO',
+      gallery: const <SpotImage>[],
+      likeCount: 0,
+    );
+
+    test('extracts the href from a TourAPI anchor tag', () {
+      // 실제 TourAPI 응답 형태 — href 안에 후행 공백이 있다.
+      final SpotDetail detail = withHomepage(
+        '<a href="http://www.i-etland.co.kr " target="_blank" '
+        'title="용산전자랜드 홈페이지로 이동">http://www.i-etland.co.kr</a>',
+      );
+
+      expect(detail.homepageUrl, 'http://www.i-etland.co.kr');
+      expect(detail.hasHomepage, isTrue);
+    });
+
+    test('accepts single-quoted href', () {
+      expect(
+        withHomepage("<a href='https://example.com'>x</a>").homepageUrl,
+        'https://example.com',
+      );
+    });
+
+    test('takes the first link when several are present', () {
+      final SpotDetail detail = withHomepage(
+        '<a href="https://first.com">1</a> <a href="https://second.com">2</a>',
+      );
+
+      expect(detail.homepageUrl, 'https://first.com');
+    });
+
+    test('falls back to a bare URL when there is no anchor tag', () {
+      expect(
+        withHomepage('http://www.example.co.kr').homepageUrl,
+        'http://www.example.co.kr',
+      );
+      expect(
+        withHomepage('안내: https://example.com 로 문의').homepageUrl,
+        'https://example.com',
+      );
+    });
+
+    test('is null when there is no usable URL', () {
+      expect(withHomepage(null).homepageUrl, isNull);
+      expect(withHomepage('').homepageUrl, isNull);
+      expect(withHomepage('   ').homepageUrl, isNull);
+      // 링크 없는 평문 → 열 수 있는 URL이 없으므로 행을 숨긴다.
+      expect(withHomepage('준비 중').homepageUrl, isNull);
+      expect(withHomepage('준비 중').hasHomepage, isFalse);
+    });
+  });
+
   test('distinctImageAttributions excludes the item attribution', () {
     final SpotDetail detail = SpotDetail(
       id: 'c1',

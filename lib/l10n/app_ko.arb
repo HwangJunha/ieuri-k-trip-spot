@@ -329,5 +329,6 @@
   "spotDetailUnavailableTitle": "여행지를 불러오지 못했어요",
   "spotDetailUnavailableBody": "상세 정보를 불러오는 중 문제가 발생했어요. 다시 시도해 주세요.",
   "spotDetailRetryButton": "다시 시도",
-  "spotDetailReactionFailed": "반응을 저장하지 못했어요. 다시 시도해 주세요."
+  "spotDetailReactionFailed": "반응을 저장하지 못했어요. 다시 시도해 주세요.",
+  "spotDetailLinkFailed": "링크를 열지 못했어요."
 }

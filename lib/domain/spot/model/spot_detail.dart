@@ -70,8 +70,38 @@ class SpotDetail {
   /// 주소 행을 그릴지.
   bool get hasAddress => _present(address);
 
-  /// 홈페이지 행을 그릴지.
-  bool get hasHomepage => _present(homepage);
+  /// 홈페이지 행을 그릴지. 값이 있어도 URL을 못 뽑으면(빈 앵커 등) 그리지 않는다.
+  bool get hasHomepage => homepageUrl != null;
+
+  /// [homepage]에서 실제 이동할 URL만 뽑아낸다.
+  ///
+  /// TourAPI의 homepage는 평문 URL이 아니라 앵커 태그 원문으로 오는 경우가 많다:
+  /// `<a href="http://example.com " target="_blank" title="...">http://example.com</a>`
+  /// (href 안에 공백이 끼기도 한다). 그대로 렌더하면 태그가 노출되고 링크도 안 되므로
+  /// href 값을 우선 취하고, 앵커가 없으면 본문에서 첫 URL을 찾는다. 둘 다 없으면 null.
+  ///
+  /// 표시 규칙은 클라이언트 몫이라(POL-024) 이 정규화를 모델에 둔다 — 위젯마다
+  /// 파싱을 반복하지 않는다.
+  String? get homepageUrl {
+    final String? raw = homepage;
+    if (raw == null || raw.trim().isEmpty) return null;
+
+    // 1순위: href="..." 안의 값(작은/큰따옴표 모두 허용).
+    final RegExpMatch? href = RegExp(
+      r'''href\s*=\s*["']([^"']+)["']''',
+      caseSensitive: false,
+    ).firstMatch(raw);
+    final String? fromHref = href?.group(1)?.trim();
+    if (fromHref != null && fromHref.isNotEmpty) return fromHref;
+
+    // 2순위: 태그가 없거나 href가 비었으면 본문에서 첫 URL을 찾는다.
+    // 공백·따옴표·꺾쇠는 URL의 끝으로 본다.
+    final RegExpMatch? bare = RegExp(
+      '''https?://[^\\s"'<>]+''',
+      caseSensitive: false,
+    ).firstMatch(raw);
+    return bare?.group(0);
+  }
 
   /// 전화 행을 그릴지.
   bool get hasTel => _present(tel);
