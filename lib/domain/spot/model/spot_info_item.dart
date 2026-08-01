@@ -1,3 +1,5 @@
+import 'tour_api_text.dart';
+
 /// 이용안내 1건(detailInfo2). 카테고리별로 제각각인 반복 항목을 서버가 항목명/내용
 /// 쌍으로 정규화해 내려준 값이다.
 ///
@@ -14,11 +16,11 @@ class SpotInfoItem {
   /// 항목 내용.
   final String text;
 
-  /// 표시용 항목명(앞뒤 공백 제거). 비어 있으면 그 줄을 그리지 않는다.
-  String get displayName => name.trim();
+  /// 표시용 항목명. HTML 조각을 걷어낸 평문이며, 비어 있으면 그 줄을 그리지 않는다.
+  String get displayName => sanitizeTourApiText(name) ?? '';
 
-  /// 표시용 내용(앞뒤 공백 제거). 비어 있으면 그 줄을 그리지 않는다.
-  String get displayText => text.trim();
+  /// 표시용 내용. `<br>`은 줄바꿈으로 바뀐다 — 이용안내는 여러 줄로 오는 일이 잦다.
+  String get displayText => sanitizeTourApiText(text) ?? '';
 
   /// 이 항목을 그릴지. 항목명·내용 중 하나라도 실제 값이 있어야 한다.
   bool get hasContent => displayName.isNotEmpty || displayText.isNotEmpty;

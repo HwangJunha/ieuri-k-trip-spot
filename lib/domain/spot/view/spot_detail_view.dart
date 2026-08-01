@@ -190,7 +190,7 @@ class _DetailBody extends ConsumerWidget {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          detail.address!,
+                          detail.displayAddress!,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -210,7 +210,7 @@ class _DetailBody extends ConsumerWidget {
                   DetailSection(
                     title: l10n.spotDetailOverviewTitle,
                     child: Text(
-                      detail.overview!,
+                      detail.displayOverview!,
                       style: theme.textTheme.bodyMedium,
                     ),
                   ),
@@ -349,7 +349,7 @@ class _ContactRows extends StatelessWidget {
           _ContactRow(
             icon: Icons.phone_outlined,
             label: l10n.spotDetailTelLabel,
-            value: detail.tel!,
+            value: detail.displayTel!,
           ),
       ],
     );

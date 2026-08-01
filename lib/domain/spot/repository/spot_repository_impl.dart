@@ -14,6 +14,7 @@ import '../model/spot_image.dart';
 import '../model/spot_info_item.dart';
 import '../model/spot_intro.dart';
 import '../model/spot_reaction.dart';
+import '../model/tour_api_text.dart';
 import '../model/tourist_spot.dart';
 import 'spot_operations.graphql.dart';
 import 'spot_repository.dart';
@@ -184,14 +185,17 @@ class SpotRepositoryImpl implements SpotRepository {
 
   /// 서버 `Spot` 아이템을 도메인 [TouristSpot]으로 매핑한다. 스와이프 카드가 쓰는
   /// 필드만 채우고(Home 전용 필드는 null), 거리는 미터 정수로 반올림한다.
+  /// 제목·주소는 TourAPI 원문이라 `&amp;` 같은 엔티티가 섞여 온다. 여기서 정리해
+  /// 두면 같은 값을 스와이프 카드와 상세가 똑같이 보여준다(한쪽만 정리하면 탭 한 번에
+  /// 표기가 달라진다).
   TouristSpot _spotFromItem(Query$Spots$spots$items item) => TouristSpot(
     id: item.id,
-    name: item.title,
+    name: sanitizeTourApiText(item.title) ?? item.title,
     imageRef: item.thumbnailImageUrl,
-    location: item.address ?? '',
+    location: sanitizeTourApiText(item.address) ?? '',
     congestion: CongestionLevel.low,
     thumbnailImageUrl: item.thumbnailImageUrl,
-    address: item.address,
+    address: sanitizeTourApiText(item.address),
     distanceMeters: item.distanceMeters.round(),
     copyright: _copyright(item.copyright),
     attributionText: item.attributionText,
@@ -202,7 +206,8 @@ class SpotRepositoryImpl implements SpotRepository {
   /// 갤러리 아이템은 [SpotImage]로 매핑한다(POL-020, AC-32).
   SpotDetail _detailFromResult(Query$SpotDetail$spotDetail r) => SpotDetail(
     id: r.id,
-    title: r.title,
+    // 제목도 TourAPI 원문이라 엔티티가 섞여 온다(스와이프 카드와 동일하게 정리).
+    title: sanitizeTourApiText(r.title) ?? r.title,
     category: _categoryFromEnum(r.category),
     thumbnailImageUrl: r.thumbnailImageUrl,
     overview: r.overview,

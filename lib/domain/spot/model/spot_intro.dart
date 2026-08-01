@@ -1,3 +1,5 @@
+import 'tour_api_text.dart';
+
 /// 운영 정보 항목의 종류. 뷰가 아이콘·라벨(다국어)을 고르는 키다 — 문구 자체는
 /// l10n에 있고 모델은 종류만 안다(모델은 순수, CLAUDE.md §3).
 enum SpotIntroField {
@@ -75,13 +77,15 @@ class SpotIntro {
   ///
   /// null뿐 아니라 공백뿐인 값도 "없음"으로 친다 — TourAPI는 값이 없을 때 빈 문자열을
   /// 주기도 하는데, null만 검사하면 `"주차: "` 같은 빈 라벨이 남는다.
+  ///
+  /// 값은 [sanitizeTourApiText]로 정리해서 담는다 — 운영 시간 같은 필드는 `<br>`로
+  /// 줄을 나눠 오므로 태그를 걷어내고 줄바꿈으로 바꾼다. 태그만 있던 값은 정리 후
+  /// 비어 항목에서 빠진다.
   List<SpotIntroEntry> get presentEntries {
     final List<SpotIntroEntry> entries = <SpotIntroEntry>[];
     void add(SpotIntroField field, String? value) {
-      final String? trimmed = value?.trim();
-      if (trimmed != null && trimmed.isNotEmpty) {
-        entries.add(SpotIntroEntry(field, trimmed));
-      }
+      final String? cleaned = sanitizeTourApiText(value);
+      if (cleaned != null) entries.add(SpotIntroEntry(field, cleaned));
     }
 
     // 여행자가 먼저 확인하는 순서: 언제 여는가 → 언제 닫는가 → 얼마인가 → 부가 조건.

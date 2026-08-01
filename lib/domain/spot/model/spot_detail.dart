@@ -3,6 +3,7 @@ import 'spot_category.dart';
 import 'spot_image.dart';
 import 'spot_info_item.dart';
 import 'spot_intro.dart';
+import 'tour_api_text.dart';
 
 /// 관광지 상세(SPEC-0003). Discover 스와이프의 [TouristSpot]과 별개인 상세 전용
 /// read shape다 — 스와이프는 대량 리스트라 상세 필드를 얹지 않는다(contract §SpotDetail).
@@ -75,11 +76,18 @@ class SpotDetail {
   // 검사하면 빈 라벨("웹사이트: ")이 그려지므로, 값의 유무 판단은 이 게터로 한 곳에
   // 모은다 — 각 위젯이 제각기 검사하지 않는다.
 
-  /// 소개 섹션을 그릴지. 값이 없거나 공백뿐이면 false.
-  bool get hasOverview => _present(overview);
+  /// 소개 섹션을 그릴지. 값이 없거나, 공백뿐이거나, 태그만 있으면 false.
+  bool get hasOverview => displayOverview != null;
 
-  /// 주소 행을 그릴지.
-  bool get hasAddress => _present(address);
+  /// 표시용 소개글. TourAPI는 긴 설명을 `<br>`로 줄을 나눠 주므로 태그를 걷어내고
+  /// 줄바꿈으로 바꾼다 — 원문([overview])은 그대로 두고 표시용만 정리한다.
+  String? get displayOverview => sanitizeTourApiText(overview);
+
+  /// 주소 행을 그릴지. 태그만 남은 값은 정리 후 비므로 그리지 않는다.
+  bool get hasAddress => displayAddress != null;
+
+  /// 표시용 주소. 주소에도 간혹 태그가 섞여 온다.
+  String? get displayAddress => sanitizeTourApiText(address);
 
   /// 홈페이지 행을 그릴지. 값이 있어도 URL을 못 뽑으면(빈 앵커 등) 그리지 않는다.
   bool get hasHomepage => homepageUrl != null;
@@ -115,7 +123,10 @@ class SpotDetail {
   }
 
   /// 전화 행을 그릴지.
-  bool get hasTel => _present(tel);
+  bool get hasTel => displayTel != null;
+
+  /// 표시용 전화번호. 전화번호에도 `<br>`로 여러 번호를 나눠 주는 경우가 있다.
+  String? get displayTel => sanitizeTourApiText(tel);
 
   /// 연락처 섹션 자체를 그릴지 — 홈페이지·전화가 모두 없으면 섹션을 숨긴다.
   bool get hasContact => hasHomepage || hasTel;
@@ -146,9 +157,6 @@ class SpotDetail {
     }
     return result;
   }
-
-  static bool _present(String? value) =>
-      value != null && value.trim().isNotEmpty;
 
   @override
   bool operator ==(Object other) =>

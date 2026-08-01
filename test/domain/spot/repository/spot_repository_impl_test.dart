@@ -337,6 +337,43 @@ void main() {
     },
   );
 
+  test('swipe card text is cleaned of TourAPI markup at mapping', () async {
+    // 카드와 상세가 같은 값을 다르게 보여주지 않도록 매핑 시점에 정리한다.
+    final SpotRepositoryImpl repo = _repo(
+      _FakeLink(
+        data: <String, dynamic>{
+          'spots': <String, dynamic>{
+            'items': <dynamic>[
+              <String, dynamic>{
+                'id': 's1',
+                'title': '롯데월드 &amp; 매직아일랜드',
+                'address': '서울<br>송파구',
+                'thumbnailImageUrl': 'https://img/s1.jpg',
+                'distanceMeters': 100.0,
+                'category': 'TOURIST_SPOT',
+                'copyright': 'TYPE1',
+                'attributionText': 'KTO',
+              },
+            ],
+            'page': 0,
+            'hasNext': false,
+            'totalCount': 1,
+          },
+        },
+      ),
+    );
+
+    final OffsetPage<TouristSpot> page = await repo.fetchSpotPage(
+      latitude: 37.5,
+      longitude: 127.0,
+      page: 0,
+      size: 100,
+    );
+
+    expect(page.items.first.name, '롯데월드 & 매직아일랜드');
+    expect(page.items.first.address, '서울\n송파구');
+  });
+
   test('fetchSpotDetail sends the category the server requires', () async {
     // intro/infoItems는 category를 필수 인자로 요구한다 — 변수로 실려 나가지 않으면
     // 서버가 MissingFieldArgument로 쿼리를 거절한다.

@@ -191,6 +191,60 @@ void main() {
     expect(find.text(l10n.spotDetailIntroFee), findsNothing);
   });
 
+  testWidgets('renders <br> in intro values as real line breaks', (
+    tester,
+  ) async {
+    // 서버가 실제로 내려주는 형태 — 태그가 화면에 리터럴로 보이면 안 된다.
+    final repo = FakeSpotRepository(
+      detail: detailSpot(
+        'c1',
+        intro: const SpotIntro(
+          businessHours: '[평일]<br>- 11:30~22:00<br>- 준비시간 15:00~17:30',
+        ),
+      ),
+    );
+    await _pump(tester, repo);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('[평일]\n- 11:30~22:00\n- 준비시간 15:00~17:30'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('<br>'), findsNothing);
+  });
+
+  testWidgets('strips tags from the overview text', (tester) async {
+    final repo = FakeSpotRepository(
+      detail: detailSpot('c1', overview: '첫 줄<br>둘째 줄 &amp; 셋째'),
+    );
+    await _pump(tester, repo);
+    await tester.pumpAndSettle();
+
+    expect(find.text('첫 줄\n둘째 줄 & 셋째'), findsOneWidget);
+    expect(find.textContaining('<br>'), findsNothing);
+    expect(find.textContaining('&amp;'), findsNothing);
+  });
+
+  testWidgets('hides a section whose value is only markup', (tester) async {
+    // 태그만 남은 값은 정리 후 비므로 "값 없음"과 똑같이 다뤄야 한다.
+    final repo = FakeSpotRepository(
+      detail: detailSpot(
+        'c1',
+        overview: '<br>',
+        homepage: null,
+        tel: '<br><br>',
+      ),
+    );
+    await _pump(tester, repo);
+    await tester.pumpAndSettle();
+
+    final AppLocalizations l10n = AppLocalizations.of(
+      tester.element(find.byType(SpotDetailView)),
+    );
+    expect(find.text(l10n.spotDetailOverviewTitle), findsNothing);
+    expect(find.text(l10n.spotDetailContactTitle), findsNothing);
+  });
+
   testWidgets('hides the intro section when no field has a value', (
     tester,
   ) async {
@@ -258,6 +312,25 @@ void main() {
     // 값이 같아도 두 항목 모두 남는다(간격 위젯 개수 같은 내부 구조는 보지 않는다).
     expect(find.text('동일 내용'), findsNWidgets(2));
     expect(find.text('안내'), findsNWidgets(2));
+  });
+
+  testWidgets('renders <br> in info item text as real line breaks', (
+    tester,
+  ) async {
+    // 모델 → presentInfoItems → 위젯까지 정리된 값이 흘러가는지 끝까지 확인한다.
+    final repo = FakeSpotRepository(
+      detail: detailSpot(
+        'c1',
+        infoItems: const <SpotInfoItem>[
+          SpotInfoItem(name: '이용시간', text: '[평일]<br>09:00~18:00'),
+        ],
+      ),
+    );
+    await _pump(tester, repo);
+    await tester.pumpAndSettle();
+
+    expect(find.text('[평일]\n09:00~18:00'), findsOneWidget);
+    expect(find.textContaining('<br>'), findsNothing);
   });
 
   testWidgets('hides the info section when there are no items', (tester) async {
