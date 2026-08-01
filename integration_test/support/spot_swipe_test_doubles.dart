@@ -8,6 +8,8 @@ import 'package:ieuri_k_trip_spot/common/permission/service/permission_service.d
 import 'package:ieuri_k_trip_spot/domain/spot/model/congestion_level.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/spot_detail.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/spot_image.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_reaction.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/tourist_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/repository/spot_repository.dart';
@@ -82,6 +84,27 @@ class FakeSpotRepository implements SpotRepository {
   Future<void> reactToSpot(String spotId, SpotReaction reaction) async {
     recordedReactions.add((spotId, reaction));
   }
+
+  @override
+  Future<SpotDetail> fetchSpotDetail(String id, SpotCategory category) async =>
+      SpotDetail(
+        id: id,
+        title: 'Spot $id',
+        category: category,
+        thumbnailImageUrl: id,
+        overview: 'Overview of $id',
+        address: '$id-ro, Seoul',
+        copyright: CopyrightType.type1,
+        attributionText: 'KTO',
+        gallery: const <SpotImage>[
+          SpotImage(
+            imageUrl: 'https://img/g.jpg',
+            copyright: CopyrightType.type1,
+            attributionText: 'KTO',
+          ),
+        ],
+        likeCount: 0,
+      );
 
   @override
   Future<List<TouristSpot>> fetchRecommendedSpots() async =>

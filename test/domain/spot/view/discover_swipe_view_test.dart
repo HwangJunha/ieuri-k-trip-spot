@@ -69,7 +69,11 @@ void main() {
     // 각 이동 후 pump 하여, drag-end 시점의 dragX가 임계값을 확실히 넘게 한다.
     final Offset start = tester.getCenter(find.byType(SwipeCard).first);
     final TestGesture gesture = await tester.startGesture(start);
-    await gesture.moveBy(const Offset(150, 0));
+    // 카드는 이제 탭(상세 진입)과 수평 드래그를 함께 받는다. 작은 이동으로 먼저 수평
+    // 드래그 인식기가 제스처 아레나를 확보하게 한 뒤 크게 민다.
+    await gesture.moveBy(const Offset(20, 0));
+    await tester.pump();
+    await gesture.moveBy(const Offset(130, 0));
     await tester.pump();
     // 드래그 중에는 LIKE 피드백이 보인다.
     expect(find.byType(DragFeedbackOverlay), findsWidgets);

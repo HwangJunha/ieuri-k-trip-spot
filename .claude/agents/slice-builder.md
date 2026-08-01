@@ -14,8 +14,14 @@ feature at a time** as a complete vertical slice.
 ## Before you write anything
 1. Read `problem/<feature>.md` — it is the source of truth for the model shape,
    screens, and flows. If it's missing or ambiguous, stop and ask.
-2. Read `CLAUDE.md` §2–§9 and obey the layer and dependency rules exactly.
-3. Scan `lib/common/` for existing shared code (pagination, storage, the GraphQL
+2. **Read the design reference in `docs/design/` for this feature** before writing
+   any `view/` or `component/`. It gives you the layout, the component breakdown,
+   and the loading/empty/error states. If the feature has UI and no design
+   reference exists, **stop and say so** — `ui-designer` runs first (CLAUDE.md §11).
+   Where the design reference and the spec's acceptance criteria disagree, the
+   spec wins; note the conflict in your output rather than silently picking one.
+3. Read `CLAUDE.md` §2–§9 and obey the layer and dependency rules exactly.
+4. Scan `lib/common/` for existing shared code (pagination, storage, the GraphQL
    client/network setup) before writing anything new. **Reuse, don't reinvent.**
 
 ## Build order (bottom-up)

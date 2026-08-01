@@ -40,6 +40,52 @@ query AvailableSpotCategories {
   availableSpotCategories
 }
 
+# SPEC-0003 상세 단건 조회. 언어는 Accept-Language 헤더로 전달(인자 없음, spec §2).
+# 생성 타입은 repository 안에서만 쓰이고 도메인 모델(SpotDetail/SpotImage)로 매핑된다
+# (POL-020, AC-32).
+#
+# $category는 intro/infoItems가 요구하는 필수 인자다. 같은 응답의 category 필드를
+# 인자로 참조할 수 없어서(GraphQL 제약) 호출부가 넘긴다 — Discover 카드가 이미
+# 들고 있는 값이라 추가 조회는 필요 없다.
+query SpotDetail($id: ID!, $category: SpotCategory!) {
+  spotDetail(id: $id) {
+    id
+    title
+    category
+    thumbnailImageUrl
+    overview
+    address
+    homepage
+    tel
+    copyright
+    attributionText
+    gallery {
+      imageUrl
+      thumbnailUrl
+      caption
+      copyright
+      attributionText
+    }
+    likeCount
+    # 운영 정보. 카테고리마다 서버가 공통 이름으로 정규화해 주고, 해당 개념이 없는
+    # 카테고리에선 필드가 null이다 — 값 있는 행만 렌더한다.
+    intro(category: $category) {
+      businessHours
+      closedDays
+      parking
+      inquiryPhone
+      fee
+      petAllowed
+      creditCardAccepted
+    }
+    # 이용안내 항목명/내용 쌍. 비어 있을 수 있다.
+    infoItems(category: $category) {
+      name
+      text
+    }
+  }
+}
+
 # 스와이프 반응 기록(낙관적). userErrors를 실패로 번역한다(spec §2).
 mutation ReactToSpot($input: ReactToSpotInput!) {
   reactToSpot(input: $input) {

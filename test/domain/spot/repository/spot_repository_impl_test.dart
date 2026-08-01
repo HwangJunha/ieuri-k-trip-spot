@@ -18,8 +18,12 @@ class _FakeLink extends Link {
   final List<GraphQLError>? errors;
   final bool throwLinkException;
 
+  /// 마지막으로 서버에 나간 변수(전송 내용 검증용).
+  Map<String, dynamic>? sentVariables;
+
   @override
   Stream<Response> request(Request request, [NextLink? forward]) async* {
+    sentVariables = request.variables;
     if (throwLinkException) {
       throw const ServerException(originalException: 'down');
     }
@@ -226,6 +230,250 @@ void main() {
       ),
     );
   });
+
+  test(
+    'fetchSpotDetail maps SpotDetail incl. gallery to a domain model',
+    () async {
+      final SpotRepositoryImpl repo = _repo(
+        _FakeLink(
+          data: <String, dynamic>{
+            'spotDetail': <String, dynamic>{
+              'id': 'c1',
+              'title': 'Gyeongbokgung',
+              'category': 'TOURIST_SPOT',
+              'thumbnailImageUrl': 'https://img/thumb.jpg',
+              'overview': 'A palace.',
+              'address': 'Seoul',
+              'homepage': 'https://example.com',
+              'tel': '02-000',
+              'copyright': 'TYPE1',
+              'attributionText': 'Source: KTO',
+              'gallery': <dynamic>[
+                <String, dynamic>{
+                  'imageUrl': 'https://img/g1.jpg',
+                  'thumbnailUrl': 'https://img/g1-s.jpg',
+                  'caption': 'front',
+                  'copyright': 'TYPE3',
+                  'attributionText': 'Photo: KTO',
+                },
+              ],
+              'likeCount': 42,
+              'intro': <String, dynamic>{
+                'businessHours': '09:00 ~ 18:00',
+                'closedDays': '화요일',
+                // 이 카테고리에 없는 개념은 서버가 null로 준다.
+                'parking': null,
+                'inquiryPhone': '02-111',
+                'fee': '3,000원',
+                'petAllowed': null,
+                'creditCardAccepted': null,
+              },
+              'infoItems': <dynamic>[
+                <String, dynamic>{'name': '입장료', 'text': '성인 3,000원'},
+              ],
+            },
+          },
+        ),
+      );
+
+      final detail = await repo.fetchSpotDetail('c1', SpotCategory.touristSpot);
+
+      expect(detail.id, 'c1');
+      expect(detail.category, SpotCategory.touristSpot);
+      expect(detail.overview, 'A palace.');
+      expect(detail.likeCount, 42);
+      expect(detail.gallery, hasLength(1));
+      expect(detail.gallery.first.imageUrl, 'https://img/g1.jpg');
+      // 저작권은 이미지별 — 부모 TYPE1과 별개로 갤러리 아이템은 TYPE3.
+      expect(detail.gallery.first.copyright, CopyrightType.type3);
+      // 운영 정보는 서버가 카테고리별 필드를 공통 이름으로 정규화해 준 값이다.
+      expect(detail.intro?.businessHours, '09:00 ~ 18:00');
+      expect(detail.intro?.closedDays, '화요일');
+      expect(detail.intro?.parking, isNull);
+      expect(detail.infoItems, hasLength(1));
+      expect(detail.infoItems.first.name, '입장료');
+      expect(detail.infoItems.first.text, '성인 3,000원');
+    },
+  );
+
+  test(
+    'fetchSpotDetail keeps nullable fields null and gallery empty',
+    () async {
+      final SpotRepositoryImpl repo = _repo(
+        _FakeLink(
+          data: <String, dynamic>{
+            'spotDetail': <String, dynamic>{
+              'id': 'c2',
+              'title': 'Sparse Spot',
+              'category': 'RESTAURANT',
+              'thumbnailImageUrl': 'https://img/t.jpg',
+              'overview': null,
+              'address': null,
+              'homepage': null,
+              'tel': null,
+              'copyright': 'UNSPECIFIED',
+              'attributionText': 'KTO',
+              'gallery': <dynamic>[],
+              'likeCount': 0,
+              // 운영 정보가 아예 없는 카테고리는 intro 자체가 null이다.
+              'intro': null,
+              'infoItems': <dynamic>[],
+            },
+          },
+        ),
+      );
+
+      final detail = await repo.fetchSpotDetail('c2', SpotCategory.restaurant);
+
+      expect(detail.overview, isNull);
+      expect(detail.homepage, isNull);
+      expect(detail.tel, isNull);
+      expect(detail.gallery, isEmpty);
+      // intro가 null이어도 터지지 않고, 두 섹션 모두 숨김 대상이 된다.
+      expect(detail.intro, isNull);
+      expect(detail.hasIntro, isFalse);
+      expect(detail.infoItems, isEmpty);
+      expect(detail.hasInfoItems, isFalse);
+    },
+  );
+
+  test('swipe card text is cleaned of TourAPI markup at mapping', () async {
+    // 카드와 상세가 같은 값을 다르게 보여주지 않도록 매핑 시점에 정리한다.
+    final SpotRepositoryImpl repo = _repo(
+      _FakeLink(
+        data: <String, dynamic>{
+          'spots': <String, dynamic>{
+            'items': <dynamic>[
+              <String, dynamic>{
+                'id': 's1',
+                'title': '롯데월드 &amp; 매직아일랜드',
+                'address': '서울<br>송파구',
+                'thumbnailImageUrl': 'https://img/s1.jpg',
+                'distanceMeters': 100.0,
+                'category': 'TOURIST_SPOT',
+                'copyright': 'TYPE1',
+                'attributionText': 'KTO',
+              },
+            ],
+            'page': 0,
+            'hasNext': false,
+            'totalCount': 1,
+          },
+        },
+      ),
+    );
+
+    final OffsetPage<TouristSpot> page = await repo.fetchSpotPage(
+      latitude: 37.5,
+      longitude: 127.0,
+      page: 0,
+      size: 100,
+    );
+
+    expect(page.items.first.name, '롯데월드 & 매직아일랜드');
+    expect(page.items.first.address, '서울\n송파구');
+  });
+
+  test('fetchSpotDetail sends the category the server requires', () async {
+    // intro/infoItems는 category를 필수 인자로 요구한다 — 변수로 실려 나가지 않으면
+    // 서버가 MissingFieldArgument로 쿼리를 거절한다.
+    final _FakeLink link = _FakeLink(
+      data: <String, dynamic>{
+        'spotDetail': <String, dynamic>{
+          'id': 'c1',
+          'title': 'T',
+          'category': 'RESTAURANT',
+          'thumbnailImageUrl': 'https://img/t.jpg',
+          'overview': null,
+          'address': null,
+          'homepage': null,
+          'tel': null,
+          'copyright': 'TYPE1',
+          'attributionText': 'KTO',
+          'gallery': <dynamic>[],
+          'likeCount': 0,
+          'intro': null,
+          'infoItems': <dynamic>[],
+        },
+      },
+    );
+
+    await _repo(link).fetchSpotDetail('c1', SpotCategory.restaurant);
+
+    expect(link.sentVariables?['id'], 'c1');
+    expect(link.sentVariables?['category'], 'RESTAURANT');
+  });
+
+  test(
+    'fetchSpotDetail translates SPOT_NOT_FOUND from extensions.code',
+    () async {
+      final SpotRepositoryImpl repo = _repo(
+        _FakeLink(
+          errors: const <GraphQLError>[
+            GraphQLError(
+              message: 'not found',
+              extensions: <String, dynamic>{'code': 'SPOT_NOT_FOUND'},
+            ),
+          ],
+        ),
+      );
+
+      await expectLater(
+        repo.fetchSpotDetail('missing', SpotCategory.touristSpot),
+        throwsA(
+          isA<SpotFailure>().having(
+            (SpotFailure f) => f.kind,
+            'kind',
+            SpotFailureKind.notFound,
+          ),
+        ),
+      );
+    },
+  );
+
+  test(
+    'fetchSpotDetail falls back to the message code when no extensions',
+    () async {
+      final SpotRepositoryImpl repo = _repo(
+        _FakeLink(
+          errors: const <GraphQLError>[
+            GraphQLError(message: 'UPSTREAM_RATE_LIMITED'),
+          ],
+        ),
+      );
+
+      await expectLater(
+        repo.fetchSpotDetail('c1', SpotCategory.touristSpot),
+        throwsA(
+          isA<SpotFailure>().having(
+            (SpotFailure f) => f.kind,
+            'kind',
+            SpotFailureKind.rateLimited,
+          ),
+        ),
+      );
+    },
+  );
+
+  test(
+    'fetchSpotDetail surfaces a link exception as network failure',
+    () async {
+      final SpotRepositoryImpl repo = _repo(
+        _FakeLink(throwLinkException: true),
+      );
+
+      await expectLater(
+        repo.fetchSpotDetail('c1', SpotCategory.touristSpot),
+        throwsA(
+          isA<SpotFailure>().having(
+            (SpotFailure f) => f.kind,
+            'kind',
+            SpotFailureKind.network,
+          ),
+        ),
+      );
+    },
+  );
 
   test('Home mock sections stay populated (no server API yet)', () async {
     final SpotRepositoryImpl repo = _repo(_FakeLink());

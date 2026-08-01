@@ -10,24 +10,24 @@ part of 'spot_providers.dart';
 // ignore_for_file: type=lint, type=warning
 /// Exposes the [SpotRepository]. Widgets never construct it (CLAUDE.md §5);
 /// section providers read it from here, and tests override this one provider to
-/// inject a fake. Swapping the mock impl for a GraphQL one changes only this
-/// line.
+/// inject a fake. The swipe feed is GraphQL-backed, so the impl takes the shared
+/// client from `common/network`.
 
 @ProviderFor(spotRepository)
 const spotRepositoryProvider = SpotRepositoryProvider._();
 
 /// Exposes the [SpotRepository]. Widgets never construct it (CLAUDE.md §5);
 /// section providers read it from here, and tests override this one provider to
-/// inject a fake. Swapping the mock impl for a GraphQL one changes only this
-/// line.
+/// inject a fake. The swipe feed is GraphQL-backed, so the impl takes the shared
+/// client from `common/network`.
 
 final class SpotRepositoryProvider
     extends $FunctionalProvider<SpotRepository, SpotRepository, SpotRepository>
     with $Provider<SpotRepository> {
   /// Exposes the [SpotRepository]. Widgets never construct it (CLAUDE.md §5);
   /// section providers read it from here, and tests override this one provider to
-  /// inject a fake. Swapping the mock impl for a GraphQL one changes only this
-  /// line.
+  /// inject a fake. The swipe feed is GraphQL-backed, so the impl takes the shared
+  /// client from `common/network`.
   const SpotRepositoryProvider._()
     : super(
         from: null,
@@ -61,7 +61,7 @@ final class SpotRepositoryProvider
   }
 }
 
-String _$spotRepositoryHash() => r'9508c1c2e29c0c2ae2a6460de0652572155d7ce7';
+String _$spotRepositoryHash() => r'a9401d0c75abe45212cbfe66c2914d54ce5e7083';
 
 /// "Recommended for You" spots as an `AsyncValue` for the UI boundary.
 

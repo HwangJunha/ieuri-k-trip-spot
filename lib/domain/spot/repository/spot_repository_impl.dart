@@ -8,8 +8,13 @@ import '../../../common/pagination/offset_page.dart';
 import '../model/congestion_level.dart';
 import '../model/copyright_type.dart';
 import '../model/spot_category.dart';
+import '../model/spot_detail.dart';
 import '../model/spot_failure.dart';
+import '../model/spot_image.dart';
+import '../model/spot_info_item.dart';
+import '../model/spot_intro.dart';
 import '../model/spot_reaction.dart';
+import '../model/tour_api_text.dart';
 import '../model/tourist_spot.dart';
 import 'spot_operations.graphql.dart';
 import 'spot_repository.dart';
@@ -79,6 +84,25 @@ class SpotRepositoryImpl implements SpotRepository {
         .map(_categoryFromEnum)
         .whereType<SpotCategory>()
         .toList(growable: false);
+  }
+
+  @override
+  Future<SpotDetail> fetchSpotDetail(String id, SpotCategory category) async {
+    // 언어는 인자로 보내지 않는다 — Accept-Language 헤더로 전달된다(spec §2).
+    // category는 intro/infoItems가 요구하는 필수 인자다(같은 응답의 필드를 인자로
+    // 참조할 수 없어 호출부가 넘긴다).
+    final Map<String, dynamic> data = await _queryDetail(
+      documentNodeQuerySpotDetail,
+      Variables$Query$SpotDetail(
+        id: id,
+        category: _category(category),
+      ).toJson(),
+      'spotDetail',
+    );
+    final Query$SpotDetail$spotDetail result = Query$SpotDetail.fromJson(
+      data,
+    ).spotDetail;
+    return _detailFromResult(result);
   }
 
   @override
@@ -161,19 +185,66 @@ class SpotRepositoryImpl implements SpotRepository {
 
   /// 서버 `Spot` 아이템을 도메인 [TouristSpot]으로 매핑한다. 스와이프 카드가 쓰는
   /// 필드만 채우고(Home 전용 필드는 null), 거리는 미터 정수로 반올림한다.
+  /// 제목·주소는 TourAPI 원문이라 `&amp;` 같은 엔티티가 섞여 온다. 여기서 정리해
+  /// 두면 같은 값을 스와이프 카드와 상세가 똑같이 보여준다(한쪽만 정리하면 탭 한 번에
+  /// 표기가 달라진다).
   TouristSpot _spotFromItem(Query$Spots$spots$items item) => TouristSpot(
     id: item.id,
-    name: item.title,
+    name: sanitizeTourApiText(item.title) ?? item.title,
     imageRef: item.thumbnailImageUrl,
-    location: item.address ?? '',
+    location: sanitizeTourApiText(item.address) ?? '',
     congestion: CongestionLevel.low,
     thumbnailImageUrl: item.thumbnailImageUrl,
-    address: item.address,
+    address: sanitizeTourApiText(item.address),
     distanceMeters: item.distanceMeters.round(),
     copyright: _copyright(item.copyright),
     attributionText: item.attributionText,
     category: _categoryFromEnum(item.category),
   );
+
+  /// 상세 생성 타입 → 도메인 [SpotDetail]. nullable 필드는 그대로 넘기고(UI가 숨김 판단),
+  /// 갤러리 아이템은 [SpotImage]로 매핑한다(POL-020, AC-32).
+  SpotDetail _detailFromResult(Query$SpotDetail$spotDetail r) => SpotDetail(
+    id: r.id,
+    // 제목도 TourAPI 원문이라 엔티티가 섞여 온다(스와이프 카드와 동일하게 정리).
+    title: sanitizeTourApiText(r.title) ?? r.title,
+    category: _categoryFromEnum(r.category),
+    thumbnailImageUrl: r.thumbnailImageUrl,
+    overview: r.overview,
+    address: r.address,
+    homepage: r.homepage,
+    tel: r.tel,
+    copyright: _copyright(r.copyright),
+    attributionText: r.attributionText,
+    gallery: r.gallery.map(_imageFromGallery).toList(growable: false),
+    likeCount: r.likeCount,
+    intro: r.intro == null ? null : _introFromResult(r.intro!),
+    infoItems: r.infoItems.map(_infoItemFrom).toList(growable: false),
+  );
+
+  /// 운영 정보 매핑. 서버가 카테고리별 필드를 공통 이름으로 정규화해 주므로
+  /// 카테고리 분기 없이 그대로 옮긴다 — 값 없는 항목의 숨김 판단은 모델이 한다.
+  SpotIntro _introFromResult(Query$SpotDetail$spotDetail$intro i) => SpotIntro(
+    businessHours: i.businessHours,
+    closedDays: i.closedDays,
+    parking: i.parking,
+    inquiryPhone: i.inquiryPhone,
+    fee: i.fee,
+    petAllowed: i.petAllowed,
+    creditCardAccepted: i.creditCardAccepted,
+  );
+
+  SpotInfoItem _infoItemFrom(Query$SpotDetail$spotDetail$infoItems item) =>
+      SpotInfoItem(name: item.name, text: item.text);
+
+  SpotImage _imageFromGallery(Query$SpotDetail$spotDetail$gallery g) =>
+      SpotImage(
+        imageUrl: g.imageUrl,
+        thumbnailUrl: g.thumbnailUrl,
+        caption: g.caption,
+        copyright: _copyright(g.copyright),
+        attributionText: g.attributionText,
+      );
 
   /// 생성 enum → 도메인 enum. 미래 서버가 새 값을 추가하면 `$unknown`이 되어 null.
   SpotCategory? _categoryFromEnum(Enum$SpotCategory value) => switch (value) {
@@ -224,6 +295,57 @@ class SpotRepositoryImpl implements SpotRepository {
     operation,
     variables,
   );
+
+  /// 상세 조회 실행. `_run`과 달리 최상위 `errors[]`를 정체불명 네트워크 실패로
+  /// 뭉개지 않고, 첫 오류의 코드를 뽑아 [SpotFailure.fromQueryErrorCode]로 번역한다
+  /// (SPOT_NOT_FOUND/UPSTREAM_*를 UI가 구분하려면 코드가 필요하다, spec §6·AC-26).
+  /// 링크 예외(도달 불가)나 코드 없는 오류는 그대로 네트워크 실패로 떨어진다.
+  Future<Map<String, dynamic>> _queryDetail(
+    DocumentNode document,
+    Map<String, dynamic> variables,
+    String operation,
+  ) async {
+    GraphqlDebugLog.request(operation, variables);
+    late final QueryResult<Object?> result;
+    try {
+      result = await _client.query(
+        QueryOptions(document: document, variables: variables),
+      );
+    } on Exception catch (error) {
+      GraphqlDebugLog.clientThrew(operation, error);
+      throw SpotFailure.network;
+    }
+
+    GraphqlDebugLog.response(operation, result);
+
+    if (hasTransportFailure(result)) {
+      GraphqlDebugLog.transportFailure(operation, result);
+      final String? code = _firstErrorCode(result);
+      // 코드가 있으면 유형별 실패로(SPOT_NOT_FOUND 등), 없으면(링크 예외 등) 네트워크로.
+      throw code == null
+          ? SpotFailure.network
+          : SpotFailure.fromQueryErrorCode(code);
+    }
+
+    final Object? data = result.data;
+    if (data is! Map<String, dynamic>) throw SpotFailure.unknown;
+    return data;
+  }
+
+  /// 최상위 `errors[]` 첫 항목의 코드 문자열. 서버가 `extensions.code`에 싣는 것이
+  /// 관례이나 최종 포맷은 미확정(`[TBD-2]`)이라, extensions에 없으면 코드처럼 보이는
+  /// 메시지(SCREAMING_SNAKE)를 폴백으로 본다. 아무 코드도 못 찾으면 null.
+  String? _firstErrorCode(QueryResult<Object?> result) {
+    final List<GraphQLError> errors =
+        result.exception?.graphqlErrors ?? const <GraphQLError>[];
+    if (errors.isEmpty) return null;
+    final GraphQLError error = errors.first;
+    final Object? code = error.extensions?['code'];
+    if (code is String && code.isNotEmpty) return code;
+    // 폴백: 메시지가 코드 토큰(예: "SPOT_NOT_FOUND")과 정확히 일치할 때만 취한다.
+    final String message = error.message;
+    return RegExp(r'^[A-Z][A-Z0-9_]+$').hasMatch(message) ? message : null;
+  }
 
   Future<Map<String, dynamic>> _mutate(
     DocumentNode document,

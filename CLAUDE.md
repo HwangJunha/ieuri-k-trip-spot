@@ -160,7 +160,17 @@ criteria in the linked spec are what the widget and provider tests must satisfy.
 design while missing an acceptance criterion is not done.
 
 `problem/SPEC-*.md` is produced by the planner — **do not edit it**, a hook blocks it. Everything
-else under `problem/` (including `problem/design/`) stays yours.
+else under `problem/` stays yours.
+
+### Design references
+
+**Screen designs live in `docs/design/<name>.md`** — one file per screen or per spec, written by
+`ui-designer` from the Stitch project and read by `slice-builder` before it builds any `view/` or
+`component/`. This is the single location; there is no `problem/design/`.
+
+A design reference records the layout, the components (named so they map onto `component/`), the
+loading/empty/error states, and the Stitch screen id it came from. It is a *reference*, not an
+authority: when it conflicts with the spec's acceptance criteria, the spec wins.
 
 ### When the spec is wrong
 
@@ -195,8 +205,8 @@ Design still comes from Google Stitch via MCP (see the `ui-designer` subagent), 
 
 For a new feature, the intended flow mirrors the backend harness:
 
-1. **(optional) `ui-designer`** — reads `problem/<feature>.md`, drives Stitch MCP to produce/refine the screen design, saves a design reference.
-2. **`slice-builder`** — implements the full vertical slice for one feature: `model → repository → provider → component → view`, plus tests. Uses the `domain-slice-generator` skill to scaffold, then fills in logic.
+1. **`ui-designer`** — reads `problem/SPEC-XXXX-client.md`, drives Stitch MCP to produce/refine the screen design, saves a design reference to `docs/design/`. **Required for any feature with UI.** Skip it only when the change adds no screen and no component — and say so explicitly rather than skipping silently.
+2. **`slice-builder`** — implements the full vertical slice for one feature: `model → repository → provider → component → view`, plus tests. **Reads `docs/design/` for the feature before writing any `view/` or `component/`**; if no design reference exists and the feature has UI, stop and run step 1 first. Uses the `domain-slice-generator` skill to scaffold, then fills in logic.
 3. **`architecture-reviewer`** (read-only) — verifies layer boundaries, dependency direction, GraphQL isolation, `common/` extraction, no cross-feature imports.
 4. **`quality-reviewer`** (read-only) — verifies simplicity, test shape, Riverpod performance patterns, and secure-storage usage.
 

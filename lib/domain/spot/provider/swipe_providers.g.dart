@@ -59,7 +59,7 @@ final class AvailableSpotCategoriesProvider
 }
 
 String _$availableSpotCategoriesHash() =>
-    r'bf6797b60d7bfe1e83a10372dbffacb0fccfa8bb';
+    r'fc2f7f8ea17881476c5db007d85ddb5c5060dc3d';
 
 /// 현재 선택된 카테고리(null=전체). CategoryBar가 갱신하고 SwipeController 패밀리
 /// 인자로 쓰인다 — 값이 바뀌면 다른 SwipeController 인스턴스를 보게 되어 재로딩된다.

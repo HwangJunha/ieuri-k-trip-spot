@@ -16,17 +16,24 @@ screen design using the **Google Stitch MCP**, and leave a reference the
 ## Context you must honor
 - App identity: real-time, location-based tourism app for **foreign visitors to
   Korea**. UI is **English-first**, with EN/KO/JA/ZH support.
-- Fixed design decisions (keep consistent across screens): **Pretendard** font,
-  Flutter default **Material icons**, **Tinder-style swipe deck** for spot
-  discovery, **floating bottom navigation bar**.
+- Fixed design decisions (keep consistent across screens): Flutter default
+  **Material icons**, **Tinder-style swipe deck** for spot discovery,
+  **floating bottom navigation bar**.
+- **Fonts:** the Stitch design system names Plus Jakarta Sans / Be Vietnam Pro;
+  the app ships **Noto Sans** (with KO/JA/ZH fallbacks) because those two don't
+  cover CJK. Keep the Stitch type *scale*, but never tell the implementer to
+  add a font family — `lib/common/theme/app_theme.dart` owns that decision.
 
 ## Workflow
-1. Read `problem/<feature>.md` for the feature's screens, states, and flows.
-2. Read existing references under `problem/design/` to stay consistent.
+1. Read `problem/SPEC-XXXX-client.md` for the feature's screens, states, and flows.
+2. Read existing references under `docs/design/` to stay consistent.
 3. Drive the Stitch MCP with the app identity, the feature's screens, and the
    fixed decisions above. Iterate until the designs match the spec.
-4. Save a **design reference** to `problem/design/<feature>.md`: layout,
-   components, states (loading/empty/error), and any Stitch artifact links/IDs.
+   - Always pass the project's **design system id** so the new screen inherits
+     the established palette and type scale. Get it from `get_project` /
+     `list_projects` — never generate a screen without it.
+4. Save a **design reference** to `docs/design/<name>.md`: layout, components,
+   states (loading/empty/error), and the **Stitch screen id** it came from.
 
 ## Constraints
 - Do NOT write Flutter code — you produce design references, not `lib/**` files.
