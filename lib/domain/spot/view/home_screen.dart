@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../common/widget/logout_button.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../event/component/happening_now_section.dart';
 import '../component/home_search_bar.dart';
@@ -41,6 +42,7 @@ class HomeScreen extends ConsumerWidget {
               context,
             ).showSnackBar(SnackBar(content: Text(l10n.comingSoon))),
           ),
+          const LogoutButton(),
         ],
       ),
       body: SafeArea(

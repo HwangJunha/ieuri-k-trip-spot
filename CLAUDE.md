@@ -141,13 +141,63 @@ One behavior per test. Minimal mocks. Arrange–Act–Assert. Per-layer shape:
 - `const` constructors wherever the analyzer allows.
 - Small widgets; extract a `component` when a widget grows past a screenful or is reused.
 - No dead code, no commented-out blocks, no `print` in committed code.
+- **주석은 한글로 작성한다.** 코드·식별자·API 이름은 영어를 유지하되, 설명 주석(`//`, `///` doc comment)은 한글로 쓴다.
 
 ---
 
 ## 10. Specs & design workflow
 
-- **Feature specs live in `problem/*.md`.** Before implementing a feature, read its spec in `problem/`. The spec is the source of truth; if code and spec disagree, ask before diverging.
-- **Design comes from Google Stitch via MCP.** When a screen needs a design, use the Stitch MCP tools (see the `ui-designer` subagent). Translate the Stitch output into `component/` and `view/` widgets that respect the layer rules above — do not paste generated markup that violates §3.
+Requirements originate in the planner harness (`ieuri-planner`), not here. Two documents:
+
+- **`Specs/SPEC-XXXX/spec.md`** (Obsidian vault) — requirements, acceptance criteria, applied
+  policies. The authority on *what must be true*.
+- **`problem/SPEC-XXXX-client.md`** (this repo) — the client-side design: screens, state
+  transitions, navigation, which repository consumes which operation. The entry point for
+  implementation.
+
+**Read both before implementing.** The design document is where you start; the acceptance
+criteria in the linked spec are what the widget and provider tests must satisfy. Satisfying the
+design while missing an acceptance criterion is not done.
+
+`problem/SPEC-*.md` is produced by the planner — **do not edit it**, a hook blocks it. Everything
+else under `problem/` stays yours.
+
+### Design references
+
+**Screen designs live in `docs/design/<name>.md`** — one file per screen or per spec, written by
+`ui-designer` from the Stitch project and read by `slice-builder` before it builds any `view/` or
+`component/`. This is the single location; there is no `problem/design/`.
+
+A design reference records the layout, the components (named so they map onto `component/`), the
+loading/empty/error states, and the Stitch screen id it came from. It is a *reference*, not an
+authority: when it conflicts with the spec's acceptance criteria, the spec wins.
+
+### When the spec is wrong
+
+**Do not fix it in code.** On hitting an uncovered case, a technical impossibility, or a needed
+contract change:
+
+1. Stop.
+2. Comment on the issue: `[AMEND] SPEC-XXXX: <what you hit and why>`
+3. Wait for the planner's `/amend`.
+
+The deviation that feels too small to report is exactly the one that makes the spec unreliable.
+
+### Contract
+
+`Specs/SPEC-XXXX/contract.graphql` is the planner's proposal; the server owns the final schema.
+Write operations against the **live introspection snapshot** (§13), never against the proposal —
+the proposal is what was asked for, the snapshot is what exists.
+
+### Issues and branches
+
+One issue per repo per spec, opened by the planner with the background, spec link, acceptance
+conditions, and branch name. Branches are `feature/SPEC-XXXX-<short-kebab-name>` — see §12.
+
+### Design
+
+Design still comes from Google Stitch via MCP (see the `ui-designer` subagent), driven from
+`problem/SPEC-XXXX-client.md` rather than a free-standing feature spec.
 
 ---
 
@@ -155,8 +205,8 @@ One behavior per test. Minimal mocks. Arrange–Act–Assert. Per-layer shape:
 
 For a new feature, the intended flow mirrors the backend harness:
 
-1. **(optional) `ui-designer`** — reads `problem/<feature>.md`, drives Stitch MCP to produce/refine the screen design, saves a design reference.
-2. **`slice-builder`** — implements the full vertical slice for one feature: `model → repository → provider → component → view`, plus tests. Uses the `domain-slice-generator` skill to scaffold, then fills in logic.
+1. **`ui-designer`** — reads `problem/SPEC-XXXX-client.md`, drives Stitch MCP to produce/refine the screen design, saves a design reference to `docs/design/`. **Required for any feature with UI.** Skip it only when the change adds no screen and no component — and say so explicitly rather than skipping silently.
+2. **`slice-builder`** — implements the full vertical slice for one feature: `model → repository → provider → component → view`, plus tests. **Reads `docs/design/` for the feature before writing any `view/` or `component/`**; if no design reference exists and the feature has UI, stop and run step 1 first. Uses the `domain-slice-generator` skill to scaffold, then fills in logic.
 3. **`architecture-reviewer`** (read-only) — verifies layer boundaries, dependency direction, GraphQL isolation, `common/` extraction, no cross-feature imports.
 4. **`quality-reviewer`** (read-only) — verifies simplicity, test shape, Riverpod performance patterns, and secure-storage usage.
 
@@ -166,7 +216,30 @@ Reviews are read-only: they report, the parent agent (or `slice-builder`) applie
 
 ## 12. Branch policy (hook-enforced)
 
-**Never work directly on a protected branch.** `master`, `main`, and `dev` are protected. Every change — code, tests, specs — happens on a **topic branch** created first:
+**Never work directly on a protected branch.** `master`, `main`, and `dev` are protected. Every
+change — code, tests, specs — happens on a **topic branch** created first:
+
+```
+git checkout -b feature/SPEC-0007-home-screen
+```
+
+- `feature/SPEC-XXXX-<short-kebab-name>` is the **required convention** for spec-driven work.
+  `fix/`, `hotfix/`, `chore/`, and `refactor/` take the same shape for their respective purposes.
+- **The spec id belongs in the branch name; a step number does not.** SPEC-0007 is a permanent
+  identifier shared by the spec, the issue, the working log, and the published post — carrying it
+  in the branch makes the whole chain greppable from any one of them. A step number
+  (`feature/step3-home-screen`) encodes a plan ordering that stops being true the moment the plan
+  changes, which is why it stays out.
+- Work with no spec behind it — a chore, a dependency bump, an experiment — uses
+  `chore/<short-kebab-name>` with no id. Do not invent a spec id to satisfy the convention.
+- This is enforced by the `require-feature-branch.sh` PreToolUse hook: while on a protected
+  branch, `Edit`/`Write` and **git-mutating** Bash commands (`commit`/`merge`/`rebase`/`push`/…)
+  are **blocked** (exit 2). Read-only git (`status`/`diff`/`log`) and `git checkout -b` /
+  `git switch -c` / `git branch` are allowed so you can get onto a topic branch.
+- When a task starts on a protected branch, create the topic branch **before** the first edit.
+  The hook wins over this text — if it blocks you, switch branches, don't work around it.
+- Commit/push remain gated by the permission policy (`ask`/`deny`); the branch hook is an
+  additional, independent guard.
 
 ```
 git checkout -b feature/<short-kebab-name>

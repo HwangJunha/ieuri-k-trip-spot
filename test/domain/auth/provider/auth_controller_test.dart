@@ -6,20 +6,28 @@ import 'package:ieuri_k_trip_spot/domain/auth/model/auth_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/auth_session.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/auth_state.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/email_verification_handle.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/model/sns_credential.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/model/sns_provider.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/model/sns_registration_result.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/model/sns_sign_in_outcome.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/provider/auth_controller.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/provider/auth_repository_provider.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/repository/auth_repository.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/repository/sns_authenticator.dart';
 
 import '../auth_test_doubles.dart';
 
 ProviderContainer _container(
   MemoryStore store, {
   required AuthRepository repo,
+  SnsAuthenticator? snsAuth,
 }) {
   final ProviderContainer container = ProviderContainer(
     overrides: [
       secureStorageProvider.overrideWithValue(SecureStorage(store)),
       authRepositoryProvider.overrideWithValue(repo),
+      if (snsAuth != null)
+        snsAuthenticatorProvider.overrideWithValue(snsAuth),
     ],
   );
   addTearDown(container.dispose);
@@ -229,5 +237,103 @@ void main() {
 
     expect(c.read(authControllerProvider).value!.onboardingCompleted, isTrue);
     expect(await SecureStorage(store).isOnboardingCompleted('7'), isTrue);
+  });
+
+  test(
+    'signInSns authenticates and emits an authenticated state on a known member',
+    () async {
+      final MemoryStore store = MemoryStore();
+      final ProviderContainer c = _container(
+        store,
+        repo: FakeAuthRepository(session: _tokens),
+        snsAuth: FakeSnsAuthenticator(),
+      );
+      await c.read(authControllerProvider.future);
+
+      final SnsSignInOutcome outcome = await c
+          .read(authControllerProvider.notifier)
+          .signInSns(SnsProvider.google);
+
+      expect(outcome, isA<SnsAuthenticated>());
+      expect(c.read(authControllerProvider).value!.isAuthenticated, isTrue);
+    },
+  );
+
+  test(
+    'signInSns returns needsSignUp (with credential) for an unregistered member',
+    () async {
+      final MemoryStore store = MemoryStore();
+      const SnsCredential credential = SnsCredential(
+        provider: SnsProvider.google,
+        idToken: 'id-token',
+        email: 'new@b.com',
+      );
+      final ProviderContainer c = _container(
+        store,
+        repo: FakeAuthRepository(
+          session: _tokens,
+          snsFailure: const AuthFailure(AuthFailureKind.memberNotFound),
+        ),
+        snsAuth: FakeSnsAuthenticator(credential: credential),
+      );
+      await c.read(authControllerProvider.future);
+
+      final SnsSignInOutcome outcome = await c
+          .read(authControllerProvider.notifier)
+          .signInSns(SnsProvider.google);
+
+      expect(outcome, isA<SnsNeedsSignUp>());
+      expect((outcome as SnsNeedsSignUp).credential.email, 'new@b.com');
+      // Not an auth error: state stays unauthenticated, not error.
+      expect(c.read(authControllerProvider).hasError, isFalse);
+      expect(c.read(authControllerProvider).value!.isAuthenticated, isFalse);
+    },
+  );
+
+  test('signInSns returns cancelled when the user backs out', () async {
+    final MemoryStore store = MemoryStore();
+    final ProviderContainer c = _container(
+      store,
+      repo: FakeAuthRepository(session: _tokens),
+      snsAuth: FakeSnsAuthenticator(error: const SnsCancelledException()),
+    );
+    await c.read(authControllerProvider.future);
+
+    final SnsSignInOutcome outcome = await c
+        .read(authControllerProvider.notifier)
+        .signInSns(SnsProvider.kakao);
+
+    expect(outcome, isA<SnsCancelled>());
+    expect(c.read(authControllerProvider).hasError, isFalse);
+  });
+
+  test('signUpSns delegates to the repository and returns its result', () async {
+    final MemoryStore store = MemoryStore();
+    final ProviderContainer c = _container(
+      store,
+      repo: FakeAuthRepository(
+        session: _tokens,
+        snsRegistrationResult: const SnsRegistrationResult(
+          emailVerified: false,
+          verificationId: 'v-1',
+        ),
+      ),
+    );
+    await c.read(authControllerProvider.future);
+
+    final SnsRegistrationResult result = await c
+        .read(authControllerProvider.notifier)
+        .signUpSns(
+          credential: const SnsCredential(
+            provider: SnsProvider.apple,
+            idToken: 'id-token',
+          ),
+          email: 'a@b.com',
+          ageVerified: true,
+          agreements: const [],
+        );
+
+    expect(result.needsVerification, isTrue);
+    expect(result.verificationId, 'v-1');
   });
 }

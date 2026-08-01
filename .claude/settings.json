@@ -16,6 +16,7 @@
       "Bash(git diff:*)",
       "Bash(git log:*)",
       "Bash(git add:*)",
+      "Bash(git push:*)",
       "Read(./**)",
       "Edit(lib/**)",
       "Edit(test/**)",
@@ -25,14 +26,19 @@
       "Edit(analysis_options.yaml)",
       "Write(lib/**)",
       "Write(test/**)",
-      "Write(problem/**)"
-    ],
-    "ask": [
-      "Bash(git commit:*)",
+      "Write(problem/**)",
+      "Bash(flutter pub publish:*)",
       "Bash(flutter build:*)",
       "Bash(flutter run:*)",
       "Bash(flutter clean:*)",
       "Bash(flutter pub upgrade:*)",
+      "Bash(flutter devices:*)",
+      "Bash(flutter test integration_test:*)",
+      "Bash(patrol test:*)",
+      "Bash(patrol develop:*)"
+    ],
+    "ask": [
+      "Bash(git commit:*)",
       "Bash(dart pub upgrade:*)"
     ],
     "deny": [
@@ -51,15 +57,14 @@
       "Edit(./**/key.properties)",
       "Edit(./**/google-services.json)",
       "Edit(./**/GoogleService-Info.plist)",
-      "Bash(git push:*)",
       "Bash(rm -rf:*)",
       "Bash(sudo:*)",
       "Bash(curl:*)",
       "Bash(wget:*)",
-      "Bash(flutter pub publish:*)",
       "Bash(dart pub publish:*)"
     ]
   },
+  "env": { "IEURI_VAULT": "/Users/junha/Documents/Obsidian Vault" },
   "hooks": {
     "PreToolUse": [
       {
@@ -83,6 +88,11 @@
       {
         "matcher": "Edit|Write",
         "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-spec-docs.sh\""
+          }
+          ,
           {
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/require-fresh-schema.sh\""

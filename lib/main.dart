@@ -6,14 +6,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'common/localization/app_language.dart';
 import 'common/localization/locale_controller.dart';
+import 'common/permission/component/permission_boot_gate.dart';
 import 'common/storage/app_preferences.dart';
 import 'common/storage/secure_storage.dart';
 import 'common/theme/app_theme.dart';
+import 'domain/auth/repository/sns_initializer.dart';
 import 'l10n/gen/app_localizations.dart';
 import 'router/app_router.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SnsInitializer.ensureInitialized();
   final SharedPreferences prefs = await SharedPreferences.getInstance();
 
   runApp(
@@ -50,6 +53,10 @@ class KTripSpotApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+      // 라우팅되는 화면들 위에서 최초 실행 권한 시퀀스(SPEC-0001)를 구동한다: 어떤
+      // 화면이 떠 있든 무관하게, 사전설명 시트와 앱 resume 재조회를 담을 안정적인 자리.
+      builder: (BuildContext context, Widget? child) =>
+          PermissionBootGate(child: child ?? const SizedBox.shrink()),
       routerConfig: router,
     );
   }

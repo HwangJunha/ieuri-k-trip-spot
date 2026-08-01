@@ -59,24 +59,27 @@ String _$tokenRefreshBridgeHash() =>
 
 /// The shared `graphql_flutter` client (CLAUDE.md §4 — lives only in
 /// `common/network`). Injects `Authorization: Bearer <accessToken>` from
-/// [SecureStorage] on every request, and on an auth error tries one refresh via
-/// the [TokenRefreshBridge] before retrying the original operation.
+/// [SecureStorage] on every request, sends the app's active language as an
+/// `Accept-Language` header (the server localizes content from it — spec §2), and
+/// on an auth error tries one refresh via the [TokenRefreshBridge] before retrying.
 
 @ProviderFor(graphqlClient)
 const graphqlClientProvider = GraphqlClientProvider._();
 
 /// The shared `graphql_flutter` client (CLAUDE.md §4 — lives only in
 /// `common/network`). Injects `Authorization: Bearer <accessToken>` from
-/// [SecureStorage] on every request, and on an auth error tries one refresh via
-/// the [TokenRefreshBridge] before retrying the original operation.
+/// [SecureStorage] on every request, sends the app's active language as an
+/// `Accept-Language` header (the server localizes content from it — spec §2), and
+/// on an auth error tries one refresh via the [TokenRefreshBridge] before retrying.
 
 final class GraphqlClientProvider
     extends $FunctionalProvider<GraphQLClient, GraphQLClient, GraphQLClient>
     with $Provider<GraphQLClient> {
   /// The shared `graphql_flutter` client (CLAUDE.md §4 — lives only in
   /// `common/network`). Injects `Authorization: Bearer <accessToken>` from
-  /// [SecureStorage] on every request, and on an auth error tries one refresh via
-  /// the [TokenRefreshBridge] before retrying the original operation.
+  /// [SecureStorage] on every request, sends the app's active language as an
+  /// `Accept-Language` header (the server localizes content from it — spec §2), and
+  /// on an auth error tries one refresh via the [TokenRefreshBridge] before retrying.
   const GraphqlClientProvider._()
     : super(
         from: null,
@@ -110,4 +113,4 @@ final class GraphqlClientProvider
   }
 }
 
-String _$graphqlClientHash() => r'b3b8ef39750fd361256cae21fcbf101d99504203';
+String _$graphqlClientHash() => r'40f05209f622dfb73f475c1bf3b5ee12357c5e6f';

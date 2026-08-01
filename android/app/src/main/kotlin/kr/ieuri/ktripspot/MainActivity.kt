@@ -1,4 +1,4 @@
-package com.around.ieuri_k_trip_spot
+package kr.ieuri.ktripspot
 
 import io.flutter.embedding.android.FlutterActivity
 

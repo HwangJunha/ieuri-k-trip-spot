@@ -17,3 +17,5 @@ targets:
         generate_for:
           - lib/domain/auth/repository/auth_operations.graphql
           - lib/domain/auth/repository/auth_schema.graphql
+          - lib/domain/spot/repository/spot_operations.graphql
+          - lib/domain/spot/repository/spot_schema.graphql

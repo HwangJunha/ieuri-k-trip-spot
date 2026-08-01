@@ -111,5 +111,87 @@
   "errorNetwork": "ネットワークエラーが発生しました。もう一度お試しください。",
   "errorUnknown": "問題が発生しました。もう一度お試しください。",
 
-  "signUpSuccessLoginPrompt": "登録が完了しました。ログインしてください。"
+  "signUpSuccessLoginPrompt": "登録が完了しました。ログインしてください。",
+
+  "orDivider": "または",
+  "continueWithGoogle": "Googleで続ける",
+  "continueWithApple": "Appleで続ける",
+  "continueWithKakao": "カカオで続ける",
+  "snsSignUpTitle": "SNSで登録",
+  "snsSignUpSubtitle": "SNSアカウントで認証されました。登録を完了するには、メールアドレスの確認と規約への同意が必要です。",
+  "snsEmailPrefillHint": "メールアドレスを入力してください。",
+  "snsSignUpButton": "登録を完了",
+  "snsCancelled": "ログインがキャンセルされました。",
+  "errorSnsMemberNotFound": "登録されていないアカウントです。会員登録を行ってください。",
+  "logoutTooltip": "ログアウト",
+
+  "permissionLocationRationaleTitle": "周辺のスポットを探す",
+  "permissionLocationRationaleBody": "K-Trip Spotはアプリの使用中のみ位置情報を利用し、近くの名所やリアルタイムの混雑状況を表示します。バックグラウンドで追跡することはありません。",
+  "permissionNotificationRationaleTitle": "最新情報を受け取る",
+  "permissionNotificationRationaleBody": "通知をオンにすると、気になるスポットのリアルタイムの混雑通知やお知らせを受け取れます。いつでも変更できます。",
+  "permissionContinue": "続ける",
+  "permissionNotNow": "後で",
+  "permissionLocationBlockedMessage": "位置情報がオフになっています。周辺のスポットを見るには設定でオンにしてください。",
+  "permissionNotificationBlockedMessage": "通知がオフになっています。お知らせを受け取るには設定でオンにしてください。",
+  "permissionOpenSettings": "設定を開く",
+
+  "splashLocationRequired": "続けるには位置情報へのアクセスが必要です。",
+  "splashLocationBlockedHint": "位置情報がオフになっています。続けるには設定でオンにしてください。",
+
+  "discoverLikeLabel": "いいね",
+  "discoverNopeLabel": "パス",
+
+  "discoverCategoryTouristSpot": "観光地",
+  "discoverCategoryCulturalFacility": "文化施設",
+  "discoverCategoryFestivalEvent": "祭り・イベント",
+  "discoverCategoryTravelCourse": "旅行コース",
+  "discoverCategoryLeisureSports": "レジャー・スポーツ",
+  "discoverCategoryLodging": "宿泊",
+  "discoverCategoryShopping": "ショッピング",
+  "discoverCategoryRestaurant": "飲食店",
+  "discoverCategoryTransport": "交通",
+
+  "distanceKilometers": "{distance}キロ",
+  "distanceMeters": "{distance}メートル",
+
+  "discoverEmptyTitle": "近くはすべて見終わりました",
+  "discoverEmptyBody": "範囲を広げるかカテゴリーを変えて、もっと探しましょう。",
+  "discoverWidenRadius": "範囲を広げる",
+  "discoverChangeCategory": "カテゴリー変更",
+
+  "discoverRetryBanner": "スポットを読み込めませんでした。まもなく再試行します。",
+  "discoverRetryButton": "再試行",
+  "discoverLoadError": "スポットの読み込み中に問題が発生しました。",
+  "discoverLoading": "近くのスポットを探しています…",
+
+  "spotDetailOverviewTitle": "紹介",
+  "spotDetailContactTitle": "連絡先",
+  "spotDetailHomepageLabel": "ウェブサイト",
+  "spotDetailTelLabel": "電話",
+  "spotDetailLikeCount": "{count, plural, =0{いいねはまだありません} other{いいね {count}件}}",
+  "@spotDetailLikeCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "spotDetailLikeAction": "いいね",
+  "spotDetailDislikeAction": "スキップ",
+  "spotDetailLoading": "スポットを読み込んでいます…",
+  "spotDetailNotFoundTitle": "スポットが見つかりません",
+  "spotDetailNotFoundBody": "このスポットが見つかりませんでした。削除されたか、現在の言語では利用できない可能性があります。",
+  "spotDetailRateLimitedTitle": "リクエストが多すぎます",
+  "spotDetailRateLimitedBody": "現在混み合っています。しばらくしてからもう一度お試しください。",
+  "spotDetailUnavailableTitle": "スポットを読み込めませんでした",
+  "spotDetailUnavailableBody": "詳細の読み込み中に問題が発生しました。もう一度お試しください。",
+  "spotDetailRetryButton": "再試行",
+  "spotDetailReactionFailed": "リアクションを保存できませんでした。もう一度お試しください。",
+  "spotDetailLinkFailed": "リンクを開けませんでした。",
+
+  "spotDetailIntroTitle": "利用案内",
+  "spotDetailIntroBusinessHours": "利用時間",
+  "spotDetailIntroClosedDays": "休業日",
+  "spotDetailIntroFee": "利用料金",
+  "spotDetailIntroParking": "駐車場",
+  "spotDetailIntroPetAllowed": "ペット同伴",
+  "spotDetailIntroCreditCard": "クレジットカード",
+  "spotDetailIntroInquiryPhone": "お問い合わせ",
+  "spotDetailInfoTitle": "ご案内"
 }

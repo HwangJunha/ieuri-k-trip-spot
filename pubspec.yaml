@@ -38,6 +38,14 @@ dependencies:
 
   # Secure storage for tokens (via common/storage wrapper only)
   flutter_secure_storage: ^9.2.2
+  google_sign_in: ^7.2.0
+  sign_in_with_apple: ^8.1.0
+  kakao_flutter_sdk_user: ^2.0.0+1
+  permission_handler: ^12.0.3
+
+  # Device GPS coordinates for the location-based spot feed (SPEC-0002)
+  geolocator: ^13.0.1
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:
@@ -53,6 +61,11 @@ dev_dependencies:
 
   # Native splash generation
   flutter_native_splash: ^2.4.0
+
+  # E2E: journeys that stay inside the widget tree (bundled with the SDK).
+  # Discover 스와이프→반응→다음카드 여정(integration_test/)이 사용.
+  integration_test:
+    sdk: flutter
 
 flutter:
   uses-material-design: true

@@ -4,7 +4,17 @@
 ///
 /// [field] echoes the offending input field name when the server supplies one,
 /// so the UI can show an inline error under that field.
-enum AuthFailureKind { invalidCredentials, emailAlreadyInUse, network, unknown }
+enum AuthFailureKind {
+  invalidCredentials,
+  emailAlreadyInUse,
+
+  /// SNS login for an account that doesn't exist yet (spec §4). The server
+  /// rejects `loginSns` for an unregistered identity rather than auto-creating
+  /// one; the caller routes the user to SNS sign-up.
+  memberNotFound,
+  network,
+  unknown,
+}
 
 class AuthFailure implements Exception {
   const AuthFailure(this.kind, {this.field});
@@ -29,6 +39,8 @@ class AuthFailure implements Exception {
       case 'EMAIL_TAKEN':
       case 'EMAIL_ALREADY_IN_USE':
         return AuthFailure(AuthFailureKind.emailAlreadyInUse, field: field);
+      case 'MEMBER_NOT_FOUND':
+        return AuthFailure(AuthFailureKind.memberNotFound, field: field);
       default:
         return AuthFailure(AuthFailureKind.unknown, field: field);
     }

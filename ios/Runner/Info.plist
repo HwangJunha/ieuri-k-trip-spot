@@ -4,6 +4,8 @@
 	<dict>
 		<key>CADisableMinimumFrameDurationOnPhone</key>
 		<true/>
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>K-Trip Spot uses your location while you use the app to show nearby attractions and real-time crowd levels. It is never accessed in the background.</string>
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
@@ -68,5 +70,38 @@
 		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<!-- Google Sign-In (google_sign_in v7): the iOS OAuth client id. Without
+		     this (or a bundled GoogleService-Info.plist / a clientId passed to
+		     initialize) the SDK has no client id and the sign-in throws. This is
+		     the iOS CLIENT_ID from GoogleService-Info.plist. -->
+		<key>GIDClientID</key>
+		<string>504325192446-vvqljuqs07v73fq5093ekl1ijt6q1cm7.apps.googleusercontent.com</string>
+		<!-- SNS login (spec §7): custom URL schemes the providers redirect back to.
+		     Google uses its REVERSED_CLIENT_ID; Kakao uses kakao{NATIVE_APP_KEY}. -->
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>com.googleusercontent.apps.504325192446-vvqljuqs07v73fq5093ekl1ijt6q1cm7</string>
+				</array>
+			</dict>
+			<dict>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>kakaof3d974f8c5a77ab1fb0673c353f9cb62</string>
+				</array>
+			</dict>
+		</array>
+		<!-- Kakao: query schemes so the SDK can open the KakaoTalk app for login. -->
+		<key>LSApplicationQueriesSchemes</key>
+		<array>
+			<string>kakaokompassauth</string>
+			<string>kakaolink</string>
+		</array>
 	</dict>
 </plist>

@@ -111,5 +111,87 @@
   "errorNetwork": "网络错误，请重试。",
   "errorUnknown": "出现问题，请重试。",
 
-  "signUpSuccessLoginPrompt": "账户已创建，请登录。"
+  "signUpSuccessLoginPrompt": "账户已创建，请登录。",
+
+  "orDivider": "或",
+  "continueWithGoogle": "使用 Google 继续",
+  "continueWithApple": "使用 Apple 继续",
+  "continueWithKakao": "使用 Kakao 继续",
+  "snsSignUpTitle": "社交账号注册",
+  "snsSignUpSubtitle": "已通过社交账号验证。若要完成注册，请确认邮箱并同意条款。",
+  "snsEmailPrefillHint": "请输入您的邮箱。",
+  "snsSignUpButton": "完成注册",
+  "snsCancelled": "已取消登录。",
+  "errorSnsMemberNotFound": "该账户尚未注册，请先注册。",
+  "logoutTooltip": "退出登录",
+
+  "permissionLocationRationaleTitle": "发现你周边的景点",
+  "permissionLocationRationaleBody": "K-Trip Spot 仅在你使用应用时使用你的位置，以显示附近的景点和实时拥挤度。我们绝不会在后台追踪你。",
+  "permissionNotificationRationaleTitle": "掌握最新动态",
+  "permissionNotificationRationaleBody": "开启通知即可获取你关注景点的实时拥挤提醒和动态。你可以随时更改。",
+  "permissionContinue": "继续",
+  "permissionNotNow": "以后再说",
+  "permissionLocationBlockedMessage": "定位已关闭。请在设置中开启以查看附近景点。",
+  "permissionNotificationBlockedMessage": "通知已关闭。请在设置中开启以接收动态。",
+  "permissionOpenSettings": "打开设置",
+
+  "splashLocationRequired": "需要位置权限才能继续。",
+  "splashLocationBlockedHint": "定位已关闭。请在设置中开启以继续。",
+
+  "discoverLikeLabel": "喜欢",
+  "discoverNopeLabel": "跳过",
+
+  "discoverCategoryTouristSpot": "旅游景点",
+  "discoverCategoryCulturalFacility": "文化设施",
+  "discoverCategoryFestivalEvent": "庆典·活动",
+  "discoverCategoryTravelCourse": "旅行路线",
+  "discoverCategoryLeisureSports": "休闲·运动",
+  "discoverCategoryLodging": "住宿",
+  "discoverCategoryShopping": "购物",
+  "discoverCategoryRestaurant": "餐饮",
+  "discoverCategoryTransport": "交通",
+
+  "distanceKilometers": "{distance}公里",
+  "distanceMeters": "{distance}米",
+
+  "discoverEmptyTitle": "附近的都看完啦",
+  "discoverEmptyBody": "扩大范围或切换类别，发现更多景点。",
+  "discoverWidenRadius": "扩大范围",
+  "discoverChangeCategory": "更改类别",
+
+  "discoverRetryBanner": "无法加载景点，稍后重试。",
+  "discoverRetryButton": "重试",
+  "discoverLoadError": "加载景点时出现问题。",
+  "discoverLoading": "正在查找您附近的景点…",
+
+  "spotDetailOverviewTitle": "简介",
+  "spotDetailContactTitle": "联系方式",
+  "spotDetailHomepageLabel": "网站",
+  "spotDetailTelLabel": "电话",
+  "spotDetailLikeCount": "{count, plural, =0{还没有点赞} other{{count} 个赞}}",
+  "@spotDetailLikeCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "spotDetailLikeAction": "喜欢",
+  "spotDetailDislikeAction": "跳过",
+  "spotDetailLoading": "正在加载景点…",
+  "spotDetailNotFoundTitle": "未找到该景点",
+  "spotDetailNotFoundBody": "我们找不到这个景点。它可能已被删除，或在您的语言中不可用。",
+  "spotDetailRateLimitedTitle": "请求过多",
+  "spotDetailRateLimitedBody": "当前访问量较大，请稍后再试。",
+  "spotDetailUnavailableTitle": "无法加载该景点",
+  "spotDetailUnavailableBody": "加载详情时出现问题，请重试。",
+  "spotDetailRetryButton": "重试",
+  "spotDetailReactionFailed": "无法保存您的反应，请重试。",
+  "spotDetailLinkFailed": "无法打开此链接。",
+
+  "spotDetailIntroTitle": "参观信息",
+  "spotDetailIntroBusinessHours": "开放时间",
+  "spotDetailIntroClosedDays": "休息日",
+  "spotDetailIntroFee": "门票",
+  "spotDetailIntroParking": "停车",
+  "spotDetailIntroPetAllowed": "宠物",
+  "spotDetailIntroCreditCard": "信用卡",
+  "spotDetailIntroInquiryPhone": "咨询",
+  "spotDetailInfoTitle": "须知"
 }

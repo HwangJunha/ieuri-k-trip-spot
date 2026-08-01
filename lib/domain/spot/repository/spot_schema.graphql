@@ -1,0 +1,131 @@
+# SPEC-0002 spots 슬라이스가 쓰는 서버 스키마 조각(committed codegen 입력).
+# `schema/schema.introspection.json` 스냅샷에서 손으로 추린 안정 빌드 입력이며,
+# gitignore된 스냅샷을 codegen이 직접 읽지 않는다(CLAUDE.md §13).
+
+enum SpotCategory {
+  TOURIST_SPOT
+  CULTURAL_FACILITY
+  FESTIVAL_EVENT
+  TRAVEL_COURSE
+  LEISURE_SPORTS
+  LODGING
+  SHOPPING
+  RESTAURANT
+  TRANSPORT
+}
+
+enum CopyrightType {
+  TYPE1
+  TYPE3
+  UNSPECIFIED
+}
+
+enum SpotReaction {
+  LIKE
+  DISLIKE
+}
+
+type Spot {
+  id: ID!
+  title: String!
+  address: String
+  thumbnailImageUrl: String!
+  distanceMeters: Float!
+  category: SpotCategory!
+  copyright: CopyrightType!
+  attributionText: String!
+  mapX: Float!
+  mapY: Float!
+}
+
+type SpotPage {
+  items: [Spot!]!
+  page: Int!
+  hasNext: Boolean!
+  totalCount: Int
+}
+
+# SPEC-0003 상세 전용 read shape. 라이브 스키마 스냅샷에서 옮긴 committed codegen
+# 입력이다(서버가 spotDetail을 서빙하기 시작한 뒤 제안 기준에서 실물 기준으로 갱신).
+
+# 갤러리 이미지 한 장. TourAPI detailImage2가 이미지별 cpyrhtDivCd를 주므로
+# 저작권/문구는 이미지별이며 부모 Spot에서 상속하지 않는다.
+type SpotImage {
+  imageUrl: String!
+  thumbnailUrl: String
+  caption: String
+  copyright: CopyrightType!
+  attributionText: String!
+}
+
+# 관광지 운영 정보(detailIntro2). TourAPI는 카테고리마다 응답 필드가 완전히 다르므로
+# (관광지 usetime, 음식점 opentimefood …) 서버가 의미가 같은 필드를 공통 이름으로
+# 정규화해 내려준다. 카테고리에 그 개념이 없으면 null이다(예: 여행코스엔 주차·휴무 없음).
+type SpotIntro {
+  businessHours: String
+  closedDays: String
+  parking: String
+  inquiryPhone: String
+  fee: String
+  petAllowed: String
+  creditCardAccepted: String
+}
+
+# 이용안내 1건(detailInfo2). 카테고리별 반복 항목을 항목명/내용 쌍으로 정규화한다.
+type SpotInfoItem {
+  name: String!
+  text: String!
+}
+
+# 상세 전용 반환 타입. Spot의 확장이 아니라 별도 shape다(어떤 인터페이스도 구현 안 함).
+type SpotDetail {
+  id: ID!
+  title: String!
+  category: SpotCategory!
+  thumbnailImageUrl: String!
+  overview: String
+  address: String
+  homepage: String
+  tel: String
+  copyright: CopyrightType!
+  attributionText: String!
+  gallery: [SpotImage!]!
+  likeCount: Int!
+  # category 인자가 필수다. 서버가 카테고리별로 다른 TourAPI 응답(detailIntro2/
+  # detailInfo2)을 정규화할 때 어떤 카테고리로 해석할지 알아야 하기 때문이다.
+  # 같은 객체의 category 필드를 인자로 참조할 수 없어 호출부가 값을 넘긴다.
+  intro(category: SpotCategory!): SpotIntro
+  infoItems(category: SpotCategory!): [SpotInfoItem!]!
+}
+
+input ReactToSpotInput {
+  spotId: ID!
+  reaction: SpotReaction!
+}
+
+type ReactToSpotPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+# auth_schema.graphql가 base Query/Mutation를 소유하므로 여기선 extend로 이어 붙인다
+# (graphql_codegen은 모든 스키마 파일을 하나로 병합한다 — 중복 정의 시 충돌).
+extend type Query {
+  spots(
+    latitude: Float!
+    longitude: Float!
+    radiusMeters: Int
+    category: SpotCategory
+    page: Int
+    size: Int
+  ): SpotPage!
+  availableSpotCategories: [SpotCategory!]!
+  # contentId(=Spot.id) 단건 상세 조회. 로케일은 Accept-Language 헤더로 전달(SPEC-0002
+  # 규약) — 로케일 인자 없음. 유효 id는 항상 SpotDetail을 반환하고, 해소 실패는 최상위
+  # errors[](SPOT_NOT_FOUND)이므로 non-null. 라이브 스키마 확인됨.
+  spotDetail(id: ID!): SpotDetail!
+}
+
+extend type Mutation {
+  reactToSpot(input: ReactToSpotInput!): ReactToSpotPayload!
+}

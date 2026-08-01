@@ -10,6 +10,8 @@
 .history
 .svn/
 .swiftpm/
+# Xcode SwiftPM resolution artifacts inside the workspace (auto-generated).
+**/xcshareddata/swiftpm/
 migrate_working_dir/
 
 # IntelliJ related
@@ -230,8 +232,13 @@ fabric.properties
 .AppleDouble
 .LSOverride
 
-# Icon must end with two \r
-Icon
+# Icon must end with two \r (macOS Finder folder-icon file). Anchor it to the
+# filename so it doesn't also swallow paths under asset/icon/ on case-insensitive
+# filesystems (core.ignorecase makes bare `Icon` match the `icon/` directory).
+Icon[\r]
+# Keep the SNS provider logos (they live under asset/icon/, which the above would
+# otherwise ignore case-insensitively).
+!asset/icon/
 
 
 # Thumbnails
@@ -307,8 +314,10 @@ captures/
 *.jks
 *.keystore
 
-# Google Services (e.g. APIs or Firebase)
-# google-services.json
+# Google Services (e.g. APIs or Firebase) — SNS auth configs, keep local only
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+macos/Runner/GoogleService-Info.plist
 
 # Android Patch
 gen-external-apklibs
