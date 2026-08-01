@@ -2,6 +2,7 @@ import 'dart:developer' as developer;
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../model/spot_category.dart';
 import '../model/spot_detail.dart';
 import '../model/spot_reaction.dart';
 import '../repository/spot_repository.dart';
@@ -28,8 +29,8 @@ class SpotDetailController extends _$SpotDetailController {
   SpotReaction? _myReaction;
 
   @override
-  Future<SpotDetail> build(String contentId) =>
-      _repository.fetchSpotDetail(contentId);
+  Future<SpotDetail> build(String contentId, SpotCategory category) =>
+      _repository.fetchSpotDetail(contentId, category);
 
   /// 상세에서 [reaction]을 보낸다. 낙관적으로 `likeCount`를 갱신하고 `reactToSpot`을
   /// 발사하며, 실패 시 개수와 내 반응 상태를 모두 롤백한다.
@@ -75,6 +76,6 @@ class SpotDetailController extends _$SpotDetailController {
   /// 오류 상태에서 상세를 다시 로드한다(재시도 CTA용, AC-26).
   Future<void> reload() async {
     state = const AsyncLoading<SpotDetail>();
-    state = await AsyncValue.guard(() => build(contentId));
+    state = await AsyncValue.guard(() => build(contentId, category));
   }
 }

@@ -18,8 +18,12 @@ class _FakeLink extends Link {
   final List<GraphQLError>? errors;
   final bool throwLinkException;
 
+  /// 마지막으로 서버에 나간 변수(전송 내용 검증용).
+  Map<String, dynamic>? sentVariables;
+
   @override
   Stream<Response> request(Request request, [NextLink? forward]) async* {
+    sentVariables = request.variables;
     if (throwLinkException) {
       throw const ServerException(originalException: 'down');
     }
@@ -272,7 +276,7 @@ void main() {
         ),
       );
 
-      final detail = await repo.fetchSpotDetail('c1');
+      final detail = await repo.fetchSpotDetail('c1', SpotCategory.touristSpot);
 
       expect(detail.id, 'c1');
       expect(detail.category, SpotCategory.touristSpot);
@@ -319,7 +323,7 @@ void main() {
         ),
       );
 
-      final detail = await repo.fetchSpotDetail('c2');
+      final detail = await repo.fetchSpotDetail('c2', SpotCategory.restaurant);
 
       expect(detail.overview, isNull);
       expect(detail.homepage, isNull);
@@ -332,6 +336,36 @@ void main() {
       expect(detail.hasInfoItems, isFalse);
     },
   );
+
+  test('fetchSpotDetail sends the category the server requires', () async {
+    // intro/infoItems는 category를 필수 인자로 요구한다 — 변수로 실려 나가지 않으면
+    // 서버가 MissingFieldArgument로 쿼리를 거절한다.
+    final _FakeLink link = _FakeLink(
+      data: <String, dynamic>{
+        'spotDetail': <String, dynamic>{
+          'id': 'c1',
+          'title': 'T',
+          'category': 'RESTAURANT',
+          'thumbnailImageUrl': 'https://img/t.jpg',
+          'overview': null,
+          'address': null,
+          'homepage': null,
+          'tel': null,
+          'copyright': 'TYPE1',
+          'attributionText': 'KTO',
+          'gallery': <dynamic>[],
+          'likeCount': 0,
+          'intro': null,
+          'infoItems': <dynamic>[],
+        },
+      },
+    );
+
+    await _repo(link).fetchSpotDetail('c1', SpotCategory.restaurant);
+
+    expect(link.sentVariables?['id'], 'c1');
+    expect(link.sentVariables?['category'], 'RESTAURANT');
+  });
 
   test(
     'fetchSpotDetail translates SPOT_NOT_FOUND from extensions.code',
@@ -348,7 +382,7 @@ void main() {
       );
 
       await expectLater(
-        repo.fetchSpotDetail('missing'),
+        repo.fetchSpotDetail('missing', SpotCategory.touristSpot),
         throwsA(
           isA<SpotFailure>().having(
             (SpotFailure f) => f.kind,
@@ -372,7 +406,7 @@ void main() {
       );
 
       await expectLater(
-        repo.fetchSpotDetail('c1'),
+        repo.fetchSpotDetail('c1', SpotCategory.touristSpot),
         throwsA(
           isA<SpotFailure>().having(
             (SpotFailure f) => f.kind,
@@ -392,7 +426,7 @@ void main() {
       );
 
       await expectLater(
-        repo.fetchSpotDetail('c1'),
+        repo.fetchSpotDetail('c1', SpotCategory.touristSpot),
         throwsA(
           isA<SpotFailure>().having(
             (SpotFailure f) => f.kind,

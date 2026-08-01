@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_detail.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_reaction.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/spot_detail_providers.dart';
@@ -14,12 +15,12 @@ Future<(ProviderContainer, SpotDetail)> _load(FakeSpotRepository repo) async {
   );
   addTearDown(container.dispose);
   container.listen(
-    spotDetailControllerProvider('c1'),
+    spotDetailControllerProvider('c1', SpotCategory.touristSpot),
     (_, _) {},
     fireImmediately: true,
   );
   final SpotDetail detail = await container.read(
-    spotDetailControllerProvider('c1').future,
+    spotDetailControllerProvider('c1', SpotCategory.touristSpot).future,
   );
   return (container, detail);
 }
@@ -44,11 +45,19 @@ void main() {
       final (container, _) = await _load(repo);
 
       await container
-          .read(spotDetailControllerProvider('c1').notifier)
+          .read(
+            spotDetailControllerProvider(
+              'c1',
+              SpotCategory.touristSpot,
+            ).notifier,
+          )
           .react(SpotReaction.like);
 
       expect(
-        container.read(spotDetailControllerProvider('c1')).value!.likeCount,
+        container
+            .read(spotDetailControllerProvider('c1', SpotCategory.touristSpot))
+            .value!
+            .likeCount,
         11,
       );
       expect(repo.recordedReactions, <(String, SpotReaction)>[
@@ -61,14 +70,17 @@ void main() {
     final repo = FakeSpotRepository(detail: detailSpot('c1', likeCount: 10));
     final (container, _) = await _load(repo);
     final notifier = container.read(
-      spotDetailControllerProvider('c1').notifier,
+      spotDetailControllerProvider('c1', SpotCategory.touristSpot).notifier,
     );
 
     await notifier.react(SpotReaction.like); // 10 → 11
     await notifier.react(SpotReaction.dislike); // 이전 LIKE 취소 → 10
 
     expect(
-      container.read(spotDetailControllerProvider('c1')).value!.likeCount,
+      container
+          .read(spotDetailControllerProvider('c1', SpotCategory.touristSpot))
+          .value!
+          .likeCount,
       10,
     );
   });
@@ -80,7 +92,7 @@ void main() {
     );
     final (container, _) = await _load(repo);
     final notifier = container.read(
-      spotDetailControllerProvider('c1').notifier,
+      spotDetailControllerProvider('c1', SpotCategory.touristSpot).notifier,
     );
 
     await expectLater(
@@ -89,7 +101,10 @@ void main() {
     );
     // 낙관적 +1이 롤백돼 원래 값으로 복귀.
     expect(
-      container.read(spotDetailControllerProvider('c1')).value!.likeCount,
+      container
+          .read(spotDetailControllerProvider('c1', SpotCategory.touristSpot))
+          .value!
+          .likeCount,
       10,
     );
   });

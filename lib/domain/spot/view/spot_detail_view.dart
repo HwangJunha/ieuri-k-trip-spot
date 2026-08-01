@@ -10,6 +10,7 @@ import '../component/like_count_badge.dart';
 import '../component/spot_gallery.dart';
 import '../component/spot_info_item_list.dart';
 import '../component/spot_intro_rows.dart';
+import '../model/spot_category.dart';
 import '../model/spot_detail.dart';
 import '../model/spot_failure.dart';
 import '../model/spot_reaction.dart';
@@ -21,17 +22,26 @@ import '../provider/spot_detail_providers.dart';
 /// 상태(§6): 로딩 → 스피너, 오류 → 유형별 오류 화면(재시도), 정상 → 레이아웃. 값 없는
 /// 섹션은 렌더하지 않는다(AC-25). [contentId]는 라우트가 넘긴 Spot.id다.
 class SpotDetailView extends ConsumerWidget {
-  const SpotDetailView({super.key, required this.contentId});
+  const SpotDetailView({
+    super.key,
+    required this.contentId,
+    required this.category,
+  });
 
   /// Discover 카드의 contentId(=Spot.id). 라우트 파라미터로 전달된다(R9).
   final String contentId;
+
+  /// 카드가 이미 알고 있는 카테고리. 서버의 `intro`/`infoItems`가 필수 인자로
+  /// 요구하는데 조회 중인 응답의 필드를 인자로 참조할 수 없어, 스와이프 피드에서
+  /// 받은 값을 그대로 넘긴다(추가 왕복 없음).
+  final SpotCategory category;
 
   static String get routeName => 'spotDetail';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<SpotDetail> detail = ref.watch(
-      spotDetailControllerProvider(contentId),
+      spotDetailControllerProvider(contentId, category),
     );
 
     return Scaffold(
@@ -42,11 +52,16 @@ class SpotDetailView extends ConsumerWidget {
           error: (Object error, _) => _ErrorState(
             failure: error is SpotFailure ? error : SpotFailure.network,
             onRetry: () => ref
-                .read(spotDetailControllerProvider(contentId).notifier)
+                .read(
+                  spotDetailControllerProvider(contentId, category).notifier,
+                )
                 .reload(),
           ),
-          data: (SpotDetail data) =>
-              _DetailBody(contentId: contentId, detail: data),
+          data: (SpotDetail data) => _DetailBody(
+            contentId: contentId,
+            category: category,
+            detail: data,
+          ),
         ),
       ),
     );
@@ -133,9 +148,14 @@ class _ErrorState extends StatelessWidget {
 
 /// 정상 상세 레이아웃(§3). 값 없는 섹션은 조건부로 렌더하지 않는다(AC-25).
 class _DetailBody extends ConsumerWidget {
-  const _DetailBody({required this.contentId, required this.detail});
+  const _DetailBody({
+    required this.contentId,
+    required this.category,
+    required this.detail,
+  });
 
   final String contentId;
+  final SpotCategory category;
   final SpotDetail detail;
 
   @override
@@ -182,7 +202,7 @@ class _DetailBody extends ConsumerWidget {
                 const SizedBox(height: 16),
                 // 좋아요 개수만 좁게 watch 한다 — 낙관적 갱신/롤백 시 이 배지만
                 // 다시 그리고, 갤러리·소개 등 정적 서브트리는 건드리지 않는다(§5 select).
-                _LikeCount(contentId: contentId),
+                _LikeCount(contentId: contentId, category: category),
 
                 // 소개글: overview 값이 있을 때만(AC-25).
                 if (detail.hasOverview) ...<Widget>[
@@ -256,7 +276,7 @@ class _DetailBody extends ConsumerWidget {
     ).spotDetailReactionFailed;
     try {
       await ref
-          .read(spotDetailControllerProvider(contentId).notifier)
+          .read(spotDetailControllerProvider(contentId, category).notifier)
           .react(reaction);
     } catch (_) {
       messenger.showSnackBar(SnackBar(content: Text(failedText)));
@@ -267,15 +287,17 @@ class _DetailBody extends ConsumerWidget {
 /// 좋아요 개수 배지를 좁게 watch 하는 래퍼. `select`로 likeCount만 구독해 낙관적
 /// 갱신/롤백 시 이 위젯만 다시 그린다(§5) — 갤러리·소개 등 정적 서브트리는 정지.
 class _LikeCount extends ConsumerWidget {
-  const _LikeCount({required this.contentId});
+  const _LikeCount({required this.contentId, required this.category});
 
   final String contentId;
+  final SpotCategory category;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final int likeCount = ref.watch(
       spotDetailControllerProvider(
         contentId,
+        category,
       ).select((AsyncValue<SpotDetail> v) => v.value?.likeCount ?? 0),
     );
     return LikeCountBadge(likeCount: likeCount);

@@ -8,6 +8,7 @@ import 'package:ieuri_k_trip_spot/domain/spot/component/detail_section.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/component/spot_gallery.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/component/spot_info_item_list.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/component/spot_intro_rows.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_info_item.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_intro.dart';
@@ -30,7 +31,10 @@ Future<void> _pump(WidgetTester tester, FakeSpotRepository repo) async {
         ],
         supportedLocales: AppLocalizations.supportedLocales,
         locale: Locale('en'),
-        home: SpotDetailView(contentId: 'c1'),
+        home: SpotDetailView(
+          contentId: 'c1',
+          category: SpotCategory.touristSpot,
+        ),
       ),
     ),
   );
@@ -148,6 +152,17 @@ void main() {
     // 열 수 있는 URL이 없으면 연락처 섹션까지 사라진다.
     expect(find.text(l10n.spotDetailHomepageLabel), findsNothing);
     expect(find.text(l10n.spotDetailContactTitle), findsNothing);
+  });
+
+  testWidgets('passes the route category through to the repository', (
+    tester,
+  ) async {
+    // 서버 intro/infoItems가 필수로 요구하는 값 — 화면이 조회 시 넘겨야 한다.
+    final repo = FakeSpotRepository(detail: detailSpot('c1'));
+    await _pump(tester, repo);
+    await tester.pumpAndSettle();
+
+    expect(repo.requestedDetailCategory, SpotCategory.touristSpot);
   });
 
   testWidgets('renders only the intro rows that have a value', (tester) async {

@@ -1055,8 +1055,10 @@ const documentNodeQueryAvailableSpotCategories = DocumentNode(
 );
 
 class Variables$Query$SpotDetail {
-  factory Variables$Query$SpotDetail({required String id}) =>
-      Variables$Query$SpotDetail._({r'id': id});
+  factory Variables$Query$SpotDetail({
+    required String id,
+    required Enum$SpotCategory category,
+  }) => Variables$Query$SpotDetail._({r'id': id, r'category': category});
 
   Variables$Query$SpotDetail._(this._$data);
 
@@ -1064,6 +1066,10 @@ class Variables$Query$SpotDetail {
     final result$data = <String, dynamic>{};
     final l$id = data['id'];
     result$data['id'] = (l$id as String);
+    final l$category = data['category'];
+    result$data['category'] = fromJson$Enum$SpotCategory(
+      (l$category as String),
+    );
     return Variables$Query$SpotDetail._(result$data);
   }
 
@@ -1071,10 +1077,14 @@ class Variables$Query$SpotDetail {
 
   String get id => (_$data['id'] as String);
 
+  Enum$SpotCategory get category => (_$data['category'] as Enum$SpotCategory);
+
   Map<String, dynamic> toJson() {
     final result$data = <String, dynamic>{};
     final l$id = id;
     result$data['id'] = l$id;
+    final l$category = category;
+    result$data['category'] = toJson$Enum$SpotCategory(l$category);
     return result$data;
   }
 
@@ -1095,13 +1105,19 @@ class Variables$Query$SpotDetail {
     if (l$id != lOther$id) {
       return false;
     }
+    final l$category = category;
+    final lOther$category = other.category;
+    if (l$category != lOther$category) {
+      return false;
+    }
     return true;
   }
 
   @override
   int get hashCode {
     final l$id = id;
-    return Object.hashAll([l$id]);
+    final l$category = category;
+    return Object.hashAll([l$id, l$category]);
   }
 }
 
@@ -1114,7 +1130,7 @@ abstract class CopyWith$Variables$Query$SpotDetail<TRes> {
   factory CopyWith$Variables$Query$SpotDetail.stub(TRes res) =
       _CopyWithStubImpl$Variables$Query$SpotDetail;
 
-  TRes call({String? id});
+  TRes call({String? id, Enum$SpotCategory? category});
 }
 
 class _CopyWithImpl$Variables$Query$SpotDetail<TRes>
@@ -1127,10 +1143,12 @@ class _CopyWithImpl$Variables$Query$SpotDetail<TRes>
 
   static const _undefined = <dynamic, dynamic>{};
 
-  TRes call({Object? id = _undefined}) => _then(
+  TRes call({Object? id = _undefined, Object? category = _undefined}) => _then(
     Variables$Query$SpotDetail._({
       ..._instance._$data,
       if (id != _undefined && id != null) 'id': (id as String),
+      if (category != _undefined && category != null)
+        'category': (category as Enum$SpotCategory),
     }),
   );
 }
@@ -1141,7 +1159,7 @@ class _CopyWithStubImpl$Variables$Query$SpotDetail<TRes>
 
   TRes _res;
 
-  call({String? id}) => _res;
+  call({String? id, Enum$SpotCategory? category}) => _res;
 }
 
 class Query$SpotDetail {
@@ -1254,6 +1272,15 @@ const documentNodeQuerySpotDetail = DocumentNode(
         VariableDefinitionNode(
           variable: VariableNode(name: NameNode(value: 'id')),
           type: NamedTypeNode(name: NameNode(value: 'ID'), isNonNull: true),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'category')),
+          type: NamedTypeNode(
+            name: NameNode(value: 'SpotCategory'),
+            isNonNull: true,
+          ),
           defaultValue: DefaultValueNode(value: null),
           directives: [],
         ),
@@ -1398,7 +1425,12 @@ const documentNodeQuerySpotDetail = DocumentNode(
                 FieldNode(
                   name: NameNode(value: 'intro'),
                   alias: null,
-                  arguments: [],
+                  arguments: [
+                    ArgumentNode(
+                      name: NameNode(value: 'category'),
+                      value: VariableNode(name: NameNode(value: 'category')),
+                    ),
+                  ],
                   directives: [],
                   selectionSet: SelectionSetNode(
                     selections: [
@@ -1457,7 +1489,12 @@ const documentNodeQuerySpotDetail = DocumentNode(
                 FieldNode(
                   name: NameNode(value: 'infoItems'),
                   alias: null,
-                  arguments: [],
+                  arguments: [
+                    ArgumentNode(
+                      name: NameNode(value: 'category'),
+                      value: VariableNode(name: NameNode(value: 'category')),
+                    ),
+                  ],
                   directives: [],
                   selectionSet: SelectionSetNode(
                     selections: [

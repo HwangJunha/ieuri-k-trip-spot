@@ -108,8 +108,13 @@ class FakeSpotRepository implements SpotRepository {
           ];
   }
 
+  /// `fetchSpotDetail`이 받은 카테고리(마지막 호출 기준). 서버 필수 인자가 실제로
+  /// 전달되는지 검증할 때 쓴다.
+  SpotCategory? requestedDetailCategory;
+
   @override
-  Future<SpotDetail> fetchSpotDetail(String id) async {
+  Future<SpotDetail> fetchSpotDetail(String id, SpotCategory category) async {
+    requestedDetailCategory = category;
     if (detailFailure != null) throw detailFailure!;
     return detail ?? detailSpot(id);
   }

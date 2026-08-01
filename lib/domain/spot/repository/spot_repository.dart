@@ -38,7 +38,13 @@ abstract interface class SpotRepository {
   /// argument (spec §2). Maps the GraphQL response to a domain [SpotDetail];
   /// query-level failures surface as a [SpotFailure] the provider translates to a
   /// UI state (SPOT_NOT_FOUND / UPSTREAM_RATE_LIMITED / UPSTREAM_UNAVAILABLE, §6).
-  Future<SpotDetail> fetchSpotDetail(String id);
+  ///
+  /// [category] is required by the server's `intro`/`infoItems` fields, which
+  /// normalize category-specific TourAPI responses. It cannot be read from the
+  /// response being fetched, so the caller supplies the value it already has from
+  /// the swipe feed. When it is null (an unmapped server enum) the caller omits
+  /// those two sections rather than failing the whole screen.
+  Future<SpotDetail> fetchSpotDetail(String id, SpotCategory category);
 
   /// The categories the server exposes for the active [language] (spec §5). The
   /// server is the single source of availability — the client renders exactly

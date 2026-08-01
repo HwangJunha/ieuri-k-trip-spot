@@ -46,7 +46,7 @@ final class SpotDetailControllerProvider
   ///   직전 +1을 되돌려 순변화 −1. 같은 반응 반복은 순변화 0.
   const SpotDetailControllerProvider._({
     required SpotDetailControllerFamily super.from,
-    required String super.argument,
+    required (String, SpotCategory) super.argument,
   }) : super(
          retry: null,
          name: r'spotDetailControllerProvider',
@@ -62,7 +62,7 @@ final class SpotDetailControllerProvider
   String toString() {
     return r'spotDetailControllerProvider'
         ''
-        '($argument)';
+        '$argument';
   }
 
   @$internal
@@ -81,7 +81,7 @@ final class SpotDetailControllerProvider
 }
 
 String _$spotDetailControllerHash() =>
-    r'6a67a1cce64f5846607f2aba3eb6be15a74b79b0';
+    r'974415043ff1264ccbabf7363bab5fcabeea2c41';
 
 /// 관광지 상세 컨트롤러(SPEC-0003). [contentId]별 패밀리 — 상세 진입마다 해당 id의
 /// 인스턴스를 로드한다.
@@ -101,7 +101,7 @@ final class SpotDetailControllerFamily extends $Family
           AsyncValue<SpotDetail>,
           SpotDetail,
           FutureOr<SpotDetail>,
-          String
+          (String, SpotCategory)
         > {
   const SpotDetailControllerFamily._()
     : super(
@@ -123,8 +123,11 @@ final class SpotDetailControllerFamily extends $Family
   /// - 재평가는 이전 반응을 덮어쓰는 것으로 계산한다(SPEC-0002 규약): LIKE→DISLIKE면
   ///   직전 +1을 되돌려 순변화 −1. 같은 반응 반복은 순변화 0.
 
-  SpotDetailControllerProvider call(String contentId) =>
-      SpotDetailControllerProvider._(argument: contentId, from: this);
+  SpotDetailControllerProvider call(String contentId, SpotCategory category) =>
+      SpotDetailControllerProvider._(
+        argument: (contentId, category),
+        from: this,
+      );
 
   @override
   String toString() => r'spotDetailControllerProvider';
@@ -142,14 +145,15 @@ final class SpotDetailControllerFamily extends $Family
 ///   직전 +1을 되돌려 순변화 −1. 같은 반응 반복은 순변화 0.
 
 abstract class _$SpotDetailController extends $AsyncNotifier<SpotDetail> {
-  late final _$args = ref.$arg as String;
-  String get contentId => _$args;
+  late final _$args = ref.$arg as (String, SpotCategory);
+  String get contentId => _$args.$1;
+  SpotCategory get category => _$args.$2;
 
-  FutureOr<SpotDetail> build(String contentId);
+  FutureOr<SpotDetail> build(String contentId, SpotCategory category);
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build(_$args);
+    final created = build(_$args.$1, _$args.$2);
     final ref = this.ref as $Ref<AsyncValue<SpotDetail>, SpotDetail>;
     final element =
         ref.element

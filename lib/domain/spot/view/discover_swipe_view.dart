@@ -225,11 +225,18 @@ class _CardStackState extends ConsumerState<_CardStack> {
     setState(() => _dragX = 0);
   }
 
-  /// 카드 탭 → 상세로 push(§5, R9). id만 넘기고, Discover 스택은 셸에 보존된다.
+  /// 카드 탭 → 상세로 push(§5, R9). 식별자만 넘기고, Discover 스택은 셸에 보존된다.
+  ///
+  /// category도 함께 넘긴다 — 서버의 `intro`/`infoItems`가 필수 인자로 요구하는데
+  /// 상세 응답의 필드를 인자로 쓸 수 없어서다. 카드가 이미 가진 값이라 추가 왕복은
+  /// 없다. 매핑되지 않은 값이면 라우트가 기본값으로 떨어뜨린다.
   void _openDetail(TouristSpot spot) {
     context.pushNamed(
       SpotDetailView.routeName,
       pathParameters: <String, String>{'id': spot.id},
+      queryParameters: <String, String>{
+        if (spot.category != null) 'category': spot.category!.name,
+      },
     );
   }
 

@@ -86,11 +86,16 @@ class SpotRepositoryImpl implements SpotRepository {
   }
 
   @override
-  Future<SpotDetail> fetchSpotDetail(String id) async {
+  Future<SpotDetail> fetchSpotDetail(String id, SpotCategory category) async {
     // 언어는 인자로 보내지 않는다 — Accept-Language 헤더로 전달된다(spec §2).
+    // category는 intro/infoItems가 요구하는 필수 인자다(같은 응답의 필드를 인자로
+    // 참조할 수 없어 호출부가 넘긴다).
     final Map<String, dynamic> data = await _queryDetail(
       documentNodeQuerySpotDetail,
-      Variables$Query$SpotDetail(id: id).toJson(),
+      Variables$Query$SpotDetail(
+        id: id,
+        category: _category(category),
+      ).toJson(),
       'spotDetail',
     );
     final Query$SpotDetail$spotDetail result = Query$SpotDetail.fromJson(

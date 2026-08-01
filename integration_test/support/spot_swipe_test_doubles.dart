@@ -86,24 +86,25 @@ class FakeSpotRepository implements SpotRepository {
   }
 
   @override
-  Future<SpotDetail> fetchSpotDetail(String id) async => SpotDetail(
-    id: id,
-    title: 'Spot $id',
-    category: SpotCategory.touristSpot,
-    thumbnailImageUrl: id,
-    overview: 'Overview of $id',
-    address: '$id-ro, Seoul',
-    copyright: CopyrightType.type1,
-    attributionText: 'KTO',
-    gallery: const <SpotImage>[
-      SpotImage(
-        imageUrl: 'https://img/g.jpg',
+  Future<SpotDetail> fetchSpotDetail(String id, SpotCategory category) async =>
+      SpotDetail(
+        id: id,
+        title: 'Spot $id',
+        category: category,
+        thumbnailImageUrl: id,
+        overview: 'Overview of $id',
+        address: '$id-ro, Seoul',
         copyright: CopyrightType.type1,
         attributionText: 'KTO',
-      ),
-    ],
-    likeCount: 0,
-  );
+        gallery: const <SpotImage>[
+          SpotImage(
+            imageUrl: 'https://img/g.jpg',
+            copyright: CopyrightType.type1,
+            attributionText: 'KTO',
+          ),
+        ],
+        likeCount: 0,
+      );
 
   @override
   Future<List<TouristSpot>> fetchRecommendedSpots() async =>
