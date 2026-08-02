@@ -5,12 +5,15 @@ import 'package:go_router/go_router.dart';
 import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
 import 'package:ieuri_k_trip_spot/common/storage/secure_storage.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/provider/auth_controller.dart';
+import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/provider/auth_repository_provider.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/provider/spot_providers.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
 import 'package:ieuri_k_trip_spot/router/app_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../domain/auth/auth_test_doubles.dart';
+import '../domain/spot/spot_test_doubles.dart';
 
 Future<ProviderContainer> _container({
   required bool authed,
@@ -28,6 +31,9 @@ Future<ProviderContainer> _container({
       sharedPreferencesProvider.overrideWithValue(prefs),
       secureStorageProvider.overrideWithValue(secure),
       authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
+      // 착지점이 Discover라 스팟 조회가 실제로 돈다 — 네트워크 없이 끝나도록 스텁.
+      spotRepositoryProvider.overrideWithValue(FakeSpotRepository()),
+      locationServiceProvider.overrideWithValue(FakeLocationService()),
     ],
   );
   addTearDown(container.dispose);
@@ -70,9 +76,11 @@ void main() {
     expect(await _land(tester, container), '/onboarding');
   });
 
-  testWidgets('authenticated and onboarded reaches home', (tester) async {
+  // 로그인·온보딩을 마치면 홈이 아니라 Discover로 착지한다 — 앱의 핵심 동선이
+  // 스와이프이므로 바로 카드를 보게 한다.
+  testWidgets('authenticated and onboarded reaches discover', (tester) async {
     final container = await _container(authed: true, onboarded: true);
     container.read(goRouterProvider).goNamed('login');
-    expect(await _land(tester, container), '/home');
+    expect(await _land(tester, container), '/discover');
   });
 }

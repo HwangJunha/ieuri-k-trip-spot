@@ -65,8 +65,14 @@ abstract interface class AuthRepository {
   Future<Me> fetchMe();
 
   /// Exchanges a refresh token for a fresh session (spec §6.3). Returns the new
-  /// [AuthSession] (tokens only), or `null` if refresh failed (caller signs
-  /// out).
+  /// [AuthSession] (tokens only).
+  ///
+  /// 실패는 **던진다** — 분류된 `AuthFailure`로 나오며, 호출자는 갱신 거부(E3·E4 →
+  /// 세션 종료)와 전송 실패(E5 → 세션 유지)를 구분해 처리해야 한다(SPEC-0005 §2.2).
+  /// 이 둘을 하나로 뭉개면 R9와 R10 중 하나는 반드시 위반된다.
+  ///
+  /// `null`은 실패 전반이 아니라 **한 가지 경우만** 뜻한다: `success: true`인데
+  /// accessToken이 없는 응답(AC-31). 호출자는 이때 R9를 따른다.
   Future<AuthSession?> refresh({required String refreshToken});
 
   /// Invalidates the refresh token server-side (spec §6.3). Best-effort: never

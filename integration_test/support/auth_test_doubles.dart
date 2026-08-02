@@ -1,4 +1,5 @@
 import 'package:ieuri_k_trip_spot/common/storage/secure_storage.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/model/auth_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/auth_session.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/email_verification_handle.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/me.dart';
@@ -106,4 +107,51 @@ class FixedMeAuthRepository implements AuthRepository {
     required String code,
     required String newPassword,
   }) async {}
+}
+
+/// 저장소에 보관된 세션 값 한 쌍. 여정 파일이 저장소 API를 직접 호출하지 않고도
+/// 보관 상태를 단언할 수 있게 한다.
+typedef StoredSession = ({String? access, String? refresh});
+
+/// 현재 보관된 세션 값을 읽는다.
+Future<StoredSession> readStoredSession(SecureStorage storage) async => (
+  access: await storage.readAccessToken(),
+  refresh: await storage.readRefreshToken(),
+);
+
+/// accessToken이 만료된 채 부팅하는 상황을 재현한다(SPEC-0005 §2.6, AC-34).
+///
+/// 갱신 전에는 `me`가 인증 실패로 끝나고, 갱신이 성공한 뒤에야 계정이 확립된다.
+/// 사용자가 로그인 화면을 거치지 않고 곧장 홈에 도달해야 한다 — 상태를 잠깐이라도
+/// `unauthenticated`로 넘기면 라우터가 `/login`으로 보내므로, 이 여정은 그 회귀를
+/// 잡는다.
+class ExpiredAccessTokenAuthRepository extends FixedMeAuthRepository {
+  ExpiredAccessTokenAuthRepository({this.renewSucceeds = true});
+
+  /// 갱신이 성공하는지 여부. false면 전송 실패(E5)를 흉내내 보관된 값이 유지된 채
+  /// 미인증으로 남는지 확인한다(R10).
+  final bool renewSucceeds;
+
+  /// 갱신이 몇 번 나갔는지 — 부팅 경로에서 갱신이 선행됐는지 확인한다.
+  final List<String> renewCalls = <String>[];
+
+  bool _renewed = false;
+
+  @override
+  Future<Me> fetchMe() async {
+    if (!_renewed) throw AuthFailure.unauthenticated;
+    return super.fetchMe();
+  }
+
+  @override
+  Future<AuthSession?> refresh({required String refreshToken}) async {
+    renewCalls.add(refreshToken);
+    if (!renewSucceeds) throw AuthFailure.transportFailure;
+    _renewed = true;
+    return const AuthSession(
+      accessToken: 'e2e-access-2',
+      refreshToken: 'e2e-refresh-2',
+      tokenType: 'Bearer',
+    );
+  }
 }

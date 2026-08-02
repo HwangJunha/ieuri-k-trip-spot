@@ -225,24 +225,27 @@ void main() {
     );
   });
 
-  test('a top-level errors array surfaces as a network failure', () async {
-    final AuthRepositoryImpl repo = _repo(
-      _FakeLink(errors: const <GraphQLError>[GraphQLError(message: 'boom')]),
-    );
+  test(
+    'an unrecognized top-level errors array surfaces as a transport failure',
+    () async {
+      final AuthRepositoryImpl repo = _repo(
+        _FakeLink(errors: const <GraphQLError>[GraphQLError(message: 'boom')]),
+      );
 
-    await expectLater(
-      repo.loginEmail(email: 'a@b.com', password: 'pw'),
-      throwsA(
-        isA<AuthFailure>().having(
-          (AuthFailure f) => f.kind,
-          'kind',
-          AuthFailureKind.network,
+      await expectLater(
+        repo.loginEmail(email: 'a@b.com', password: 'pw'),
+        throwsA(
+          isA<AuthFailure>().having(
+            (AuthFailure f) => f.kind,
+            'kind',
+            AuthFailureKind.transportFailure,
+          ),
         ),
-      ),
-    );
-  });
+      );
+    },
+  );
 
-  test('a link exception surfaces as a network failure', () async {
+  test('a link exception surfaces as a transport failure', () async {
     final AuthRepositoryImpl repo = _repo(_FakeLink(throwLinkException: true));
 
     await expectLater(
@@ -251,11 +254,40 @@ void main() {
         isA<AuthFailure>().having(
           (AuthFailure f) => f.kind,
           'kind',
-          AuthFailureKind.network,
+          AuthFailureKind.transportFailure,
         ),
       ),
     );
   });
+
+  // 갱신 거부(E3·E4)와 전송 실패(E5)가 repository 계층에서 다른 값으로 나와야 R9와
+  // R10이 서로 다르게 처리될 수 있다(SPEC-0005 §2.2, AC-25·AC-27).
+  test(
+    'a rejected refresh token surfaces as a refreshRejected failure',
+    () async {
+      final AuthRepositoryImpl repo = _repo(
+        _FakeLink(
+          errors: const <GraphQLError>[
+            GraphQLError(
+              message:
+                  'org.around.ieuri.common.security.TokenReuseDetectedException: reused',
+            ),
+          ],
+        ),
+      );
+
+      await expectLater(
+        repo.loginEmail(email: 'a@b.com', password: 'pw'),
+        throwsA(
+          isA<AuthFailure>().having(
+            (AuthFailure f) => f.kind,
+            'kind',
+            AuthFailureKind.refreshRejected,
+          ),
+        ),
+      );
+    },
+  );
 
   test('loginSns maps AuthTokenPayload to an AuthSession', () async {
     final AuthRepositoryImpl repo = _repo(

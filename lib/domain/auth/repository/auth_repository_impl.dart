@@ -1,6 +1,7 @@
 import 'package:gql/ast.dart' show DocumentNode;
 import 'package:graphql_flutter/graphql_flutter.dart';
 
+import '../../../common/network/auth_error_classifier.dart';
 import '../../../common/network/graphql_debug_log.dart';
 import '../../../common/network/graphql_failure.dart';
 import '../model/auth_failure.dart';
@@ -183,9 +184,7 @@ class AuthRepositoryImpl implements AuthRepository {
       ).toJson(),
       'registerSnsMember',
     );
-    final payload = Mutation$RegisterSnsMember.fromJson(
-      data,
-    ).registerSnsMember;
+    final payload = Mutation$RegisterSnsMember.fromJson(data).registerSnsMember;
     _check('registerSnsMember', payload.success, payload.userErrors);
     return SnsRegistrationResult(
       emailVerified: payload.emailVerified ?? false,
@@ -199,29 +198,33 @@ class AuthRepositoryImpl implements AuthRepository {
     return Me.fromJson(Query$Me.fromJson(data).me.toJson());
   }
 
+  /// 토큰을 갱신한다. 실패는 **던진다** — 호출자가 갱신 거부(E3·E4)와 전송 실패(E5)를
+  /// 구분해 처리해야 하기 때문이다(SPEC-0005 §2.2). 여기서 null로 뭉개면 R9와 R10 중
+  /// 하나는 반드시 위반된다.
+  ///
+  /// `success: true`인데 accessToken이 null인 응답은 실패로 간주해 null을 돌려주고,
+  /// 호출자가 R9를 따른다(AC-31). 스키마상 accessToken이 nullable이라 가능한 상태다.
   @override
   Future<AuthSession?> refresh({required String refreshToken}) async {
-    try {
-      final Map<String, dynamic> data = await _mutate(
-        documentNodeMutationRefreshToken,
-        Variables$Mutation$RefreshToken(
-          input: Input$RefreshTokenInput(refreshToken: refreshToken),
-        ).toJson(),
-        'refreshToken',
-      );
-      final payload = Mutation$RefreshToken.fromJson(data).refreshToken;
-      _check('refreshToken', payload.success, payload.userErrors);
-      return _sessionFrom(
-        accessToken: payload.accessToken,
-        refreshToken: payload.refreshToken,
-        tokenType: payload.tokenType,
-        accessTokenExpiresIn: payload.accessTokenExpiresIn,
-        refreshTokenExpiresIn: payload.refreshTokenExpiresIn,
-      );
-    } on AuthFailure {
-      // Refresh failed (expired/invalid) — caller signs out. No throw.
+    final Map<String, dynamic> data = await _mutate(
+      documentNodeMutationRefreshToken,
+      Variables$Mutation$RefreshToken(
+        input: Input$RefreshTokenInput(refreshToken: refreshToken),
+      ).toJson(),
+      'refreshToken',
+    );
+    final payload = Mutation$RefreshToken.fromJson(data).refreshToken;
+    _check('refreshToken', payload.success, payload.userErrors);
+    if (payload.accessToken == null || payload.refreshToken == null) {
       return null;
     }
+    return _sessionFrom(
+      accessToken: payload.accessToken,
+      refreshToken: payload.refreshToken,
+      tokenType: payload.tokenType,
+      accessTokenExpiresIn: payload.accessTokenExpiresIn,
+      refreshTokenExpiresIn: payload.refreshTokenExpiresIn,
+    );
   }
 
   @override
@@ -348,14 +351,24 @@ class AuthRepositoryImpl implements AuthRepository {
       result = await call();
     } on Exception catch (error) {
       GraphqlDebugLog.clientThrew(operation, error);
-      throw AuthFailure.networkFailure;
+      // 클라이언트가 던졌다 = 응답 자체를 못 받았다 → 전송 실패(E5).
+      throw AuthFailure.transportFailure;
     }
 
     GraphqlDebugLog.response(operation, result);
 
     if (hasTransportFailure(result)) {
       GraphqlDebugLog.transportFailure(operation, result);
-      throw AuthFailure.networkFailure;
+      // 실패를 세 갈래로 나눈다(SPEC-0005 §2.2). "서버가 refreshToken을 거부함"과
+      // "네트워크가 끊김"을 뭉개면 R9(세션 종료)와 R10(세션 유지) 중 하나는 반드시
+      // 위반된다. 밖으로 나가는 값은 분류 결과뿐이며 원본 message는 흘리지
+      // 않는다(POL-013).
+      throw switch (classifyQueryResult(result)) {
+        AuthErrorClass.unauthenticated => AuthFailure.unauthenticated,
+        AuthErrorClass.refreshRejected => AuthFailure.refreshRejected,
+        AuthErrorClass.transport ||
+        AuthErrorClass.none => AuthFailure.transportFailure,
+      };
     }
 
     final Object? data = result.data;
