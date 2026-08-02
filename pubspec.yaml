@@ -63,7 +63,8 @@ dev_dependencies:
   flutter_native_splash: ^2.4.0
 
   # E2E: journeys that stay inside the widget tree (bundled with the SDK).
-  # Discover 스와이프→반응→다음카드 여정(integration_test/)이 사용.
+  # 현재 상시 e2e 여정은 없다 — 검증은 유닛·위젯 테스트가 맡는다(CLAUDE.md §8).
+  # SDK 번들이라 유지 비용이 없어, 여정을 추가할 때 바로 쓸 수 있게 남겨둔다.
   integration_test:
     sdk: flutter
 

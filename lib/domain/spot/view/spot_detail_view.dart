@@ -15,6 +15,7 @@ import '../model/spot_detail.dart';
 import '../model/spot_failure.dart';
 import '../model/spot_reaction.dart';
 import '../provider/spot_detail_providers.dart';
+import '../provider/swipe_providers.dart';
 
 /// 관광지 상세 화면(SPEC-0003). Discover 카드 탭 → 이 화면으로 push. 전체화면 스크롤로
 /// 갤러리·제목·소개·연락처·저작권 전문·좋아요/반응을 위에서 아래로 쌓는다(§3).
@@ -265,12 +266,17 @@ class _DetailBody extends ConsumerWidget {
   }
 
   /// 반응을 provider에 위임하고, 실패(롤백 후 rethrow) 시 스낵바로 피드백한다(AC-30).
+  ///
+  /// 성공하면 이 카드를 스와이프 스택에서 소비하고 Discover로 돌아간다. 사용자가
+  /// 이미 판단한 카드가 돌아왔을 때 맨 위에 다시 있으면 안 되기 때문이다 — 상세는
+  /// 스와이프의 "자세히 보기" 단계다. 실패하면 화면에 머물러 재시도할 수 있게 한다.
   Future<void> _react(
     BuildContext context,
     WidgetRef ref,
     SpotReaction reaction,
   ) async {
     final messenger = ScaffoldMessenger.of(context);
+    final NavigatorState navigator = Navigator.of(context);
     final String failedText = AppLocalizations.of(
       context,
     ).spotDetailReactionFailed;
@@ -280,7 +286,18 @@ class _DetailBody extends ConsumerWidget {
           .react(reaction);
     } catch (_) {
       messenger.showSnackBar(SnackBar(content: Text(failedText)));
+      return;
     }
+
+    // 반응은 상세가 이미 보냈으므로 카드만 제거한다(중복 전송 금지).
+    ref
+        .read(
+          swipeControllerProvider(
+            ref.read(selectedSpotCategoryProvider),
+          ).notifier,
+        )
+        .consume(contentId);
+    if (navigator.canPop()) navigator.pop();
   }
 }
 

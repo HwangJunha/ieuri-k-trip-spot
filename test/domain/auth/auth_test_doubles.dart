@@ -60,6 +60,7 @@ class FakeAuthRepository implements AuthRepository {
     this.failure,
     this.verificationId = 'verify-1',
     this.refreshResult,
+    this.refreshFailure,
     this.tokenProbe,
     this.snsFailure,
     this.snsRegistrationResult = const SnsRegistrationResult(
@@ -72,6 +73,13 @@ class FakeAuthRepository implements AuthRepository {
   final AuthFailure? failure;
   final String verificationId;
   final AuthSession? refreshResult;
+
+  /// Makes `refresh` throw it. 갱신 거부(E3·E4)와 전송 실패(E5)를 구분해 처리하는지
+  /// 검증하려면 repository가 던지는 분류를 그대로 재현해야 한다(SPEC-0005 §2.2).
+  final AuthFailure? refreshFailure;
+
+  /// `refresh` 호출 기록 — 갱신이 몇 번 나갔는지 세는 데 쓴다(R8·R14).
+  final List<String> refreshCalls = <String>[];
 
   /// Makes `loginSns` / `registerSnsMember` throw it (e.g. a `memberNotFound`
   /// for the login-not-registered path). Falls back to [failure] if unset.
@@ -161,8 +169,11 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthSession?> refresh({required String refreshToken}) async =>
-      refreshResult;
+  Future<AuthSession?> refresh({required String refreshToken}) async {
+    refreshCalls.add(refreshToken);
+    if (refreshFailure != null) throw refreshFailure!;
+    return refreshResult;
+  }
 
   @override
   Future<void> logout({required String refreshToken}) async =>

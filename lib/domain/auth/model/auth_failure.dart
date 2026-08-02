@@ -12,7 +12,19 @@ enum AuthFailureKind {
   /// rejects `loginSns` for an unregistered identity rather than auto-creating
   /// one; the caller routes the user to SNS sign-up.
   memberNotFound,
-  network,
+
+  /// accessToken이 만료/무효라 갱신이 필요하다(SPEC-0005 E1·E2, R4·R5).
+  unauthenticated,
+
+  /// 서버가 refreshToken을 거부했다 — 토큰을 제거하고 세션을 종료한다
+  /// (SPEC-0005 E3·E4, R9·R11). 재사용 감지(E4)도 여기에 포함된다.
+  refreshRejected,
+
+  /// 네트워크가 끊겼거나 서버에 닿지 못했다 — 토큰은 유지한 채 오류만 전파한다
+  /// (SPEC-0005 E5, R10). "서버가 거부함"과 뭉개면 R9·R10 중 하나는 반드시
+  /// 위반되므로 [refreshRejected]와 반드시 구분한다.
+  transportFailure,
+
   unknown,
 }
 
@@ -46,8 +58,19 @@ class AuthFailure implements Exception {
     }
   }
 
-  static const AuthFailure networkFailure = AuthFailure(
-    AuthFailureKind.network,
+  /// accessToken 만료/무효 — 갱신 트리거 대상(E1·E2).
+  static const AuthFailure unauthenticated = AuthFailure(
+    AuthFailureKind.unauthenticated,
+  );
+
+  /// 서버가 refreshToken을 거부함 — 세션 종료 대상(E3·E4).
+  static const AuthFailure refreshRejected = AuthFailure(
+    AuthFailureKind.refreshRejected,
+  );
+
+  /// 네트워크/서버 도달 실패 — 토큰 유지, 오류만 전파(E5).
+  static const AuthFailure transportFailure = AuthFailure(
+    AuthFailureKind.transportFailure,
   );
 
   @override

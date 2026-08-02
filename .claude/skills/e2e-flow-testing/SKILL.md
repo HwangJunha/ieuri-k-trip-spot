@@ -87,9 +87,15 @@ Every test starts from a point where **stored tokens, caches, and granted permis
 
 ## 8. Unstable tests
 
-Run every new test **repeatedly and confirm it does not waver** before adopting it. Passing once is not passing.
+**1회 실행이 기본이다.** 통과하면 채택한다. 안정성 확인을 명목으로 같은 스위트를
+반복 실행하지 않는다 — e2e는 빌드·부팅·기기 왕복 때문에 유닛 테스트의 수십 배
+시간을 먹고, 반복은 그 비용을 그대로 곱한다.
 
-If it wavers, **do not paper over it by raising the retry count.** The cause is almost always a violated waiting rule or a state isolation failure. Retries only hide the cause, and hidden instability is what makes you miss a real bug later.
+예외는 **비결정성이 설계에 실제로 들어 있을 때**다(무작위 순서, 타이밍 의존,
+공유 상태). 그럴 때만 1회 더 돌려 확인한다. 그 외에는 플레이키가 **관측된 뒤에**
+대응한다.
+
+플레이키가 관측되면 **재시도 횟수를 올려 덮지 않는다.** The cause is almost always a violated waiting rule or a state isolation failure. Retries only hide the cause, and hidden instability is what makes you miss a real bug later.
 
 If the cause cannot be found, quarantine it — but **never skip it silently.** Record the quarantine reason and suspected cause in a GitHub issue, and reference that issue from the test.
 

@@ -7,6 +7,7 @@ import '../model/auth_session.dart';
 import '../model/auth_state.dart';
 import '../model/email_verification_handle.dart';
 import '../model/me.dart';
+import '../model/refresh_outcome.dart';
 import '../model/sns_credential.dart';
 import '../model/sns_provider.dart';
 import '../model/sns_registration_result.dart';
@@ -39,8 +40,12 @@ class AuthController extends _$AuthController {
   AuthRepository get _repo => ref.read(authRepositoryProvider);
 
   /// Session restore (spec §4.2): load the stored tokens. If an access token is
-  /// present, confirm it by fetching `me`; if that fails, try a refresh; if
-  /// neither works, fall back to unauthenticated.
+  /// present, confirm it by fetching `me`; if that fails, try a refresh.
+  ///
+  /// 이 경로의 실패도 §2.2 분류를 따른다(SPEC-0005 §2.6). accessToken만 만료된 경우
+  /// 갱신이 선행되어 로그인 화면을 거치지 않아야 하므로(AC-34), 갱신 시도가 끝나기
+  /// 전에는 상태를 `unauthenticated`로 넘기지 않는다 — 이 메서드는 `build()` 안에서
+  /// 돌기 때문에 반환 전까지 라우터가 보는 상태는 `loading`으로 유지된다.
   Future<AuthState> _restoreSession() async {
     final String? accessToken = await _storage.readAccessToken();
     final String? refreshToken = await _storage.readRefreshToken();
@@ -54,16 +59,30 @@ class AuthController extends _$AuthController {
     }
 
     // Access token missing or rejected — try one refresh before giving up.
-    final AuthSession? refreshed = await _repo.refresh(
-      refreshToken: refreshToken,
-    );
-    if (refreshed == null) {
-      await _storage.clearSession();
-      return AuthState.unauthenticated;
+    //
+    // 이 경로도 억제 플래그를 [_refreshAccessToken]과 동일하게 갱신해야 한다.
+    // 그러지 않으면 [retryRefresh]가 억제를 풀고 이 경로로 재시도했다가 또 실패해도
+    // 억제가 서지 않아, 화면 전환마다 갱신이 다시 나간다(AC-36 위반).
+    final TokenRefreshBridge bridge = ref.read(tokenRefreshBridgeProvider);
+    final RefreshOutcome outcome = await _refreshSession(refreshToken);
+    switch (outcome) {
+      case RefreshSucceeded(:final AuthSession session):
+        await _persist(session);
+        bridge.allowRefresh();
+        final AuthState? established = await _tryEstablish(session);
+        return established ?? AuthState.unauthenticated;
+      case RefreshRejected():
+        // 서버가 거부했으니 보관해도 쓸모없다 — 지운다(R9·R11).
+        bridge.suppressRefresh();
+        await _storage.clearSession();
+        return AuthState.unauthenticated;
+      case RefreshUnavailable():
+        // 부팅 중 네트워크가 끊겨 있으면 토큰을 지우지 않고 유지한 채 미인증으로
+        // 둔다(R10). 복구 후 재시도 시 보관된 refreshToken으로 갱신이 성공해야
+        // 한다(AC-29).
+        bridge.suppressRefresh();
+        return AuthState.unauthenticated;
     }
-    await _persist(refreshed);
-    final AuthState? established = await _tryEstablish(refreshed);
-    return established ?? AuthState.unauthenticated;
   }
 
   /// Fetches `me` for [session] and builds an authenticated [AuthState], or
@@ -233,21 +252,67 @@ class AuthController extends _$AuthController {
       _storage.writeUser(userId: me.id, userEmail: me.email);
 
   /// Called by the network refresh bridge on an auth error. Renews the token
-  /// pair; on failure clears the session and signs out (spec §6.3).
+  /// pair and returns the new access token.
+  ///
+  /// 실패 처리는 두 갈래로 갈린다(SPEC-0005 §2.2) — 이걸 뭉개면 R9와 R10 중 하나는
+  /// 반드시 위반된다:
+  ///   - 갱신 거부(E3·E4): 토큰을 제거하고 세션을 종료한다(R9·R11).
+  ///   - 전송 실패(E5): 토큰을 **유지**한 채 오류만 전파한다(R10). 네트워크가
+  ///     복구되면 보관된 refreshToken으로 갱신이 성공해야 하기 때문이다(AC-29).
+  ///
+  /// 어느 쪽이든 실패하면 억제 플래그를 세워 순차 재발화를 막는다(R14, AC-36).
   Future<String?> _refreshAccessToken() async {
+    final TokenRefreshBridge bridge = ref.read(tokenRefreshBridgeProvider);
     final String? refreshToken = await _storage.readRefreshToken();
     if (refreshToken == null) {
+      bridge.suppressRefresh();
       await signOut();
       return null;
     }
-    final AuthSession? refreshed = await _repo.refresh(
-      refreshToken: refreshToken,
-    );
-    if (refreshed == null) {
-      await signOut();
-      return null;
+
+    final RefreshOutcome outcome = await _refreshSession(refreshToken);
+    switch (outcome) {
+      case RefreshSucceeded(:final AuthSession session):
+        // 저장이 끝난 뒤에 대기 중인 요청이 풀려야 이후 요청이 새 토큰을 담는다
+        // (AC-32). 갱신 성공 시 억제는 당연히 해제된다.
+        await _persist(session);
+        bridge.allowRefresh();
+        return session.accessToken;
+      case RefreshRejected():
+        bridge.suppressRefresh();
+        await signOut();
+        return null;
+      case RefreshUnavailable():
+        // R10 — 토큰을 지우지 않는다. 세션도 강제 종료하지 않는다.
+        bridge.suppressRefresh();
+        return null;
     }
-    await _persist(refreshed);
-    return refreshed.accessToken;
+  }
+
+  /// refreshToken으로 갱신을 시도하고 결과를 세 갈래로 돌려준다. repository가 던지는
+  /// [AuthFailure] 분류를 그대로 따르며, 여기서 다시 판별하지 않는다(SPEC-0005 §2.1 —
+  /// 판별은 한 곳에서만).
+  Future<RefreshOutcome> _refreshSession(String refreshToken) async {
+    try {
+      final AuthSession? refreshed = await _repo.refresh(
+        refreshToken: refreshToken,
+      );
+      // `success: true`인데 accessToken이 null인 응답은 실패로 간주하고 R9를 따른다
+      // (AC-31). 스키마상 accessToken이 nullable이라 가능한 상태다.
+      if (refreshed == null) return const RefreshRejected();
+      return RefreshSucceeded(refreshed);
+    } on AuthFailure catch (failure) {
+      return failure.kind == AuthFailureKind.transportFailure
+          ? const RefreshUnavailable()
+          : const RefreshRejected();
+    }
+  }
+
+  /// 사용자의 명시적 재시도 — 억제를 해제하고 세션 복원을 다시 시도한다(AC-38).
+  /// 시간 기반 자동 해제는 두지 않으므로 이 경로와 앱 재시작만이 해제 계기다.
+  Future<void> retryRefresh() async {
+    ref.read(tokenRefreshBridgeProvider).allowRefresh();
+    state = const AsyncValue<AuthState>.loading();
+    state = await AsyncValue.guard(_restoreSession);
   }
 }

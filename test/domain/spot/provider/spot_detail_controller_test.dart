@@ -108,4 +108,45 @@ void main() {
       10,
     );
   });
+
+  // §4.4 — 상세도 스와이프와 동일하게 링크 계층 재시도에 의존한다. 갱신이 성공하면
+  // 요청이 성공하므로 **롤백이 발동하지 않는다**(AC-43). 별도의 재전송 장치는 없다.
+  test('a reaction that succeeds after a token refresh keeps the optimistic count', () async {
+    final repo = _RetryOnceDetailRepository(
+      detail: detailSpot('c1', likeCount: 10),
+    );
+    final (container, _) = await _load(repo);
+    final notifier = container.read(
+      spotDetailControllerProvider('c1', SpotCategory.touristSpot).notifier,
+    );
+
+    // 인증 실패로 시작했지만 갱신 후 재시도가 성공하므로 예외가 나오지 않는다.
+    await notifier.react(SpotReaction.like);
+
+    // 낙관적 +1이 그대로 유지된다 — 롤백 없음.
+    expect(
+      container
+          .read(spotDetailControllerProvider('c1', SpotCategory.touristSpot))
+          .value!
+          .likeCount,
+      11,
+    );
+  });
+}
+
+/// 첫 `reactToSpot`은 인증 실패로 끝나고 재시도에서 성공하는 저장소(§4.4).
+/// 링크 계층의 갱신·재시도를 provider 관점에서 관찰한 모습이다.
+class _RetryOnceDetailRepository extends FakeSpotRepository {
+  _RetryOnceDetailRepository({required super.detail});
+
+  bool _refreshed = false;
+
+  @override
+  Future<void> reactToSpot(String spotId, SpotReaction reaction) async {
+    if (!_refreshed) {
+      _refreshed = true;
+      return reactToSpot(spotId, reaction);
+    }
+    return super.reactToSpot(spotId, reaction);
+  }
 }

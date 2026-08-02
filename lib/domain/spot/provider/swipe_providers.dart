@@ -25,6 +25,21 @@ const int _pageSize = 100;
 /// 두고 10장 미만이 남으면 다음 100장을 이어 붙여 스택이 끊기지 않게 한다.
 const int _prefetchThreshold = 10;
 
+/// 받아온 페이지를 클라이언트에서 한 번 더 섞는다.
+///
+/// 서버는 같은 좌표·카테고리에 같은 순서를 돌려주므로, 한 카페에 있는 사용자들이
+/// 전부 같은 카드를 같은 순서로 보게 된다. 페이지 안에서만 섞어도 100장 규모에서는
+/// 충분히 갈라진다 — 보통 한 세션에 100장을 넘기지 않기 때문이다.
+///
+/// 페이지 **경계는 넘지 않는다**: 이어 붙인 다음 페이지는 그 페이지 안에서만 섞어
+/// 서버의 거리순 대분류(가까운 100장 → 다음 100장)를 보존한다. 전체를 다시 섞으면
+/// 멀리 있는 장소가 앞으로 튀어나온다.
+List<TouristSpot> _shuffled(List<TouristSpot> items) {
+  final List<TouristSpot> copy = List<TouristSpot>.of(items);
+  copy.shuffle();
+  return copy;
+}
+
 /// 활성 언어에서 서버가 노출하는 카테고리 목록(spec §5). 서버가 가용성의 단일
 /// 출처이므로 CategoryBar는 이 결과만 렌더한다. 언어(locale)에 의존하므로 언어가
 /// 바뀌면 자동 재조회된다.
@@ -75,7 +90,7 @@ class SwipeController extends _$SwipeController {
       size: _pageSize,
     );
     return SwipeQueue(
-      cards: page.items,
+      cards: _shuffled(page.items),
       loadedPage: page.page,
       hasNextPage: page.hasNext,
     );
@@ -96,6 +111,30 @@ class SwipeController extends _$SwipeController {
     // 반응 기록은 비동기 발사, 실패는 조용히 로깅(복원 없음).
     _record(top.id, reaction);
 
+    _maybePrefetch();
+  }
+
+  /// [spotId] 카드를 스택에서 제거한다. **반응은 보내지 않는다** — 이미 다른 화면이
+  /// 보낸 뒤 호출하는 용도다.
+  ///
+  /// 상세 화면에서 좋아요/싫어요를 누르면 그 카드는 사용자가 이미 판단한 것이므로,
+  /// Discover로 돌아왔을 때 같은 카드가 맨 위에 다시 있으면 안 된다. 상세는 스와이프
+  /// 스택의 "자세히 보기" 단계이므로 여기서 소비된다.
+  ///
+  /// 맨 위가 아닌 카드도 제거한다 — 상세는 스택 중간의 카드에서도 열릴 수 있다.
+  /// 해당 id가 없으면 아무 일도 하지 않는다(다른 경로로 들어온 상세).
+  void consume(String spotId) {
+    final SwipeQueue? queue = state.value;
+    if (queue == null) return;
+    if (!queue.cards.any((TouristSpot s) => s.id == spotId)) return;
+
+    state = AsyncData<SwipeQueue>(
+      queue.copyWith(
+        cards: queue.cards
+            .where((TouristSpot s) => s.id != spotId)
+            .toList(growable: false),
+      ),
+    );
     _maybePrefetch();
   }
 
@@ -137,7 +176,7 @@ class SwipeController extends _$SwipeController {
       if (current == null) return;
       state = AsyncData<SwipeQueue>(
         current.copyWith(
-          cards: <TouristSpot>[...current.cards, ...next.items],
+          cards: <TouristSpot>[...current.cards, ..._shuffled(next.items)],
           loadedPage: next.page,
           hasNextPage: next.hasNext,
         ),
