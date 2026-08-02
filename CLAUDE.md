@@ -7,6 +7,28 @@ This file is the **operating contract** for this repository. Rules here are enfo
 
 ---
 
+## 0. 사용자와의 소통
+
+**모든 응답과 질문은 한글로 한다.** 코드·식별자·커밋 메시지 제목의 관용 표현(`fix(auth):`)은
+영어를 유지하되, 사용자에게 말하는 문장은 한글이다. 선택지를 묻는 질문(AskUserQuestion)도
+질문·선택지·설명 전부 한글이다.
+
+**작업 마무리는 "확인할 것"만 말한다.** 무엇을 했는지 길게 나열하지 않는다. 마지막 요약에
+들어갈 것은 이 셋뿐이다:
+
+1. **사용자가 판단해야 할 것** — 내가 임의로 정한 선택, 갈릴 수 있었던 판단
+2. **사용자가 직접 확인해야 할 것** — 내가 검증하지 못한 것(실기기 육안 확인 등)
+3. **범위 밖으로 남긴 것** — 왜 안 했는지 한 줄
+
+**확인할 것이 없으면 그렇게 말하고 끝낸다.** "완료했습니다" 한 줄이면 충분하다. 변경 파일
+목록, 통과한 테스트 개수, 구현 단계 나열은 사용자가 물었을 때만 쓴다 — 도구 출력에 이미
+있는 것을 산문으로 옮겨 적지 않는다.
+
+검증 결과는 예외다: 테스트가 **실패했거나 건너뛴 것이 있으면** 반드시 말한다. 통과했으면
+"통과" 한 줄로 족하다.
+
+---
+
 ## 1. Core principles (in priority order)
 
 1. **Domain-centric design.** Code is organized by feature/domain, not by technical type at the top level. Each domain owns its full vertical slice.
@@ -133,6 +155,16 @@ One behavior per test. Minimal mocks. Arrange–Act–Assert. Per-layer shape:
 - Do not test framework code or generated code.
 - If a test needs elaborate setup, the code under test is probably too complex — simplify the code first.
 
+**e2e는 이 표의 일부가 아니라 예외적 수단이다.** 위 네 계층이 검증을 책임진다. e2e는
+빌드·부팅·기기 왕복 때문에 유닛 테스트의 수십 배 시간을 먹으므로, 다음 두 경우에만 쓴다:
+
+1. 사용자가 명시적으로 요청했을 때
+2. 기능의 핵심 여정에 e2e가 **아예 없을 때** — 여정 하나를 추가
+
+**실행은 작업당 1회.** 통과하면 끝이다. 안정성 확인을 명목으로 반복 실행하지 않는다 —
+플레이키가 실제로 관측됐을 때만 1회 더 돌린다. 코드를 고친 뒤의 재검증은 여기 포함되지
+않는다(그건 수정 확인이다). 판단 기준은 `e2e-flow-testing` 스킬에 있다.
+
 ---
 
 ## 9. Code style
@@ -161,6 +193,11 @@ design while missing an acceptance criterion is not done.
 
 `problem/SPEC-*.md` is produced by the planner — **do not edit it**, a hook blocks it. Everything
 else under `problem/` stays yours.
+
+**`problem/SPEC-XXXX-client.md`는 반드시 커밋한다.** 이 설계 문서는 구현의 진입점이고,
+왜 그렇게 만들었는지를 코드와 같은 이력에 남겨야 나중에 diff에서 근거를 되짚을 수 있다.
+planner가 갱신했을 때도 그 버전을 함께 커밋한다 — 파일을 읽고 구현했는데 그 파일이 이력에
+없으면, 리뷰어는 결정의 근거를 볼 수 없다. 편집이 금지된 것과 커밋이 필요한 것은 별개다.
 
 ### Design references
 
@@ -212,9 +249,25 @@ For a new feature, the intended flow mirrors the backend harness:
 
 Reviews are read-only: they report, the parent agent (or `slice-builder`) applies fixes.
 
+**`e2e-runner`는 이 파이프라인의 기본 단계가 아니다.** e2e는 빌드·부팅·기기 왕복 때문에
+유닛 테스트의 수십 배 시간을 먹으므로, 기능이 "완료"되기 위해 매번 거쳐야 하는 관문이
+아니다. 사용자가 요청했거나 핵심 여정에 e2e가 아예 없을 때만 호출하고, 실행은 작업당
+1회로 끝낸다(§8, `e2e-flow-testing` 스킬).
+
 ---
 
 ## 12. Branch policy (hook-enforced)
+
+**작업 단위는 worktree가 기본이다.** 여러 작업을 동시에 돌리기 때문에, 각 작업은 자기
+worktree에서 격리되어 돌아야 한다. 한 체크아웃을 공유하면 브랜치 전환이 서로의 작업 중인
+파일을 덮고, 한쪽의 `flutter test`가 다른 쪽이 방금 고친 코드를 집어간다.
+
+작업을 시작할 때 **EnterWorktree로 worktree를 만든 뒤** 편집을 시작한다. 이름은 아래
+브랜치 규칙을 그대로 따른다(`feature/SPEC-0007-home-screen`). Orca에서 구동되는 경우
+worktree는 Orca가 관리하므로, 이미 worktree 안이라면 새로 만들지 않고 그대로 쓴다.
+
+예외는 worktree가 의미 없는 경우뿐이다 — 읽기 전용 조사, 질문 답변, 이미 격리된 세션.
+사용자가 "여기서 바로 해"라고 하면 그 지시가 우선한다.
 
 **Never work directly on a protected branch.** `master`, `main`, and `dev` are protected. Every
 change — code, tests, specs — happens on a **topic branch** created first:
@@ -240,16 +293,6 @@ git checkout -b feature/SPEC-0007-home-screen
   The hook wins over this text — if it blocks you, switch branches, don't work around it.
 - Commit/push remain gated by the permission policy (`ask`/`deny`); the branch hook is an
   additional, independent guard.
-
-```
-git checkout -b feature/<short-kebab-name>
-```
-
-- `feature/<name>` is the **required convention** for new work. `fix/`, `hotfix/`, `chore/`, and `refactor/` prefixes are also accepted for their respective purposes.
-- **Name the branch by the feature, never by a step number.** `feature/home-screen` — not `feature/step3-home-screen`. Step numbers live in the specs, not in branch names.
-- This is enforced by the `require-feature-branch.sh` PreToolUse hook: while on a protected branch, `Edit`/`Write` and **git-mutating** Bash commands (`commit`/`merge`/`rebase`/`push`/…) are **blocked** (exit 2). Read-only git (`status`/`diff`/`log`) and `git checkout -b` / `git switch -c` / `git branch` are allowed so you can get onto a topic branch.
-- When a task starts on a protected branch, create the topic branch **before** the first edit. The hook wins over this text — if it blocks you, switch branches, don't work around it.
-- Commit/push remain gated by the permission policy (`ask`/`deny`); the branch hook is an additional, independent guard.
 
 ---
 
