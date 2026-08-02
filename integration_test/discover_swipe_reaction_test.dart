@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/component/swipe_card.dart';
 import 'package:ieuri_k_trip_spot/common/permission/provider/permission_providers.dart';
 import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
 import 'package:ieuri_k_trip_spot/common/storage/secure_storage.dart';
@@ -75,18 +76,25 @@ void main() {
       await tester.tap(find.byKey(const Key('bottom_nav_discover')));
       await tester.pumpAndSettle();
 
-      // 첫 카드가 뜰 때까지 대기(고정 시간이 아니라 위젯 등장 조건). 카드 스택은
-      // 맨 위 카드 아래 다음 카드도 미리 깔아 둔다(스케일업 애니메이션용, spec §3)
-      // — 그래서 s1이 이 시점에 이미 트리에 있는 건 정상이며, s0가 맨 위(활성
-      // 드래그 대상)인지가 검증 포인트다.
-      await tester.pumpUntilFinder(find.byKey(const ValueKey<String>('s0')));
+      // 첫 카드가 뜰 때까지 대기(고정 시간이 아니라 위젯 등장 조건). 스택은
+      // 클라이언트에서 섞이므로(같은 장소의 사용자들이 다른 순서를 보도록) 어느
+      // 카드가 맨 위인지 고정할 수 없다 — 실제로 그려진 SwipeCard를 읽어 쓴다.
+      // 카드 스택은 맨 위 아래 다음 카드도 미리 깔아 둔다(스케일업 애니메이션용,
+      // spec §3). 다음 카드가 **먼저** 그려지고 맨 위 카드가 그 위에 얹히므로,
+      // 위젯 순서로 맨 위를 고르면 안 된다 — 활성 드래그 대상인 맨 위 카드만
+      // 감싸는 키를 통해 찾는다.
+      await tester.pumpUntilFinder(find.byType(SwipeCard));
 
-      expect(find.byKey(const ValueKey<String>('s0')), findsOneWidget);
+      final SwipeCard topCard = tester.widget<SwipeCard>(
+        find.descendant(
+          of: find.byKey(const Key('discover_card_stack')),
+          matching: find.byType(SwipeCard),
+        ).last,
+      );
+      final String topId = topCard.spot.id;
 
       // 맨 위 카드를 카드 폭 이상 오른쪽으로 드래그(LIKE 확정 임계값 28% 초과).
-      final Offset start = tester.getCenter(
-        find.byKey(const ValueKey<String>('s0')),
-      );
+      final Offset start = tester.getCenter(find.byKey(ValueKey<String>(topId)));
       final TestGesture gesture = await tester.startGesture(start);
       await gesture.moveBy(const Offset(220, 0));
       await tester.pump();
@@ -96,13 +104,13 @@ void main() {
       await tester.pumpAndSettle();
 
       // 맨 위 카드가 제거되고 다음 카드가 올라온다.
-      expect(find.byKey(const ValueKey<String>('s0')), findsNothing);
-      expect(find.byKey(const ValueKey<String>('s1')), findsOneWidget);
+      expect(find.byKey(ValueKey<String>(topId)), findsNothing);
+      expect(find.byType(SwipeCard), findsWidgets);
 
       // 낙관적 기록: reactToSpot이 비동기 발사됐는지 확인(카드 제거는 이미 확정,
       // 여기서는 발사 여부만 조건 대기로 확인한다 — 고정 시간 대기 없이).
       await tester.pumpUntil(() => repo.recordedReactions.isNotEmpty);
-      expect(repo.recordedReactions.single.$1, 's0');
+      expect(repo.recordedReactions.single.$1, topId);
     },
   );
 }

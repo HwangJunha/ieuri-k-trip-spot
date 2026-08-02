@@ -60,10 +60,13 @@ void main() {
   testWidgets('swiping right removes the top card and shows the LIKE label', (
     tester,
   ) async {
-    await _pump(tester, repo: FakeSpotRepository(feed: _spots(3)));
+    // 카드 2장 — 스택은 클라이언트에서 섞이므로(같은 장소의 사용자들이 다른 순서를
+    // 보도록) 어느 카드가 맨 위인지는 고정할 수 없다. 확인하려는 건 "맨 위가 다음
+    // 카드로 교체된다"이지 특정 id가 아니므로, 남는 장수로 검증한다.
+    await _pump(tester, repo: FakeSpotRepository(feed: _spots(2)));
     await tester.pumpAndSettle();
 
-    expect(find.text('Spot s0'), findsOneWidget);
+    expect(find.textContaining('Spot s'), findsNWidgets(2));
 
     // 오른쪽으로 카드 폭 이상 드래그 → 확정(LIKE). 위젯 상태가 변위를 따라오도록
     // 각 이동 후 pump 하여, drag-end 시점의 dragX가 임계값을 확실히 넘게 한다.
@@ -84,9 +87,8 @@ void main() {
     await gesture.up();
     await tester.pumpAndSettle();
 
-    // 맨 위 카드가 사라지고 다음 카드가 올라온다.
-    expect(find.text('Spot s0'), findsNothing);
-    expect(find.text('Spot s1'), findsOneWidget);
+    // 맨 위 카드가 사라지고 다음(마지막) 카드만 남는다.
+    expect(find.textContaining('Spot s'), findsOneWidget);
   });
 
   testWidgets('empty state renders widen-radius and change-category CTAs', (

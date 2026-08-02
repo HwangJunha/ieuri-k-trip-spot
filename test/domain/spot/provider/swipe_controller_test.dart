@@ -89,6 +89,10 @@ void main() {
     expect(repo.recordedReactions, contains((topId, SpotReaction.dislike)));
   });
 
+  // 갱신 자체가 실패해 재전송이 불가능하면(R9 세션 종료 / R10 세션 유지) 반응은
+  // 유실되고 카드는 복원하지 않는다(SPEC-0005 R16, AC-44). 되돌리면 사용자가 방금
+  // 넘긴 카드가 다시 나타나므로 — 분명히 반응한 카드를 되묻는 셈이라 하지 않는다.
+  // 유실 허용은 의도된 선택이다(좋아요/싫어요는 비치명적).
   test('react failure does not restore the card', () async {
     final repo = FakeSpotRepository(
       feed: _spots(3),
@@ -103,6 +107,33 @@ void main() {
     await Future<void>.delayed(Duration.zero);
 
     // 실패해도 큐는 2장으로 유지(복원 없음).
+    expect(
+      container.read(swipeControllerProvider(null)).value!.cards.length,
+      2,
+    );
+  });
+
+  // AC-43 — 인증 실패 후 갱신에 성공하면 반응은 재전송되어 기록되고, 사용자에게는
+  // 오류가 노출되지 않는다. 재전송은 링크 계층의 기존 재시도가 수행하므로
+  // (SPEC-0005 §4.1) provider에는 별도의 재전송 큐가 없다 — repository 호출이
+  // 성공으로 끝나는 것으로 관찰된다. 카드가 이미 넘어간 것과 요청 재시도는 서로
+  // 독립적이다.
+  test('a reaction that succeeds after a token refresh is recorded', () async {
+    // 첫 호출은 인증 실패로 끝나고, 갱신 후의 재시도에서 성공하는 저장소 —
+    // 링크 계층의 재시도를 provider 관점에서 관찰한 모습이다.
+    final repo = _RetryOnceSpotRepository(feed: _spots(3));
+    final (container, queue) = await _load(repo);
+    final String topId = queue.cards.first.id;
+
+    container
+        .read(swipeControllerProvider(null).notifier)
+        .swipe(SpotReaction.like);
+    await Future<void>.delayed(Duration.zero);
+
+    // 재전송이 성공해 반응이 기록된다.
+    expect(repo.recordedReactions, contains((topId, SpotReaction.like)));
+    // 그리고 큐는 정상 상태 — 오류로 인한 부작용이 없다(오류 미노출).
+    expect(container.read(swipeControllerProvider(null)).hasError, isFalse);
     expect(
       container.read(swipeControllerProvider(null)).value!.cards.length,
       2,
@@ -165,4 +196,107 @@ void main() {
     );
     expect(food.cards.single.id, 'f1');
   });
+
+  // 서버는 같은 좌표·카테고리에 같은 순서를 돌려주므로, 한 카페에 있는 사용자들이
+  // 전부 같은 카드를 같은 순서로 보게 된다. 클라이언트에서 한 번 더 섞어 갈라놓는다.
+  test(
+    'the first page is shuffled so concurrent users see different orders',
+    () async {
+      // 같은 피드를 두 번 로드해 순서가 갈리는지 본다. 50장이면 우연히 같은 순서가
+      // 나올 확률은 사실상 0이다.
+      final List<TouristSpot> feed = _spots(50);
+
+      final (c1, q1) = await _load(
+        FakeSpotRepository(feed: feed, pageSize: 100),
+      );
+      final (c2, q2) = await _load(
+        FakeSpotRepository(feed: feed, pageSize: 100),
+      );
+
+      final List<String> order1 = q1.cards
+          .map((TouristSpot s) => s.id)
+          .toList();
+      final List<String> order2 = q2.cards
+          .map((TouristSpot s) => s.id)
+          .toList();
+
+      expect(order1, isNot(order2), reason: '두 사용자가 다른 순서를 본다');
+      // 섞기만 할 뿐 잃거나 더하지 않는다.
+      expect(order1..sort(), order2..sort());
+      expect(q1.cards.length, 50);
+      c1.dispose();
+      c2.dispose();
+    },
+  );
+
+  // 상세에서 반응한 카드는 Discover로 돌아왔을 때 스택에 남아 있으면 안 된다.
+  group('consume', () {
+    test('removes the card without sending a reaction', () async {
+      final repo = FakeSpotRepository(feed: _spots(3), pageSize: 5);
+      final (container, queue) = await _load(repo);
+      final String topId = queue.cards.first.id;
+
+      container.read(swipeControllerProvider(null).notifier).consume(topId);
+      await Future<void>.delayed(Duration.zero);
+
+      final SwipeQueue after = container
+          .read(swipeControllerProvider(null))
+          .value!;
+      expect(after.cards.map((TouristSpot s) => s.id), isNot(contains(topId)));
+      expect(after.cards.length, 2);
+      // 반응은 상세가 이미 보냈다 — 여기서 또 보내면 중복이다.
+      expect(repo.recordedReactions, isEmpty);
+    });
+
+    test('removes a card that is not on top', () async {
+      // 상세는 스택 중간의 카드에서도 열릴 수 있다.
+      final repo = FakeSpotRepository(feed: _spots(3), pageSize: 5);
+      final (container, queue) = await _load(repo);
+      final String middleId = queue.cards[1].id;
+      final String topId = queue.cards.first.id;
+
+      container.read(swipeControllerProvider(null).notifier).consume(middleId);
+
+      final SwipeQueue after = container
+          .read(swipeControllerProvider(null))
+          .value!;
+      expect(
+        after.cards.map((TouristSpot s) => s.id),
+        isNot(contains(middleId)),
+      );
+      expect(after.cards.first.id, topId, reason: '맨 위는 그대로다');
+    });
+
+    test('an unknown id leaves the stack untouched', () async {
+      // 스와이프를 거치지 않은 경로로 들어온 상세.
+      final repo = FakeSpotRepository(feed: _spots(3), pageSize: 5);
+      final (container, before) = await _load(repo);
+
+      container.read(swipeControllerProvider(null).notifier).consume('nope');
+
+      expect(container.read(swipeControllerProvider(null)).value, before);
+    });
+  });
 }
+
+/// 첫 `reactToSpot`은 인증 실패로 끝나고 재시도에서 성공하는 저장소.
+///
+/// 실제로는 링크 계층이 갱신 후 원 요청을 재시도하므로 provider는 한 번만 호출하고
+/// 성공을 받는다(SPEC-0005 §4.1). 여기서는 그 재시도를 저장소 수준에서 재현해,
+/// "인증 실패로 시작한 반응이 결국 기록된다"는 AC-43의 관찰 가능한 결과를 만든다.
+class _RetryOnceSpotRepository extends FakeSpotRepository {
+  _RetryOnceSpotRepository({required super.feed}) : super(pageSize: 5);
+
+  bool _refreshed = false;
+
+  @override
+  Future<void> reactToSpot(String spotId, SpotReaction reaction) async {
+    if (!_refreshed) {
+      // 첫 시도는 인증 실패 — 링크가 갱신하고 같은 요청을 다시 태운다.
+      _refreshed = true;
+      return reactToSpot(spotId, reaction);
+    }
+    return super.reactToSpot(spotId, reaction);
+  }
+}
+
