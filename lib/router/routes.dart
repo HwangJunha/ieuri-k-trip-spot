@@ -82,12 +82,31 @@ List<RouteBase> buildRoutes() => <RouteBase>[
   //
   // category는 쿼리 파라미터다. 서버의 `intro`/`infoItems`가 필수 인자로 요구하는데
   // 조회 중인 응답의 필드를 인자로 쓸 수 없어, 스와이프 피드가 이미 가진 값을 넘긴다.
+  //
+  // 전환은 아래→위 진입, 위→아래 종료다(SPEC-0006 R6·R7, AC-17·AC-20). 기본
+  // 좌우 슬라이드는 "옆으로 넘어간다"를 뜻해 스와이프 스택 위로 덮이는 이 화면의
+  // 성격과 어긋난다. 시스템 뒤로가기와 명시적 닫기가 같은 `CustomTransitionPage`를
+  // 지나므로 종료 전환도 자동으로 같아진다(AC-22).
+  //
+  // thumb는 스와이프 카드가 이미 가진 썸네일 URL이다. 본문 조회가 끝나기 전에도
+  // 같은 이미지를 그려 깜빡임을 없앤다(R8, AC-24). 없으면(직접 진입) 조회 결과로
+  // 대체되며 오류가 아니다(AC-25).
   GoRoute(
     path: '/spot/:id',
     name: SpotDetailView.routeName,
-    builder: (_, GoRouterState state) => SpotDetailView(
-      contentId: state.pathParameters['id']!,
-      category: _spotCategoryFrom(state.uri.queryParameters['category']),
+    pageBuilder: (_, GoRouterState state) => CustomTransitionPage<void>(
+      key: state.pageKey,
+      child: SpotDetailView(
+        contentId: state.pathParameters['id']!,
+        category: _spotCategoryFrom(state.uri.queryParameters['category']),
+        initialThumbnailUrl: state.uri.queryParameters['thumb'],
+        // 어느 피드에서 열렸는지(R11). category(관광지의 카테고리)와 다른 값이며,
+        // 파라미터가 없으면 전체 피드(null)로 본다 — 직접 진입도 같은 경로다.
+        feedCategory: _feedCategoryFrom(state.uri.queryParameters['feed']),
+      ),
+      transitionDuration: const Duration(milliseconds: 300),
+      reverseTransitionDuration: const Duration(milliseconds: 250),
+      transitionsBuilder: _slideUpFromBottom,
     ),
   ),
   // The post-onboarding 5-tab shell. Each tab keeps its own navigation stack.
@@ -104,12 +123,35 @@ List<RouteBase> buildRoutes() => <RouteBase>[
   ),
 ];
 
+/// 아래에서 위로 밀어 올리는 전환(SPEC-0006 AC-17). 같은 builder가 역방향 재생으로
+/// 위→아래 종료가 되므로(AC-20), 시스템 뒤로가기와 명시적 닫기가 같은 연출을 쓴다
+/// (AC-22). 곡선·지속시간은 수용 기준에 없어 구현 재량이다.
+Widget _slideUpFromBottom(
+  BuildContext context,
+  Animation<double> animation,
+  Animation<double> secondaryAnimation,
+  Widget child,
+) => SlideTransition(
+  position: animation.drive(
+    Tween<Offset>(
+      begin: const Offset(0, 1),
+      end: Offset.zero,
+    ).chain(CurveTween(curve: Curves.easeOutCubic)),
+  ),
+  child: child,
+);
+
 /// 쿼리 파라미터로 온 카테고리 이름을 [SpotCategory]로 되돌린다.
 ///
 /// 서버가 아직 매핑되지 않은 enum 값을 추가했거나 파라미터가 빠진 경우엔
 /// [SpotCategory.touristSpot]으로 떨어진다 — 상세 화면 전체를 실패시키는 것보다
 /// 낫고, 이때 운영 정보·이용안내가 실제와 다르면 서버가 빈 값을 주므로 해당 섹션이
 /// 렌더되지 않는다.
+/// 피드 필터를 되돌린다. [_spotCategoryFrom]과 달리 **null이 유효한 값**이다 —
+/// "전체" 피드를 뜻하므로 기본값으로 떨어뜨리면 안 된다.
+SpotCategory? _feedCategoryFrom(String? name) =>
+    SpotCategory.values.where((SpotCategory c) => c.name == name).firstOrNull;
+
 SpotCategory _spotCategoryFrom(String? name) =>
     SpotCategory.values.where((SpotCategory c) => c.name == name).firstOrNull ??
     SpotCategory.touristSpot;

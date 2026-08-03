@@ -2,10 +2,15 @@ import 'dart:developer' as developer;
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../model/retry_budget.dart';
+import '../model/retry_exhausted.dart';
 import '../model/spot_category.dart';
 import '../model/spot_detail.dart';
+import '../model/spot_failure.dart';
 import '../model/spot_reaction.dart';
 import '../repository/spot_repository.dart';
+import 'retry_budget_providers.dart';
+import 'retry_counting.dart';
 import 'spot_providers.dart';
 
 part 'spot_detail_providers.g.dart';
@@ -20,7 +25,8 @@ part 'spot_detail_providers.g.dart';
 ///   개수가 화면에 보이는 값이라 되돌려야 한다(spec §4).
 /// - 재평가는 이전 반응을 덮어쓰는 것으로 계산한다(SPEC-0002 규약): LIKE→DISLIKE면
 ///   직전 +1을 되돌려 순변화 −1. 같은 반응 반복은 순변화 0.
-@riverpod
+/// [retry]로 자동 재시도를 1회로 묶는다(SPEC-0006 R1) — 스와이프와 같은 정책이다.
+@Riverpod(retry: spotRetryPolicy)
 class SpotDetailController extends _$SpotDetailController {
   SpotRepository get _repository => ref.read(spotRepositoryProvider);
 
@@ -28,9 +34,37 @@ class SpotDetailController extends _$SpotDetailController {
   /// 델타 계산의 기준 — 서버 왕복 없이 덮어쓰기 순변화를 구하려고 로컬로 들고 있다.
   SpotReaction? _myReaction;
 
+  /// 이 상세의 재시도 예산(SPEC-0006 R4). 스와이프와 같은 이유로 컨트롤러 바깥의
+  /// keepAlive provider에 둔다 — 재빌드가 카운터를 초기화하면 상한이 무의미해진다.
+  SpotRetryBudget get _budget =>
+      ref.read(spotRetryBudgetProvider(detailRetryScope(contentId)).notifier);
+
+  RetryBudget get _budgetState =>
+      ref.read(spotRetryBudgetProvider(detailRetryScope(contentId)));
+
   @override
-  Future<SpotDetail> build(String contentId, SpotCategory category) =>
-      _repository.fetchSpotDetail(contentId, category);
+  Future<SpotDetail> build(String contentId, SpotCategory category) {
+    // 상한 소진 상태면 repository를 호출하지 않는다(AC-11·AC-12). 원인은 예산이 들고
+    // 있던 실제 실패를 쓴다 — 스와이프 쪽과 같은 이유다.
+    final RetryBudget budget = _budgetState;
+    if (budget.isExhausted) {
+      throw RetryExhausted(budget.lastFailure ?? SpotFailure.network);
+    }
+    return _fetchDetail();
+  }
+
+  /// 상세를 조회하고 실패를 상한에 계상한다. 계상 규칙은 스와이프와 동일하다(§2.3).
+  Future<SpotDetail> _fetchDetail() async {
+    try {
+      return await _repository.fetchSpotDetail(contentId, category);
+    } catch (error) {
+      if (!countsTowardRetryBudget(error)) rethrow;
+
+      _budget.countFailure(error);
+      if (_budgetState.isExhausted) throw RetryExhausted(error);
+      rethrow;
+    }
+  }
 
   /// 상세에서 [reaction]을 보낸다. 낙관적으로 `likeCount`를 갱신하고 `reactToSpot`을
   /// 발사하며, 실패 시 개수와 내 반응 상태를 모두 롤백한다.
@@ -73,9 +107,21 @@ class SpotDetailController extends _$SpotDetailController {
     return after - before;
   }
 
-  /// 오류 상태에서 상세를 다시 로드한다(재시도 CTA용, AC-26).
+  /// 사용자의 명시적 재시도(R3, AC-26). 상한을 무시하고 1회 조회하며, 성공하면
+  /// 카운터를 0으로 되돌린다(AC-9). 실패하면 종료 상태를 유지한다(AC-10).
   Future<void> reload() async {
     state = const AsyncLoading<SpotDetail>();
-    state = await AsyncValue.guard(() => build(contentId, category));
+    state = await AsyncValue.guard(() async {
+      try {
+        final SpotDetail detail = await _fetchDetail();
+        _budget.reset();
+        return detail;
+      } on RetryExhausted {
+        rethrow;
+      } catch (error) {
+        if (_budgetState.isExhausted) throw RetryExhausted(error);
+        rethrow;
+      }
+    });
   }
 }

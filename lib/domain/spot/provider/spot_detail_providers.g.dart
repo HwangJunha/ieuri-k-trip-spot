@@ -18,6 +18,7 @@ part of 'spot_detail_providers.dart';
 ///   개수가 화면에 보이는 값이라 되돌려야 한다(spec §4).
 /// - 재평가는 이전 반응을 덮어쓰는 것으로 계산한다(SPEC-0002 규약): LIKE→DISLIKE면
 ///   직전 +1을 되돌려 순변화 −1. 같은 반응 반복은 순변화 0.
+/// [retry]로 자동 재시도를 1회로 묶는다(SPEC-0006 R1) — 스와이프와 같은 정책이다.
 
 @ProviderFor(SpotDetailController)
 const spotDetailControllerProvider = SpotDetailControllerFamily._();
@@ -32,6 +33,7 @@ const spotDetailControllerProvider = SpotDetailControllerFamily._();
 ///   개수가 화면에 보이는 값이라 되돌려야 한다(spec §4).
 /// - 재평가는 이전 반응을 덮어쓰는 것으로 계산한다(SPEC-0002 규약): LIKE→DISLIKE면
 ///   직전 +1을 되돌려 순변화 −1. 같은 반응 반복은 순변화 0.
+/// [retry]로 자동 재시도를 1회로 묶는다(SPEC-0006 R1) — 스와이프와 같은 정책이다.
 final class SpotDetailControllerProvider
     extends $AsyncNotifierProvider<SpotDetailController, SpotDetail> {
   /// 관광지 상세 컨트롤러(SPEC-0003). [contentId]별 패밀리 — 상세 진입마다 해당 id의
@@ -44,11 +46,12 @@ final class SpotDetailControllerProvider
   ///   개수가 화면에 보이는 값이라 되돌려야 한다(spec §4).
   /// - 재평가는 이전 반응을 덮어쓰는 것으로 계산한다(SPEC-0002 규약): LIKE→DISLIKE면
   ///   직전 +1을 되돌려 순변화 −1. 같은 반응 반복은 순변화 0.
+  /// [retry]로 자동 재시도를 1회로 묶는다(SPEC-0006 R1) — 스와이프와 같은 정책이다.
   const SpotDetailControllerProvider._({
     required SpotDetailControllerFamily super.from,
     required (String, SpotCategory) super.argument,
   }) : super(
-         retry: null,
+         retry: spotRetryPolicy,
          name: r'spotDetailControllerProvider',
          isAutoDispose: true,
          dependencies: null,
@@ -81,7 +84,7 @@ final class SpotDetailControllerProvider
 }
 
 String _$spotDetailControllerHash() =>
-    r'974415043ff1264ccbabf7363bab5fcabeea2c41';
+    r'6dc979421ac9eeff273423159424b048e442f45c';
 
 /// 관광지 상세 컨트롤러(SPEC-0003). [contentId]별 패밀리 — 상세 진입마다 해당 id의
 /// 인스턴스를 로드한다.
@@ -93,6 +96,7 @@ String _$spotDetailControllerHash() =>
 ///   개수가 화면에 보이는 값이라 되돌려야 한다(spec §4).
 /// - 재평가는 이전 반응을 덮어쓰는 것으로 계산한다(SPEC-0002 규약): LIKE→DISLIKE면
 ///   직전 +1을 되돌려 순변화 −1. 같은 반응 반복은 순변화 0.
+/// [retry]로 자동 재시도를 1회로 묶는다(SPEC-0006 R1) — 스와이프와 같은 정책이다.
 
 final class SpotDetailControllerFamily extends $Family
     with
@@ -105,7 +109,7 @@ final class SpotDetailControllerFamily extends $Family
         > {
   const SpotDetailControllerFamily._()
     : super(
-        retry: null,
+        retry: spotRetryPolicy,
         name: r'spotDetailControllerProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
@@ -122,6 +126,7 @@ final class SpotDetailControllerFamily extends $Family
   ///   개수가 화면에 보이는 값이라 되돌려야 한다(spec §4).
   /// - 재평가는 이전 반응을 덮어쓰는 것으로 계산한다(SPEC-0002 규약): LIKE→DISLIKE면
   ///   직전 +1을 되돌려 순변화 −1. 같은 반응 반복은 순변화 0.
+  /// [retry]로 자동 재시도를 1회로 묶는다(SPEC-0006 R1) — 스와이프와 같은 정책이다.
 
   SpotDetailControllerProvider call(String contentId, SpotCategory category) =>
       SpotDetailControllerProvider._(
@@ -143,6 +148,7 @@ final class SpotDetailControllerFamily extends $Family
 ///   개수가 화면에 보이는 값이라 되돌려야 한다(spec §4).
 /// - 재평가는 이전 반응을 덮어쓰는 것으로 계산한다(SPEC-0002 규약): LIKE→DISLIKE면
 ///   직전 +1을 되돌려 순변화 −1. 같은 반응 반복은 순변화 0.
+/// [retry]로 자동 재시도를 1회로 묶는다(SPEC-0006 R1) — 스와이프와 같은 정책이다.
 
 abstract class _$SpotDetailController extends $AsyncNotifier<SpotDetail> {
   late final _$args = ref.$arg as (String, SpotCategory);

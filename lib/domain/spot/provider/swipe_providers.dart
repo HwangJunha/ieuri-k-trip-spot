@@ -8,11 +8,16 @@ import '../../../common/localization/locale_controller.dart';
 import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
 import '../../../common/pagination/offset_page.dart';
+import '../model/retry_budget.dart';
+import '../model/retry_exhausted.dart';
 import '../model/spot_category.dart';
+import '../model/spot_failure.dart';
 import '../model/spot_reaction.dart';
 import '../model/swipe_queue.dart';
 import '../model/tourist_spot.dart';
 import '../repository/spot_repository.dart';
+import 'retry_budget_providers.dart';
+import 'retry_counting.dart';
 import 'spot_providers.dart';
 
 part 'swipe_providers.g.dart';
@@ -71,29 +76,68 @@ class SelectedSpotCategory extends _$SelectedSpotCategory {
 ///   실패해도 카드를 복원하지 않고 조용히 로깅한다(좋아요 실패는 비치명적).
 /// - 잔여 [_prefetchThreshold] 미만이고 다음 페이지가 있으면 백그라운드로 이어 붙인다.
 /// - 소진: 큐가 비고 `hasNext=false`면 [SwipeQueue.isExhausted]로 빈 상태.
-@riverpod
+/// [retry]로 자동 재시도를 1회로 묶는다(R1). Riverpod 기본값은 최대 10회 지수 백오프라
+/// 실패 상태에서 조회가 폭주하는데, 그 폭주의 실제 경로가 여기다(설계문서 §2.1).
+@Riverpod(retry: spotRetryPolicy)
 class SwipeController extends _$SwipeController {
   SpotRepository get _repository => ref.read(spotRepositoryProvider);
 
   bool _isPrefetching = false;
 
+  /// 이 카테고리의 재시도 예산(SPEC-0006 R4). 컨트롤러 바깥의 keepAlive provider라
+  /// 재빌드를 넘어 살아남는다 — 인스턴스 필드에 두면 폭주 경로인 재빌드가 카운터를
+  /// 초기화해 상한이 무의미해진다(설계문서 §2.2).
+  SpotRetryBudget get _budget => ref.read(
+    spotRetryBudgetProvider(swipeRetryScope(category?.name)).notifier,
+  );
+
+  RetryBudget get _budgetState =>
+      ref.read(spotRetryBudgetProvider(swipeRetryScope(category?.name)));
+
   @override
   Future<SwipeQueue> build(SpotCategory? category) async {
+    // 좌표는 watch 한다 — 위치가 바뀌면 피드를 다시 받아야 하기 때문이다. 그 재빌드가
+    // 실패 상태에서 폭주하지 않도록 막는 것이 아래 상한 확인이다(R1).
     final Coordinates coords = await ref.watch(
       currentCoordinatesProvider.future,
     );
-    final OffsetPage<TouristSpot> page = await _repository.fetchSpotPage(
-      latitude: coords.latitude,
-      longitude: coords.longitude,
-      category: category,
-      page: 0,
-      size: _pageSize,
-    );
-    return SwipeQueue(
-      cards: _shuffled(page.items),
-      loadedPage: page.page,
-      hasNextPage: page.hasNext,
-    );
+
+    // 상한을 이미 소진했으면 repository를 호출하지 않고 종료 상태를 그대로 돌려준다
+    // (AC-11·AC-12). 재빌드가 몇 번 일어나도 조회 횟수는 늘지 않는다. 원인은 예산이
+    // 들고 있던 실제 실패를 쓴다 — 지어내면 로깅·분기가 실제와 어긋난다.
+    final RetryBudget budget = _budgetState;
+    if (budget.isExhausted) {
+      throw RetryExhausted(budget.lastFailure ?? SpotFailure.network);
+    }
+
+    return _fetchFirstPage(coords);
+  }
+
+  /// 첫 페이지를 조회하고 실패를 상한에 계상한다. 계상 대상은 설계문서 §2.3의 표를
+  /// 따른다 — 인증 실패는 SPEC-0005 갱신 경로 소관이라 계상하지 않는다(AC-14·AC-15).
+  Future<SwipeQueue> _fetchFirstPage(Coordinates coords) async {
+    try {
+      final OffsetPage<TouristSpot> page = await _repository.fetchSpotPage(
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        category: category,
+        page: 0,
+        size: _pageSize,
+      );
+      return SwipeQueue(
+        cards: _shuffled(page.items),
+        loadedPage: page.page,
+        hasNextPage: page.hasNext,
+      );
+    } catch (error) {
+      if (!countsTowardRetryBudget(error)) rethrow;
+
+      _budget.countFailure(error);
+      // 이번 실패로 상한을 다 썼으면 일반 오류가 아니라 종료 상태로 승격한다
+      // (AC-5·AC-6) — 화면이 재시도 버튼만 있는 오류와 구분해 그린다.
+      if (_budgetState.isExhausted) throw RetryExhausted(error);
+      rethrow;
+    }
   }
 
   /// 맨 위 카드를 [reaction]으로 처리한다. 즉시 큐에서 제거(낙관적)하고 반응 기록을
@@ -194,9 +238,31 @@ class SwipeController extends _$SwipeController {
     }
   }
 
-  /// 오류/빈 상태에서 첫 페이지부터 다시 로드한다(재시도 배너·CTA용).
+  /// 사용자의 명시적 재시도(R3). **상한을 무시하고 1회 조회한다**(AC-8·AC-13) —
+  /// 자동 재시도의 상한은 폭주를 막기 위한 것이지 사용자의 의사를 막기 위한 것이 아니다.
+  ///
+  /// 성공하면 카운터를 0으로 되돌려 이후 실패에 다시 자동 재시도가 가능해진다(AC-9).
+  /// 실패하면 종료 상태를 유지하고 자동 재시도를 이어서 발생시키지 않는다(AC-10) —
+  /// 여기서 카운터를 올리지 않는 이유는 이미 소진 상태이기 때문이고, 소진 전이었다면
+  /// 이 실패도 계상되어야 하므로 `_fetchFirstPage`와 같은 규칙을 쓴다.
   Future<void> reload() async {
     state = const AsyncLoading<SwipeQueue>();
-    state = await AsyncValue.guard(() => build(category));
+    state = await AsyncValue.guard(() async {
+      final Coordinates coords = await ref.read(
+        currentCoordinatesProvider.future,
+      );
+      try {
+        final SwipeQueue queue = await _fetchFirstPage(coords);
+        _budget.reset(); // 성공 → 카운터 초기화(AC-9).
+        return queue;
+      } on RetryExhausted {
+        rethrow; // 이미 종료 상태로 승격됨 — 그대로 유지한다(AC-10).
+      } catch (error) {
+        // 상한을 이미 소진한 뒤의 명시적 재시도가 실패한 경우다. 종료 상태를 유지해
+        // 화면이 "재시도 중"으로 되돌아가지 않게 한다(AC-10).
+        if (_budgetState.isExhausted) throw RetryExhausted(error);
+        rethrow;
+      }
+    });
   }
 }

@@ -164,6 +164,10 @@
   "discoverLoadError": "スポットの読み込み中に問題が発生しました。",
   "discoverLoading": "近くのスポットを探しています…",
 
+  "retryExhaustedTitle": "接続できません",
+  "retryExhaustedBody": "何度か試しましたが接続できませんでした。通信環境をご確認のうえ、もう一度お試しください。",
+  "retryExhaustedAction": "もう一度試す",
+
   "spotDetailOverviewTitle": "紹介",
   "spotDetailContactTitle": "連絡先",
   "spotDetailHomepageLabel": "ウェブサイト",

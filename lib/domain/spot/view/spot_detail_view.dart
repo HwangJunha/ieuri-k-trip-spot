@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../common/widget/failure_notice.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/attribution_block.dart';
 import '../component/detail_reaction_bar.dart';
@@ -10,9 +11,11 @@ import '../component/like_count_badge.dart';
 import '../component/spot_gallery.dart';
 import '../component/spot_info_item_list.dart';
 import '../component/spot_intro_rows.dart';
+import '../model/retry_exhausted.dart';
 import '../model/spot_category.dart';
 import '../model/spot_detail.dart';
 import '../model/spot_failure.dart';
+import '../model/spot_image.dart';
 import '../model/spot_reaction.dart';
 import '../provider/spot_detail_providers.dart';
 import '../provider/swipe_providers.dart';
@@ -27,7 +30,24 @@ class SpotDetailView extends ConsumerWidget {
     super.key,
     required this.contentId,
     required this.category,
+    this.initialThumbnailUrl,
+    this.feedCategory,
   });
+
+  /// 스와이프 카드가 이미 가진 썸네일 URL(SPEC-0006 R8). 본문 조회가 끝나기 전에도
+  /// 이 URL로 첫 이미지 자리를 채워, 같은 이미지를 다시 로드하며 깜빡이는 것을
+  /// 막는다(AC-24). 직접 진입처럼 값이 없으면 조회 결과로 대체되며 오류가 아니다
+  /// (AC-25). 조회가 끝나면 응답의 `thumbnailImageUrl`이 최종 값이다(AC-26).
+  final String? initialThumbnailUrl;
+
+  /// 이 상세가 어느 스와이프 피드에서 열렸는지(null=전체 피드, SPEC-0006 R11).
+  /// 반응 후 그 피드에서 카드를 소비할 때 쓴다.
+  ///
+  /// [category]와 다른 값이다 — [category]는 **이 관광지의** 카테고리이고, 이 값은
+  /// **피드의 필터**다. 전체 피드에서 식당 카드를 열면 앞은 restaurant, 뒤는 null이다.
+  /// 현재 선택 상태를 다시 읽지 않는 이유는, 상세를 열어둔 채 카테고리를 바꾸면 그
+  /// 선택이 이미 다른 피드를 가리켜 정작 카드가 있는 인스턴스를 놓치기 때문이다.
+  final SpotCategory? feedCategory;
 
   /// Discover 카드의 contentId(=Spot.id). 라우트 파라미터로 전달된다(R9).
   final String contentId;
@@ -49,9 +69,9 @@ class SpotDetailView extends ConsumerWidget {
       appBar: AppBar(),
       body: SafeArea(
         child: detail.when(
-          loading: () => const _LoadingState(),
+          loading: () => _LoadingState(thumbnailUrl: initialThumbnailUrl),
           error: (Object error, _) => _ErrorState(
-            failure: error is SpotFailure ? error : SpotFailure.network,
+            error: error,
             onRetry: () => ref
                 .read(
                   spotDetailControllerProvider(contentId, category).notifier,
@@ -61,6 +81,7 @@ class SpotDetailView extends ConsumerWidget {
           data: (SpotDetail data) => _DetailBody(
             contentId: contentId,
             category: category,
+            feedCategory: feedCategory,
             detail: data,
           ),
         ),
@@ -69,80 +90,92 @@ class SpotDetailView extends ConsumerWidget {
   }
 }
 
+/// 본문 조회 중 화면. 넘겨받은 썸네일이 있으면 갤러리 자리를 **먼저 채운다**(R8,
+/// AC-24) — 리스트에서 이미 보던 이미지가 그대로 이어져, 조회가 끝난 뒤 같은 URL을
+/// 다시 로드하며 깜빡이는 일이 없다. 값이 없으면(직접 진입) 기존 스피너만 보인다.
 class _LoadingState extends StatelessWidget {
-  const _LoadingState();
+  const _LoadingState({this.thumbnailUrl});
+
+  final String? thumbnailUrl;
 
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    return Center(
+    final Widget spinner = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        const CircularProgressIndicator(),
+        const SizedBox(height: 16),
+        Text(l10n.spotDetailLoading),
+      ],
+    );
+
+    if (thumbnailUrl == null) return Center(child: spinner);
+
+    // 갤러리와 같은 컴포넌트를 쓴다 — 조회 완료 후 교체될 위젯과 같은 형이라야 같은
+    // 자리·같은 크기에 그려지고, 이미지 캐시도 같은 URL로 적중한다.
+    //
+    // 스크롤 가능한 컨테이너에 담는 이유는 본문(`_DetailBody`)도 스크롤이기 때문이다.
+    // 화면이 좁으면 갤러리 + 스피너가 세로를 넘겨 오버플로한다.
+    return SingleChildScrollView(
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          const CircularProgressIndicator(),
-          const SizedBox(height: 16),
-          Text(l10n.spotDetailLoading),
+          SpotGallery(
+            images: const <SpotImage>[],
+            fallbackImageUrl: thumbnailUrl!,
+          ),
+          const SizedBox(height: 32),
+          spinner,
         ],
       ),
     );
   }
 }
 
-/// 조회 실패 화면(AC-26). 실패 유형별로 안내 문구를 달리하되, 빈 상세로 오인시키지
-/// 않도록 항상 오류임을 명확히 하고 재시도 CTA를 준다.
+/// 조회 실패 화면(AC-26). 자동 재시도 상한을 소진했으면 종료 상태를, 아니면 실패
+/// 유형별 안내를 보여준다(SPEC-0006 AC-5·AC-6). 어느 쪽이든 빈 상세로 오인시키지
+/// 않도록 오류임을 명확히 하고 명시적 재시도 CTA를 준다(AC-8).
 class _ErrorState extends StatelessWidget {
-  const _ErrorState({required this.failure, required this.onRetry});
+  const _ErrorState({required this.error, required this.onRetry});
 
-  final SpotFailure failure;
+  final Object error;
   final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final ThemeData theme = Theme.of(context);
-    final (IconData icon, String title, String body) = switch (failure.kind) {
+
+    // 종료 상태는 실패 유형과 무관하게 하나의 문구다 — 사용자에게 필요한 정보는
+    // "무엇이 실패했나"가 아니라 "자동 재시도가 끝났다"이기 때문이다.
+    if (error is RetryExhausted) {
+      return FailureNotice.terminal(
+        title: l10n.retryExhaustedTitle,
+        body: l10n.retryExhaustedBody,
+        actionLabel: l10n.retryExhaustedAction,
+        onAction: onRetry,
+      );
+    }
+
+    final SpotFailure failure = error is SpotFailure
+        ? error as SpotFailure
+        : SpotFailure.network;
+    final (String title, String body) = switch (failure.kind) {
       SpotFailureKind.notFound => (
-        Icons.search_off_outlined,
         l10n.spotDetailNotFoundTitle,
         l10n.spotDetailNotFoundBody,
       ),
       SpotFailureKind.rateLimited => (
-        Icons.hourglass_empty_outlined,
         l10n.spotDetailRateLimitedTitle,
         l10n.spotDetailRateLimitedBody,
       ),
-      _ => (
-        Icons.cloud_off_outlined,
-        l10n.spotDetailUnavailableTitle,
-        l10n.spotDetailUnavailableBody,
-      ),
+      _ => (l10n.spotDetailUnavailableTitle, l10n.spotDetailUnavailableBody),
     };
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Icon(icon, size: 48, color: theme.colorScheme.onSurfaceVariant),
-            const SizedBox(height: 16),
-            Text(title, style: theme.textTheme.titleLarge),
-            const SizedBox(height: 8),
-            Text(
-              body,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: onRetry,
-              child: Text(l10n.spotDetailRetryButton),
-            ),
-          ],
-        ),
-      ),
+    return FailureNotice.retryable(
+      title: title,
+      body: body,
+      actionLabel: l10n.spotDetailRetryButton,
+      onAction: onRetry,
     );
   }
 }
@@ -152,11 +185,16 @@ class _DetailBody extends ConsumerWidget {
   const _DetailBody({
     required this.contentId,
     required this.category,
+    required this.feedCategory,
     required this.detail,
   });
 
   final String contentId;
   final SpotCategory category;
+
+  /// 이 상세가 열린 스와이프 피드의 필터(null=전체). 반응 후 카드 소비 대상이다.
+  final SpotCategory? feedCategory;
+
   final SpotDetail detail;
 
   @override
@@ -267,9 +305,14 @@ class _DetailBody extends ConsumerWidget {
 
   /// 반응을 provider에 위임하고, 실패(롤백 후 rethrow) 시 스낵바로 피드백한다(AC-30).
   ///
-  /// 성공하면 이 카드를 스와이프 스택에서 소비하고 Discover로 돌아간다. 사용자가
-  /// 이미 판단한 카드가 돌아왔을 때 맨 위에 다시 있으면 안 되기 때문이다 — 상세는
-  /// 스와이프의 "자세히 보기" 단계다. 실패하면 화면에 머물러 재시도할 수 있게 한다.
+  /// 성공하면 이 카드를 스와이프 스택에서 소비하고 Discover로 돌아간다(SPEC-0006
+  /// R11·R12). 사용자가 이미 판단한 카드가 돌아왔을 때 맨 위에 다시 있으면 안 되기
+  /// 때문이다 — 상세는 스와이프의 "자세히 보기" 단계다. 소비를 **pop 전에** 하는
+  /// 이유는 R12다: 리스트가 이미 다음 카드를 맨 위에 둔 채로 드러나야 전진이
+  /// 일어났음이 복귀 순간에 보인다(AC-38·AC-39).
+  ///
+  /// 실패하면 소비하지 않고 화면에 머물러 재시도할 수 있게 한다. 반응이 기록되지
+  /// 않았는데 카드가 사라지면 사용자는 반응했다고 믿지만 서버는 모르는 상태가 된다.
   Future<void> _react(
     BuildContext context,
     WidgetRef ref,
@@ -290,13 +333,12 @@ class _DetailBody extends ConsumerWidget {
     }
 
     // 반응은 상세가 이미 보냈으므로 카드만 제거한다(중복 전송 금지).
-    ref
-        .read(
-          swipeControllerProvider(
-            ref.read(selectedSpotCategoryProvider),
-          ).notifier,
-        )
-        .consume(contentId);
+    //
+    // 어떤 피드에서 왔는지는 **현재 선택된 카테고리가 아니라** 이 화면이 열릴 때 받은
+    // 값이 답이다 — 상세를 열어둔 채 카테고리를 바꾸면 선택 상태는 이미 다른 피드를
+    // 가리켜, 정작 카드가 있는 인스턴스를 놓친다. 피드에 없는 id면 아무 일도 없다.
+    ref.read(swipeControllerProvider(feedCategory).notifier).consume(contentId);
+
     if (navigator.canPop()) navigator.pop();
   }
 }
