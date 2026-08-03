@@ -10,12 +10,12 @@ import '../domain/auth/model/sns_credential.dart';
 import '../domain/auth/view/password_reset_screen.dart';
 import '../domain/auth/view/sign_up_screen.dart';
 import '../domain/auth/view/sns_sign_up_screen.dart';
-import '../domain/event/view/events_screen.dart';
 import '../domain/onboarding/view/onboarding_screen.dart';
 import '../domain/spot/model/spot_category.dart';
-import '../domain/spot/view/chat_screen.dart';
+import '../domain/spot/view/community_screen.dart';
 import '../domain/spot/view/discover_screen.dart';
 import '../domain/spot/view/home_screen.dart';
+import '../domain/spot/view/liked_spots_screen.dart';
 import '../domain/spot/view/map_screen.dart';
 import '../domain/spot/view/spot_detail_view.dart';
 
@@ -117,8 +117,10 @@ List<RouteBase> buildRoutes() => <RouteBase>[
       _branch('/home', HomeScreen.routeName, const HomeScreen()),
       _branch('/map', MapScreen.routeName, const MapScreen()),
       _branch('/discover', DiscoverScreen.routeName, const DiscoverScreen()),
-      _branch('/events', EventsScreen.routeName, const EventsScreen()),
-      _branch('/chat', ChatScreen.routeName, const ChatScreen()),
+      // SPEC-0008 R-12·R-13: 탭 3·4의 목적지만 교체한다. 탭 수(5)와 Discover의
+      // 가운데 강조는 그대로다(AC-40) — 셸 구조는 건드리지 않는다.
+      _branch('/liked', LikedSpotsScreen.routeName, const LikedSpotsScreen()),
+      _branch('/community', CommunityScreen.routeName, const CommunityScreen()),
     ],
   ),
 ];

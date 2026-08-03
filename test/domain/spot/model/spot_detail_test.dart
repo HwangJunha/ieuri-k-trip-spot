@@ -256,4 +256,60 @@ void main() {
     // 나머지 필드는 그대로.
     expect(updated.copyWithLikeCount(5), original);
   });
+
+  // --- 축약 상태 (SPEC-0008 R-11) --------------------------------------------
+
+  /// 본문(`overview`)까지 없고 갤러리·운영정보·이용안내가 전부 비었을 때, 남는 것은
+  /// 목록이 이미 준 값들뿐이다 — 제목·썸네일·주소·카테고리. 이것을 **오류가 아닌
+  /// 정상 상태**로 다룬다(AC-34 · AC-35).
+  ///
+  /// 모델은 "숨김 판단"만 책임진다 — 화면은 이 게터들을 보고 섹션을 그리지 않을 뿐,
+  /// 별도의 축약 분기를 만들지 않는다(§2 세 상태를 하나로 접는다).
+  test('상세가 전부 비어도 목록이 준 값은 남고 정상 상태다 (AC-34·AC-35)', () {
+    const SpotDetail sparse = SpotDetail(
+      id: 'c1',
+      title: 'Gyeongbokgung',
+      category: SpotCategory.touristSpot,
+      thumbnailImageUrl: 'https://img/thumb.jpg',
+      address: 'Seoul',
+      copyright: CopyrightType.type1,
+      attributionText: 'Source: KTO',
+      gallery: <SpotImage>[],
+      likeCount: 3,
+    );
+
+    // 모든 섹션이 숨겨진다 — 오류 문구 없이.
+    expect(sparse.hasOverview, isFalse);
+    expect(sparse.hasIntro, isFalse);
+    expect(sparse.hasInfoItems, isFalse);
+    expect(sparse.hasContact, isFalse);
+
+    // 카드에서 본 값들은 그대로 남는다 — 이것이 축약 화면이 보여주는 전부다.
+    expect(sparse.title, 'Gyeongbokgung');
+    expect(sparse.thumbnailImageUrl, isNotEmpty);
+    expect(sparse.hasAddress, isTrue);
+    expect(sparse.category, SpotCategory.touristSpot);
+
+    // likeCount는 non-null이 유지되므로 축약 화면에서도 표시·반응이 가능하다(§3.2).
+    expect(sparse.likeCount, 3);
+    expect(sparse.copyWithLikeCount(4).likeCount, 4);
+  });
+
+  /// 갤러리가 비어도 썸네일 1장으로 대체된다 — null과 빈 배열을 구분하는 분기를
+  /// 만들지 않는다(AC-26 · AC-27 · AC-28).
+  test('빈 갤러리는 썸네일 폴백이고 출처 문구를 더하지 않는다 (AC-26·AC-27)', () {
+    const SpotDetail sparse = SpotDetail(
+      id: 'c1',
+      title: 'T',
+      category: SpotCategory.touristSpot,
+      thumbnailImageUrl: 'https://img/thumb.jpg',
+      copyright: CopyrightType.type1,
+      attributionText: 'Source: KTO',
+      gallery: <SpotImage>[],
+      likeCount: 0,
+    );
+
+    expect(sparse.gallery, isEmpty);
+    expect(sparse.distinctImageAttributions, isEmpty);
+  });
 }

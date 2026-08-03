@@ -93,10 +93,13 @@
   "@navMap": { "description": "하단 내비 - 지도 탭" },
   "navDiscover": "발견",
   "@navDiscover": { "description": "하단 내비 - 발견 탭" },
-  "navEvents": "행사",
-  "@navEvents": { "description": "하단 내비 - 행사 탭" },
-  "navChat": "채팅",
-  "@navChat": { "description": "하단 내비 - 채팅 탭" },
+  "navLiked": "좋아요",
+  "@navLiked": { "description": "하단 내비 - 좋아요 목록 탭" },
+  "navCommunity": "커뮤니티",
+  "@navCommunity": { "description": "하단 내비 - 커뮤니티 탭" },
+
+  "likedSpotsEmpty": "아직 좋아요한 여행지가 없어요.",
+  "@likedSpotsEmpty": { "description": "좋아요 목록이 비었을 때 문구" },
 
   "comingSoon": "곧 제공될 예정입니다.",
   "@comingSoon": { "description": "미구현 탭 플레이스홀더 문구" },

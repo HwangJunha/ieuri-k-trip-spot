@@ -50,8 +50,10 @@
   "navHome": "ホーム",
   "navMap": "マップ",
   "navDiscover": "発見",
-  "navEvents": "イベント",
-  "navChat": "チャット",
+  "navLiked": "お気に入り",
+  "navCommunity": "コミュニティ",
+
+  "likedSpotsEmpty": "お気に入りのスポットはまだありません。",
 
   "comingSoon": "近日公開予定です。",
 
