@@ -155,6 +155,21 @@ One behavior per test. Minimal mocks. Arrange–Act–Assert. Per-layer shape:
 - Do not test framework code or generated code.
 - If a test needs elaborate setup, the code under test is probably too complex — simplify the code first.
 
+**스위트는 빠르다 — 느리면 그건 깨진 테스트다.** 전체 `flutter test`는 약 11초다(테스트 300개
+기준). 이보다 오래 걸린다면 실행이 느린 게 아니라 **테스트가 매달려 30초 타임아웃까지 가고
+있는 것**이다. 가장 흔한 원인은 provider가 오류 상태로 떠서 `.future`가 완결되지 않는 경우이고,
+그때 스택트레이스에 `Tried to use a provider that is in error state`가 찍힌다.
+
+따라서 **테스트가 깨진 채로 다음 단계를 진행하지 않는다.** 깨진 스위트를 그대로 두고 계속
+돌리면 매 실행이 30초씩 들고, 그 비용이 작업 전체 시간의 절반을 먹는다. 하나가 깨지면 그
+자리에서 고친 뒤 이동한다.
+
+**공통 의존을 새로 만들면 기존 테스트 셋업을 함께 고친다.** provider의 `build()`에 새 `watch`를
+추가하는 것은 그 provider를 쓰는 **모든 테스트**에 새 override 요구를 심는 일이다. 예: locale을
+watch하면 `sharedPreferencesProvider` override와 `TestWidgetsFlutterBinding.ensureInitialized()`가
+필요해진다. 추가한 쪽이 파급을 정리한다 — 남의 테스트가 깨진 걸 발견하고 지우는 것은 해결이
+아니다.
+
 **e2e는 이 표의 일부가 아니라 예외적 수단이다.** 위 네 계층이 검증을 책임진다. e2e는
 빌드·부팅·기기 왕복 때문에 유닛 테스트의 수십 배 시간을 먹으므로, 다음 두 경우에만 쓴다:
 
@@ -268,6 +283,23 @@ worktree는 Orca가 관리하므로, 이미 worktree 안이라면 새로 만들�
 
 예외는 worktree가 의미 없는 경우뿐이다 — 읽기 전용 조사, 질문 답변, 이미 격리된 세션.
 사용자가 "여기서 바로 해"라고 하면 그 지시가 우선한다.
+
+**브랜치를 따기 전에 반드시 `git fetch`부터 한다.** 로컬 `dev`는 낡아 있다고 가정한다 —
+다른 작업이 이미 머지됐는데 로컬에 안 내려와 있으면, 그 위에서 만든 브랜치에는 앞선 작업이
+통째로 빠진다. 그 상태로 같은 파일을 고치면 앞 작업을 되돌리는 커밋이 되고, 나중에 리베이스로
+충돌을 다시 풀어야 한다.
+
+```
+git fetch origin
+git log --oneline -3 origin/dev     # 로컬 dev와 다른지 확인
+git checkout -b feature/SPEC-0007-home-screen origin/dev
+```
+
+**분기 기준은 `origin/dev`이지 로컬 `dev`가 아니다.** worktree를 쓸 때도 같다 — EnterWorktree가
+만든 브랜치가 낡은 기준에서 출발했다면 즉시 `origin/dev` 위로 옮긴다.
+
+실제로 이걸 빠뜨려 SPEC-0007을 SPEC-0006이 빠진 코드 위에서 전부 구현한 적이 있다. 시작 전
+`git fetch` 한 번이면 없었을 일이다.
 
 **Never work directly on a protected branch.** `master`, `main`, and `dev` are protected. Every
 change — code, tests, specs — happens on a **topic branch** created first:

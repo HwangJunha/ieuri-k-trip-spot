@@ -199,17 +199,17 @@ void main() {
   test(
     'AC-44 reaction rejected with SPOT_NOT_FOUND drops the card from the queue',
     () async {
-      // 같은 축제가 스택에 두 번 들어 있는 상황: 낙관적 제거로 맨 위 하나만 빠지고
-      // 뒤의 하나가 남아 있는데, 서버가 삭제를 알려오면 그것도 걷어내야 한다.
       final repo = FakeSpotRepository(
-        feed: <TouristSpot>[swipeSpot('gone'), swipeSpot('alive')],
+        feed: <TouristSpot>[swipeSpot('a'), swipeSpot('b'), swipeSpot('c')],
         pageSize: 5,
         reactFailure: const SpotFailure(
           SpotFailureKind.userError,
           code: 'SPOT_NOT_FOUND',
         ),
       );
-      final (container, _) = await _load(repo);
+      final (container, initial) = await _load(repo);
+      // 피드는 provider에서 섞이므로(SPEC-0006 _shuffled) 맨 위가 무엇인지 읽어서 쓴다.
+      final String reacted = initial.top!.id;
 
       container
           .read(swipeControllerProvider(null).notifier)
@@ -219,7 +219,12 @@ void main() {
       final SwipeQueue after = container
           .read(swipeControllerProvider(null))
           .value!;
-      expect(after.cards.map((TouristSpot s) => s.id), <String>['alive']);
+      // 반응한 카드가 사라졌고, 나머지는 남는다.
+      expect(
+        after.cards.map((TouristSpot s) => s.id),
+        isNot(contains(reacted)),
+      );
+      expect(after.cards.length, 2);
       // 세션은 계속된다 — 오류 상태로 넘어가지 않는다.
       expect(container.read(swipeControllerProvider(null)).hasError, isFalse);
     },
@@ -306,18 +311,21 @@ void main() {
       pageSize: 5,
       reactShouldFail: true,
     );
-    final (container, _) = await _load(repo);
+    final (container, initial) = await _load(repo);
+    final String reacted = initial.top!.id;
 
     container
         .read(swipeControllerProvider(null).notifier)
         .swipe(SpotReaction.like);
     await Future<void>.delayed(Duration.zero);
 
-    // 낙관적으로 빠진 맨 위 카드만 사라지고, 나머지는 그대로다.
+    // 낙관적으로 빠진 맨 위 카드만 사라지고, 나머지는 그대로다 — SPOT_NOT_FOUND가
+    // 아니므로 큐에서 추가로 걷어내지 않는다.
     final SwipeQueue after = container
         .read(swipeControllerProvider(null))
         .value!;
-    expect(after.cards.map((TouristSpot s) => s.id), <String>['b']);
+    expect(after.cards.map((TouristSpot s) => s.id), isNot(contains(reacted)));
+    expect(after.cards.length, 1);
   });
 
   test('category families load independently', () async {
@@ -438,4 +446,3 @@ class _RetryOnceSpotRepository extends FakeSpotRepository {
     return super.reactToSpot(spotId, reaction);
   }
 }
-

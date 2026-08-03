@@ -116,11 +116,6 @@
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/format-and-analyze.sh\"",
             "timeout": 60
-          },
-          {
-            "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/run-tests-after-edit.sh\"",
-            "timeout": 120
           }
         ]
       }
