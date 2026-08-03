@@ -177,7 +177,7 @@ input RegisterEmailMemberInput {
 type RegisterEmailMemberPayload {
   success: Boolean!
   userErrors: [UserError!]!
-  verificationId: ID
+  verificationId: String
 }
 
 input RegisterSnsMemberInput {
@@ -192,7 +192,7 @@ type RegisterSnsMemberPayload {
   success: Boolean!
   userErrors: [UserError!]!
   emailVerified: Boolean
-  verificationId: ID
+  verificationId: String
 }
 
 input RequestPasswordResetInput {
@@ -205,13 +205,13 @@ type RequestPasswordResetPayload {
 }
 
 input ResendVerificationInput {
-  verificationId: ID!
+  verificationId: String!
 }
 
 type ResendVerificationPayload {
   success: Boolean!
   userErrors: [UserError!]!
-  verificationId: ID
+  verificationId: String
   expiresAt: String
 }
 
@@ -264,7 +264,7 @@ type UserError {
 }
 
 input VerifyEmailInput {
-  verificationId: ID!
+  verificationId: String!
   code: String!
 }
 

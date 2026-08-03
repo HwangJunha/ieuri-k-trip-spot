@@ -78,6 +78,10 @@ class SelectedSpotCategory extends _$SelectedSpotCategory {
 /// - 소진: 큐가 비고 `hasNext=false`면 [SwipeQueue.isExhausted]로 빈 상태.
 /// [retry]로 자동 재시도를 1회로 묶는다(R1). Riverpod 기본값은 최대 10회 지수 백오프라
 /// 실패 상태에서 조회가 폭주하는데, 그 폭주의 실제 경로가 여기다(설계문서 §2.1).
+///
+/// SPEC-0007: 서버가 종료된 축제를 삭제하므로 쌓아둔 카드의 id가 세션 도중 해소
+/// 불가가 될 수 있다. 그 경우 [dropMissingCard]로 해당 카드만 걷어내고 세션은
+/// 계속한다(AC-43·AC-44) — 세션 전체를 실패로 만들지 않는다.
 @Riverpod(retry: spotRetryPolicy)
 class SwipeController extends _$SwipeController {
   SpotRepository get _repository => ref.read(spotRepositoryProvider);
@@ -96,6 +100,11 @@ class SwipeController extends _$SwipeController {
 
   @override
   Future<SwipeQueue> build(SpotCategory? category) async {
+    // 언어가 바뀌면 세션을 통째로 다시 만든다(SPEC-0007 §4.5·R-14). 쌓아둔 카드의
+    // id는 전부 이전 언어의 spot.id라, 그대로 두면 상세·반응이 SPOT_NOT_FOUND로
+    // 거부된다. **값은 쓰지 않고 재빌드 트리거로만 구독한다** — 지우면 R-14가 깨진다.
+    ref.watch(localeControllerProvider);
+
     // 좌표는 watch 한다 — 위치가 바뀌면 피드를 다시 받아야 하기 때문이다. 그 재빌드가
     // 실패 상태에서 폭주하지 않도록 막는 것이 아래 상한 확인이다(R1).
     final Coordinates coords = await ref.watch(
@@ -186,6 +195,13 @@ class SwipeController extends _$SwipeController {
     try {
       await _repository.reactToSpot(spotId, reaction);
     } catch (error, stack) {
+      // 대상이 이미 삭제됐으면(SPEC-0007 AC-44) 큐에 남아 있는 같은 카드도 걷어낸다.
+      // 낙관적 제거로 맨 위에서는 이미 빠졌지만, 아직 뒤에 남아 있을 수 있고 되돌려
+      // 놓으면 다음 조회에서 또 실패한다. 재시도 큐에는 넣지 않는다 — 결과가 같다.
+      if (error is SpotFailure && error.isSpotMissing) {
+        dropMissingCard(spotId);
+      }
+
       // 좋아요 실패는 비치명적(spec §4): 조용히 로깅하고 카드 복원 안 함.
       developer.log(
         'reactToSpot failed',
@@ -194,6 +210,20 @@ class SwipeController extends _$SwipeController {
         stackTrace: stack,
       );
     }
+  }
+
+  /// 서버에서 사라진 [spotId] 카드를 현재 세션에서 걷어낸다(SPEC-0007 §4.2·§4.3).
+  ///
+  /// 상세 조회가 `SPOT_NOT_FOUND`로 실패했을 때(AC-43)와 반응 전송이 같은 이유로
+  /// 실패했을 때(AC-44) 공통으로 쓴다. 세션을 오류 상태로 만들지 않고 배너도 띄우지
+  /// 않는다 — 사용자가 한 행동의 결과가 아니기 때문이다. 이미 없는 id면 무시한다.
+  void dropMissingCard(String spotId) {
+    final SwipeQueue? queue = state.value;
+    if (queue == null) return;
+    final SwipeQueue next = queue.removeCard(spotId);
+    if (identical(next, queue)) return;
+    state = AsyncData<SwipeQueue>(next);
+    _maybePrefetch();
   }
 
   /// 잔여 카드가 임계값 미만이고 다음 페이지가 있으면 한 번만 이어 조회한다.

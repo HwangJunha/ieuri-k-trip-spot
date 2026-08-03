@@ -1,27 +1,42 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ieuri_k_trip_spot/common/localization/app_language.dart';
+import 'package:ieuri_k_trip_spot/common/localization/locale_controller.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
+import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_reaction.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/swipe_queue.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/tourist_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/spot_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/swipe_providers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../spot_test_doubles.dart';
+
+/// 스와이프 세션이 필요로 하는 최소 컨테이너. SwipeController가 언어 전환 시
+/// 세션을 다시 만들려고 locale을 watch하므로(SPEC-0007 §4.5) 저장소도 덮어쓴다.
+Future<ProviderContainer> _container(FakeSpotRepository repo) async {
+  SharedPreferences.setMockInitialValues(<String, Object>{});
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  final container = ProviderContainer(
+    overrides: [
+      spotRepositoryProvider.overrideWithValue(repo),
+      locationServiceProvider.overrideWithValue(FakeLocationService()),
+      sharedPreferencesProvider.overrideWithValue(prefs),
+    ],
+  );
+  addTearDown(container.dispose);
+  return container;
+}
 
 /// [category]로 SwipeController를 로드해 첫 큐를 반환한다.
 Future<(ProviderContainer, SwipeQueue)> _load(
   FakeSpotRepository repo, {
   SpotCategory? category,
 }) async {
-  final container = ProviderContainer(
-    overrides: [
-      spotRepositoryProvider.overrideWithValue(repo),
-      locationServiceProvider.overrideWithValue(FakeLocationService()),
-    ],
-  );
-  addTearDown(container.dispose);
+  final ProviderContainer container = await _container(repo);
   // autoDispose 프로바이더가 read 사이에 폐기되지 않도록 구독을 유지한다.
   container.listen(
     swipeControllerProvider(category),
@@ -38,15 +53,13 @@ List<TouristSpot> _spots(int n) =>
     List<TouristSpot>.generate(n, (int i) => swipeSpot('s$i'));
 
 void main() {
+  // SwipeController가 언어 전환을 감지하려고 locale을 watch하고, LocaleController는
+  // 저장값이 없을 때 기기 로케일을 읽는다(SPEC-0007 §4.5).
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   test('build emits loading then the first page as data', () async {
     final repo = FakeSpotRepository(feed: _spots(3), pageSize: 5);
-    final container = ProviderContainer(
-      overrides: [
-        spotRepositoryProvider.overrideWithValue(repo),
-        locationServiceProvider.overrideWithValue(FakeLocationService()),
-      ],
-    );
-    addTearDown(container.dispose);
+    final ProviderContainer container = await _container(repo);
 
     expect(
       container.read(swipeControllerProvider(null)),
@@ -180,6 +193,132 @@ void main() {
       expect(after.isExhausted, isTrue);
     },
   );
+
+  // --- SPEC-0007: 서버가 종료 축제를 삭제해 카드 id가 세션 도중 무효가 되는 경우 ---
+
+  test(
+    'AC-44 reaction rejected with SPOT_NOT_FOUND drops the card from the queue',
+    () async {
+      // 같은 축제가 스택에 두 번 들어 있는 상황: 낙관적 제거로 맨 위 하나만 빠지고
+      // 뒤의 하나가 남아 있는데, 서버가 삭제를 알려오면 그것도 걷어내야 한다.
+      final repo = FakeSpotRepository(
+        feed: <TouristSpot>[swipeSpot('gone'), swipeSpot('alive')],
+        pageSize: 5,
+        reactFailure: const SpotFailure(
+          SpotFailureKind.userError,
+          code: 'SPOT_NOT_FOUND',
+        ),
+      );
+      final (container, _) = await _load(repo);
+
+      container
+          .read(swipeControllerProvider(null).notifier)
+          .swipe(SpotReaction.like);
+      await Future<void>.delayed(Duration.zero);
+
+      final SwipeQueue after = container
+          .read(swipeControllerProvider(null))
+          .value!;
+      expect(after.cards.map((TouristSpot s) => s.id), <String>['alive']);
+      // 세션은 계속된다 — 오류 상태로 넘어가지 않는다.
+      expect(container.read(swipeControllerProvider(null)).hasError, isFalse);
+    },
+  );
+
+  test(
+    'AC-43 dropMissingCard removes the card and keeps the session alive',
+    () async {
+      final repo = FakeSpotRepository(
+        feed: <TouristSpot>[swipeSpot('gone'), swipeSpot('alive')],
+        pageSize: 5,
+      );
+      final (container, _) = await _load(repo);
+
+      container
+          .read(swipeControllerProvider(null).notifier)
+          .dropMissingCard('gone');
+
+      final AsyncValue<SwipeQueue> state = container.read(
+        swipeControllerProvider(null),
+      );
+      expect(state.hasError, isFalse);
+      expect(state.value!.cards.map((TouristSpot s) => s.id), <String>[
+        'alive',
+      ]);
+    },
+  );
+
+  test(
+    // AC-42의 요구는 "이전보다 적게 온 목록을 실패로 해석하지 말 것"인데, 그렇게
+    // 해석하는 로직은 애초에 없다(§4.1 — 제거할 것이 없음). 관찰 가능한 사실은
+    // 진행 중인 축제가 0건인 시기에 오류가 아니라 빈 상태가 된다는 것이다.
+    'AC-42 an empty festival page is an empty state, not an error',
+    () async {
+      final repo = FakeSpotRepository(feed: const <TouristSpot>[], pageSize: 5);
+      final (container, queue) = await _load(
+        repo,
+        category: SpotCategory.festivalEvent,
+      );
+
+      expect(
+        container
+            .read(swipeControllerProvider(SpotCategory.festivalEvent))
+            .hasError,
+        isFalse,
+      );
+      expect(queue.isExhausted, isTrue);
+    },
+  );
+
+  test(
+    'R-14 switching language rebuilds the session from the first page',
+    () async {
+      // spot.id는 언어별이라, 언어를 바꾸면 쌓아둔 카드의 id가 전부 무효가 된다
+      // (SPEC-0007 §4.5). 세션은 처음부터 다시 서야 한다.
+      final repo = FakeSpotRepository(feed: _spots(3), pageSize: 5);
+      final (container, _) = await _load(repo);
+
+      // 카드 하나를 소비해 세션이 처음 상태가 아니게 만든다.
+      container
+          .read(swipeControllerProvider(null).notifier)
+          .swipe(SpotReaction.like);
+      await Future<void>.delayed(Duration.zero);
+      expect(
+        container.read(swipeControllerProvider(null)).value!.cards.length,
+        2,
+      );
+
+      await container
+          .read(localeControllerProvider.notifier)
+          .select(AppLanguage.korean);
+
+      final SwipeQueue rebuilt = await container.read(
+        swipeControllerProvider(null).future,
+      );
+      expect(rebuilt.cards.length, 3);
+      expect(rebuilt.loadedPage, 0);
+    },
+  );
+
+  test('reaction failure other than SPOT_NOT_FOUND keeps the queue', () async {
+    final repo = FakeSpotRepository(
+      feed: <TouristSpot>[swipeSpot('a'), swipeSpot('b')],
+      pageSize: 5,
+      reactShouldFail: true,
+    );
+    final (container, _) = await _load(repo);
+
+    container
+        .read(swipeControllerProvider(null).notifier)
+        .swipe(SpotReaction.like);
+    await Future<void>.delayed(Duration.zero);
+
+    // 낙관적으로 빠진 맨 위 카드만 사라지고, 나머지는 그대로다.
+    final SwipeQueue after = container
+        .read(swipeControllerProvider(null))
+        .value!;
+    expect(after.cards.map((TouristSpot s) => s.id), <String>['b']);
+  });
 
   test('category families load independently', () async {
     final repo = FakeSpotRepository(

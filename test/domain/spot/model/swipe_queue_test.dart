@@ -11,6 +11,14 @@ const TouristSpot _a = TouristSpot(
   congestion: CongestionLevel.low,
 );
 
+const TouristSpot _b = TouristSpot(
+  id: 'b',
+  name: 'B',
+  imageRef: 'b',
+  location: 'Seoul',
+  congestion: CongestionLevel.low,
+);
+
 void main() {
   test('top returns the first card, null when empty', () {
     const SwipeQueue full = SwipeQueue(
@@ -81,5 +89,27 @@ void main() {
     expect(next.cards, isEmpty);
     expect(next.loadedPage, 1);
     expect(next.hasNextPage, isTrue);
+  });
+
+  test('removeCard drops every occurrence of the id', () {
+    const SwipeQueue q = SwipeQueue(
+      cards: <TouristSpot>[_a, _b, _a],
+      loadedPage: 0,
+      hasNextPage: false,
+    );
+
+    final SwipeQueue next = q.removeCard(_a.id);
+
+    expect(next.cards.map((TouristSpot s) => s.id), <String>[_b.id]);
+  });
+
+  test('removeCard returns the same queue when the id is absent', () {
+    const SwipeQueue q = SwipeQueue(
+      cards: <TouristSpot>[_a],
+      loadedPage: 0,
+      hasNextPage: false,
+    );
+
+    expect(identical(q.removeCard('missing'), q), isTrue);
   });
 }

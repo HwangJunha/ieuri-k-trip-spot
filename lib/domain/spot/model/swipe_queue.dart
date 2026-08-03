@@ -33,6 +33,15 @@ class SwipeQueue {
   /// 맨 위 카드, 비었으면 null.
   TouristSpot? get top => cards.isEmpty ? null : cards.first;
 
+  /// [spotId] 카드를 스택에서 제거한 큐(SPEC-0007 §4.2·§4.3). 서버에서 사라진
+  /// 축제를 만났을 때 다시 나타나지 않게 하는 용도로, 없는 id면 그대로 돌려준다.
+  SwipeQueue removeCard(String spotId) {
+    final List<TouristSpot> remaining = cards
+        .where((TouristSpot spot) => spot.id != spotId)
+        .toList(growable: false);
+    return remaining.length == cards.length ? this : copyWith(cards: remaining);
+  }
+
   SwipeQueue copyWith({
     List<TouristSpot>? cards,
     int? loadedPage,

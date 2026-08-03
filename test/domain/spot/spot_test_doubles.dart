@@ -25,6 +25,7 @@ class FakeSpotRepository implements SpotRepository {
     this.categories,
     this.pageSize = 5,
     this.reactShouldFail = false,
+    this.reactFailure,
     this.detail,
     this.detailFailure,
     this.pageFailure,
@@ -50,11 +51,17 @@ class FakeSpotRepository implements SpotRepository {
   final int pageSize;
   final bool reactShouldFail;
 
+  /// `reactToSpot`이 던질 도메인 실패(설정 시). [reactShouldFail]보다 우선한다 —
+  /// SPOT_NOT_FOUND처럼 유형별 분기가 있는 경로를 검증할 때 쓴다.
+  final SpotFailure? reactFailure;
+
   /// `fetchSpotDetail`이 돌려줄 상세(설정 시). [detailFailure]가 있으면 그게 우선한다.
   final SpotDetail? detail;
 
   /// `fetchSpotDetail`이 던질 실패(설정 시) — SPOT_NOT_FOUND 등 오류 경로 검증용.
-  final SpotFailure? detailFailure;
+  /// 첫 조회는 성공시키고 재조회만 실패시키려면 도중에 바꾼다(상세를 연 사이에
+  /// 축제가 삭제된 상황).
+  SpotFailure? detailFailure;
 
   /// 마지막으로 기록된 반응 (검증용).
   final List<(String, SpotReaction)> recordedReactions =
@@ -149,6 +156,7 @@ class FakeSpotRepository implements SpotRepository {
 
   @override
   Future<void> reactToSpot(String spotId, SpotReaction reaction) async {
+    if (reactFailure != null) throw reactFailure!;
     if (reactShouldFail) throw StateError('react failed');
     recordedReactions.add((spotId, reaction));
   }

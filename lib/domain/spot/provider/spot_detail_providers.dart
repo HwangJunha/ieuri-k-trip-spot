@@ -12,6 +12,7 @@ import '../repository/spot_repository.dart';
 import 'retry_budget_providers.dart';
 import 'retry_counting.dart';
 import 'spot_providers.dart';
+import 'swipe_providers.dart';
 
 part 'spot_detail_providers.g.dart';
 
@@ -58,11 +59,39 @@ class SpotDetailController extends _$SpotDetailController {
     try {
       return await _repository.fetchSpotDetail(contentId, category);
     } catch (error) {
+      // 축제가 종료돼 서버에서 삭제된 경우(SPEC-0007 AC-43). 이 화면은 오류 상태를
+      // 그대로 그리지만(사용자가 직접 연 화면이라 조용히 넘기면 더 혼란스럽다),
+      // 뒤에 남아 있는 스와이프 세션에서는 같은 카드를 걷어내 다시 뜨지 않게 한다.
+      if (error is SpotFailure && error.isSpotMissing) {
+        _dropFromSwipeSessions(contentId);
+      }
+
       if (!countsTowardRetryBudget(error)) rethrow;
 
       _budget.countFailure(error);
       if (_budgetState.isExhausted) throw RetryExhausted(error);
       rethrow;
+    }
+  }
+
+  /// 사라진 [spotId]를 스와이프 세션에서 제거한다. 어떤 카테고리 세션에서 열었는지
+  /// 모르므로 살아 있는 세션 전부에 알린다 — 해당 id가 없는 세션은 무시한다.
+  ///
+  /// **이미 만들어진 세션만** 건드린다([Ref.exists]). 없는 카테고리까지 read하면
+  /// 사용자가 열지도 않은 세션 10개가 위치·목록 조회를 시작한다.
+  ///
+  /// 세션을 오류로 만들거나 배너를 띄우지 않는다(§4.2) — 사용자가 한 행동의 결과가
+  /// 아니기 때문이다.
+  void _dropFromSwipeSessions(String spotId) {
+    for (final SpotCategory? category in <SpotCategory?>[
+      null,
+      ...SpotCategory.values,
+    ]) {
+      final SwipeControllerProvider provider = swipeControllerProvider(
+        category,
+      );
+      if (!ref.exists(provider)) continue;
+      ref.read(provider.notifier).dropMissingCard(spotId);
     }
   }
 
@@ -89,6 +118,12 @@ class SpotDetailController extends _$SpotDetailController {
       // 오류는 재던져 뷰가 피드백(스낵바 등)을 띄우게 한다.
       _myReaction = previousReaction;
       state = AsyncData<SpotDetail>(current);
+
+      // 대상이 이미 삭제된 축제면(SPEC-0007 AC-44) 스와이프 세션에서도 걷어낸다.
+      // 롤백은 위에서 이미 했고, 재시도 큐에는 넣지 않는다 — 결과가 같다.
+      if (error is SpotFailure && error.isSpotMissing) {
+        _dropFromSwipeSessions(current.id);
+      }
       developer.log(
         'reactToSpot failed (rolled back)',
         name: 'SpotDetailController',
