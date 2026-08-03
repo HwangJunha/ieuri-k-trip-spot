@@ -310,6 +310,13 @@
   "discoverLoading": "주변 여행지를 찾는 중…",
   "@discoverLoading": { "description": "초기 로딩 안내" },
 
+  "retryExhaustedTitle": "계속 연결되지 않아요",
+  "@retryExhaustedTitle": { "description": "자동 재시도 상한 소진 상태 제목(SPEC-0006 AC-5)" },
+  "retryExhaustedBody": "몇 번 시도했지만 연결하지 못했어요. 연결 상태를 확인한 뒤 다시 시도해 주세요.",
+  "@retryExhaustedBody": { "description": "자동 재시도가 더 일어나지 않음을 알리는 본문" },
+  "retryExhaustedAction": "다시 시도",
+  "@retryExhaustedAction": { "description": "종료 상태의 명시적 재시도 버튼" },
+
   "spotDetailOverviewTitle": "소개",
   "spotDetailContactTitle": "연락처",
   "spotDetailHomepageLabel": "웹사이트",

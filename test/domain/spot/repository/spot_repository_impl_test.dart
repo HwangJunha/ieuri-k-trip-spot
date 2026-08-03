@@ -162,6 +162,70 @@ void main() {
     },
   );
 
+  // 인증 실패를 네트워크 실패로 뭉개면 재시도 상한이 그것까지 계상해 버려 AC-14가
+  // 깨진다. 이 매핑이 SPEC-0006 재시도 계상의 유일한 근거이므로 두 형태 모두 검증한다.
+  test(
+    'fetchSpotPage maps UNAUTHENTICATED in extensions to an auth failure (AC-14)',
+    () async {
+      final SpotRepositoryImpl repo = _repo(
+        _FakeLink(
+          errors: const <GraphQLError>[
+            GraphQLError(
+              message: 'not allowed',
+              extensions: <String, dynamic>{'code': 'UNAUTHENTICATED'},
+            ),
+          ],
+        ),
+      );
+
+      await expectLater(
+        repo.fetchSpotPage(
+          latitude: 37.5,
+          longitude: 127.0,
+          page: 0,
+          size: 100,
+        ),
+        throwsA(
+          isA<SpotFailure>().having(
+            (SpotFailure f) => f.kind,
+            'kind',
+            SpotFailureKind.unauthenticated,
+          ),
+        ),
+      );
+    },
+  );
+
+  test(
+    'fetchSpotPage maps a bare UNAUTHENTICATED message to an auth failure (AC-14)',
+    () async {
+      // extensions에 코드가 없을 때의 폴백(코드 최종 포맷 미확정, `[TBD-2]`).
+      final SpotRepositoryImpl repo = _repo(
+        _FakeLink(
+          errors: const <GraphQLError>[
+            GraphQLError(message: 'UNAUTHENTICATED'),
+          ],
+        ),
+      );
+
+      await expectLater(
+        repo.fetchSpotPage(
+          latitude: 37.5,
+          longitude: 127.0,
+          page: 0,
+          size: 100,
+        ),
+        throwsA(
+          isA<SpotFailure>().having(
+            (SpotFailure f) => f.kind,
+            'kind',
+            SpotFailureKind.unauthenticated,
+          ),
+        ),
+      );
+    },
+  );
+
   test('fetchAvailableCategories maps server enum tokens', () async {
     final SpotRepositoryImpl repo = _repo(
       _FakeLink(

@@ -133,6 +133,8 @@ abstract class _$SelectedSpotCategory extends $Notifier<SpotCategory?> {
 ///   실패해도 카드를 복원하지 않고 조용히 로깅한다(좋아요 실패는 비치명적).
 /// - 잔여 [_prefetchThreshold] 미만이고 다음 페이지가 있으면 백그라운드로 이어 붙인다.
 /// - 소진: 큐가 비고 `hasNext=false`면 [SwipeQueue.isExhausted]로 빈 상태.
+/// [retry]로 자동 재시도를 1회로 묶는다(R1). Riverpod 기본값은 최대 10회 지수 백오프라
+/// 실패 상태에서 조회가 폭주하는데, 그 폭주의 실제 경로가 여기다(설계문서 §2.1).
 
 @ProviderFor(SwipeController)
 const swipeControllerProvider = SwipeControllerFamily._();
@@ -145,6 +147,8 @@ const swipeControllerProvider = SwipeControllerFamily._();
 ///   실패해도 카드를 복원하지 않고 조용히 로깅한다(좋아요 실패는 비치명적).
 /// - 잔여 [_prefetchThreshold] 미만이고 다음 페이지가 있으면 백그라운드로 이어 붙인다.
 /// - 소진: 큐가 비고 `hasNext=false`면 [SwipeQueue.isExhausted]로 빈 상태.
+/// [retry]로 자동 재시도를 1회로 묶는다(R1). Riverpod 기본값은 최대 10회 지수 백오프라
+/// 실패 상태에서 조회가 폭주하는데, 그 폭주의 실제 경로가 여기다(설계문서 §2.1).
 final class SwipeControllerProvider
     extends $AsyncNotifierProvider<SwipeController, SwipeQueue> {
   /// Discover 스와이프 카드 스택 컨트롤러(spec §4). [category]별 패밀리 —
@@ -155,11 +159,13 @@ final class SwipeControllerProvider
   ///   실패해도 카드를 복원하지 않고 조용히 로깅한다(좋아요 실패는 비치명적).
   /// - 잔여 [_prefetchThreshold] 미만이고 다음 페이지가 있으면 백그라운드로 이어 붙인다.
   /// - 소진: 큐가 비고 `hasNext=false`면 [SwipeQueue.isExhausted]로 빈 상태.
+  /// [retry]로 자동 재시도를 1회로 묶는다(R1). Riverpod 기본값은 최대 10회 지수 백오프라
+  /// 실패 상태에서 조회가 폭주하는데, 그 폭주의 실제 경로가 여기다(설계문서 §2.1).
   const SwipeControllerProvider._({
     required SwipeControllerFamily super.from,
     required SpotCategory? super.argument,
   }) : super(
-         retry: null,
+         retry: spotRetryPolicy,
          name: r'swipeControllerProvider',
          isAutoDispose: true,
          dependencies: null,
@@ -191,7 +197,7 @@ final class SwipeControllerProvider
   }
 }
 
-String _$swipeControllerHash() => r'329f8ad1e76c3430f0d707877e10fd03b066b13a';
+String _$swipeControllerHash() => r'02826f307d4bddfb12c083466aaf41f82d98635a';
 
 /// Discover 스와이프 카드 스택 컨트롤러(spec §4). [category]별 패밀리 —
 /// 카테고리 변경은 다른 인스턴스 로딩으로 이어진다.
@@ -201,6 +207,8 @@ String _$swipeControllerHash() => r'329f8ad1e76c3430f0d707877e10fd03b066b13a';
 ///   실패해도 카드를 복원하지 않고 조용히 로깅한다(좋아요 실패는 비치명적).
 /// - 잔여 [_prefetchThreshold] 미만이고 다음 페이지가 있으면 백그라운드로 이어 붙인다.
 /// - 소진: 큐가 비고 `hasNext=false`면 [SwipeQueue.isExhausted]로 빈 상태.
+/// [retry]로 자동 재시도를 1회로 묶는다(R1). Riverpod 기본값은 최대 10회 지수 백오프라
+/// 실패 상태에서 조회가 폭주하는데, 그 폭주의 실제 경로가 여기다(설계문서 §2.1).
 
 final class SwipeControllerFamily extends $Family
     with
@@ -213,7 +221,7 @@ final class SwipeControllerFamily extends $Family
         > {
   const SwipeControllerFamily._()
     : super(
-        retry: null,
+        retry: spotRetryPolicy,
         name: r'swipeControllerProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
@@ -228,6 +236,8 @@ final class SwipeControllerFamily extends $Family
   ///   실패해도 카드를 복원하지 않고 조용히 로깅한다(좋아요 실패는 비치명적).
   /// - 잔여 [_prefetchThreshold] 미만이고 다음 페이지가 있으면 백그라운드로 이어 붙인다.
   /// - 소진: 큐가 비고 `hasNext=false`면 [SwipeQueue.isExhausted]로 빈 상태.
+  /// [retry]로 자동 재시도를 1회로 묶는다(R1). Riverpod 기본값은 최대 10회 지수 백오프라
+  /// 실패 상태에서 조회가 폭주하는데, 그 폭주의 실제 경로가 여기다(설계문서 §2.1).
 
   SwipeControllerProvider call(SpotCategory? category) =>
       SwipeControllerProvider._(argument: category, from: this);
@@ -244,6 +254,8 @@ final class SwipeControllerFamily extends $Family
 ///   실패해도 카드를 복원하지 않고 조용히 로깅한다(좋아요 실패는 비치명적).
 /// - 잔여 [_prefetchThreshold] 미만이고 다음 페이지가 있으면 백그라운드로 이어 붙인다.
 /// - 소진: 큐가 비고 `hasNext=false`면 [SwipeQueue.isExhausted]로 빈 상태.
+/// [retry]로 자동 재시도를 1회로 묶는다(R1). Riverpod 기본값은 최대 10회 지수 백오프라
+/// 실패 상태에서 조회가 폭주하는데, 그 폭주의 실제 경로가 여기다(설계문서 §2.1).
 
 abstract class _$SwipeController extends $AsyncNotifier<SwipeQueue> {
   late final _$args = ref.$arg as SpotCategory?;

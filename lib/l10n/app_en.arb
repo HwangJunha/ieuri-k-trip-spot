@@ -164,6 +164,10 @@
   "discoverLoadError": "Something went wrong while loading spots.",
   "discoverLoading": "Finding spots near you…",
 
+  "retryExhaustedTitle": "Still not working",
+  "retryExhaustedBody": "We tried a couple of times and couldn't connect. Check your connection, then try again.",
+  "retryExhaustedAction": "Try again",
+
   "spotDetailOverviewTitle": "About",
   "spotDetailContactTitle": "Contact",
   "spotDetailHomepageLabel": "Website",

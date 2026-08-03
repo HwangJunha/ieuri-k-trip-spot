@@ -6,10 +6,12 @@ import '../../../common/permission/component/permission_blocked_notice.dart';
 import '../../../common/permission/model/permission_kind.dart';
 import '../../../common/permission/model/permission_state.dart';
 import '../../../common/permission/provider/permission_providers.dart';
+import '../../../common/widget/failure_notice.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/category_bar.dart';
 import '../component/drag_feedback_overlay.dart';
 import '../component/swipe_card.dart';
+import '../model/retry_exhausted.dart';
 import '../model/spot_category.dart';
 import '../model/spot_reaction.dart';
 import '../model/swipe_queue.dart';
@@ -79,6 +81,7 @@ class _QueueBody extends ConsumerWidget {
     return queue.when(
       loading: () => const _LoadingState(),
       error: (Object error, _) => _ErrorState(
+        error: error,
         onRetry: () =>
             ref.read(swipeControllerProvider(category).notifier).reload(),
       ),
@@ -109,36 +112,32 @@ class _LoadingState extends StatelessWidget {
   }
 }
 
+/// 조회 실패 상태. 자동 재시도 상한을 소진했으면 종료 상태를, 아니면 일반 오류를
+/// 보여준다(SPEC-0006 AC-5·AC-6). 두 경우 모두 명시적 재시도는 가능하다(AC-8).
 class _ErrorState extends StatelessWidget {
-  const _ErrorState({required this.onRetry});
+  const _ErrorState({required this.error, required this.onRetry});
 
+  final Object error;
   final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final ThemeData theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Icon(
-              Icons.cloud_off_outlined,
-              size: 48,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(height: 16),
-            Text(l10n.discoverLoadError, textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: onRetry,
-              child: Text(l10n.discoverRetryButton),
-            ),
-          ],
-        ),
-      ),
+
+    if (error is RetryExhausted) {
+      return FailureNotice.terminal(
+        title: l10n.retryExhaustedTitle,
+        body: l10n.retryExhaustedBody,
+        actionLabel: l10n.retryExhaustedAction,
+        onAction: onRetry,
+      );
+    }
+
+    return FailureNotice.retryable(
+      title: l10n.discoverLoadError,
+      body: l10n.discoverRetryBanner,
+      actionLabel: l10n.discoverRetryButton,
+      onAction: onRetry,
     );
   }
 }
@@ -230,12 +229,18 @@ class _CardStackState extends ConsumerState<_CardStack> {
   /// category도 함께 넘긴다 — 서버의 `intro`/`infoItems`가 필수 인자로 요구하는데
   /// 상세 응답의 필드를 인자로 쓸 수 없어서다. 카드가 이미 가진 값이라 추가 왕복은
   /// 없다. 매핑되지 않은 값이면 라우트가 기본값으로 떨어뜨린다.
+  /// 썸네일 URL도 함께 넘긴다(SPEC-0006 R8) — 상세가 본문 조회를 기다리는 동안 카드에서
+  /// 보던 같은 이미지를 그대로 그려, 같은 URL을 다시 로드하며 깜빡이는 것을 막는다(AC-24).
   void _openDetail(TouristSpot spot) {
     context.pushNamed(
       SpotDetailView.routeName,
       pathParameters: <String, String>{'id': spot.id},
       queryParameters: <String, String>{
         if (spot.category != null) 'category': spot.category!.name,
+        if (spot.thumbnailImageUrl != null) 'thumb': spot.thumbnailImageUrl!,
+        // 어느 피드에서 열렸는지(R11) — 반응 후 이 피드에서 카드를 소비한다.
+        // 전체 피드(null)면 파라미터를 붙이지 않고, 라우트가 null로 되돌린다.
+        if (widget.category != null) 'feed': widget.category!.name,
       },
     );
   }

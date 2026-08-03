@@ -27,9 +27,21 @@ class FakeSpotRepository implements SpotRepository {
     this.reactShouldFail = false,
     this.detail,
     this.detailFailure,
+    this.pageFailure,
+    this.failPageTimes = 0,
   }) : recommended = recommended ?? const <TouristSpot>[_spot],
        popular = popular ?? const <TouristSpot>[_spot],
        feed = feed ?? const <TouristSpot>[];
+
+  /// `fetchSpotPage`가 던질 실패(설정 시). [failPageTimes]와 함께 쓰면 앞의 N회만
+  /// 실패하고 이후 성공한다 — 재시도 상한 검증용(SPEC-0006).
+  final Object? pageFailure;
+
+  /// [pageFailure]를 던질 횟수. 0이면 설정된 동안 계속 던진다.
+  final int failPageTimes;
+
+  /// `fetchSpotPage` 호출 횟수(검증용). 상한 소진 후 호출이 늘지 않는지 확인한다.
+  int spotPageCallCount = 0;
 
   final List<TouristSpot> recommended;
   final List<TouristSpot> popular;
@@ -73,6 +85,11 @@ class FakeSpotRepository implements SpotRepository {
     required int page,
     required int size,
   }) async {
+    spotPageCallCount++;
+    if (pageFailure != null &&
+        (failPageTimes == 0 || spotPageCallCount <= failPageTimes)) {
+      throw pageFailure!;
+    }
     final List<TouristSpot> pool = category == null
         ? feed
         : feed.where((TouristSpot s) => s.category == category).toList();
@@ -112,10 +129,21 @@ class FakeSpotRepository implements SpotRepository {
   /// 전달되는지 검증할 때 쓴다.
   SpotCategory? requestedDetailCategory;
 
+  /// `fetchSpotDetail` 호출 횟수(검증용). 상한 소진 후 호출이 늘지 않는지 확인한다.
+  int detailCallCount = 0;
+
+  /// [detailFailure]를 던질 횟수. 0이면 설정된 동안 계속 던진다 — 앞의 N회만 실패하고
+  /// 이후 성공시켜 명시적 재시도 성공 경로를 검증할 때 쓴다(SPEC-0006 AC-9).
+  int failDetailTimes = 0;
+
   @override
   Future<SpotDetail> fetchSpotDetail(String id, SpotCategory category) async {
     requestedDetailCategory = category;
-    if (detailFailure != null) throw detailFailure!;
+    detailCallCount++;
+    if (detailFailure != null &&
+        (failDetailTimes == 0 || detailCallCount <= failDetailTimes)) {
+      throw detailFailure!;
+    }
     return detail ?? detailSpot(id);
   }
 

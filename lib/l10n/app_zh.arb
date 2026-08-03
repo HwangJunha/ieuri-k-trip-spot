@@ -164,6 +164,10 @@
   "discoverLoadError": "加载景点时出现问题。",
   "discoverLoading": "正在查找您附近的景点…",
 
+  "retryExhaustedTitle": "仍然无法连接",
+  "retryExhaustedBody": "我们尝试了几次仍无法连接。请检查网络后重试。",
+  "retryExhaustedAction": "重试",
+
   "spotDetailOverviewTitle": "简介",
   "spotDetailContactTitle": "联系方式",
   "spotDetailHomepageLabel": "网站",

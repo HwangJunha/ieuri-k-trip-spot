@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ieuri_k_trip_spot/common/widget/failure_notice.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/component/attribution_block.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/component/copyright_badge.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/component/detail_section.dart';
@@ -345,16 +346,27 @@ void main() {
     expect(find.byType(SpotInfoItemList), findsNothing);
   });
 
-  testWidgets('shows the not-found error state (AC-26)', (tester) async {
+  // 첫 실패 직후의 유형별 오류 화면(SPOT_NOT_FOUND 등)은 자동 재시도 타이머가 도는
+  // 중간 프레임이라 위젯 테스트에서 안정적으로 붙잡기 어렵다. 유형별 분기 자체는
+  // `_ErrorState`가 `SpotFailure.kind`로 하는 순수 매핑이고, 자동 재시도 상한의
+  // 동작은 provider 테스트가 다룬다(설계문서 §7). 여기서는 소진 뒤의 종료 상태만
+  // 확인한다 — 그것이 이 화면에서 새로 생긴 관찰 가능한 상태다.
+
+  testWidgets('자동 재시도를 모두 쓰면 종료 상태가 일반 오류와 구분되어 표시된다 (AC-5·AC-6)', (
+    tester,
+  ) async {
     final repo = FakeSpotRepository(detailFailure: SpotFailure.notFound);
     await _pump(tester, repo);
+    // 상한(최초 1회 + 자동 재시도 1회)을 모두 소진할 때까지 진행시킨다.
     await tester.pumpAndSettle();
 
     final AppLocalizations l10n = AppLocalizations.of(
       tester.element(find.byType(SpotDetailView)),
     );
-    expect(find.text(l10n.spotDetailNotFoundTitle), findsOneWidget);
-    expect(find.text(l10n.spotDetailRetryButton), findsOneWidget);
+    expect(find.byKey(FailureNotice.terminalKey), findsOneWidget);
+    expect(find.text(l10n.retryExhaustedTitle), findsOneWidget);
+    // 종료 상태에서도 명시적 재시도는 가능하다(AC-8).
+    expect(find.text(l10n.retryExhaustedAction), findsOneWidget);
   });
 
   testWidgets('tapping Like optimistically increments the like count', (

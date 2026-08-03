@@ -23,6 +23,13 @@ class SpotFailure implements Exception {
     SpotFailureKind.upstreamUnavailable,
   );
 
+  /// 인증 실패(UNAUTHENTICATED). 토큰 갱신 링크가 갱신에 실패했을 때 원래 오류가
+  /// 그대로 올라온 경우다. **재시도 상한에 계상하지 않는다**(SPEC-0006 R5·AC-14) —
+  /// 조회를 반복해도 해결되지 않고, SPEC-0005의 갱신·로그아웃 경로가 소관이다.
+  static const SpotFailure unauthenticated = SpotFailure(
+    SpotFailureKind.unauthenticated,
+  );
+
   final SpotFailureKind kind;
 
   /// 뮤테이션 userErrors의 서버 코드(있으면). 로깅·분기용이며 UI엔 노출하지 않는다.
@@ -36,6 +43,7 @@ class SpotFailure implements Exception {
         'SPOT_NOT_FOUND' => SpotFailure.notFound,
         'UPSTREAM_RATE_LIMITED' => SpotFailure.rateLimited,
         'UPSTREAM_UNAVAILABLE' => SpotFailure.upstreamUnavailable,
+        'UNAUTHENTICATED' => SpotFailure.unauthenticated,
         _ => SpotFailure.network,
       };
 
@@ -50,4 +58,5 @@ enum SpotFailureKind {
   notFound,
   rateLimited,
   upstreamUnavailable,
+  unauthenticated,
 }

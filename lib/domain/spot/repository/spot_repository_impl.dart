@@ -91,7 +91,7 @@ class SpotRepositoryImpl implements SpotRepository {
     // 언어는 인자로 보내지 않는다 — Accept-Language 헤더로 전달된다(spec §2).
     // category는 intro/infoItems가 요구하는 필수 인자다(같은 응답의 필드를 인자로
     // 참조할 수 없어 호출부가 넘긴다).
-    final Map<String, dynamic> data = await _queryDetail(
+    final Map<String, dynamic> data = await _query(
       documentNodeQuerySpotDetail,
       Variables$Query$SpotDetail(
         id: id,
@@ -296,42 +296,6 @@ class SpotRepositoryImpl implements SpotRepository {
     variables,
   );
 
-  /// 상세 조회 실행. `_run`과 달리 최상위 `errors[]`를 정체불명 네트워크 실패로
-  /// 뭉개지 않고, 첫 오류의 코드를 뽑아 [SpotFailure.fromQueryErrorCode]로 번역한다
-  /// (SPOT_NOT_FOUND/UPSTREAM_*를 UI가 구분하려면 코드가 필요하다, spec §6·AC-26).
-  /// 링크 예외(도달 불가)나 코드 없는 오류는 그대로 네트워크 실패로 떨어진다.
-  Future<Map<String, dynamic>> _queryDetail(
-    DocumentNode document,
-    Map<String, dynamic> variables,
-    String operation,
-  ) async {
-    GraphqlDebugLog.request(operation, variables);
-    late final QueryResult<Object?> result;
-    try {
-      result = await _client.query(
-        QueryOptions(document: document, variables: variables),
-      );
-    } on Exception catch (error) {
-      GraphqlDebugLog.clientThrew(operation, error);
-      throw SpotFailure.network;
-    }
-
-    GraphqlDebugLog.response(operation, result);
-
-    if (hasTransportFailure(result)) {
-      GraphqlDebugLog.transportFailure(operation, result);
-      final String? code = _firstErrorCode(result);
-      // 코드가 있으면 유형별 실패로(SPOT_NOT_FOUND 등), 없으면(링크 예외 등) 네트워크로.
-      throw code == null
-          ? SpotFailure.network
-          : SpotFailure.fromQueryErrorCode(code);
-    }
-
-    final Object? data = result.data;
-    if (data is! Map<String, dynamic>) throw SpotFailure.unknown;
-    return data;
-  }
-
   /// 최상위 `errors[]` 첫 항목의 코드 문자열. 서버가 `extensions.code`에 싣는 것이
   /// 관례이나 최종 포맷은 미확정(`[TBD-2]`)이라, extensions에 없으면 코드처럼 보이는
   /// 메시지(SCREAMING_SNAKE)를 폴백으로 본다. 아무 코드도 못 찾으면 null.
@@ -377,7 +341,10 @@ class SpotRepositoryImpl implements SpotRepository {
 
     if (hasTransportFailure(result)) {
       GraphqlDebugLog.transportFailure(operation, result);
-      throw SpotFailure.network;
+      // 코드를 뽑아 번역한다. 인증 실패(UNAUTHENTICATED)를 네트워크 실패로 뭉개면
+      // 재시도 상한이 그것까지 계상해 버려 AC-14를 만족할 수 없다(SPEC-0006 §2.3).
+      // 코드가 없으면 기존대로 네트워크 실패로 떨어진다.
+      throw SpotFailure.fromQueryErrorCode(_firstErrorCode(result));
     }
 
     final Object? data = result.data;
