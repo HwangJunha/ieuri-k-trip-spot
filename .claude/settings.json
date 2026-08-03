@@ -35,7 +35,10 @@
       "Bash(flutter devices:*)",
       "Bash(flutter test integration_test:*)",
       "Bash(patrol test:*)",
-      "Bash(patrol develop:*)"
+      "Bash(patrol develop:*)",
+      "Bash(dart run build_runner clean:*)",
+      "Bash(pgrep:*)",
+      "Bash(pkill -f build_runner:*)"
     ],
     "ask": [
       "Bash(git commit:*)",

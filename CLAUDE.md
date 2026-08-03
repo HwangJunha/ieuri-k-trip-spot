@@ -271,6 +271,46 @@ Reviews are read-only: they report, the parent agent (or `slice-builder`) applie
 
 ---
 
+## 11.5 도구가 멈췄을 때 (codegen·빌드)
+
+**출력이 없는 것과 느린 것은 다르다.** `dart run build_runner build`는 이 프로젝트에서
+**1~20초**다. 그보다 오래 걸린다면 느린 게 아니라 **멈춘 것**이고, 기다려서 해결되지 않는다.
+
+판별은 출력으로 한다 — 진행 로그(`riverpod_generator on N inputs …`)가 흐르면 도는 중이고,
+**한 줄도 없이 멈춰 있으면 시작조차 못 한 것**이다.
+
+멈췄을 때는 아래 순서로 **끝까지** 간다. 중간 단계에서 우회하지 않는다:
+
+```
+dart run build_runner clean          # 1순위. asset_graph 캐시를 정상 경로로 비운다
+dart run build_runner build          # 옵션 없이 재실행
+```
+
+`clean`으로도 안 되면 `rm -rf .dart_tool/build`가 다음 수단인데, **이 명령은 정책상
+차단돼 있다**(`Bash(rm -rf:*)` deny — 실수 한 번이 치명적이라 유지하는 안전장치다).
+우회하지 말고 사용자에게 실행을 요청한다:
+
+```
+! rm -rf .dart_tool/build && dart run build_runner build
+```
+
+`.dart_tool/build/lock/build_runner.lock`만 지우는 것은 **해결이 아니다.** 락은 원인이 아니라
+증상이고, 손상된 asset_graph가 남아 있으면 다음 실행이 같은 자리에서 다시 멈춘다. 락 파일만
+지우고 재실행하는 것을 반복하는 것이 이 문제에서 가장 흔한 시간 낭비다.
+
+**실행 규율 두 가지.**
+
+1. **`timeout`을 걸고 포그라운드로 돌린다.** `timeout 300 dart run build_runner build`.
+   백그라운드로 던지면 kill될 때 락이 남고, 그 락이 다음 실행을 막아 문제가 번식한다.
+2. **600초씩 기다리지 않는다.** 2분 안에 진행 로그가 없으면 끊고 위 절차로 간다.
+
+**권한에 막히면 우회하지 말고 사용자에게 요청한다.** 명령이 거부됐다는 것은 그 경로를
+쓰지 말라는 뜻이지, 비슷한 효과를 내는 다른 명령을 찾으라는 뜻이 아니다. 실제로
+`rm -rf .dart_tool/build`가 거부됐을 때 `rm -f lock`으로 우회하며 한 시간을 쓴 적이 있다 —
+"이 명령이 필요한데 막혀 있습니다"라고 한 줄 물었으면 끝날 일이었다.
+
+---
+
 ## 12. Branch policy (hook-enforced)
 
 **작업 단위는 worktree가 기본이다.** 여러 작업을 동시에 돌리기 때문에, 각 작업은 자기
