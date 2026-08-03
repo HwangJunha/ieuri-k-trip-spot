@@ -60,7 +60,10 @@ Future<List<SpotCategory>> availableSpotCategories(Ref ref) {
 
 /// 현재 선택된 카테고리(null=전체). CategoryBar가 갱신하고 SwipeController 패밀리
 /// 인자로 쓰인다 — 값이 바뀌면 다른 SwipeController 인스턴스를 보게 되어 재로딩된다.
-@riverpod
+///
+/// [SwipeController]와 같은 이유로 `keepAlive`다 — autoDispose면 다른 탭에 다녀오는
+/// 것만으로 선택이 "전체"로 되돌아간다. 사용자가 고른 필터는 화면이 아니라 세션에 속한다.
+@Riverpod(keepAlive: true)
 class SelectedSpotCategory extends _$SelectedSpotCategory {
   @override
   SpotCategory? build() => null;
@@ -82,7 +85,13 @@ class SelectedSpotCategory extends _$SelectedSpotCategory {
 /// SPEC-0007: 서버가 종료된 축제를 삭제하므로 쌓아둔 카드의 id가 세션 도중 해소
 /// 불가가 될 수 있다. 그 경우 [dropMissingCard]로 해당 카드만 걷어내고 세션은
 /// 계속한다(AC-43·AC-44) — 세션 전체를 실패로 만들지 않는다.
-@Riverpod(retry: spotRetryPolicy)
+///
+/// **`keepAlive`인 이유(CLAUDE.md §5의 근거 요구).** 이 상태는 화면이 아니라 *세션*에
+/// 속한다. autoDispose면 카테고리를 옮기거나 다른 탭에 다녀오는 것만으로 큐가 버려지고,
+/// 돌아왔을 때 `build()`가 다시 돌아 [_shuffled]가 **새 순서**를 만든다. 사용자에겐
+/// 목록이 매번 랜덤으로 바뀌는 것으로 보이고, 이미 스와이프해 소비한 카드까지 되살아난다.
+/// 피드를 새로 받는 계기는 앱 재시작·언어 전환·명시적 [reload]뿐이어야 한다.
+@Riverpod(keepAlive: true, retry: spotRetryPolicy)
 class SwipeController extends _$SwipeController {
   SpotRepository get _repository => ref.read(spotRepositoryProvider);
 
