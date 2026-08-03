@@ -17,6 +17,19 @@ CLAUDE.md (2–9); the _code_ you write yourself from those rules.
 
 ## Procedure
 
+**0. 시작 기준을 최신으로 맞춘다 (건너뛰지 않는다).**
+
+```
+git fetch origin
+git log --oneline -3 origin/dev          # 로컬 dev와 다르면 로컬이 낡은 것이다
+git checkout -b feature/SPEC-XXXX-<name> origin/dev
+```
+
+로컬 `dev`는 낡아 있다고 가정한다. 앞선 스펙이 이미 머지됐는데 안 내려와 있으면 그 위에서
+만든 슬라이스에는 앞 작업이 통째로 빠지고, 같은 파일을 고치는 순간 앞 작업을 되돌리는
+커밋이 된다. 나중에 리베이스로 충돌을 다시 푸는 비용이 `git fetch` 한 번보다 훨씬 크다.
+worktree를 쓸 때도 같다 — 만들어진 브랜치가 낡은 기준이면 즉시 `origin/dev` 위로 옮긴다.
+
 Take the feature name in `snake_case` (classes use its `PascalCase` form).
 Read `problem/<feature>.md` first — it defines the model shape and screens.
 Then create the slice bottom-up, each file obeying its layer's rules in

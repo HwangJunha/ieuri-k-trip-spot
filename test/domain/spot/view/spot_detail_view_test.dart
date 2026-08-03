@@ -9,8 +9,10 @@ import 'package:ieuri_k_trip_spot/domain/spot/component/detail_section.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/component/spot_gallery.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/component/spot_info_item_list.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/component/spot_intro_rows.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/spot_image.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_info_item.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_intro.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/spot_providers.dart';
@@ -19,22 +21,27 @@ import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
 
 import '../spot_test_doubles.dart';
 
-Future<void> _pump(WidgetTester tester, FakeSpotRepository repo) async {
+Future<void> _pump(
+  WidgetTester tester,
+  FakeSpotRepository repo, {
+  String? initialThumbnailUrl,
+}) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [spotRepositoryProvider.overrideWithValue(repo)],
-      child: const MaterialApp(
-        localizationsDelegates: <LocalizationsDelegate<Object>>[
+      child: MaterialApp(
+        localizationsDelegates: const <LocalizationsDelegate<Object>>[
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: AppLocalizations.supportedLocales,
-        locale: Locale('en'),
+        locale: const Locale('en'),
         home: SpotDetailView(
           contentId: 'c1',
           category: SpotCategory.touristSpot,
+          initialThumbnailUrl: initialThumbnailUrl,
         ),
       ),
     ),
@@ -393,5 +400,51 @@ void main() {
 
     expect(find.text('11 likes'), findsOneWidget);
     expect(repo.recordedReactions, isNotEmpty);
+  });
+
+  // --- SPEC-0006 R8: 리스트에서 보던 썸네일이 상세 첫 장으로 이어진다 ---
+
+  testWidgets(
+    'R8 the card thumbnail stays the first gallery image even when the '
+    'server returns its own gallery',
+    (tester) async {
+      // 갤러리를 가진 스팟(관광지·문화시설 등에서 흔하다). 예전에는 조회가 끝나는
+      // 순간 첫 장이 gallery[0]으로 바뀌어, 카드에서 보던 이미지가 사라졌다.
+      const String cardThumb = 'https://img/card-thumb.jpg';
+      final repo = FakeSpotRepository(
+        detail: detailSpot(
+          'c1',
+          gallery: const <SpotImage>[
+            SpotImage(
+              imageUrl: 'https://img/server-1.jpg',
+              copyright: CopyrightType.type1,
+              attributionText: 'KTO',
+            ),
+          ],
+        ),
+      );
+
+      await _pump(tester, repo, initialThumbnailUrl: cardThumb);
+      await tester.pumpAndSettle();
+
+      final SpotGallery gallery = tester.widget<SpotGallery>(
+        find.byType(SpotGallery),
+      );
+      expect(gallery.fallbackImageUrl, cardThumb);
+    },
+  );
+
+  testWidgets('R8 direct entry without a card thumbnail falls back to the '
+      'response thumbnail (AC-25)', (tester) async {
+    final repo = FakeSpotRepository(detail: detailSpot('c1'));
+
+    await _pump(tester, repo);
+    await tester.pumpAndSettle();
+
+    final SpotGallery gallery = tester.widget<SpotGallery>(
+      find.byType(SpotGallery),
+    );
+    // 넘겨받은 값이 없으면 응답의 썸네일이 첫 장 — 오류가 아니다.
+    expect(gallery.fallbackImageUrl, 'https://img/c1.jpg');
   });
 }

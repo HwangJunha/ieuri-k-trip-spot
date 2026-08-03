@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
+import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/retry_exhausted.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
@@ -9,11 +10,17 @@ import 'package:ieuri_k_trip_spot/domain/spot/model/tourist_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/retry_counting.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/spot_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/swipe_providers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../spot_test_doubles.dart';
 
 /// SwipeController를 구독한 컨테이너를 만든다. 구독을 유지해야 autoDispose가
 /// read 사이에 상태를 버리지 않는다.
+/// SwipeController가 언어 전환 시 세션을 다시 만들려고 locale을 watch하므로
+/// (SPEC-0007 §4.5) 저장소도 덮어써야 컨테이너가 선다. `setUpAll`에서 한 번 받아둔다
+/// — 이 헬퍼는 동기라 여기서 await할 수 없다.
+late final SharedPreferences _prefs;
+
 ProviderContainer _container(
   FakeSpotRepository repo, {
   SpotCategory? category,
@@ -22,6 +29,7 @@ ProviderContainer _container(
     overrides: [
       spotRepositoryProvider.overrideWithValue(repo),
       locationServiceProvider.overrideWithValue(FakeLocationService()),
+      sharedPreferencesProvider.overrideWithValue(_prefs),
     ],
   );
   addTearDown(container.dispose);
@@ -57,6 +65,14 @@ Future<void> _settle(
 const Duration _settleStep = Duration(milliseconds: 20);
 
 void main() {
+  // locale watch가 기기 로케일을 읽으므로 바인딩이 필요하다(SPEC-0007 §4.5).
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    _prefs = await SharedPreferences.getInstance();
+  });
+
   // 검증 대상은 재시도 횟수지 간격이 아니다. 실제 400ms를 재우면 이 파일 하나가
   // 스위트 전체 시간을 지배한다.
   setUp(() => debugRetryDelay = const Duration(milliseconds: 1));

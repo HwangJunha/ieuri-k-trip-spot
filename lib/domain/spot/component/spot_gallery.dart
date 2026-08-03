@@ -11,6 +11,11 @@ import '../model/spot_image.dart';
 /// [images]가 비면(갤러리 빈 배열) [fallbackImageUrl](=thumbnailImageUrl)로 한 장짜리
 /// 폴백을 렌더한다(AC-27).
 ///
+/// **첫 장은 언제나 [fallbackImageUrl](=리스트에서 보던 썸네일)이다**(SPEC-0006 R8).
+/// 갤러리에 그 URL이 없으면 맨 앞에 끼워 넣는다 — 그러지 않으면 조회가 끝나는 순간
+/// 첫 이미지가 `gallery[0]`으로 바뀌며 깜빡이고, 갤러리 보유 여부가 카테고리마다
+/// 달라 "전체보기에서만 자연스럽다"는 불일치로 드러난다.
+///
 /// 크롭 렌더링은 저작권 유형별 분기(`[TBD-1]`) 확정 전까지 SPEC-0002와 일관되게
 /// [BoxFit.cover]로 둔다(§7).
 class SpotGallery extends StatefulWidget {
@@ -37,10 +42,21 @@ class _SpotGalleryState extends State<SpotGallery> {
     super.dispose();
   }
 
+  /// 실제로 그릴 이미지 URL 목록. 첫 장은 항상 리스트에서 보던 썸네일이고, 서버
+  /// 갤러리가 같은 URL을 이미 갖고 있으면 중복으로 넣지 않는다(순서만 앞으로 당긴다).
+  List<String> get _urls {
+    final String first = widget.fallbackImageUrl;
+    final List<String> rest = widget.images
+        .map((SpotImage image) => image.imageUrl)
+        .where((String url) => url != first)
+        .toList(growable: false);
+    return <String>[first, ...rest];
+  }
+
   @override
   Widget build(BuildContext context) {
-    final bool hasGallery = widget.images.isNotEmpty;
-    final int pageCount = hasGallery ? widget.images.length : 1;
+    final List<String> urls = _urls;
+    final int pageCount = urls.length;
 
     return AspectRatio(
       aspectRatio: 4 / 3,
@@ -51,15 +67,11 @@ class _SpotGalleryState extends State<SpotGallery> {
             controller: _controller,
             itemCount: pageCount,
             onPageChanged: (int i) => setState(() => _index = i),
-            itemBuilder: (BuildContext context, int i) {
-              if (!hasGallery) {
-                return _GalleryImage(imageRef: widget.fallbackImageUrl);
-              }
-              // 이미지 위에는 아무것도 얹지 않는다 — 저작권 표기는 사진을 가리지 않게
-              // 갤러리 아래 [AttributionBlock]이 전담한다(AC-28은 전문 노출이 요건이라
-              // 배지 중복 없이 충족된다).
-              return _GalleryImage(imageRef: widget.images[i].imageUrl);
-            },
+            // 이미지 위에는 아무것도 얹지 않는다 — 저작권 표기는 사진을 가리지 않게
+            // 갤러리 아래 [AttributionBlock]이 전담한다(AC-28은 전문 노출이 요건이라
+            // 배지 중복 없이 충족된다).
+            itemBuilder: (BuildContext context, int i) =>
+                _GalleryImage(imageRef: urls[i]),
           ),
           // 페이지 인디케이터: 2장 이상일 때만.
           if (pageCount > 1)

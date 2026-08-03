@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
+import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/swipe_queue.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/tourist_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/spot_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/swipe_providers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../spot_test_doubles.dart';
 
@@ -14,10 +16,15 @@ Future<(ProviderContainer, SwipeQueue)> _load(int n) async {
     feed: List<TouristSpot>.generate(n, (int i) => swipeSpot('s$i')),
     pageSize: 100,
   );
+  // SwipeController가 언어 전환 시 세션을 다시 만들려고 locale을 watch하므로
+  // (SPEC-0007 §4.5) 그 저장소도 덮어써야 컨테이너가 선다.
+  SharedPreferences.setMockInitialValues(<String, Object>{});
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
   final container = ProviderContainer(
     overrides: [
       spotRepositoryProvider.overrideWithValue(repo),
       locationServiceProvider.overrideWithValue(FakeLocationService()),
+      sharedPreferencesProvider.overrideWithValue(prefs),
     ],
   );
   addTearDown(container.dispose);
@@ -42,6 +49,9 @@ List<String> _ids(ProviderContainer container) => container
 // 피드는 provider에서 한 번 섞이므로(SwipeController의 _shuffled) 카드 **순서**를
 // 단언하지 않는다. 소비의 계약은 "그 id가 빠지고 나머지는 남는다"이지 순서가 아니다.
 void main() {
+  // locale watch가 기기 로케일을 읽으므로 바인딩이 필요하다(SPEC-0007 §4.5).
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   test('반응한 카드가 스택에서 제거된다 (AC-35·AC-36)', () async {
     final (container, queue) = await _load(3);
     expect(queue.cards.length, 3);

@@ -24,6 +24,20 @@ void main() {
     );
   });
 
+  test('isSpotMissing covers both the query and the mutation shape', () {
+    // 상세 조회: 최상위 errors[] → notFound로 번역된 형태.
+    expect(SpotFailure.notFound.isSpotMissing, isTrue);
+    // 반응 전송: payload userErrors[] → userError + 코드 형태(대소문자 무관).
+    expect(
+      const SpotFailure(
+        SpotFailureKind.userError,
+        code: 'spot_not_found',
+      ).isSpotMissing,
+      isTrue,
+    );
+    expect(SpotFailure.rateLimited.isSpotMissing, isFalse);
+  });
+
   test('fromQueryErrorCode falls back to network for unknown/null', () {
     expect(
       SpotFailure.fromQueryErrorCode('WHATEVER').kind,

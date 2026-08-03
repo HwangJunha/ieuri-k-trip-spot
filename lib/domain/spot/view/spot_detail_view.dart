@@ -83,6 +83,7 @@ class SpotDetailView extends ConsumerWidget {
             category: category,
             feedCategory: feedCategory,
             detail: data,
+            initialThumbnailUrl: initialThumbnailUrl,
           ),
         ),
       ),
@@ -187,6 +188,7 @@ class _DetailBody extends ConsumerWidget {
     required this.category,
     required this.feedCategory,
     required this.detail,
+    this.initialThumbnailUrl,
   });
 
   final String contentId;
@@ -196,6 +198,11 @@ class _DetailBody extends ConsumerWidget {
   final SpotCategory? feedCategory;
 
   final SpotDetail detail;
+
+  /// 리스트에서 넘겨받은 썸네일(SPEC-0006 R8). 로딩 화면이 이미 그린 이미지라,
+  /// 본문에서도 이것을 갤러리 첫 장으로 유지해야 조회 완료 순간에 안 바뀐다.
+  /// 직접 진입이면 null이고, 그때는 응답의 썸네일이 첫 장이 된다(AC-25).
+  final String? initialThumbnailUrl;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -208,7 +215,10 @@ class _DetailBody extends ConsumerWidget {
         children: <Widget>[
           SpotGallery(
             images: detail.gallery,
-            fallbackImageUrl: detail.thumbnailImageUrl,
+            // 리스트에서 보던 썸네일이 있으면 그것을 첫 장으로 유지한다(R8·AC-24) —
+            // 응답의 썸네일로 갈아끼우면 로딩 화면에서 본문으로 넘어가는 순간
+            // 이미지가 바뀐다. 직접 진입이면 응답 값이 첫 장이다(AC-25).
+            fallbackImageUrl: initialThumbnailUrl ?? detail.thumbnailImageUrl,
           ),
           Padding(
             padding: const EdgeInsets.all(16),

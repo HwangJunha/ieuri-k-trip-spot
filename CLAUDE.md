@@ -155,6 +155,21 @@ One behavior per test. Minimal mocks. Arrange–Act–Assert. Per-layer shape:
 - Do not test framework code or generated code.
 - If a test needs elaborate setup, the code under test is probably too complex — simplify the code first.
 
+**스위트는 빠르다 — 느리면 그건 깨진 테스트다.** 전체 `flutter test`는 약 11초다(테스트 300개
+기준). 이보다 오래 걸린다면 실행이 느린 게 아니라 **테스트가 매달려 30초 타임아웃까지 가고
+있는 것**이다. 가장 흔한 원인은 provider가 오류 상태로 떠서 `.future`가 완결되지 않는 경우이고,
+그때 스택트레이스에 `Tried to use a provider that is in error state`가 찍힌다.
+
+따라서 **테스트가 깨진 채로 다음 단계를 진행하지 않는다.** 깨진 스위트를 그대로 두고 계속
+돌리면 매 실행이 30초씩 들고, 그 비용이 작업 전체 시간의 절반을 먹는다. 하나가 깨지면 그
+자리에서 고친 뒤 이동한다.
+
+**공통 의존을 새로 만들면 기존 테스트 셋업을 함께 고친다.** provider의 `build()`에 새 `watch`를
+추가하는 것은 그 provider를 쓰는 **모든 테스트**에 새 override 요구를 심는 일이다. 예: locale을
+watch하면 `sharedPreferencesProvider` override와 `TestWidgetsFlutterBinding.ensureInitialized()`가
+필요해진다. 추가한 쪽이 파급을 정리한다 — 남의 테스트가 깨진 걸 발견하고 지우는 것은 해결이
+아니다.
+
 **e2e는 이 표의 일부가 아니라 예외적 수단이다.** 위 네 계층이 검증을 책임진다. e2e는
 빌드·부팅·기기 왕복 때문에 유닛 테스트의 수십 배 시간을 먹으므로, 다음 두 경우에만 쓴다:
 
@@ -256,6 +271,46 @@ Reviews are read-only: they report, the parent agent (or `slice-builder`) applie
 
 ---
 
+## 11.5 도구가 멈췄을 때 (codegen·빌드)
+
+**출력이 없는 것과 느린 것은 다르다.** `dart run build_runner build`는 이 프로젝트에서
+**1~20초**다. 그보다 오래 걸린다면 느린 게 아니라 **멈춘 것**이고, 기다려서 해결되지 않는다.
+
+판별은 출력으로 한다 — 진행 로그(`riverpod_generator on N inputs …`)가 흐르면 도는 중이고,
+**한 줄도 없이 멈춰 있으면 시작조차 못 한 것**이다.
+
+멈췄을 때는 아래 순서로 **끝까지** 간다. 중간 단계에서 우회하지 않는다:
+
+```
+dart run build_runner clean          # 1순위. asset_graph 캐시를 정상 경로로 비운다
+dart run build_runner build          # 옵션 없이 재실행
+```
+
+`clean`으로도 안 되면 `rm -rf .dart_tool/build`가 다음 수단인데, **이 명령은 정책상
+차단돼 있다**(`Bash(rm -rf:*)` deny — 실수 한 번이 치명적이라 유지하는 안전장치다).
+우회하지 말고 사용자에게 실행을 요청한다:
+
+```
+! rm -rf .dart_tool/build && dart run build_runner build
+```
+
+`.dart_tool/build/lock/build_runner.lock`만 지우는 것은 **해결이 아니다.** 락은 원인이 아니라
+증상이고, 손상된 asset_graph가 남아 있으면 다음 실행이 같은 자리에서 다시 멈춘다. 락 파일만
+지우고 재실행하는 것을 반복하는 것이 이 문제에서 가장 흔한 시간 낭비다.
+
+**실행 규율 두 가지.**
+
+1. **`timeout`을 걸고 포그라운드로 돌린다.** `timeout 300 dart run build_runner build`.
+   백그라운드로 던지면 kill될 때 락이 남고, 그 락이 다음 실행을 막아 문제가 번식한다.
+2. **600초씩 기다리지 않는다.** 2분 안에 진행 로그가 없으면 끊고 위 절차로 간다.
+
+**권한에 막히면 우회하지 말고 사용자에게 요청한다.** 명령이 거부됐다는 것은 그 경로를
+쓰지 말라는 뜻이지, 비슷한 효과를 내는 다른 명령을 찾으라는 뜻이 아니다. 실제로
+`rm -rf .dart_tool/build`가 거부됐을 때 `rm -f lock`으로 우회하며 한 시간을 쓴 적이 있다 —
+"이 명령이 필요한데 막혀 있습니다"라고 한 줄 물었으면 끝날 일이었다.
+
+---
+
 ## 12. Branch policy (hook-enforced)
 
 **작업 단위는 worktree가 기본이다.** 여러 작업을 동시에 돌리기 때문에, 각 작업은 자기
@@ -268,6 +323,23 @@ worktree는 Orca가 관리하므로, 이미 worktree 안이라면 새로 만들�
 
 예외는 worktree가 의미 없는 경우뿐이다 — 읽기 전용 조사, 질문 답변, 이미 격리된 세션.
 사용자가 "여기서 바로 해"라고 하면 그 지시가 우선한다.
+
+**브랜치를 따기 전에 반드시 `git fetch`부터 한다.** 로컬 `dev`는 낡아 있다고 가정한다 —
+다른 작업이 이미 머지됐는데 로컬에 안 내려와 있으면, 그 위에서 만든 브랜치에는 앞선 작업이
+통째로 빠진다. 그 상태로 같은 파일을 고치면 앞 작업을 되돌리는 커밋이 되고, 나중에 리베이스로
+충돌을 다시 풀어야 한다.
+
+```
+git fetch origin
+git log --oneline -3 origin/dev     # 로컬 dev와 다른지 확인
+git checkout -b feature/SPEC-0007-home-screen origin/dev
+```
+
+**분기 기준은 `origin/dev`이지 로컬 `dev`가 아니다.** worktree를 쓸 때도 같다 — EnterWorktree가
+만든 브랜치가 낡은 기준에서 출발했다면 즉시 `origin/dev` 위로 옮긴다.
+
+실제로 이걸 빠뜨려 SPEC-0007을 SPEC-0006이 빠진 코드 위에서 전부 구현한 적이 있다. 시작 전
+`git fetch` 한 번이면 없었을 일이다.
 
 **Never work directly on a protected branch.** `master`, `main`, and `dev` are protected. Every
 change — code, tests, specs — happens on a **topic branch** created first:

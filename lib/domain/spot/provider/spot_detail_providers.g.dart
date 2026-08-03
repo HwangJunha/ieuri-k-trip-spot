@@ -84,7 +84,7 @@ final class SpotDetailControllerProvider
 }
 
 String _$spotDetailControllerHash() =>
-    r'6dc979421ac9eeff273423159424b048e442f45c';
+    r'b6f58fc4299ad1dd6027d69711f214fd0ed4fee8';
 
 /// 관광지 상세 컨트롤러(SPEC-0003). [contentId]별 패밀리 — 상세 진입마다 해당 id의
 /// 인스턴스를 로드한다.
