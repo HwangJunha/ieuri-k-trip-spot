@@ -2,8 +2,10 @@ import 'package:ieuri_k_trip_spot/common/localization/app_language.dart';
 import 'package:ieuri_k_trip_spot/common/location/coordinates.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_service.dart';
 import 'package:ieuri_k_trip_spot/common/pagination/offset_page.dart';
+import 'package:ieuri_k_trip_spot/common/pagination/page.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/congestion_level.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/liked_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_detail.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
@@ -30,9 +32,14 @@ class FakeSpotRepository implements SpotRepository {
     this.detailFailure,
     this.pageFailure,
     this.failPageTimes = 0,
+    List<LikedSpot>? liked,
+    this.likedPageSize = 2,
+    this.likedSpotsFailure,
+    this.failLikedAfter = 0,
   }) : recommended = recommended ?? const <TouristSpot>[_spot],
        popular = popular ?? const <TouristSpot>[_spot],
-       feed = feed ?? const <TouristSpot>[];
+       feed = feed ?? const <TouristSpot>[],
+       liked = liked ?? const <LikedSpot>[];
 
   /// `fetchSpotPage`가 던질 실패(설정 시). [failPageTimes]와 함께 쓰면 앞의 N회만
   /// 실패하고 이후 성공한다 — 재시도 상한 검증용(SPEC-0006).
@@ -67,6 +74,26 @@ class FakeSpotRepository implements SpotRepository {
   final List<(String, SpotReaction)> recordedReactions =
       <(String, SpotReaction)>[];
 
+  // --- 좋아요 목록 (SPEC-0008 R-18) -------------------------------------------
+
+  /// `fetchLikedSpots`가 페이징해 돌려줄 전체 항목.
+  final List<LikedSpot> liked;
+
+  /// 페이크가 한 번에 돌려줄 항목 수. 프로바이더가 보내는 `first`는 무시하고 이
+  /// 값으로 자른다 — 작은 목록으로 페이지 경계를 검증하기 위해서다.
+  final int likedPageSize;
+
+  /// `fetchLikedSpots`가 던질 실패(설정 시). 미인증(UNAUTHENTICATED) 경로 검증용.
+  /// [failLikedAfter]와 함께 쓰면 앞의 N회는 성공하고 그 다음부터 실패한다 — 첫 장은
+  /// 받았는데 추가 로딩만 실패하는 상황을 만든다.
+  final Object? likedSpotsFailure;
+
+  /// [likedSpotsFailure]를 던지기 전에 성공시킬 호출 수. 0이면 첫 호출부터 던진다.
+  final int failLikedAfter;
+
+  /// `fetchLikedSpots` 호출 횟수(검증용) — 중복 loadMore가 조회를 늘리지 않는지 본다.
+  int likedSpotsCallCount = 0;
+
   static const TouristSpot _spot = TouristSpot(
     id: 'spot-1',
     name: 'Gyeongbokgung Palace',
@@ -76,6 +103,32 @@ class FakeSpotRepository implements SpotRepository {
     rating: 4.7,
     distanceKm: 1.2,
   );
+
+  /// 좋아요 목록 커서 페이징(SPEC-0008 R-18). [likedPageSize]씩 잘라 돌려주며,
+  /// 커서는 다음 항목의 인덱스 문자열이다 — 실제 서버의 불투명 커서를 흉내내되
+  /// 테스트가 페이지 경계를 예측할 수 있게 한다.
+  @override
+  Future<CursorPage<LikedSpot>> fetchLikedSpots({
+    int? first,
+    String? after,
+  }) async {
+    likedSpotsCallCount++;
+    if (likedSpotsFailure != null && likedSpotsCallCount > failLikedAfter) {
+      throw likedSpotsFailure!;
+    }
+
+    final int start = after == null ? 0 : (int.tryParse(after) ?? 0);
+    final int end = (start + likedPageSize).clamp(0, liked.length);
+    final List<LikedSpot> items = start >= liked.length
+        ? const <LikedSpot>[]
+        : liked.sublist(start, end);
+    final bool hasNext = end < liked.length;
+    return CursorPage<LikedSpot>(
+      items: items,
+      hasNextPage: hasNext,
+      endCursor: hasNext ? '$end' : null,
+    );
+  }
 
   @override
   Future<List<TouristSpot>> fetchRecommendedSpots() async => recommended;

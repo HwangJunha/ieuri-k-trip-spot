@@ -18,6 +18,7 @@ const List<String> _requiredKeys = <String>[
   'navLiked',
   'navCommunity',
   'likedSpotsEmpty',
+  'likedSpotsUnavailable',
 ];
 
 /// 대체되어 더는 참조되지 않는 키.

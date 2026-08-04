@@ -2,8 +2,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:ieuri_k_trip_spot/common/localization/app_language.dart';
 import 'package:ieuri_k_trip_spot/common/pagination/offset_page.dart';
+import 'package:ieuri_k_trip_spot/common/pagination/page.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/liked_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/spot_detail.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_reaction.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/tourist_spot.dart';
@@ -40,9 +43,11 @@ SpotRepositoryImpl _repo(_FakeLink link) => SpotRepositoryImpl(
   GraphQLClient(
     link: link,
     cache: GraphQLCache(),
+    // 프로덕션 클라이언트와 같은 정책이어야 부분 실패 경로가 실제와 같게 검증된다
+    // (ErrorPolicy.all — errors[]가 있어도 data를 버리지 않는다, SPEC-0008 §2.1).
     defaultPolicies: DefaultPolicies(
-      mutate: Policies(fetch: FetchPolicy.noCache),
-      query: Policies(fetch: FetchPolicy.noCache),
+      mutate: Policies(fetch: FetchPolicy.noCache, error: ErrorPolicy.all),
+      query: Policies(fetch: FetchPolicy.noCache, error: ErrorPolicy.all),
     ),
   ),
 );
@@ -550,4 +555,220 @@ void main() {
       expect(spot.distanceKm, isNotNull);
     }
   });
+
+  // --- 부분 실패 / 축약 (SPEC-0008 R-7 ~ R-11) --------------------------------
+
+  test('gallery·infoItems가 null이면 빈 배열로 접힌다 (AC-28·AC-29)', () async {
+    // 서버가 하위 조회 실패를 필드 null로 내린다. 도메인 모델은 "조회 실패"와
+    // "정상적으로 없음"을 구분하지 않는다 — 둘 다 섹션을 숨기기 때문이다.
+    final SpotRepositoryImpl repo = _repo(
+      _FakeLink(data: _detailData(gallery: null, infoItems: null)),
+    );
+
+    final SpotDetail detail = await repo.fetchSpotDetail(
+      'c1',
+      SpotCategory.touristSpot,
+    );
+
+    expect(detail.gallery, isEmpty);
+    expect(detail.infoItems, isEmpty);
+    // 섹션은 숨겨지되 전체는 정상 상태다 — 오류로 번역되지 않는다(AC-23).
+    expect(detail.hasInfoItems, isFalse);
+    expect(detail.title, 'T');
+  });
+
+  test('본문까지 없으면 축약 상태가 되지만 실패가 아니다 (AC-31·AC-34)', () async {
+    final SpotRepositoryImpl repo = _repo(
+      _FakeLink(
+        data: _detailData(gallery: null, infoItems: null, overview: null),
+      ),
+    );
+
+    final SpotDetail detail = await repo.fetchSpotDetail(
+      'c1',
+      SpotCategory.touristSpot,
+    );
+
+    expect(detail.hasOverview, isFalse);
+    expect(detail.hasIntro, isFalse);
+    // 목록이 이미 준 값은 남는다 — 축약 화면이 보여주는 전부다.
+    expect(detail.thumbnailImageUrl, isNotEmpty);
+    expect(detail.likeCount, 0);
+  });
+
+  test('하위 필드만 가리키는 errors[]는 전체 실패가 아니다 (AC-25)', () async {
+    // `path`가 ["spotDetail","gallery"]면 갤러리만 실패한 것이다. errors[]가
+    // 비어있지 않다는 사실만으로 전체 실패로 단정하면 R-7이 무너진다.
+    final SpotRepositoryImpl repo = _repo(
+      _FakeLink(
+        data: _detailData(gallery: null),
+        errors: const <GraphQLError>[
+          GraphQLError(
+            message: 'gallery lookup failed',
+            path: <dynamic>['spotDetail', 'gallery'],
+          ),
+        ],
+      ),
+    );
+
+    final SpotDetail detail = await repo.fetchSpotDetail(
+      'c1',
+      SpotCategory.touristSpot,
+    );
+
+    // 던지지 않고 본문을 돌려준다.
+    expect(detail.id, 'c1');
+    expect(detail.gallery, isEmpty);
+  });
+
+  test('최상위 필드를 가리키는 errors[]는 전체 실패다 (AC-24)', () async {
+    // path가 ["spotDetail"] 한 칸이면 그 필드의 해소 자체가 실패한 것이다.
+    final SpotRepositoryImpl repo = _repo(
+      _FakeLink(
+        errors: const <GraphQLError>[
+          GraphQLError(
+            message: 'SPOT_NOT_FOUND',
+            path: <dynamic>['spotDetail'],
+          ),
+        ],
+      ),
+    );
+
+    await expectLater(
+      repo.fetchSpotDetail('c1', SpotCategory.touristSpot),
+      throwsA(isA<SpotFailure>()),
+    );
+  });
+
+  test('부분 실패가 앞에 와도 루트 오류 코드를 놓치지 않는다', () async {
+    // ErrorPolicy.all 이후로는 부분 실패와 전체 실패가 **같은 배열에** 실려 온다.
+    // errors.first만 보면 갤러리 실패에서 코드를 못 찾아 UNAUTHENTICATED가
+    // network로 둔갑하고, 그러면 재시도 상한에 계상되어 SPEC-0006 R5가 깨진다.
+    final SpotRepositoryImpl repo = _repo(
+      _FakeLink(
+        errors: const <GraphQLError>[
+          GraphQLError(
+            message: 'gallery lookup failed',
+            path: <dynamic>['spotDetail', 'gallery'],
+          ),
+          GraphQLError(
+            message: 'unauthorized',
+            path: <dynamic>['spotDetail'],
+            extensions: <String, dynamic>{'code': 'UNAUTHENTICATED'},
+          ),
+        ],
+      ),
+    );
+
+    await expectLater(
+      repo.fetchSpotDetail('c1', SpotCategory.touristSpot),
+      throwsA(
+        isA<SpotFailure>().having(
+          (SpotFailure f) => f.kind,
+          'kind',
+          SpotFailureKind.unauthenticated,
+        ),
+      ),
+    );
+  });
+
+  // --- 좋아요 목록 (SPEC-0008 R-18) -------------------------------------------
+
+  test('fetchLikedSpots가 커넥션을 CursorPage로 매핑한다', () async {
+    final _FakeLink link = _FakeLink(
+      data: <String, dynamic>{
+        'likedSpots': <String, dynamic>{
+          'edges': <dynamic>[
+            <String, dynamic>{
+              'cursor': 'c1',
+              'node': <String, dynamic>{
+                'id': 'spot-1',
+                'title': 'Gyeongbokgung',
+                'thumbnailImageUrl': 'https://img/1.jpg',
+                'address': 'Seoul',
+                'category': 'TOURIST_SPOT',
+                'copyright': 'TYPE1',
+                'attributionText': 'KTO',
+              },
+            },
+          ],
+          'pageInfo': <String, dynamic>{'hasNextPage': true, 'endCursor': 'c1'},
+          'totalCount': 10,
+        },
+      },
+    );
+
+    final CursorPage<LikedSpot> page = await _repo(
+      link,
+    ).fetchLikedSpots(first: 20);
+
+    expect(page.items.single.id, 'spot-1');
+    expect(page.items.single.category, SpotCategory.touristSpot);
+    expect(page.hasNextPage, isTrue);
+    expect(page.endCursor, 'c1');
+    expect(link.sentVariables?['first'], 20);
+  });
+
+  test('fetchLikedSpots는 after 커서를 그대로 보낸다', () async {
+    final _FakeLink link = _FakeLink(
+      data: <String, dynamic>{
+        'likedSpots': <String, dynamic>{
+          'edges': <dynamic>[],
+          'pageInfo': <String, dynamic>{
+            'hasNextPage': false,
+            'endCursor': null,
+          },
+          'totalCount': 0,
+        },
+      },
+    );
+
+    final CursorPage<LikedSpot> page = await _repo(
+      link,
+    ).fetchLikedSpots(first: 20, after: 'cursor-2');
+
+    expect(link.sentVariables?['after'], 'cursor-2');
+    expect(page.items, isEmpty);
+    expect(page.hasNextPage, isFalse);
+  });
+
+  test('fetchLikedSpots의 UNAUTHENTICATED는 실패로 번역된다', () async {
+    final SpotRepositoryImpl repo = _repo(
+      _FakeLink(
+        errors: const <GraphQLError>[
+          GraphQLError(
+            message: 'unauthorized',
+            extensions: <String, dynamic>{'code': 'UNAUTHENTICATED'},
+          ),
+        ],
+      ),
+    );
+
+    await expectLater(repo.fetchLikedSpots(), throwsA(isA<SpotFailure>()));
+  });
 }
+
+/// 상세 응답 한 벌. 부분 실패를 표현하려고 [gallery]·[infoItems]를 null로 줄 수 있다
+/// (서버 nullability 완화 후의 실제 형태).
+Map<String, dynamic> _detailData({
+  List<dynamic>? gallery = const <dynamic>[],
+  List<dynamic>? infoItems = const <dynamic>[],
+  String? overview = 'An overview.',
+}) => <String, dynamic>{
+  'spotDetail': <String, dynamic>{
+    'id': 'c1',
+    'title': 'T',
+    'category': 'TOURIST_SPOT',
+    'thumbnailImageUrl': 'https://img/t.jpg',
+    'overview': overview,
+    'address': 'Seoul',
+    'homepage': null,
+    'tel': null,
+    'copyright': 'TYPE1',
+    'attributionText': 'KTO',
+    'gallery': gallery,
+    'likeCount': 0,
+    'intro': null,
+    'infoItems': infoItems,
+  },
+};
