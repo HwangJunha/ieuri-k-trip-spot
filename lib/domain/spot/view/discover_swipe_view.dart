@@ -42,7 +42,13 @@ class DiscoverSwipeView extends ConsumerWidget {
     return Column(
       children: <Widget>[
         const SizedBox(height: 8),
-        const CategoryBar(),
+        // 스와이프의 선택 상태는 세션에 속하는 keepAlive provider다(카테고리를
+        // 옮겼다 와도 유지된다).
+        CategoryBar(
+          selected: category,
+          onSelected: (SpotCategory? next) =>
+              ref.read(selectedSpotCategoryProvider.notifier).select(next),
+        ),
         const SizedBox(height: 8),
         Expanded(
           child: locationBlocked

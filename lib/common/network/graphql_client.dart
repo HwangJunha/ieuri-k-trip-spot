@@ -78,8 +78,17 @@ GraphQLClient graphqlClient(Ref ref) {
     link: languageLink.concat(refreshLink).concat(authLink).concat(httpLink),
     cache: GraphQLCache(),
     defaultPolicies: DefaultPolicies(
-      mutate: Policies(fetch: FetchPolicy.noCache),
-      query: Policies(fetch: FetchPolicy.noCache),
+      // `ErrorPolicy.all`이어야 **부분 실패**를 다룰 수 있다(SPEC-0008 R-7).
+      //
+      // 기본값 `ErrorPolicy.none`은 errors[]가 하나라도 있으면 **data를 통째로
+      // 버린다**. 그러면 `["spotDetail","gallery"]`처럼 하위 필드만 실패한 응답에서도
+      // 본문이 사라져, path로 범위를 판별하는 것(§2.1)이 무의미해진다 — 판별에
+      // 성공해도 매핑할 데이터가 없기 때문이다.
+      //
+      // `all`은 data와 errors를 함께 넘기고, 전체 실패 여부는 repository가 path로
+      // 판단한다(`hasRootFailure`). 전체 실패면 data가 어차피 null이라 동작이 같다.
+      mutate: Policies(fetch: FetchPolicy.noCache, error: ErrorPolicy.all),
+      query: Policies(fetch: FetchPolicy.noCache, error: ErrorPolicy.all),
     ),
   );
 }

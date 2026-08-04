@@ -1,5 +1,7 @@
 import '../../../common/localization/app_language.dart';
 import '../../../common/pagination/offset_page.dart';
+import '../../../common/pagination/page.dart';
+import '../model/liked_spot.dart';
 import '../model/spot_category.dart';
 import '../model/spot_detail.dart';
 import '../model/spot_reaction.dart';
@@ -55,4 +57,21 @@ abstract interface class SpotRepository {
   /// on success; a failure surfaces as a thrown error the caller can log and
   /// ignore (like-failure is non-critical).
   Future<void> reactToSpot(String spotId, SpotReaction reaction);
+
+  /// 좋아요한 관광지 한 페이지(SPEC-0008 R-18). `likedSpots`는 **커서** 페이징이라
+  /// 오프셋인 [fetchSpotPage]와 달리 [CursorPage]를 돌려준다 — 둘 다 `common/pagination`의
+  /// 공용 타입이고, 기능이 자기 페이지네이션을 새로 만들지 않는다(CLAUDE.md §4).
+  ///
+  /// [after]는 이전 페이지의 `endCursor`이며 첫 조회에선 null이다. [first]는 페이지 크기.
+  /// [category]가 null이면 전체다 — 필터링은 서버가 하고 클라이언트는 받은 페이지를
+  /// 그대로 잇는다(Discover의 [fetchSpotPage]와 같은 규약).
+  ///
+  /// 정렬은 서버가 보장하므로 클라이언트가 재정렬하지 않는다. 미인증이면 최상위
+  /// `errors[]`의 `UNAUTHENTICATED`가 [SpotFailure]로 번역되어 SPEC-0005의 세션 갱신
+  /// 경로를 탄다 — 이 스펙이 별도 처리를 더하지 않는다(§5.2).
+  Future<CursorPage<LikedSpot>> fetchLikedSpots({
+    SpotCategory? category,
+    int? first,
+    String? after,
+  });
 }

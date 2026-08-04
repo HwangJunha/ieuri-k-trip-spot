@@ -50,8 +50,11 @@
   "navHome": "首页",
   "navMap": "地图",
   "navDiscover": "发现",
-  "navEvents": "活动",
-  "navChat": "聊天",
+  "navLiked": "收藏",
+  "navCommunity": "社区",
+
+  "likedSpotsEmpty": "还没有收藏的景点。",
+  "likedSpotsUnavailable": "无法加载收藏列表",
 
   "comingSoon": "敬请期待。",
 

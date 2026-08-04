@@ -56,19 +56,44 @@ Future<void> _pump(WidgetTester tester, ProviderContainer container) async {
 }
 
 void main() {
-  testWidgets('tapping the Chat tab shows its placeholder', (tester) async {
+  // SPEC-0008 AC-38·AC-41: 탭 3은 좋아요 목록으로 간다.
+  testWidgets('tapping the Liked tab shows the liked spots screen', (
+    tester,
+  ) async {
     final container = await _homeContainer();
     await _pump(tester, container);
 
     // Home is the initial tab: its section headers are visible.
     expect(find.text('Recommended for You'), findsOneWidget);
 
-    // Switch to the Chat tab via the floating nav.
-    await tester.tap(find.text('Chat'));
+    await tester.tap(find.byKey(const Key('bottom_nav_liked')));
     await tester.pumpAndSettle();
 
-    // The Chat placeholder ("Coming soon.") is shown.
+    expect(find.text('No liked spots yet.'), findsOneWidget);
+    expect(find.text('Recommended for You'), findsNothing);
+  });
+
+  // SPEC-0008 AC-39·AC-42: 탭 4는 커뮤니티 라벨로 바뀌되 화면 내용(플레이스홀더)은
+  // 그대로다. 행사 탭은 도달 경로가 사라진다.
+  testWidgets('tapping the Community tab shows the unchanged placeholder', (
+    tester,
+  ) async {
+    final container = await _homeContainer();
+    await _pump(tester, container);
+
+    await tester.tap(find.byKey(const Key('bottom_nav_community')));
+    await tester.pumpAndSettle();
+
     expect(find.text('Coming soon.'), findsOneWidget);
     expect(find.text('Recommended for You'), findsNothing);
+  });
+
+  // SPEC-0008 AC-40: 목적지만 교체되고 탭 수(5)는 그대로다. 라벨 문자열이 아니라
+  // 구조를 검사한다 — 폐기된 라벨 키의 부재는 nav_arb_keys_test가 훨씬 싸게 잡는다.
+  testWidgets('the shell still has exactly five tabs', (tester) async {
+    final container = await _homeContainer();
+    await _pump(tester, container);
+
+    expect(find.byType(NavigationDestination), findsNWidgets(5));
   });
 }
