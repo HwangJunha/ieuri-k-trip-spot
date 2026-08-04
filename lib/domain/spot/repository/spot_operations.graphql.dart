@@ -2502,16 +2502,26 @@ class _CopyWithStubImpl$Query$SpotDetail$spotDetail$infoItems<TRes>
 }
 
 class Variables$Query$LikedSpots {
-  factory Variables$Query$LikedSpots({int? first, String? after}) =>
-      Variables$Query$LikedSpots._({
-        if (first != null) r'first': first,
-        if (after != null) r'after': after,
-      });
+  factory Variables$Query$LikedSpots({
+    Enum$SpotCategory? category,
+    int? first,
+    String? after,
+  }) => Variables$Query$LikedSpots._({
+    if (category != null) r'category': category,
+    if (first != null) r'first': first,
+    if (after != null) r'after': after,
+  });
 
   Variables$Query$LikedSpots._(this._$data);
 
   factory Variables$Query$LikedSpots.fromJson(Map<String, dynamic> data) {
     final result$data = <String, dynamic>{};
+    if (data.containsKey('category')) {
+      final l$category = data['category'];
+      result$data['category'] = l$category == null
+          ? null
+          : fromJson$Enum$SpotCategory((l$category as String));
+    }
     if (data.containsKey('first')) {
       final l$first = data['first'];
       result$data['first'] = (l$first as int?);
@@ -2525,12 +2535,20 @@ class Variables$Query$LikedSpots {
 
   Map<String, dynamic> _$data;
 
+  Enum$SpotCategory? get category => (_$data['category'] as Enum$SpotCategory?);
+
   int? get first => (_$data['first'] as int?);
 
   String? get after => (_$data['after'] as String?);
 
   Map<String, dynamic> toJson() {
     final result$data = <String, dynamic>{};
+    if (_$data.containsKey('category')) {
+      final l$category = category;
+      result$data['category'] = l$category == null
+          ? null
+          : toJson$Enum$SpotCategory(l$category);
+    }
     if (_$data.containsKey('first')) {
       final l$first = first;
       result$data['first'] = l$first;
@@ -2554,6 +2572,15 @@ class Variables$Query$LikedSpots {
         runtimeType != other.runtimeType) {
       return false;
     }
+    final l$category = category;
+    final lOther$category = other.category;
+    if (_$data.containsKey('category') !=
+        other._$data.containsKey('category')) {
+      return false;
+    }
+    if (l$category != lOther$category) {
+      return false;
+    }
     final l$first = first;
     final lOther$first = other.first;
     if (_$data.containsKey('first') != other._$data.containsKey('first')) {
@@ -2575,9 +2602,11 @@ class Variables$Query$LikedSpots {
 
   @override
   int get hashCode {
+    final l$category = category;
     final l$first = first;
     final l$after = after;
     return Object.hashAll([
+      _$data.containsKey('category') ? l$category : const {},
       _$data.containsKey('first') ? l$first : const {},
       _$data.containsKey('after') ? l$after : const {},
     ]);
@@ -2593,7 +2622,7 @@ abstract class CopyWith$Variables$Query$LikedSpots<TRes> {
   factory CopyWith$Variables$Query$LikedSpots.stub(TRes res) =
       _CopyWithStubImpl$Variables$Query$LikedSpots;
 
-  TRes call({int? first, String? after});
+  TRes call({Enum$SpotCategory? category, int? first, String? after});
 }
 
 class _CopyWithImpl$Variables$Query$LikedSpots<TRes>
@@ -2606,9 +2635,14 @@ class _CopyWithImpl$Variables$Query$LikedSpots<TRes>
 
   static const _undefined = <dynamic, dynamic>{};
 
-  TRes call({Object? first = _undefined, Object? after = _undefined}) => _then(
+  TRes call({
+    Object? category = _undefined,
+    Object? first = _undefined,
+    Object? after = _undefined,
+  }) => _then(
     Variables$Query$LikedSpots._({
       ..._instance._$data,
+      if (category != _undefined) 'category': (category as Enum$SpotCategory?),
       if (first != _undefined) 'first': (first as int?),
       if (after != _undefined) 'after': (after as String?),
     }),
@@ -2621,7 +2655,7 @@ class _CopyWithStubImpl$Variables$Query$LikedSpots<TRes>
 
   TRes _res;
 
-  call({int? first, String? after}) => _res;
+  call({Enum$SpotCategory? category, int? first, String? after}) => _res;
 }
 
 class Query$LikedSpots {
@@ -2732,6 +2766,15 @@ const documentNodeQueryLikedSpots = DocumentNode(
       name: NameNode(value: 'LikedSpots'),
       variableDefinitions: [
         VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'category')),
+          type: NamedTypeNode(
+            name: NameNode(value: 'SpotCategory'),
+            isNonNull: false,
+          ),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
           variable: VariableNode(name: NameNode(value: 'first')),
           type: NamedTypeNode(name: NameNode(value: 'Int'), isNonNull: false),
           defaultValue: DefaultValueNode(value: null),
@@ -2754,6 +2797,10 @@ const documentNodeQueryLikedSpots = DocumentNode(
             name: NameNode(value: 'likedSpots'),
             alias: null,
             arguments: [
+              ArgumentNode(
+                name: NameNode(value: 'category'),
+                value: VariableNode(name: NameNode(value: 'category')),
+              ),
               ArgumentNode(
                 name: NameNode(value: 'first'),
                 value: VariableNode(name: NameNode(value: 'first')),
@@ -2866,13 +2913,6 @@ const documentNodeQueryLikedSpots = DocumentNode(
                     ],
                   ),
                 ),
-                FieldNode(
-                  name: NameNode(value: 'totalCount'),
-                  alias: null,
-                  arguments: [],
-                  directives: [],
-                  selectionSet: null,
-                ),
               ],
             ),
           ),
@@ -2883,16 +2923,11 @@ const documentNodeQueryLikedSpots = DocumentNode(
 );
 
 class Query$LikedSpots$likedSpots {
-  Query$LikedSpots$likedSpots({
-    required this.edges,
-    required this.pageInfo,
-    this.totalCount,
-  });
+  Query$LikedSpots$likedSpots({required this.edges, required this.pageInfo});
 
   factory Query$LikedSpots$likedSpots.fromJson(Map<String, dynamic> json) {
     final l$edges = json['edges'];
     final l$pageInfo = json['pageInfo'];
-    final l$totalCount = json['totalCount'];
     return Query$LikedSpots$likedSpots(
       edges: (l$edges as List<dynamic>)
           .map(
@@ -2904,7 +2939,6 @@ class Query$LikedSpots$likedSpots {
       pageInfo: Query$LikedSpots$likedSpots$pageInfo.fromJson(
         (l$pageInfo as Map<String, dynamic>),
       ),
-      totalCount: (l$totalCount as int?),
     );
   }
 
@@ -2912,16 +2946,12 @@ class Query$LikedSpots$likedSpots {
 
   final Query$LikedSpots$likedSpots$pageInfo pageInfo;
 
-  final int? totalCount;
-
   Map<String, dynamic> toJson() {
     final _resultData = <String, dynamic>{};
     final l$edges = edges;
     _resultData['edges'] = l$edges.map((e) => e.toJson()).toList();
     final l$pageInfo = pageInfo;
     _resultData['pageInfo'] = l$pageInfo.toJson();
-    final l$totalCount = totalCount;
-    _resultData['totalCount'] = l$totalCount;
     return _resultData;
   }
 
@@ -2929,12 +2959,7 @@ class Query$LikedSpots$likedSpots {
   int get hashCode {
     final l$edges = edges;
     final l$pageInfo = pageInfo;
-    final l$totalCount = totalCount;
-    return Object.hashAll([
-      Object.hashAll(l$edges.map((v) => v)),
-      l$pageInfo,
-      l$totalCount,
-    ]);
+    return Object.hashAll([Object.hashAll(l$edges.map((v) => v)), l$pageInfo]);
   }
 
   @override
@@ -2963,11 +2988,6 @@ class Query$LikedSpots$likedSpots {
     if (l$pageInfo != lOther$pageInfo) {
       return false;
     }
-    final l$totalCount = totalCount;
-    final lOther$totalCount = other.totalCount;
-    if (l$totalCount != lOther$totalCount) {
-      return false;
-    }
     return true;
   }
 }
@@ -2990,7 +3010,6 @@ abstract class CopyWith$Query$LikedSpots$likedSpots<TRes> {
   TRes call({
     List<Query$LikedSpots$likedSpots$edges>? edges,
     Query$LikedSpots$likedSpots$pageInfo? pageInfo,
-    int? totalCount,
   });
   TRes edges(
     Iterable<Query$LikedSpots$likedSpots$edges> Function(
@@ -3015,23 +3034,17 @@ class _CopyWithImpl$Query$LikedSpots$likedSpots<TRes>
 
   static const _undefined = <dynamic, dynamic>{};
 
-  TRes call({
-    Object? edges = _undefined,
-    Object? pageInfo = _undefined,
-    Object? totalCount = _undefined,
-  }) => _then(
-    Query$LikedSpots$likedSpots(
-      edges: edges == _undefined || edges == null
-          ? _instance.edges
-          : (edges as List<Query$LikedSpots$likedSpots$edges>),
-      pageInfo: pageInfo == _undefined || pageInfo == null
-          ? _instance.pageInfo
-          : (pageInfo as Query$LikedSpots$likedSpots$pageInfo),
-      totalCount: totalCount == _undefined
-          ? _instance.totalCount
-          : (totalCount as int?),
-    ),
-  );
+  TRes call({Object? edges = _undefined, Object? pageInfo = _undefined}) =>
+      _then(
+        Query$LikedSpots$likedSpots(
+          edges: edges == _undefined || edges == null
+              ? _instance.edges
+              : (edges as List<Query$LikedSpots$likedSpots$edges>),
+          pageInfo: pageInfo == _undefined || pageInfo == null
+              ? _instance.pageInfo
+              : (pageInfo as Query$LikedSpots$likedSpots$pageInfo),
+        ),
+      );
 
   TRes edges(
     Iterable<Query$LikedSpots$likedSpots$edges> Function(
@@ -3068,7 +3081,6 @@ class _CopyWithStubImpl$Query$LikedSpots$likedSpots<TRes>
   call({
     List<Query$LikedSpots$likedSpots$edges>? edges,
     Query$LikedSpots$likedSpots$pageInfo? pageInfo,
-    int? totalCount,
   }) => _res;
 
   edges(_fn) => _res;

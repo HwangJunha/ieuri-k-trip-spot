@@ -109,13 +109,19 @@ class SpotRepositoryImpl implements SpotRepository {
 
   @override
   Future<CursorPage<LikedSpot>> fetchLikedSpots({
+    SpotCategory? category,
     int? first,
     String? after,
   }) async {
     // 언어는 인자로 보내지 않는다 — Accept-Language 헤더로 전달된다(spec §2).
+    // category가 null이면 인자를 비워 전체를 받는다(서버 규약).
     final Map<String, dynamic> data = await _query(
       documentNodeQueryLikedSpots,
-      Variables$Query$LikedSpots(first: first, after: after).toJson(),
+      Variables$Query$LikedSpots(
+        category: category == null ? null : _category(category),
+        first: first,
+        after: after,
+      ).toJson(),
       'likedSpots',
     );
     final Query$LikedSpots$likedSpots result = Query$LikedSpots.fromJson(

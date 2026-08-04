@@ -38,10 +38,14 @@ class LikedSpot {
 
   final SpotCategory category;
 
-  /// 이미지 저작권 유형 — 카드의 BoxFit 분기를 정한다(스와이프 카드와 동일 규칙).
+  /// 이미지 저작권 유형. 목록 카드는 이 값으로 분기하지 않는다 — 저작권 유형과
+  /// 무관하게 [BoxFit.cover]로 채운다(스와이프 카드와 동일 규칙). 서버가 주는 값이라
+  /// 모델은 보유하되, 표시 규칙이 달라지면 그때 쓴다.
   final CopyrightType copyright;
 
-  /// 카드마다 노출하는 저작권 표준 문구.
+  /// 서버가 준 저작권 표준 문구. **목록 카드는 노출하지 않는다** — 작은 썸네일마다
+  /// 붙으면 제목·주소를 가리고, 카드를 눌러 들어간 상세의 `AttributionBlock`이
+  /// 전문으로 밝힌다. 표기 요건은 정책(POL-024)에서 오므로 값은 계속 보유한다.
   final String attributionText;
 
   @override

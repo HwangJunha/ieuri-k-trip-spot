@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/pagination/page.dart';
 import '../model/liked_spot.dart';
+import '../model/spot_category.dart';
 import '../repository/spot_repository.dart';
 import 'retry_counting.dart';
 import 'spot_providers.dart';
@@ -59,7 +60,25 @@ class LikedSpotsState {
   );
 }
 
-/// 좋아요 목록 컨트롤러(SPEC-0008 R-18).
+/// 좋아요 목록에서 선택된 카테고리(null=전체).
+///
+/// Discover의 `selectedSpotCategory`와 **일부러 분리한다.** 같은 provider를 쓰면
+/// 좋아요 목록에서 고른 필터가 스와이프 스택까지 갈아치워, 탭을 옮겼을 때 보고 있던
+/// 카드가 사라진다. 두 화면의 필터는 서로 독립이다.
+///
+/// keepAlive인 이유는 Discover의 것과 같다 — 사용자가 고른 필터는 화면이 아니라
+/// 세션에 속한다. autoDispose면 상세에 다녀오는 것만으로 "전체"로 되돌아간다.
+@Riverpod(keepAlive: true)
+class SelectedLikedCategory extends _$SelectedLikedCategory {
+  @override
+  SpotCategory? build() => null;
+
+  void select(SpotCategory? category) => state = category;
+}
+
+/// 좋아요 목록 컨트롤러(SPEC-0008 R-18). [category]별 패밀리 — 카테고리를 바꾸면
+/// 다른 인스턴스가 로딩되고, 필터링은 서버가 한다(클라이언트가 받은 목록을 거르지
+/// 않는다).
 ///
 /// 미인증이면 repository가 `UNAUTHENTICATED`를 [SpotFailure]로 던지고, 그것이
 /// `AsyncValue.error`로 UI에 노출되어 SPEC-0005의 세션 갱신 경로를 탄다 — 이 스펙이
@@ -78,8 +97,9 @@ class LikedSpotsController extends _$LikedSpotsController {
   SpotRepository get _repository => ref.read(spotRepositoryProvider);
 
   @override
-  Future<LikedSpotsState> build() async {
+  Future<LikedSpotsState> build(SpotCategory? category) async {
     final CursorPage<LikedSpot> page = await _repository.fetchLikedSpots(
+      category: category,
       first: _pageSize,
     );
     return LikedSpotsState(

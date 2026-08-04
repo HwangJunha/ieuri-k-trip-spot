@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/liked_spot.dart';
-import 'copyright_badge.dart';
 import 'spot_display.dart';
 
 /// 좋아요 목록의 항목 한 장(SPEC-0008 R-18).
@@ -11,8 +10,12 @@ import 'spot_display.dart';
 /// 전면 이미지로 만들지 않는 이유는 이 화면의 목적이 "훑어보고 고르는 것"이라
 /// 한 화면에 여러 장이 보여야 하기 때문이다.
 ///
-/// 이미지는 저작권 유형과 무관하게 [BoxFit.cover]다(스와이프 카드와 같은 규칙),
-/// 저작권 표기는 [CopyrightBadge]로 최소 출처를 밝힌다.
+/// 이미지는 저작권 유형과 무관하게 [BoxFit.cover]다(스와이프 카드와 같은 규칙).
+///
+/// **썸네일에 출처 배지를 얹지 않는다.** 배지는 이미지에 박힌 것이 아니라 우리가
+/// 오버레이한 위젯이었고, 목록은 훑어보는 화면이라 작은 썸네일마다 출처 문구가
+/// 붙으면 제목·주소를 가린다. 출처는 카드를 눌러 들어간 상세 화면의
+/// `AttributionBlock`이 전문으로 밝힌다.
 class LikedSpotCard extends StatelessWidget {
   const LikedSpotCard({super.key, required this.spot, required this.onTap});
 
@@ -90,27 +93,15 @@ class _Thumbnail extends StatelessWidget {
       child: SizedBox(
         width: 104,
         height: 104,
-        child: Stack(
-          fit: StackFit.expand,
-          children: <Widget>[
-            if (_isUrl)
-              Image.network(
+        child: _isUrl
+            ? Image.network(
                 spot.thumbnailImageUrl,
                 fit: BoxFit.cover,
                 errorBuilder: (_, _, _) => ColoredBox(
                   color: theme.colorScheme.surfaceContainerHighest,
                 ),
               )
-            else
-              ColoredBox(color: theme.colorScheme.surfaceContainerHighest),
-            Positioned(
-              left: 4,
-              right: 4,
-              bottom: 4,
-              child: CopyrightBadge(attributionText: spot.attributionText),
-            ),
-          ],
-        ),
+            : ColoredBox(color: theme.colorScheme.surfaceContainerHighest),
       ),
     );
   }

@@ -94,6 +94,9 @@ class FakeSpotRepository implements SpotRepository {
   /// `fetchLikedSpots` 호출 횟수(검증용) — 중복 loadMore가 조회를 늘리지 않는지 본다.
   int likedSpotsCallCount = 0;
 
+  /// 마지막 조회에 실린 카테고리(검증용) — 필터가 서버까지 전달되는지 본다.
+  SpotCategory? lastLikedCategory;
+
   static const TouristSpot _spot = TouristSpot(
     id: 'spot-1',
     name: 'Gyeongbokgung Palace',
@@ -107,22 +110,30 @@ class FakeSpotRepository implements SpotRepository {
   /// 좋아요 목록 커서 페이징(SPEC-0008 R-18). [likedPageSize]씩 잘라 돌려주며,
   /// 커서는 다음 항목의 인덱스 문자열이다 — 실제 서버의 불투명 커서를 흉내내되
   /// 테스트가 페이지 경계를 예측할 수 있게 한다.
+  ///
+  /// [category]가 있으면 실제 서버처럼 **자르기 전에** 거른다 — 페이지 크기가 필터링
+  /// 이후 기준이어야 커서 경계가 서버와 같아진다.
   @override
   Future<CursorPage<LikedSpot>> fetchLikedSpots({
+    SpotCategory? category,
     int? first,
     String? after,
   }) async {
     likedSpotsCallCount++;
+    lastLikedCategory = category;
     if (likedSpotsFailure != null && likedSpotsCallCount > failLikedAfter) {
       throw likedSpotsFailure!;
     }
 
+    final List<LikedSpot> pool = category == null
+        ? liked
+        : liked.where((LikedSpot s) => s.category == category).toList();
     final int start = after == null ? 0 : (int.tryParse(after) ?? 0);
-    final int end = (start + likedPageSize).clamp(0, liked.length);
-    final List<LikedSpot> items = start >= liked.length
+    final int end = (start + likedPageSize).clamp(0, pool.length);
+    final List<LikedSpot> items = start >= pool.length
         ? const <LikedSpot>[]
-        : liked.sublist(start, end);
-    final bool hasNext = end < liked.length;
+        : pool.sublist(start, end);
+    final bool hasNext = end < pool.length;
     return CursorPage<LikedSpot>(
       items: items,
       hasNextPage: hasNext,

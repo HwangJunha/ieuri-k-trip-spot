@@ -157,7 +157,13 @@ extend type Query {
   spotDetail(id: ID!): SpotDetail!
   # SPEC-0008 R-18. 미인증이면 최상위 errors[]에 UNAUTHENTICATED가 실려 SPEC-0005의
   # 세션 갱신 경로를 탄다 — 이 스펙이 별도 처리를 더하지 않는다(§5.2).
-  likedSpots(first: Int, after: String): LikedSpotConnection!
+  # category는 nullable = "전체"다(Discover의 spots와 같은 규약). 필터링은 서버가
+  # 하고 클라이언트는 받은 페이지를 그대로 잇는다.
+  likedSpots(
+    category: SpotCategory
+    first: Int
+    after: String
+  ): LikedSpotConnection!
 }
 
 extend type Mutation {

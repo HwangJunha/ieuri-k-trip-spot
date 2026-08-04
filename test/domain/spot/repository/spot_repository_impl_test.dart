@@ -709,6 +709,42 @@ void main() {
     expect(link.sentVariables?['first'], 20);
   });
 
+  test('fetchLikedSpots가 카테고리를 서버 enum으로 실어 보낸다', () async {
+    final _FakeLink link = _FakeLink(
+      data: <String, dynamic>{
+        'likedSpots': <String, dynamic>{
+          'edges': <dynamic>[],
+          'pageInfo': <String, dynamic>{
+            'hasNextPage': false,
+            'endCursor': null,
+          },
+        },
+      },
+    );
+
+    await _repo(link).fetchLikedSpots(category: SpotCategory.restaurant);
+
+    expect(link.sentVariables?['category'], 'RESTAURANT');
+  });
+
+  test('카테고리가 null이면 필터를 보내지 않는다 (전체)', () async {
+    final _FakeLink link = _FakeLink(
+      data: <String, dynamic>{
+        'likedSpots': <String, dynamic>{
+          'edges': <dynamic>[],
+          'pageInfo': <String, dynamic>{
+            'hasNextPage': false,
+            'endCursor': null,
+          },
+        },
+      },
+    );
+
+    await _repo(link).fetchLikedSpots();
+
+    expect(link.sentVariables?['category'], isNull);
+  });
+
   test('fetchLikedSpots는 after 커서를 그대로 보낸다', () async {
     final _FakeLink link = _FakeLink(
       data: <String, dynamic>{

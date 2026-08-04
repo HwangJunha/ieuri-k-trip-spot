@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../common/pagination/pagination_list_view.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../component/category_bar.dart';
 import '../component/liked_spot_card.dart';
 import '../model/liked_spot.dart';
+import '../model/spot_category.dart';
 import '../provider/liked_spots_providers.dart';
 import 'spot_detail_view.dart';
 
@@ -27,22 +29,43 @@ class LikedSpotsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
+    final SpotCategory? category = ref.watch(selectedLikedCategoryProvider);
     final AsyncValue<LikedSpotsState> state = ref.watch(
-      likedSpotsControllerProvider,
+      likedSpotsControllerProvider(category),
     );
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navLiked)),
-      body: state.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        // 미인증(UNAUTHENTICATED)은 SPEC-0005의 세션 갱신 경로가 처리한다 — 여기선
-        // 일반 오류와 같게 다루고 재시도만 제공한다(§5.2).
-        error: (_, _) => _ErrorBody(
-          onRetry: () => ref.invalidate(likedSpotsControllerProvider),
+      body: SafeArea(
+        child: Column(
+          children: <Widget>[
+            const SizedBox(height: 8),
+            // Discover와 같은 바를 쓰되 선택 상태는 이 화면 것이다 — 여기서 고른
+            // 필터가 스와이프 스택을 갈아치우면 안 된다.
+            CategoryBar(
+              selected: category,
+              onSelected: (SpotCategory? next) =>
+                  ref.read(selectedLikedCategoryProvider.notifier).select(next),
+            ),
+            const SizedBox(height: 8),
+            // 본문만 상태에 따라 갈린다 — 카테고리를 바꿔 로딩이 떠도 바는 그대로
+            // 있어야 다른 카테고리로 이어서 옮길 수 있다.
+            Expanded(
+              child: state.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                // 미인증(UNAUTHENTICATED)은 SPEC-0005의 세션 갱신 경로가 처리한다 —
+                // 여기선 일반 오류와 같게 다루고 재시도만 제공한다(§5.2).
+                error: (_, _) => _ErrorBody(
+                  onRetry: () =>
+                      ref.invalidate(likedSpotsControllerProvider(category)),
+                ),
+                data: (LikedSpotsState data) => data.isEmpty
+                    ? Center(child: Text(l10n.likedSpotsEmpty))
+                    : _LikedList(category: category, data: data),
+              ),
+            ),
+          ],
         ),
-        data: (LikedSpotsState data) => data.isEmpty
-            ? Center(child: Text(l10n.likedSpotsEmpty))
-            : _LikedList(data: data),
       ),
     );
   }
@@ -50,8 +73,10 @@ class LikedSpotsScreen extends ConsumerWidget {
 
 /// 목록 본문. 스크롤·추가 로딩은 공용 [PaginationListView]가 담당한다(§4).
 class _LikedList extends ConsumerWidget {
-  const _LikedList({required this.data});
+  const _LikedList({required this.category, required this.data});
 
+  /// 어느 카테고리의 목록인지 — 추가 로딩을 같은 family 인스턴스에 요청해야 한다.
+  final SpotCategory? category;
   final LikedSpotsState data;
 
   @override
@@ -61,7 +86,7 @@ class _LikedList extends ConsumerWidget {
     hasMore: data.hasMore,
     isLoadingMore: data.isLoadingMore,
     onLoadMore: () =>
-        ref.read(likedSpotsControllerProvider.notifier).loadMore(),
+        ref.read(likedSpotsControllerProvider(category).notifier).loadMore(),
     itemBuilder: (BuildContext context, int index) {
       final LikedSpot spot = data.items[index];
       return LikedSpotCard(spot: spot, onTap: () => _openDetail(context, spot));
