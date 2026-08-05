@@ -1,63 +1,50 @@
 {
   "@@locale": "en",
   "appTitle": "K-Trip Spot",
-
   "splashTagline": "Discover Korea's vibrant spots, real-time.",
   "splashSubTagline": "Your smart gateway to Seoul & beyond.",
   "splashLoading": "Initializing...",
-
   "languageSelectionSubtitle": "Select your language",
   "languageSelectionInstruction": "Choose your preferred language to explore the best spots in South Korea.",
   "languageDefaultBadge": "Default",
   "confirmSelection": "Confirm Selection",
   "changeLaterHint": "You can change this later in Settings.",
-
   "skip": "Skip",
   "next": "Next",
   "getStarted": "Get started",
-
   "onboardingTitle1": "Swipe to Discover",
   "onboardingBody1": "Find your perfect Korean adventure with a simple swipe. Like what you see? Swipe right to save!",
   "onboardingTitle2": "Avoid the Crowds",
   "onboardingBody2": "Plan smarter with real-time congestion data. Know when spots are quiet or buzzing before you go.",
   "onboardingTitle3": "Travel Together",
   "onboardingBody3": "Connect with fellow global travelers in real-time. Share tips, meet up, and make memories.",
-
   "onboardingCaption1": "Myeongdong Street Food",
   "onboardingLocation1": "Seoul, KR",
   "onboardingCaption2": "Gyeongbokgung Palace",
   "onboardingLocation2": "Seoul, KR",
   "onboardingCaption3": "Hangang Park",
   "onboardingLocation3": "Seoul, KR",
-
   "homeSearchHint": "Search for spots, hidden gems…",
   "homeFavoritesTooltip": "Favorites",
   "homeSectionRecommended": "Recommended for You",
   "homeSectionHappeningNow": "Happening Now",
   "homeSectionPopular": "Popular Spots",
   "viewAll": "View all",
-
   "congestionLow": "Low",
   "congestionModerate": "Moderate",
   "congestionHigh": "High",
-
   "eventCategoryFestival": "Festival",
   "eventCategoryLive": "Live",
   "eventCategoryArt": "Art",
-
   "distanceAway": "{distance}km away",
-
   "navHome": "Home",
   "navMap": "Map",
   "navDiscover": "Discover",
   "navLiked": "Liked",
   "navCommunity": "Community",
-
   "likedSpotsEmpty": "No liked spots yet.",
   "likedSpotsUnavailable": "Couldn't load your liked spots",
-
   "comingSoon": "Coming soon.",
-
   "loginTitle": "Welcome back",
   "loginSubtitle": "Sign in to continue.",
   "emailLabel": "Email",
@@ -72,10 +59,8 @@
   "forgotPassword": "Forgot your password?",
   "showPassword": "Show password",
   "hidePassword": "Hide password",
-
   "signUpTitle": "Create account",
   "signUpSubtitle": "Get started with your email and password.",
-
   "agreementSelectAll": "Agree to all",
   "agreementAge": "I am 14 years or older.",
   "agreementService": "Terms of Service",
@@ -86,7 +71,6 @@
   "agreementOptionalBadge": "Optional",
   "agreementViewDetail": "View",
   "agreementDetailPlaceholder": "Full terms text coming soon.",
-
   "passwordResetTitle": "Reset password",
   "passwordResetSubtitle": "Enter your account email and we'll send a verification code.",
   "passwordResetRequestButton": "Send code",
@@ -95,27 +79,22 @@
   "passwordResetDone": "Password changed. Please log in.",
   "newPasswordLabel": "New password",
   "verificationCodeLabel": "Verification code",
-
   "emailVerificationTitle": "Verify email",
   "emailVerificationSubtitle": "Enter the verification code we emailed you.",
   "emailVerificationButton": "Verify",
   "emailVerificationResend": "Resend code",
   "emailVerificationResent": "Verification code resent.",
   "validationCodeRequired": "Enter the verification code.",
-
   "validationEmailRequired": "Enter your email.",
   "validationEmailInvalid": "That doesn't look like a valid email.",
   "validationPasswordRequired": "Enter your password.",
   "validationPasswordPolicy": "Use 8+ characters with a letter, a number, and a special character.",
   "validationPasswordMismatch": "Passwords don't match.",
-
   "errorInvalidCredentials": "Incorrect email or password.",
   "errorEmailAlreadyInUse": "That email is already in use.",
   "errorNetwork": "Network error. Please try again.",
   "errorUnknown": "Something went wrong. Please try again.",
-
   "signUpSuccessLoginPrompt": "Account created. Please log in.",
-
   "orDivider": "or",
   "continueWithGoogle": "Continue with Google",
   "continueWithApple": "Continue with Apple",
@@ -127,7 +106,6 @@
   "snsCancelled": "Sign-in was cancelled.",
   "errorSnsMemberNotFound": "This account isn't registered yet. Please sign up.",
   "logoutTooltip": "Log out",
-
   "permissionLocationRationaleTitle": "Find spots around you",
   "permissionLocationRationaleBody": "K-Trip Spot uses your location while you use the app to show nearby attractions and real-time crowd levels. We never track you in the background.",
   "permissionNotificationRationaleTitle": "Stay in the loop",
@@ -137,13 +115,10 @@
   "permissionLocationBlockedMessage": "Location is turned off. Enable it in Settings to see nearby spots.",
   "permissionNotificationBlockedMessage": "Notifications are turned off. Enable them in Settings to get updates.",
   "permissionOpenSettings": "Open Settings",
-
   "splashLocationRequired": "Location access is required to continue.",
   "splashLocationBlockedHint": "Location is turned off. Enable it in Settings to continue.",
-
   "discoverLikeLabel": "LIKE",
   "discoverNopeLabel": "NOPE",
-
   "discoverCategoryTouristSpot": "Tourist Spots",
   "discoverCategoryCulturalFacility": "Cultural Facilities",
   "discoverCategoryFestivalEvent": "Festivals & Events",
@@ -153,24 +128,19 @@
   "discoverCategoryShopping": "Shopping",
   "discoverCategoryRestaurant": "Restaurants",
   "discoverCategoryTransport": "Transport",
-
   "distanceKilometers": "{distance} km",
   "distanceMeters": "{distance} m",
-
   "discoverEmptyTitle": "You've seen everything nearby",
   "discoverEmptyBody": "Widen your radius or switch category to find more spots.",
   "discoverWidenRadius": "Widen radius",
   "discoverChangeCategory": "Change category",
-
   "discoverRetryBanner": "Couldn't load spots. Retrying shortly.",
   "discoverRetryButton": "Retry",
   "discoverLoadError": "Something went wrong while loading spots.",
   "discoverLoading": "Finding spots near you…",
-
   "retryExhaustedTitle": "Still not working",
   "retryExhaustedBody": "We tried a couple of times and couldn't connect. Check your connection, then try again.",
   "retryExhaustedAction": "Try again",
-
   "spotDetailOverviewTitle": "About",
   "spotDetailContactTitle": "Contact",
   "spotDetailHomepageLabel": "Website",
@@ -178,7 +148,11 @@
   "spotDetailLikeCount": "{count, plural, =0{No likes yet} =1{1 like} other{{count} likes}}",
   "@spotDetailLikeCount": {
     "description": "상세 좋아요 개수 배지 (현재 언어의 실시간 LIKE 수)",
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "spotDetailLikeAction": "Like",
   "spotDetailDislikeAction": "Nope",
@@ -192,7 +166,6 @@
   "spotDetailRetryButton": "Retry",
   "spotDetailReactionFailed": "Couldn't save your reaction. Please try again.",
   "spotDetailLinkFailed": "Couldn't open this link.",
-
   "spotDetailIntroTitle": "Visitor info",
   "spotDetailIntroBusinessHours": "Hours",
   "spotDetailIntroClosedDays": "Closed",
@@ -201,5 +174,129 @@
   "spotDetailIntroPetAllowed": "Pets",
   "spotDetailIntroCreditCard": "Credit cards",
   "spotDetailIntroInquiryPhone": "Inquiries",
-  "spotDetailInfoTitle": "Guide"
+  "spotDetailInfoTitle": "Guide",
+  "communityTitle": "Spot Talk",
+  "@communityTitle": {
+    "description": "커뮤니티 탭 앱바 제목 (Spot Talk)"
+  },
+  "communityNearbyTitle": "Nearby",
+  "@communityNearbyTitle": {
+    "description": "지역 피드 섹션 헤더"
+  },
+  "communityTopicAll": "All",
+  "@communityTopicAll": {
+    "description": "주제 태그 칩 — 전체(선택 없음)"
+  },
+  "communityTopicQuestion": "Questions",
+  "@communityTopicQuestion": {
+    "description": "주제 태그 QUESTION 표시명"
+  },
+  "communityTopicTip": "Tips",
+  "@communityTopicTip": {
+    "description": "주제 태그 TIP 표시명"
+  },
+  "communityTopicReview": "Reviews",
+  "@communityTopicReview": {
+    "description": "주제 태그 REVIEW 표시명"
+  },
+  "communityTopicCompanion": "Companions",
+  "@communityTopicCompanion": {
+    "description": "주제 태그 COMPANION 표시명"
+  },
+  "communityTopicPhoto": "Photos",
+  "@communityTopicPhoto": {
+    "description": "주제 태그 PHOTO 표시명"
+  },
+  "communityFeedEmpty": "No posts around you yet.",
+  "@communityFeedEmpty": {
+    "description": "지역 피드에 글이 하나도 없을 때"
+  },
+  "communityFeedUnavailable": "Couldn't load nearby posts",
+  "@communityFeedUnavailable": {
+    "description": "지역 피드 조회 실패 제목"
+  },
+  "communityFeedUnavailableBody": "Check your connection and try again.",
+  "@communityFeedUnavailableBody": {
+    "description": "지역 피드 조회 실패 안내 본문"
+  },
+  "communityLocationUnavailable": "Location is off, so nearby posts are unavailable.",
+  "@communityLocationUnavailable": {
+    "description": "위치 권한 없음·좌표 실패 — 빈 피드와 구분되는 사유 표시"
+  },
+  "communityRetry": "Retry",
+  "@communityRetry": {
+    "description": "커뮤니티 오류 상태의 재시도 버튼"
+  },
+  "communityHiddenBadge": "Hidden after multiple reports",
+  "@communityHiddenBadge": {
+    "description": "신고 누적으로 자동 숨김된 글·댓글 배지 (작성자에게만 보임)"
+  },
+  "communityTimeJustNow": "Just now",
+  "@communityTimeJustNow": {
+    "description": "상대 시각 — 방금"
+  },
+  "communityTimeMinutes": "{count}m ago",
+  "@communityTimeMinutes": {
+    "description": "상대 시각 — n분 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeHours": "{count}h ago",
+  "@communityTimeHours": {
+    "description": "상대 시각 — n시간 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeDays": "{count}d ago",
+  "@communityTimeDays": {
+    "description": "상대 시각 — n일 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityPostDetailTitle": "Post",
+  "@communityPostDetailTitle": {
+    "description": "글 상세 앱바 제목"
+  },
+  "communityCommentsHeader": "Comments · {count}",
+  "@communityCommentsHeader": {
+    "description": "상세의 댓글 섹션 헤더 (서버 commentCount 그대로)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityCommentsEmpty": "No comments yet.",
+  "@communityCommentsEmpty": {
+    "description": "댓글이 하나도 없을 때"
+  },
+  "communityPostUnavailable": "This post was deleted or is unavailable.",
+  "@communityPostUnavailable": {
+    "description": "차단·숨김이라 볼 수 없는 글 (post(id:)가 null)"
+  },
+  "communityPostUnavailableTitle": "Post unavailable",
+  "@communityPostUnavailableTitle": {
+    "description": "볼 수 없는 글 화면의 제목"
+  },
+  "communityComposeAction": "Write a post",
+  "@communityComposeAction": {
+    "description": "글 작성 FAB의 접근성 라벨"
+  },
+  "communityComposeUnavailable": "Writing posts is coming soon.",
+  "@communityComposeUnavailable": {
+    "description": "글 작성이 아직 준비되지 않았을 때의 안내"
+  },
+  "communityCommentsUnavailable": "Comments couldn't be loaded.",
+  "@communityCommentsUnavailable": {
+    "description": "댓글을 불러오지 못했을 때 (글 본문은 정상)"
+  }
 }

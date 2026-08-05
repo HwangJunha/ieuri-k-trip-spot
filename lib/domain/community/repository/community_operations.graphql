@@ -1,0 +1,210 @@
+# SPEC-0010 커뮤니티 오퍼레이션. 생성 타입은 repository 안에서만 쓰이고 도메인
+# 모델로 매핑된다(CLAUDE.md §3, POL-020).
+#
+# `Post.target`/`author`/`comments`는 **지연 필드**다 — 요청할 때만 서버가 조회한다.
+# 그래서 목록과 상세가 서로 다른 필드 집합을 쓴다(가이드 §4).
+
+# 목록 카드가 쓰는 필드 집합. **`comments`를 넣지 않는다** — 20건짜리 피드에 댓글
+# 쿼리가 20번 붙는다. 댓글 수는 commentCount로 충분하다(가이드 §4).
+fragment PostCardFields on Post {
+  id
+  body
+  topic
+  createdAt
+  photoKeys
+  likeCount
+  commentCount
+  likedByViewer
+  ownedByViewer
+  hidden
+  target {
+    type
+    id
+    title
+    thumbnailImageUrl
+  }
+  author {
+    id
+    nickname
+    profileImageUrl
+  }
+}
+
+# 지역(좌표 기반) 피드 한 페이지. 커서 페이징이며 `after: pageInfo.endCursor`로
+# 다음 장을 받는다. radiusMeters 기본 20000 / 상한 100000(초과해도 오류가 아니라
+# 잘린다, 가이드 §14). 언어는 Accept-Language 헤더로 전달된다.
+query NearbyPosts(
+  $latitude: Float!
+  $longitude: Float!
+  $radiusMeters: Int
+  $topic: PostTopic
+  $first: Int
+  $after: String
+) {
+  nearbyPosts(
+    latitude: $latitude
+    longitude: $longitude
+    radiusMeters: $radiusMeters
+    topic: $topic
+    first: $first
+    after: $after
+  ) {
+    edges {
+      cursor
+      node {
+        ...PostCardFields
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+# 특정 대상(지금은 관광지)의 글 피드. targetType은 하드코딩하지 않고 값으로 넘긴다
+# (가이드 §1 — 값이 늘어난다).
+#
+# `hasPreviousPage`는 요청하지 않는다 — 앞으로만 가는 피드라 신뢰할 수 없는 값이다
+# (가이드 §5).
+query TargetPosts(
+  $targetType: PostTargetType!
+  $targetId: ID!
+  $topic: PostTopic
+  $first: Int
+  $after: String
+) {
+  targetPosts(
+    targetType: $targetType
+    targetId: $targetId
+    topic: $topic
+    first: $first
+    after: $after
+  ) {
+    edges {
+      cursor
+      node {
+        ...PostCardFields
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+# 글 상세. 여기서만 댓글을 함께 받는다(가이드 §4).
+#
+# 차단·숨김이면 **오류가 아니라 null**이 온다 — errors[]를 기대하면 안 되고,
+# "삭제되었거나 볼 수 없는 글" 안내로 처리한다(가이드 §6).
+#
+# $withComments는 댓글을 함께 받을지 고르는 스위치다. `CommentConnection!`이
+# non-null이라 댓글 해소가 실패하면 서버가 **글 전체를 null로 만든다** — 그러면
+# 멀쩡한 글이 "볼 수 없는 글"로 보인다. repository가 그 경우를 감지해 댓글 없이
+# 한 번 더 조회하고, 본문만이라도 보여준다.
+query PostDetail($id: ID!, $commentCount: Int, $withComments: Boolean!) {
+  post(id: $id) {
+    ...PostCardFields
+    comments(first: $commentCount) @include(if: $withComments) {
+      edges {
+        cursor
+        node {
+          id
+          body
+          createdAt
+          ownedByViewer
+          hidden
+          author {
+            id
+            nickname
+            profileImageUrl
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# 탐색 타일. title은 서버가 언어에 맞춰 내려준 문자열이라 그대로 표시한다.
+# 해당 언어의 타일이 없으면 **빈 목록이 정상**이다(가이드 §10·§15).
+query DiscoveryTiles {
+  discoveryTiles {
+    id
+    title
+    imageUrl
+    filterTopic
+    filterTargetType
+  }
+}
+
+# 좋아요/해제. 멱등이라 이미 좋아요한 글에 다시 눌러도 success: true다(가이드 §8).
+# 낙관적 업데이트는 응답의 likeCount로 **되맞춘다** — 서버 값이 정본이다.
+mutation LikePost($postId: ID!) {
+  likePost(input: { postId: $postId }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    likeCount
+  }
+}
+
+mutation UnlikePost($postId: ID!) {
+  unlikePost(input: { postId: $postId }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    likeCount
+  }
+}
+
+# 글 작성. **postId만 온다 — post는 항상 null이다**(가이드 §11). 작성 직후 상세로
+# 가려면 post(id:)를 한 번 더 조회하고, 피드로 돌아간다면 목록을 새로 고친다.
+mutation CreatePost(
+  $targetType: PostTargetType!
+  $targetId: ID!
+  $topic: PostTopic!
+  $body: String!
+  $photoKeys: [String!]!
+) {
+  createPost(
+    input: {
+      targetType: $targetType
+      targetId: $targetId
+      topic: $topic
+      body: $body
+      photoKeys: $photoKeys
+    }
+  ) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    postId
+  }
+}
+
+# 댓글 작성. createPost와 같이 commentId만 온다(가이드 §11).
+mutation CreateComment($postId: ID!, $body: String!) {
+  createComment(input: { postId: $postId, body: $body }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    commentId
+  }
+}

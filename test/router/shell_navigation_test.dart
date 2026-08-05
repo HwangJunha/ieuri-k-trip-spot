@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
 import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
 import 'package:ieuri_k_trip_spot/common/storage/secure_storage.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/provider/auth_controller.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/provider/auth_repository_provider.dart';
+import 'package:ieuri_k_trip_spot/domain/community/model/post.dart';
+import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/event/provider/event_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/spot_providers.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
@@ -13,6 +16,7 @@ import 'package:ieuri_k_trip_spot/router/app_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../domain/auth/auth_test_doubles.dart';
+import '../domain/community/community_test_doubles.dart';
 import '../domain/event/event_test_doubles.dart';
 import '../domain/spot/spot_test_doubles.dart';
 
@@ -31,6 +35,13 @@ Future<ProviderContainer> _homeContainer() async {
       authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
       spotRepositoryProvider.overrideWithValue(FakeSpotRepository()),
       eventRepositoryProvider.overrideWithValue(FakeEventRepository()),
+      // SPEC-0010: 커뮤니티 탭이 실제 화면이 되면서 repository와 좌표가 필요해졌다.
+      // 오버라이드가 없으면 실제 GraphQL 클라이언트로 나가 탭 전환 검증이 네트워크에
+      // 매달린다.
+      communityRepositoryProvider.overrideWithValue(
+        FakeCommunityRepository(posts: <Post>[fakePost()]),
+      ),
+      locationServiceProvider.overrideWithValue(FakeLocationService()),
     ],
   );
   addTearDown(container.dispose);
@@ -73,9 +84,12 @@ void main() {
     expect(find.text('Recommended for You'), findsNothing);
   });
 
-  // SPEC-0008 AC-39·AC-42: 탭 4는 커뮤니티 라벨로 바뀌되 화면 내용(플레이스홀더)은
-  // 그대로다. 행사 탭은 도달 경로가 사라진다.
-  testWidgets('tapping the Community tab shows the unchanged placeholder', (
+  // SPEC-0008 AC-39: 탭 4는 커뮤니티로 간다. 행사 탭은 도달 경로가 사라진다.
+  //
+  // AC-42("화면 내용은 플레이스홀더 그대로")는 SPEC-0010이 대체한다 — 같은 탭·같은
+  // 라우트를 유지한 채 스텁 내용만 Spot Talk 화면으로 바뀌었다. 여기서 검사하는 것은
+  // 여전히 "탭 4를 누르면 커뮤니티에 도달하고 홈이 사라진다"이며, 그 계약은 그대로다.
+  testWidgets('tapping the Community tab shows the Spot Talk screen', (
     tester,
   ) async {
     final container = await _homeContainer();
@@ -84,7 +98,7 @@ void main() {
     await tester.tap(find.byKey(const Key('bottom_nav_community')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Coming soon.'), findsOneWidget);
+    expect(find.text('Spot Talk'), findsOneWidget);
     expect(find.text('Recommended for You'), findsNothing);
   });
 

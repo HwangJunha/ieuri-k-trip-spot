@@ -10,9 +10,10 @@ import '../domain/auth/model/sns_credential.dart';
 import '../domain/auth/view/password_reset_screen.dart';
 import '../domain/auth/view/sign_up_screen.dart';
 import '../domain/auth/view/sns_sign_up_screen.dart';
+import '../domain/community/view/community_screen.dart';
+import '../domain/community/view/post_detail_screen.dart';
 import '../domain/onboarding/view/onboarding_screen.dart';
 import '../domain/spot/model/spot_category.dart';
-import '../domain/spot/view/community_screen.dart';
 import '../domain/spot/view/discover_screen.dart';
 import '../domain/spot/view/home_screen.dart';
 import '../domain/spot/view/liked_spots_screen.dart';
@@ -108,6 +109,19 @@ List<RouteBase> buildRoutes() => <RouteBase>[
       reverseTransitionDuration: const Duration(milliseconds: 250),
       transitionsBuilder: _slideUpFromBottom,
     ),
+  ),
+  // 커뮤니티 글 상세(SPEC-0010 R13). 셸 밖의 최상위 라우트라 루트 내비게이터에
+  // push되어 하단 탭을 덮는다 — 관광지 상세와 같은 성격이다.
+  //
+  // 라우트 파라미터는 **id뿐이다**(CLAUDE.md §6 — 모델 객체가 아니라 식별자만
+  // 넘긴다). 상세는 그 id로 `post(id:)`를 다시 조회하며, 차단·숨김이면 오류가 아니라
+  // null이 와서 "볼 수 없는 글" 안내가 뜬다(가이드 §6). 딥링크로 바로 들어와도
+  // 같은 경로다.
+  GoRoute(
+    path: '/post/:id',
+    name: PostDetailScreen.routeName,
+    builder: (_, GoRouterState state) =>
+        PostDetailScreen(postId: state.pathParameters['id']!),
   ),
   // The post-onboarding 5-tab shell. Each tab keeps its own navigation stack.
   StatefulShellRoute.indexedStack(

@@ -1,0 +1,160 @@
+# SPEC-0010 커뮤니티 슬라이스가 쓰는 서버 스키마 조각(committed codegen 입력).
+# `schema/schema.introspection.json` 스냅샷에서 손으로 추린 안정 빌드 입력이며,
+# gitignore된 스냅샷을 codegen이 직접 읽지 않는다(CLAUDE.md §13).
+
+enum PostTopic {
+  QUESTION
+  TIP
+  REVIEW
+  COMPANION
+  PHOTO
+}
+
+enum PostTargetType {
+  SPOT
+}
+
+type PostAuthor {
+  id: ID!
+  nickname: String!
+  profileImageUrl: String
+}
+
+type PostTarget {
+  type: PostTargetType!
+  id: ID!
+  title: String!
+  thumbnailImageUrl: String!
+}
+
+type Comment {
+  id: ID!
+  body: String!
+  author: PostAuthor!
+  ownedByViewer: Boolean!
+  hidden: Boolean!
+  createdAt: String!
+}
+
+type CommentEdge {
+  cursor: String!
+  node: Comment!
+}
+
+type CommentConnection {
+  edges: [CommentEdge!]!
+  pageInfo: PageInfo!
+}
+
+type Post {
+  id: ID!
+  body: String!
+  topic: PostTopic!
+  target: PostTarget!
+  author: PostAuthor!
+  photoKeys: [String!]!
+  likeCount: Int!
+  commentCount: Int!
+  likedByViewer: Boolean!
+  ownedByViewer: Boolean!
+  hidden: Boolean!
+  createdAt: String!
+  comments(first: Int, after: String): CommentConnection!
+}
+
+type PostEdge {
+  cursor: String!
+  node: Post!
+}
+
+type PostConnection {
+  edges: [PostEdge!]!
+  pageInfo: PageInfo!
+}
+
+# `PageInfo`·`UserError`는 auth 스키마 조각이 이미 선언한다. codegen이 모든 조각을
+# 한 네임스페이스에서 합치므로 여기서 다시 선언하면 중복이다.
+
+type DiscoveryTile {
+  id: ID!
+  title: String!
+  imageUrl: String
+  filterTopic: PostTopic
+  filterTargetType: PostTargetType
+}
+
+input CreatePostInput {
+  targetType: PostTargetType!
+  targetId: ID!
+  topic: PostTopic!
+  body: String!
+  photoKeys: [String!]!
+}
+
+type CreatePostPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  postId: ID
+  post: Post
+}
+
+input CreateCommentInput {
+  postId: ID!
+  body: String!
+}
+
+type CreateCommentPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  commentId: ID
+  comment: Comment
+}
+
+input LikePostInput {
+  postId: ID!
+}
+
+type LikePostPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  likeCount: Int
+}
+
+input UnlikePostInput {
+  postId: ID!
+}
+
+type UnlikePostPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  likeCount: Int
+}
+
+# Query·Mutation은 auth 조각이 선언한 것을 **확장**한다(spot 조각과 같은 규약) —
+# 다시 선언하면 앞선 조각의 필드가 사라져 다른 기능의 codegen이 깨진다.
+extend type Query {
+  targetPosts(
+    targetType: PostTargetType!
+    targetId: ID!
+    topic: PostTopic
+    first: Int
+    after: String
+  ): PostConnection!
+  nearbyPosts(
+    latitude: Float!
+    longitude: Float!
+    radiusMeters: Int
+    topic: PostTopic
+    first: Int
+    after: String
+  ): PostConnection!
+  post(id: ID!): Post
+  discoveryTiles: [DiscoveryTile!]!
+}
+
+extend type Mutation {
+  createPost(input: CreatePostInput!): CreatePostPayload!
+  createComment(input: CreateCommentInput!): CreateCommentPayload!
+  likePost(input: LikePostInput!): LikePostPayload!
+  unlikePost(input: UnlikePostInput!): UnlikePostPayload!
+}

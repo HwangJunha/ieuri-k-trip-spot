@@ -1,63 +1,50 @@
 {
   "@@locale": "zh",
   "appTitle": "K-韩游",
-
   "splashTagline": "实时发现韩国的活力景点。",
   "splashSubTagline": "通往首尔及更远方的智能入口。",
   "splashLoading": "正在初始化...",
-
   "languageSelectionSubtitle": "选择语言",
   "languageSelectionInstruction": "选择您偏好的语言，探索韩国的精彩景点。",
   "languageDefaultBadge": "默认",
   "confirmSelection": "确认选择",
   "changeLaterHint": "稍后可在设置中更改。",
-
   "skip": "跳过",
   "next": "下一步",
   "getStarted": "开始",
-
   "onboardingTitle1": "滑动发现",
   "onboardingBody1": "轻轻一滑，找到最适合你的韩国之旅。喜欢就右滑收藏！",
   "onboardingTitle2": "避开人群",
   "onboardingBody2": "借助实时拥挤数据更聪明地规划。出发前就知道景点是清静还是热闹。",
   "onboardingTitle3": "结伴同行",
   "onboardingBody3": "与全球旅行者实时连接。分享攻略、相约见面、共创回忆。",
-
   "onboardingCaption1": "明洞街头美食",
   "onboardingLocation1": "首尔, 韩国",
   "onboardingCaption2": "景福宫",
   "onboardingLocation2": "首尔, 韩国",
   "onboardingCaption3": "汉江公园",
   "onboardingLocation3": "首尔, 韩国",
-
   "homeSearchHint": "搜索景点、隐藏胜地…",
   "homeFavoritesTooltip": "收藏",
   "homeSectionRecommended": "为你推荐",
   "homeSectionHappeningNow": "正在举办",
   "homeSectionPopular": "热门景点",
   "viewAll": "查看全部",
-
   "congestionLow": "空闲",
   "congestionModerate": "适中",
   "congestionHigh": "拥挤",
-
   "eventCategoryFestival": "节庆",
   "eventCategoryLive": "现场",
   "eventCategoryArt": "艺术",
-
   "distanceAway": "距离{distance}km",
-
   "navHome": "首页",
   "navMap": "地图",
   "navDiscover": "发现",
   "navLiked": "收藏",
   "navCommunity": "社区",
-
   "likedSpotsEmpty": "还没有收藏的景点。",
   "likedSpotsUnavailable": "无法加载收藏列表",
-
   "comingSoon": "敬请期待。",
-
   "loginTitle": "欢迎回来",
   "loginSubtitle": "登录以继续。",
   "emailLabel": "邮箱",
@@ -72,10 +59,8 @@
   "forgotPassword": "忘记密码？",
   "showPassword": "显示密码",
   "hidePassword": "隐藏密码",
-
   "signUpTitle": "创建账户",
   "signUpSubtitle": "使用邮箱和密码开始吧。",
-
   "agreementSelectAll": "全部同意",
   "agreementAge": "我已年满14周岁。",
   "agreementService": "服务使用条款",
@@ -86,7 +71,6 @@
   "agreementOptionalBadge": "可选",
   "agreementViewDetail": "查看",
   "agreementDetailPlaceholder": "条款全文即将提供。",
-
   "passwordResetTitle": "重置密码",
   "passwordResetSubtitle": "输入注册邮箱，我们将发送验证码。",
   "passwordResetRequestButton": "发送验证码",
@@ -95,27 +79,22 @@
   "passwordResetDone": "密码已更改，请登录。",
   "newPasswordLabel": "新密码",
   "verificationCodeLabel": "验证码",
-
   "emailVerificationTitle": "验证邮箱",
   "emailVerificationSubtitle": "请输入我们发送到您邮箱的验证码。",
   "emailVerificationButton": "验证",
   "emailVerificationResend": "重新发送验证码",
   "emailVerificationResent": "验证码已重新发送。",
   "validationCodeRequired": "请输入验证码。",
-
   "validationEmailRequired": "请输入邮箱。",
   "validationEmailInvalid": "邮箱格式不正确。",
   "validationPasswordRequired": "请输入密码。",
   "validationPasswordPolicy": "需包含字母、数字和特殊字符，且至少8位。",
   "validationPasswordMismatch": "两次输入的密码不一致。",
-
   "errorInvalidCredentials": "邮箱或密码不正确。",
   "errorEmailAlreadyInUse": "该邮箱已被使用。",
   "errorNetwork": "网络错误，请重试。",
   "errorUnknown": "出现问题，请重试。",
-
   "signUpSuccessLoginPrompt": "账户已创建，请登录。",
-
   "orDivider": "或",
   "continueWithGoogle": "使用 Google 继续",
   "continueWithApple": "使用 Apple 继续",
@@ -127,7 +106,6 @@
   "snsCancelled": "已取消登录。",
   "errorSnsMemberNotFound": "该账户尚未注册，请先注册。",
   "logoutTooltip": "退出登录",
-
   "permissionLocationRationaleTitle": "发现你周边的景点",
   "permissionLocationRationaleBody": "K-Trip Spot 仅在你使用应用时使用你的位置，以显示附近的景点和实时拥挤度。我们绝不会在后台追踪你。",
   "permissionNotificationRationaleTitle": "掌握最新动态",
@@ -137,13 +115,10 @@
   "permissionLocationBlockedMessage": "定位已关闭。请在设置中开启以查看附近景点。",
   "permissionNotificationBlockedMessage": "通知已关闭。请在设置中开启以接收动态。",
   "permissionOpenSettings": "打开设置",
-
   "splashLocationRequired": "需要位置权限才能继续。",
   "splashLocationBlockedHint": "定位已关闭。请在设置中开启以继续。",
-
   "discoverLikeLabel": "喜欢",
   "discoverNopeLabel": "跳过",
-
   "discoverCategoryTouristSpot": "旅游景点",
   "discoverCategoryCulturalFacility": "文化设施",
   "discoverCategoryFestivalEvent": "庆典·活动",
@@ -153,31 +128,30 @@
   "discoverCategoryShopping": "购物",
   "discoverCategoryRestaurant": "餐饮",
   "discoverCategoryTransport": "交通",
-
   "distanceKilometers": "{distance}公里",
   "distanceMeters": "{distance}米",
-
   "discoverEmptyTitle": "附近的都看完啦",
   "discoverEmptyBody": "扩大范围或切换类别，发现更多景点。",
   "discoverWidenRadius": "扩大范围",
   "discoverChangeCategory": "更改类别",
-
   "discoverRetryBanner": "无法加载景点，稍后重试。",
   "discoverRetryButton": "重试",
   "discoverLoadError": "加载景点时出现问题。",
   "discoverLoading": "正在查找您附近的景点…",
-
   "retryExhaustedTitle": "仍然无法连接",
   "retryExhaustedBody": "我们尝试了几次仍无法连接。请检查网络后重试。",
   "retryExhaustedAction": "重试",
-
   "spotDetailOverviewTitle": "简介",
   "spotDetailContactTitle": "联系方式",
   "spotDetailHomepageLabel": "网站",
   "spotDetailTelLabel": "电话",
   "spotDetailLikeCount": "{count, plural, =0{还没有点赞} other{{count} 个赞}}",
   "@spotDetailLikeCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "spotDetailLikeAction": "喜欢",
   "spotDetailDislikeAction": "跳过",
@@ -191,7 +165,6 @@
   "spotDetailRetryButton": "重试",
   "spotDetailReactionFailed": "无法保存您的反应，请重试。",
   "spotDetailLinkFailed": "无法打开此链接。",
-
   "spotDetailIntroTitle": "参观信息",
   "spotDetailIntroBusinessHours": "开放时间",
   "spotDetailIntroClosedDays": "休息日",
@@ -200,5 +173,129 @@
   "spotDetailIntroPetAllowed": "宠物",
   "spotDetailIntroCreditCard": "信用卡",
   "spotDetailIntroInquiryPhone": "咨询",
-  "spotDetailInfoTitle": "须知"
+  "spotDetailInfoTitle": "须知",
+  "communityTitle": "景点畅聊",
+  "@communityTitle": {
+    "description": "커뮤니티 탭 앱바 제목 (Spot Talk)"
+  },
+  "communityNearbyTitle": "附近",
+  "@communityNearbyTitle": {
+    "description": "지역 피드 섹션 헤더"
+  },
+  "communityTopicAll": "全部",
+  "@communityTopicAll": {
+    "description": "주제 태그 칩 — 전체(선택 없음)"
+  },
+  "communityTopicQuestion": "提问",
+  "@communityTopicQuestion": {
+    "description": "주제 태그 QUESTION 표시명"
+  },
+  "communityTopicTip": "贴士",
+  "@communityTopicTip": {
+    "description": "주제 태그 TIP 표시명"
+  },
+  "communityTopicReview": "点评",
+  "@communityTopicReview": {
+    "description": "주제 태그 REVIEW 표시명"
+  },
+  "communityTopicCompanion": "结伴",
+  "@communityTopicCompanion": {
+    "description": "주제 태그 COMPANION 표시명"
+  },
+  "communityTopicPhoto": "照片",
+  "@communityTopicPhoto": {
+    "description": "주제 태그 PHOTO 표시명"
+  },
+  "communityFeedEmpty": "附近还没有帖子。",
+  "@communityFeedEmpty": {
+    "description": "지역 피드에 글이 하나도 없을 때"
+  },
+  "communityFeedUnavailable": "无法加载附近的帖子",
+  "@communityFeedUnavailable": {
+    "description": "지역 피드 조회 실패 제목"
+  },
+  "communityFeedUnavailableBody": "请检查网络连接后重试。",
+  "@communityFeedUnavailableBody": {
+    "description": "지역 피드 조회 실패 안내 본문"
+  },
+  "communityLocationUnavailable": "未获取到位置信息，无法显示附近的帖子。",
+  "@communityLocationUnavailable": {
+    "description": "위치 권한 없음·좌표 실패 — 빈 피드와 구분되는 사유 표시"
+  },
+  "communityRetry": "重试",
+  "@communityRetry": {
+    "description": "커뮤니티 오류 상태의 재시도 버튼"
+  },
+  "communityHiddenBadge": "因多次举报已被隐藏",
+  "@communityHiddenBadge": {
+    "description": "신고 누적으로 자동 숨김된 글·댓글 배지 (작성자에게만 보임)"
+  },
+  "communityTimeJustNow": "刚刚",
+  "@communityTimeJustNow": {
+    "description": "상대 시각 — 방금"
+  },
+  "communityTimeMinutes": "{count}分钟前",
+  "@communityTimeMinutes": {
+    "description": "상대 시각 — n분 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeHours": "{count}小时前",
+  "@communityTimeHours": {
+    "description": "상대 시각 — n시간 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeDays": "{count}天前",
+  "@communityTimeDays": {
+    "description": "상대 시각 — n일 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityPostDetailTitle": "帖子",
+  "@communityPostDetailTitle": {
+    "description": "글 상세 앱바 제목"
+  },
+  "communityCommentsHeader": "评论 · {count}",
+  "@communityCommentsHeader": {
+    "description": "상세의 댓글 섹션 헤더 (서버 commentCount 그대로)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityCommentsEmpty": "还没有评论。",
+  "@communityCommentsEmpty": {
+    "description": "댓글이 하나도 없을 때"
+  },
+  "communityPostUnavailable": "该帖子已删除或无法查看。",
+  "@communityPostUnavailable": {
+    "description": "차단·숨김이라 볼 수 없는 글 (post(id:)가 null)"
+  },
+  "communityPostUnavailableTitle": "无法查看",
+  "@communityPostUnavailableTitle": {
+    "description": "볼 수 없는 글 화면의 제목"
+  },
+  "communityComposeAction": "写帖子",
+  "@communityComposeAction": {
+    "description": "글 작성 FAB의 접근성 라벨"
+  },
+  "communityComposeUnavailable": "发帖功能即将上线。",
+  "@communityComposeUnavailable": {
+    "description": "글 작성이 아직 준비되지 않았을 때의 안내"
+  },
+  "communityCommentsUnavailable": "评论加载失败。",
+  "@communityCommentsUnavailable": {
+    "description": "댓글을 불러오지 못했을 때 (글 본문은 정상)"
+  }
 }

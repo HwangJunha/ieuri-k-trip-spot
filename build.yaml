@@ -19,3 +19,5 @@ targets:
           - lib/domain/auth/repository/auth_schema.graphql
           - lib/domain/spot/repository/spot_operations.graphql
           - lib/domain/spot/repository/spot_schema.graphql
+          - lib/domain/community/repository/community_operations.graphql
+          - lib/domain/community/repository/community_schema.graphql

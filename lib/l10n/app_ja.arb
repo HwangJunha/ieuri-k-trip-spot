@@ -1,63 +1,50 @@
 {
   "@@locale": "ja",
   "appTitle": "K-トリップスポット",
-
   "splashTagline": "リアルタイムで出会う、韓国の活気あるスポット。",
   "splashSubTagline": "ソウル、そしてその先へのスマートな入口。",
   "splashLoading": "準備中...",
-
   "languageSelectionSubtitle": "言語を選択",
   "languageSelectionInstruction": "韓国のおすすめスポットを楽しむための言語を選んでください。",
   "languageDefaultBadge": "デフォルト",
   "confirmSelection": "選択を確定",
   "changeLaterHint": "設定でいつでも変更できます。",
-
   "skip": "スキップ",
   "next": "次へ",
   "getStarted": "はじめる",
-
   "onboardingTitle1": "スワイプで発見",
   "onboardingBody1": "簡単なスワイプであなたにぴったりの韓国旅行を見つけよう。気に入ったら右スワイプで保存！",
   "onboardingTitle2": "混雑を避けよう",
   "onboardingBody2": "リアルタイムの混雑データで賢く計画。空いているか混んでいるか、行く前に確認できます。",
   "onboardingTitle3": "一緒に旅しよう",
   "onboardingBody3": "世界中の旅行者とリアルタイムでつながろう。情報を共有し、出会い、思い出を作ろう。",
-
   "onboardingCaption1": "明洞の屋台グルメ",
   "onboardingLocation1": "ソウル, 韓国",
   "onboardingCaption2": "景福宮",
   "onboardingLocation2": "ソウル, 韓国",
   "onboardingCaption3": "漢江公園",
   "onboardingLocation3": "ソウル, 韓国",
-
   "homeSearchHint": "スポットや隠れた名所を検索…",
   "homeFavoritesTooltip": "お気に入り",
   "homeSectionRecommended": "あなたへのおすすめ",
   "homeSectionHappeningNow": "開催中のイベント",
   "homeSectionPopular": "人気のスポット",
   "viewAll": "すべて見る",
-
   "congestionLow": "空いている",
   "congestionModerate": "普通",
   "congestionHigh": "混雑",
-
   "eventCategoryFestival": "フェス",
   "eventCategoryLive": "ライブ",
   "eventCategoryArt": "アート",
-
   "distanceAway": "{distance}km先",
-
   "navHome": "ホーム",
   "navMap": "マップ",
   "navDiscover": "発見",
   "navLiked": "お気に入り",
   "navCommunity": "コミュニティ",
-
   "likedSpotsEmpty": "お気に入りのスポットはまだありません。",
   "likedSpotsUnavailable": "お気に入りを読み込めませんでした",
-
   "comingSoon": "近日公開予定です。",
-
   "loginTitle": "おかえりなさい",
   "loginSubtitle": "続けるにはログインしてください。",
   "emailLabel": "メールアドレス",
@@ -72,10 +59,8 @@
   "forgotPassword": "パスワードをお忘れですか？",
   "showPassword": "パスワードを表示",
   "hidePassword": "パスワードを非表示",
-
   "signUpTitle": "アカウント作成",
   "signUpSubtitle": "メールアドレスとパスワードで始めましょう。",
-
   "agreementSelectAll": "すべての規約に同意",
   "agreementAge": "満14歳以上です。",
   "agreementService": "サービス利用規約",
@@ -86,7 +71,6 @@
   "agreementOptionalBadge": "任意",
   "agreementViewDetail": "内容を見る",
   "agreementDetailPlaceholder": "規約の全文は後日提供されます。",
-
   "passwordResetTitle": "パスワード再設定",
   "passwordResetSubtitle": "登録したメールアドレスを入力すると認証コードを送ります。",
   "passwordResetRequestButton": "認証コードを受け取る",
@@ -95,27 +79,22 @@
   "passwordResetDone": "パスワードを変更しました。ログインしてください。",
   "newPasswordLabel": "新しいパスワード",
   "verificationCodeLabel": "認証コード",
-
   "emailVerificationTitle": "メール認証",
   "emailVerificationSubtitle": "メールで届いた認証コードを入力してください。",
   "emailVerificationButton": "認証する",
   "emailVerificationResend": "コードを再送信",
   "emailVerificationResent": "認証コードを再送信しました。",
   "validationCodeRequired": "認証コードを入力してください。",
-
   "validationEmailRequired": "メールアドレスを入力してください。",
   "validationEmailInvalid": "メールアドレスの形式が正しくありません。",
   "validationPasswordRequired": "パスワードを入力してください。",
   "validationPasswordPolicy": "英字・数字・記号を含む8文字以上で入力してください。",
   "validationPasswordMismatch": "パスワードが一致しません。",
-
   "errorInvalidCredentials": "メールアドレスまたはパスワードが正しくありません。",
   "errorEmailAlreadyInUse": "このメールアドレスは既に使用されています。",
   "errorNetwork": "ネットワークエラーが発生しました。もう一度お試しください。",
   "errorUnknown": "問題が発生しました。もう一度お試しください。",
-
   "signUpSuccessLoginPrompt": "登録が完了しました。ログインしてください。",
-
   "orDivider": "または",
   "continueWithGoogle": "Googleで続ける",
   "continueWithApple": "Appleで続ける",
@@ -127,7 +106,6 @@
   "snsCancelled": "ログインがキャンセルされました。",
   "errorSnsMemberNotFound": "登録されていないアカウントです。会員登録を行ってください。",
   "logoutTooltip": "ログアウト",
-
   "permissionLocationRationaleTitle": "周辺のスポットを探す",
   "permissionLocationRationaleBody": "K-Trip Spotはアプリの使用中のみ位置情報を利用し、近くの名所やリアルタイムの混雑状況を表示します。バックグラウンドで追跡することはありません。",
   "permissionNotificationRationaleTitle": "最新情報を受け取る",
@@ -137,13 +115,10 @@
   "permissionLocationBlockedMessage": "位置情報がオフになっています。周辺のスポットを見るには設定でオンにしてください。",
   "permissionNotificationBlockedMessage": "通知がオフになっています。お知らせを受け取るには設定でオンにしてください。",
   "permissionOpenSettings": "設定を開く",
-
   "splashLocationRequired": "続けるには位置情報へのアクセスが必要です。",
   "splashLocationBlockedHint": "位置情報がオフになっています。続けるには設定でオンにしてください。",
-
   "discoverLikeLabel": "いいね",
   "discoverNopeLabel": "パス",
-
   "discoverCategoryTouristSpot": "観光地",
   "discoverCategoryCulturalFacility": "文化施設",
   "discoverCategoryFestivalEvent": "祭り・イベント",
@@ -153,31 +128,30 @@
   "discoverCategoryShopping": "ショッピング",
   "discoverCategoryRestaurant": "飲食店",
   "discoverCategoryTransport": "交通",
-
   "distanceKilometers": "{distance}キロ",
   "distanceMeters": "{distance}メートル",
-
   "discoverEmptyTitle": "近くはすべて見終わりました",
   "discoverEmptyBody": "範囲を広げるかカテゴリーを変えて、もっと探しましょう。",
   "discoverWidenRadius": "範囲を広げる",
   "discoverChangeCategory": "カテゴリー変更",
-
   "discoverRetryBanner": "スポットを読み込めませんでした。まもなく再試行します。",
   "discoverRetryButton": "再試行",
   "discoverLoadError": "スポットの読み込み中に問題が発生しました。",
   "discoverLoading": "近くのスポットを探しています…",
-
   "retryExhaustedTitle": "接続できません",
   "retryExhaustedBody": "何度か試しましたが接続できませんでした。通信環境をご確認のうえ、もう一度お試しください。",
   "retryExhaustedAction": "もう一度試す",
-
   "spotDetailOverviewTitle": "紹介",
   "spotDetailContactTitle": "連絡先",
   "spotDetailHomepageLabel": "ウェブサイト",
   "spotDetailTelLabel": "電話",
   "spotDetailLikeCount": "{count, plural, =0{いいねはまだありません} other{いいね {count}件}}",
   "@spotDetailLikeCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "spotDetailLikeAction": "いいね",
   "spotDetailDislikeAction": "スキップ",
@@ -191,7 +165,6 @@
   "spotDetailRetryButton": "再試行",
   "spotDetailReactionFailed": "リアクションを保存できませんでした。もう一度お試しください。",
   "spotDetailLinkFailed": "リンクを開けませんでした。",
-
   "spotDetailIntroTitle": "利用案内",
   "spotDetailIntroBusinessHours": "利用時間",
   "spotDetailIntroClosedDays": "休業日",
@@ -200,5 +173,129 @@
   "spotDetailIntroPetAllowed": "ペット同伴",
   "spotDetailIntroCreditCard": "クレジットカード",
   "spotDetailIntroInquiryPhone": "お問い合わせ",
-  "spotDetailInfoTitle": "ご案内"
+  "spotDetailInfoTitle": "ご案内",
+  "communityTitle": "スポットトーク",
+  "@communityTitle": {
+    "description": "커뮤니티 탭 앱바 제목 (Spot Talk)"
+  },
+  "communityNearbyTitle": "近くの投稿",
+  "@communityNearbyTitle": {
+    "description": "지역 피드 섹션 헤더"
+  },
+  "communityTopicAll": "すべて",
+  "@communityTopicAll": {
+    "description": "주제 태그 칩 — 전체(선택 없음)"
+  },
+  "communityTopicQuestion": "質問",
+  "@communityTopicQuestion": {
+    "description": "주제 태그 QUESTION 표시명"
+  },
+  "communityTopicTip": "豆知識",
+  "@communityTopicTip": {
+    "description": "주제 태그 TIP 표시명"
+  },
+  "communityTopicReview": "レビュー",
+  "@communityTopicReview": {
+    "description": "주제 태그 REVIEW 표시명"
+  },
+  "communityTopicCompanion": "同行者",
+  "@communityTopicCompanion": {
+    "description": "주제 태그 COMPANION 표시명"
+  },
+  "communityTopicPhoto": "写真",
+  "@communityTopicPhoto": {
+    "description": "주제 태그 PHOTO 표시명"
+  },
+  "communityFeedEmpty": "近くにはまだ投稿がありません。",
+  "@communityFeedEmpty": {
+    "description": "지역 피드에 글이 하나도 없을 때"
+  },
+  "communityFeedUnavailable": "近くの投稿を読み込めませんでした",
+  "@communityFeedUnavailable": {
+    "description": "지역 피드 조회 실패 제목"
+  },
+  "communityFeedUnavailableBody": "接続状況を確認してからもう一度お試しください。",
+  "@communityFeedUnavailableBody": {
+    "description": "지역 피드 조회 실패 안내 본문"
+  },
+  "communityLocationUnavailable": "位置情報が利用できないため、近くの投稿を表示できません。",
+  "@communityLocationUnavailable": {
+    "description": "위치 권한 없음·좌표 실패 — 빈 피드와 구분되는 사유 표시"
+  },
+  "communityRetry": "再試行",
+  "@communityRetry": {
+    "description": "커뮤니티 오류 상태의 재시도 버튼"
+  },
+  "communityHiddenBadge": "通報が重なり非表示になっています",
+  "@communityHiddenBadge": {
+    "description": "신고 누적으로 자동 숨김된 글·댓글 배지 (작성자에게만 보임)"
+  },
+  "communityTimeJustNow": "たった今",
+  "@communityTimeJustNow": {
+    "description": "상대 시각 — 방금"
+  },
+  "communityTimeMinutes": "{count}分前",
+  "@communityTimeMinutes": {
+    "description": "상대 시각 — n분 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeHours": "{count}時間前",
+  "@communityTimeHours": {
+    "description": "상대 시각 — n시간 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeDays": "{count}日前",
+  "@communityTimeDays": {
+    "description": "상대 시각 — n일 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityPostDetailTitle": "投稿",
+  "@communityPostDetailTitle": {
+    "description": "글 상세 앱바 제목"
+  },
+  "communityCommentsHeader": "コメント · {count}",
+  "@communityCommentsHeader": {
+    "description": "상세의 댓글 섹션 헤더 (서버 commentCount 그대로)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityCommentsEmpty": "まだコメントがありません。",
+  "@communityCommentsEmpty": {
+    "description": "댓글이 하나도 없을 때"
+  },
+  "communityPostUnavailable": "この投稿は削除されたか、表示できません。",
+  "@communityPostUnavailable": {
+    "description": "차단·숨김이라 볼 수 없는 글 (post(id:)가 null)"
+  },
+  "communityPostUnavailableTitle": "表示できない投稿",
+  "@communityPostUnavailableTitle": {
+    "description": "볼 수 없는 글 화면의 제목"
+  },
+  "communityComposeAction": "投稿する",
+  "@communityComposeAction": {
+    "description": "글 작성 FAB의 접근성 라벨"
+  },
+  "communityComposeUnavailable": "投稿機能はまもなく提供されます。",
+  "@communityComposeUnavailable": {
+    "description": "글 작성이 아직 준비되지 않았을 때의 안내"
+  },
+  "communityCommentsUnavailable": "コメントを読み込めませんでした。",
+  "@communityCommentsUnavailable": {
+    "description": "댓글을 불러오지 못했을 때 (글 본문은 정상)"
+  }
 }
