@@ -4,23 +4,32 @@ import '../../../common/network/media_cdn.dart';
 import '../../../common/widget/image_placeholder.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/post.dart';
-import 'post_action_bar.dart';
-import 'post_target_chip.dart';
+import '../model/post_body_split.dart';
+import '../model/post_topic.dart';
 import 'post_topic_label.dart';
 
-/// 피드 항목 하나(디자인 §1의 PostCard 분해).
+/// 피드 항목 하나 — **당근 동네생활 카드 배치**를 따른다.
 ///
 /// ```
-/// 헤더 행    아바타 · 닉네임 · middot · 상대시각
-/// PostTargetChip
-/// 본문       목록에서는 3줄, 넘치면 ellipsis
-/// 사진       0장이면 영역 자체를 미렌더 / 1장 와이드 / N장 썸네일 행
-/// 주제 태그 pill  저강조
-/// PostActionBar
+/// ┌──────────────────────────────────────────┐
+/// │ 주제 태그(저강조)                  [⋮]  │  ← 태그가 맨 위, 우상단에 오버플로
+/// │ 제목 줄 (굵게)                           │
+/// │ 본문 2줄, 넘치면 ellipsis                │
+/// │ [사진]                                   │
+/// │ 스팟명 · 3시간 전        ♡ 12  💬 4      │  ← 좌: 위치+시각, 우: 좋아요·댓글
+/// └──────────────────────────────────────────┘
 /// ```
 ///
-/// **작성자를 눌러도 이동할 곳이 없다** — 프로필 화면이 비범위라 닉네임과 프로필
-/// 이미지는 표시만 한다(설계 §6).
+/// 당근 카드는 **납작하다** — 그림자 있는 Material 카드가 아니라 얇은 구분선으로만
+/// 나뉘고 세로 여백이 넉넉하다. 그래서 [Card]도 [Material] elevation도 쓰지 않고
+/// 구분선은 목록 쪽(`_FeedList`)이 그린다.
+///
+/// **제목은 서버 필드가 아니다.** `Post`에는 `body`만 있어 [splitPostBody]가 본문에서
+/// 첫 문장을 떼어 제목 자리에 놓는다 — 서버에 `title`이 생기면 그 함수와 여기 두 줄만
+/// 바꾸면 된다(자세한 내용은 `model/post_body_split.dart`).
+///
+/// **작성자를 눌러도 이동할 곳이 없다** — 프로필 화면이 비범위라 닉네임은 표시조차
+/// 하지 않는다: 당근 카드도 목록에서 작성자를 보여주지 않는다(설계 §6).
 ///
 /// [expanded]가 true면 상세용이다 — 본문을 자르지 않고 사진을 전부 보여준다(디자인 §4).
 class PostCard extends StatelessWidget {
@@ -31,6 +40,7 @@ class PostCard extends StatelessWidget {
     this.onTap,
     this.onLike,
     this.onTargetTap,
+    this.onOptions,
     this.showTarget = true,
     this.expanded = false,
   });
@@ -44,7 +54,13 @@ class PostCard extends StatelessWidget {
   final VoidCallback? onLike;
   final VoidCallback? onTargetTap;
 
-  /// 대상 pill 표시 여부. spot 상세 안의 피드에서는 false다 — 이미 그 spot의
+  /// 우상단 오버플로 — 차단·신고·삭제 시트를 연다. null이면 버튼을 그리지 않는다.
+  ///
+  /// **미인증이라고 해서 null로 넘기지 않는다**(가이드 §13, 디자인 §7). 감추면
+  /// 기능이 없는 것처럼 보이므로, 눌렀을 때 로그인으로 유도하는 쪽을 택한다.
+  final VoidCallback? onOptions;
+
+  /// 대상 이름 표시 여부. spot 상세 안의 피드에서는 false다 — 이미 그 spot의
   /// 화면이라 같은 이름을 두 번 보여줄 이유가 없다(디자인 §2).
   final bool showTarget;
 
@@ -54,47 +70,81 @@ class PostCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final AppLocalizations l10n = AppLocalizations.of(context);
+    // 상세에서는 본문을 자르지 않으므로 제목/본문으로 가르지 않는다 — 원문 그대로
+    // 읽히는 편이 낫다.
+    final PostBodySplit split = expanded
+        ? PostBodySplit(title: '', rest: post.body)
+        : splitPostBody(post.body);
+
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            _Header(post: post, now: now),
+            // 맨 위 줄: 저강조 태그(당근의 "동네질문" 자리) + 우상단 오버플로.
+            Row(
+              children: <Widget>[
+                if (post.topic != null)
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: _TopicTag(
+                        label: postTopicLabel(l10n, post.topic!),
+                      ),
+                    ),
+                  )
+                else
+                  const Spacer(),
+                if (onOptions != null)
+                  _OptionsButton(
+                    tooltip: l10n.communityPostOptions,
+                    onPressed: onOptions!,
+                  ),
+              ],
+            ),
             // 신고 누적으로 숨겨진 글은 **작성자 본인에게만** 내려온다. 배지가 없으면
             // 작성자는 왜 반응이 없는지 몰라 서버 장애로 오해한다(가이드 §6).
             if (post.hidden) ...<Widget>[
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               _HiddenBadge(label: l10n.communityHiddenBadge),
             ],
-            if (showTarget) ...<Widget>[
-              const SizedBox(height: 8),
-              PostTargetChip(target: post.target, onTap: onTargetTap),
+            // 제목 줄. 본문에서 갈라낼 수 없으면 비어 있고, 그때는 본문만 그린다.
+            if (split.title.isNotEmpty) ...<Widget>[
+              const SizedBox(height: 4),
+              Text(
+                split.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ],
-            const SizedBox(height: 8),
-            Text(
-              post.body,
-              maxLines: expanded ? null : 3,
-              overflow: expanded ? null : TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium,
-            ),
+            if (split.rest.isNotEmpty) ...<Widget>[
+              const SizedBox(height: 4),
+              Text(
+                split.rest,
+                maxLines: expanded ? null : 2,
+                overflow: expanded ? null : TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
             // 사진이 없으면 자리를 비워두지 않고 **영역 자체를 렌더하지 않는다**
-            // (디자인 §1).
+            // (디자인 §1). 시드 키는 404가 정상이라 실패해도 레이아웃이 유지된다.
             if (post.photoKeys.isNotEmpty) ...<Widget>[
               const SizedBox(height: 10),
               _Photos(photoKeys: post.photoKeys, expanded: expanded),
             ],
-            if (post.topic != null) ...<Widget>[
-              const SizedBox(height: 10),
-              _TopicPill(label: postTopicLabel(l10n, post.topic!)),
-            ],
-            const SizedBox(height: 4),
-            PostActionBar(
-              likeCount: post.likeCount,
-              likedByViewer: post.likedByViewer,
-              // 서버 commentCount 그대로 — 목록 길이로 계산하지 않는다(가이드 §6).
-              commentCount: post.commentCount,
+            const SizedBox(height: 10),
+            _FooterRow(
+              post: post,
+              now: now,
+              showTarget: showTarget,
+              onTargetTap: onTargetTap,
               onLike: onLike,
               onComment: onTap,
             ),
@@ -105,56 +155,165 @@ class PostCard extends StatelessWidget {
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header({required this.post, required this.now});
+/// 카드 하단 한 줄. **좌측은 장소 이름 + 상대 시각**(당근의 "신림동 · 3시간 전"
+/// 자리에 spot 이름을 넣는다), **우측은 좋아요 수와 댓글 수**다.
+class _FooterRow extends StatelessWidget {
+  const _FooterRow({
+    required this.post,
+    required this.now,
+    required this.showTarget,
+    required this.onTargetTap,
+    required this.onLike,
+    required this.onComment,
+  });
 
   final Post post;
   final DateTime now;
+  final bool showTarget;
+  final VoidCallback? onTargetTap;
+  final VoidCallback? onLike;
+  final VoidCallback? onComment;
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final String? avatar = post.author.profileImageUrl;
+    final TextStyle? meta = theme.textTheme.labelMedium?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+
     return Row(
       children: <Widget>[
-        CircleAvatar(
-          radius: 16,
-          backgroundColor: theme.colorScheme.surfaceContainerHighest,
-          foregroundImage: avatar == null ? null : NetworkImage(avatar),
-          child: Text(
-            // 프로필 이미지가 없을 때의 이니셜. 닉네임이 비는 경우는 서버 계약상
-            // 없지만, 그래도 빈 문자열에서 터지지 않게 한다.
-            post.author.nickname.isEmpty
-                ? '?'
-                : post.author.nickname.characters.first,
-            style: theme.textTheme.labelMedium,
+        Expanded(
+          child: Row(
+            children: <Widget>[
+              if (showTarget) ...<Widget>[
+                // 이름만 눌러도 대상 상세로 간다. 카드 전체 탭(글 상세)과 겹치지
+                // 않도록 InkWell을 이름에만 씌운다.
+                Flexible(
+                  child: InkWell(
+                    onTap: post.target.type == PostTargetType.spot
+                        ? onTargetTap
+                        : null,
+                    borderRadius: BorderRadius.circular(6),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Text(
+                        post.target.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: meta?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ),
+                Text(' · ', style: meta),
+              ],
+              Text(relativePostTime(l10n, post.createdAt, now), style: meta),
+            ],
           ),
         ),
-        const SizedBox(width: 10),
-        Flexible(
-          child: Text(
-            post.author.nickname,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.titleSmall,
-          ),
+        // 우측: 좋아요 수와 댓글 수. 댓글 수는 서버 `commentCount` 그대로 쓴다 —
+        // 목록 길이로 계산하지 않는다(가이드 §6).
+        _Count(
+          icon: post.likedByViewer ? Icons.favorite : Icons.favorite_border,
+          color: post.likedByViewer
+              ? theme.colorScheme.primary
+              : theme.colorScheme.onSurfaceVariant,
+          count: post.likeCount,
+          onTap: onLike,
         ),
-        const SizedBox(width: 6),
-        Text(
-          '·',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          relativePostTime(l10n, post.createdAt, now),
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+        const SizedBox(width: 4),
+        _Count(
+          icon: Icons.chat_bubble_outline_rounded,
+          color: theme.colorScheme.onSurfaceVariant,
+          count: post.commentCount,
+          onTap: onComment,
         ),
       ],
+    );
+  }
+}
+
+/// 하단 우측의 수 하나. 터치 영역 ≥48dp(디자인 §1).
+///
+/// **미인증이어도 감추지 않는다** — 눌렀을 때 로그인으로 유도한다(R17).
+class _Count extends StatelessWidget {
+  const _Count({
+    required this.icon,
+    required this.color,
+    required this.count,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final Color color;
+  final int count;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 4),
+              Text(
+                '$count',
+                style: theme.textTheme.labelMedium?.copyWith(color: color),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 카드 우상단 오버플로. 차단·신고·삭제 시트를 연다.
+class _OptionsButton extends StatelessWidget {
+  const _OptionsButton({required this.tooltip, required this.onPressed});
+
+  final String tooltip;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    onPressed: onPressed,
+    tooltip: tooltip,
+    visualDensity: VisualDensity.compact,
+    iconSize: 20,
+    color: Theme.of(context).colorScheme.onSurfaceVariant,
+    icon: const Icon(Icons.more_vert),
+  );
+}
+
+/// 카드 맨 위의 주제 태그. **저강조다** — 당근이 게시판 이름을 작게 두는 자리라
+/// 본문 위계를 가리면 안 된다.
+class _TopicTag extends StatelessWidget {
+  const _TopicTag({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    return Text(
+      label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: theme.textTheme.labelSmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+        fontWeight: FontWeight.w600,
+      ),
     );
   }
 }
@@ -222,35 +381,6 @@ class _Photo extends StatelessWidget {
       ),
     ],
   );
-}
-
-class _TopicPill extends StatelessWidget {
-  const _TopicPill({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          child: Text(
-            label,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _HiddenBadge extends StatelessWidget {

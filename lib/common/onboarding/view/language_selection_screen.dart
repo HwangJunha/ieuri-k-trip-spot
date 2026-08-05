@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../domain/auth/view/login_screen.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../app_assets.dart';
+import '../../navigation/auth_route.dart';
 import '../../localization/app_language.dart';
 import '../../localization/locale_controller.dart';
 
@@ -25,7 +25,7 @@ class LanguageSelectionScreen extends ConsumerWidget {
     await ref
         .read(localeControllerProvider.notifier)
         .select(ref.read(localeControllerProvider.notifier).current);
-    if (context.mounted) context.goNamed(LoginScreen.routeName);
+    if (context.mounted) context.goNamed(loginRouteName);
   }
 
   @override

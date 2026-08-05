@@ -2,6 +2,7 @@ import '../../../common/pagination/page.dart';
 import '../model/discovery_tile.dart';
 import '../model/post.dart';
 import '../model/post_topic.dart';
+import '../model/report_reason.dart';
 
 /// 커뮤니티 데이터 접근(SPEC-0010). 도메인 모델만 돌려주며, 생성 타입
 /// (`*.graphql.dart`)은 구현체 밖으로 나가지 않는다(CLAUDE.md §3, POL-020).
@@ -60,4 +61,52 @@ abstract interface class CommunityRepository {
 
   /// 좋아요 해제. [likePost]와 같은 규약이며 0 아래로 내려가지 않는다.
   Future<int?> unlikePost(String postId);
+
+  /// 글 작성(R1). **`postId`만 돌아오고 `post`는 항상 null이다**(가이드 §11) —
+  /// 지연 필드 때문에 생성 응답에서 조립할 수 없다. 작성 직후 상세로 가려면 그 id로
+  /// `post(id:)`를 다시 조회하고, 피드로 돌아간다면 목록을 새로 고친다.
+  ///
+  /// [targetType]은 **값으로 받는다**(가이드 §1). [photoKeys]는 3단계 업로드가 준
+  /// **최종 키**(`images/...`)여야 하며, 1단계의 `pending/...`을 넘기면 서버가
+  /// `PHOTO_NOT_UPLOADED`로 거부한다(§3-(2)).
+  ///
+  /// 실패는 `userErrors`의 코드를 담은 [CommunityFailure]로 던져진다 —
+  /// `POST_BODY_REQUIRED`·`POST_BODY_LENGTH_INVALID`·`SPOT_NOT_FOUND`·
+  /// `TOO_MANY_PHOTOS`를 화면이 필드별 메시지로 옮긴다.
+  Future<String?> createPost({
+    required String targetType,
+    required String targetId,
+    required PostTopic topic,
+    required String body,
+    List<String> photoKeys,
+  });
+
+  /// 내 글 삭제. 남의 글이면 `NOT_POST_OWNER`, 이미 지워졌으면 `POST_NOT_FOUND`다.
+  Future<void> deletePost(String postId);
+
+  /// 사용자 차단(R15). **양방향이다** — 이 호출 하나로 서로의 글·댓글이 모든 피드에서
+  /// 사라진다(가이드 §6). 성공 후에는 로컬에서 지우는 것이 아니라 **피드를 다시
+  /// 불러온다**: 필터링은 서버가 한다.
+  ///
+  /// 멱등이라 이미 차단한 사람에게 다시 불러도 성공이다(§8). 자기 자신이면
+  /// `CANNOT_BLOCK_SELF`가 오므로 UI에서 미리 막는다.
+  Future<void> blockUser(String targetMemberId);
+
+  /// 차단 해제. 차단하지 않은 사람에게 불러도 멱등하게 성공한다(가이드 §8).
+  Future<void> unblockUser(String targetMemberId);
+
+  /// 신고(R16). [reason]이 [ReportReason.other]면 [detail]이 **필수**이며, 비면
+  /// 서버가 `REPORT_DETAIL_REQUIRED`로 거부한다 — 폼에서 미리 막는다(가이드 §9).
+  ///
+  /// 같은 대상 재신고는 `ALREADY_REPORTED`다. 호출부는 그것을 오류가 아니라
+  /// "이미 신고했다"는 안내로 접는다.
+  ///
+  /// **`member` 신고는 기록만 된다** — 자동 조치는 글·댓글에만 있으므로 화면은
+  /// "접수되었다" 이상을 약속하지 않는다.
+  Future<void> reportContent({
+    required ReportTargetType targetType,
+    required String targetId,
+    required ReportReason reason,
+    String? detail,
+  });
 }

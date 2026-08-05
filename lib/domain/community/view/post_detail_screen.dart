@@ -7,6 +7,7 @@ import '../component/post_card.dart';
 import '../model/comment.dart';
 import '../model/post.dart';
 import '../provider/post_detail_providers.dart';
+import 'post_moderation_flow.dart';
 
 /// 글 상세(R13·R23, 디자인 §4).
 ///
@@ -37,8 +38,31 @@ class PostDetailScreen extends ConsumerWidget {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final AsyncValue<Post?> state = ref.watch(postDetailProvider(postId));
 
+    // 볼 수 없는 글이거나 조회에 실패했으면 오버플로를 둘 이유가 없다 — 차단·신고
+    // 대상이 화면에 없기 때문이다. `AsyncValue<Post?>`라 데이터가 온 것과 글이
+    // null인 것이 겹치므로 둘 다 걸러 낸다.
+    final Post? post = state is AsyncData<Post?> ? state.value : null;
+
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.communityPostDetailTitle)),
+      appBar: AppBar(
+        title: Text(l10n.communityPostDetailTitle),
+        actions: <Widget>[
+          if (post != null)
+            IconButton(
+              icon: const Icon(Icons.more_vert),
+              tooltip: l10n.communityPostOptions,
+              // 차단·삭제에 성공하면 이 글은 더 이상 볼 수 없다 — 상세에 남겨 두는
+              // 것이 어색하므로 화면을 닫고 이전 목록으로 돌아간다. 목록 쪽은
+              // 자기 provider를 다시 불러온다.
+              onPressed: () => runPostModerationFlow(
+                context,
+                ref,
+                post: post,
+                onChanged: () => Navigator.of(context).maybePop(),
+              ),
+            ),
+        ],
+      ),
       body: SafeArea(
         child: state.when(
           loading: () => const Center(child: CircularProgressIndicator()),

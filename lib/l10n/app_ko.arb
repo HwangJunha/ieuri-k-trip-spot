@@ -729,12 +729,171 @@
   "@communityComposeAction": {
     "description": "글 작성 FAB의 접근성 라벨"
   },
-  "communityComposeUnavailable": "글쓰기는 곧 제공될 예정이에요.",
-  "@communityComposeUnavailable": {
-    "description": "글 작성이 아직 준비되지 않았을 때의 안내"
-  },
   "communityCommentsUnavailable": "댓글을 불러오지 못했어요.",
   "@communityCommentsUnavailable": {
     "description": "댓글을 불러오지 못했을 때 (글 본문은 정상)"
+  },
+  "communityPostOptions": "게시글 옵션",
+  "@communityPostOptions": {
+    "description": "카드 우상단 오버플로 버튼의 접근성 라벨"
+  },
+  "communityBlockAction": "이 사용자 차단하기",
+  "@communityBlockAction": {
+    "description": "모더레이션 시트의 차단 항목"
+  },
+  "communityReportAction": "신고하기",
+  "@communityReportAction": {
+    "description": "모더레이션 시트의 신고 항목"
+  },
+  "communityDeleteAction": "글 삭제하기",
+  "@communityDeleteAction": {
+    "description": "모더레이션 시트의 삭제 항목 (내 글일 때만)"
+  },
+  "communityCancel": "취소",
+  "@communityCancel": {
+    "description": "시트·다이얼로그의 취소"
+  },
+  "communityBlockConfirmTitle": "{nickname} 님을 차단할까요?",
+  "@communityBlockConfirmTitle": {
+    "description": "차단 확인 다이얼로그 제목",
+    "placeholders": {
+      "nickname": {
+        "type": "String"
+      }
+    }
+  },
+  "communityBlockConfirmBody": "차단은 양방향이에요. 상대의 글과 댓글이 보이지 않고, 상대에게도 내 글이 보이지 않아요. 나중에 해제할 수 있어요.",
+  "@communityBlockConfirmBody": {
+    "description": "차단이 양방향임을 명시하는 확인 문구 (가이드 §6)"
+  },
+  "communityBlockConfirmAction": "차단",
+  "@communityBlockConfirmAction": {
+    "description": "차단 확인 다이얼로그의 실행 버튼"
+  },
+  "communityBlockDone": "차단했어요. 이 사용자의 글이 피드에서 사라져요.",
+  "@communityBlockDone": {
+    "description": "차단 성공 안내"
+  },
+  "communityDeleteConfirmTitle": "이 글을 삭제할까요?",
+  "@communityDeleteConfirmTitle": {
+    "description": "글 삭제 확인 다이얼로그 제목"
+  },
+  "communityDeleteConfirmBody": "되돌릴 수 없어요. 글 수정 기능이 없어서 다시 쓰셔야 해요.",
+  "@communityDeleteConfirmBody": {
+    "description": "삭제 확인 문구 (글 수정이 없으므로 재작성해야 한다)"
+  },
+  "communityDeleteDone": "글을 삭제했어요.",
+  "@communityDeleteDone": {
+    "description": "삭제 성공 안내"
+  },
+  "communityReportTitle": "신고",
+  "@communityReportTitle": {
+    "description": "신고 시트 제목"
+  },
+  "communityReportReasonSpam": "스팸 또는 광고",
+  "@communityReportReasonSpam": {
+    "description": "신고 사유 SPAM"
+  },
+  "communityReportReasonAbuse": "괴롭힘 또는 폭언",
+  "@communityReportReasonAbuse": {
+    "description": "신고 사유 ABUSE"
+  },
+  "communityReportReasonInappropriate": "부적절한 내용",
+  "@communityReportReasonInappropriate": {
+    "description": "신고 사유 INAPPROPRIATE_CONTENT"
+  },
+  "communityReportReasonOther": "기타",
+  "@communityReportReasonOther": {
+    "description": "신고 사유 OTHER — 상세 입력이 필수가 된다"
+  },
+  "communityReportDetailLabel": "자세한 내용",
+  "@communityReportDetailLabel": {
+    "description": "OTHER 선택 시에만 보이는 상세 입력 라벨"
+  },
+  "communityReportDetailRequired": "기타를 선택하면 자세한 내용을 적어 주세요.",
+  "@communityReportDetailRequired": {
+    "description": "OTHER인데 상세가 비었을 때 (REPORT_DETAIL_REQUIRED를 미리 막는다)"
+  },
+  "communityReportSubmit": "제출",
+  "@communityReportSubmit": {
+    "description": "신고 제출 버튼"
+  },
+  "communityReportDone": "신고가 접수되었어요.",
+  "@communityReportDone": {
+    "description": "신고 접수 안내 — 처리 결과나 시점을 약속하지 않는다 (가이드 §9)"
+  },
+  "communityReportAlready": "이미 신고한 대상이에요.",
+  "@communityReportAlready": {
+    "description": "ALREADY_REPORTED — 오류가 아니라 안내다"
+  },
+  "communityActionFailed": "문제가 생겼어요. 다시 시도해 주세요.",
+  "@communityActionFailed": {
+    "description": "모더레이션·등록의 일반 실패 안내"
+  },
+  "communitySignInRequired": "계속하려면 로그인해 주세요.",
+  "@communitySignInRequired": {
+    "description": "미인증 사용자가 쓰기 동작을 눌렀을 때 (버튼을 숨기지 않는다)"
+  },
+  "communityComposeTitle": "새 글",
+  "@communityComposeTitle": {
+    "description": "컴포저 앱바 제목"
+  },
+  "communityComposeSubmit": "등록",
+  "@communityComposeSubmit": {
+    "description": "컴포저 앱바의 등록 액션"
+  },
+  "communityComposeBodyHint": "이곳에 대한 이야기를 들려주세요.",
+  "@communityComposeBodyHint": {
+    "description": "본문 입력 힌트"
+  },
+  "communityComposeTopicLabel": "게시판 선택",
+  "@communityComposeTopicLabel": {
+    "description": "컴포저에서 주제를 먼저 고르게 하는 라벨"
+  },
+  "communityComposeSpotLabel": "장소",
+  "@communityComposeSpotLabel": {
+    "description": "컴포저의 대상(관광지) 라벨"
+  },
+  "communityComposeSpotMissing": "장소를 선택하세요",
+  "@communityComposeSpotMissing": {
+    "description": "대상이 아직 정해지지 않았을 때"
+  },
+  "communityComposeCounter": "{count} / 500",
+  "@communityComposeCounter": {
+    "description": "본문 잔여 글자 수 — 서버와 같은 코드포인트 기준 (가이드 §12)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityComposeTooLong": "{count}자를 초과했어요.",
+  "@communityComposeTooLong": {
+    "description": "500자 초과분 — 입력을 자르지 않고 드러낸다",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityComposeDone": "글을 등록했어요.",
+  "@communityComposeDone": {
+    "description": "글 등록 성공 안내"
+  },
+  "communityComposeErrorBodyRequired": "본문을 입력해 주세요.",
+  "@communityComposeErrorBodyRequired": {
+    "description": "POST_BODY_REQUIRED"
+  },
+  "communityComposeErrorBodyLength": "본문이 너무 길어요. 500자 이내로 써 주세요.",
+  "@communityComposeErrorBodyLength": {
+    "description": "POST_BODY_LENGTH_INVALID"
+  },
+  "communityComposeErrorSpotNotFound": "그 장소를 찾을 수 없어요.",
+  "@communityComposeErrorSpotNotFound": {
+    "description": "SPOT_NOT_FOUND"
+  },
+  "communityComposeErrorTooManyPhotos": "사진은 최대 5장까지 첨부할 수 있어요.",
+  "@communityComposeErrorTooManyPhotos": {
+    "description": "TOO_MANY_PHOTOS"
   }
 }

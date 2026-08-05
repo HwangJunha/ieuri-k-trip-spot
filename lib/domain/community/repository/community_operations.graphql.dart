@@ -7353,3 +7353,2403 @@ class _CopyWithStubImpl$Mutation$CreateComment$createComment$userErrors<TRes>
 
   call({String? code, String? message, String? field}) => _res;
 }
+
+class Variables$Mutation$DeletePost {
+  factory Variables$Mutation$DeletePost({required String postId}) =>
+      Variables$Mutation$DeletePost._({r'postId': postId});
+
+  Variables$Mutation$DeletePost._(this._$data);
+
+  factory Variables$Mutation$DeletePost.fromJson(Map<String, dynamic> data) {
+    final result$data = <String, dynamic>{};
+    final l$postId = data['postId'];
+    result$data['postId'] = (l$postId as String);
+    return Variables$Mutation$DeletePost._(result$data);
+  }
+
+  Map<String, dynamic> _$data;
+
+  String get postId => (_$data['postId'] as String);
+
+  Map<String, dynamic> toJson() {
+    final result$data = <String, dynamic>{};
+    final l$postId = postId;
+    result$data['postId'] = l$postId;
+    return result$data;
+  }
+
+  CopyWith$Variables$Mutation$DeletePost<Variables$Mutation$DeletePost>
+  get copyWith => CopyWith$Variables$Mutation$DeletePost(this, (i) => i);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Variables$Mutation$DeletePost ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$postId = postId;
+    final lOther$postId = other.postId;
+    if (l$postId != lOther$postId) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    final l$postId = postId;
+    return Object.hashAll([l$postId]);
+  }
+}
+
+abstract class CopyWith$Variables$Mutation$DeletePost<TRes> {
+  factory CopyWith$Variables$Mutation$DeletePost(
+    Variables$Mutation$DeletePost instance,
+    TRes Function(Variables$Mutation$DeletePost) then,
+  ) = _CopyWithImpl$Variables$Mutation$DeletePost;
+
+  factory CopyWith$Variables$Mutation$DeletePost.stub(TRes res) =
+      _CopyWithStubImpl$Variables$Mutation$DeletePost;
+
+  TRes call({String? postId});
+}
+
+class _CopyWithImpl$Variables$Mutation$DeletePost<TRes>
+    implements CopyWith$Variables$Mutation$DeletePost<TRes> {
+  _CopyWithImpl$Variables$Mutation$DeletePost(this._instance, this._then);
+
+  final Variables$Mutation$DeletePost _instance;
+
+  final TRes Function(Variables$Mutation$DeletePost) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? postId = _undefined}) => _then(
+    Variables$Mutation$DeletePost._({
+      ..._instance._$data,
+      if (postId != _undefined && postId != null) 'postId': (postId as String),
+    }),
+  );
+}
+
+class _CopyWithStubImpl$Variables$Mutation$DeletePost<TRes>
+    implements CopyWith$Variables$Mutation$DeletePost<TRes> {
+  _CopyWithStubImpl$Variables$Mutation$DeletePost(this._res);
+
+  TRes _res;
+
+  call({String? postId}) => _res;
+}
+
+class Mutation$DeletePost {
+  Mutation$DeletePost({required this.deletePost});
+
+  factory Mutation$DeletePost.fromJson(Map<String, dynamic> json) {
+    final l$deletePost = json['deletePost'];
+    return Mutation$DeletePost(
+      deletePost: Mutation$DeletePost$deletePost.fromJson(
+        (l$deletePost as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final Mutation$DeletePost$deletePost deletePost;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$deletePost = deletePost;
+    _resultData['deletePost'] = l$deletePost.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$deletePost = deletePost;
+    return Object.hashAll([l$deletePost]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$DeletePost || runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$deletePost = deletePost;
+    final lOther$deletePost = other.deletePost;
+    if (l$deletePost != lOther$deletePost) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$DeletePost on Mutation$DeletePost {
+  CopyWith$Mutation$DeletePost<Mutation$DeletePost> get copyWith =>
+      CopyWith$Mutation$DeletePost(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$DeletePost<TRes> {
+  factory CopyWith$Mutation$DeletePost(
+    Mutation$DeletePost instance,
+    TRes Function(Mutation$DeletePost) then,
+  ) = _CopyWithImpl$Mutation$DeletePost;
+
+  factory CopyWith$Mutation$DeletePost.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$DeletePost;
+
+  TRes call({Mutation$DeletePost$deletePost? deletePost});
+  CopyWith$Mutation$DeletePost$deletePost<TRes> get deletePost;
+}
+
+class _CopyWithImpl$Mutation$DeletePost<TRes>
+    implements CopyWith$Mutation$DeletePost<TRes> {
+  _CopyWithImpl$Mutation$DeletePost(this._instance, this._then);
+
+  final Mutation$DeletePost _instance;
+
+  final TRes Function(Mutation$DeletePost) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? deletePost = _undefined}) => _then(
+    Mutation$DeletePost(
+      deletePost: deletePost == _undefined || deletePost == null
+          ? _instance.deletePost
+          : (deletePost as Mutation$DeletePost$deletePost),
+    ),
+  );
+
+  CopyWith$Mutation$DeletePost$deletePost<TRes> get deletePost {
+    final local$deletePost = _instance.deletePost;
+    return CopyWith$Mutation$DeletePost$deletePost(
+      local$deletePost,
+      (e) => call(deletePost: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Mutation$DeletePost<TRes>
+    implements CopyWith$Mutation$DeletePost<TRes> {
+  _CopyWithStubImpl$Mutation$DeletePost(this._res);
+
+  TRes _res;
+
+  call({Mutation$DeletePost$deletePost? deletePost}) => _res;
+
+  CopyWith$Mutation$DeletePost$deletePost<TRes> get deletePost =>
+      CopyWith$Mutation$DeletePost$deletePost.stub(_res);
+}
+
+const documentNodeMutationDeletePost = DocumentNode(
+  definitions: [
+    OperationDefinitionNode(
+      type: OperationType.mutation,
+      name: NameNode(value: 'DeletePost'),
+      variableDefinitions: [
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'postId')),
+          type: NamedTypeNode(name: NameNode(value: 'ID'), isNonNull: true),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+      ],
+      directives: [],
+      selectionSet: SelectionSetNode(
+        selections: [
+          FieldNode(
+            name: NameNode(value: 'deletePost'),
+            alias: null,
+            arguments: [
+              ArgumentNode(
+                name: NameNode(value: 'input'),
+                value: ObjectValueNode(
+                  fields: [
+                    ObjectFieldNode(
+                      name: NameNode(value: 'postId'),
+                      value: VariableNode(name: NameNode(value: 'postId')),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            directives: [],
+            selectionSet: SelectionSetNode(
+              selections: [
+                FieldNode(
+                  name: NameNode(value: 'success'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'userErrors'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'code'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'message'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'field'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+);
+
+class Mutation$DeletePost$deletePost {
+  Mutation$DeletePost$deletePost({
+    required this.success,
+    required this.userErrors,
+  });
+
+  factory Mutation$DeletePost$deletePost.fromJson(Map<String, dynamic> json) {
+    final l$success = json['success'];
+    final l$userErrors = json['userErrors'];
+    return Mutation$DeletePost$deletePost(
+      success: (l$success as bool),
+      userErrors: (l$userErrors as List<dynamic>)
+          .map(
+            (e) => Mutation$DeletePost$deletePost$userErrors.fromJson(
+              (e as Map<String, dynamic>),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  final bool success;
+
+  final List<Mutation$DeletePost$deletePost$userErrors> userErrors;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$success = success;
+    _resultData['success'] = l$success;
+    final l$userErrors = userErrors;
+    _resultData['userErrors'] = l$userErrors.map((e) => e.toJson()).toList();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$success = success;
+    final l$userErrors = userErrors;
+    return Object.hashAll([
+      l$success,
+      Object.hashAll(l$userErrors.map((v) => v)),
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$DeletePost$deletePost ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$success = success;
+    final lOther$success = other.success;
+    if (l$success != lOther$success) {
+      return false;
+    }
+    final l$userErrors = userErrors;
+    final lOther$userErrors = other.userErrors;
+    if (l$userErrors.length != lOther$userErrors.length) {
+      return false;
+    }
+    for (int i = 0; i < l$userErrors.length; i++) {
+      final l$userErrors$entry = l$userErrors[i];
+      final lOther$userErrors$entry = lOther$userErrors[i];
+      if (l$userErrors$entry != lOther$userErrors$entry) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$DeletePost$deletePost
+    on Mutation$DeletePost$deletePost {
+  CopyWith$Mutation$DeletePost$deletePost<Mutation$DeletePost$deletePost>
+  get copyWith => CopyWith$Mutation$DeletePost$deletePost(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$DeletePost$deletePost<TRes> {
+  factory CopyWith$Mutation$DeletePost$deletePost(
+    Mutation$DeletePost$deletePost instance,
+    TRes Function(Mutation$DeletePost$deletePost) then,
+  ) = _CopyWithImpl$Mutation$DeletePost$deletePost;
+
+  factory CopyWith$Mutation$DeletePost$deletePost.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$DeletePost$deletePost;
+
+  TRes call({
+    bool? success,
+    List<Mutation$DeletePost$deletePost$userErrors>? userErrors,
+  });
+  TRes userErrors(
+    Iterable<Mutation$DeletePost$deletePost$userErrors> Function(
+      Iterable<
+        CopyWith$Mutation$DeletePost$deletePost$userErrors<
+          Mutation$DeletePost$deletePost$userErrors
+        >
+      >,
+    )
+    _fn,
+  );
+}
+
+class _CopyWithImpl$Mutation$DeletePost$deletePost<TRes>
+    implements CopyWith$Mutation$DeletePost$deletePost<TRes> {
+  _CopyWithImpl$Mutation$DeletePost$deletePost(this._instance, this._then);
+
+  final Mutation$DeletePost$deletePost _instance;
+
+  final TRes Function(Mutation$DeletePost$deletePost) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? success = _undefined, Object? userErrors = _undefined}) =>
+      _then(
+        Mutation$DeletePost$deletePost(
+          success: success == _undefined || success == null
+              ? _instance.success
+              : (success as bool),
+          userErrors: userErrors == _undefined || userErrors == null
+              ? _instance.userErrors
+              : (userErrors as List<Mutation$DeletePost$deletePost$userErrors>),
+        ),
+      );
+
+  TRes userErrors(
+    Iterable<Mutation$DeletePost$deletePost$userErrors> Function(
+      Iterable<
+        CopyWith$Mutation$DeletePost$deletePost$userErrors<
+          Mutation$DeletePost$deletePost$userErrors
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    userErrors: _fn(
+      _instance.userErrors.map(
+        (e) => CopyWith$Mutation$DeletePost$deletePost$userErrors(e, (i) => i),
+      ),
+    ).toList(),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$DeletePost$deletePost<TRes>
+    implements CopyWith$Mutation$DeletePost$deletePost<TRes> {
+  _CopyWithStubImpl$Mutation$DeletePost$deletePost(this._res);
+
+  TRes _res;
+
+  call({
+    bool? success,
+    List<Mutation$DeletePost$deletePost$userErrors>? userErrors,
+  }) => _res;
+
+  userErrors(_fn) => _res;
+}
+
+class Mutation$DeletePost$deletePost$userErrors {
+  Mutation$DeletePost$deletePost$userErrors({
+    required this.code,
+    required this.message,
+    this.field,
+  });
+
+  factory Mutation$DeletePost$deletePost$userErrors.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$code = json['code'];
+    final l$message = json['message'];
+    final l$field = json['field'];
+    return Mutation$DeletePost$deletePost$userErrors(
+      code: (l$code as String),
+      message: (l$message as String),
+      field: (l$field as String?),
+    );
+  }
+
+  final String code;
+
+  final String message;
+
+  final String? field;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$message = message;
+    _resultData['message'] = l$message;
+    final l$field = field;
+    _resultData['field'] = l$field;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$code = code;
+    final l$message = message;
+    final l$field = field;
+    return Object.hashAll([l$code, l$message, l$field]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$DeletePost$deletePost$userErrors ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$message = message;
+    final lOther$message = other.message;
+    if (l$message != lOther$message) {
+      return false;
+    }
+    final l$field = field;
+    final lOther$field = other.field;
+    if (l$field != lOther$field) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$DeletePost$deletePost$userErrors
+    on Mutation$DeletePost$deletePost$userErrors {
+  CopyWith$Mutation$DeletePost$deletePost$userErrors<
+    Mutation$DeletePost$deletePost$userErrors
+  >
+  get copyWith =>
+      CopyWith$Mutation$DeletePost$deletePost$userErrors(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$DeletePost$deletePost$userErrors<TRes> {
+  factory CopyWith$Mutation$DeletePost$deletePost$userErrors(
+    Mutation$DeletePost$deletePost$userErrors instance,
+    TRes Function(Mutation$DeletePost$deletePost$userErrors) then,
+  ) = _CopyWithImpl$Mutation$DeletePost$deletePost$userErrors;
+
+  factory CopyWith$Mutation$DeletePost$deletePost$userErrors.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$DeletePost$deletePost$userErrors;
+
+  TRes call({String? code, String? message, String? field});
+}
+
+class _CopyWithImpl$Mutation$DeletePost$deletePost$userErrors<TRes>
+    implements CopyWith$Mutation$DeletePost$deletePost$userErrors<TRes> {
+  _CopyWithImpl$Mutation$DeletePost$deletePost$userErrors(
+    this._instance,
+    this._then,
+  );
+
+  final Mutation$DeletePost$deletePost$userErrors _instance;
+
+  final TRes Function(Mutation$DeletePost$deletePost$userErrors) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? code = _undefined,
+    Object? message = _undefined,
+    Object? field = _undefined,
+  }) => _then(
+    Mutation$DeletePost$deletePost$userErrors(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      message: message == _undefined || message == null
+          ? _instance.message
+          : (message as String),
+      field: field == _undefined ? _instance.field : (field as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$DeletePost$deletePost$userErrors<TRes>
+    implements CopyWith$Mutation$DeletePost$deletePost$userErrors<TRes> {
+  _CopyWithStubImpl$Mutation$DeletePost$deletePost$userErrors(this._res);
+
+  TRes _res;
+
+  call({String? code, String? message, String? field}) => _res;
+}
+
+class Variables$Mutation$BlockUser {
+  factory Variables$Mutation$BlockUser({required String targetMemberId}) =>
+      Variables$Mutation$BlockUser._({r'targetMemberId': targetMemberId});
+
+  Variables$Mutation$BlockUser._(this._$data);
+
+  factory Variables$Mutation$BlockUser.fromJson(Map<String, dynamic> data) {
+    final result$data = <String, dynamic>{};
+    final l$targetMemberId = data['targetMemberId'];
+    result$data['targetMemberId'] = (l$targetMemberId as String);
+    return Variables$Mutation$BlockUser._(result$data);
+  }
+
+  Map<String, dynamic> _$data;
+
+  String get targetMemberId => (_$data['targetMemberId'] as String);
+
+  Map<String, dynamic> toJson() {
+    final result$data = <String, dynamic>{};
+    final l$targetMemberId = targetMemberId;
+    result$data['targetMemberId'] = l$targetMemberId;
+    return result$data;
+  }
+
+  CopyWith$Variables$Mutation$BlockUser<Variables$Mutation$BlockUser>
+  get copyWith => CopyWith$Variables$Mutation$BlockUser(this, (i) => i);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Variables$Mutation$BlockUser ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$targetMemberId = targetMemberId;
+    final lOther$targetMemberId = other.targetMemberId;
+    if (l$targetMemberId != lOther$targetMemberId) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    final l$targetMemberId = targetMemberId;
+    return Object.hashAll([l$targetMemberId]);
+  }
+}
+
+abstract class CopyWith$Variables$Mutation$BlockUser<TRes> {
+  factory CopyWith$Variables$Mutation$BlockUser(
+    Variables$Mutation$BlockUser instance,
+    TRes Function(Variables$Mutation$BlockUser) then,
+  ) = _CopyWithImpl$Variables$Mutation$BlockUser;
+
+  factory CopyWith$Variables$Mutation$BlockUser.stub(TRes res) =
+      _CopyWithStubImpl$Variables$Mutation$BlockUser;
+
+  TRes call({String? targetMemberId});
+}
+
+class _CopyWithImpl$Variables$Mutation$BlockUser<TRes>
+    implements CopyWith$Variables$Mutation$BlockUser<TRes> {
+  _CopyWithImpl$Variables$Mutation$BlockUser(this._instance, this._then);
+
+  final Variables$Mutation$BlockUser _instance;
+
+  final TRes Function(Variables$Mutation$BlockUser) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? targetMemberId = _undefined}) => _then(
+    Variables$Mutation$BlockUser._({
+      ..._instance._$data,
+      if (targetMemberId != _undefined && targetMemberId != null)
+        'targetMemberId': (targetMemberId as String),
+    }),
+  );
+}
+
+class _CopyWithStubImpl$Variables$Mutation$BlockUser<TRes>
+    implements CopyWith$Variables$Mutation$BlockUser<TRes> {
+  _CopyWithStubImpl$Variables$Mutation$BlockUser(this._res);
+
+  TRes _res;
+
+  call({String? targetMemberId}) => _res;
+}
+
+class Mutation$BlockUser {
+  Mutation$BlockUser({required this.blockUser});
+
+  factory Mutation$BlockUser.fromJson(Map<String, dynamic> json) {
+    final l$blockUser = json['blockUser'];
+    return Mutation$BlockUser(
+      blockUser: Mutation$BlockUser$blockUser.fromJson(
+        (l$blockUser as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final Mutation$BlockUser$blockUser blockUser;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$blockUser = blockUser;
+    _resultData['blockUser'] = l$blockUser.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$blockUser = blockUser;
+    return Object.hashAll([l$blockUser]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$BlockUser || runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$blockUser = blockUser;
+    final lOther$blockUser = other.blockUser;
+    if (l$blockUser != lOther$blockUser) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$BlockUser on Mutation$BlockUser {
+  CopyWith$Mutation$BlockUser<Mutation$BlockUser> get copyWith =>
+      CopyWith$Mutation$BlockUser(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$BlockUser<TRes> {
+  factory CopyWith$Mutation$BlockUser(
+    Mutation$BlockUser instance,
+    TRes Function(Mutation$BlockUser) then,
+  ) = _CopyWithImpl$Mutation$BlockUser;
+
+  factory CopyWith$Mutation$BlockUser.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$BlockUser;
+
+  TRes call({Mutation$BlockUser$blockUser? blockUser});
+  CopyWith$Mutation$BlockUser$blockUser<TRes> get blockUser;
+}
+
+class _CopyWithImpl$Mutation$BlockUser<TRes>
+    implements CopyWith$Mutation$BlockUser<TRes> {
+  _CopyWithImpl$Mutation$BlockUser(this._instance, this._then);
+
+  final Mutation$BlockUser _instance;
+
+  final TRes Function(Mutation$BlockUser) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? blockUser = _undefined}) => _then(
+    Mutation$BlockUser(
+      blockUser: blockUser == _undefined || blockUser == null
+          ? _instance.blockUser
+          : (blockUser as Mutation$BlockUser$blockUser),
+    ),
+  );
+
+  CopyWith$Mutation$BlockUser$blockUser<TRes> get blockUser {
+    final local$blockUser = _instance.blockUser;
+    return CopyWith$Mutation$BlockUser$blockUser(
+      local$blockUser,
+      (e) => call(blockUser: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Mutation$BlockUser<TRes>
+    implements CopyWith$Mutation$BlockUser<TRes> {
+  _CopyWithStubImpl$Mutation$BlockUser(this._res);
+
+  TRes _res;
+
+  call({Mutation$BlockUser$blockUser? blockUser}) => _res;
+
+  CopyWith$Mutation$BlockUser$blockUser<TRes> get blockUser =>
+      CopyWith$Mutation$BlockUser$blockUser.stub(_res);
+}
+
+const documentNodeMutationBlockUser = DocumentNode(
+  definitions: [
+    OperationDefinitionNode(
+      type: OperationType.mutation,
+      name: NameNode(value: 'BlockUser'),
+      variableDefinitions: [
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'targetMemberId')),
+          type: NamedTypeNode(name: NameNode(value: 'ID'), isNonNull: true),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+      ],
+      directives: [],
+      selectionSet: SelectionSetNode(
+        selections: [
+          FieldNode(
+            name: NameNode(value: 'blockUser'),
+            alias: null,
+            arguments: [
+              ArgumentNode(
+                name: NameNode(value: 'input'),
+                value: ObjectValueNode(
+                  fields: [
+                    ObjectFieldNode(
+                      name: NameNode(value: 'targetMemberId'),
+                      value: VariableNode(
+                        name: NameNode(value: 'targetMemberId'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            directives: [],
+            selectionSet: SelectionSetNode(
+              selections: [
+                FieldNode(
+                  name: NameNode(value: 'success'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'userErrors'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'code'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'message'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'field'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+);
+
+class Mutation$BlockUser$blockUser {
+  Mutation$BlockUser$blockUser({
+    required this.success,
+    required this.userErrors,
+  });
+
+  factory Mutation$BlockUser$blockUser.fromJson(Map<String, dynamic> json) {
+    final l$success = json['success'];
+    final l$userErrors = json['userErrors'];
+    return Mutation$BlockUser$blockUser(
+      success: (l$success as bool),
+      userErrors: (l$userErrors as List<dynamic>)
+          .map(
+            (e) => Mutation$BlockUser$blockUser$userErrors.fromJson(
+              (e as Map<String, dynamic>),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  final bool success;
+
+  final List<Mutation$BlockUser$blockUser$userErrors> userErrors;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$success = success;
+    _resultData['success'] = l$success;
+    final l$userErrors = userErrors;
+    _resultData['userErrors'] = l$userErrors.map((e) => e.toJson()).toList();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$success = success;
+    final l$userErrors = userErrors;
+    return Object.hashAll([
+      l$success,
+      Object.hashAll(l$userErrors.map((v) => v)),
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$BlockUser$blockUser ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$success = success;
+    final lOther$success = other.success;
+    if (l$success != lOther$success) {
+      return false;
+    }
+    final l$userErrors = userErrors;
+    final lOther$userErrors = other.userErrors;
+    if (l$userErrors.length != lOther$userErrors.length) {
+      return false;
+    }
+    for (int i = 0; i < l$userErrors.length; i++) {
+      final l$userErrors$entry = l$userErrors[i];
+      final lOther$userErrors$entry = lOther$userErrors[i];
+      if (l$userErrors$entry != lOther$userErrors$entry) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$BlockUser$blockUser
+    on Mutation$BlockUser$blockUser {
+  CopyWith$Mutation$BlockUser$blockUser<Mutation$BlockUser$blockUser>
+  get copyWith => CopyWith$Mutation$BlockUser$blockUser(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$BlockUser$blockUser<TRes> {
+  factory CopyWith$Mutation$BlockUser$blockUser(
+    Mutation$BlockUser$blockUser instance,
+    TRes Function(Mutation$BlockUser$blockUser) then,
+  ) = _CopyWithImpl$Mutation$BlockUser$blockUser;
+
+  factory CopyWith$Mutation$BlockUser$blockUser.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$BlockUser$blockUser;
+
+  TRes call({
+    bool? success,
+    List<Mutation$BlockUser$blockUser$userErrors>? userErrors,
+  });
+  TRes userErrors(
+    Iterable<Mutation$BlockUser$blockUser$userErrors> Function(
+      Iterable<
+        CopyWith$Mutation$BlockUser$blockUser$userErrors<
+          Mutation$BlockUser$blockUser$userErrors
+        >
+      >,
+    )
+    _fn,
+  );
+}
+
+class _CopyWithImpl$Mutation$BlockUser$blockUser<TRes>
+    implements CopyWith$Mutation$BlockUser$blockUser<TRes> {
+  _CopyWithImpl$Mutation$BlockUser$blockUser(this._instance, this._then);
+
+  final Mutation$BlockUser$blockUser _instance;
+
+  final TRes Function(Mutation$BlockUser$blockUser) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? success = _undefined, Object? userErrors = _undefined}) =>
+      _then(
+        Mutation$BlockUser$blockUser(
+          success: success == _undefined || success == null
+              ? _instance.success
+              : (success as bool),
+          userErrors: userErrors == _undefined || userErrors == null
+              ? _instance.userErrors
+              : (userErrors as List<Mutation$BlockUser$blockUser$userErrors>),
+        ),
+      );
+
+  TRes userErrors(
+    Iterable<Mutation$BlockUser$blockUser$userErrors> Function(
+      Iterable<
+        CopyWith$Mutation$BlockUser$blockUser$userErrors<
+          Mutation$BlockUser$blockUser$userErrors
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    userErrors: _fn(
+      _instance.userErrors.map(
+        (e) => CopyWith$Mutation$BlockUser$blockUser$userErrors(e, (i) => i),
+      ),
+    ).toList(),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$BlockUser$blockUser<TRes>
+    implements CopyWith$Mutation$BlockUser$blockUser<TRes> {
+  _CopyWithStubImpl$Mutation$BlockUser$blockUser(this._res);
+
+  TRes _res;
+
+  call({
+    bool? success,
+    List<Mutation$BlockUser$blockUser$userErrors>? userErrors,
+  }) => _res;
+
+  userErrors(_fn) => _res;
+}
+
+class Mutation$BlockUser$blockUser$userErrors {
+  Mutation$BlockUser$blockUser$userErrors({
+    required this.code,
+    required this.message,
+    this.field,
+  });
+
+  factory Mutation$BlockUser$blockUser$userErrors.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$code = json['code'];
+    final l$message = json['message'];
+    final l$field = json['field'];
+    return Mutation$BlockUser$blockUser$userErrors(
+      code: (l$code as String),
+      message: (l$message as String),
+      field: (l$field as String?),
+    );
+  }
+
+  final String code;
+
+  final String message;
+
+  final String? field;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$message = message;
+    _resultData['message'] = l$message;
+    final l$field = field;
+    _resultData['field'] = l$field;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$code = code;
+    final l$message = message;
+    final l$field = field;
+    return Object.hashAll([l$code, l$message, l$field]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$BlockUser$blockUser$userErrors ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$message = message;
+    final lOther$message = other.message;
+    if (l$message != lOther$message) {
+      return false;
+    }
+    final l$field = field;
+    final lOther$field = other.field;
+    if (l$field != lOther$field) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$BlockUser$blockUser$userErrors
+    on Mutation$BlockUser$blockUser$userErrors {
+  CopyWith$Mutation$BlockUser$blockUser$userErrors<
+    Mutation$BlockUser$blockUser$userErrors
+  >
+  get copyWith =>
+      CopyWith$Mutation$BlockUser$blockUser$userErrors(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$BlockUser$blockUser$userErrors<TRes> {
+  factory CopyWith$Mutation$BlockUser$blockUser$userErrors(
+    Mutation$BlockUser$blockUser$userErrors instance,
+    TRes Function(Mutation$BlockUser$blockUser$userErrors) then,
+  ) = _CopyWithImpl$Mutation$BlockUser$blockUser$userErrors;
+
+  factory CopyWith$Mutation$BlockUser$blockUser$userErrors.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$BlockUser$blockUser$userErrors;
+
+  TRes call({String? code, String? message, String? field});
+}
+
+class _CopyWithImpl$Mutation$BlockUser$blockUser$userErrors<TRes>
+    implements CopyWith$Mutation$BlockUser$blockUser$userErrors<TRes> {
+  _CopyWithImpl$Mutation$BlockUser$blockUser$userErrors(
+    this._instance,
+    this._then,
+  );
+
+  final Mutation$BlockUser$blockUser$userErrors _instance;
+
+  final TRes Function(Mutation$BlockUser$blockUser$userErrors) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? code = _undefined,
+    Object? message = _undefined,
+    Object? field = _undefined,
+  }) => _then(
+    Mutation$BlockUser$blockUser$userErrors(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      message: message == _undefined || message == null
+          ? _instance.message
+          : (message as String),
+      field: field == _undefined ? _instance.field : (field as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$BlockUser$blockUser$userErrors<TRes>
+    implements CopyWith$Mutation$BlockUser$blockUser$userErrors<TRes> {
+  _CopyWithStubImpl$Mutation$BlockUser$blockUser$userErrors(this._res);
+
+  TRes _res;
+
+  call({String? code, String? message, String? field}) => _res;
+}
+
+class Variables$Mutation$UnblockUser {
+  factory Variables$Mutation$UnblockUser({required String targetMemberId}) =>
+      Variables$Mutation$UnblockUser._({r'targetMemberId': targetMemberId});
+
+  Variables$Mutation$UnblockUser._(this._$data);
+
+  factory Variables$Mutation$UnblockUser.fromJson(Map<String, dynamic> data) {
+    final result$data = <String, dynamic>{};
+    final l$targetMemberId = data['targetMemberId'];
+    result$data['targetMemberId'] = (l$targetMemberId as String);
+    return Variables$Mutation$UnblockUser._(result$data);
+  }
+
+  Map<String, dynamic> _$data;
+
+  String get targetMemberId => (_$data['targetMemberId'] as String);
+
+  Map<String, dynamic> toJson() {
+    final result$data = <String, dynamic>{};
+    final l$targetMemberId = targetMemberId;
+    result$data['targetMemberId'] = l$targetMemberId;
+    return result$data;
+  }
+
+  CopyWith$Variables$Mutation$UnblockUser<Variables$Mutation$UnblockUser>
+  get copyWith => CopyWith$Variables$Mutation$UnblockUser(this, (i) => i);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Variables$Mutation$UnblockUser ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$targetMemberId = targetMemberId;
+    final lOther$targetMemberId = other.targetMemberId;
+    if (l$targetMemberId != lOther$targetMemberId) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    final l$targetMemberId = targetMemberId;
+    return Object.hashAll([l$targetMemberId]);
+  }
+}
+
+abstract class CopyWith$Variables$Mutation$UnblockUser<TRes> {
+  factory CopyWith$Variables$Mutation$UnblockUser(
+    Variables$Mutation$UnblockUser instance,
+    TRes Function(Variables$Mutation$UnblockUser) then,
+  ) = _CopyWithImpl$Variables$Mutation$UnblockUser;
+
+  factory CopyWith$Variables$Mutation$UnblockUser.stub(TRes res) =
+      _CopyWithStubImpl$Variables$Mutation$UnblockUser;
+
+  TRes call({String? targetMemberId});
+}
+
+class _CopyWithImpl$Variables$Mutation$UnblockUser<TRes>
+    implements CopyWith$Variables$Mutation$UnblockUser<TRes> {
+  _CopyWithImpl$Variables$Mutation$UnblockUser(this._instance, this._then);
+
+  final Variables$Mutation$UnblockUser _instance;
+
+  final TRes Function(Variables$Mutation$UnblockUser) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? targetMemberId = _undefined}) => _then(
+    Variables$Mutation$UnblockUser._({
+      ..._instance._$data,
+      if (targetMemberId != _undefined && targetMemberId != null)
+        'targetMemberId': (targetMemberId as String),
+    }),
+  );
+}
+
+class _CopyWithStubImpl$Variables$Mutation$UnblockUser<TRes>
+    implements CopyWith$Variables$Mutation$UnblockUser<TRes> {
+  _CopyWithStubImpl$Variables$Mutation$UnblockUser(this._res);
+
+  TRes _res;
+
+  call({String? targetMemberId}) => _res;
+}
+
+class Mutation$UnblockUser {
+  Mutation$UnblockUser({required this.unblockUser});
+
+  factory Mutation$UnblockUser.fromJson(Map<String, dynamic> json) {
+    final l$unblockUser = json['unblockUser'];
+    return Mutation$UnblockUser(
+      unblockUser: Mutation$UnblockUser$unblockUser.fromJson(
+        (l$unblockUser as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final Mutation$UnblockUser$unblockUser unblockUser;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$unblockUser = unblockUser;
+    _resultData['unblockUser'] = l$unblockUser.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$unblockUser = unblockUser;
+    return Object.hashAll([l$unblockUser]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$UnblockUser || runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$unblockUser = unblockUser;
+    final lOther$unblockUser = other.unblockUser;
+    if (l$unblockUser != lOther$unblockUser) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$UnblockUser on Mutation$UnblockUser {
+  CopyWith$Mutation$UnblockUser<Mutation$UnblockUser> get copyWith =>
+      CopyWith$Mutation$UnblockUser(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$UnblockUser<TRes> {
+  factory CopyWith$Mutation$UnblockUser(
+    Mutation$UnblockUser instance,
+    TRes Function(Mutation$UnblockUser) then,
+  ) = _CopyWithImpl$Mutation$UnblockUser;
+
+  factory CopyWith$Mutation$UnblockUser.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$UnblockUser;
+
+  TRes call({Mutation$UnblockUser$unblockUser? unblockUser});
+  CopyWith$Mutation$UnblockUser$unblockUser<TRes> get unblockUser;
+}
+
+class _CopyWithImpl$Mutation$UnblockUser<TRes>
+    implements CopyWith$Mutation$UnblockUser<TRes> {
+  _CopyWithImpl$Mutation$UnblockUser(this._instance, this._then);
+
+  final Mutation$UnblockUser _instance;
+
+  final TRes Function(Mutation$UnblockUser) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? unblockUser = _undefined}) => _then(
+    Mutation$UnblockUser(
+      unblockUser: unblockUser == _undefined || unblockUser == null
+          ? _instance.unblockUser
+          : (unblockUser as Mutation$UnblockUser$unblockUser),
+    ),
+  );
+
+  CopyWith$Mutation$UnblockUser$unblockUser<TRes> get unblockUser {
+    final local$unblockUser = _instance.unblockUser;
+    return CopyWith$Mutation$UnblockUser$unblockUser(
+      local$unblockUser,
+      (e) => call(unblockUser: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Mutation$UnblockUser<TRes>
+    implements CopyWith$Mutation$UnblockUser<TRes> {
+  _CopyWithStubImpl$Mutation$UnblockUser(this._res);
+
+  TRes _res;
+
+  call({Mutation$UnblockUser$unblockUser? unblockUser}) => _res;
+
+  CopyWith$Mutation$UnblockUser$unblockUser<TRes> get unblockUser =>
+      CopyWith$Mutation$UnblockUser$unblockUser.stub(_res);
+}
+
+const documentNodeMutationUnblockUser = DocumentNode(
+  definitions: [
+    OperationDefinitionNode(
+      type: OperationType.mutation,
+      name: NameNode(value: 'UnblockUser'),
+      variableDefinitions: [
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'targetMemberId')),
+          type: NamedTypeNode(name: NameNode(value: 'ID'), isNonNull: true),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+      ],
+      directives: [],
+      selectionSet: SelectionSetNode(
+        selections: [
+          FieldNode(
+            name: NameNode(value: 'unblockUser'),
+            alias: null,
+            arguments: [
+              ArgumentNode(
+                name: NameNode(value: 'input'),
+                value: ObjectValueNode(
+                  fields: [
+                    ObjectFieldNode(
+                      name: NameNode(value: 'targetMemberId'),
+                      value: VariableNode(
+                        name: NameNode(value: 'targetMemberId'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            directives: [],
+            selectionSet: SelectionSetNode(
+              selections: [
+                FieldNode(
+                  name: NameNode(value: 'success'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'userErrors'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'code'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'message'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'field'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+);
+
+class Mutation$UnblockUser$unblockUser {
+  Mutation$UnblockUser$unblockUser({
+    required this.success,
+    required this.userErrors,
+  });
+
+  factory Mutation$UnblockUser$unblockUser.fromJson(Map<String, dynamic> json) {
+    final l$success = json['success'];
+    final l$userErrors = json['userErrors'];
+    return Mutation$UnblockUser$unblockUser(
+      success: (l$success as bool),
+      userErrors: (l$userErrors as List<dynamic>)
+          .map(
+            (e) => Mutation$UnblockUser$unblockUser$userErrors.fromJson(
+              (e as Map<String, dynamic>),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  final bool success;
+
+  final List<Mutation$UnblockUser$unblockUser$userErrors> userErrors;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$success = success;
+    _resultData['success'] = l$success;
+    final l$userErrors = userErrors;
+    _resultData['userErrors'] = l$userErrors.map((e) => e.toJson()).toList();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$success = success;
+    final l$userErrors = userErrors;
+    return Object.hashAll([
+      l$success,
+      Object.hashAll(l$userErrors.map((v) => v)),
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$UnblockUser$unblockUser ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$success = success;
+    final lOther$success = other.success;
+    if (l$success != lOther$success) {
+      return false;
+    }
+    final l$userErrors = userErrors;
+    final lOther$userErrors = other.userErrors;
+    if (l$userErrors.length != lOther$userErrors.length) {
+      return false;
+    }
+    for (int i = 0; i < l$userErrors.length; i++) {
+      final l$userErrors$entry = l$userErrors[i];
+      final lOther$userErrors$entry = lOther$userErrors[i];
+      if (l$userErrors$entry != lOther$userErrors$entry) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$UnblockUser$unblockUser
+    on Mutation$UnblockUser$unblockUser {
+  CopyWith$Mutation$UnblockUser$unblockUser<Mutation$UnblockUser$unblockUser>
+  get copyWith => CopyWith$Mutation$UnblockUser$unblockUser(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$UnblockUser$unblockUser<TRes> {
+  factory CopyWith$Mutation$UnblockUser$unblockUser(
+    Mutation$UnblockUser$unblockUser instance,
+    TRes Function(Mutation$UnblockUser$unblockUser) then,
+  ) = _CopyWithImpl$Mutation$UnblockUser$unblockUser;
+
+  factory CopyWith$Mutation$UnblockUser$unblockUser.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$UnblockUser$unblockUser;
+
+  TRes call({
+    bool? success,
+    List<Mutation$UnblockUser$unblockUser$userErrors>? userErrors,
+  });
+  TRes userErrors(
+    Iterable<Mutation$UnblockUser$unblockUser$userErrors> Function(
+      Iterable<
+        CopyWith$Mutation$UnblockUser$unblockUser$userErrors<
+          Mutation$UnblockUser$unblockUser$userErrors
+        >
+      >,
+    )
+    _fn,
+  );
+}
+
+class _CopyWithImpl$Mutation$UnblockUser$unblockUser<TRes>
+    implements CopyWith$Mutation$UnblockUser$unblockUser<TRes> {
+  _CopyWithImpl$Mutation$UnblockUser$unblockUser(this._instance, this._then);
+
+  final Mutation$UnblockUser$unblockUser _instance;
+
+  final TRes Function(Mutation$UnblockUser$unblockUser) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? success = _undefined, Object? userErrors = _undefined}) =>
+      _then(
+        Mutation$UnblockUser$unblockUser(
+          success: success == _undefined || success == null
+              ? _instance.success
+              : (success as bool),
+          userErrors: userErrors == _undefined || userErrors == null
+              ? _instance.userErrors
+              : (userErrors
+                    as List<Mutation$UnblockUser$unblockUser$userErrors>),
+        ),
+      );
+
+  TRes userErrors(
+    Iterable<Mutation$UnblockUser$unblockUser$userErrors> Function(
+      Iterable<
+        CopyWith$Mutation$UnblockUser$unblockUser$userErrors<
+          Mutation$UnblockUser$unblockUser$userErrors
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    userErrors: _fn(
+      _instance.userErrors.map(
+        (e) =>
+            CopyWith$Mutation$UnblockUser$unblockUser$userErrors(e, (i) => i),
+      ),
+    ).toList(),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$UnblockUser$unblockUser<TRes>
+    implements CopyWith$Mutation$UnblockUser$unblockUser<TRes> {
+  _CopyWithStubImpl$Mutation$UnblockUser$unblockUser(this._res);
+
+  TRes _res;
+
+  call({
+    bool? success,
+    List<Mutation$UnblockUser$unblockUser$userErrors>? userErrors,
+  }) => _res;
+
+  userErrors(_fn) => _res;
+}
+
+class Mutation$UnblockUser$unblockUser$userErrors {
+  Mutation$UnblockUser$unblockUser$userErrors({
+    required this.code,
+    required this.message,
+    this.field,
+  });
+
+  factory Mutation$UnblockUser$unblockUser$userErrors.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$code = json['code'];
+    final l$message = json['message'];
+    final l$field = json['field'];
+    return Mutation$UnblockUser$unblockUser$userErrors(
+      code: (l$code as String),
+      message: (l$message as String),
+      field: (l$field as String?),
+    );
+  }
+
+  final String code;
+
+  final String message;
+
+  final String? field;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$message = message;
+    _resultData['message'] = l$message;
+    final l$field = field;
+    _resultData['field'] = l$field;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$code = code;
+    final l$message = message;
+    final l$field = field;
+    return Object.hashAll([l$code, l$message, l$field]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$UnblockUser$unblockUser$userErrors ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$message = message;
+    final lOther$message = other.message;
+    if (l$message != lOther$message) {
+      return false;
+    }
+    final l$field = field;
+    final lOther$field = other.field;
+    if (l$field != lOther$field) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$UnblockUser$unblockUser$userErrors
+    on Mutation$UnblockUser$unblockUser$userErrors {
+  CopyWith$Mutation$UnblockUser$unblockUser$userErrors<
+    Mutation$UnblockUser$unblockUser$userErrors
+  >
+  get copyWith =>
+      CopyWith$Mutation$UnblockUser$unblockUser$userErrors(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$UnblockUser$unblockUser$userErrors<TRes> {
+  factory CopyWith$Mutation$UnblockUser$unblockUser$userErrors(
+    Mutation$UnblockUser$unblockUser$userErrors instance,
+    TRes Function(Mutation$UnblockUser$unblockUser$userErrors) then,
+  ) = _CopyWithImpl$Mutation$UnblockUser$unblockUser$userErrors;
+
+  factory CopyWith$Mutation$UnblockUser$unblockUser$userErrors.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$UnblockUser$unblockUser$userErrors;
+
+  TRes call({String? code, String? message, String? field});
+}
+
+class _CopyWithImpl$Mutation$UnblockUser$unblockUser$userErrors<TRes>
+    implements CopyWith$Mutation$UnblockUser$unblockUser$userErrors<TRes> {
+  _CopyWithImpl$Mutation$UnblockUser$unblockUser$userErrors(
+    this._instance,
+    this._then,
+  );
+
+  final Mutation$UnblockUser$unblockUser$userErrors _instance;
+
+  final TRes Function(Mutation$UnblockUser$unblockUser$userErrors) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? code = _undefined,
+    Object? message = _undefined,
+    Object? field = _undefined,
+  }) => _then(
+    Mutation$UnblockUser$unblockUser$userErrors(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      message: message == _undefined || message == null
+          ? _instance.message
+          : (message as String),
+      field: field == _undefined ? _instance.field : (field as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$UnblockUser$unblockUser$userErrors<TRes>
+    implements CopyWith$Mutation$UnblockUser$unblockUser$userErrors<TRes> {
+  _CopyWithStubImpl$Mutation$UnblockUser$unblockUser$userErrors(this._res);
+
+  TRes _res;
+
+  call({String? code, String? message, String? field}) => _res;
+}
+
+class Variables$Mutation$ReportContent {
+  factory Variables$Mutation$ReportContent({
+    required Enum$ReportTargetType targetType,
+    required String targetId,
+    required Enum$ReportReason reason,
+    String? detail,
+  }) => Variables$Mutation$ReportContent._({
+    r'targetType': targetType,
+    r'targetId': targetId,
+    r'reason': reason,
+    if (detail != null) r'detail': detail,
+  });
+
+  Variables$Mutation$ReportContent._(this._$data);
+
+  factory Variables$Mutation$ReportContent.fromJson(Map<String, dynamic> data) {
+    final result$data = <String, dynamic>{};
+    final l$targetType = data['targetType'];
+    result$data['targetType'] = fromJson$Enum$ReportTargetType(
+      (l$targetType as String),
+    );
+    final l$targetId = data['targetId'];
+    result$data['targetId'] = (l$targetId as String);
+    final l$reason = data['reason'];
+    result$data['reason'] = fromJson$Enum$ReportReason((l$reason as String));
+    if (data.containsKey('detail')) {
+      final l$detail = data['detail'];
+      result$data['detail'] = (l$detail as String?);
+    }
+    return Variables$Mutation$ReportContent._(result$data);
+  }
+
+  Map<String, dynamic> _$data;
+
+  Enum$ReportTargetType get targetType =>
+      (_$data['targetType'] as Enum$ReportTargetType);
+
+  String get targetId => (_$data['targetId'] as String);
+
+  Enum$ReportReason get reason => (_$data['reason'] as Enum$ReportReason);
+
+  String? get detail => (_$data['detail'] as String?);
+
+  Map<String, dynamic> toJson() {
+    final result$data = <String, dynamic>{};
+    final l$targetType = targetType;
+    result$data['targetType'] = toJson$Enum$ReportTargetType(l$targetType);
+    final l$targetId = targetId;
+    result$data['targetId'] = l$targetId;
+    final l$reason = reason;
+    result$data['reason'] = toJson$Enum$ReportReason(l$reason);
+    if (_$data.containsKey('detail')) {
+      final l$detail = detail;
+      result$data['detail'] = l$detail;
+    }
+    return result$data;
+  }
+
+  CopyWith$Variables$Mutation$ReportContent<Variables$Mutation$ReportContent>
+  get copyWith => CopyWith$Variables$Mutation$ReportContent(this, (i) => i);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Variables$Mutation$ReportContent ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$targetType = targetType;
+    final lOther$targetType = other.targetType;
+    if (l$targetType != lOther$targetType) {
+      return false;
+    }
+    final l$targetId = targetId;
+    final lOther$targetId = other.targetId;
+    if (l$targetId != lOther$targetId) {
+      return false;
+    }
+    final l$reason = reason;
+    final lOther$reason = other.reason;
+    if (l$reason != lOther$reason) {
+      return false;
+    }
+    final l$detail = detail;
+    final lOther$detail = other.detail;
+    if (_$data.containsKey('detail') != other._$data.containsKey('detail')) {
+      return false;
+    }
+    if (l$detail != lOther$detail) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    final l$targetType = targetType;
+    final l$targetId = targetId;
+    final l$reason = reason;
+    final l$detail = detail;
+    return Object.hashAll([
+      l$targetType,
+      l$targetId,
+      l$reason,
+      _$data.containsKey('detail') ? l$detail : const {},
+    ]);
+  }
+}
+
+abstract class CopyWith$Variables$Mutation$ReportContent<TRes> {
+  factory CopyWith$Variables$Mutation$ReportContent(
+    Variables$Mutation$ReportContent instance,
+    TRes Function(Variables$Mutation$ReportContent) then,
+  ) = _CopyWithImpl$Variables$Mutation$ReportContent;
+
+  factory CopyWith$Variables$Mutation$ReportContent.stub(TRes res) =
+      _CopyWithStubImpl$Variables$Mutation$ReportContent;
+
+  TRes call({
+    Enum$ReportTargetType? targetType,
+    String? targetId,
+    Enum$ReportReason? reason,
+    String? detail,
+  });
+}
+
+class _CopyWithImpl$Variables$Mutation$ReportContent<TRes>
+    implements CopyWith$Variables$Mutation$ReportContent<TRes> {
+  _CopyWithImpl$Variables$Mutation$ReportContent(this._instance, this._then);
+
+  final Variables$Mutation$ReportContent _instance;
+
+  final TRes Function(Variables$Mutation$ReportContent) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? targetType = _undefined,
+    Object? targetId = _undefined,
+    Object? reason = _undefined,
+    Object? detail = _undefined,
+  }) => _then(
+    Variables$Mutation$ReportContent._({
+      ..._instance._$data,
+      if (targetType != _undefined && targetType != null)
+        'targetType': (targetType as Enum$ReportTargetType),
+      if (targetId != _undefined && targetId != null)
+        'targetId': (targetId as String),
+      if (reason != _undefined && reason != null)
+        'reason': (reason as Enum$ReportReason),
+      if (detail != _undefined) 'detail': (detail as String?),
+    }),
+  );
+}
+
+class _CopyWithStubImpl$Variables$Mutation$ReportContent<TRes>
+    implements CopyWith$Variables$Mutation$ReportContent<TRes> {
+  _CopyWithStubImpl$Variables$Mutation$ReportContent(this._res);
+
+  TRes _res;
+
+  call({
+    Enum$ReportTargetType? targetType,
+    String? targetId,
+    Enum$ReportReason? reason,
+    String? detail,
+  }) => _res;
+}
+
+class Mutation$ReportContent {
+  Mutation$ReportContent({required this.reportContent});
+
+  factory Mutation$ReportContent.fromJson(Map<String, dynamic> json) {
+    final l$reportContent = json['reportContent'];
+    return Mutation$ReportContent(
+      reportContent: Mutation$ReportContent$reportContent.fromJson(
+        (l$reportContent as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final Mutation$ReportContent$reportContent reportContent;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$reportContent = reportContent;
+    _resultData['reportContent'] = l$reportContent.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$reportContent = reportContent;
+    return Object.hashAll([l$reportContent]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$ReportContent || runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$reportContent = reportContent;
+    final lOther$reportContent = other.reportContent;
+    if (l$reportContent != lOther$reportContent) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$ReportContent on Mutation$ReportContent {
+  CopyWith$Mutation$ReportContent<Mutation$ReportContent> get copyWith =>
+      CopyWith$Mutation$ReportContent(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$ReportContent<TRes> {
+  factory CopyWith$Mutation$ReportContent(
+    Mutation$ReportContent instance,
+    TRes Function(Mutation$ReportContent) then,
+  ) = _CopyWithImpl$Mutation$ReportContent;
+
+  factory CopyWith$Mutation$ReportContent.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$ReportContent;
+
+  TRes call({Mutation$ReportContent$reportContent? reportContent});
+  CopyWith$Mutation$ReportContent$reportContent<TRes> get reportContent;
+}
+
+class _CopyWithImpl$Mutation$ReportContent<TRes>
+    implements CopyWith$Mutation$ReportContent<TRes> {
+  _CopyWithImpl$Mutation$ReportContent(this._instance, this._then);
+
+  final Mutation$ReportContent _instance;
+
+  final TRes Function(Mutation$ReportContent) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? reportContent = _undefined}) => _then(
+    Mutation$ReportContent(
+      reportContent: reportContent == _undefined || reportContent == null
+          ? _instance.reportContent
+          : (reportContent as Mutation$ReportContent$reportContent),
+    ),
+  );
+
+  CopyWith$Mutation$ReportContent$reportContent<TRes> get reportContent {
+    final local$reportContent = _instance.reportContent;
+    return CopyWith$Mutation$ReportContent$reportContent(
+      local$reportContent,
+      (e) => call(reportContent: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Mutation$ReportContent<TRes>
+    implements CopyWith$Mutation$ReportContent<TRes> {
+  _CopyWithStubImpl$Mutation$ReportContent(this._res);
+
+  TRes _res;
+
+  call({Mutation$ReportContent$reportContent? reportContent}) => _res;
+
+  CopyWith$Mutation$ReportContent$reportContent<TRes> get reportContent =>
+      CopyWith$Mutation$ReportContent$reportContent.stub(_res);
+}
+
+const documentNodeMutationReportContent = DocumentNode(
+  definitions: [
+    OperationDefinitionNode(
+      type: OperationType.mutation,
+      name: NameNode(value: 'ReportContent'),
+      variableDefinitions: [
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'targetType')),
+          type: NamedTypeNode(
+            name: NameNode(value: 'ReportTargetType'),
+            isNonNull: true,
+          ),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'targetId')),
+          type: NamedTypeNode(name: NameNode(value: 'ID'), isNonNull: true),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'reason')),
+          type: NamedTypeNode(
+            name: NameNode(value: 'ReportReason'),
+            isNonNull: true,
+          ),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'detail')),
+          type: NamedTypeNode(
+            name: NameNode(value: 'String'),
+            isNonNull: false,
+          ),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+      ],
+      directives: [],
+      selectionSet: SelectionSetNode(
+        selections: [
+          FieldNode(
+            name: NameNode(value: 'reportContent'),
+            alias: null,
+            arguments: [
+              ArgumentNode(
+                name: NameNode(value: 'input'),
+                value: ObjectValueNode(
+                  fields: [
+                    ObjectFieldNode(
+                      name: NameNode(value: 'targetType'),
+                      value: VariableNode(name: NameNode(value: 'targetType')),
+                    ),
+                    ObjectFieldNode(
+                      name: NameNode(value: 'targetId'),
+                      value: VariableNode(name: NameNode(value: 'targetId')),
+                    ),
+                    ObjectFieldNode(
+                      name: NameNode(value: 'reason'),
+                      value: VariableNode(name: NameNode(value: 'reason')),
+                    ),
+                    ObjectFieldNode(
+                      name: NameNode(value: 'detail'),
+                      value: VariableNode(name: NameNode(value: 'detail')),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            directives: [],
+            selectionSet: SelectionSetNode(
+              selections: [
+                FieldNode(
+                  name: NameNode(value: 'success'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'userErrors'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'code'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'message'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'field'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+);
+
+class Mutation$ReportContent$reportContent {
+  Mutation$ReportContent$reportContent({
+    required this.success,
+    required this.userErrors,
+  });
+
+  factory Mutation$ReportContent$reportContent.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$success = json['success'];
+    final l$userErrors = json['userErrors'];
+    return Mutation$ReportContent$reportContent(
+      success: (l$success as bool),
+      userErrors: (l$userErrors as List<dynamic>)
+          .map(
+            (e) => Mutation$ReportContent$reportContent$userErrors.fromJson(
+              (e as Map<String, dynamic>),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  final bool success;
+
+  final List<Mutation$ReportContent$reportContent$userErrors> userErrors;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$success = success;
+    _resultData['success'] = l$success;
+    final l$userErrors = userErrors;
+    _resultData['userErrors'] = l$userErrors.map((e) => e.toJson()).toList();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$success = success;
+    final l$userErrors = userErrors;
+    return Object.hashAll([
+      l$success,
+      Object.hashAll(l$userErrors.map((v) => v)),
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$ReportContent$reportContent ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$success = success;
+    final lOther$success = other.success;
+    if (l$success != lOther$success) {
+      return false;
+    }
+    final l$userErrors = userErrors;
+    final lOther$userErrors = other.userErrors;
+    if (l$userErrors.length != lOther$userErrors.length) {
+      return false;
+    }
+    for (int i = 0; i < l$userErrors.length; i++) {
+      final l$userErrors$entry = l$userErrors[i];
+      final lOther$userErrors$entry = lOther$userErrors[i];
+      if (l$userErrors$entry != lOther$userErrors$entry) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$ReportContent$reportContent
+    on Mutation$ReportContent$reportContent {
+  CopyWith$Mutation$ReportContent$reportContent<
+    Mutation$ReportContent$reportContent
+  >
+  get copyWith => CopyWith$Mutation$ReportContent$reportContent(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$ReportContent$reportContent<TRes> {
+  factory CopyWith$Mutation$ReportContent$reportContent(
+    Mutation$ReportContent$reportContent instance,
+    TRes Function(Mutation$ReportContent$reportContent) then,
+  ) = _CopyWithImpl$Mutation$ReportContent$reportContent;
+
+  factory CopyWith$Mutation$ReportContent$reportContent.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$ReportContent$reportContent;
+
+  TRes call({
+    bool? success,
+    List<Mutation$ReportContent$reportContent$userErrors>? userErrors,
+  });
+  TRes userErrors(
+    Iterable<Mutation$ReportContent$reportContent$userErrors> Function(
+      Iterable<
+        CopyWith$Mutation$ReportContent$reportContent$userErrors<
+          Mutation$ReportContent$reportContent$userErrors
+        >
+      >,
+    )
+    _fn,
+  );
+}
+
+class _CopyWithImpl$Mutation$ReportContent$reportContent<TRes>
+    implements CopyWith$Mutation$ReportContent$reportContent<TRes> {
+  _CopyWithImpl$Mutation$ReportContent$reportContent(
+    this._instance,
+    this._then,
+  );
+
+  final Mutation$ReportContent$reportContent _instance;
+
+  final TRes Function(Mutation$ReportContent$reportContent) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? success = _undefined, Object? userErrors = _undefined}) =>
+      _then(
+        Mutation$ReportContent$reportContent(
+          success: success == _undefined || success == null
+              ? _instance.success
+              : (success as bool),
+          userErrors: userErrors == _undefined || userErrors == null
+              ? _instance.userErrors
+              : (userErrors
+                    as List<Mutation$ReportContent$reportContent$userErrors>),
+        ),
+      );
+
+  TRes userErrors(
+    Iterable<Mutation$ReportContent$reportContent$userErrors> Function(
+      Iterable<
+        CopyWith$Mutation$ReportContent$reportContent$userErrors<
+          Mutation$ReportContent$reportContent$userErrors
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    userErrors: _fn(
+      _instance.userErrors.map(
+        (e) => CopyWith$Mutation$ReportContent$reportContent$userErrors(
+          e,
+          (i) => i,
+        ),
+      ),
+    ).toList(),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$ReportContent$reportContent<TRes>
+    implements CopyWith$Mutation$ReportContent$reportContent<TRes> {
+  _CopyWithStubImpl$Mutation$ReportContent$reportContent(this._res);
+
+  TRes _res;
+
+  call({
+    bool? success,
+    List<Mutation$ReportContent$reportContent$userErrors>? userErrors,
+  }) => _res;
+
+  userErrors(_fn) => _res;
+}
+
+class Mutation$ReportContent$reportContent$userErrors {
+  Mutation$ReportContent$reportContent$userErrors({
+    required this.code,
+    required this.message,
+    this.field,
+  });
+
+  factory Mutation$ReportContent$reportContent$userErrors.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$code = json['code'];
+    final l$message = json['message'];
+    final l$field = json['field'];
+    return Mutation$ReportContent$reportContent$userErrors(
+      code: (l$code as String),
+      message: (l$message as String),
+      field: (l$field as String?),
+    );
+  }
+
+  final String code;
+
+  final String message;
+
+  final String? field;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$message = message;
+    _resultData['message'] = l$message;
+    final l$field = field;
+    _resultData['field'] = l$field;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$code = code;
+    final l$message = message;
+    final l$field = field;
+    return Object.hashAll([l$code, l$message, l$field]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$ReportContent$reportContent$userErrors ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$message = message;
+    final lOther$message = other.message;
+    if (l$message != lOther$message) {
+      return false;
+    }
+    final l$field = field;
+    final lOther$field = other.field;
+    if (l$field != lOther$field) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$ReportContent$reportContent$userErrors
+    on Mutation$ReportContent$reportContent$userErrors {
+  CopyWith$Mutation$ReportContent$reportContent$userErrors<
+    Mutation$ReportContent$reportContent$userErrors
+  >
+  get copyWith =>
+      CopyWith$Mutation$ReportContent$reportContent$userErrors(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$ReportContent$reportContent$userErrors<TRes> {
+  factory CopyWith$Mutation$ReportContent$reportContent$userErrors(
+    Mutation$ReportContent$reportContent$userErrors instance,
+    TRes Function(Mutation$ReportContent$reportContent$userErrors) then,
+  ) = _CopyWithImpl$Mutation$ReportContent$reportContent$userErrors;
+
+  factory CopyWith$Mutation$ReportContent$reportContent$userErrors.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Mutation$ReportContent$reportContent$userErrors;
+
+  TRes call({String? code, String? message, String? field});
+}
+
+class _CopyWithImpl$Mutation$ReportContent$reportContent$userErrors<TRes>
+    implements CopyWith$Mutation$ReportContent$reportContent$userErrors<TRes> {
+  _CopyWithImpl$Mutation$ReportContent$reportContent$userErrors(
+    this._instance,
+    this._then,
+  );
+
+  final Mutation$ReportContent$reportContent$userErrors _instance;
+
+  final TRes Function(Mutation$ReportContent$reportContent$userErrors) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? code = _undefined,
+    Object? message = _undefined,
+    Object? field = _undefined,
+  }) => _then(
+    Mutation$ReportContent$reportContent$userErrors(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      message: message == _undefined || message == null
+          ? _instance.message
+          : (message as String),
+      field: field == _undefined ? _instance.field : (field as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$ReportContent$reportContent$userErrors<TRes>
+    implements CopyWith$Mutation$ReportContent$reportContent$userErrors<TRes> {
+  _CopyWithStubImpl$Mutation$ReportContent$reportContent$userErrors(this._res);
+
+  TRes _res;
+
+  call({String? code, String? message, String? field}) => _res;
+}

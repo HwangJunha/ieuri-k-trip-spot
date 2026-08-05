@@ -5,6 +5,7 @@ import 'package:ieuri_k_trip_spot/domain/community/model/community_failure.dart'
 import 'package:ieuri_k_trip_spot/domain/community/model/discovery_tile.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_topic.dart';
+import 'package:ieuri_k_trip_spot/domain/community/model/report_reason.dart';
 import 'package:ieuri_k_trip_spot/domain/community/repository/community_repository_impl.dart';
 
 /// 정형 [Response] 하나를 돌려주는 링크. 실제 네트워크 대신 repository의 매핑과
@@ -378,6 +379,263 @@ void main() {
                 CommunityFailureKind.userError,
               )
               .having((CommunityFailure f) => f.code, 'code', 'POST_NOT_FOUND'),
+        ),
+      );
+    });
+  });
+
+  group('createPost', () {
+    // 가이드 §11 — postId만 오고 post는 항상 null이다. 응답에서 글을 조립할 수 없다.
+    test('postId만 돌려주고 입력을 그대로 서버에 넘긴다', () async {
+      final _FakeLink link = _FakeLink(
+        data: <String, dynamic>{
+          'createPost': <String, dynamic>{
+            'success': true,
+            'userErrors': <dynamic>[],
+            'postId': '42',
+          },
+        },
+      );
+
+      final String? postId = await _repo(link).createPost(
+        targetType: 'SPOT',
+        targetId: '11094',
+        topic: PostTopic.tip,
+        body: '경복궁은 화요일 휴무예요.',
+        photoKeys: <String>['images/20/abc'],
+      );
+
+      expect(postId, '42');
+      expect(link.sentVariables?['targetType'], 'SPOT');
+      expect(link.sentVariables?['topic'], 'TIP');
+      expect(link.sentVariables?['photoKeys'], <String>['images/20/abc']);
+    });
+
+    test('본문 길이 위반은 코드를 담은 실패가 된다', () async {
+      expect(
+        () =>
+            _repo(
+              _FakeLink(
+                data: <String, dynamic>{
+                  'createPost': <String, dynamic>{
+                    'success': false,
+                    'userErrors': <dynamic>[
+                      <String, dynamic>{
+                        'code': 'POST_BODY_LENGTH_INVALID',
+                        'message': '본문이 너무 깁니다.',
+                        'field': 'body',
+                      },
+                    ],
+                    'postId': null,
+                  },
+                },
+              ),
+            ).createPost(
+              targetType: 'SPOT',
+              targetId: '11094',
+              topic: PostTopic.tip,
+              body: '가' * 501,
+            ),
+        throwsA(
+          isA<CommunityFailure>().having(
+            (CommunityFailure f) => f.code,
+            'code',
+            'POST_BODY_LENGTH_INVALID',
+          ),
+        ),
+      );
+    });
+  });
+
+  group('blockUser', () {
+    test('대상 회원 id를 서버에 넘긴다', () async {
+      final _FakeLink link = _FakeLink(
+        data: <String, dynamic>{
+          'blockUser': <String, dynamic>{
+            'success': true,
+            'userErrors': <dynamic>[],
+          },
+        },
+      );
+
+      await _repo(link).blockUser('19');
+
+      expect(link.sentVariables?['targetMemberId'], '19');
+    });
+
+    test('자기 차단은 코드를 담은 실패가 된다', () async {
+      expect(
+        () => _repo(
+          _FakeLink(
+            data: <String, dynamic>{
+              'blockUser': <String, dynamic>{
+                'success': false,
+                'userErrors': <dynamic>[
+                  <String, dynamic>{
+                    'code': 'CANNOT_BLOCK_SELF',
+                    'message': '자기 자신은 차단할 수 없습니다.',
+                    'field': null,
+                  },
+                ],
+              },
+            },
+          ),
+        ).blockUser('20'),
+        throwsA(
+          isA<CommunityFailure>().having(
+            (CommunityFailure f) => f.code,
+            'code',
+            'CANNOT_BLOCK_SELF',
+          ),
+        ),
+      );
+    });
+
+    // 가이드 §7 — 쓰기는 전부 인증 필수이고, UNAUTHENTICATED만 최상위 errors[]로
+    // 온다. 화면이 로그인으로 유도하려면 이 종류가 구분돼야 한다.
+    test('미인증은 전용 실패 종류로 번역된다', () async {
+      expect(
+        () => _repo(
+          _FakeLink(
+            data: null,
+            errors: <GraphQLError>[
+              const GraphQLError(
+                message: '인증이 필요합니다.',
+                path: <dynamic>['blockUser'],
+                extensions: <String, dynamic>{'code': 'UNAUTHENTICATED'},
+              ),
+            ],
+          ),
+        ).blockUser('19'),
+        throwsA(
+          isA<CommunityFailure>().having(
+            (CommunityFailure f) => f.kind,
+            'kind',
+            CommunityFailureKind.unauthenticated,
+          ),
+        ),
+      );
+    });
+  });
+
+  group('reportContent', () {
+    test('사유와 상세를 서버 enum으로 옮겨 넘긴다', () async {
+      final _FakeLink link = _FakeLink(
+        data: <String, dynamic>{
+          'reportContent': <String, dynamic>{
+            'success': true,
+            'userErrors': <dynamic>[],
+          },
+        },
+      );
+
+      await _repo(link).reportContent(
+        targetType: ReportTargetType.post,
+        targetId: 'p1',
+        reason: ReportReason.inappropriateContent,
+        detail: '  광고성 글이에요  ',
+      );
+
+      expect(link.sentVariables?['targetType'], 'POST');
+      expect(link.sentVariables?['reason'], 'INAPPROPRIATE_CONTENT');
+      expect(link.sentVariables?['detail'], '광고성 글이에요');
+    });
+
+    // 공백뿐인 상세는 없는 것과 같다 — 서버도 REPORT_DETAIL_REQUIRED로 본다.
+    test('공백뿐인 상세는 아예 보내지 않는다', () async {
+      final _FakeLink link = _FakeLink(
+        data: <String, dynamic>{
+          'reportContent': <String, dynamic>{
+            'success': true,
+            'userErrors': <dynamic>[],
+          },
+        },
+      );
+
+      await _repo(link).reportContent(
+        targetType: ReportTargetType.post,
+        targetId: 'p1',
+        reason: ReportReason.spam,
+        detail: '   ',
+      );
+
+      expect(link.sentVariables?.containsKey('detail'), isFalse);
+    });
+
+    test('재신고는 ALREADY_REPORTED 코드를 담은 실패가 된다', () async {
+      expect(
+        () =>
+            _repo(
+              _FakeLink(
+                data: <String, dynamic>{
+                  'reportContent': <String, dynamic>{
+                    'success': false,
+                    'userErrors': <dynamic>[
+                      <String, dynamic>{
+                        'code': 'ALREADY_REPORTED',
+                        'message': '이미 신고했습니다.',
+                        'field': null,
+                      },
+                    ],
+                  },
+                },
+              ),
+            ).reportContent(
+              targetType: ReportTargetType.post,
+              targetId: 'p1',
+              reason: ReportReason.spam,
+            ),
+        throwsA(
+          isA<CommunityFailure>().having(
+            (CommunityFailure f) => f.code,
+            'code',
+            'ALREADY_REPORTED',
+          ),
+        ),
+      );
+    });
+  });
+
+  group('deletePost', () {
+    test('글 id를 서버에 넘긴다', () async {
+      final _FakeLink link = _FakeLink(
+        data: <String, dynamic>{
+          'deletePost': <String, dynamic>{
+            'success': true,
+            'userErrors': <dynamic>[],
+          },
+        },
+      );
+
+      await _repo(link).deletePost('p1');
+
+      expect(link.sentVariables?['postId'], 'p1');
+    });
+
+    test('남의 글 삭제는 코드를 담은 실패가 된다', () async {
+      expect(
+        () => _repo(
+          _FakeLink(
+            data: <String, dynamic>{
+              'deletePost': <String, dynamic>{
+                'success': false,
+                'userErrors': <dynamic>[
+                  <String, dynamic>{
+                    'code': 'NOT_POST_OWNER',
+                    'message': '본인 글만 삭제할 수 있습니다.',
+                    'field': null,
+                  },
+                ],
+              },
+            },
+          ),
+        ).deletePost('p1'),
+        throwsA(
+          isA<CommunityFailure>().having(
+            (CommunityFailure f) => f.code,
+            'code',
+            'NOT_POST_OWNER',
+          ),
         ),
       );
     });

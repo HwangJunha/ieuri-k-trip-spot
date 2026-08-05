@@ -208,3 +208,72 @@ mutation CreateComment($postId: ID!, $body: String!) {
     commentId
   }
 }
+
+# 내 글 삭제. 남의 글이면 `NOT_POST_OWNER`가 온다 — 버튼을 숨겨도 서버는 여전히
+# 판정하므로 코드를 처리해 둔다(가이드 §7).
+mutation DeletePost($postId: ID!) {
+  deletePost(input: { postId: $postId }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+# 사용자 차단. **양방향이다** — 이 뮤테이션 하나로 서로의 글·댓글이 모든 피드에서
+# 사라진다(가이드 §6). 이미 차단한 사람에게 다시 불러도 멱등하게 성공한다(§8).
+#
+# 성공 후에는 로컬에서 글을 지우는 것이 아니라 **피드를 다시 불러온다** — 필터링은
+# 서버가 한다.
+mutation BlockUser($targetMemberId: ID!) {
+  blockUser(input: { targetMemberId: $targetMemberId }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+# 차단 해제. 차단하지 않은 사람에게 불러도 멱등하게 성공한다(가이드 §8).
+mutation UnblockUser($targetMemberId: ID!) {
+  unblockUser(input: { targetMemberId: $targetMemberId }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+# 신고. reason이 OTHER면 detail이 **필수**이며, 비면 `REPORT_DETAIL_REQUIRED`가 온다
+# — 폼에서 미리 막지만 서버 판정도 함께 처리한다(가이드 §9).
+#
+# 같은 대상 재신고는 `ALREADY_REPORTED`다. 오류로 터뜨리지 않고 "이미 신고했다"는
+# 안내로 접는다.
+mutation ReportContent(
+  $targetType: ReportTargetType!
+  $targetId: ID!
+  $reason: ReportReason!
+  $detail: String
+) {
+  reportContent(
+    input: {
+      targetType: $targetType
+      targetId: $targetId
+      reason: $reason
+      detail: $detail
+    }
+  ) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}

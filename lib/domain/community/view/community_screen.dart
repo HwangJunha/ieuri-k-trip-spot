@@ -15,25 +15,23 @@ import '../model/post.dart';
 import '../model/post_topic.dart';
 import '../provider/community_providers.dart';
 import '../provider/nearby_feed_providers.dart';
+import 'post_composer_screen.dart';
 import 'post_detail_screen.dart';
+import 'post_moderation_flow.dart';
 
-/// 커뮤니티 탭 — Spot Talk(SPEC-0010 R7·R8·R10·R11).
+/// 커뮤니티 탭 — Spot Talk(SPEC-0010 R7·R8·R10·R11), **당근 동네생활 배치**.
 ///
-/// 위에서부터 탐색 타일 그리드, 주제 태그 칩 한 줄, 지역 피드다(디자인 §1).
-/// 라우트 `/community`와 탭 라벨 `navCommunity`는 SPEC-0008이 이미 만들어 둔 것을
-/// 그대로 쓴다 — **탭을 새로 만들지 않고 스텁 내용만 바꾼 것**이다(설계 §1).
+/// 위에서부터 탐색 타일 그리드, 카테고리 행, 지역 피드다. 라우트 `/community`와 탭
+/// 라벨 `navCommunity`는 SPEC-0008이 이미 만들어 둔 것을 그대로 쓴다 — **탭을 새로
+/// 만들지 않고 스텁 내용만 바꾼 것**이다(설계 §1).
 ///
 /// **타일과 피드를 서로 다른 provider로 갈라 둔 이유**가 화면에 드러난다: 지금 서버는
-/// 커넥션 조회(`nearbyPosts`)만 깨져 있고 타일은 정상이라, 피드가 실패해도 타일과 칩은
-/// 그대로 보이고 피드 자리에만 오류와 재시도가 뜬다. 하나로 묶었으면 화면 전체가
-/// 빈 오류 화면이 됐을 것이다.
+/// 커넥션 조회(`nearbyPosts`)만 깨져 있고 타일은 정상이라, 피드가 실패해도 타일과
+/// 카테고리 행은 그대로 보이고 피드 자리에만 오류와 재시도가 뜬다. 하나로 묶었으면
+/// 화면 전체가 빈 오류 화면이 됐을 것이다.
 ///
 /// 미인증으로도 피드를 볼 수 있다(R17) — 조회 4종은 로그인이 필요 없고, 상호작용
-/// 시점에 로그인으로 유도한다. 버튼을 감추지 않는다.
-///
-/// 타일·칩은 스크롤과 함께 흐르지 않고 상단에 고정된다. 피드가 공용
-/// [PaginationListView]를 쓰기 때문이며(CLAUDE.md §4 — 기능이 자기 페이지네이션을
-/// 만들지 않는다), 필터 칩이 늘 보이는 편이 태그를 옮겨 다니기에도 낫다.
+/// 시점에 로그인으로 유도한다. **버튼을 감추지 않는다.**
 class CommunityScreen extends ConsumerWidget {
   const CommunityScreen({super.key});
 
@@ -48,12 +46,7 @@ class CommunityScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.communityTitle)),
       floatingActionButton: FloatingActionButton(
         tooltip: l10n.communityComposeAction,
-        // 컴포저는 아직 없다. 비활성 버튼을 두지 않는다는 원칙(설계 §6)과 작성
-        // 진입점이 스펙의 요구라는 사실 사이에서 **버튼은 두고 안내만 한다** —
-        // 지금 없앴다가 컴포저가 붙을 때 레이아웃을 다시 잡는 것보다 낫다.
-        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.communityComposeUnavailable)),
-        ),
+        onPressed: () => _openComposer(context, ref, topic),
         child: const Icon(Icons.edit_outlined),
       ),
       body: SafeArea(
@@ -75,13 +68,29 @@ class CommunityScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            // 본문만 상태에 따라 갈린다 — 피드가 로딩·오류여도 타일과 칩은 그대로
-            // 있어야 다른 태그로 옮겨갈 수 있다.
+            // 본문만 상태에 따라 갈린다 — 피드가 로딩·오류여도 타일과 카테고리 행은
+            // 그대로 있어야 다른 태그로 옮겨갈 수 있다.
             Expanded(child: _NearbyFeed(topic: topic)),
           ],
         ),
       ),
     );
+  }
+
+  /// 컴포저를 연다. 등록에 성공하면 **피드를 다시 불러온다** — `createPost`는
+  /// `postId`만 주고 `post`는 항상 null이라(가이드 §11) 새 글을 응답으로 조립할 수
+  /// 없기 때문이다.
+  Future<void> _openComposer(
+    BuildContext context,
+    WidgetRef ref,
+    PostTopic? topic,
+  ) async {
+    final bool? created = await context.pushNamed<bool>(
+      PostComposerScreen.routeName,
+    );
+    if (created ?? false) {
+      ref.invalidate(nearbyFeedControllerProvider(topic));
+    }
   }
 }
 
@@ -95,7 +104,7 @@ class _Tiles extends ConsumerWidget {
       .maybeWhen(
         data: (List<DiscoveryTile> tiles) => DiscoveryTileGrid(
           tiles: tiles,
-          // 타일 진입은 칩 선택과 **같은 상태**를 쓴다(R11-3) — 상단 칩이 그
+          // 타일 진입은 카테고리 선택과 **같은 상태**를 쓴다(R11-3) — 상단 행이 그
           // 태그로 선택된 것처럼 보인다.
           onTap: (DiscoveryTile tile) => ref
               .read(selectedPostTopicProvider.notifier)
@@ -141,6 +150,9 @@ class _NearbyFeed extends ConsumerWidget {
 }
 
 /// 피드 본문. 스크롤·추가 로딩은 공용 [PaginationListView]가 담당한다(CLAUDE.md §4).
+///
+/// 카드 사이는 **얇은 구분선**이다 — 당근 동네생활은 그림자 있는 카드가 아니라
+/// 구분선으로만 항목을 나눈다.
 class _FeedList extends ConsumerWidget {
   const _FeedList({required this.topic, required this.data});
 
@@ -162,20 +174,34 @@ class _FeedList extends ConsumerWidget {
           ref.read(nearbyFeedControllerProvider(topic).notifier).loadMore(),
       itemBuilder: (BuildContext context, int index) {
         final Post post = data.items[index];
-        return PostCard(
-          post: post,
-          now: now,
-          onTap: () => context.pushNamed(
-            PostDetailScreen.routeName,
-            pathParameters: <String, String>{'id': post.id},
-          ),
-          onLike: () => ref
-              .read(nearbyFeedControllerProvider(topic).notifier)
-              .toggleLike(post.id)
-              // 실패는 컨트롤러가 롤백하고 로그를 남긴다. 여기서 다시 던지면
-              // 프레임 밖 예외가 되어 앱이 죽는다.
-              .catchError((Object _) {}),
-          onTargetTap: () => _openTarget(context, post),
+        return Column(
+          children: <Widget>[
+            if (index > 0) const Divider(height: 1, thickness: 0.5),
+            PostCard(
+              post: post,
+              now: now,
+              onTap: () => context.pushNamed(
+                PostDetailScreen.routeName,
+                pathParameters: <String, String>{'id': post.id},
+              ),
+              onLike: () => ref
+                  .read(nearbyFeedControllerProvider(topic).notifier)
+                  .toggleLike(post.id)
+                  // 실패는 컨트롤러가 롤백하고 로그를 남긴다. 여기서 다시 던지면
+                  // 프레임 밖 예외가 되어 앱이 죽는다.
+                  .catchError((Object _) {}),
+              onTargetTap: () => _openTarget(context, post),
+              // 차단·신고·삭제. 성공하면 흐름이 피드를 다시 불러온다 — 서버가
+              // 필터링하므로 로컬에서 지우는 것이 아니다(가이드 §6).
+              onOptions: () => runPostModerationFlow(
+                context,
+                ref,
+                post: post,
+                onChanged: () =>
+                    ref.invalidate(nearbyFeedControllerProvider(topic)),
+              ),
+            ),
+          ],
         );
       },
     );

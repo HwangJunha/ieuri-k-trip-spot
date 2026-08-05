@@ -6,6 +6,7 @@ import 'package:ieuri_k_trip_spot/domain/community/model/community_failure.dart'
 import 'package:ieuri_k_trip_spot/domain/community/model/discovery_tile.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_topic.dart';
+import 'package:ieuri_k_trip_spot/domain/community/model/report_reason.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/community/view/community_screen.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
@@ -42,8 +43,166 @@ void main() {
 
     expect(find.text('Spot Talk'), findsOneWidget);
     expect(find.text('A nice walk around the palace.'), findsOneWidget);
-    // 대상 pill은 어느 spot의 글인지 보여준다.
+    // 하단 좌측이 장소 이름이다 — 당근의 "신림동" 자리에 spot 이름을 넣는다.
     expect(find.text('Gyeongbokgung'), findsOneWidget);
+  });
+
+  // 당근 카드 배치: 태그가 맨 위, 그 아래 굵은 제목, 그 아래 본문.
+  testWidgets('카드는 태그·제목·본문 순으로 그려진다', (WidgetTester tester) async {
+    await _pump(
+      tester,
+      FakeCommunityRepository(
+        posts: <Post>[
+          fakePost(body: 'Night opening was great! Wear a hanbok for free.'),
+        ],
+      ),
+    );
+
+    final Finder topic = find.text('Reviews');
+    final Finder title = find.text('Night opening was great!');
+    final Finder body = find.text('Wear a hanbok for free.');
+    expect(topic, findsWidgets);
+    expect(title, findsOneWidget);
+    expect(body, findsOneWidget);
+
+    // 위계가 위→아래로 서 있어야 한다.
+    expect(
+      tester.getTopLeft(topic.first).dy,
+      lessThan(tester.getTopLeft(title).dy),
+    );
+    expect(tester.getTopLeft(title).dy, lessThan(tester.getTopLeft(body).dy));
+    // 제목은 본문보다 굵다.
+    final Text titleWidget = tester.widget<Text>(title);
+    expect(titleWidget.style?.fontWeight, FontWeight.w700);
+  });
+
+  // 하단 우측에 좋아요 수와 댓글 수가 함께 선다.
+  testWidgets('카드 하단 우측에 좋아요 수와 댓글 수가 보인다', (WidgetTester tester) async {
+    await _pump(
+      tester,
+      FakeCommunityRepository(
+        posts: <Post>[fakePost(likeCount: 12, commentCount: 4)],
+      ),
+    );
+
+    expect(find.text('12'), findsOneWidget);
+    expect(find.text('4'), findsOneWidget);
+  });
+
+  // R17 / 가이드 §13 — 미인증이어도 감추지 않는다. 오버플로는 늘 보인다.
+  testWidgets('카드 우상단 오버플로가 모더레이션 시트를 연다', (WidgetTester tester) async {
+    await _pump(tester, FakeCommunityRepository(posts: <Post>[fakePost()]));
+
+    await tester.tap(find.byIcon(Icons.more_vert).first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Block this user'), findsOneWidget);
+    expect(find.text('Report'), findsOneWidget);
+    // 남의 글이라 삭제는 없다.
+    expect(find.text('Delete post'), findsNothing);
+  });
+
+  testWidgets('내 글이면 삭제 항목이 함께 보인다', (WidgetTester tester) async {
+    await _pump(
+      tester,
+      FakeCommunityRepository(posts: <Post>[fakePost(ownedByViewer: true)]),
+    );
+
+    await tester.tap(find.byIcon(Icons.more_vert).first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Delete post'), findsOneWidget);
+  });
+
+  // R15 — 차단은 양방향이므로 확인 문구가 그 사실을 말해야 한다.
+  testWidgets('차단은 양방향임을 밝히는 확인을 거친다', (WidgetTester tester) async {
+    final FakeCommunityRepository repo = FakeCommunityRepository(
+      posts: <Post>[fakePost()],
+    );
+    await _pump(tester, repo);
+
+    await tester.tap(find.byIcon(Icons.more_vert).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Block this user'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('both ways'), findsOneWidget);
+    // 확인 전에는 뮤테이션이 나가지 않는다.
+    expect(repo.lastBlockedMemberId, isNull);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Block'));
+    await tester.pumpAndSettle();
+
+    expect(repo.lastBlockedMemberId, '20');
+  });
+
+  // 가이드 §9 — 신고 후에는 접수 사실만 알린다. 처리 결과를 약속하지 않는다.
+  testWidgets('신고 시트에서 기타를 고르면 상세가 필수가 된다', (WidgetTester tester) async {
+    final FakeCommunityRepository repo = FakeCommunityRepository(
+      posts: <Post>[fakePost()],
+    );
+    await _pump(tester, repo);
+
+    await tester.tap(find.byIcon(Icons.more_vert).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Report').last);
+    await tester.pumpAndSettle();
+
+    // 사유를 고르기 전에는 제출할 수 없다.
+    expect(
+      tester
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Submit'))
+          .onPressed,
+      isNull,
+    );
+
+    await tester.tap(find.text('Something else'));
+    await tester.pumpAndSettle();
+
+    // 기타를 골랐는데 상세가 비어 있으면 여전히 제출할 수 없다 —
+    // REPORT_DETAIL_REQUIRED를 왕복 없이 미리 막는다.
+    expect(
+      tester
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Submit'))
+          .onPressed,
+      isNull,
+    );
+
+    await tester.enterText(find.byType(TextField), '광고성 글이에요');
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Submit'))
+          .onPressed,
+      isNotNull,
+    );
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Submit'));
+    await tester.pumpAndSettle();
+
+    expect(repo.lastReport?.reason, ReportReason.other);
+    expect(repo.lastReport?.detail, '광고성 글이에요');
+    expect(find.text('Your report was received.'), findsOneWidget);
+  });
+
+  // 가이드 §7 — 재신고는 오류가 아니라 안내다.
+  testWidgets('이미 신고한 대상은 오류가 아니라 안내가 뜬다', (WidgetTester tester) async {
+    final FakeCommunityRepository repo = FakeCommunityRepository(
+      posts: <Post>[fakePost()],
+    )..mutationError = CommunityFailure.userError('ALREADY_REPORTED');
+    await _pump(tester, repo);
+
+    await tester.tap(find.byIcon(Icons.more_vert).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Report').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Spam or advertising'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Submit'));
+    await tester.pumpAndSettle();
+
+    expect(find.text("You've already reported this."), findsOneWidget);
   });
 
   testWidgets('글이 없으면 빈 피드 안내가 뜬다', (WidgetTester tester) async {

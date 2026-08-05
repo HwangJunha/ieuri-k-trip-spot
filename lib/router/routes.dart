@@ -11,6 +11,7 @@ import '../domain/auth/view/password_reset_screen.dart';
 import '../domain/auth/view/sign_up_screen.dart';
 import '../domain/auth/view/sns_sign_up_screen.dart';
 import '../domain/community/view/community_screen.dart';
+import '../domain/community/view/post_composer_screen.dart';
 import '../domain/community/view/post_detail_screen.dart';
 import '../domain/onboarding/view/onboarding_screen.dart';
 import '../domain/spot/model/spot_category.dart';
@@ -122,6 +123,22 @@ List<RouteBase> buildRoutes() => <RouteBase>[
     name: PostDetailScreen.routeName,
     builder: (_, GoRouterState state) =>
         PostDetailScreen(postId: state.pathParameters['id']!),
+  ),
+  // 글 작성(SPEC-0010 R1~R4). 셸 밖의 최상위 라우트라 하단 탭을 덮는다.
+  //
+  // 대상(관광지)은 **쿼리 파라미터**다. 커뮤니티 탭에서 열면 없고(화면이 선택을
+  // 요구한다), 관광지 상세에서 열면 그 spot의 id·이름이 실려 이미 정해진 채로
+  // 열린다 — 두 진입의 차이는 그것뿐이다(디자인 §3).
+  //
+  // 이름은 표시 전용이라 파라미터로 넘긴다. 모델 객체가 아니라 값만 넘기는 것이라
+  // §6과 어긋나지 않는다.
+  GoRoute(
+    path: '/post-composer',
+    name: PostComposerScreen.routeName,
+    builder: (_, GoRouterState state) => PostComposerScreen(
+      initialTargetId: state.uri.queryParameters['targetId'],
+      initialTargetTitle: state.uri.queryParameters['targetTitle'],
+    ),
   ),
   // The post-onboarding 5-tab shell. Each tab keeps its own navigation stack.
   StatefulShellRoute.indexedStack(

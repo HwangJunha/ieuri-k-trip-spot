@@ -110,6 +110,63 @@ type CreateCommentPayload {
   comment: Comment
 }
 
+input DeletePostInput {
+  postId: ID!
+}
+
+type DeletePostPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+# 모더레이션(가이드 §6·§9). 차단은 **양방향**이라 내가 차단한 사람과 나를 차단한
+# 사람의 글이 모두 사라진다 — 서버가 걸러 주므로 앱이 필터링할 것은 없고, 차단
+# 직후에는 피드를 다시 불러온다.
+enum ReportReason {
+  SPAM
+  ABUSE
+  INAPPROPRIATE_CONTENT
+  OTHER
+}
+
+enum ReportTargetType {
+  POST
+  COMMENT
+  MEMBER
+}
+
+input BlockUserInput {
+  targetMemberId: ID!
+}
+
+type BlockUserPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+input UnblockUserInput {
+  targetMemberId: ID!
+}
+
+type UnblockUserPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+# `detail`은 reason이 OTHER일 때 **필수**다. 스키마상 nullable이라 GraphQL이 막아
+# 주지 않으므로 클라이언트 폼에서 미리 거른다(가이드 §9).
+input ReportContentInput {
+  targetType: ReportTargetType!
+  targetId: ID!
+  reason: ReportReason!
+  detail: String
+}
+
+type ReportContentPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
 input LikePostInput {
   postId: ID!
 }
@@ -155,6 +212,10 @@ extend type Query {
 extend type Mutation {
   createPost(input: CreatePostInput!): CreatePostPayload!
   createComment(input: CreateCommentInput!): CreateCommentPayload!
+  deletePost(input: DeletePostInput!): DeletePostPayload!
   likePost(input: LikePostInput!): LikePostPayload!
   unlikePost(input: UnlikePostInput!): UnlikePostPayload!
+  blockUser(input: BlockUserInput!): BlockUserPayload!
+  unblockUser(input: UnblockUserInput!): UnblockUserPayload!
+  reportContent(input: ReportContentInput!): ReportContentPayload!
 }

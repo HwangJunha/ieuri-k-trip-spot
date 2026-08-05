@@ -5,6 +5,7 @@ import 'package:ieuri_k_trip_spot/domain/community/model/post.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_author.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_target.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_topic.dart';
+import 'package:ieuri_k_trip_spot/domain/community/model/report_reason.dart';
 import 'package:ieuri_k_trip_spot/domain/community/repository/community_repository.dart';
 
 /// 테스트용 [Post] 하나. 값을 지정하지 않은 필드는 검증에 쓰이지 않는 자리채움이다.
@@ -15,6 +16,7 @@ Post fakePost({
   int likeCount = 3,
   int commentCount = 2,
   bool likedByViewer = false,
+  bool ownedByViewer = false,
   bool hidden = false,
   List<String> photoKeys = const <String>[],
   List<Comment>? comments,
@@ -34,6 +36,7 @@ Post fakePost({
   likeCount: likeCount,
   commentCount: commentCount,
   likedByViewer: likedByViewer,
+  ownedByViewer: ownedByViewer,
   hidden: hidden,
   comments: comments,
 );
@@ -141,5 +144,85 @@ class FakeCommunityRepository implements CommunityRepository {
     unlikeCalls++;
     if (likeError != null) throw likeError!;
     return serverLikeCount;
+  }
+
+  // --- 쓰기/모더레이션 ---------------------------------------------------------
+
+  /// 설정하면 아래 뮤테이션들이 이 오류를 던진다.
+  Object? mutationError;
+
+  /// `createPost`가 돌려줄 새 글 id. 가이드 §11대로 서버는 id만 준다.
+  String? createdPostId = 'new-post';
+
+  ({
+    String targetType,
+    String targetId,
+    PostTopic topic,
+    String body,
+    List<String> photoKeys,
+  })?
+  lastCreatePost;
+  String? lastBlockedMemberId;
+  String? lastUnblockedMemberId;
+  String? lastDeletedPostId;
+  ({
+    ReportTargetType targetType,
+    String targetId,
+    ReportReason reason,
+    String? detail,
+  })?
+  lastReport;
+
+  @override
+  Future<String?> createPost({
+    required String targetType,
+    required String targetId,
+    required PostTopic topic,
+    required String body,
+    List<String> photoKeys = const <String>[],
+  }) async {
+    lastCreatePost = (
+      targetType: targetType,
+      targetId: targetId,
+      topic: topic,
+      body: body,
+      photoKeys: photoKeys,
+    );
+    if (mutationError != null) throw mutationError!;
+    return createdPostId;
+  }
+
+  @override
+  Future<void> deletePost(String postId) async {
+    lastDeletedPostId = postId;
+    if (mutationError != null) throw mutationError!;
+  }
+
+  @override
+  Future<void> blockUser(String targetMemberId) async {
+    lastBlockedMemberId = targetMemberId;
+    if (mutationError != null) throw mutationError!;
+  }
+
+  @override
+  Future<void> unblockUser(String targetMemberId) async {
+    lastUnblockedMemberId = targetMemberId;
+    if (mutationError != null) throw mutationError!;
+  }
+
+  @override
+  Future<void> reportContent({
+    required ReportTargetType targetType,
+    required String targetId,
+    required ReportReason reason,
+    String? detail,
+  }) async {
+    lastReport = (
+      targetType: targetType,
+      targetId: targetId,
+      reason: reason,
+      detail: detail,
+    );
+    if (mutationError != null) throw mutationError!;
   }
 }

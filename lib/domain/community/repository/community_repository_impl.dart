@@ -11,6 +11,7 @@ import '../model/post.dart';
 import '../model/post_author.dart';
 import '../model/post_target.dart';
 import '../model/post_topic.dart';
+import '../model/report_reason.dart';
 import 'community_operations.graphql.dart';
 import 'community_repository.dart';
 import 'community_schema.graphql.dart';
@@ -208,6 +209,140 @@ class CommunityRepositoryImpl implements CommunityRepository {
     return payload.likeCount;
   }
 
+  @override
+  Future<String?> createPost({
+    required String targetType,
+    required String targetId,
+    required PostTopic topic,
+    required String body,
+    List<String> photoKeys = const <String>[],
+  }) async {
+    final Map<String, dynamic> data = await _mutate(
+      documentNodeMutationCreatePost,
+      Variables$Mutation$CreatePost(
+        targetType: _targetTypeInput(targetType),
+        targetId: targetId,
+        topic: _topicInput(topic),
+        body: body,
+        photoKeys: photoKeys,
+      ).toJson(),
+      'createPost',
+    );
+    final Mutation$CreatePost$createPost payload = Mutation$CreatePost.fromJson(
+      data,
+    ).createPost;
+    _check(
+      'createPost',
+      payload.success,
+      payload.userErrors
+          .map(
+            (Mutation$CreatePost$createPost$userErrors e) =>
+                (code: e.code, field: e.field),
+          )
+          .toList(growable: false),
+    );
+    // `post`는 항상 null이라 요청조차 하지 않는다 — id만 돌려주고 화면이 그 id로
+    // 다시 조회하거나 피드를 새로 고친다(가이드 §11).
+    return payload.postId;
+  }
+
+  @override
+  Future<void> deletePost(String postId) async {
+    final Map<String, dynamic> data = await _mutate(
+      documentNodeMutationDeletePost,
+      Variables$Mutation$DeletePost(postId: postId).toJson(),
+      'deletePost',
+    );
+    final Mutation$DeletePost$deletePost payload = Mutation$DeletePost.fromJson(
+      data,
+    ).deletePost;
+    _check(
+      'deletePost',
+      payload.success,
+      payload.userErrors
+          .map(
+            (Mutation$DeletePost$deletePost$userErrors e) =>
+                (code: e.code, field: e.field),
+          )
+          .toList(growable: false),
+    );
+  }
+
+  @override
+  Future<void> blockUser(String targetMemberId) async {
+    final Map<String, dynamic> data = await _mutate(
+      documentNodeMutationBlockUser,
+      Variables$Mutation$BlockUser(targetMemberId: targetMemberId).toJson(),
+      'blockUser',
+    );
+    final Mutation$BlockUser$blockUser payload = Mutation$BlockUser.fromJson(
+      data,
+    ).blockUser;
+    _check(
+      'blockUser',
+      payload.success,
+      payload.userErrors
+          .map(
+            (Mutation$BlockUser$blockUser$userErrors e) =>
+                (code: e.code, field: e.field),
+          )
+          .toList(growable: false),
+    );
+  }
+
+  @override
+  Future<void> unblockUser(String targetMemberId) async {
+    final Map<String, dynamic> data = await _mutate(
+      documentNodeMutationUnblockUser,
+      Variables$Mutation$UnblockUser(targetMemberId: targetMemberId).toJson(),
+      'unblockUser',
+    );
+    final Mutation$UnblockUser$unblockUser payload =
+        Mutation$UnblockUser.fromJson(data).unblockUser;
+    _check(
+      'unblockUser',
+      payload.success,
+      payload.userErrors
+          .map(
+            (Mutation$UnblockUser$unblockUser$userErrors e) =>
+                (code: e.code, field: e.field),
+          )
+          .toList(growable: false),
+    );
+  }
+
+  @override
+  Future<void> reportContent({
+    required ReportTargetType targetType,
+    required String targetId,
+    required ReportReason reason,
+    String? detail,
+  }) async {
+    final Map<String, dynamic> data = await _mutate(
+      documentNodeMutationReportContent,
+      Variables$Mutation$ReportContent(
+        targetType: _reportTargetTypeInput(targetType),
+        targetId: targetId,
+        reason: _reportReasonInput(reason),
+        // 공백뿐인 상세는 없는 것과 같다 — 서버가 `REPORT_DETAIL_REQUIRED`로 본다.
+        detail: (detail?.trim().isEmpty ?? true) ? null : detail!.trim(),
+      ).toJson(),
+      'reportContent',
+    );
+    final Mutation$ReportContent$reportContent payload =
+        Mutation$ReportContent.fromJson(data).reportContent;
+    _check(
+      'reportContent',
+      payload.success,
+      payload.userErrors
+          .map(
+            (Mutation$ReportContent$reportContent$userErrors e) =>
+                (code: e.code, field: e.field),
+          )
+          .toList(growable: false),
+    );
+  }
+
   // --- 매핑 (생성 타입 → 도메인) ---------------------------------------------
 
   /// 카드 필드 fragment → 도메인 [Post]. 목록과 상세가 같은 fragment를 쓰므로 매핑도
@@ -296,6 +431,21 @@ class CommunityRepositoryImpl implements CommunityRepository {
       switch (value) {
         Enum$PostTargetType.SPOT => PostTargetType.spot,
         Enum$PostTargetType.$unknown => null,
+      };
+
+  Enum$ReportReason _reportReasonInput(ReportReason reason) => switch (reason) {
+    ReportReason.spam => Enum$ReportReason.SPAM,
+    ReportReason.abuse => Enum$ReportReason.ABUSE,
+    ReportReason.inappropriateContent =>
+      Enum$ReportReason.INAPPROPRIATE_CONTENT,
+    ReportReason.other => Enum$ReportReason.OTHER,
+  };
+
+  Enum$ReportTargetType _reportTargetTypeInput(ReportTargetType type) =>
+      switch (type) {
+        ReportTargetType.post => Enum$ReportTargetType.POST,
+        ReportTargetType.comment => Enum$ReportTargetType.COMMENT,
+        ReportTargetType.member => Enum$ReportTargetType.MEMBER,
       };
 
   /// 대상 종류는 **문자열로 받아** 생성 enum으로 옮긴다. 인터페이스가 값으로 다루기
