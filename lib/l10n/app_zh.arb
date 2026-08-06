@@ -434,11 +434,19 @@
   "communityComposePhotosLabel": "照片（可选）",
   "communityComposePhotoAdd": "添加照片",
   "communityComposePhotoTooLarge": "{count, plural, other{{count} 张照片过大(最大 10MB)。}}",
-  "communityComposePhotoFailed": "有 {count} 张照片上传失败，请重试。",
-  "@communityComposePhotoFailed": {
+  "communityComposeDonePhotosFailed": "已发布，但有 {count} 张照片上传失败。",
+  "@communityComposeDonePhotosFailed": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "num"
+      }
+    }
+  },
+  "communityEditDonePhotosFailed": "帖子已更新，但有 {count} 张照片上传失败。",
+  "@communityEditDonePhotosFailed": {
+    "placeholders": {
+      "count": {
+        "type": "num"
       }
     }
   },

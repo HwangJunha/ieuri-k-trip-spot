@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +10,7 @@ import '../component/community_labels.dart';
 import '../component/post_photo.dart';
 import '../component/spot_picker_sheet.dart';
 import '../model/community_chip.dart';
+import '../model/composer_photo.dart';
 import '../model/nearby_spot.dart';
 import '../model/post.dart';
 import '../model/post_draft.dart';
@@ -254,11 +257,11 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
             ),
             // 붙인 사진은 하단 바 바로 위에 줄로 남는다 — 무엇을 붙였는지 보이지
             // 않으면 지울 수도 없다.
-            if (draft.photoKeys.isNotEmpty)
+            if (draft.photos.isNotEmpty)
               _PhotoRow(
-                photoKeys: draft.photoKeys,
-                onRemove: (String key) =>
-                    ref.read(_provider.notifier).removePhoto(key),
+                photos: draft.photos,
+                onRemove: (String id) =>
+                    ref.read(_provider.notifier).removePhoto(id),
               ),
             // 태그도 마찬가지다 — 시트에서 넣은 결과가 화면에 남아야 한다.
             if (!_isEditing && draft.tags.isNotEmpty)
@@ -322,32 +325,39 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
     builder: (BuildContext context) => _TagSheet(provider: _provider),
   );
 
-  /// 사진을 고르고 4단계 업로드 중 1~3단계를 돌린다(가이드 §4).
+  /// 사진을 고른다. **네트워크를 타지 않는다** — 고른 바이트를 초안에 들고 있다가
+  /// 등록/수정을 누를 때 올린다(가이드 §4의 1~3단계는 그때 돈다).
+  ///
+  /// 고르는 즉시 올리면 글을 쓰지 않고 나간 사용자의 사진이 스토리지에 고아로 남고,
+  /// 골랐다 뺐다를 반복하는 만큼 쌓인다 — 실제 저장 비용이다.
   ///
   /// **고르는 수단은 주입된다**([photoPickerProvider]) — 위젯 테스트가 갤러리를
   /// 열지 않도록 override할 수 있어야 하기 때문이다. null은 사용자가 취소한 것이라
   /// 아무 안내도 하지 않는다.
   ///
-  /// **크기 상한은 여기서 거른다.** 10 MiB를 넘는 장을 그대로 1단계에 넘기면 서버가
+  /// **크기 상한은 여기서 거른다.** 업로드를 미뤄도 이 검사는 고르는 자리에 남는다 —
+  /// 사용자는 사진이 너무 크다는 것을 글을 다 쓰고 나서가 아니라 그 자리에서 알아야
+  /// 한다. 또 10 MiB를 넘는 장을 1단계에 그대로 넘기면 서버가
   /// `UNSUPPORTED_CONTENT_TYPE`으로 **전부** 거절해(부분 발급이 없다) 멀쩡한 장까지
   /// 같이 죽는다.
   Future<void> _addPhotos() async {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final PostDraft draft = ref.read(_provider);
-    final int remaining = maxPostPhotos - draft.photoKeys.length;
+    // 상한은 원격·로컬을 합쳐 센다.
+    final int remaining = draft.remainingPhotoSlots;
     if (remaining <= 0) {
       _toast(l10n.communityComposeErrorTooManyPhotos);
       return;
     }
 
-    final List<PickedPhoto>? picked = await ref.read(photoPickerProvider)(
+    final List<LocalPhoto>? picked = await ref.read(photoPickerProvider)(
       limit: remaining,
     );
     if (!mounted) return;
     if (picked == null || picked.isEmpty) return;
 
-    final List<PickedPhoto> withinLimit = picked
-        .where((PickedPhoto p) => p.contentLength <= maxPostPhotoBytes)
+    final List<LocalPhoto> withinLimit = picked
+        .where((LocalPhoto p) => p.contentLength <= maxPostPhotoBytes)
         .toList();
     if (withinLimit.length != picked.length) {
       _toast(
@@ -356,18 +366,7 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
     }
     if (withinLimit.isEmpty) return;
 
-    try {
-      final PhotoUploadResult result = await ref
-          .read(_provider.notifier)
-          .uploadPhotos(picked);
-      if (!mounted) return;
-      // **부분 성공이 정상이다** — 실패한 장만 알리고 통과한 키는 이미 초안에 있다.
-      if (result.hasFailures) {
-        _toast(l10n.communityComposePhotoFailed(result.failedNames.length));
-      }
-    } on Object {
-      if (mounted) _toast(l10n.communityComposeErrorPhotoNotUploaded);
-    }
+    ref.read(_provider.notifier).addPhotos(withinLimit);
   }
 
   Future<void> _submit() async {
@@ -380,17 +379,27 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
     if (mounted) setState(() => _submitting = false);
   }
 
+  /// 등록. 사진 업로드도 여기 안에서 일어난다 — [submit]이 먼저 올리고 확정 키로
+  /// `createPost`를 부른다.
+  ///
+  /// **사진이 실패해도 글은 올라간다**(가이드 §4·디자인 §3). 그래서 성공 안내를
+  /// 띄운 뒤 못 올린 장이 있다는 것만 덧붙인다 — 사진 한 장 때문에 사용자가 쓴 글을
+  /// 통째로 버리게 하지 않는다.
   Future<void> _submitCreate() async {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final ComposerResult result = await ref.read(_provider.notifier).submit();
     if (!mounted) return;
 
     switch (result) {
-      case ComposerSucceeded():
+      case ComposerSucceeded(:final List<String> failedPhotoNames):
         // `createPost`는 postId만 준다(가이드 §5). 피드로 돌아가면 목록을 새로
         // 고치는 것으로 충분하므로 상세 재조회 없이 닫는다.
         Navigator.of(context).pop(true);
-        _toast(l10n.communityComposeDone);
+        _toast(
+          failedPhotoNames.isEmpty
+              ? l10n.communityComposeDone
+              : l10n.communityComposeDonePhotosFailed(failedPhotoNames.length),
+        );
       case ComposerUnauthenticated():
         _toast(l10n.communitySignInRequired);
         context.pushNamed(loginRouteName);
@@ -401,8 +410,24 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
     }
   }
 
+  /// 수정 저장. 등록과 같은 순서다 — **먼저 새로 고른 장을 올리고**, 확정된 키만
+  /// 실어 `editPost`를 부른다.
   Future<void> _submitEdit() async {
     final AppLocalizations l10n = AppLocalizations.of(context);
+    // 업로드가 통째로 실패해도 저장은 진행한다 — 못 올린 장만 빠진다.
+    List<String> failedPhotoNames = const <String>[];
+    try {
+      failedPhotoNames =
+          (await ref.read(_provider.notifier).uploadPending()).failedNames;
+    } on Object {
+      failedPhotoNames = ref
+          .read(_provider)
+          .pendingPhotos
+          .map((LocalPhoto p) => p.name)
+          .toList(growable: false);
+    }
+    if (!mounted) return;
+
     final PostDraft draft = ref.read(_provider);
     final ModerationOutcome outcome = await ref
         .read(moderationControllerProvider.notifier)
@@ -414,14 +439,20 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
           // 사진이 그대로 남는다(가이드 §5) — 화면이 기존 사진을 채워 열고 뺄
           // 수단까지 주는 이상, 생략하면 "다 지웠는데 그대로"가 된다. 빈 목록도
           // 사용자가 뜻한 결과이므로 그대로 보낸다.
-          photoKeys: draft.photoKeys,
+          //
+          // 확정 키만 실린다 — 못 올린 장은 빠진 채로 저장된다.
+          photoKeys: draft.remoteKeys,
         );
     if (!mounted) return;
 
     switch (outcome) {
       case ModerationOutcome.success:
         Navigator.of(context).pop(true);
-        _toast(l10n.communityEditDone);
+        _toast(
+          failedPhotoNames.isEmpty
+              ? l10n.communityEditDone
+              : l10n.communityEditDonePhotosFailed(failedPhotoNames.length),
+        );
       case ModerationOutcome.notEditable:
         _toast(l10n.communityComposeErrorNotEditable);
       case ModerationOutcome.unauthenticated:
@@ -869,10 +900,17 @@ class _TagRow extends StatelessWidget {
 }
 
 /// 첨부한 사진 줄. 붙인 것이 있을 때만 나타나며, 추가는 하단 바가 맡는다.
+///
+/// **두 종류가 한 줄에 섞인다.** 아직 올리지 않은 장은 손에 든 바이트로 바로 그리고
+/// ([Image.memory]), 이미 올라간 장은 CDN에서 받아 그린다([PostPhoto]) — 사용자에게는
+/// 구분 없이 똑같은 썸네일이다. 업로드 전이라고 빈 칸을 두면 무엇을 골랐는지 알 수
+/// 없다.
 class _PhotoRow extends StatelessWidget {
-  const _PhotoRow({required this.photoKeys, required this.onRemove});
+  const _PhotoRow({required this.photos, required this.onRemove});
 
-  final List<String> photoKeys;
+  final List<ComposerPhoto> photos;
+
+  /// 뺄 장을 [ComposerPhoto.id]로 지목한다.
   final ValueChanged<String> onRemove;
 
   @override
@@ -882,7 +920,7 @@ class _PhotoRow extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       children: <Widget>[
-        for (final String key in photoKeys)
+        for (final ComposerPhoto photo in photos)
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: Stack(
@@ -892,14 +930,22 @@ class _PhotoRow extends StatelessWidget {
                   child: SizedBox(
                     width: 84,
                     height: 84,
-                    child: PostPhoto(photoKey: key),
+                    child: switch (photo) {
+                      RemotePhoto(:final String objectKey) => PostPhoto(
+                        photoKey: objectKey,
+                      ),
+                      LocalPhoto(:final Uint8List bytes) => Image.memory(
+                        bytes,
+                        fit: BoxFit.cover,
+                      ),
+                    },
                   ),
                 ),
                 Positioned(
                   top: -6,
                   right: -6,
                   child: IconButton(
-                    onPressed: () => onRemove(key),
+                    onPressed: () => onRemove(photo.id),
                     iconSize: 18,
                     icon: const Icon(Icons.cancel),
                   ),

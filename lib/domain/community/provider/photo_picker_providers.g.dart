@@ -67,4 +67,4 @@ final class PhotoPickerProvider
   }
 }
 
-String _$photoPickerHash() => r'ffe254fb730d95cef3c1eeda31c72b8df3c96ae4';
+String _$photoPickerHash() => r'38d068d15b87acedf373bc7e2ab2b42d1b43a8e6';

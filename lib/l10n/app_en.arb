@@ -536,12 +536,21 @@
       }
     }
   },
-  "communityComposePhotoFailed": "Couldn't upload {count} photo(s). Try those again.",
-  "@communityComposePhotoFailed": {
-    "description": "사진 업로드 일부 실패",
+  "communityComposeDonePhotosFailed": "{count, plural, =1{Your post is up, but 1 photo couldn't be uploaded.} other{Your post is up, but {count} photos couldn't be uploaded.}}",
+  "@communityComposeDonePhotosFailed": {
+    "description": "글은 등록됐지만 사진 일부를 올리지 못한 경우 — 사진 때문에 글을 버리지 않는다",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "num"
+      }
+    }
+  },
+  "communityEditDonePhotosFailed": "{count, plural, =1{Your post was updated, but 1 photo couldn't be uploaded.} other{Your post was updated, but {count} photos couldn't be uploaded.}}",
+  "@communityEditDonePhotosFailed": {
+    "description": "수정은 됐지만 사진 일부를 올리지 못한 경우",
+    "placeholders": {
+      "count": {
+        "type": "num"
       }
     }
   },

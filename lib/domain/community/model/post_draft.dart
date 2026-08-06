@@ -1,4 +1,5 @@
 import '../../../common/model/list_equality.dart';
+import 'composer_photo.dart';
 import 'target_category.dart';
 
 /// 제목 최대 길이(코드포인트).
@@ -40,7 +41,7 @@ class PostDraft {
     this.title = '',
     this.body = '',
     this.tags = const <String>[],
-    this.photoKeys = const <String>[],
+    this.photos = const <ComposerPhoto>[],
   });
 
   /// **필수.** 미선택이면 등록이 막힌다.
@@ -59,9 +60,26 @@ class PostDraft {
   /// 30 코드포인트 이내여야 한다(가이드 §5).
   final List<String> tags;
 
-  /// **최종 키**(`images/...`)만 담는다. 1단계가 준 `pending/...` 키를 그대로 넘기면
-  /// 서버가 `PHOTO_NOT_UPLOADED`로 거부한다(가이드 §4).
-  final List<String> photoKeys;
+  /// 붙인 사진. **이미 올라간 것([RemotePhoto])과 방금 고른 것([LocalPhoto])이
+  /// 섞여 있고 순서가 곧 표시 순서다**(가이드 §4).
+  ///
+  /// 로컬 장의 업로드는 **등록/수정을 누를 때** 일어난다 — 고를 때마다 올리면 글을
+  /// 쓰지 않고 나간 사용자의 사진이 고아 오브젝트로 남아 저장 비용이 든다.
+  final List<ComposerPhoto> photos;
+
+  /// 이미 확정된 키만 추린 목록. 아직 올리지 않은 로컬 장은 여기 없다.
+  List<String> get remoteKeys => photos
+      .whereType<RemotePhoto>()
+      .map((RemotePhoto p) => p.objectKey)
+      .toList(growable: false);
+
+  /// 등록 시점에 올려야 할 장들. 순서를 보존한다.
+  List<LocalPhoto> get pendingPhotos =>
+      photos.whereType<LocalPhoto>().toList(growable: false);
+
+  /// 사진을 더 붙일 수 있는 수. **두 종류를 함께 센다** — 서버 상한(5장)은 글에 붙는
+  /// 최종 개수에 걸리므로 원격·로컬을 구분하지 않는다(가이드 §4).
+  int get remainingPhotoSlots => maxPostPhotos - photos.length;
 
   /// 제목 길이(코드포인트). 화면 카운터가 이 값을 쓴다.
   int get titleRunes => title.runes.length;
@@ -114,7 +132,7 @@ class PostDraft {
     String? title,
     String? body,
     List<String>? tags,
-    List<String>? photoKeys,
+    List<ComposerPhoto>? photos,
   }) => PostDraft(
     category: category ?? this.category,
     spotId: spotId ?? this.spotId,
@@ -122,7 +140,7 @@ class PostDraft {
     title: title ?? this.title,
     body: body ?? this.body,
     tags: tags ?? this.tags,
-    photoKeys: photoKeys ?? this.photoKeys,
+    photos: photos ?? this.photos,
   );
 
   /// 장소를 비운다. [copyWith]는 null을 "안 바꿈"으로 보기 때문에 해제 전용
@@ -132,7 +150,7 @@ class PostDraft {
     title: title,
     body: body,
     tags: tags,
-    photoKeys: photoKeys,
+    photos: photos,
   );
 
   @override
@@ -144,7 +162,7 @@ class PostDraft {
       other.title == title &&
       other.body == body &&
       listEquals(other.tags, tags) &&
-      listEquals(other.photoKeys, photoKeys);
+      listEquals(other.photos, photos);
 
   @override
   int get hashCode => Object.hash(
@@ -154,6 +172,6 @@ class PostDraft {
     title,
     body,
     Object.hashAll(tags),
-    Object.hashAll(photoKeys),
+    Object.hashAll(photos),
   );
 }

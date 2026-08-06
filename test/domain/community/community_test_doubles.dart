@@ -419,6 +419,29 @@ class FakeCommunityRepository implements CommunityRepository {
 
   final List<String> uploadedUrls = <String>[];
 
+  /// 1단계(`createPostImageUploadUrls`)에 넘어간 요청들, 호출마다 한 건.
+  ///
+  /// **비어 있다는 것이 "사진을 골랐을 뿐 아직 아무것도 올리지 않았다"의 증거다** —
+  /// 업로드가 등록 시점으로 미뤄졌는지는 이 목록으로만 확인할 수 있다.
+  final List<List<PostImageUploadRequest>> uploadUrlCalls =
+      <List<PostImageUploadRequest>>[];
+
+  /// 3단계(`confirmPostImageUploads`)에 넘어간 임시 키들, 호출마다 한 건.
+  final List<List<String>> confirmCalls = <List<String>>[];
+
+  /// 설정하면 1단계 발급이 이 오류를 던진다. [mutationError]와 분리한 이유는
+  /// **업로드가 통째로 실패해도 글은 올라가야** 하기 때문이다 — 두 실패를 한
+  /// 스위치로 묶으면 그 경로를 검증할 수 없다.
+  Object? uploadUrlError;
+
+  /// 설정하면 3단계 확인이 이 오류를 던진다. [uploadUrlError]와 같은 이유로 분리했다.
+  Object? confirmError;
+
+  /// 설정하면 1단계 발급이 이 Future가 완결될 때까지 멈춘다. **업로드가 도는 동안의
+  /// 화면 상태**(등록 버튼이 스피너로 바뀌어 다시 눌리지 않는지)를 보려면 그 순간에
+  /// 멈춰 세울 수단이 필요하다.
+  Future<void>? uploadGate;
+
   @override
   Future<String?> createPost({
     required TargetCategory category,
@@ -499,7 +522,12 @@ class FakeCommunityRepository implements CommunityRepository {
   Future<List<PostImageUploadUrl>> createPostImageUploadUrls(
     List<PostImageUploadRequest> images,
   ) async {
-    if (mutationError != null) throw mutationError!;
+    uploadUrlCalls.add(images);
+    if (uploadGate != null) await uploadGate;
+    // **[mutationError]를 보지 않는다.** 그것은 `createPost`/`editPost`의 실패
+    // 스위치다 — 사진 업로드까지 함께 죽이면 "글은 거부됐지만 사진은 이미 올라간"
+    // 경로를 재현할 수 없다. 업로드 실패는 [uploadUrlError]로 따로 세운다.
+    if (uploadUrlError != null) throw uploadUrlError!;
     return uploadUrls;
   }
 
@@ -519,7 +547,8 @@ class FakeCommunityRepository implements CommunityRepository {
   Future<PostImageConfirmation> confirmPostImageUploads(
     List<String> objectKeys,
   ) async {
-    if (mutationError != null) throw mutationError!;
+    confirmCalls.add(objectKeys);
+    if (confirmError != null) throw confirmError!;
     return confirmation;
   }
 

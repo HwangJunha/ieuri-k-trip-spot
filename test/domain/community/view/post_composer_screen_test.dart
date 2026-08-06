@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:ieuri_k_trip_spot/common/location/location_service.dart';
 import 'package:ieuri_k_trip_spot/domain/community/component/post_photo.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_chip.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_failure.dart';
+import 'package:ieuri_k_trip_spot/domain/community/model/composer_photo.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_draft.dart';
@@ -16,7 +18,6 @@ import 'package:ieuri_k_trip_spot/domain/community/model/post_image_upload.dart'
 import 'package:ieuri_k_trip_spot/domain/community/model/target_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/photo_picker_providers.dart';
-import 'package:ieuri_k_trip_spot/domain/community/provider/post_composer_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/community/view/post_composer_screen.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
 
@@ -60,14 +61,31 @@ Future<void> _pump(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         locale: const Locale('en'),
-        home: PostComposerScreen(
-          initialSpotId: spotId,
-          initialSpotTitle: spotTitle,
-          editPostId: editPostId,
+        // **컴포저를 최상위 화면으로 두지 않는다.** 등록에 성공하면 화면이 스스로
+        // 닫히는데(pop), 밑에 아무 라우트도 없으면 트리가 통째로 사라져 그 직후
+        // 띄우는 안내(스낵바)를 검증할 수 없다. 실제 앱에서도 컴포저는 피드 위에
+        // 얹히므로 이 배치가 실제와 같다.
+        home: Scaffold(
+          body: Builder(
+            builder: (BuildContext context) => TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => PostComposerScreen(
+                    initialSpotId: spotId,
+                    initialSpotTitle: spotTitle,
+                    editPostId: editPostId,
+                  ),
+                ),
+              ),
+              child: const Text('open composer'),
+            ),
+          ),
         ),
       ),
     ),
   );
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('open composer'));
   await tester.pumpAndSettle();
 }
 
@@ -106,6 +124,55 @@ NearbySpot _spot({
   String title = '서울갤러리',
   double distanceMeters = 16,
 }) => NearbySpot(id: id, title: title, distanceMeters: distanceMeters);
+
+/// 방금 고른 사진 한 장. 이름이 곧 식별자다.
+LocalPhoto _local(String name, {int bytes = 3}) => LocalPhoto(
+  id: name,
+  // 1x1 PNG. `Image.memory`가 실제로 디코드하므로 아무 바이트나 주면 안 된다.
+  bytes: bytes == 3 ? _onePixelPng : Uint8List(bytes),
+  contentType: 'image/png',
+  name: name,
+);
+
+/// 가장 작은 유효 PNG 한 장(1×1 투명). 위젯이 로컬 미리보기를 실제로 디코드한다.
+final Uint8List _onePixelPng = Uint8List.fromList(<int>[
+  0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, //
+  0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+  0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+  0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4,
+  0x89, 0x00, 0x00, 0x00, 0x0A, 0x49, 0x44, 0x41,
+  0x54, 0x78, 0x9C, 0x63, 0x00, 0x01, 0x00, 0x00,
+  0x05, 0x00, 0x01, 0x0D, 0x0A, 0x2D, 0xB4, 0x00,
+  0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE,
+  0x42, 0x60, 0x82,
+]);
+
+/// 고른 사진을 정해 주는 picker. 실제 picker는 갤러리를 연다.
+PhotoPicker _picker(List<LocalPhoto> photos) =>
+    ({required int limit}) async => photos;
+
+/// 하단 액션 바의 사진 버튼을 눌러 고른다.
+Future<void> _pickPhotos(WidgetTester tester) async {
+  await tester.tap(find.widgetWithText(TextButton, 'Photos'));
+  await tester.pumpAndSettle();
+}
+
+/// 등록을 누르고 **스낵바가 살아 있는 동안** 멈춘다.
+///
+/// `pumpAndSettle`은 스낵바의 4초 표시 시간까지 흘려보내 문구를 지운다 — 등록 성공
+/// 안내를 검증하려면 그 전에 멈춰야 한다.
+Future<void> _tapSubmitAndHoldToast(WidgetTester tester) async {
+  await tester.tap(_submit);
+  // 업로드·등록의 비동기 완결(pump 한 번) + 스낵바 등장 애니메이션.
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 500));
+}
+
+PostImageUploadUrl _url(int n) => PostImageUploadUrl(
+  uploadUrl: 'https://storage/$n',
+  objectKey: 'pending/20/$n',
+  expiresAt: 'x',
+);
 
 /// 수정 모드가 조회할 글을 세운 저장소. 수정 컴포저는 라우트 파라미터가 아니라
 /// `post(id:)`로 제목·본문·**사진 키**를 받아 채운다.
@@ -694,25 +761,166 @@ void main() {
   });
 
   group('사진', () {
-    // 10 MiB를 넘는 장은 **고른 직후 거른다.** 그대로 1단계에 넘기면 서버가 하나만
-    // 어긋나도 전부 거부해(부분 발급 없음) 멀쩡한 장까지 같이 죽는다(가이드 §4).
+    // 10 MiB를 넘는 장은 **고른 직후 거른다.** 업로드를 등록 시점으로 미뤄도 이
+    // 검사는 여기 남는다 — 사용자는 글을 다 쓰고 나서가 아니라 그 자리에서 알아야
+    // 한다. 서버 쪽 이유도 그대로다: 하나만 어긋나도 1단계가 전부 거부한다(가이드 §4).
     testWidgets('10MiB를 넘는 사진은 제외하고 그 사실을 알린다', (WidgetTester tester) async {
       await _pump(
         tester,
         FakeCommunityRepository(),
-        picker: ({required int limit}) async => <PickedPhoto>[
-          PickedPhoto(
-            bytes: Uint8List(maxPostPhotoBytes + 1),
-            contentType: 'image/jpeg',
-            name: 'huge.jpg',
-          ),
-        ],
+        picker: _picker(<LocalPhoto>[
+          _local('huge.jpg', bytes: maxPostPhotoBytes + 1),
+        ]),
       );
 
-      await tester.tap(find.widgetWithText(TextButton, 'Photos'));
-      await tester.pumpAndSettle();
+      await _pickPhotos(tester);
 
       expect(find.text('1 photo was too large (max 10MB).'), findsOneWidget);
+    });
+
+    // 미지원 형식은 picker가 걸러 아예 목록에 들어오지 않는다(§4). 화면은 빈 결과를
+    // 조용히 받는다 — 이 검사도 **고르는 자리**에 남아 있다.
+    testWidgets('미지원 형식만 골랐으면 아무것도 붙지 않는다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository();
+      await _pump(tester, repo, picker: _picker(const <LocalPhoto>[]));
+
+      await _pickPhotos(tester);
+
+      expect(find.byType(Image), findsNothing);
+      expect(repo.uploadUrlCalls, isEmpty);
+    });
+
+    // 이 기능의 요지 — 고르는 것만으로는 **한 바이트도 나가지 않는다.**
+    testWidgets('사진을 골라도 업로드 호출이 나가지 않고 미리보기만 뜬다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository();
+      await _pump(
+        tester,
+        repo,
+        picker: _picker(<LocalPhoto>[_local('a.png'), _local('b.png')]),
+      );
+
+      await _pickPhotos(tester);
+
+      expect(repo.uploadUrlCalls, isEmpty);
+      expect(repo.uploadedUrls, isEmpty);
+      expect(repo.confirmCalls, isEmpty);
+      // 손에 든 바이트로 그린다 — CDN을 타지 않는다.
+      expect(find.byType(PostPhoto), findsNothing);
+      expect(find.byType(Image), findsNWidgets(2));
+    });
+
+    // 올린 적이 없으니 지울 오브젝트도 없다.
+    testWidgets('등록 전에 뺀 사진은 아무 호출도 남기지 않는다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository();
+      await _pump(tester, repo, picker: _picker(<LocalPhoto>[_local('a.png')]));
+
+      await _pickPhotos(tester);
+      await tester.tap(find.byIcon(Icons.cancel).first);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(Image), findsNothing);
+      expect(repo.uploadUrlCalls, isEmpty);
+      expect(repo.lastDeletedImageKey, isNull);
+    });
+
+    // 업로드가 등록 안으로 들어왔으므로 **진행 표시와 중복 방지가 그 구간까지
+    // 덮어야 한다.** 안 덮으면 업로드가 도는 몇 초 동안 버튼이 멀쩡히 눌려 같은 글이
+    // 두 번 올라간다.
+    testWidgets('업로드가 도는 동안 등록 버튼이 스피너로 바뀌어 다시 눌리지 않는다', (
+      WidgetTester tester,
+    ) async {
+      final Completer<void> gate = Completer<void>();
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..uploadGate = gate.future
+        ..uploadUrls = <PostImageUploadUrl>[_url(1)]
+        ..confirmation = const PostImageConfirmation(
+          confirmed: <String>['images/20/1'],
+        );
+      await _pump(tester, repo, picker: _picker(<LocalPhoto>[_local('a.png')]));
+      await _fill(tester);
+      await _pickPhotos(tester);
+
+      await tester.tap(_submit);
+      await tester.pump();
+
+      // 업로드가 아직 안 끝났다 — 버튼 자리에 진행 표시가 서 있다.
+      expect(repo.uploadUrlCalls, hasLength(1));
+      expect(_submit, findsNothing);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+      gate.complete();
+      await tester.pumpAndSettle();
+
+      // 발급은 딱 한 번만 나갔고 글도 한 번만 만들어졌다.
+      expect(repo.uploadUrlCalls, hasLength(1));
+      expect(repo.lastCreatePost?.photoKeys, <String>['images/20/1']);
+    });
+
+    testWidgets('등록을 누르면 그때 올리고 확정 키로 글이 만들어진다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..uploadUrls = <PostImageUploadUrl>[_url(1)]
+        ..confirmation = const PostImageConfirmation(
+          confirmed: <String>['images/20/1'],
+        );
+      await _pump(tester, repo, picker: _picker(<LocalPhoto>[_local('a.png')]));
+      await _fill(tester);
+
+      await _pickPhotos(tester);
+      expect(repo.uploadUrlCalls, isEmpty);
+
+      await tester.tap(_submit);
+      await tester.pumpAndSettle();
+
+      expect(repo.uploadUrlCalls, hasLength(1));
+      expect(repo.uploadedUrls, <String>['https://storage/1']);
+      expect(repo.lastCreatePost?.photoKeys, <String>['images/20/1']);
+    });
+
+    // 사용자가 정한 정책 — **사진 때문에 글을 버리지 않는다.**
+    testWidgets('한 장이 실패해도 글은 등록되고 실패만 알린다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..uploadUrls = <PostImageUploadUrl>[_url(1), _url(2)]
+        ..failingUploadUrls = <String>{'https://storage/2'}
+        ..confirmation = const PostImageConfirmation(
+          confirmed: <String>['images/20/1'],
+        );
+      await _pump(
+        tester,
+        repo,
+        picker: _picker(<LocalPhoto>[_local('a.png'), _local('b.png')]),
+      );
+      await _fill(tester);
+
+      await _pickPhotos(tester);
+      await _tapSubmitAndHoldToast(tester);
+
+      expect(repo.lastCreatePost?.photoKeys, <String>['images/20/1']);
+      expect(
+        find.text("Your post is up, but 1 photo couldn't be uploaded."),
+        findsOneWidget,
+      );
+    });
+
+    // 사진은 선택 항목이다(가이드 §5) — 전부 실패해도 글은 올라간다.
+    testWidgets('전부 실패해도 사진 없이 글은 등록된다', (WidgetTester tester) async {
+      // uploadUrls를 비워 두면 1단계 "전부 거부"다(가이드 §4).
+      final FakeCommunityRepository repo = FakeCommunityRepository();
+      await _pump(
+        tester,
+        repo,
+        picker: _picker(<LocalPhoto>[_local('a.png'), _local('b.png')]),
+      );
+      await _fill(tester);
+
+      await _pickPhotos(tester);
+      await _tapSubmitAndHoldToast(tester);
+
+      expect(repo.lastCreatePost, isNotNull);
+      expect(repo.lastCreatePost?.photoKeys, isEmpty);
+      expect(
+        find.text("Your post is up, but 2 photos couldn't be uploaded."),
+        findsOneWidget,
+      );
     });
 
     // 사용자가 갤러리에서 취소하면 **아무 안내도 하지 않는다** — 스스로 한 일이라
@@ -724,8 +932,7 @@ void main() {
         picker: ({required int limit}) async => null,
       );
 
-      await tester.tap(find.widgetWithText(TextButton, 'Photos'));
-      await tester.pumpAndSettle();
+      await _pickPhotos(tester);
 
       expect(find.byType(SnackBar), findsNothing);
     });
@@ -919,16 +1126,14 @@ void main() {
       expect(repo.lastDeletedImageKey, isNull);
     });
 
-    testWidgets('사진을 더 붙이면 기존 목록 뒤에 실린다', (WidgetTester tester) async {
+    // 수정 모드는 **두 종류가 섞이는 유일한 자리**다 — 이미 올라간 키와 방금 고른
+    // 로컬 장이 한 줄에 있고, 순서가 곧 표시 순서다(가이드 §4).
+    testWidgets('사진을 더 붙이면 저장할 때 올라가 기존 목록 뒤에 실린다', (
+      WidgetTester tester,
+    ) async {
       final FakeCommunityRepository repo =
           _editRepo(photoKeys: <String>['images/20/1'])
-            ..uploadUrls = const <PostImageUploadUrl>[
-              PostImageUploadUrl(
-                uploadUrl: 'https://storage/2',
-                objectKey: 'pending/20/2',
-                expiresAt: 'x',
-              ),
-            ]
+            ..uploadUrls = <PostImageUploadUrl>[_url(2)]
             ..confirmation = const PostImageConfirmation(
               confirmed: <String>['images/20/2'],
             );
@@ -936,24 +1141,46 @@ void main() {
         tester,
         repo,
         editPostId: '42',
-        picker: ({required int limit}) async => <PickedPhoto>[
-          PickedPhoto(
-            bytes: Uint8List.fromList(<int>[1, 2, 3]),
-            contentType: 'image/jpeg',
-            name: 'b.jpg',
-          ),
-        ],
+        picker: _picker(<LocalPhoto>[_local('b.png')]),
       );
 
-      await tester.tap(find.widgetWithText(TextButton, 'Photos'));
-      await tester.pumpAndSettle();
+      await _pickPhotos(tester);
+      // 고른 것만으로는 나가지 않는다. 기존 원격 장 1개 + 새 로컬 장 1개가 보인다.
+      expect(repo.uploadUrlCalls, isEmpty);
+      expect(find.byType(PostPhoto), findsOneWidget);
+
       await tester.tap(_submit);
       await tester.pumpAndSettle();
 
+      expect(repo.uploadedUrls, <String>['https://storage/2']);
       expect(repo.lastEditPost?.photoKeys, <String>[
         'images/20/1',
         'images/20/2',
       ]);
+    });
+
+    // 수정에서도 정책은 같다 — 사진 한 장 때문에 수정 자체를 되돌리지 않는다.
+    testWidgets('새로 붙인 장이 실패해도 저장은 되고 실패만 알린다', (WidgetTester tester) async {
+      // uploadUrls를 비워 두면 1단계 "전부 거부"다.
+      final FakeCommunityRepository repo = _editRepo(
+        photoKeys: <String>['images/20/1'],
+      );
+      await _pump(
+        tester,
+        repo,
+        editPostId: '42',
+        picker: _picker(<LocalPhoto>[_local('b.png')]),
+      );
+
+      await _pickPhotos(tester);
+      await _tapSubmitAndHoldToast(tester);
+
+      // 원래 사진은 그대로 남고 새 장만 빠진다.
+      expect(repo.lastEditPost?.photoKeys, <String>['images/20/1']);
+      expect(
+        find.text("Your post was updated, but 1 photo couldn't be uploaded."),
+        findsOneWidget,
+      );
     });
   });
 }

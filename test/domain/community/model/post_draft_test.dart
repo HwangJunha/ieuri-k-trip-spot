@@ -1,4 +1,7 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ieuri_k_trip_spot/domain/community/model/composer_photo.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_draft.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/target_category.dart';
 
@@ -106,5 +109,35 @@ void main() {
     expect(withSpot.withoutSpot().spotTitle, isNull);
     // 나머지는 유지된다.
     expect(withSpot.withoutSpot().title, valid.title);
+  });
+
+  // **두 종류가 한 목록에 섞인다** — 이미 올라간 키와 아직 안 올린 로컬 장이다.
+  // 초안이 후자를 담을 수 있게 된 것이 업로드를 등록 시점으로 미룰 수 있는 근거다.
+  group('사진 — 원격과 로컬', () {
+    final LocalPhoto local = LocalPhoto(
+      id: 'l1',
+      bytes: Uint8List.fromList(<int>[1, 2, 3]),
+      contentType: 'image/jpeg',
+      name: 'a.jpg',
+    );
+    final PostDraft mixed = valid.copyWith(
+      photos: <ComposerPhoto>[const RemotePhoto('images/20/1'), local],
+    );
+
+    test('확정 키만 서버로 나가고 로컬 장은 따로 추려진다', () {
+      expect(mixed.remoteKeys, <String>['images/20/1']);
+      expect(mixed.pendingPhotos, <LocalPhoto>[local]);
+    });
+
+    // 상한은 글에 붙는 최종 개수에 걸린다(가이드 §4) — 두 종류를 함께 센다.
+    test('남은 자리는 원격·로컬을 합쳐 센다', () {
+      expect(mixed.remainingPhotoSlots, maxPostPhotos - 2);
+    });
+
+    // **실제 바이트 수여야 한다** — 이 값이 서명에 들어가 1바이트만 달라도
+    // 스토리지가 403으로 거부한다(가이드 §4).
+    test('contentLength는 들고 있는 바이트 수 그대로다', () {
+      expect(local.contentLength, 3);
+    });
   });
 }

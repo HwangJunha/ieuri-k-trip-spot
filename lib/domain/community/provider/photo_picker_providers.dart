@@ -1,7 +1,7 @@
 import 'package:image_picker/image_picker.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import 'post_composer_providers.dart';
+import '../model/composer_photo.dart';
 
 part 'photo_picker_providers.g.dart';
 
@@ -11,7 +11,7 @@ part 'photo_picker_providers.g.dart';
 /// 이 provider를 고정된 목록으로 override하고, 실제 화면만 갤러리를 띄운다.
 ///
 /// null을 돌려주면 사용자가 취소한 것이고, 빈 목록이면 고른 것이 없는 것이다.
-typedef PhotoPicker = Future<List<PickedPhoto>?> Function({required int limit});
+typedef PhotoPicker = Future<List<LocalPhoto>?> Function({required int limit});
 
 /// 서버가 받는 MIME 타입. 그 밖이면 `UNSUPPORTED_CONTENT_TYPE`으로 거부되므로
 /// **고르는 단계에서 미리 거른다**(가이드 §4).
@@ -21,6 +21,9 @@ const Map<String, String> _contentTypeByExtension = <String, String>{
   'png': 'image/png',
   'webp': 'image/webp',
 };
+
+/// 고른 사진에 붙일 식별자의 일련번호. 초안 안에서만 쓰이고 서버로 나가지 않는다.
+int _nextPickId = 0;
 
 /// 파일 이름의 확장자로 MIME 타입을 고른다. 모르는 확장자면 null이고 그 장은 버린다.
 ///
@@ -46,12 +49,15 @@ PhotoPicker photoPicker(Ref ref) {
     final List<XFile> files = await picker.pickMultiImage(limit: limit);
     if (files.isEmpty) return null;
 
-    final List<PickedPhoto> picked = <PickedPhoto>[];
+    final List<LocalPhoto> picked = <LocalPhoto>[];
     for (final XFile file in files) {
       final String? contentType = _contentTypeOf(file.name);
       if (contentType == null) continue;
       picked.add(
-        PickedPhoto(
+        LocalPhoto(
+          // 같은 파일을 두 번 골라도 서로 다른 장이므로 이름으로는 구분할 수
+          // 없다 — 고른 순서로 단조 증가하는 값을 붙인다.
+          id: 'local-${_nextPickId++}',
           bytes: await file.readAsBytes(),
           contentType: contentType,
           name: file.name,
