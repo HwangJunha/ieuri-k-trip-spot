@@ -22,7 +22,12 @@
 set -euo pipefail
 
 # Max snapshot age in minutes before it's considered stale (override via env).
-MAX_AGE_MIN="${SCHEMA_MAX_AGE_MIN:-10}"
+#
+# 10분은 너무 짧았다 — 한 기능을 붙이는 동안 introspection이 여러 번 다시 돈다.
+# 스키마가 바뀌는 계기는 서버 재배포이고 그건 시간 단위로 일어나므로, 한 시간이면
+# 실제 변경을 놓치지 않으면서 편집마다 서버를 두드리지 않는다. 서버를 방금 고쳤다면
+# `SCHEMA_MAX_AGE_MIN=0`으로 한 번 강제하면 된다.
+MAX_AGE_MIN="${SCHEMA_MAX_AGE_MIN:-60}"
 # GraphQL endpoint (local-only). Override via env if the port ever changes.
 GRAPHQL_URL="${GRAPHQL_INTROSPECT_URL:-http://localhost:8888/graphql}"
 # curl timeout so a down server never hangs the edit for long.
