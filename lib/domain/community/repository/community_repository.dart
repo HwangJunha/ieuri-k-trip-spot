@@ -9,6 +9,7 @@ import '../model/nearby_spot.dart';
 import '../model/nearby_spot_category.dart';
 import '../model/post.dart';
 import '../model/post_image_upload.dart';
+import '../model/post_sort_order.dart';
 import '../model/report_reason.dart';
 import '../model/target_category.dart';
 
@@ -40,6 +41,17 @@ abstract interface class CommunityRepository {
   /// - **[category]·[tag]는 범위와 독립**이라 단독으로도 걸린다
   ///
   /// [first]는 기본 20 / 상한 50이며 초과해도 오류가 아니라 잘린다.
+  ///
+  /// [sort]는 기본 [PostSortOrder.latest]다(2차 가이드 §3). [PostSortOrder.distance]는
+  /// 반경 안 **장소에 붙은 글만** 가까운 순으로 주므로 장소 없는 글이 빠지고,
+  /// 좌표가 없으면 최신순처럼 동작한다(오류가 아니다).
+  ///
+  /// **두 정렬의 커서 형식이 다르다** — 정렬을 바꾸면 [after]를 버리고 첫 페이지부터
+  /// 다시 조회해야 한다. 이전 커서를 그대로 넘기면 `INVALID_INPUT`이다.
+  ///
+  /// [hiddenByViewer]가 true면 **내가 숨긴 글만** 온다(2차 가이드 §2). 숨긴 글은 그
+  /// 밖의 모든 조회에서 빠지므로 해제 화면이 이 인자를 쓴다. 이때도 [category]·[tag]
+  /// 필터와 [sort]가 그대로 걸린다 — 별도 쿼리를 두지 않은 이유가 그것이다.
   Future<CursorPage<Post>> fetchPosts({
     String? spotId,
     double? latitude,
@@ -47,6 +59,8 @@ abstract interface class CommunityRepository {
     int? radiusMeters,
     TargetCategory? category,
     String? tag,
+    PostSortOrder? sort,
+    bool? hiddenByViewer,
     int? first,
     String? after,
   });
@@ -172,7 +186,18 @@ abstract interface class CommunityRepository {
   Future<void> deletePost(String postId);
 
   /// 댓글 작성. `createPost`와 같이 **commentId만 온다**(가이드 §5).
-  Future<String?> createComment({required String postId, required String body});
+  ///
+  /// [parentCommentId]를 주면 그 댓글의 답글이고, 생략하면 최상위 댓글이다
+  /// (2차 가이드 §1). **답글에 답글을 달아도 거부되지 않고** 서버가 최상위 부모로
+  /// 눕히므로 실제 부모가 넘긴 값과 다를 수 있다 — 그래서 화면은 답글에 답글 버튼을
+  /// 두지 않고, 성공 후에는 목록을 다시 받는다.
+  ///
+  /// 다른 글의 댓글을 [parentCommentId]로 주면 `COMMENT_NOT_FOUND`다.
+  Future<String?> createComment({
+    required String postId,
+    required String body,
+    String? parentCommentId,
+  });
 
   /// 내 댓글 삭제. 남의 댓글이면 `NOT_COMMENT_OWNER`다.
   Future<void> deleteComment(String commentId);
@@ -211,6 +236,23 @@ abstract interface class CommunityRepository {
   /// **글에서 사진을 빼도 오브젝트는 남는다** — `editPost(photoKeys:)`는 연결만
   /// 바꾸므로 스토리지에서 지우려면 이걸 따로 부른다(가이드 §4).
   Future<void> deletePostImage(String objectKey);
+
+  /// 글 하나를 **내 화면에서만** 감춘다(2차 가이드 §2).
+  ///
+  /// **차단·신고와 각각 다르다**: 차단은 사람 단위 양방향이고, 신고는 되돌릴 수 없는
+  /// 운영 조치 요청이다. 이것은 글 하나에 대한 **화면 설정**이라 소유권을 보지 않으며
+  /// 내 글도 숨길 수 있다.
+  ///
+  /// **[Post.hidden]과 다른 값이다.** 그쪽은 신고 5건 누적으로 **모두에게** 감춰진
+  /// 글(작성자 본인에게만 보인다)이고, 이건 내가 나에게만 감춘 것이다.
+  ///
+  /// 멱등이라 이미 숨긴 글에 다시 불러도 성공이다. 성공 후에는 로컬에서 지우는 것이
+  /// 아니라 **피드를 다시 불러온다** — 필터링은 서버가 한다(차단과 같은 규약).
+  Future<void> hidePost(String postId);
+
+  /// 숨김을 해제한다. 멱등이며 **삭제된 글에도 동작한다** — 그래야 숨김 목록에
+  /// 남지 않는다(2차 가이드 §2).
+  Future<void> unhidePost(String postId);
 
   /// 사용자 차단. **양방향이다** — 이 호출 하나로 서로의 글·댓글이 모든 피드에서
   /// 사라진다(가이드 §6). 성공 후에는 로컬에서 지우는 것이 아니라 **피드를 다시

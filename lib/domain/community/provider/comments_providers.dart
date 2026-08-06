@@ -42,8 +42,13 @@ class CommentsState {
   );
 }
 
-/// 글 하나의 댓글(가이드 §2). [postId]별 패밀리 — id를 인자로 두면 codegen이
-/// family를 만든다(CLAUDE.md §5).
+/// 글 하나의 최상위 댓글과 각 댓글의 답글(가이드 §2, 2차 가이드 §1). [postId]별
+/// 패밀리 — id를 인자로 두면 codegen이 family를 만든다(CLAUDE.md §5).
+///
+/// **[CommentsState.items]는 최상위 댓글만 담는다** — 답글은 각 [Comment.replies]
+/// 안에 있다. 그래서 목록 길이는 답글을 세지 않으며, `commentCount`는 답글까지
+/// 포함하므로 둘이 다른 것이 정상이다(§6의 차단 불일치와 겹쳐 두 배로 어긋날 수
+/// 있다).
 ///
 /// **`comments`가 루트 쿼리라서 provider도 글과 분리돼 있다.** 예전에는 글 상세
 /// 응답에 댓글이 중첩돼 있었는데, 그 구조에서는 목록 안의 목록을 페이지네이션해야 해
@@ -103,12 +108,24 @@ class CommentsController extends _$CommentsController {
   ///
   /// 성공하면 `createComment`가 **commentId만 주므로**(가이드 §5) 응답으로 댓글을
   /// 조립할 수 없다 — 목록을 다시 받는다.
-  Future<CommentSubmission> submit(String body) async {
+  ///
+  /// [parentCommentId]를 주면 그 댓글의 답글이다(2차 가이드 §1). 낙관적 갱신을 하지
+  /// 않는 것이 여기서 한 번 더 이득인데, **답글에 답글을 달면 서버가 최상위 부모로
+  /// 눕히므로 실제 부모가 보낸 값과 다를 수 있기** 때문이다 — 다시 받으면 그 차이가
+  /// 저절로 해소된다.
+  Future<CommentSubmission> submit(
+    String body, {
+    String? parentCommentId,
+  }) async {
     final String trimmed = body.trim();
     if (trimmed.isEmpty) return CommentSubmission.rejected;
 
     try {
-      await _repository.createComment(postId: postId, body: trimmed);
+      await _repository.createComment(
+        postId: postId,
+        body: trimmed,
+        parentCommentId: parentCommentId,
+      );
       ref.invalidateSelf();
       return CommentSubmission.success;
     } on CommunityFailure catch (failure) {

@@ -32,6 +32,12 @@ type PostSpot {
   category: TargetCategory
 }
 
+# 댓글은 **깊이 2단계**다(2차 가이드 §1). `comments(postId:)`는 최상위만 주고
+# 답글은 각 댓글의 `replies`로 온다 — 요청하지 않으면 조회되지 않는다.
+#
+# `parentCommentId`가 null이면 최상위, 있으면 답글이다(들여쓰기 판정에 쓴다).
+# `replies`에는 페이지네이션이 없고, 답글의 `replies`는 항상 빈 목록이다(3단계가
+# 없다) — 그래서 오퍼레이션이 한 단계만 내려가 요청한다.
 type Comment {
   id: ID!
   body: String!
@@ -39,6 +45,8 @@ type Comment {
   ownedByViewer: Boolean!
   hidden: Boolean!
   createdAt: String!
+  parentCommentId: ID
+  replies: [Comment!]!
 }
 
 type CommentEdge {
@@ -135,6 +143,10 @@ type EditPostPayload {
 input CreateCommentInput {
   postId: ID!
   body: String!
+  # 생략하면 최상위 댓글이다. **답글에 답글을 달아도 거부되지 않고** 그 답글의
+  # 최상위 부모에 눕혀지므로, 응답의 `parentCommentId`가 넘긴 값과 다를 수 있다
+  # (2차 가이드 §1). 그래서 앱은 답글에 "답글 달기"를 두지 않는다.
+  parentCommentId: ID
 }
 
 type CreateCommentPayload {
@@ -257,6 +269,47 @@ type ReportContentPayload {
   userErrors: [UserError!]!
 }
 
+# 게시물 숨기기(2차 가이드 §2). **신고·차단과 각각 다르다** — 글 하나를 **내
+# 화면에서만** 감추고, 되돌릴 수 있으며, 소유권을 보지 않아 내 글도 숨길 수 있다.
+# 조치가 아니라 화면 설정이다.
+#
+# **`Post.hidden`과 헷갈리면 안 된다.** 그쪽은 신고 5건 누적으로 **모두에게** 감춰진
+# 글(작성자 본인에게만 보인다)이고, 이건 내가 나에게만 감춘 것이다.
+#
+# 둘 다 멱등이며(이미 숨긴 글에 다시 불러도 success), 해제는 **삭제된 글에도**
+# 동작한다 — 그래야 숨김 목록에 남지 않는다.
+input HidePostInput {
+  postId: ID!
+}
+
+type HidePostPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+input UnhidePostInput {
+  postId: ID!
+}
+
+type UnhidePostPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+# 피드 정렬(2차 가이드 §3).
+#
+# | 값 | 무엇이 보이나 | 순서 |
+# |---|---|---|
+# | `LATEST`(기본) | 반경 안 글 + **장소 없이 쓴 글** | 최신순 |
+# | `DISTANCE` | 반경 안 장소에 붙은 글만 | 가까운 장소 순 |
+#
+# **두 정렬의 커서 형식이 다르다** — 정렬을 바꾸면 커서를 버리고 첫 페이지부터 다시
+# 조회해야 하며, 이전 커서를 그대로 넘기면 `INVALID_INPUT`이다.
+enum PostSortOrder {
+  LATEST
+  DISTANCE
+}
+
 input LikePostInput {
   postId: ID!
 }
@@ -287,6 +340,11 @@ extend type Query {
     radiusMeters: Int
     category: TargetCategory
     tag: String
+    sort: PostSortOrder
+    # true면 **내가 숨긴 글만** 온다(해제 화면용). 숨긴 글은 그 밖의 모든 조회에서
+    # 빠지며 `post(id:)` 단건도 null이다(2차 가이드 §2). 카테고리·태그 필터와
+    # 정렬은 여기에도 그대로 걸리므로 별도 쿼리를 두지 않았다.
+    hiddenByViewer: Boolean
     first: Int
     after: String
   ): PostConnection!
@@ -311,6 +369,8 @@ extend type Mutation {
     input: ConfirmPostImageUploadsInput!
   ): ConfirmPostImageUploadsPayload!
   deletePostImage(input: DeletePostImageInput!): DeletePostImagePayload!
+  hidePost(input: HidePostInput!): HidePostPayload!
+  unhidePost(input: UnhidePostInput!): UnhidePostPayload!
   blockUser(input: BlockUserInput!): BlockUserPayload!
   unblockUser(input: UnblockUserInput!): UnblockUserPayload!
   reportContent(input: ReportContentInput!): ReportContentPayload!

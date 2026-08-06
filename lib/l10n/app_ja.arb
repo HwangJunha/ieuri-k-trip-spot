@@ -479,6 +479,26 @@
   "communityUnblockAction": "ブロック解除",
   "communityUnblockDone": "ブロックを解除しました。",
   "communityBlockedUsersAction": "ブロックしたユーザー",
+  "communityHidePostAction": "この投稿を非表示",
+  "communityHidePostDone": "投稿を非表示にしました。自分にだけ見えなくなります。",
+  "communityHiddenPostsAction": "非表示の投稿",
+  "communityHiddenPostsTitle": "非表示の投稿",
+  "communityHiddenPostsEmpty": "非表示にした投稿はありません。",
+  "communityHiddenPostsNote": "自分のフィードでのみ非表示になります。他の人には表示されたままです。",
+  "communityUnhideAction": "非表示を解除",
+  "communityUnhideDone": "フィードに再び表示されます。",
+  "communitySortLatest": "新着順",
+  "communitySortDistance": "近い順",
+  "communityReplyAction": "返信する",
+  "communityReplyComposerHint": "{nickname}さんに返信",
+  "@communityReplyComposerHint": {
+    "placeholders": {
+      "nickname": {
+        "type": "String"
+      }
+    }
+  },
+  "communityReplyCancel": "返信をキャンセル",
   "communityPhotoViewerTitle": "{total}枚中{current}枚目",
   "@communityPhotoViewerTitle": {
     "placeholders": {

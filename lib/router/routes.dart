@@ -13,6 +13,7 @@ import '../domain/auth/view/sns_sign_up_screen.dart';
 import '../domain/community/model/target_category.dart';
 import '../domain/community/view/blocked_users_screen.dart';
 import '../domain/community/view/community_screen.dart';
+import '../domain/community/view/hidden_posts_screen.dart';
 import '../domain/community/view/post_composer_screen.dart';
 import '../domain/community/view/post_detail_screen.dart';
 import '../domain/onboarding/view/onboarding_screen.dart';
@@ -156,6 +157,13 @@ List<RouteBase> buildRoutes() => <RouteBase>[
     path: '/blocked-users',
     name: BlockedUsersScreen.routeName,
     builder: (_, _) => const BlockedUsersScreen(),
+  ),
+  // 내가 숨긴 글 목록(2차 가이드 §2). 차단 목록과 같은 자리·같은 성격의 화면이라
+  // 나란히 둔다 — 다만 차단은 사람, 숨김은 글 하나가 대상이다.
+  GoRoute(
+    path: '/hidden-posts',
+    name: HiddenPostsScreen.routeName,
+    builder: (_, _) => const HiddenPostsScreen(),
   ),
   // The post-onboarding 5-tab shell. Each tab keeps its own navigation stack.
   StatefulShellRoute.indexedStack(

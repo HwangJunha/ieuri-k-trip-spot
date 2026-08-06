@@ -8,8 +8,13 @@ part of 'comments_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 글 하나의 댓글(가이드 §2). [postId]별 패밀리 — id를 인자로 두면 codegen이
-/// family를 만든다(CLAUDE.md §5).
+/// 글 하나의 최상위 댓글과 각 댓글의 답글(가이드 §2, 2차 가이드 §1). [postId]별
+/// 패밀리 — id를 인자로 두면 codegen이 family를 만든다(CLAUDE.md §5).
+///
+/// **[CommentsState.items]는 최상위 댓글만 담는다** — 답글은 각 [Comment.replies]
+/// 안에 있다. 그래서 목록 길이는 답글을 세지 않으며, `commentCount`는 답글까지
+/// 포함하므로 둘이 다른 것이 정상이다(§6의 차단 불일치와 겹쳐 두 배로 어긋날 수
+/// 있다).
 ///
 /// **`comments`가 루트 쿼리라서 provider도 글과 분리돼 있다.** 예전에는 글 상세
 /// 응답에 댓글이 중첩돼 있었는데, 그 구조에서는 목록 안의 목록을 페이지네이션해야 해
@@ -22,8 +27,13 @@ part of 'comments_providers.dart';
 @ProviderFor(CommentsController)
 const commentsControllerProvider = CommentsControllerFamily._();
 
-/// 글 하나의 댓글(가이드 §2). [postId]별 패밀리 — id를 인자로 두면 codegen이
-/// family를 만든다(CLAUDE.md §5).
+/// 글 하나의 최상위 댓글과 각 댓글의 답글(가이드 §2, 2차 가이드 §1). [postId]별
+/// 패밀리 — id를 인자로 두면 codegen이 family를 만든다(CLAUDE.md §5).
+///
+/// **[CommentsState.items]는 최상위 댓글만 담는다** — 답글은 각 [Comment.replies]
+/// 안에 있다. 그래서 목록 길이는 답글을 세지 않으며, `commentCount`는 답글까지
+/// 포함하므로 둘이 다른 것이 정상이다(§6의 차단 불일치와 겹쳐 두 배로 어긋날 수
+/// 있다).
 ///
 /// **`comments`가 루트 쿼리라서 provider도 글과 분리돼 있다.** 예전에는 글 상세
 /// 응답에 댓글이 중첩돼 있었는데, 그 구조에서는 목록 안의 목록을 페이지네이션해야 해
@@ -34,8 +44,13 @@ const commentsControllerProvider = CommentsControllerFamily._();
 /// 반영하지 않고 목록은 반영하기 때문이다(가이드 §6).
 final class CommentsControllerProvider
     extends $AsyncNotifierProvider<CommentsController, CommentsState> {
-  /// 글 하나의 댓글(가이드 §2). [postId]별 패밀리 — id를 인자로 두면 codegen이
-  /// family를 만든다(CLAUDE.md §5).
+  /// 글 하나의 최상위 댓글과 각 댓글의 답글(가이드 §2, 2차 가이드 §1). [postId]별
+  /// 패밀리 — id를 인자로 두면 codegen이 family를 만든다(CLAUDE.md §5).
+  ///
+  /// **[CommentsState.items]는 최상위 댓글만 담는다** — 답글은 각 [Comment.replies]
+  /// 안에 있다. 그래서 목록 길이는 답글을 세지 않으며, `commentCount`는 답글까지
+  /// 포함하므로 둘이 다른 것이 정상이다(§6의 차단 불일치와 겹쳐 두 배로 어긋날 수
+  /// 있다).
   ///
   /// **`comments`가 루트 쿼리라서 provider도 글과 분리돼 있다.** 예전에는 글 상세
   /// 응답에 댓글이 중첩돼 있었는데, 그 구조에서는 목록 안의 목록을 페이지네이션해야 해
@@ -81,10 +96,15 @@ final class CommentsControllerProvider
 }
 
 String _$commentsControllerHash() =>
-    r'4405bb6f5d494814a718ebad80081215485c6344';
+    r'b8f3bad9d0ce706ff983286dd6e799a338afa3df';
 
-/// 글 하나의 댓글(가이드 §2). [postId]별 패밀리 — id를 인자로 두면 codegen이
-/// family를 만든다(CLAUDE.md §5).
+/// 글 하나의 최상위 댓글과 각 댓글의 답글(가이드 §2, 2차 가이드 §1). [postId]별
+/// 패밀리 — id를 인자로 두면 codegen이 family를 만든다(CLAUDE.md §5).
+///
+/// **[CommentsState.items]는 최상위 댓글만 담는다** — 답글은 각 [Comment.replies]
+/// 안에 있다. 그래서 목록 길이는 답글을 세지 않으며, `commentCount`는 답글까지
+/// 포함하므로 둘이 다른 것이 정상이다(§6의 차단 불일치와 겹쳐 두 배로 어긋날 수
+/// 있다).
 ///
 /// **`comments`가 루트 쿼리라서 provider도 글과 분리돼 있다.** 예전에는 글 상세
 /// 응답에 댓글이 중첩돼 있었는데, 그 구조에서는 목록 안의 목록을 페이지네이션해야 해
@@ -112,8 +132,13 @@ final class CommentsControllerFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// 글 하나의 댓글(가이드 §2). [postId]별 패밀리 — id를 인자로 두면 codegen이
-  /// family를 만든다(CLAUDE.md §5).
+  /// 글 하나의 최상위 댓글과 각 댓글의 답글(가이드 §2, 2차 가이드 §1). [postId]별
+  /// 패밀리 — id를 인자로 두면 codegen이 family를 만든다(CLAUDE.md §5).
+  ///
+  /// **[CommentsState.items]는 최상위 댓글만 담는다** — 답글은 각 [Comment.replies]
+  /// 안에 있다. 그래서 목록 길이는 답글을 세지 않으며, `commentCount`는 답글까지
+  /// 포함하므로 둘이 다른 것이 정상이다(§6의 차단 불일치와 겹쳐 두 배로 어긋날 수
+  /// 있다).
   ///
   /// **`comments`가 루트 쿼리라서 provider도 글과 분리돼 있다.** 예전에는 글 상세
   /// 응답에 댓글이 중첩돼 있었는데, 그 구조에서는 목록 안의 목록을 페이지네이션해야 해
@@ -130,8 +155,13 @@ final class CommentsControllerFamily extends $Family
   String toString() => r'commentsControllerProvider';
 }
 
-/// 글 하나의 댓글(가이드 §2). [postId]별 패밀리 — id를 인자로 두면 codegen이
-/// family를 만든다(CLAUDE.md §5).
+/// 글 하나의 최상위 댓글과 각 댓글의 답글(가이드 §2, 2차 가이드 §1). [postId]별
+/// 패밀리 — id를 인자로 두면 codegen이 family를 만든다(CLAUDE.md §5).
+///
+/// **[CommentsState.items]는 최상위 댓글만 담는다** — 답글은 각 [Comment.replies]
+/// 안에 있다. 그래서 목록 길이는 답글을 세지 않으며, `commentCount`는 답글까지
+/// 포함하므로 둘이 다른 것이 정상이다(§6의 차단 불일치와 겹쳐 두 배로 어긋날 수
+/// 있다).
 ///
 /// **`comments`가 루트 쿼리라서 provider도 글과 분리돼 있다.** 예전에는 글 상세
 /// 응답에 댓글이 중첩돼 있었는데, 그 구조에서는 목록 안의 목록을 페이지네이션해야 해

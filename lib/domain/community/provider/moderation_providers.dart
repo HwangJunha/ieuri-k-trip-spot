@@ -57,6 +57,21 @@ class ModerationController extends _$ModerationController {
   Future<ModerationOutcome> unblock(String memberId) =>
       _run(() => _repository.unblockUser(memberId));
 
+  /// 글 하나를 **내 화면에서만** 감춘다(2차 가이드 §2).
+  ///
+  /// **차단·신고와 다르다** — 사람이 아니라 글 하나가 대상이고, 되돌릴 수 있으며,
+  /// 소유권을 보지 않아 내 글도 숨길 수 있다. 조치가 아니라 화면 설정이라 확인
+  /// 단계도 두지 않는다(차단은 양방향이라 확인이 필요했다).
+  ///
+  /// 성공하면 화면이 피드를 **재조회한다** — 서버가 필터링하므로 로컬 제거가 아니다.
+  Future<ModerationOutcome> hidePost(String postId) =>
+      _run(() => _repository.hidePost(postId));
+
+  /// 숨김을 푼다. 멱등이며 **삭제된 글에도 동작한다** — 그래야 숨김 목록에 남지
+  /// 않는다(2차 가이드 §2).
+  Future<ModerationOutcome> unhidePost(String postId) =>
+      _run(() => _repository.unhidePost(postId));
+
   /// 신고한다. [reason]이 [ReportReason.other]면 [detail]이 필수이며, 폼이 미리
   /// 막지만 서버가 `REPORT_DETAIL_REQUIRED`를 줄 수도 있다(가이드 §6).
   ///

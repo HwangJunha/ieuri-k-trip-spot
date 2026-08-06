@@ -918,6 +918,26 @@
   "communityUnblockAction": "차단 해제",
   "communityUnblockDone": "차단을 해제했습니다.",
   "communityBlockedUsersAction": "차단한 사용자",
+  "communityHidePostAction": "이 글 숨기기",
+  "communityHidePostDone": "글을 숨겼습니다. 나에게만 보이지 않습니다.",
+  "communityHiddenPostsAction": "숨긴 글",
+  "communityHiddenPostsTitle": "숨긴 글",
+  "communityHiddenPostsEmpty": "숨긴 글이 없습니다.",
+  "communityHiddenPostsNote": "내 피드에서만 숨겨집니다. 다른 사람에게는 그대로 보입니다.",
+  "communityUnhideAction": "숨김 해제",
+  "communityUnhideDone": "다시 피드에 표시됩니다.",
+  "communitySortLatest": "최신순",
+  "communitySortDistance": "거리순",
+  "communityReplyAction": "답글 달기",
+  "communityReplyComposerHint": "{nickname}님에게 답글",
+  "@communityReplyComposerHint": {
+    "placeholders": {
+      "nickname": {
+        "type": "String"
+      }
+    }
+  },
+  "communityReplyCancel": "답글 취소",
   "communityPhotoViewerTitle": "{total}장 중 {current}장",
   "@communityPhotoViewerTitle": {
     "placeholders": {

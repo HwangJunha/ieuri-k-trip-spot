@@ -46,6 +46,14 @@ fragment PostCardFields on Post {
 #
 # `hasPreviousPage`는 요청하지 않는다 — 앞으로만 가는 피드라 믿을 수 없는 값이다
 # (가이드 §2).
+#
+# `sort`는 기본 `LATEST`다(2차 가이드 §3). `DISTANCE`는 반경 안 **장소에 붙은 글만**
+# 가까운 순으로 주므로 장소 없는 글이 빠지고, 좌표가 없으면 `LATEST`처럼 동작한다
+# (오류가 아니다). **두 정렬의 커서 형식이 다르므로 정렬을 바꾸면 커서를 버리고
+# 첫 페이지부터 다시 조회한다** — 이전 커서를 넘기면 `INVALID_INPUT`이다.
+#
+# `hiddenByViewer`는 기본 false다. true면 **내가 숨긴 글만** 오며 해제 화면이 쓴다
+# (2차 가이드 §2). 이때도 카테고리·태그·정렬이 그대로 걸린다.
 query Posts(
   $spotId: ID
   $latitude: Float
@@ -53,6 +61,8 @@ query Posts(
   $radiusMeters: Int
   $category: TargetCategory
   $tag: String
+  $sort: PostSortOrder
+  $hiddenByViewer: Boolean
   $first: Int
   $after: String
 ) {
@@ -63,6 +73,8 @@ query Posts(
     radiusMeters: $radiusMeters
     category: $category
     tag: $tag
+    sort: $sort
+    hiddenByViewer: $hiddenByViewer
     first: $first
     after: $after
   ) {
@@ -90,10 +102,18 @@ query PostDetail($id: ID!) {
   }
 }
 
-# 글의 댓글 한 페이지(커서 페이징).
+# 글의 최상위 댓글 한 페이지(커서 페이징)와 각 댓글의 답글.
+#
+# **`comments(postId:)`는 최상위만 준다**(2차 가이드 §1) — 답글은 `replies`에 담겨
+# 오며 **요청해야 조회된다**. 답글은 오래된 순이고(대화 흐름이라 뒤집으면 문맥이
+# 끊긴다) 최상위 목록은 최신순이다.
+#
+# **답글의 `replies`는 요청하지 않는다** — 깊이가 2단계라 항상 빈 목록이다.
+# `replies`에는 페이지네이션도 없다.
 #
 # **`commentCount`와 이 목록의 길이는 다를 수 있다** — 숫자는 차단을 반영하지 않고
-# 목록은 반영하기 때문이다. 불일치를 오류로 처리하지 않는다(가이드 §6).
+# 목록은 반영하며(가이드 §6), 게다가 **답글까지 포함한 수**다(2차 가이드 §1).
+# 불일치를 오류로 처리하지 않는다.
 query Comments($postId: ID!, $first: Int, $after: String) {
   comments(postId: $postId, first: $first, after: $after) {
     edges {
@@ -104,10 +124,24 @@ query Comments($postId: ID!, $first: Int, $after: String) {
         createdAt
         ownedByViewer
         hidden
+        parentCommentId
         author {
           id
           nickname
           profileImageUrl
+        }
+        replies {
+          id
+          body
+          createdAt
+          ownedByViewer
+          hidden
+          parentCommentId
+          author {
+            id
+            nickname
+            profileImageUrl
+          }
         }
       }
     }
@@ -233,8 +267,15 @@ mutation EditPost(
 }
 
 # 댓글 작성. createPost와 같이 commentId만 온다(가이드 §5).
-mutation CreateComment($postId: ID!, $body: String!) {
-  createComment(input: { postId: $postId, body: $body }) {
+#
+# `parentCommentId`를 생략하면 최상위 댓글, 주면 그 댓글의 답글이다(2차 가이드 §1).
+# **답글에 답글을 달아도 거부되지 않고** 최상위 부모로 눕혀지므로 응답의
+# `parentCommentId`가 넘긴 값과 다를 수 있다 — 그래서 화면은 답글에 "답글 달기"를
+# 두지 않고, 성공 후에는 응답으로 조립하지 않고 목록을 다시 받는다.
+mutation CreateComment($postId: ID!, $body: String!, $parentCommentId: ID) {
+  createComment(
+    input: { postId: $postId, body: $body, parentCommentId: $parentCommentId }
+  ) {
     success
     userErrors {
       code
@@ -319,6 +360,40 @@ mutation ConfirmPostImageUploads($objectKeys: [String!]!) {
 # 바꾸므로 스토리지에서 지우려면 이걸 따로 부른다(가이드 §4).
 mutation DeletePostImage($objectKey: String!) {
   deletePostImage(input: { objectKey: $objectKey }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+# 게시물 숨기기(2차 가이드 §2). **차단·신고와 각각 다르다**:
+#
+# | | 대상 | 효과 | 되돌리기 |
+# |---|---|---|---|
+# | `hidePost` | 글 하나 | **내 화면에서만** 사라짐 | 가능 |
+# | `blockUser` | 사람 | 그 사람 글·댓글 전부(양방향) | 가능 |
+# | `reportContent` | 글·댓글·사람 | 운영 조치 요청 | 불가 |
+#
+# 소유권을 보지 않아 **내 글도 숨길 수 있다** — 조치가 아니라 화면 설정이다.
+# 성공 후에는 로컬에서 지우는 것이 아니라 **피드를 다시 불러온다**(차단과 같은
+# 규약): 필터링은 서버가 한다.
+mutation HidePost($postId: ID!) {
+  hidePost(input: { postId: $postId }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+# 숨김 해제. 멱등이며 **삭제된 글에도 동작한다** — 그래야 숨김 목록에 남지 않는다.
+mutation UnhidePost($postId: ID!) {
+  unhidePost(input: { postId: $postId }) {
     success
     userErrors {
       code

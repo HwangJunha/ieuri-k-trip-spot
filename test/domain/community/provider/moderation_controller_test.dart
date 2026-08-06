@@ -55,6 +55,48 @@ void main() {
     });
   });
 
+  // 2차 가이드 §2 — 글 하나를 내 화면에서만 감춘다. 차단과 다른 축이다.
+  group('글 숨기기', () {
+    test('글 id로 숨김 뮤테이션이 나간다', () async {
+      final FakeCommunityRepository repo = FakeCommunityRepository();
+      final ProviderContainer container = _container(repo);
+
+      final ModerationOutcome outcome = await container
+          .read(moderationControllerProvider.notifier)
+          .hidePost('42');
+
+      expect(outcome, ModerationOutcome.success);
+      expect(repo.lastHiddenPostId, '42');
+      // 사람이 아니라 글이 대상이다 — 차단은 나가지 않는다.
+      expect(repo.lastBlockedMemberId, isNull);
+    });
+
+    test('글 id로 해제 뮤테이션이 나간다', () async {
+      final FakeCommunityRepository repo = FakeCommunityRepository();
+      final ProviderContainer container = _container(repo);
+
+      final ModerationOutcome outcome = await container
+          .read(moderationControllerProvider.notifier)
+          .unhidePost('42');
+
+      expect(outcome, ModerationOutcome.success);
+      expect(repo.lastUnhiddenPostId, '42');
+    });
+
+    test('미인증은 전용 결과로 구분된다', () async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..mutationError = CommunityFailure.unauthenticated;
+      final ProviderContainer container = _container(repo);
+
+      expect(
+        await container
+            .read(moderationControllerProvider.notifier)
+            .hidePost('42'),
+        ModerationOutcome.unauthenticated,
+      );
+    });
+  });
+
   group('신고 (R16)', () {
     test('사유와 상세가 그대로 넘어간다', () async {
       final FakeCommunityRepository repo = FakeCommunityRepository();

@@ -479,6 +479,26 @@
   "communityUnblockAction": "解除屏蔽",
   "communityUnblockDone": "已解除屏蔽。",
   "communityBlockedUsersAction": "已屏蔽的用户",
+  "communityHidePostAction": "隐藏这篇帖子",
+  "communityHidePostDone": "已隐藏。只有你看不到这篇帖子。",
+  "communityHiddenPostsAction": "隐藏的帖子",
+  "communityHiddenPostsTitle": "隐藏的帖子",
+  "communityHiddenPostsEmpty": "你还没有隐藏任何帖子。",
+  "communityHiddenPostsNote": "仅在你的信息流中隐藏，其他人仍然可以看到。",
+  "communityUnhideAction": "取消隐藏",
+  "communityUnhideDone": "已重新显示在信息流中。",
+  "communitySortLatest": "最新",
+  "communitySortDistance": "距离最近",
+  "communityReplyAction": "回复",
+  "communityReplyComposerHint": "回复 {nickname}",
+  "@communityReplyComposerHint": {
+    "placeholders": {
+      "nickname": {
+        "type": "String"
+      }
+    }
+  },
+  "communityReplyCancel": "取消回复",
   "communityPhotoViewerTitle": "第 {current} 张，共 {total} 张",
   "@communityPhotoViewerTitle": {
     "placeholders": {

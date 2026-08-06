@@ -68,6 +68,51 @@ void main() {
       expect(repo.lastCreateComment?.postId, 'p1');
       // 앞뒤 공백은 서버가 제거한 뒤 판정하지만, 보내기 전에 다듬는다.
       expect(repo.lastCreateComment?.body, '좋은 글이네요');
+      // 최상위 댓글이면 부모를 보내지 않는다(2차 가이드 §1).
+      expect(repo.lastCreateComment?.parentCommentId, isNull);
+    });
+
+    // 2차 가이드 §1 — 답글은 parentCommentId를 실어 보낸다.
+    test('답글은 parentCommentId를 함께 보낸다', () async {
+      final FakeCommunityRepository repo = FakeCommunityRepository(
+        comments: <Comment>[fakeComment()],
+      );
+      final ProviderContainer container = _container(repo);
+      await container.read(commentsControllerProvider('p1').future);
+
+      final CommentSubmission result = await container
+          .read(commentsControllerProvider('p1').notifier)
+          .submit('저도요!', parentCommentId: 'c1');
+
+      expect(result, CommentSubmission.success);
+      expect(repo.lastCreateComment?.parentCommentId, 'c1');
+    });
+
+    // 최상위 목록만 items에 담기고 답글은 각 댓글의 replies에 있다.
+    test('최상위 댓글에 답글이 딸려 온다', () async {
+      final ProviderContainer container = _container(
+        FakeCommunityRepository(
+          comments: <Comment>[
+            fakeComment(
+              id: 'c1',
+              replies: <Comment>[
+                fakeComment(id: 'c2', parentCommentId: 'c1'),
+                fakeComment(id: 'c3', parentCommentId: 'c1'),
+              ],
+            ),
+          ],
+        ),
+      );
+
+      final CommentsState state = await container.read(
+        commentsControllerProvider('p1').future,
+      );
+
+      expect(state.items, hasLength(1));
+      expect(state.items.single.replies.map((Comment c) => c.id), <String>[
+        'c2',
+        'c3',
+      ]);
     });
 
     test('공백뿐인 댓글은 서버로 나가지 않는다', () async {

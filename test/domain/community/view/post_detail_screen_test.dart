@@ -174,4 +174,136 @@ void main() {
       expect(find.text('Delete comment'), findsNothing);
     });
   });
+
+  // 2차 가이드 §1 — 대댓글은 깊이 2단계다.
+  group('대댓글', () {
+    FakeCommunityRepository withReplies() => FakeCommunityRepository(
+      post: fakePost(commentCount: 3),
+      comments: <Comment>[
+        fakeComment(
+          id: 'c1',
+          body: 'When does it open?',
+          nickname: 'Minji',
+          replies: <Comment>[
+            fakeComment(
+              id: 'c2',
+              body: 'Ten and two.',
+              nickname: 'Jisoo',
+              parentCommentId: 'c1',
+            ),
+          ],
+        ),
+        fakeComment(id: 'c9', body: 'Parking is rough.', nickname: 'Minsu'),
+      ],
+    );
+
+    testWidgets('답글이 부모 아래에 들여쓰여 보인다', (WidgetTester tester) async {
+      await _pump(tester, withReplies());
+
+      expect(find.text('When does it open?'), findsOneWidget);
+      expect(find.text('Ten and two.'), findsOneWidget);
+
+      final CommentTile parent = tester.widget<CommentTile>(
+        find.ancestor(
+          of: find.text('When does it open?'),
+          matching: find.byType(CommentTile),
+        ),
+      );
+      final CommentTile reply = tester.widget<CommentTile>(
+        find.ancestor(
+          of: find.text('Ten and two.'),
+          matching: find.byType(CommentTile),
+        ),
+      );
+      expect(parent.isReply, isFalse);
+      expect(reply.isReply, isTrue);
+
+      // 답글이 부모 바로 아래에 온다 — 목록 끝으로 밀리지 않는다.
+      final double parentY = tester
+          .getTopLeft(find.text('When does it open?'))
+          .dy;
+      final double replyY = tester.getTopLeft(find.text('Ten and two.')).dy;
+      final double otherY = tester
+          .getTopLeft(find.text('Parking is rough.'))
+          .dy;
+      expect(replyY, greaterThan(parentY));
+      expect(replyY, lessThan(otherY));
+
+      // 왼쪽으로 더 들어가 있다.
+      expect(
+        tester.getTopLeft(find.text('Ten and two.')).dx,
+        greaterThan(tester.getTopLeft(find.text('When does it open?')).dx),
+      );
+    });
+
+    // 답글에 답글을 달면 서버가 최상위 부모로 눕히므로, 버튼을 두면 사용자가 믿은
+    // 부모와 실제 부모가 어긋난다.
+    testWidgets('답글 달기는 최상위 댓글에만 보인다', (WidgetTester tester) async {
+      await _pump(tester, withReplies());
+
+      // 최상위 2건에만 붙는다 — 답글 1건에는 없다.
+      expect(find.text('Reply'), findsNWidgets(2));
+
+      final CommentTile reply = tester.widget<CommentTile>(
+        find.ancestor(
+          of: find.text('Ten and two.'),
+          matching: find.byType(CommentTile),
+        ),
+      );
+      expect(reply.onReply, isNull);
+    });
+
+    testWidgets('답글을 달면 parentCommentId가 함께 나간다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = withReplies();
+      await _pump(tester, repo);
+
+      // 첫 최상위 댓글의 "답글 달기"를 누른다.
+      await tester.tap(
+        find.descendant(
+          of: find.ancestor(
+            of: find.text('When does it open?'),
+            matching: find.byType(CommentTile),
+          ),
+          matching: find.text('Reply'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // 누구에게 다는지 밝힌다.
+      expect(find.text('Reply to Minji'), findsWidgets);
+
+      await tester.enterText(find.byType(TextField), 'Thanks!');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.send));
+      await tester.pumpAndSettle();
+
+      expect(repo.lastCreateComment?.body, 'Thanks!');
+      expect(repo.lastCreateComment?.parentCommentId, 'c1');
+    });
+
+    // 부모가 삭제돼도 답글은 남는다 — 서버가 부모 자리를 여전히 내려준다.
+    testWidgets('삭제된 부모의 답글도 그려진다', (WidgetTester tester) async {
+      await _pump(
+        tester,
+        FakeCommunityRepository(
+          post: fakePost(),
+          comments: <Comment>[
+            fakeComment(
+              id: 'c1',
+              body: 'Deleted comment',
+              replies: <Comment>[
+                fakeComment(
+                  id: 'c2',
+                  body: 'Still here',
+                  parentCommentId: 'c1',
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+
+      expect(find.text('Still here'), findsOneWidget);
+    });
+  });
 }

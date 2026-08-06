@@ -6,6 +6,7 @@ import 'package:ieuri_k_trip_spot/common/widget/floating_bottom_nav_scaffold.dar
 import 'package:ieuri_k_trip_spot/domain/community/model/community_chip.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post.dart';
+import 'package:ieuri_k_trip_spot/domain/community/model/post_sort_order.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/report_reason.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/target_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.dart';
@@ -451,5 +452,90 @@ void main() {
       lessThanOrEqualTo(barTop),
       reason: '글쓰기 버튼 아래끝이 내비 바 윗변보다 위에 있어야 한다',
     );
+  });
+
+  // 2차 가이드 §3 — 거리순/최신순 토글.
+  group('정렬 토글', () {
+    testWidgets('처음에는 최신순으로 조회한다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository(
+        posts: <Post>[fakePost()],
+      );
+      await _pump(tester, repo);
+
+      expect(find.text('Latest'), findsOneWidget);
+      expect(find.text('Nearby'), findsOneWidget);
+      expect(repo.lastFetchPosts?.sort, PostSortOrder.latest);
+    });
+
+    // **커서를 버리고 첫 페이지부터 다시 조회한다** — 두 정렬의 커서 형식이 달라
+    // 이전 커서를 그대로 넘기면 서버가 INVALID_INPUT을 준다.
+    testWidgets('거리순으로 바꾸면 커서 없이 새 정렬로 다시 조회한다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo =
+          FakeCommunityRepository(
+              posts: <Post>[fakePost(id: 'p1', title: 'Latest post')],
+              hasNextPage: true,
+              nextPagePosts: <Post>[fakePost(id: 'p2')],
+            )
+            ..postsBySort = <PostSortOrder, List<Post>>{
+              PostSortOrder.distance: <Post>[
+                fakePost(id: 'p9', title: 'Nearby post'),
+              ],
+            };
+      await _pump(tester, repo);
+
+      await tester.tap(find.text('Nearby'));
+      await tester.pumpAndSettle();
+
+      expect(repo.lastFetchPosts?.sort, PostSortOrder.distance);
+      expect(repo.lastFetchPosts?.after, isNull);
+      // 목록도 서버가 준 거리순 결과로 갈린다 — 클라이언트가 다시 세우지 않는다.
+      expect(find.text('Nearby post'), findsOneWidget);
+      // 거리순 조회는 최신순 커서를 한 번도 재사용하지 않았다.
+      expect(
+        repo.fetchPostsCalls.where(
+          (({PostSortOrder? sort, String? after, bool? hiddenByViewer}) c) =>
+              c.sort == PostSortOrder.distance && c.after != null,
+        ),
+        isEmpty,
+      );
+    });
+  });
+
+  // 2차 가이드 §2 — 게시물 숨기기.
+  group('글 숨기기', () {
+    testWidgets('⋮ 메뉴에 항상 보인다 (내 글에도)', (WidgetTester tester) async {
+      await _pump(
+        tester,
+        FakeCommunityRepository(posts: <Post>[fakePost(ownedByViewer: true)]),
+      );
+
+      await tester.tap(find.byIcon(Icons.more_vert).first);
+      await tester.pumpAndSettle();
+
+      // 소유권을 보지 않는다 — 조치가 아니라 화면 설정이다.
+      expect(find.text('Hide this post'), findsOneWidget);
+      // 내 글이라 차단·신고는 없지만 숨기기는 있다.
+      expect(find.text('Block this user'), findsNothing);
+    });
+
+    testWidgets('숨기면 그 글로 hidePost가 나가고 피드를 다시 받는다', (
+      WidgetTester tester,
+    ) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository(
+        posts: <Post>[fakePost(id: 'p1', title: 'Goes away')],
+      )..refreshedPosts = <Post>[];
+      await _pump(tester, repo);
+
+      await tester.tap(find.byIcon(Icons.more_vert).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Hide this post'));
+      await tester.pumpAndSettle();
+
+      expect(repo.lastHiddenPostId, 'p1');
+      // **로컬에서 지우는 것이 아니라 서버가 거른 결과를 다시 받는다**(차단과 같은
+      // 규약) — 재조회가 실제로 일어났고 그 결과 목록에서 빠졌다.
+      expect(repo.firstPageCalls, greaterThan(1));
+      expect(find.text('Goes away'), findsNothing);
+    });
   });
 }

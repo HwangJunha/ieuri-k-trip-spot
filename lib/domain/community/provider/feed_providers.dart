@@ -6,6 +6,7 @@ import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
 import '../../../common/pagination/page.dart';
 import '../model/post.dart';
+import '../model/post_sort_order.dart';
 import '../model/target_category.dart';
 import '../repository/community_repository.dart';
 import 'community_providers.dart';
@@ -18,8 +19,6 @@ const int _pageSize = 20;
 
 /// 커뮤니티 탭에서 선택된 카테고리(null=전체).
 ///
-/// **상태는 이것 하나뿐이다** — 정렬 선택도, 추가 필터도, 검색도 없다(디자인 §1).
-///
 /// keepAlive인 이유는 좋아요 목록의 카테고리 필터와 같다 — 사용자가 고른 필터는
 /// 화면이 아니라 세션에 속한다. autoDispose면 상세에 다녀오는 것만으로 "전체"로
 /// 되돌아간다.
@@ -30,6 +29,23 @@ class SelectedCategory extends _$SelectedCategory {
 
   /// 칩을 선택한다. 같은 칩을 다시 누르면 해제(전체)다.
   void select(TargetCategory? category) => state = category;
+}
+
+/// 커뮤니티 탭에서 선택된 정렬(2차 가이드 §3). 기본은 [PostSortOrder.latest]다.
+///
+/// [SelectedCategory]와 같은 이유로 keepAlive다 — 사용자가 고른 정렬은 화면이
+/// 아니라 세션에 속한다.
+///
+/// **정렬은 피드 provider의 family 인자이기도 하다.** 여기서 값을 바꾸면 화면이
+/// 다른 family 인스턴스를 watch하게 되고, 그 인스턴스는 커서 없이 처음부터
+/// 로딩된다 — 두 정렬의 커서 형식이 달라 이전 커서를 넘기면 `INVALID_INPUT`이므로
+/// 이 구조가 곧 "정렬을 바꾸면 커서를 버린다"는 규약의 구현이다.
+@Riverpod(keepAlive: true)
+class SelectedSort extends _$SelectedSort {
+  @override
+  PostSortOrder build() => PostSortOrder.latest;
+
+  void select(PostSortOrder sort) => state = sort;
 }
 
 /// 피드의 누적 상태. 커서 페이징이라 [CursorPage]의 `endCursor`를 다음 조회의
@@ -69,8 +85,14 @@ class FeedState {
   );
 }
 
-/// 커뮤니티 탭의 지역 피드. [category]별 패밀리 — 칩을 바꾸면 다른 인스턴스가
-/// 로딩되고 **필터링은 서버가 한다**(클라이언트가 받은 목록을 거르지 않는다).
+/// 커뮤니티 탭의 지역 피드. [category]·[sort]별 패밀리 — 둘 중 하나를 바꾸면 다른
+/// 인스턴스가 로딩되고 **필터링·정렬은 서버가 한다**(클라이언트가 받은 목록을 거르거나
+/// 다시 정렬하지 않는다).
+///
+/// **[sort]가 family 인자인 것이 "정렬을 바꾸면 커서를 버린다"는 규약의 구현이다**
+/// (2차 가이드 §3). 두 정렬의 커서 형식이 달라 이전 커서를 넘기면 서버가
+/// `INVALID_INPUT`을 주는데, 정렬마다 인스턴스가 갈리면 새 인스턴스는 `after` 없이
+/// 첫 페이지부터 받으므로 커서가 섞일 길이 없다.
 ///
 /// 좌표는 앱이 이미 쓰고 있는 [currentCoordinatesProvider]를 그대로 쓴다. 위치를
 /// 얻지 못하면 그 실패가 `AsyncValue.error`로 올라와 화면이 **빈 피드와 구분되는
@@ -83,7 +105,7 @@ class FeedController extends _$FeedController {
   CommunityRepository get _repository => ref.read(communityRepositoryProvider);
 
   @override
-  Future<FeedState> build(TargetCategory? category) async {
+  Future<FeedState> build(TargetCategory? category, PostSortOrder sort) async {
     final Coordinates coords = await ref.watch(
       currentCoordinatesProvider.future,
     );
@@ -91,6 +113,7 @@ class FeedController extends _$FeedController {
       latitude: coords.latitude,
       longitude: coords.longitude,
       category: category,
+      sort: sort,
       first: _pageSize,
     );
     return FeedState(
@@ -117,6 +140,9 @@ class FeedController extends _$FeedController {
         latitude: coords.latitude,
         longitude: coords.longitude,
         category: category,
+        // **첫 페이지와 같은 정렬을 넘겨야 한다** — 커서는 정렬마다 형식이 달라서
+        // 다른 정렬로 이어 받으면 서버가 `INVALID_INPUT`을 준다(2차 가이드 §3).
+        sort: sort,
         first: _pageSize,
         after: current.endCursor,
       );

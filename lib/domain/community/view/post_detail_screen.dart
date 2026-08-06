@@ -22,16 +22,16 @@ import 'post_moderation_flow.dart';
 /// 스크롤 본문 (PaginationListView)
 ///   ├── [0] PostCard 전체 형태 (본문 미절단, 사진 전체)
 ///   ├── [1] 구분선 + "댓글 · N"   ← 서버 commentCount 그대로
-///   └── [2..] CommentTile × N     ← 1단계만, 커서 페이징
-/// 하단 고정 CommentComposerBar
+///   └── [2..] CommentTile × N     ← 최상위 + 답글(들여쓰기), 커서 페이징
+/// 하단 고정 CommentComposerBar   ← 답글 대상이 있으면 그 표시가 함께 뜬다
 /// ```
 ///
 /// **글과 댓글이 서로 다른 provider다.** `comments`가 루트 쿼리가 되면서 갈렸고,
 /// 덕분에 **댓글 조회가 실패해도 글 본문은 그대로 뜬다**(가이드 §2).
 ///
-/// **댓글 수와 목록 길이가 달라도 오류가 아니다**(가이드 §6): `commentCount`는
-/// 숨겨진 댓글만 제외하고 차단은 반영하지 않으므로, 내가 차단한 사람의 댓글은
-/// 목록에서 빠지지만 숫자에는 남는다. 클라이언트가 목록을 세어 다시 계산하지 않는다.
+/// **댓글 수와 목록 길이가 달라도 오류가 아니다**(가이드 §6, 2차 가이드 §1):
+/// `commentCount`는 차단을 반영하지 않는데 목록은 반영하고, 게다가 그 수는 **답글까지
+/// 포함한다.** 두 사유가 겹쳐 어긋나므로 클라이언트가 목록을 세어 다시 계산하지 않는다.
 class PostDetailScreen extends ConsumerWidget {
   const PostDetailScreen({super.key, required this.postId});
 
@@ -100,16 +100,49 @@ class PostDetailScreen extends ConsumerWidget {
 ///
 /// 스크롤을 중첩하지 않는 이유이기도 하다 — 목록 안에 목록을 넣으면 어느 쪽이
 /// 움직이는지 사용자가 알 수 없다.
-class _Body extends ConsumerWidget {
-  const _Body({required this.post});
+/// 화면이 그리는 댓글 한 줄 — 최상위이거나 답글이다.
+///
+/// **서버가 준 트리를 평탄화한 결과다.** 목록 안에 목록을 넣으면 스크롤이 중첩되고
+/// 어느 쪽이 움직이는지 알 수 없으므로, 한 목록에 순서대로 눕히고 [isReply]로
+/// 들여쓰기만 다르게 준다.
+typedef _CommentRow = ({Comment comment, bool isReply});
 
-  /// 글 카드와 댓글 헤더가 목록 앞에 차지하는 칸 수.
-  static const int _headerCount = 2;
+/// 최상위 댓글 목록을 화면 순서로 평탄화한다.
+///
+/// **답글 순서를 건드리지 않는다** — 서버가 오래된 순으로 주고 대화 흐름이라
+/// 뒤집으면 문맥이 끊긴다(2차 가이드 §1). 최상위 목록만 최신순이다.
+///
+/// **부모가 삭제돼도 답글은 남는다** — 그 경우 서버가 부모 자리를 여전히 내려주므로
+/// 여기서 특별히 걸러 낼 것이 없다. 답글만 남은 부분 트리를 숨기지 않는다.
+List<_CommentRow> _flatten(List<Comment> topLevel) => <_CommentRow>[
+  for (final Comment parent in topLevel) ...<_CommentRow>[
+    (comment: parent, isReply: false),
+    for (final Comment reply in parent.replies) (comment: reply, isReply: true),
+  ],
+];
+
+class _Body extends ConsumerStatefulWidget {
+  const _Body({required this.post});
 
   final Post post;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_Body> createState() => _BodyState();
+}
+
+class _BodyState extends ConsumerState<_Body> {
+  /// 글 카드와 댓글 헤더가 목록 앞에 차지하는 칸 수.
+  static const int _headerCount = 2;
+
+  /// 지금 답글을 달고 있는 최상위 댓글. null이면 일반 댓글이다.
+  ///
+  /// **화면 상태이지 서버 상태가 아니라서 provider로 올리지 않는다** — 다른 화면이
+  /// 알 필요가 없고, 상세를 떠나면 사라지는 것이 맞다.
+  Comment? _replyTarget;
+
+  @override
+  Widget build(BuildContext context) {
+    final Post post = widget.post;
     // 모든 항목이 같은 기준으로 상대 시각을 계산하도록 빌드 1회당 한 번만 읽는다.
     final DateTime now = DateTime.now().toUtc();
     final AsyncValue<CommentsState> comments = ref.watch(
@@ -118,7 +151,11 @@ class _Body extends ConsumerWidget {
     final CommentsState? data = comments.value;
     // 댓글이 아직 없거나(로딩·실패·빈 목록) 하나도 안 온 경우에는 헤더 뒤 한 칸이
     // 상태 표시 자리다 — 로딩·실패·"댓글 없음"이 서로 다른 문구로 그 자리에 뜬다.
-    final List<Comment> items = data?.items ?? const <Comment>[];
+    //
+    // **추가 로딩은 최상위 댓글 단위다.** `replies`에는 페이지네이션이 없으므로
+    // (2차 가이드 §1) 커서는 `data.items`(최상위)에만 걸리고, 평탄화된 줄 수는
+    // 그보다 많을 수 있다.
+    final List<_CommentRow> items = _flatten(data?.items ?? const <Comment>[]);
 
     return Column(
       children: <Widget>[
@@ -170,17 +207,28 @@ class _Body extends ConsumerWidget {
                 post: post,
               ),
               _ => _Tile(
-                comment: items[index - _headerCount],
+                row: items[index - _headerCount],
                 postId: post.id,
                 now: now,
+                // **최상위에만 답글 버튼을 준다**(2차 가이드 §1). 답글에 답글을
+                // 달면 서버가 최상위 부모로 눕히므로, 버튼을 두면 사용자가 믿은
+                // 부모와 실제 부모가 어긋난다.
+                onReply: _replyTo,
               ),
             },
           ),
         ),
-        _CommentComposerBar(postId: post.id),
+        _CommentComposerBar(
+          postId: post.id,
+          replyTo: _replyTarget,
+          onCancelReply: () => setState(() => _replyTarget = null),
+          onSubmitted: () => setState(() => _replyTarget = null),
+        ),
       ],
     );
   }
+
+  void _replyTo(Comment parent) => setState(() => _replyTarget = parent);
 }
 
 /// 댓글 목록의 로딩·실패·빈 상태 한 칸.
@@ -262,35 +310,66 @@ class _CommentsHeader extends StatelessWidget {
 }
 
 class _Tile extends ConsumerWidget {
-  const _Tile({required this.comment, required this.postId, required this.now});
+  const _Tile({
+    required this.row,
+    required this.postId,
+    required this.now,
+    required this.onReply,
+  });
 
-  final Comment comment;
+  final _CommentRow row;
   final String postId;
   final DateTime now;
 
+  /// 답글 대상을 고르는 콜백. **최상위 줄에만 넘긴다.**
+  final ValueChanged<Comment> onReply;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) => CommentTile(
-    comment: comment,
-    now: now,
-    onOptions: () => runCommentModerationFlow(
-      context,
-      ref,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final Comment comment = row.comment;
+    return CommentTile(
       comment: comment,
-      onChanged: () {
-        ref.invalidate(commentsControllerProvider(postId));
-        // 댓글 수는 글에 있으므로 함께 다시 받는다.
-        ref.invalidate(postDetailProvider(postId));
-      },
-    ),
-  );
+      now: now,
+      isReply: row.isReply,
+      // 답글에는 답글 버튼을 두지 않는다 — 눌러도 최상위에 달리기 때문이다.
+      onReply: row.isReply ? null : () => onReply(comment),
+      onOptions: () => runCommentModerationFlow(
+        context,
+        ref,
+        comment: comment,
+        onChanged: () {
+          ref.invalidate(commentsControllerProvider(postId));
+          // 댓글 수는 글에 있으므로 함께 다시 받는다.
+          ref.invalidate(postDetailProvider(postId));
+        },
+      ),
+    );
+  }
 }
 
 /// 하단 고정 댓글 입력. **낙관적으로 처리하지 않는다** — 서버가 거부할 사유가
 /// 실재하고, 달린 것처럼 보였다가 사라지는 편이 잠깐 기다리는 것보다 나쁘다.
+///
+/// [replyTo]가 있으면 그 댓글의 **답글**로 보낸다(2차 가이드 §1). 누구에게 다는지를
+/// 입력줄 위에 밝히고 취소 수단을 함께 둔다 — 답글 모드에 갇히면 일반 댓글을 달 수
+/// 없다.
 class _CommentComposerBar extends ConsumerStatefulWidget {
-  const _CommentComposerBar({required this.postId});
+  const _CommentComposerBar({
+    required this.postId,
+    required this.replyTo,
+    required this.onCancelReply,
+    required this.onSubmitted,
+  });
 
   final String postId;
+
+  /// 답글 대상(최상위 댓글). null이면 일반 댓글이다.
+  final Comment? replyTo;
+
+  final VoidCallback onCancelReply;
+
+  /// 전송에 성공했을 때 — 호출부가 답글 대상을 푼다.
+  final VoidCallback onSubmitted;
 
   @override
   ConsumerState<_CommentComposerBar> createState() =>
@@ -318,45 +397,85 @@ class _CommentComposerBarState extends ConsumerState<_CommentComposerBar> {
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final ThemeData theme = Theme.of(context);
+    final Comment? replyTo = widget.replyTo;
     return Material(
       color: theme.colorScheme.surface,
       elevation: 2,
       child: SafeArea(
         top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
-          child: Row(
-            children: <Widget>[
-              Expanded(
-                child: TextField(
-                  controller: _controller,
-                  minLines: 1,
-                  maxLines: 4,
-                  // **maxLength를 두지 않는다** — 두면 입력이 잘려 초과분이 사라진다.
-                  decoration: InputDecoration(
-                    hintText: l10n.communityCommentComposerHint,
-                    border: const OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                  onChanged: (_) => setState(() {}),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            // **누구에게 다는지 밝힌다.** 답글 모드는 눈에 보이지 않으면 일반
+            // 댓글을 달려던 사용자가 엉뚱한 곳에 달게 된다.
+            if (replyTo != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 4, 0),
+                child: Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: Text(
+                        l10n.communityReplyComposerHint(
+                          replyTo.author.nickname,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: widget.onCancelReply,
+                      tooltip: l10n.communityReplyCancel,
+                      visualDensity: VisualDensity.compact,
+                      iconSize: 18,
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
                 ),
               ),
-              _sending
-                  ? const Padding(
-                      padding: EdgeInsets.all(12),
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      minLines: 1,
+                      maxLines: 4,
+                      // **maxLength를 두지 않는다** — 두면 입력이 잘려 초과분이
+                      // 사라진다.
+                      decoration: InputDecoration(
+                        hintText: replyTo == null
+                            ? l10n.communityCommentComposerHint
+                            : l10n.communityReplyComposerHint(
+                                replyTo.author.nickname,
+                              ),
+                        border: const OutlineInputBorder(),
+                        isDense: true,
                       ),
-                    )
-                  : IconButton(
-                      onPressed: _canSend ? _send : null,
-                      tooltip: l10n.communityCommentSend,
-                      icon: const Icon(Icons.send),
+                      onChanged: (_) => setState(() {}),
                     ),
-            ],
-          ),
+                  ),
+                  _sending
+                      ? const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : IconButton(
+                          onPressed: _canSend ? _send : null,
+                          tooltip: l10n.communityCommentSend,
+                          icon: const Icon(Icons.send),
+                        ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -367,13 +486,16 @@ class _CommentComposerBarState extends ConsumerState<_CommentComposerBar> {
     setState(() => _sending = true);
     final CommentSubmission result = await ref
         .read(commentsControllerProvider(widget.postId).notifier)
-        .submit(_controller.text);
+        // null이면 최상위 댓글이다(2차 가이드 §1).
+        .submit(_controller.text, parentCommentId: widget.replyTo?.id);
     if (!mounted) return;
     setState(() => _sending = false);
 
     switch (result) {
       case CommentSubmission.success:
         _controller.clear();
+        // 답글 모드를 푼다 — 한 번 답글을 달면 다음 입력은 일반 댓글이 기본이다.
+        widget.onSubmitted();
         // 목록은 컨트롤러가 다시 받는다(`createComment`는 commentId만 준다).
         // 댓글 수는 글에 있으므로 상세도 함께 무효화한다.
         ref.invalidate(postDetailProvider(widget.postId));

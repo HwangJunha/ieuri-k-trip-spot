@@ -411,7 +411,12 @@ class Input$CreateCommentInput {
   factory Input$CreateCommentInput({
     required String postId,
     required String body,
-  }) => Input$CreateCommentInput._({r'postId': postId, r'body': body});
+    String? parentCommentId,
+  }) => Input$CreateCommentInput._({
+    r'postId': postId,
+    r'body': body,
+    if (parentCommentId != null) r'parentCommentId': parentCommentId,
+  });
 
   Input$CreateCommentInput._(this._$data);
 
@@ -421,6 +426,10 @@ class Input$CreateCommentInput {
     result$data['postId'] = (l$postId as String);
     final l$body = data['body'];
     result$data['body'] = (l$body as String);
+    if (data.containsKey('parentCommentId')) {
+      final l$parentCommentId = data['parentCommentId'];
+      result$data['parentCommentId'] = (l$parentCommentId as String?);
+    }
     return Input$CreateCommentInput._(result$data);
   }
 
@@ -430,12 +439,18 @@ class Input$CreateCommentInput {
 
   String get body => (_$data['body'] as String);
 
+  String? get parentCommentId => (_$data['parentCommentId'] as String?);
+
   Map<String, dynamic> toJson() {
     final result$data = <String, dynamic>{};
     final l$postId = postId;
     result$data['postId'] = l$postId;
     final l$body = body;
     result$data['body'] = l$body;
+    if (_$data.containsKey('parentCommentId')) {
+      final l$parentCommentId = parentCommentId;
+      result$data['parentCommentId'] = l$parentCommentId;
+    }
     return result$data;
   }
 
@@ -461,6 +476,15 @@ class Input$CreateCommentInput {
     if (l$body != lOther$body) {
       return false;
     }
+    final l$parentCommentId = parentCommentId;
+    final lOther$parentCommentId = other.parentCommentId;
+    if (_$data.containsKey('parentCommentId') !=
+        other._$data.containsKey('parentCommentId')) {
+      return false;
+    }
+    if (l$parentCommentId != lOther$parentCommentId) {
+      return false;
+    }
     return true;
   }
 
@@ -468,7 +492,12 @@ class Input$CreateCommentInput {
   int get hashCode {
     final l$postId = postId;
     final l$body = body;
-    return Object.hashAll([l$postId, l$body]);
+    final l$parentCommentId = parentCommentId;
+    return Object.hashAll([
+      l$postId,
+      l$body,
+      _$data.containsKey('parentCommentId') ? l$parentCommentId : const {},
+    ]);
   }
 }
 
@@ -481,7 +510,7 @@ abstract class CopyWith$Input$CreateCommentInput<TRes> {
   factory CopyWith$Input$CreateCommentInput.stub(TRes res) =
       _CopyWithStubImpl$Input$CreateCommentInput;
 
-  TRes call({String? postId, String? body});
+  TRes call({String? postId, String? body, String? parentCommentId});
 }
 
 class _CopyWithImpl$Input$CreateCommentInput<TRes>
@@ -494,11 +523,17 @@ class _CopyWithImpl$Input$CreateCommentInput<TRes>
 
   static const _undefined = <dynamic, dynamic>{};
 
-  TRes call({Object? postId = _undefined, Object? body = _undefined}) => _then(
+  TRes call({
+    Object? postId = _undefined,
+    Object? body = _undefined,
+    Object? parentCommentId = _undefined,
+  }) => _then(
     Input$CreateCommentInput._({
       ..._instance._$data,
       if (postId != _undefined && postId != null) 'postId': (postId as String),
       if (body != _undefined && body != null) 'body': (body as String),
+      if (parentCommentId != _undefined)
+        'parentCommentId': (parentCommentId as String?),
     }),
   );
 }
@@ -509,7 +544,7 @@ class _CopyWithStubImpl$Input$CreateCommentInput<TRes>
 
   TRes _res;
 
-  call({String? postId, String? body}) => _res;
+  call({String? postId, String? body, String? parentCommentId}) => _res;
 }
 
 class Input$DeleteCommentInput {
@@ -1490,6 +1525,184 @@ class _CopyWithStubImpl$Input$ReportContentInput<TRes>
   }) => _res;
 }
 
+class Input$HidePostInput {
+  factory Input$HidePostInput({required String postId}) =>
+      Input$HidePostInput._({r'postId': postId});
+
+  Input$HidePostInput._(this._$data);
+
+  factory Input$HidePostInput.fromJson(Map<String, dynamic> data) {
+    final result$data = <String, dynamic>{};
+    final l$postId = data['postId'];
+    result$data['postId'] = (l$postId as String);
+    return Input$HidePostInput._(result$data);
+  }
+
+  Map<String, dynamic> _$data;
+
+  String get postId => (_$data['postId'] as String);
+
+  Map<String, dynamic> toJson() {
+    final result$data = <String, dynamic>{};
+    final l$postId = postId;
+    result$data['postId'] = l$postId;
+    return result$data;
+  }
+
+  CopyWith$Input$HidePostInput<Input$HidePostInput> get copyWith =>
+      CopyWith$Input$HidePostInput(this, (i) => i);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Input$HidePostInput || runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$postId = postId;
+    final lOther$postId = other.postId;
+    if (l$postId != lOther$postId) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    final l$postId = postId;
+    return Object.hashAll([l$postId]);
+  }
+}
+
+abstract class CopyWith$Input$HidePostInput<TRes> {
+  factory CopyWith$Input$HidePostInput(
+    Input$HidePostInput instance,
+    TRes Function(Input$HidePostInput) then,
+  ) = _CopyWithImpl$Input$HidePostInput;
+
+  factory CopyWith$Input$HidePostInput.stub(TRes res) =
+      _CopyWithStubImpl$Input$HidePostInput;
+
+  TRes call({String? postId});
+}
+
+class _CopyWithImpl$Input$HidePostInput<TRes>
+    implements CopyWith$Input$HidePostInput<TRes> {
+  _CopyWithImpl$Input$HidePostInput(this._instance, this._then);
+
+  final Input$HidePostInput _instance;
+
+  final TRes Function(Input$HidePostInput) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? postId = _undefined}) => _then(
+    Input$HidePostInput._({
+      ..._instance._$data,
+      if (postId != _undefined && postId != null) 'postId': (postId as String),
+    }),
+  );
+}
+
+class _CopyWithStubImpl$Input$HidePostInput<TRes>
+    implements CopyWith$Input$HidePostInput<TRes> {
+  _CopyWithStubImpl$Input$HidePostInput(this._res);
+
+  TRes _res;
+
+  call({String? postId}) => _res;
+}
+
+class Input$UnhidePostInput {
+  factory Input$UnhidePostInput({required String postId}) =>
+      Input$UnhidePostInput._({r'postId': postId});
+
+  Input$UnhidePostInput._(this._$data);
+
+  factory Input$UnhidePostInput.fromJson(Map<String, dynamic> data) {
+    final result$data = <String, dynamic>{};
+    final l$postId = data['postId'];
+    result$data['postId'] = (l$postId as String);
+    return Input$UnhidePostInput._(result$data);
+  }
+
+  Map<String, dynamic> _$data;
+
+  String get postId => (_$data['postId'] as String);
+
+  Map<String, dynamic> toJson() {
+    final result$data = <String, dynamic>{};
+    final l$postId = postId;
+    result$data['postId'] = l$postId;
+    return result$data;
+  }
+
+  CopyWith$Input$UnhidePostInput<Input$UnhidePostInput> get copyWith =>
+      CopyWith$Input$UnhidePostInput(this, (i) => i);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Input$UnhidePostInput || runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$postId = postId;
+    final lOther$postId = other.postId;
+    if (l$postId != lOther$postId) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    final l$postId = postId;
+    return Object.hashAll([l$postId]);
+  }
+}
+
+abstract class CopyWith$Input$UnhidePostInput<TRes> {
+  factory CopyWith$Input$UnhidePostInput(
+    Input$UnhidePostInput instance,
+    TRes Function(Input$UnhidePostInput) then,
+  ) = _CopyWithImpl$Input$UnhidePostInput;
+
+  factory CopyWith$Input$UnhidePostInput.stub(TRes res) =
+      _CopyWithStubImpl$Input$UnhidePostInput;
+
+  TRes call({String? postId});
+}
+
+class _CopyWithImpl$Input$UnhidePostInput<TRes>
+    implements CopyWith$Input$UnhidePostInput<TRes> {
+  _CopyWithImpl$Input$UnhidePostInput(this._instance, this._then);
+
+  final Input$UnhidePostInput _instance;
+
+  final TRes Function(Input$UnhidePostInput) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? postId = _undefined}) => _then(
+    Input$UnhidePostInput._({
+      ..._instance._$data,
+      if (postId != _undefined && postId != null) 'postId': (postId as String),
+    }),
+  );
+}
+
+class _CopyWithStubImpl$Input$UnhidePostInput<TRes>
+    implements CopyWith$Input$UnhidePostInput<TRes> {
+  _CopyWithStubImpl$Input$UnhidePostInput(this._res);
+
+  TRes _res;
+
+  call({String? postId}) => _res;
+}
+
 class Input$LikePostInput {
   factory Input$LikePostInput({required String postId}) =>
       Input$LikePostInput._({r'postId': postId});
@@ -1814,5 +2027,38 @@ Enum$ReportTargetType fromJson$Enum$ReportTargetType(String value) {
       return Enum$ReportTargetType.MEMBER;
     default:
       return Enum$ReportTargetType.$unknown;
+  }
+}
+
+enum Enum$PostSortOrder {
+  LATEST,
+  DISTANCE,
+  $unknown;
+
+  factory Enum$PostSortOrder.fromJson(String value) =>
+      fromJson$Enum$PostSortOrder(value);
+
+  String toJson() => toJson$Enum$PostSortOrder(this);
+}
+
+String toJson$Enum$PostSortOrder(Enum$PostSortOrder e) {
+  switch (e) {
+    case Enum$PostSortOrder.LATEST:
+      return r'LATEST';
+    case Enum$PostSortOrder.DISTANCE:
+      return r'DISTANCE';
+    case Enum$PostSortOrder.$unknown:
+      return r'$unknown';
+  }
+}
+
+Enum$PostSortOrder fromJson$Enum$PostSortOrder(String value) {
+  switch (value) {
+    case r'LATEST':
+      return Enum$PostSortOrder.LATEST;
+    case r'DISTANCE':
+      return Enum$PostSortOrder.DISTANCE;
+    default:
+      return Enum$PostSortOrder.$unknown;
   }
 }

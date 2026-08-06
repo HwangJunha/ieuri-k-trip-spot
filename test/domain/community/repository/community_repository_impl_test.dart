@@ -10,6 +10,7 @@ import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_image_upload.dart';
+import 'package:ieuri_k_trip_spot/domain/community/model/post_sort_order.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/report_reason.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/target_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/repository/community_repository_impl.dart';
@@ -89,6 +90,28 @@ Map<String, dynamic> _postNode({
   },
 };
 
+/// 서버가 주는 댓글 노드 하나. [replies]는 최상위에만 준다(2차 가이드 §1).
+Map<String, dynamic> _commentNode({
+  required String id,
+  required String body,
+  String nickname = '민지',
+  String? parentCommentId,
+  List<dynamic> replies = const <dynamic>[],
+}) => <String, dynamic>{
+  'id': id,
+  'body': body,
+  'createdAt': '2026-08-05T10:00:00Z',
+  'ownedByViewer': false,
+  'hidden': false,
+  'parentCommentId': parentCommentId,
+  'author': <String, dynamic>{
+    'id': '12',
+    'nickname': nickname,
+    'profileImageUrl': null,
+  },
+  'replies': replies,
+};
+
 Map<String, dynamic> _postsData({
   List<Map<String, dynamic>>? nodes,
   bool hasNextPage = false,
@@ -141,6 +164,42 @@ void main() {
       expect(page.endCursor, 'p2');
       // 필터는 서버로 넘어간다 — 클라이언트가 받은 목록을 거르지 않는다.
       expect(link.sentVariables?['category'], 'TOURIST_SPOT');
+    });
+
+    // 2차 가이드 §3 — 정렬은 서버 인자다. 클라이언트가 받은 목록을 다시 세우지 않는다.
+    test('정렬을 서버 enum으로 넘긴다', () async {
+      final _FakeLink link = _FakeLink(data: _postsData());
+
+      await _repo(link).fetchPosts(
+        latitude: 37.4665,
+        longitude: 126.8956,
+        sort: PostSortOrder.distance,
+      );
+
+      expect(link.sentVariables?['sort'], 'DISTANCE');
+    });
+
+    // 서버 기본값이 LATEST라 null이면 변수를 아예 보내지 않는다.
+    test('정렬을 주지 않으면 변수를 보내지 않는다', () async {
+      final _FakeLink link = _FakeLink(data: _postsData());
+
+      await _repo(link).fetchPosts();
+
+      expect(link.sentVariables?['sort'], isNull);
+    });
+
+    // 2차 가이드 §2 — 숨긴 글은 이 인자로만 보인다.
+    test('hiddenByViewer를 서버로 넘긴다', () async {
+      final _FakeLink link = _FakeLink(
+        data: _postsData(nodes: <Map<String, dynamic>>[_postNode(id: 'p21')]),
+      );
+
+      final CursorPage<Post> page = await _repo(
+        link,
+      ).fetchPosts(hiddenByViewer: true, first: 20);
+
+      expect(link.sentVariables?['hiddenByViewer'], isTrue);
+      expect(page.items.single.id, 'p21');
     });
 
     // 가이드 §5 — 장소 없는 글이 허용된다. null이 오류가 아니다.
@@ -266,18 +325,7 @@ void main() {
             'edges': <dynamic>[
               <String, dynamic>{
                 'cursor': 'cc1',
-                'node': <String, dynamic>{
-                  'id': 'c1',
-                  'body': '저도 가봤어요',
-                  'createdAt': '2026-08-05T10:00:00Z',
-                  'ownedByViewer': false,
-                  'hidden': false,
-                  'author': <String, dynamic>{
-                    'id': '12',
-                    'nickname': '민지',
-                    'profileImageUrl': null,
-                  },
-                },
+                'node': _commentNode(id: 'c1', body: '저도 가봤어요', nickname: '민지'),
               },
             ],
             'pageInfo': <String, dynamic>{
@@ -296,6 +344,55 @@ void main() {
       expect(page.hasNextPage, isTrue);
       expect(page.endCursor, 'cc1');
       expect(link.sentVariables?['postId'], 'p1');
+    });
+
+    // 2차 가이드 §1 — `comments(postId:)`는 최상위만 주고 답글은 `replies`에 온다.
+    test('답글을 부모의 replies로 매핑한다', () async {
+      final _FakeLink link = _FakeLink(
+        data: <String, dynamic>{
+          'comments': <String, dynamic>{
+            'edges': <dynamic>[
+              <String, dynamic>{
+                'cursor': 'cc18',
+                'node': _commentNode(
+                  id: '18',
+                  body: '수문장 교대식 시간표가 어떻게 되나요?',
+                  replies: <dynamic>[
+                    _commentNode(
+                      id: '27',
+                      body: '10시, 14시 두 번이에요',
+                      parentCommentId: '18',
+                    ),
+                    _commentNode(
+                      id: '28',
+                      body: '겨울에는 조금 달라요',
+                      parentCommentId: '18',
+                    ),
+                  ],
+                ),
+              },
+            ],
+            'pageInfo': <String, dynamic>{
+              'hasNextPage': false,
+              'endCursor': null,
+            },
+          },
+        },
+      );
+
+      final CursorPage<Comment> page = await _repo(
+        link,
+      ).fetchComments('p1', first: 20);
+
+      final Comment parent = page.items.single;
+      expect(parent.isTopLevel, isTrue);
+      expect(parent.parentCommentId, isNull);
+      // **오래된 순 그대로다** — 대화 흐름이라 뒤집지 않는다.
+      expect(parent.replies.map((Comment c) => c.id), <String>['27', '28']);
+      expect(parent.replies.first.parentCommentId, '18');
+      expect(parent.replies.first.isTopLevel, isFalse);
+      // 답글의 답글은 없다(3단계가 없어 요청조차 하지 않는다).
+      expect(parent.replies.first.replies, isEmpty);
     });
   });
 
@@ -578,6 +675,27 @@ void main() {
 
       expect(id, 'c9');
       expect(link.sentVariables?['postId'], 'p1');
+      // 최상위 댓글이면 부모를 보내지 않는다(2차 가이드 §1).
+      expect(link.sentVariables?['parentCommentId'], isNull);
+    });
+
+    // 2차 가이드 §1 — 답글은 parentCommentId로 단다.
+    test('답글은 parentCommentId를 함께 넘긴다', () async {
+      final _FakeLink link = _FakeLink(
+        data: <String, dynamic>{
+          'createComment': <String, dynamic>{
+            'success': true,
+            'userErrors': <dynamic>[],
+            'commentId': 'c27',
+          },
+        },
+      );
+
+      await _repo(
+        link,
+      ).createComment(postId: 'p1', body: '저도요!', parentCommentId: '18');
+
+      expect(link.sentVariables?['parentCommentId'], '18');
     });
 
     test('남의 댓글 삭제는 NOT_COMMENT_OWNER 실패가 된다', () async {
@@ -778,6 +896,93 @@ void main() {
             ],
           ),
         ).blockUser('19'),
+        throwsA(
+          isA<CommunityFailure>().having(
+            (CommunityFailure f) => f.kind,
+            'kind',
+            CommunityFailureKind.unauthenticated,
+          ),
+        ),
+      );
+    });
+  });
+
+  // 2차 가이드 §2 — 글 하나를 내 화면에서만 감춘다. 차단·신고와 다른 축이다.
+  group('hidePost / unhidePost', () {
+    test('숨김 뮤테이션에 postId를 넘긴다', () async {
+      final _FakeLink link = _FakeLink(
+        data: <String, dynamic>{
+          'hidePost': <String, dynamic>{
+            'success': true,
+            'userErrors': <dynamic>[],
+          },
+        },
+      );
+
+      await _repo(link).hidePost('42');
+
+      expect(link.sentVariables?['postId'], '42');
+    });
+
+    test('해제 뮤테이션에 postId를 넘긴다', () async {
+      final _FakeLink link = _FakeLink(
+        data: <String, dynamic>{
+          'unhidePost': <String, dynamic>{
+            'success': true,
+            'userErrors': <dynamic>[],
+          },
+        },
+      );
+
+      await _repo(link).unhidePost('42');
+
+      expect(link.sentVariables?['postId'], '42');
+    });
+
+    // HTTP는 실패해도 200이다 — userErrors로만 판정한다(가이드 §7).
+    test('userErrors가 오면 실패로 올린다', () async {
+      await expectLater(
+        _repo(
+          _FakeLink(
+            data: <String, dynamic>{
+              'hidePost': <String, dynamic>{
+                'success': false,
+                'userErrors': <dynamic>[
+                  <String, dynamic>{
+                    'code': 'POST_NOT_FOUND',
+                    'message': '없는 글입니다.',
+                    'field': null,
+                  },
+                ],
+              },
+            },
+          ),
+        ).hidePost('42'),
+        throwsA(
+          isA<CommunityFailure>().having(
+            (CommunityFailure f) => f.code,
+            'code',
+            'POST_NOT_FOUND',
+          ),
+        ),
+      );
+    });
+
+    // GraphQL은 실패해도 HTTP 200이다 — errors 배열이 차 있으면 실패로 올려야 한다.
+    test('errors 배열이 차 있으면 실패가 된다', () async {
+      await expectLater(
+        _repo(
+          _FakeLink(
+            data: null,
+            errors: <GraphQLError>[
+              const GraphQLError(
+                message: '인증이 필요합니다.',
+                path: <dynamic>['hidePost'],
+                extensions: <String, dynamic>{'code': 'UNAUTHENTICATED'},
+              ),
+            ],
+          ),
+        ).hidePost('42'),
         throwsA(
           isA<CommunityFailure>().having(
             (CommunityFailure f) => f.kind,

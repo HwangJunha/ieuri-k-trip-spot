@@ -647,6 +647,63 @@
   "@communityBlockedUsersAction": {
     "description": "오버플로 진입 — 차단 목록"
   },
+  "communityHidePostAction": "Hide this post",
+  "@communityHidePostAction": {
+    "description": "⋮ 메뉴 — 이 글 숨기기(hidePost). 항상 노출, 내 글도 가능"
+  },
+  "communityHidePostDone": "Post hidden. Only you stop seeing it.",
+  "@communityHidePostDone": {
+    "description": "숨김 성공 토스트 — 내 화면에서만 사라진다는 것을 밝힌다"
+  },
+  "communityHiddenPostsAction": "Hidden posts",
+  "@communityHiddenPostsAction": {
+    "description": "앱바 진입 — 숨긴 글 목록(차단 목록 옆)"
+  },
+  "communityHiddenPostsTitle": "Hidden posts",
+  "@communityHiddenPostsTitle": {
+    "description": "숨긴 글 목록 화면 제목"
+  },
+  "communityHiddenPostsEmpty": "You haven't hidden any posts.",
+  "@communityHiddenPostsEmpty": {
+    "description": "숨긴 글 목록이 빌 때"
+  },
+  "communityHiddenPostsNote": "These posts are hidden from your feed only. Others still see them.",
+  "@communityHiddenPostsNote": {
+    "description": "숨김 목록 안내 — 차단·신고와 다르다는 것"
+  },
+  "communityUnhideAction": "Unhide",
+  "@communityUnhideAction": {
+    "description": "숨김 해제 버튼"
+  },
+  "communityUnhideDone": "Post is back in your feed.",
+  "@communityUnhideDone": {
+    "description": "숨김 해제 성공 토스트"
+  },
+  "communitySortLatest": "Latest",
+  "@communitySortLatest": {
+    "description": "피드 정렬 토글 — 최신순(기본)"
+  },
+  "communitySortDistance": "Nearby",
+  "@communitySortDistance": {
+    "description": "피드 정렬 토글 — 거리순. 장소 없는 글은 빠진다"
+  },
+  "communityReplyAction": "Reply",
+  "@communityReplyAction": {
+    "description": "최상위 댓글에만 붙는 답글 달기 버튼 (답글에는 두지 않는다)"
+  },
+  "communityReplyComposerHint": "Reply to {nickname}",
+  "@communityReplyComposerHint": {
+    "description": "답글 입력 중일 때의 입력창 힌트",
+    "placeholders": {
+      "nickname": {
+        "type": "String"
+      }
+    }
+  },
+  "communityReplyCancel": "Cancel reply",
+  "@communityReplyCancel": {
+    "description": "답글 대상을 해제하고 일반 댓글로 돌아가는 버튼"
+  },
   "communityPhotoViewerTitle": "{current} of {total}",
   "@communityPhotoViewerTitle": {
     "description": "사진 뷰어 상단 표시",

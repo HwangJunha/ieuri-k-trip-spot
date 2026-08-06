@@ -23,6 +23,7 @@ import '../model/nearby_spot_category.dart';
 import '../model/post.dart';
 import '../model/post_author.dart';
 import '../model/post_image_upload.dart';
+import '../model/post_sort_order.dart';
 import '../model/post_spot.dart';
 import '../model/report_reason.dart';
 import '../model/target_category.dart';
@@ -66,6 +67,8 @@ class CommunityRepositoryImpl implements CommunityRepository {
     int? radiusMeters,
     TargetCategory? category,
     String? tag,
+    PostSortOrder? sort,
+    bool? hiddenByViewer,
     int? first,
     String? after,
   }) async {
@@ -82,6 +85,9 @@ class CommunityRepositoryImpl implements CommunityRepository {
         radiusMeters: hasCoords ? radiusMeters : null,
         category: category == null ? null : _categoryInput(category),
         tag: tag,
+        // null이면 변수를 보내지 않아 서버 기본값(LATEST)이 걸린다.
+        sort: sort == null ? null : _sortInput(sort),
+        hiddenByViewer: hiddenByViewer,
         first: first,
         after: after,
       ).toJson(),
@@ -431,10 +437,16 @@ class CommunityRepositoryImpl implements CommunityRepository {
   Future<String?> createComment({
     required String postId,
     required String body,
+    String? parentCommentId,
   }) async {
     final Map<String, dynamic> data = await _mutate(
       documentNodeMutationCreateComment,
-      Variables$Mutation$CreateComment(postId: postId, body: body).toJson(),
+      Variables$Mutation$CreateComment(
+        postId: postId,
+        body: body,
+        // null이면 변수를 보내지 않아 최상위 댓글이 된다(2차 가이드 §1).
+        parentCommentId: parentCommentId,
+      ).toJson(),
       'createComment',
     );
     final Mutation$CreateComment$createComment payload =
@@ -631,6 +643,50 @@ class CommunityRepositoryImpl implements CommunityRepository {
   }
 
   @override
+  Future<void> hidePost(String postId) async {
+    final Map<String, dynamic> data = await _mutate(
+      documentNodeMutationHidePost,
+      Variables$Mutation$HidePost(postId: postId).toJson(),
+      'hidePost',
+    );
+    final Mutation$HidePost$hidePost payload = Mutation$HidePost.fromJson(
+      data,
+    ).hidePost;
+    _check(
+      'hidePost',
+      payload.success,
+      payload.userErrors
+          .map(
+            (Mutation$HidePost$hidePost$userErrors e) =>
+                (code: e.code, field: e.field),
+          )
+          .toList(growable: false),
+    );
+  }
+
+  @override
+  Future<void> unhidePost(String postId) async {
+    final Map<String, dynamic> data = await _mutate(
+      documentNodeMutationUnhidePost,
+      Variables$Mutation$UnhidePost(postId: postId).toJson(),
+      'unhidePost',
+    );
+    final Mutation$UnhidePost$unhidePost payload = Mutation$UnhidePost.fromJson(
+      data,
+    ).unhidePost;
+    _check(
+      'unhidePost',
+      payload.success,
+      payload.userErrors
+          .map(
+            (Mutation$UnhidePost$unhidePost$userErrors e) =>
+                (code: e.code, field: e.field),
+          )
+          .toList(growable: false),
+    );
+  }
+
+  @override
   Future<void> blockUser(String targetMemberId) async {
     final Map<String, dynamic> data = await _mutate(
       documentNodeMutationBlockUser,
@@ -742,6 +798,10 @@ class CommunityRepositoryImpl implements CommunityRepository {
     edited: n.edited,
   );
 
+  /// 최상위 댓글 하나와 그 답글들.
+  ///
+  /// **답글 순서를 건드리지 않는다** — 서버가 오래된 순으로 주고, 대화 흐름이라
+  /// 뒤집으면 문맥이 끊긴다(2차 가이드 §1). 최상위 목록만 최신순이다.
   Comment _commentFromNode(Query$Comments$comments$edges$node n) => Comment(
     id: n.id,
     body: n.body,
@@ -753,7 +813,26 @@ class CommunityRepositoryImpl implements CommunityRepository {
     createdAt: _parseTime(n.createdAt),
     ownedByViewer: n.ownedByViewer,
     hidden: n.hidden,
+    parentCommentId: n.parentCommentId,
+    replies: n.replies.map(_replyFromNode).toList(growable: false),
   );
+
+  /// 답글 하나. **답글의 `replies`는 요청하지 않는다** — 깊이가 2단계라 항상 빈
+  /// 목록이며, 도메인 모델에서도 기본값 그대로 비워 둔다.
+  Comment _replyFromNode(Query$Comments$comments$edges$node$replies n) =>
+      Comment(
+        id: n.id,
+        body: n.body,
+        author: _authorFromNode(
+          id: n.author.id,
+          nickname: n.author.nickname,
+          profileImageUrl: n.author.profileImageUrl,
+        ),
+        createdAt: _parseTime(n.createdAt),
+        ownedByViewer: n.ownedByViewer,
+        hidden: n.hidden,
+        parentCommentId: n.parentCommentId,
+      );
 
   PostAuthor _authorFromNode({
     required String id,
@@ -843,6 +922,13 @@ class CommunityRepositoryImpl implements CommunityRepository {
         NearbySpotCategory.restaurant => Enum$SpotCategory.RESTAURANT,
         NearbySpotCategory.transport => Enum$SpotCategory.TRANSPORT,
       };
+
+  /// 도메인 정렬 → 생성 enum. 서버 기본값이 `LATEST`라 호출부가 null을 주면 이
+  /// 매핑을 거치지 않고 변수 자체를 생략한다.
+  Enum$PostSortOrder _sortInput(PostSortOrder sort) => switch (sort) {
+    PostSortOrder.latest => Enum$PostSortOrder.LATEST,
+    PostSortOrder.distance => Enum$PostSortOrder.DISTANCE,
+  };
 
   Enum$ReportReason _reportReasonInput(ReportReason reason) => switch (reason) {
     ReportReason.spam => Enum$ReportReason.SPAM,

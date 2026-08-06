@@ -919,6 +919,8 @@ class Variables$Query$Posts {
     int? radiusMeters,
     Enum$TargetCategory? category,
     String? tag,
+    Enum$PostSortOrder? sort,
+    bool? hiddenByViewer,
     int? first,
     String? after,
   }) => Variables$Query$Posts._({
@@ -928,6 +930,8 @@ class Variables$Query$Posts {
     if (radiusMeters != null) r'radiusMeters': radiusMeters,
     if (category != null) r'category': category,
     if (tag != null) r'tag': tag,
+    if (sort != null) r'sort': sort,
+    if (hiddenByViewer != null) r'hiddenByViewer': hiddenByViewer,
     if (first != null) r'first': first,
     if (after != null) r'after': after,
   });
@@ -962,6 +966,16 @@ class Variables$Query$Posts {
       final l$tag = data['tag'];
       result$data['tag'] = (l$tag as String?);
     }
+    if (data.containsKey('sort')) {
+      final l$sort = data['sort'];
+      result$data['sort'] = l$sort == null
+          ? null
+          : fromJson$Enum$PostSortOrder((l$sort as String));
+    }
+    if (data.containsKey('hiddenByViewer')) {
+      final l$hiddenByViewer = data['hiddenByViewer'];
+      result$data['hiddenByViewer'] = (l$hiddenByViewer as bool?);
+    }
     if (data.containsKey('first')) {
       final l$first = data['first'];
       result$data['first'] = (l$first as int?);
@@ -987,6 +1001,10 @@ class Variables$Query$Posts {
       (_$data['category'] as Enum$TargetCategory?);
 
   String? get tag => (_$data['tag'] as String?);
+
+  Enum$PostSortOrder? get sort => (_$data['sort'] as Enum$PostSortOrder?);
+
+  bool? get hiddenByViewer => (_$data['hiddenByViewer'] as bool?);
 
   int? get first => (_$data['first'] as int?);
 
@@ -1019,6 +1037,16 @@ class Variables$Query$Posts {
     if (_$data.containsKey('tag')) {
       final l$tag = tag;
       result$data['tag'] = l$tag;
+    }
+    if (_$data.containsKey('sort')) {
+      final l$sort = sort;
+      result$data['sort'] = l$sort == null
+          ? null
+          : toJson$Enum$PostSortOrder(l$sort);
+    }
+    if (_$data.containsKey('hiddenByViewer')) {
+      final l$hiddenByViewer = hiddenByViewer;
+      result$data['hiddenByViewer'] = l$hiddenByViewer;
     }
     if (_$data.containsKey('first')) {
       final l$first = first;
@@ -1094,6 +1122,23 @@ class Variables$Query$Posts {
     if (l$tag != lOther$tag) {
       return false;
     }
+    final l$sort = sort;
+    final lOther$sort = other.sort;
+    if (_$data.containsKey('sort') != other._$data.containsKey('sort')) {
+      return false;
+    }
+    if (l$sort != lOther$sort) {
+      return false;
+    }
+    final l$hiddenByViewer = hiddenByViewer;
+    final lOther$hiddenByViewer = other.hiddenByViewer;
+    if (_$data.containsKey('hiddenByViewer') !=
+        other._$data.containsKey('hiddenByViewer')) {
+      return false;
+    }
+    if (l$hiddenByViewer != lOther$hiddenByViewer) {
+      return false;
+    }
     final l$first = first;
     final lOther$first = other.first;
     if (_$data.containsKey('first') != other._$data.containsKey('first')) {
@@ -1121,6 +1166,8 @@ class Variables$Query$Posts {
     final l$radiusMeters = radiusMeters;
     final l$category = category;
     final l$tag = tag;
+    final l$sort = sort;
+    final l$hiddenByViewer = hiddenByViewer;
     final l$first = first;
     final l$after = after;
     return Object.hashAll([
@@ -1130,6 +1177,8 @@ class Variables$Query$Posts {
       _$data.containsKey('radiusMeters') ? l$radiusMeters : const {},
       _$data.containsKey('category') ? l$category : const {},
       _$data.containsKey('tag') ? l$tag : const {},
+      _$data.containsKey('sort') ? l$sort : const {},
+      _$data.containsKey('hiddenByViewer') ? l$hiddenByViewer : const {},
       _$data.containsKey('first') ? l$first : const {},
       _$data.containsKey('after') ? l$after : const {},
     ]);
@@ -1152,6 +1201,8 @@ abstract class CopyWith$Variables$Query$Posts<TRes> {
     int? radiusMeters,
     Enum$TargetCategory? category,
     String? tag,
+    Enum$PostSortOrder? sort,
+    bool? hiddenByViewer,
     int? first,
     String? after,
   });
@@ -1174,6 +1225,8 @@ class _CopyWithImpl$Variables$Query$Posts<TRes>
     Object? radiusMeters = _undefined,
     Object? category = _undefined,
     Object? tag = _undefined,
+    Object? sort = _undefined,
+    Object? hiddenByViewer = _undefined,
     Object? first = _undefined,
     Object? after = _undefined,
   }) => _then(
@@ -1186,6 +1239,9 @@ class _CopyWithImpl$Variables$Query$Posts<TRes>
       if (category != _undefined)
         'category': (category as Enum$TargetCategory?),
       if (tag != _undefined) 'tag': (tag as String?),
+      if (sort != _undefined) 'sort': (sort as Enum$PostSortOrder?),
+      if (hiddenByViewer != _undefined)
+        'hiddenByViewer': (hiddenByViewer as bool?),
       if (first != _undefined) 'first': (first as int?),
       if (after != _undefined) 'after': (after as String?),
     }),
@@ -1205,6 +1261,8 @@ class _CopyWithStubImpl$Variables$Query$Posts<TRes>
     int? radiusMeters,
     Enum$TargetCategory? category,
     String? tag,
+    Enum$PostSortOrder? sort,
+    bool? hiddenByViewer,
     int? first,
     String? after,
   }) => _res;
@@ -1353,6 +1411,24 @@ const documentNodeQueryPosts = DocumentNode(
           directives: [],
         ),
         VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'sort')),
+          type: NamedTypeNode(
+            name: NameNode(value: 'PostSortOrder'),
+            isNonNull: false,
+          ),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'hiddenByViewer')),
+          type: NamedTypeNode(
+            name: NameNode(value: 'Boolean'),
+            isNonNull: false,
+          ),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
           variable: VariableNode(name: NameNode(value: 'first')),
           type: NamedTypeNode(name: NameNode(value: 'Int'), isNonNull: false),
           defaultValue: DefaultValueNode(value: null),
@@ -1398,6 +1474,14 @@ const documentNodeQueryPosts = DocumentNode(
               ArgumentNode(
                 name: NameNode(value: 'tag'),
                 value: VariableNode(name: NameNode(value: 'tag')),
+              ),
+              ArgumentNode(
+                name: NameNode(value: 'sort'),
+                value: VariableNode(name: NameNode(value: 'sort')),
+              ),
+              ArgumentNode(
+                name: NameNode(value: 'hiddenByViewer'),
+                value: VariableNode(name: NameNode(value: 'hiddenByViewer')),
               ),
               ArgumentNode(
                 name: NameNode(value: 'first'),
@@ -2434,6 +2518,13 @@ const documentNodeQueryComments = DocumentNode(
                               selectionSet: null,
                             ),
                             FieldNode(
+                              name: NameNode(value: 'parentCommentId'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: null,
+                            ),
+                            FieldNode(
                               name: NameNode(value: 'author'),
                               alias: null,
                               arguments: [],
@@ -2460,6 +2551,91 @@ const documentNodeQueryComments = DocumentNode(
                                     arguments: [],
                                     directives: [],
                                     selectionSet: null,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            FieldNode(
+                              name: NameNode(value: 'replies'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: SelectionSetNode(
+                                selections: [
+                                  FieldNode(
+                                    name: NameNode(value: 'id'),
+                                    alias: null,
+                                    arguments: [],
+                                    directives: [],
+                                    selectionSet: null,
+                                  ),
+                                  FieldNode(
+                                    name: NameNode(value: 'body'),
+                                    alias: null,
+                                    arguments: [],
+                                    directives: [],
+                                    selectionSet: null,
+                                  ),
+                                  FieldNode(
+                                    name: NameNode(value: 'createdAt'),
+                                    alias: null,
+                                    arguments: [],
+                                    directives: [],
+                                    selectionSet: null,
+                                  ),
+                                  FieldNode(
+                                    name: NameNode(value: 'ownedByViewer'),
+                                    alias: null,
+                                    arguments: [],
+                                    directives: [],
+                                    selectionSet: null,
+                                  ),
+                                  FieldNode(
+                                    name: NameNode(value: 'hidden'),
+                                    alias: null,
+                                    arguments: [],
+                                    directives: [],
+                                    selectionSet: null,
+                                  ),
+                                  FieldNode(
+                                    name: NameNode(value: 'parentCommentId'),
+                                    alias: null,
+                                    arguments: [],
+                                    directives: [],
+                                    selectionSet: null,
+                                  ),
+                                  FieldNode(
+                                    name: NameNode(value: 'author'),
+                                    alias: null,
+                                    arguments: [],
+                                    directives: [],
+                                    selectionSet: SelectionSetNode(
+                                      selections: [
+                                        FieldNode(
+                                          name: NameNode(value: 'id'),
+                                          alias: null,
+                                          arguments: [],
+                                          directives: [],
+                                          selectionSet: null,
+                                        ),
+                                        FieldNode(
+                                          name: NameNode(value: 'nickname'),
+                                          alias: null,
+                                          arguments: [],
+                                          directives: [],
+                                          selectionSet: null,
+                                        ),
+                                        FieldNode(
+                                          name: NameNode(
+                                            value: 'profileImageUrl',
+                                          ),
+                                          alias: null,
+                                          arguments: [],
+                                          directives: [],
+                                          selectionSet: null,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
@@ -2789,7 +2965,9 @@ class Query$Comments$comments$edges$node {
     required this.createdAt,
     required this.ownedByViewer,
     required this.hidden,
+    this.parentCommentId,
     required this.author,
+    required this.replies,
   });
 
   factory Query$Comments$comments$edges$node.fromJson(
@@ -2800,16 +2978,26 @@ class Query$Comments$comments$edges$node {
     final l$createdAt = json['createdAt'];
     final l$ownedByViewer = json['ownedByViewer'];
     final l$hidden = json['hidden'];
+    final l$parentCommentId = json['parentCommentId'];
     final l$author = json['author'];
+    final l$replies = json['replies'];
     return Query$Comments$comments$edges$node(
       id: (l$id as String),
       body: (l$body as String),
       createdAt: (l$createdAt as String),
       ownedByViewer: (l$ownedByViewer as bool),
       hidden: (l$hidden as bool),
+      parentCommentId: (l$parentCommentId as String?),
       author: Query$Comments$comments$edges$node$author.fromJson(
         (l$author as Map<String, dynamic>),
       ),
+      replies: (l$replies as List<dynamic>)
+          .map(
+            (e) => Query$Comments$comments$edges$node$replies.fromJson(
+              (e as Map<String, dynamic>),
+            ),
+          )
+          .toList(),
     );
   }
 
@@ -2823,7 +3011,11 @@ class Query$Comments$comments$edges$node {
 
   final bool hidden;
 
+  final String? parentCommentId;
+
   final Query$Comments$comments$edges$node$author author;
+
+  final List<Query$Comments$comments$edges$node$replies> replies;
 
   Map<String, dynamic> toJson() {
     final _resultData = <String, dynamic>{};
@@ -2837,8 +3029,12 @@ class Query$Comments$comments$edges$node {
     _resultData['ownedByViewer'] = l$ownedByViewer;
     final l$hidden = hidden;
     _resultData['hidden'] = l$hidden;
+    final l$parentCommentId = parentCommentId;
+    _resultData['parentCommentId'] = l$parentCommentId;
     final l$author = author;
     _resultData['author'] = l$author.toJson();
+    final l$replies = replies;
+    _resultData['replies'] = l$replies.map((e) => e.toJson()).toList();
     return _resultData;
   }
 
@@ -2849,14 +3045,18 @@ class Query$Comments$comments$edges$node {
     final l$createdAt = createdAt;
     final l$ownedByViewer = ownedByViewer;
     final l$hidden = hidden;
+    final l$parentCommentId = parentCommentId;
     final l$author = author;
+    final l$replies = replies;
     return Object.hashAll([
       l$id,
       l$body,
       l$createdAt,
       l$ownedByViewer,
       l$hidden,
+      l$parentCommentId,
       l$author,
+      Object.hashAll(l$replies.map((v) => v)),
     ]);
   }
 
@@ -2894,10 +3094,27 @@ class Query$Comments$comments$edges$node {
     if (l$hidden != lOther$hidden) {
       return false;
     }
+    final l$parentCommentId = parentCommentId;
+    final lOther$parentCommentId = other.parentCommentId;
+    if (l$parentCommentId != lOther$parentCommentId) {
+      return false;
+    }
     final l$author = author;
     final lOther$author = other.author;
     if (l$author != lOther$author) {
       return false;
+    }
+    final l$replies = replies;
+    final lOther$replies = other.replies;
+    if (l$replies.length != lOther$replies.length) {
+      return false;
+    }
+    for (int i = 0; i < l$replies.length; i++) {
+      final l$replies$entry = l$replies[i];
+      final lOther$replies$entry = lOther$replies[i];
+      if (l$replies$entry != lOther$replies$entry) {
+        return false;
+      }
     }
     return true;
   }
@@ -2926,9 +3143,21 @@ abstract class CopyWith$Query$Comments$comments$edges$node<TRes> {
     String? createdAt,
     bool? ownedByViewer,
     bool? hidden,
+    String? parentCommentId,
     Query$Comments$comments$edges$node$author? author,
+    List<Query$Comments$comments$edges$node$replies>? replies,
   });
   CopyWith$Query$Comments$comments$edges$node$author<TRes> get author;
+  TRes replies(
+    Iterable<Query$Comments$comments$edges$node$replies> Function(
+      Iterable<
+        CopyWith$Query$Comments$comments$edges$node$replies<
+          Query$Comments$comments$edges$node$replies
+        >
+      >,
+    )
+    _fn,
+  );
 }
 
 class _CopyWithImpl$Query$Comments$comments$edges$node<TRes>
@@ -2947,7 +3176,9 @@ class _CopyWithImpl$Query$Comments$comments$edges$node<TRes>
     Object? createdAt = _undefined,
     Object? ownedByViewer = _undefined,
     Object? hidden = _undefined,
+    Object? parentCommentId = _undefined,
     Object? author = _undefined,
+    Object? replies = _undefined,
   }) => _then(
     Query$Comments$comments$edges$node(
       id: id == _undefined || id == null ? _instance.id : (id as String),
@@ -2963,9 +3194,15 @@ class _CopyWithImpl$Query$Comments$comments$edges$node<TRes>
       hidden: hidden == _undefined || hidden == null
           ? _instance.hidden
           : (hidden as bool),
+      parentCommentId: parentCommentId == _undefined
+          ? _instance.parentCommentId
+          : (parentCommentId as String?),
       author: author == _undefined || author == null
           ? _instance.author
           : (author as Query$Comments$comments$edges$node$author),
+      replies: replies == _undefined || replies == null
+          ? _instance.replies
+          : (replies as List<Query$Comments$comments$edges$node$replies>),
     ),
   );
 
@@ -2976,6 +3213,23 @@ class _CopyWithImpl$Query$Comments$comments$edges$node<TRes>
       (e) => call(author: e),
     );
   }
+
+  TRes replies(
+    Iterable<Query$Comments$comments$edges$node$replies> Function(
+      Iterable<
+        CopyWith$Query$Comments$comments$edges$node$replies<
+          Query$Comments$comments$edges$node$replies
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    replies: _fn(
+      _instance.replies.map(
+        (e) => CopyWith$Query$Comments$comments$edges$node$replies(e, (i) => i),
+      ),
+    ).toList(),
+  );
 }
 
 class _CopyWithStubImpl$Query$Comments$comments$edges$node<TRes>
@@ -2990,11 +3244,15 @@ class _CopyWithStubImpl$Query$Comments$comments$edges$node<TRes>
     String? createdAt,
     bool? ownedByViewer,
     bool? hidden,
+    String? parentCommentId,
     Query$Comments$comments$edges$node$author? author,
+    List<Query$Comments$comments$edges$node$replies>? replies,
   }) => _res;
 
   CopyWith$Query$Comments$comments$edges$node$author<TRes> get author =>
       CopyWith$Query$Comments$comments$edges$node$author.stub(_res);
+
+  replies(_fn) => _res;
 }
 
 class Query$Comments$comments$edges$node$author {
@@ -3124,6 +3382,387 @@ class _CopyWithImpl$Query$Comments$comments$edges$node$author<TRes>
 class _CopyWithStubImpl$Query$Comments$comments$edges$node$author<TRes>
     implements CopyWith$Query$Comments$comments$edges$node$author<TRes> {
   _CopyWithStubImpl$Query$Comments$comments$edges$node$author(this._res);
+
+  TRes _res;
+
+  call({String? id, String? nickname, String? profileImageUrl}) => _res;
+}
+
+class Query$Comments$comments$edges$node$replies {
+  Query$Comments$comments$edges$node$replies({
+    required this.id,
+    required this.body,
+    required this.createdAt,
+    required this.ownedByViewer,
+    required this.hidden,
+    this.parentCommentId,
+    required this.author,
+  });
+
+  factory Query$Comments$comments$edges$node$replies.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$id = json['id'];
+    final l$body = json['body'];
+    final l$createdAt = json['createdAt'];
+    final l$ownedByViewer = json['ownedByViewer'];
+    final l$hidden = json['hidden'];
+    final l$parentCommentId = json['parentCommentId'];
+    final l$author = json['author'];
+    return Query$Comments$comments$edges$node$replies(
+      id: (l$id as String),
+      body: (l$body as String),
+      createdAt: (l$createdAt as String),
+      ownedByViewer: (l$ownedByViewer as bool),
+      hidden: (l$hidden as bool),
+      parentCommentId: (l$parentCommentId as String?),
+      author: Query$Comments$comments$edges$node$replies$author.fromJson(
+        (l$author as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final String id;
+
+  final String body;
+
+  final String createdAt;
+
+  final bool ownedByViewer;
+
+  final bool hidden;
+
+  final String? parentCommentId;
+
+  final Query$Comments$comments$edges$node$replies$author author;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$id = id;
+    _resultData['id'] = l$id;
+    final l$body = body;
+    _resultData['body'] = l$body;
+    final l$createdAt = createdAt;
+    _resultData['createdAt'] = l$createdAt;
+    final l$ownedByViewer = ownedByViewer;
+    _resultData['ownedByViewer'] = l$ownedByViewer;
+    final l$hidden = hidden;
+    _resultData['hidden'] = l$hidden;
+    final l$parentCommentId = parentCommentId;
+    _resultData['parentCommentId'] = l$parentCommentId;
+    final l$author = author;
+    _resultData['author'] = l$author.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$id = id;
+    final l$body = body;
+    final l$createdAt = createdAt;
+    final l$ownedByViewer = ownedByViewer;
+    final l$hidden = hidden;
+    final l$parentCommentId = parentCommentId;
+    final l$author = author;
+    return Object.hashAll([
+      l$id,
+      l$body,
+      l$createdAt,
+      l$ownedByViewer,
+      l$hidden,
+      l$parentCommentId,
+      l$author,
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$Comments$comments$edges$node$replies ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$id = id;
+    final lOther$id = other.id;
+    if (l$id != lOther$id) {
+      return false;
+    }
+    final l$body = body;
+    final lOther$body = other.body;
+    if (l$body != lOther$body) {
+      return false;
+    }
+    final l$createdAt = createdAt;
+    final lOther$createdAt = other.createdAt;
+    if (l$createdAt != lOther$createdAt) {
+      return false;
+    }
+    final l$ownedByViewer = ownedByViewer;
+    final lOther$ownedByViewer = other.ownedByViewer;
+    if (l$ownedByViewer != lOther$ownedByViewer) {
+      return false;
+    }
+    final l$hidden = hidden;
+    final lOther$hidden = other.hidden;
+    if (l$hidden != lOther$hidden) {
+      return false;
+    }
+    final l$parentCommentId = parentCommentId;
+    final lOther$parentCommentId = other.parentCommentId;
+    if (l$parentCommentId != lOther$parentCommentId) {
+      return false;
+    }
+    final l$author = author;
+    final lOther$author = other.author;
+    if (l$author != lOther$author) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$Comments$comments$edges$node$replies
+    on Query$Comments$comments$edges$node$replies {
+  CopyWith$Query$Comments$comments$edges$node$replies<
+    Query$Comments$comments$edges$node$replies
+  >
+  get copyWith =>
+      CopyWith$Query$Comments$comments$edges$node$replies(this, (i) => i);
+}
+
+abstract class CopyWith$Query$Comments$comments$edges$node$replies<TRes> {
+  factory CopyWith$Query$Comments$comments$edges$node$replies(
+    Query$Comments$comments$edges$node$replies instance,
+    TRes Function(Query$Comments$comments$edges$node$replies) then,
+  ) = _CopyWithImpl$Query$Comments$comments$edges$node$replies;
+
+  factory CopyWith$Query$Comments$comments$edges$node$replies.stub(TRes res) =
+      _CopyWithStubImpl$Query$Comments$comments$edges$node$replies;
+
+  TRes call({
+    String? id,
+    String? body,
+    String? createdAt,
+    bool? ownedByViewer,
+    bool? hidden,
+    String? parentCommentId,
+    Query$Comments$comments$edges$node$replies$author? author,
+  });
+  CopyWith$Query$Comments$comments$edges$node$replies$author<TRes> get author;
+}
+
+class _CopyWithImpl$Query$Comments$comments$edges$node$replies<TRes>
+    implements CopyWith$Query$Comments$comments$edges$node$replies<TRes> {
+  _CopyWithImpl$Query$Comments$comments$edges$node$replies(
+    this._instance,
+    this._then,
+  );
+
+  final Query$Comments$comments$edges$node$replies _instance;
+
+  final TRes Function(Query$Comments$comments$edges$node$replies) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? id = _undefined,
+    Object? body = _undefined,
+    Object? createdAt = _undefined,
+    Object? ownedByViewer = _undefined,
+    Object? hidden = _undefined,
+    Object? parentCommentId = _undefined,
+    Object? author = _undefined,
+  }) => _then(
+    Query$Comments$comments$edges$node$replies(
+      id: id == _undefined || id == null ? _instance.id : (id as String),
+      body: body == _undefined || body == null
+          ? _instance.body
+          : (body as String),
+      createdAt: createdAt == _undefined || createdAt == null
+          ? _instance.createdAt
+          : (createdAt as String),
+      ownedByViewer: ownedByViewer == _undefined || ownedByViewer == null
+          ? _instance.ownedByViewer
+          : (ownedByViewer as bool),
+      hidden: hidden == _undefined || hidden == null
+          ? _instance.hidden
+          : (hidden as bool),
+      parentCommentId: parentCommentId == _undefined
+          ? _instance.parentCommentId
+          : (parentCommentId as String?),
+      author: author == _undefined || author == null
+          ? _instance.author
+          : (author as Query$Comments$comments$edges$node$replies$author),
+    ),
+  );
+
+  CopyWith$Query$Comments$comments$edges$node$replies$author<TRes> get author {
+    final local$author = _instance.author;
+    return CopyWith$Query$Comments$comments$edges$node$replies$author(
+      local$author,
+      (e) => call(author: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Query$Comments$comments$edges$node$replies<TRes>
+    implements CopyWith$Query$Comments$comments$edges$node$replies<TRes> {
+  _CopyWithStubImpl$Query$Comments$comments$edges$node$replies(this._res);
+
+  TRes _res;
+
+  call({
+    String? id,
+    String? body,
+    String? createdAt,
+    bool? ownedByViewer,
+    bool? hidden,
+    String? parentCommentId,
+    Query$Comments$comments$edges$node$replies$author? author,
+  }) => _res;
+
+  CopyWith$Query$Comments$comments$edges$node$replies$author<TRes> get author =>
+      CopyWith$Query$Comments$comments$edges$node$replies$author.stub(_res);
+}
+
+class Query$Comments$comments$edges$node$replies$author {
+  Query$Comments$comments$edges$node$replies$author({
+    required this.id,
+    required this.nickname,
+    this.profileImageUrl,
+  });
+
+  factory Query$Comments$comments$edges$node$replies$author.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$id = json['id'];
+    final l$nickname = json['nickname'];
+    final l$profileImageUrl = json['profileImageUrl'];
+    return Query$Comments$comments$edges$node$replies$author(
+      id: (l$id as String),
+      nickname: (l$nickname as String),
+      profileImageUrl: (l$profileImageUrl as String?),
+    );
+  }
+
+  final String id;
+
+  final String nickname;
+
+  final String? profileImageUrl;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$id = id;
+    _resultData['id'] = l$id;
+    final l$nickname = nickname;
+    _resultData['nickname'] = l$nickname;
+    final l$profileImageUrl = profileImageUrl;
+    _resultData['profileImageUrl'] = l$profileImageUrl;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$id = id;
+    final l$nickname = nickname;
+    final l$profileImageUrl = profileImageUrl;
+    return Object.hashAll([l$id, l$nickname, l$profileImageUrl]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$Comments$comments$edges$node$replies$author ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$id = id;
+    final lOther$id = other.id;
+    if (l$id != lOther$id) {
+      return false;
+    }
+    final l$nickname = nickname;
+    final lOther$nickname = other.nickname;
+    if (l$nickname != lOther$nickname) {
+      return false;
+    }
+    final l$profileImageUrl = profileImageUrl;
+    final lOther$profileImageUrl = other.profileImageUrl;
+    if (l$profileImageUrl != lOther$profileImageUrl) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$Comments$comments$edges$node$replies$author
+    on Query$Comments$comments$edges$node$replies$author {
+  CopyWith$Query$Comments$comments$edges$node$replies$author<
+    Query$Comments$comments$edges$node$replies$author
+  >
+  get copyWith => CopyWith$Query$Comments$comments$edges$node$replies$author(
+    this,
+    (i) => i,
+  );
+}
+
+abstract class CopyWith$Query$Comments$comments$edges$node$replies$author<
+  TRes
+> {
+  factory CopyWith$Query$Comments$comments$edges$node$replies$author(
+    Query$Comments$comments$edges$node$replies$author instance,
+    TRes Function(Query$Comments$comments$edges$node$replies$author) then,
+  ) = _CopyWithImpl$Query$Comments$comments$edges$node$replies$author;
+
+  factory CopyWith$Query$Comments$comments$edges$node$replies$author.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Query$Comments$comments$edges$node$replies$author;
+
+  TRes call({String? id, String? nickname, String? profileImageUrl});
+}
+
+class _CopyWithImpl$Query$Comments$comments$edges$node$replies$author<TRes>
+    implements
+        CopyWith$Query$Comments$comments$edges$node$replies$author<TRes> {
+  _CopyWithImpl$Query$Comments$comments$edges$node$replies$author(
+    this._instance,
+    this._then,
+  );
+
+  final Query$Comments$comments$edges$node$replies$author _instance;
+
+  final TRes Function(Query$Comments$comments$edges$node$replies$author) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? id = _undefined,
+    Object? nickname = _undefined,
+    Object? profileImageUrl = _undefined,
+  }) => _then(
+    Query$Comments$comments$edges$node$replies$author(
+      id: id == _undefined || id == null ? _instance.id : (id as String),
+      nickname: nickname == _undefined || nickname == null
+          ? _instance.nickname
+          : (nickname as String),
+      profileImageUrl: profileImageUrl == _undefined
+          ? _instance.profileImageUrl
+          : (profileImageUrl as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$Comments$comments$edges$node$replies$author<TRes>
+    implements
+        CopyWith$Query$Comments$comments$edges$node$replies$author<TRes> {
+  _CopyWithStubImpl$Query$Comments$comments$edges$node$replies$author(
+    this._res,
+  );
 
   TRes _res;
 
@@ -7126,7 +7765,12 @@ class Variables$Mutation$CreateComment {
   factory Variables$Mutation$CreateComment({
     required String postId,
     required String body,
-  }) => Variables$Mutation$CreateComment._({r'postId': postId, r'body': body});
+    String? parentCommentId,
+  }) => Variables$Mutation$CreateComment._({
+    r'postId': postId,
+    r'body': body,
+    if (parentCommentId != null) r'parentCommentId': parentCommentId,
+  });
 
   Variables$Mutation$CreateComment._(this._$data);
 
@@ -7136,6 +7780,10 @@ class Variables$Mutation$CreateComment {
     result$data['postId'] = (l$postId as String);
     final l$body = data['body'];
     result$data['body'] = (l$body as String);
+    if (data.containsKey('parentCommentId')) {
+      final l$parentCommentId = data['parentCommentId'];
+      result$data['parentCommentId'] = (l$parentCommentId as String?);
+    }
     return Variables$Mutation$CreateComment._(result$data);
   }
 
@@ -7145,12 +7793,18 @@ class Variables$Mutation$CreateComment {
 
   String get body => (_$data['body'] as String);
 
+  String? get parentCommentId => (_$data['parentCommentId'] as String?);
+
   Map<String, dynamic> toJson() {
     final result$data = <String, dynamic>{};
     final l$postId = postId;
     result$data['postId'] = l$postId;
     final l$body = body;
     result$data['body'] = l$body;
+    if (_$data.containsKey('parentCommentId')) {
+      final l$parentCommentId = parentCommentId;
+      result$data['parentCommentId'] = l$parentCommentId;
+    }
     return result$data;
   }
 
@@ -7176,6 +7830,15 @@ class Variables$Mutation$CreateComment {
     if (l$body != lOther$body) {
       return false;
     }
+    final l$parentCommentId = parentCommentId;
+    final lOther$parentCommentId = other.parentCommentId;
+    if (_$data.containsKey('parentCommentId') !=
+        other._$data.containsKey('parentCommentId')) {
+      return false;
+    }
+    if (l$parentCommentId != lOther$parentCommentId) {
+      return false;
+    }
     return true;
   }
 
@@ -7183,7 +7846,12 @@ class Variables$Mutation$CreateComment {
   int get hashCode {
     final l$postId = postId;
     final l$body = body;
-    return Object.hashAll([l$postId, l$body]);
+    final l$parentCommentId = parentCommentId;
+    return Object.hashAll([
+      l$postId,
+      l$body,
+      _$data.containsKey('parentCommentId') ? l$parentCommentId : const {},
+    ]);
   }
 }
 
@@ -7196,7 +7864,7 @@ abstract class CopyWith$Variables$Mutation$CreateComment<TRes> {
   factory CopyWith$Variables$Mutation$CreateComment.stub(TRes res) =
       _CopyWithStubImpl$Variables$Mutation$CreateComment;
 
-  TRes call({String? postId, String? body});
+  TRes call({String? postId, String? body, String? parentCommentId});
 }
 
 class _CopyWithImpl$Variables$Mutation$CreateComment<TRes>
@@ -7209,11 +7877,17 @@ class _CopyWithImpl$Variables$Mutation$CreateComment<TRes>
 
   static const _undefined = <dynamic, dynamic>{};
 
-  TRes call({Object? postId = _undefined, Object? body = _undefined}) => _then(
+  TRes call({
+    Object? postId = _undefined,
+    Object? body = _undefined,
+    Object? parentCommentId = _undefined,
+  }) => _then(
     Variables$Mutation$CreateComment._({
       ..._instance._$data,
       if (postId != _undefined && postId != null) 'postId': (postId as String),
       if (body != _undefined && body != null) 'body': (body as String),
+      if (parentCommentId != _undefined)
+        'parentCommentId': (parentCommentId as String?),
     }),
   );
 }
@@ -7224,7 +7898,7 @@ class _CopyWithStubImpl$Variables$Mutation$CreateComment<TRes>
 
   TRes _res;
 
-  call({String? postId, String? body}) => _res;
+  call({String? postId, String? body, String? parentCommentId}) => _res;
 }
 
 class Mutation$CreateComment {
@@ -7346,6 +8020,12 @@ const documentNodeMutationCreateComment = DocumentNode(
           defaultValue: DefaultValueNode(value: null),
           directives: [],
         ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'parentCommentId')),
+          type: NamedTypeNode(name: NameNode(value: 'ID'), isNonNull: false),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
       ],
       directives: [],
       selectionSet: SelectionSetNode(
@@ -7365,6 +8045,12 @@ const documentNodeMutationCreateComment = DocumentNode(
                     ObjectFieldNode(
                       name: NameNode(value: 'body'),
                       value: VariableNode(name: NameNode(value: 'body')),
+                    ),
+                    ObjectFieldNode(
+                      name: NameNode(value: 'parentCommentId'),
+                      value: VariableNode(
+                        name: NameNode(value: 'parentCommentId'),
+                      ),
                     ),
                   ],
                 ),
@@ -11429,6 +12115,1133 @@ class _CopyWithStubImpl$Mutation$DeletePostImage$deletePostImage$userErrors<
   _CopyWithStubImpl$Mutation$DeletePostImage$deletePostImage$userErrors(
     this._res,
   );
+
+  TRes _res;
+
+  call({String? code, String? message, String? field}) => _res;
+}
+
+class Variables$Mutation$HidePost {
+  factory Variables$Mutation$HidePost({required String postId}) =>
+      Variables$Mutation$HidePost._({r'postId': postId});
+
+  Variables$Mutation$HidePost._(this._$data);
+
+  factory Variables$Mutation$HidePost.fromJson(Map<String, dynamic> data) {
+    final result$data = <String, dynamic>{};
+    final l$postId = data['postId'];
+    result$data['postId'] = (l$postId as String);
+    return Variables$Mutation$HidePost._(result$data);
+  }
+
+  Map<String, dynamic> _$data;
+
+  String get postId => (_$data['postId'] as String);
+
+  Map<String, dynamic> toJson() {
+    final result$data = <String, dynamic>{};
+    final l$postId = postId;
+    result$data['postId'] = l$postId;
+    return result$data;
+  }
+
+  CopyWith$Variables$Mutation$HidePost<Variables$Mutation$HidePost>
+  get copyWith => CopyWith$Variables$Mutation$HidePost(this, (i) => i);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Variables$Mutation$HidePost ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$postId = postId;
+    final lOther$postId = other.postId;
+    if (l$postId != lOther$postId) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    final l$postId = postId;
+    return Object.hashAll([l$postId]);
+  }
+}
+
+abstract class CopyWith$Variables$Mutation$HidePost<TRes> {
+  factory CopyWith$Variables$Mutation$HidePost(
+    Variables$Mutation$HidePost instance,
+    TRes Function(Variables$Mutation$HidePost) then,
+  ) = _CopyWithImpl$Variables$Mutation$HidePost;
+
+  factory CopyWith$Variables$Mutation$HidePost.stub(TRes res) =
+      _CopyWithStubImpl$Variables$Mutation$HidePost;
+
+  TRes call({String? postId});
+}
+
+class _CopyWithImpl$Variables$Mutation$HidePost<TRes>
+    implements CopyWith$Variables$Mutation$HidePost<TRes> {
+  _CopyWithImpl$Variables$Mutation$HidePost(this._instance, this._then);
+
+  final Variables$Mutation$HidePost _instance;
+
+  final TRes Function(Variables$Mutation$HidePost) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? postId = _undefined}) => _then(
+    Variables$Mutation$HidePost._({
+      ..._instance._$data,
+      if (postId != _undefined && postId != null) 'postId': (postId as String),
+    }),
+  );
+}
+
+class _CopyWithStubImpl$Variables$Mutation$HidePost<TRes>
+    implements CopyWith$Variables$Mutation$HidePost<TRes> {
+  _CopyWithStubImpl$Variables$Mutation$HidePost(this._res);
+
+  TRes _res;
+
+  call({String? postId}) => _res;
+}
+
+class Mutation$HidePost {
+  Mutation$HidePost({required this.hidePost});
+
+  factory Mutation$HidePost.fromJson(Map<String, dynamic> json) {
+    final l$hidePost = json['hidePost'];
+    return Mutation$HidePost(
+      hidePost: Mutation$HidePost$hidePost.fromJson(
+        (l$hidePost as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final Mutation$HidePost$hidePost hidePost;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$hidePost = hidePost;
+    _resultData['hidePost'] = l$hidePost.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$hidePost = hidePost;
+    return Object.hashAll([l$hidePost]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$HidePost || runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$hidePost = hidePost;
+    final lOther$hidePost = other.hidePost;
+    if (l$hidePost != lOther$hidePost) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$HidePost on Mutation$HidePost {
+  CopyWith$Mutation$HidePost<Mutation$HidePost> get copyWith =>
+      CopyWith$Mutation$HidePost(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$HidePost<TRes> {
+  factory CopyWith$Mutation$HidePost(
+    Mutation$HidePost instance,
+    TRes Function(Mutation$HidePost) then,
+  ) = _CopyWithImpl$Mutation$HidePost;
+
+  factory CopyWith$Mutation$HidePost.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$HidePost;
+
+  TRes call({Mutation$HidePost$hidePost? hidePost});
+  CopyWith$Mutation$HidePost$hidePost<TRes> get hidePost;
+}
+
+class _CopyWithImpl$Mutation$HidePost<TRes>
+    implements CopyWith$Mutation$HidePost<TRes> {
+  _CopyWithImpl$Mutation$HidePost(this._instance, this._then);
+
+  final Mutation$HidePost _instance;
+
+  final TRes Function(Mutation$HidePost) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? hidePost = _undefined}) => _then(
+    Mutation$HidePost(
+      hidePost: hidePost == _undefined || hidePost == null
+          ? _instance.hidePost
+          : (hidePost as Mutation$HidePost$hidePost),
+    ),
+  );
+
+  CopyWith$Mutation$HidePost$hidePost<TRes> get hidePost {
+    final local$hidePost = _instance.hidePost;
+    return CopyWith$Mutation$HidePost$hidePost(
+      local$hidePost,
+      (e) => call(hidePost: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Mutation$HidePost<TRes>
+    implements CopyWith$Mutation$HidePost<TRes> {
+  _CopyWithStubImpl$Mutation$HidePost(this._res);
+
+  TRes _res;
+
+  call({Mutation$HidePost$hidePost? hidePost}) => _res;
+
+  CopyWith$Mutation$HidePost$hidePost<TRes> get hidePost =>
+      CopyWith$Mutation$HidePost$hidePost.stub(_res);
+}
+
+const documentNodeMutationHidePost = DocumentNode(
+  definitions: [
+    OperationDefinitionNode(
+      type: OperationType.mutation,
+      name: NameNode(value: 'HidePost'),
+      variableDefinitions: [
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'postId')),
+          type: NamedTypeNode(name: NameNode(value: 'ID'), isNonNull: true),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+      ],
+      directives: [],
+      selectionSet: SelectionSetNode(
+        selections: [
+          FieldNode(
+            name: NameNode(value: 'hidePost'),
+            alias: null,
+            arguments: [
+              ArgumentNode(
+                name: NameNode(value: 'input'),
+                value: ObjectValueNode(
+                  fields: [
+                    ObjectFieldNode(
+                      name: NameNode(value: 'postId'),
+                      value: VariableNode(name: NameNode(value: 'postId')),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            directives: [],
+            selectionSet: SelectionSetNode(
+              selections: [
+                FieldNode(
+                  name: NameNode(value: 'success'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'userErrors'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'code'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'message'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'field'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+);
+
+class Mutation$HidePost$hidePost {
+  Mutation$HidePost$hidePost({required this.success, required this.userErrors});
+
+  factory Mutation$HidePost$hidePost.fromJson(Map<String, dynamic> json) {
+    final l$success = json['success'];
+    final l$userErrors = json['userErrors'];
+    return Mutation$HidePost$hidePost(
+      success: (l$success as bool),
+      userErrors: (l$userErrors as List<dynamic>)
+          .map(
+            (e) => Mutation$HidePost$hidePost$userErrors.fromJson(
+              (e as Map<String, dynamic>),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  final bool success;
+
+  final List<Mutation$HidePost$hidePost$userErrors> userErrors;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$success = success;
+    _resultData['success'] = l$success;
+    final l$userErrors = userErrors;
+    _resultData['userErrors'] = l$userErrors.map((e) => e.toJson()).toList();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$success = success;
+    final l$userErrors = userErrors;
+    return Object.hashAll([
+      l$success,
+      Object.hashAll(l$userErrors.map((v) => v)),
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$HidePost$hidePost ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$success = success;
+    final lOther$success = other.success;
+    if (l$success != lOther$success) {
+      return false;
+    }
+    final l$userErrors = userErrors;
+    final lOther$userErrors = other.userErrors;
+    if (l$userErrors.length != lOther$userErrors.length) {
+      return false;
+    }
+    for (int i = 0; i < l$userErrors.length; i++) {
+      final l$userErrors$entry = l$userErrors[i];
+      final lOther$userErrors$entry = lOther$userErrors[i];
+      if (l$userErrors$entry != lOther$userErrors$entry) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$HidePost$hidePost
+    on Mutation$HidePost$hidePost {
+  CopyWith$Mutation$HidePost$hidePost<Mutation$HidePost$hidePost>
+  get copyWith => CopyWith$Mutation$HidePost$hidePost(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$HidePost$hidePost<TRes> {
+  factory CopyWith$Mutation$HidePost$hidePost(
+    Mutation$HidePost$hidePost instance,
+    TRes Function(Mutation$HidePost$hidePost) then,
+  ) = _CopyWithImpl$Mutation$HidePost$hidePost;
+
+  factory CopyWith$Mutation$HidePost$hidePost.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$HidePost$hidePost;
+
+  TRes call({
+    bool? success,
+    List<Mutation$HidePost$hidePost$userErrors>? userErrors,
+  });
+  TRes userErrors(
+    Iterable<Mutation$HidePost$hidePost$userErrors> Function(
+      Iterable<
+        CopyWith$Mutation$HidePost$hidePost$userErrors<
+          Mutation$HidePost$hidePost$userErrors
+        >
+      >,
+    )
+    _fn,
+  );
+}
+
+class _CopyWithImpl$Mutation$HidePost$hidePost<TRes>
+    implements CopyWith$Mutation$HidePost$hidePost<TRes> {
+  _CopyWithImpl$Mutation$HidePost$hidePost(this._instance, this._then);
+
+  final Mutation$HidePost$hidePost _instance;
+
+  final TRes Function(Mutation$HidePost$hidePost) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? success = _undefined, Object? userErrors = _undefined}) =>
+      _then(
+        Mutation$HidePost$hidePost(
+          success: success == _undefined || success == null
+              ? _instance.success
+              : (success as bool),
+          userErrors: userErrors == _undefined || userErrors == null
+              ? _instance.userErrors
+              : (userErrors as List<Mutation$HidePost$hidePost$userErrors>),
+        ),
+      );
+
+  TRes userErrors(
+    Iterable<Mutation$HidePost$hidePost$userErrors> Function(
+      Iterable<
+        CopyWith$Mutation$HidePost$hidePost$userErrors<
+          Mutation$HidePost$hidePost$userErrors
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    userErrors: _fn(
+      _instance.userErrors.map(
+        (e) => CopyWith$Mutation$HidePost$hidePost$userErrors(e, (i) => i),
+      ),
+    ).toList(),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$HidePost$hidePost<TRes>
+    implements CopyWith$Mutation$HidePost$hidePost<TRes> {
+  _CopyWithStubImpl$Mutation$HidePost$hidePost(this._res);
+
+  TRes _res;
+
+  call({
+    bool? success,
+    List<Mutation$HidePost$hidePost$userErrors>? userErrors,
+  }) => _res;
+
+  userErrors(_fn) => _res;
+}
+
+class Mutation$HidePost$hidePost$userErrors {
+  Mutation$HidePost$hidePost$userErrors({
+    required this.code,
+    required this.message,
+    this.field,
+  });
+
+  factory Mutation$HidePost$hidePost$userErrors.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$code = json['code'];
+    final l$message = json['message'];
+    final l$field = json['field'];
+    return Mutation$HidePost$hidePost$userErrors(
+      code: (l$code as String),
+      message: (l$message as String),
+      field: (l$field as String?),
+    );
+  }
+
+  final String code;
+
+  final String message;
+
+  final String? field;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$message = message;
+    _resultData['message'] = l$message;
+    final l$field = field;
+    _resultData['field'] = l$field;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$code = code;
+    final l$message = message;
+    final l$field = field;
+    return Object.hashAll([l$code, l$message, l$field]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$HidePost$hidePost$userErrors ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$message = message;
+    final lOther$message = other.message;
+    if (l$message != lOther$message) {
+      return false;
+    }
+    final l$field = field;
+    final lOther$field = other.field;
+    if (l$field != lOther$field) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$HidePost$hidePost$userErrors
+    on Mutation$HidePost$hidePost$userErrors {
+  CopyWith$Mutation$HidePost$hidePost$userErrors<
+    Mutation$HidePost$hidePost$userErrors
+  >
+  get copyWith =>
+      CopyWith$Mutation$HidePost$hidePost$userErrors(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$HidePost$hidePost$userErrors<TRes> {
+  factory CopyWith$Mutation$HidePost$hidePost$userErrors(
+    Mutation$HidePost$hidePost$userErrors instance,
+    TRes Function(Mutation$HidePost$hidePost$userErrors) then,
+  ) = _CopyWithImpl$Mutation$HidePost$hidePost$userErrors;
+
+  factory CopyWith$Mutation$HidePost$hidePost$userErrors.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$HidePost$hidePost$userErrors;
+
+  TRes call({String? code, String? message, String? field});
+}
+
+class _CopyWithImpl$Mutation$HidePost$hidePost$userErrors<TRes>
+    implements CopyWith$Mutation$HidePost$hidePost$userErrors<TRes> {
+  _CopyWithImpl$Mutation$HidePost$hidePost$userErrors(
+    this._instance,
+    this._then,
+  );
+
+  final Mutation$HidePost$hidePost$userErrors _instance;
+
+  final TRes Function(Mutation$HidePost$hidePost$userErrors) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? code = _undefined,
+    Object? message = _undefined,
+    Object? field = _undefined,
+  }) => _then(
+    Mutation$HidePost$hidePost$userErrors(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      message: message == _undefined || message == null
+          ? _instance.message
+          : (message as String),
+      field: field == _undefined ? _instance.field : (field as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$HidePost$hidePost$userErrors<TRes>
+    implements CopyWith$Mutation$HidePost$hidePost$userErrors<TRes> {
+  _CopyWithStubImpl$Mutation$HidePost$hidePost$userErrors(this._res);
+
+  TRes _res;
+
+  call({String? code, String? message, String? field}) => _res;
+}
+
+class Variables$Mutation$UnhidePost {
+  factory Variables$Mutation$UnhidePost({required String postId}) =>
+      Variables$Mutation$UnhidePost._({r'postId': postId});
+
+  Variables$Mutation$UnhidePost._(this._$data);
+
+  factory Variables$Mutation$UnhidePost.fromJson(Map<String, dynamic> data) {
+    final result$data = <String, dynamic>{};
+    final l$postId = data['postId'];
+    result$data['postId'] = (l$postId as String);
+    return Variables$Mutation$UnhidePost._(result$data);
+  }
+
+  Map<String, dynamic> _$data;
+
+  String get postId => (_$data['postId'] as String);
+
+  Map<String, dynamic> toJson() {
+    final result$data = <String, dynamic>{};
+    final l$postId = postId;
+    result$data['postId'] = l$postId;
+    return result$data;
+  }
+
+  CopyWith$Variables$Mutation$UnhidePost<Variables$Mutation$UnhidePost>
+  get copyWith => CopyWith$Variables$Mutation$UnhidePost(this, (i) => i);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Variables$Mutation$UnhidePost ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$postId = postId;
+    final lOther$postId = other.postId;
+    if (l$postId != lOther$postId) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    final l$postId = postId;
+    return Object.hashAll([l$postId]);
+  }
+}
+
+abstract class CopyWith$Variables$Mutation$UnhidePost<TRes> {
+  factory CopyWith$Variables$Mutation$UnhidePost(
+    Variables$Mutation$UnhidePost instance,
+    TRes Function(Variables$Mutation$UnhidePost) then,
+  ) = _CopyWithImpl$Variables$Mutation$UnhidePost;
+
+  factory CopyWith$Variables$Mutation$UnhidePost.stub(TRes res) =
+      _CopyWithStubImpl$Variables$Mutation$UnhidePost;
+
+  TRes call({String? postId});
+}
+
+class _CopyWithImpl$Variables$Mutation$UnhidePost<TRes>
+    implements CopyWith$Variables$Mutation$UnhidePost<TRes> {
+  _CopyWithImpl$Variables$Mutation$UnhidePost(this._instance, this._then);
+
+  final Variables$Mutation$UnhidePost _instance;
+
+  final TRes Function(Variables$Mutation$UnhidePost) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? postId = _undefined}) => _then(
+    Variables$Mutation$UnhidePost._({
+      ..._instance._$data,
+      if (postId != _undefined && postId != null) 'postId': (postId as String),
+    }),
+  );
+}
+
+class _CopyWithStubImpl$Variables$Mutation$UnhidePost<TRes>
+    implements CopyWith$Variables$Mutation$UnhidePost<TRes> {
+  _CopyWithStubImpl$Variables$Mutation$UnhidePost(this._res);
+
+  TRes _res;
+
+  call({String? postId}) => _res;
+}
+
+class Mutation$UnhidePost {
+  Mutation$UnhidePost({required this.unhidePost});
+
+  factory Mutation$UnhidePost.fromJson(Map<String, dynamic> json) {
+    final l$unhidePost = json['unhidePost'];
+    return Mutation$UnhidePost(
+      unhidePost: Mutation$UnhidePost$unhidePost.fromJson(
+        (l$unhidePost as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final Mutation$UnhidePost$unhidePost unhidePost;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$unhidePost = unhidePost;
+    _resultData['unhidePost'] = l$unhidePost.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$unhidePost = unhidePost;
+    return Object.hashAll([l$unhidePost]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$UnhidePost || runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$unhidePost = unhidePost;
+    final lOther$unhidePost = other.unhidePost;
+    if (l$unhidePost != lOther$unhidePost) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$UnhidePost on Mutation$UnhidePost {
+  CopyWith$Mutation$UnhidePost<Mutation$UnhidePost> get copyWith =>
+      CopyWith$Mutation$UnhidePost(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$UnhidePost<TRes> {
+  factory CopyWith$Mutation$UnhidePost(
+    Mutation$UnhidePost instance,
+    TRes Function(Mutation$UnhidePost) then,
+  ) = _CopyWithImpl$Mutation$UnhidePost;
+
+  factory CopyWith$Mutation$UnhidePost.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$UnhidePost;
+
+  TRes call({Mutation$UnhidePost$unhidePost? unhidePost});
+  CopyWith$Mutation$UnhidePost$unhidePost<TRes> get unhidePost;
+}
+
+class _CopyWithImpl$Mutation$UnhidePost<TRes>
+    implements CopyWith$Mutation$UnhidePost<TRes> {
+  _CopyWithImpl$Mutation$UnhidePost(this._instance, this._then);
+
+  final Mutation$UnhidePost _instance;
+
+  final TRes Function(Mutation$UnhidePost) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? unhidePost = _undefined}) => _then(
+    Mutation$UnhidePost(
+      unhidePost: unhidePost == _undefined || unhidePost == null
+          ? _instance.unhidePost
+          : (unhidePost as Mutation$UnhidePost$unhidePost),
+    ),
+  );
+
+  CopyWith$Mutation$UnhidePost$unhidePost<TRes> get unhidePost {
+    final local$unhidePost = _instance.unhidePost;
+    return CopyWith$Mutation$UnhidePost$unhidePost(
+      local$unhidePost,
+      (e) => call(unhidePost: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Mutation$UnhidePost<TRes>
+    implements CopyWith$Mutation$UnhidePost<TRes> {
+  _CopyWithStubImpl$Mutation$UnhidePost(this._res);
+
+  TRes _res;
+
+  call({Mutation$UnhidePost$unhidePost? unhidePost}) => _res;
+
+  CopyWith$Mutation$UnhidePost$unhidePost<TRes> get unhidePost =>
+      CopyWith$Mutation$UnhidePost$unhidePost.stub(_res);
+}
+
+const documentNodeMutationUnhidePost = DocumentNode(
+  definitions: [
+    OperationDefinitionNode(
+      type: OperationType.mutation,
+      name: NameNode(value: 'UnhidePost'),
+      variableDefinitions: [
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'postId')),
+          type: NamedTypeNode(name: NameNode(value: 'ID'), isNonNull: true),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+      ],
+      directives: [],
+      selectionSet: SelectionSetNode(
+        selections: [
+          FieldNode(
+            name: NameNode(value: 'unhidePost'),
+            alias: null,
+            arguments: [
+              ArgumentNode(
+                name: NameNode(value: 'input'),
+                value: ObjectValueNode(
+                  fields: [
+                    ObjectFieldNode(
+                      name: NameNode(value: 'postId'),
+                      value: VariableNode(name: NameNode(value: 'postId')),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            directives: [],
+            selectionSet: SelectionSetNode(
+              selections: [
+                FieldNode(
+                  name: NameNode(value: 'success'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'userErrors'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'code'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'message'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'field'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+);
+
+class Mutation$UnhidePost$unhidePost {
+  Mutation$UnhidePost$unhidePost({
+    required this.success,
+    required this.userErrors,
+  });
+
+  factory Mutation$UnhidePost$unhidePost.fromJson(Map<String, dynamic> json) {
+    final l$success = json['success'];
+    final l$userErrors = json['userErrors'];
+    return Mutation$UnhidePost$unhidePost(
+      success: (l$success as bool),
+      userErrors: (l$userErrors as List<dynamic>)
+          .map(
+            (e) => Mutation$UnhidePost$unhidePost$userErrors.fromJson(
+              (e as Map<String, dynamic>),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  final bool success;
+
+  final List<Mutation$UnhidePost$unhidePost$userErrors> userErrors;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$success = success;
+    _resultData['success'] = l$success;
+    final l$userErrors = userErrors;
+    _resultData['userErrors'] = l$userErrors.map((e) => e.toJson()).toList();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$success = success;
+    final l$userErrors = userErrors;
+    return Object.hashAll([
+      l$success,
+      Object.hashAll(l$userErrors.map((v) => v)),
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$UnhidePost$unhidePost ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$success = success;
+    final lOther$success = other.success;
+    if (l$success != lOther$success) {
+      return false;
+    }
+    final l$userErrors = userErrors;
+    final lOther$userErrors = other.userErrors;
+    if (l$userErrors.length != lOther$userErrors.length) {
+      return false;
+    }
+    for (int i = 0; i < l$userErrors.length; i++) {
+      final l$userErrors$entry = l$userErrors[i];
+      final lOther$userErrors$entry = lOther$userErrors[i];
+      if (l$userErrors$entry != lOther$userErrors$entry) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$UnhidePost$unhidePost
+    on Mutation$UnhidePost$unhidePost {
+  CopyWith$Mutation$UnhidePost$unhidePost<Mutation$UnhidePost$unhidePost>
+  get copyWith => CopyWith$Mutation$UnhidePost$unhidePost(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$UnhidePost$unhidePost<TRes> {
+  factory CopyWith$Mutation$UnhidePost$unhidePost(
+    Mutation$UnhidePost$unhidePost instance,
+    TRes Function(Mutation$UnhidePost$unhidePost) then,
+  ) = _CopyWithImpl$Mutation$UnhidePost$unhidePost;
+
+  factory CopyWith$Mutation$UnhidePost$unhidePost.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$UnhidePost$unhidePost;
+
+  TRes call({
+    bool? success,
+    List<Mutation$UnhidePost$unhidePost$userErrors>? userErrors,
+  });
+  TRes userErrors(
+    Iterable<Mutation$UnhidePost$unhidePost$userErrors> Function(
+      Iterable<
+        CopyWith$Mutation$UnhidePost$unhidePost$userErrors<
+          Mutation$UnhidePost$unhidePost$userErrors
+        >
+      >,
+    )
+    _fn,
+  );
+}
+
+class _CopyWithImpl$Mutation$UnhidePost$unhidePost<TRes>
+    implements CopyWith$Mutation$UnhidePost$unhidePost<TRes> {
+  _CopyWithImpl$Mutation$UnhidePost$unhidePost(this._instance, this._then);
+
+  final Mutation$UnhidePost$unhidePost _instance;
+
+  final TRes Function(Mutation$UnhidePost$unhidePost) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? success = _undefined, Object? userErrors = _undefined}) =>
+      _then(
+        Mutation$UnhidePost$unhidePost(
+          success: success == _undefined || success == null
+              ? _instance.success
+              : (success as bool),
+          userErrors: userErrors == _undefined || userErrors == null
+              ? _instance.userErrors
+              : (userErrors as List<Mutation$UnhidePost$unhidePost$userErrors>),
+        ),
+      );
+
+  TRes userErrors(
+    Iterable<Mutation$UnhidePost$unhidePost$userErrors> Function(
+      Iterable<
+        CopyWith$Mutation$UnhidePost$unhidePost$userErrors<
+          Mutation$UnhidePost$unhidePost$userErrors
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    userErrors: _fn(
+      _instance.userErrors.map(
+        (e) => CopyWith$Mutation$UnhidePost$unhidePost$userErrors(e, (i) => i),
+      ),
+    ).toList(),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$UnhidePost$unhidePost<TRes>
+    implements CopyWith$Mutation$UnhidePost$unhidePost<TRes> {
+  _CopyWithStubImpl$Mutation$UnhidePost$unhidePost(this._res);
+
+  TRes _res;
+
+  call({
+    bool? success,
+    List<Mutation$UnhidePost$unhidePost$userErrors>? userErrors,
+  }) => _res;
+
+  userErrors(_fn) => _res;
+}
+
+class Mutation$UnhidePost$unhidePost$userErrors {
+  Mutation$UnhidePost$unhidePost$userErrors({
+    required this.code,
+    required this.message,
+    this.field,
+  });
+
+  factory Mutation$UnhidePost$unhidePost$userErrors.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$code = json['code'];
+    final l$message = json['message'];
+    final l$field = json['field'];
+    return Mutation$UnhidePost$unhidePost$userErrors(
+      code: (l$code as String),
+      message: (l$message as String),
+      field: (l$field as String?),
+    );
+  }
+
+  final String code;
+
+  final String message;
+
+  final String? field;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$message = message;
+    _resultData['message'] = l$message;
+    final l$field = field;
+    _resultData['field'] = l$field;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$code = code;
+    final l$message = message;
+    final l$field = field;
+    return Object.hashAll([l$code, l$message, l$field]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$UnhidePost$unhidePost$userErrors ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$message = message;
+    final lOther$message = other.message;
+    if (l$message != lOther$message) {
+      return false;
+    }
+    final l$field = field;
+    final lOther$field = other.field;
+    if (l$field != lOther$field) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$UnhidePost$unhidePost$userErrors
+    on Mutation$UnhidePost$unhidePost$userErrors {
+  CopyWith$Mutation$UnhidePost$unhidePost$userErrors<
+    Mutation$UnhidePost$unhidePost$userErrors
+  >
+  get copyWith =>
+      CopyWith$Mutation$UnhidePost$unhidePost$userErrors(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$UnhidePost$unhidePost$userErrors<TRes> {
+  factory CopyWith$Mutation$UnhidePost$unhidePost$userErrors(
+    Mutation$UnhidePost$unhidePost$userErrors instance,
+    TRes Function(Mutation$UnhidePost$unhidePost$userErrors) then,
+  ) = _CopyWithImpl$Mutation$UnhidePost$unhidePost$userErrors;
+
+  factory CopyWith$Mutation$UnhidePost$unhidePost$userErrors.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$UnhidePost$unhidePost$userErrors;
+
+  TRes call({String? code, String? message, String? field});
+}
+
+class _CopyWithImpl$Mutation$UnhidePost$unhidePost$userErrors<TRes>
+    implements CopyWith$Mutation$UnhidePost$unhidePost$userErrors<TRes> {
+  _CopyWithImpl$Mutation$UnhidePost$unhidePost$userErrors(
+    this._instance,
+    this._then,
+  );
+
+  final Mutation$UnhidePost$unhidePost$userErrors _instance;
+
+  final TRes Function(Mutation$UnhidePost$unhidePost$userErrors) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? code = _undefined,
+    Object? message = _undefined,
+    Object? field = _undefined,
+  }) => _then(
+    Mutation$UnhidePost$unhidePost$userErrors(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      message: message == _undefined || message == null
+          ? _instance.message
+          : (message as String),
+      field: field == _undefined ? _instance.field : (field as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$UnhidePost$unhidePost$userErrors<TRes>
+    implements CopyWith$Mutation$UnhidePost$unhidePost$userErrors<TRes> {
+  _CopyWithStubImpl$Mutation$UnhidePost$unhidePost$userErrors(this._res);
 
   TRes _res;
 

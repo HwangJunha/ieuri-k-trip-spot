@@ -5,22 +5,28 @@ import '../model/report_reason.dart';
 import 'community_labels.dart';
 
 /// 오버플로 시트에서 고른 동작.
-enum PostModerationAction { report, block, edit, delete }
+enum PostModerationAction { report, block, hide, edit, delete }
 
-/// 카드 우상단 ⋮ 가 여는 바텀 시트(가이드 §5).
+/// 카드 우상단 ⋮ 가 여는 바텀 시트(가이드 §5, 2차 가이드 §2).
 ///
 /// ```
+/// ├── 이 글 숨기기          (hidePost)        — 항상
 /// ├── 이 글 신고하기        (reportContent)   — 남의 글일 때
 /// ├── 이 사용자 차단하기     (blockUser)       — 남의 글일 때
 /// ├── 글 수정하기           (editPost)        — 내 글이고 숨김이 아닐 때
 /// └── 글 삭제하기           (deletePost)      — 내 글일 때
 /// ```
 ///
+/// **숨기기만 항상 보인다.** 소유권을 보지 않기 때문인데, 조치가 아니라 화면
+/// 설정이라 내 글도 감출 수 있다(2차 가이드 §2). 신고·차단과 각각 다르다:
+/// 차단은 사람 단위 양방향이고, 신고는 되돌릴 수 없는 운영 조치 요청이다.
+///
 /// **내 글에는 신고·차단을 두지 않는다** — 자기 자신은 차단할 수 없고
 /// (`CANNOT_BLOCK_SELF`) 자기 글 신고는 의미가 없다.
 ///
 /// **숨겨진 내 글은 수정을 비활성화하고 이유를 안내한다** — 눌러서
-/// `POST_NOT_EDITABLE` 오류를 보는 것보다 낫다(가이드 §5).
+/// `POST_NOT_EDITABLE` 오류를 보는 것보다 낫다(가이드 §5). 여기서 [hidden]은
+/// **신고 누적으로 모두에게 감춰진 것**이지 위의 "이 글 숨기기"와 다른 값이다.
 ///
 /// [Navigator.pop]으로 [PostModerationAction]을 돌려주며, 배경을 눌러 닫으면 null이다.
 Future<PostModerationAction?> showPostModerationSheet(
@@ -37,6 +43,12 @@ Future<PostModerationAction?> showPostModerationSheet(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
+          // **노출 조건이 없다** — 소유권을 보지 않으므로 내 글에도 뜬다.
+          ListTile(
+            leading: const Icon(Icons.visibility_off_outlined),
+            title: Text(l10n.communityHidePostAction),
+            onTap: () => Navigator.pop(context, PostModerationAction.hide),
+          ),
           if (!ownedByViewer) ...<Widget>[
             ListTile(
               leading: const Icon(Icons.flag_outlined),

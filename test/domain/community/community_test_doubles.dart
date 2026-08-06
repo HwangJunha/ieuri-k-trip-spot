@@ -10,6 +10,7 @@ import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot_category.da
 import 'package:ieuri_k_trip_spot/domain/community/model/post.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_author.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_image_upload.dart';
+import 'package:ieuri_k_trip_spot/domain/community/model/post_sort_order.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/report_reason.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/target_category.dart';
@@ -62,16 +63,25 @@ Post fakePost({
   commentPreview: commentPreview,
 );
 
+/// 테스트용 댓글 하나.
+///
+/// [replies]는 **최상위 댓글에만** 준다 — 답글의 답글은 없다(2차 가이드 §1).
+/// [parentCommentId]가 있으면 답글이며 화면이 들여쓴다.
 Comment fakeComment({
   String id = 'c1',
   String body = 'Nice!',
+  String nickname = 'Minji',
   bool ownedByViewer = false,
+  String? parentCommentId,
+  List<Comment> replies = const <Comment>[],
 }) => Comment(
   id: id,
   body: body,
-  author: const PostAuthor(id: '12', nickname: 'Minji'),
+  author: PostAuthor(id: '12', nickname: nickname),
   createdAt: DateTime.utc(2026, 8, 5, 10),
   ownedByViewer: ownedByViewer,
+  parentCommentId: parentCommentId,
+  replies: replies,
 );
 
 /// 정형 응답을 돌려주는 [CommunityRepository]. provider·위젯 테스트가 이 하나만
@@ -113,16 +123,24 @@ class FakeCommunityRepository implements CommunityRepository {
   /// 좋아요 성공 시 서버가 돌려주는 최종 수(되맞춤 검증용).
   final int? serverLikeCount;
 
-  /// 마지막 피드 조회에 넘어간 인자 — 범위·필터가 서버로 전달되는지 확인한다.
+  /// 마지막 피드 조회에 넘어간 인자 — 범위·필터·정렬이 서버로 전달되는지 확인한다.
   ({
     String? spotId,
     double? latitude,
     double? longitude,
     TargetCategory? category,
     String? tag,
+    PostSortOrder? sort,
+    bool? hiddenByViewer,
     String? after,
   })?
   lastFetchPosts;
+
+  /// 피드 조회에 넘어간 인자 **전부**(호출 순서대로). 정렬을 바꿨을 때 이전 커서를
+  /// 재사용하지 않는지 보려면 마지막 한 번이 아니라 이력을 봐야 한다.
+  final List<({PostSortOrder? sort, String? after, bool? hiddenByViewer})>
+  fetchPostsCalls =
+      <({PostSortOrder? sort, String? after, bool? hiddenByViewer})>[];
 
   int likeCalls = 0;
   int unlikeCalls = 0;
@@ -134,6 +152,14 @@ class FakeCommunityRepository implements CommunityRepository {
   /// 목록이 갱신되는 것을 검증하기 위한 장치다.
   List<Post>? refreshedPosts;
 
+  /// 정렬별로 다른 목록을 돌려줄 때 쓴다 — **정렬을 서버가 한다**는 것을 검증하기
+  /// 위한 장치다. 여기 없는 정렬은 [posts]로 떨어진다.
+  Map<PostSortOrder, List<Post>> postsBySort =
+      const <PostSortOrder, List<Post>>{};
+
+  /// `hiddenByViewer: true`로 조회했을 때 돌려줄 목록(숨김 해제 화면용).
+  List<Post> hiddenPosts = const <Post>[];
+
   @override
   Future<CursorPage<Post>> fetchPosts({
     String? spotId,
@@ -142,6 +168,8 @@ class FakeCommunityRepository implements CommunityRepository {
     int? radiusMeters,
     TargetCategory? category,
     String? tag,
+    PostSortOrder? sort,
+    bool? hiddenByViewer,
     int? first,
     String? after,
   }) async {
@@ -152,14 +180,28 @@ class FakeCommunityRepository implements CommunityRepository {
       longitude: longitude,
       category: category,
       tag: tag,
+      sort: sort,
+      hiddenByViewer: hiddenByViewer,
       after: after,
     );
+    fetchPostsCalls.add((
+      sort: sort,
+      after: after,
+      hiddenByViewer: hiddenByViewer,
+    ));
+    // 숨김 목록은 별도 축이다 — 피드와 섞이지 않는다(2차 가이드 §2).
+    if (hiddenByViewer ?? false) {
+      return CursorPage<Post>(items: hiddenPosts, hasNextPage: false);
+    }
     if (after != null) {
       return CursorPage<Post>(items: nextPagePosts, hasNextPage: false);
     }
     firstPageCalls++;
+    final List<Post> first0 =
+        postsBySort[sort] ??
+        (firstPageCalls > 1 ? (refreshedPosts ?? posts) : posts);
     return CursorPage<Post>(
-      items: firstPageCalls > 1 ? (refreshedPosts ?? posts) : posts,
+      items: first0,
       hasNextPage: hasNextPage,
       endCursor: hasNextPage ? 'cursor-1' : null,
     );
@@ -337,7 +379,9 @@ class FakeCommunityRepository implements CommunityRepository {
   lastCreatePost;
   ({String postId, String title, String body, List<String>? photoKeys})?
   lastEditPost;
-  ({String postId, String body})? lastCreateComment;
+  ({String postId, String body, String? parentCommentId})? lastCreateComment;
+  String? lastHiddenPostId;
+  String? lastUnhiddenPostId;
   String? lastDeletedCommentId;
   String? lastBlockedMemberId;
   String? lastUnblockedMemberId;
@@ -409,10 +453,27 @@ class FakeCommunityRepository implements CommunityRepository {
   Future<String?> createComment({
     required String postId,
     required String body,
+    String? parentCommentId,
   }) async {
-    lastCreateComment = (postId: postId, body: body);
+    lastCreateComment = (
+      postId: postId,
+      body: body,
+      parentCommentId: parentCommentId,
+    );
     if (mutationError != null) throw mutationError!;
     return 'new-comment';
+  }
+
+  @override
+  Future<void> hidePost(String postId) async {
+    lastHiddenPostId = postId;
+    if (mutationError != null) throw mutationError!;
+  }
+
+  @override
+  Future<void> unhidePost(String postId) async {
+    lastUnhiddenPostId = postId;
+    if (mutationError != null) throw mutationError!;
   }
 
   @override

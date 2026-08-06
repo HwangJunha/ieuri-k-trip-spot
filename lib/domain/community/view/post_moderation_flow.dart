@@ -43,6 +43,8 @@ Future<void> runPostModerationFlow(
         targetType: ReportTargetType.post,
         targetId: post.id,
       );
+    case PostModerationAction.hide:
+      await _hide(context, ref, post: post, onChanged: onChanged);
     case PostModerationAction.edit:
       await _edit(context, post: post, onChanged: onChanged);
     case PostModerationAction.delete:
@@ -118,6 +120,36 @@ Future<void> _block(
       _requireSignIn(context, l10n);
     // 차단은 멱등이라 이미 차단한 사람도 성공으로 온다(가이드 §7) — 아래 둘은
     // 차단 경로에서 나오지 않지만, 나오면 일반 실패와 같이 다룬다.
+    case ModerationOutcome.alreadyReported:
+    case ModerationOutcome.notEditable:
+    case ModerationOutcome.failure:
+      _toast(context, l10n.communityActionFailed);
+  }
+}
+
+/// 이 글 숨기기(2차 가이드 §2). **확인 단계를 두지 않는다** — 되돌릴 수 있고 내
+/// 화면에만 영향을 주는 화면 설정이라, 확인을 물으면 차단만큼 무거운 조치로 보인다.
+///
+/// 성공하면 **피드를 다시 불러온다** — 서버가 필터링하므로 로컬에서 지우는 것이
+/// 아니다(차단과 같은 규약). 멱등이라 이미 숨긴 글에 다시 불러도 성공이다.
+Future<void> _hide(
+  BuildContext context,
+  WidgetRef ref, {
+  required Post post,
+  required VoidCallback onChanged,
+}) async {
+  final AppLocalizations l10n = AppLocalizations.of(context);
+  final ModerationOutcome outcome = await ref
+      .read(moderationControllerProvider.notifier)
+      .hidePost(post.id);
+  if (!context.mounted) return;
+
+  switch (outcome) {
+    case ModerationOutcome.success:
+      _toast(context, l10n.communityHidePostDone);
+      onChanged();
+    case ModerationOutcome.unauthenticated:
+      _requireSignIn(context, l10n);
     case ModerationOutcome.alreadyReported:
     case ModerationOutcome.notEditable:
     case ModerationOutcome.failure:
