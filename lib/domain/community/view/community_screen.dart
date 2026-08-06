@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../common/location/location_service.dart';
 import '../../../common/pagination/pagination_list_view.dart';
+import '../../../common/widget/floating_bottom_nav_scaffold.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/category_chip_row.dart';
 import '../component/post_card.dart';
@@ -49,10 +50,19 @@ class CommunityScreen extends ConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        tooltip: l10n.communityComposeAction,
-        onPressed: () => _openComposer(context, ref, category),
-        child: const Icon(Icons.edit_outlined),
+      // 셸이 `extendBody: true`라 이 화면의 body가 떠 있는 내비 바 **아래까지**
+      // 그려진다. 기본 위치의 FAB은 그 바에 가려지므로 바 높이만큼 띄운다.
+      // 값을 여기 적지 않고 셸 상수를 읽는 이유는, 바의 높이·여백이 바뀔 때
+      // 보정이 저절로 따라오게 하기 위해서다.
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(
+          bottom: FloatingBottomNavScaffold.barExtent,
+        ),
+        child: FloatingActionButton(
+          tooltip: l10n.communityComposeAction,
+          onPressed: () => _openComposer(context, ref, category),
+          child: const Icon(Icons.edit_outlined),
+        ),
       ),
       body: SafeArea(
         child: Column(
@@ -157,7 +167,11 @@ class _FeedList extends ConsumerWidget {
     // 한 번만 읽어 모든 카드가 같은 기준을 쓴다.
     final DateTime now = DateTime.now().toUtc();
     return PaginationListView(
-      padding: const EdgeInsets.only(bottom: 96),
+      // 마지막 카드가 내비 바와 그 위의 FAB에 가리지 않도록 둘 다 넘는 만큼 비운다.
+      // 바 높이는 셸 상수를 읽고(값이 바뀌면 따라온다), FAB(56)과 숨돌릴 여백을 더한다.
+      padding: const EdgeInsets.only(
+        bottom: FloatingBottomNavScaffold.barExtent + 56 + 16,
+      ),
       itemCount: data.items.length,
       hasMore: data.hasMore,
       isLoadingMore: data.isLoadingMore,

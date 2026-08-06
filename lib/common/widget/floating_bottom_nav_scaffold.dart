@@ -17,6 +17,24 @@ class FloatingBottomNavScaffold extends StatelessWidget {
 
   static const int _discoverIndex = 2;
 
+  /// 떠 있는 내비 바가 화면 하단에서 차지하는 높이(SafeArea 제외).
+  ///
+  /// `extendBody: true`라 **탭 화면의 body가 이 바 아래까지 그려진다.** 그래서 탭
+  /// 화면이 FAB처럼 하단에 고정된 것을 두면 바에 가려진다 — 그런 화면은 이 값만큼
+  /// 띄운다. 상수를 여기 두는 이유는 바의 높이·여백을 바꿀 때 가려짐 보정이 함께
+  /// 따라오게 하기 위해서다(값을 화면 쪽에 복사해 두면 반드시 어긋난다).
+  ///
+  /// 내역: [NavigationBar] 기본 높이 + 위아래 여백.
+  static const double barExtent =
+      _navigationBarHeight + _barVerticalPadding * 2;
+
+  /// 바를 감싼 위아래 여백. 실제 [Padding]이 이 값을 쓰므로 여백을 바꾸면
+  /// [barExtent]가 함께 따라간다.
+  static const double _barVerticalPadding = 8;
+
+  /// Material [NavigationBar]의 기본 높이. 테마에서 높이를 지정하지 않아 기본값이다.
+  static const double _navigationBarHeight = 80;
+
   void _onTap(int index) {
     // initialLocation:true re-taps reset the branch to its root (standard shell
     // behavior), matching the "tap active tab → go home" convention.
@@ -36,7 +54,10 @@ class FloatingBottomNavScaffold extends StatelessWidget {
       body: navigationShell,
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: _barVerticalPadding,
+          ),
           child: Material(
             elevation: 3,
             color: theme.colorScheme.surfaceContainer,

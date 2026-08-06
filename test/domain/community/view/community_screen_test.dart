@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
+import 'package:ieuri_k_trip_spot/common/widget/floating_bottom_nav_scaffold.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_chip.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post.dart';
@@ -349,5 +350,48 @@ void main() {
 
     expect(find.text('Food'), findsOneWidget);
     expect(find.text("Couldn't load nearby posts"), findsOneWidget);
+  });
+
+  // 셸이 `extendBody: true`라 이 화면의 body가 떠 있는 내비 바 **아래까지** 그려진다.
+  // 기본 위치의 FAB은 그 바에 가려지므로, 바를 실제로 붙인 상태에서 글쓰기 버튼이
+  // 바 위에 있는지 본다 — 화면만 단독으로 띄우면 이 어긋남이 드러나지 않는다.
+  testWidgets('글쓰기 버튼은 하단 내비 바에 가리지 않는다', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          communityRepositoryProvider.overrideWithValue(
+            FakeCommunityRepository(),
+          ),
+          locationServiceProvider.overrideWithValue(FakeLocationService()),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('en'),
+          // 실제 셸과 같은 조건: body가 바 아래까지 그려진다.
+          home: Scaffold(
+            extendBody: true,
+            body: const CommunityScreen(),
+            bottomNavigationBar: Container(
+              height: FloatingBottomNavScaffold.barExtent,
+              color: const Color(0xFF000000),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final double fabBottom = tester
+        .getRect(find.byType(FloatingActionButton))
+        .bottom;
+    final double barTop = tester.getRect(find.byType(Scaffold).last).bottom -
+        FloatingBottomNavScaffold.barExtent;
+
+    expect(
+      fabBottom,
+      lessThanOrEqualTo(barTop),
+      reason: '글쓰기 버튼 아래끝이 내비 바 윗변보다 위에 있어야 한다',
+    );
   });
 }
