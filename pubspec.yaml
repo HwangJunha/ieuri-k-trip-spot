@@ -46,6 +46,10 @@ dependencies:
   # Device GPS coordinates for the location-based spot feed (SPEC-0002)
   geolocator: ^13.0.1
   url_launcher: ^6.3.2
+  # 사진 첨부(SPEC-0010). Flutter 팀이 관리하는 사실상 표준이며, 업로드는 이 패키지가
+  # 준 바이트를 그대로 스토리지로 PUT한다 — 리사이즈·재인코딩을 하면 1단계에 선언한
+  # contentLength와 어긋나 서명이 깨진다(가이드 §4).
+  image_picker: ^1.2.3
 
 dev_dependencies:
   flutter_test:

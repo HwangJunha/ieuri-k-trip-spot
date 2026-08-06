@@ -431,7 +431,7 @@
   "communityComposeSpotClear": "移除地点",
   "communityComposePhotosLabel": "照片（可选）",
   "communityComposePhotoAdd": "添加照片",
-  "communityComposePhotoUnavailable": "此版本暂不支持选择照片。",
+  "communityComposePhotoTooLarge": "{count, plural, other{{count} 张照片过大(最大 10MB)。}}",
   "communityComposePhotoFailed": "有 {count} 张照片上传失败，请重试。",
   "@communityComposePhotoFailed": {
     "placeholders": {

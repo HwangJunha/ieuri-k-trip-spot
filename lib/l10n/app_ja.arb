@@ -431,7 +431,7 @@
   "communityComposeSpotClear": "場所を外す",
   "communityComposePhotosLabel": "写真（任意）",
   "communityComposePhotoAdd": "写真を追加",
-  "communityComposePhotoUnavailable": "このビルドでは写真を選べません。",
+  "communityComposePhotoTooLarge": "{count, plural, other{{count}枚の写真が大きすぎます(最大10MB)。}}",
   "communityComposePhotoFailed": "写真{count}枚をアップロードできませんでした。もう一度お試しください。",
   "@communityComposePhotoFailed": {
     "placeholders": {

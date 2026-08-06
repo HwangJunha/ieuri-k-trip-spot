@@ -6,6 +6,8 @@
 		<true/>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>K-Trip Spot uses your location while you use the app to show nearby attractions and real-time crowd levels. It is never accessed in the background.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>K-Trip Spot needs access to your photo library so you can attach photos to your community posts.</string>
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>

@@ -1,10 +1,15 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_chip.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_failure.dart';
+import 'package:ieuri_k_trip_spot/domain/community/model/post_draft.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/target_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.dart';
+import 'package:ieuri_k_trip_spot/domain/community/provider/photo_picker_providers.dart';
+import 'package:ieuri_k_trip_spot/domain/community/provider/post_composer_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/community/view/post_composer_screen.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
 
@@ -19,10 +24,15 @@ Future<void> _pump(
   String? editPostId,
   String? initialTitle,
   String? initialBody,
+  PhotoPicker? picker,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [communityRepositoryProvider.overrideWithValue(repo)],
+      overrides: [
+        communityRepositoryProvider.overrideWithValue(repo),
+        // 실제 picker는 갤러리를 연다 — 테스트는 항상 override한다.
+        if (picker != null) photoPickerProvider.overrideWithValue(picker),
+      ],
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -192,19 +202,42 @@ void main() {
   });
 
   group('사진', () {
-    // 사진 선택 패키지가 아직 없어 기본 picker가 null을 돌려준다. 그때 조용히
-    // 아무 일도 없는 것이 아니라 **고를 수 없다는 사실**을 알린다.
-    testWidgets('사진 선택 수단이 없으면 그 사실을 알린다', (WidgetTester tester) async {
-      await _pump(tester, FakeCommunityRepository());
+    // 10 MiB를 넘는 장은 **고른 직후 거른다.** 그대로 1단계에 넘기면 서버가 하나만
+    // 어긋나도 전부 거부해(부분 발급 없음) 멀쩡한 장까지 같이 죽는다(가이드 §4).
+    testWidgets('10MiB를 넘는 사진은 제외하고 그 사실을 알린다', (WidgetTester tester) async {
+      await _pump(
+        tester,
+        FakeCommunityRepository(),
+        picker: ({required int limit}) async => <PickedPhoto>[
+          PickedPhoto(
+            bytes: Uint8List(maxPostPhotoBytes + 1),
+            contentType: 'image/jpeg',
+            name: 'huge.jpg',
+          ),
+        ],
+      );
 
       await _scrollToBottom(tester);
       await tester.tap(find.text('Add photo'));
       await tester.pumpAndSettle();
 
-      expect(
-        find.text('Photo picking is not available in this build.'),
-        findsOneWidget,
+      expect(find.text('1 photo was too large (max 10MB).'), findsOneWidget);
+    });
+
+    // 사용자가 갤러리에서 취소하면 **아무 안내도 하지 않는다** — 스스로 한 일이라
+    // 토스트가 뜨면 오히려 오류로 읽힌다.
+    testWidgets('선택을 취소하면 조용히 돌아온다', (WidgetTester tester) async {
+      await _pump(
+        tester,
+        FakeCommunityRepository(),
+        picker: ({required int limit}) async => null,
       );
+
+      await _scrollToBottom(tester);
+      await tester.tap(find.text('Add photo'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SnackBar), findsNothing);
     });
   });
 

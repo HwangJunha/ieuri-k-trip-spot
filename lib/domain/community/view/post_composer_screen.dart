@@ -265,9 +265,13 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
 
   /// 사진을 고르고 4단계 업로드 중 1~3단계를 돌린다(가이드 §4).
   ///
-  /// **고르는 수단은 주입된다**([photoPickerProvider]) — 사진 선택 패키지가 아직
-  /// 없어 기본 구현이 null을 돌려주며, 그때는 그 사실을 안내한다. 사진 없이 쓰는
-  /// 경로는 그대로 열려 있다.
+  /// **고르는 수단은 주입된다**([photoPickerProvider]) — 위젯 테스트가 갤러리를
+  /// 열지 않도록 override할 수 있어야 하기 때문이다. null은 사용자가 취소한 것이라
+  /// 아무 안내도 하지 않는다.
+  ///
+  /// **크기 상한은 여기서 거른다.** 10 MiB를 넘는 장을 그대로 1단계에 넘기면 서버가
+  /// `UNSUPPORTED_CONTENT_TYPE`으로 **전부** 거절해(부분 발급이 없다) 멀쩡한 장까지
+  /// 같이 죽는다.
   Future<void> _addPhotos() async {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final PostDraft draft = ref.read(_provider);
@@ -281,11 +285,17 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
       limit: remaining,
     );
     if (!mounted) return;
-    if (picked == null) {
-      _toast(l10n.communityComposePhotoUnavailable);
-      return;
+    if (picked == null || picked.isEmpty) return;
+
+    final List<PickedPhoto> withinLimit = picked
+        .where((PickedPhoto p) => p.contentLength <= maxPostPhotoBytes)
+        .toList();
+    if (withinLimit.length != picked.length) {
+      _toast(
+        l10n.communityComposePhotoTooLarge(picked.length - withinLimit.length),
+      );
     }
-    if (picked.isEmpty) return;
+    if (withinLimit.isEmpty) return;
 
     try {
       final PhotoUploadResult result = await ref

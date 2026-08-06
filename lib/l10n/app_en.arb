@@ -513,9 +513,14 @@
   "@communityComposePhotoAdd": {
     "description": "사진 추가 버튼"
   },
-  "communityComposePhotoUnavailable": "Photo picking is not available in this build.",
-  "@communityComposePhotoUnavailable": {
-    "description": "사진 선택 수단이 붙지 않았을 때"
+  "communityComposePhotoTooLarge": "{count, plural, =1{1 photo was too large (max 10MB).} other{{count} photos were too large (max 10MB).}}",
+  "@communityComposePhotoTooLarge": {
+    "description": "사진이 10MiB를 넘어 제외된 장 수",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
   },
   "communityComposePhotoFailed": "Couldn't upload {count} photo(s). Try those again.",
   "@communityComposePhotoFailed": {
