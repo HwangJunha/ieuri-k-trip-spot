@@ -335,15 +335,21 @@ dart run build_runner build          # 옵션 없이 재실행
 
 ## 12. Branch policy (hook-enforced)
 
-**작업 단위는 worktree가 기본이다.** 여러 작업을 동시에 돌리기 때문에, 각 작업은 자기
-worktree에서 격리되어 돌아야 한다. 한 체크아웃을 공유하면 브랜치 전환이 서로의 작업 중인
-파일을 덮고, 한쪽의 `flutter test`가 다른 쪽이 방금 고친 코드를 집어간다.
+**작업 단위는 독립 worktree가 기본이다.** 여러 작업을 **동시에** 돌리기 때문에, 각 작업은
+자기 worktree에서 격리되어 돌아야 한다. **원본 체크아웃은 하나뿐이므로 그것을 공유하면
+작업들이 서로를 망가뜨린다** — 브랜치 전환이 다른 작업의 편집 중인 파일을 덮고, 한쪽의
+`flutter test`가 다른 쪽이 방금 고친 코드를 집어가고, `dart run build_runner`가 같은
+`.dart_tool/build`를 두고 부딪힌다. 격리는 편의가 아니라 **동시 작업의 전제**다.
 
-작업을 시작할 때 **EnterWorktree로 worktree를 만든 뒤** 편집을 시작한다. 이름은 아래
-브랜치 규칙을 그대로 따른다(`feature/SPEC-0007-home-screen`). Orca에서 구동되는 경우
-worktree는 Orca가 관리하므로, 이미 worktree 안이라면 새로 만들지 않고 그대로 쓴다.
+**Orca에서 구동되는 경우 worktree는 Orca가 만들고 관리한다.** 이미 그 안에 있으므로
+새로 만들지 않고 그대로 쓴다. `EnterWorktree`를 다시 부르지 않는다.
 
-예외는 worktree가 의미 없는 경우뿐이다 — 읽기 전용 조사, 질문 답변, 이미 격리된 세션.
+**Orca를 거치지 않고 이 저장소에서 직접 시작하는 경우, 편집을 하기 전에 스스로
+worktree를 만든다.** `EnterWorktree`로 만들고 그 안에서 작업한다. 이름은 아래 브랜치
+규칙을 그대로 따른다(`feature/SPEC-0007-home-screen`). **원본 체크아웃은 항상 깨끗하게
+비워 둔다** — 거기서 편집하면 그 순간 다른 작업이 못 들어온다.
+
+예외는 격리가 의미 없는 경우뿐이다 — 읽기 전용 조사, 질문 답변, 이미 worktree 안인 세션.
 사용자가 "여기서 바로 해"라고 하면 그 지시가 우선한다.
 
 **브랜치를 따기 전에 반드시 `git fetch`부터 한다.** 로컬 `dev`는 낡아 있다고 가정한다 —
@@ -362,6 +368,11 @@ git checkout -b feature/SPEC-0007-home-screen origin/dev
 
 실제로 이걸 빠뜨려 SPEC-0007을 SPEC-0006이 빠진 코드 위에서 전부 구현한 적이 있다. 시작 전
 `git fetch` 한 번이면 없었을 일이다.
+
+**아직 머지되지 않은 앞 작업 위에서 이어야 한다면 `origin/dev`가 아니라 그 브랜치에서 딴다.**
+`dev`에서 따면 앞 작업이 통째로 빠진 코드 위에서 만들게 되고, 나중에 같은 파일을 고쳤을 때
+앞 작업을 되돌리는 커밋이 된다. 이 경우는 PR 본문에 **어느 브랜치 위에 쌓았는지** 적어 두어
+리뷰어가 머지 순서를 알 수 있게 한다.
 
 **Never work directly on a protected branch.** `master`, `main`, and `dev` are protected. Every
 change — code, tests, specs — happens on a **topic branch** created first:
