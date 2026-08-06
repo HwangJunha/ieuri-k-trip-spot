@@ -420,7 +420,6 @@
   "communityEditDisabledHidden": "非表示の投稿は編集できません。",
   "communityEditTitle": "投稿の編集",
   "communityEditDone": "投稿を更新しました。",
-  "communityEditFixedFieldsNote": "カテゴリー・場所・タグは投稿後に変更できません。",
   "communityComposeCategoryLabel": "カテゴリーを選択",
   "communityComposeTitleLabel": "タイトル",
   "communityComposeTitleHint": "短いタイトル",
@@ -571,7 +570,6 @@
   "communityComposeCategoryUnset": "カテゴリ",
   "communityComposeTagsAction": "タグ",
   "communityComposeSpotAction": "場所",
-  "communityComposeSpotClear": "場所を外す",
   "communityComposePhotosAction": "写真",
   "communityComposeTagsSheetTitle": "タグ",
   "communityComposeSheetDone": "完了"

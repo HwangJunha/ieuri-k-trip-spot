@@ -390,7 +390,16 @@ class FakeCommunityRepository implements CommunityRepository {
     List<String> photoKeys,
   })?
   lastCreatePost;
-  ({String postId, String title, String body, List<String>? photoKeys})?
+  ({
+    String postId,
+    String title,
+    String body,
+    List<String>? photoKeys,
+    TargetCategory? category,
+    bool changeSpot,
+    String? spotId,
+    List<String>? tags,
+  })?
   lastEditPost;
   ({String postId, String body, String? parentCommentId})? lastCreateComment;
   String? lastHiddenPostId;
@@ -469,12 +478,20 @@ class FakeCommunityRepository implements CommunityRepository {
     required String title,
     required String body,
     List<String>? photoKeys,
+    TargetCategory? category,
+    bool changeSpot = false,
+    String? spotId,
+    List<String>? tags,
   }) async {
     lastEditPost = (
       postId: postId,
       title: title,
       body: body,
       photoKeys: photoKeys,
+      category: category,
+      changeSpot: changeSpot,
+      spotId: spotId,
+      tags: tags,
     );
     if (mutationError != null) throw mutationError!;
   }

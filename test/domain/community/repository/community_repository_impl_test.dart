@@ -628,6 +628,95 @@ void main() {
       expect(link.sentVariables?.containsKey('photoKeys'), isFalse);
     });
 
+    // 서버가 뒤늦게 받기 시작한 셋. enum은 서버 표기로 나가야 한다.
+    test('카테고리·태그를 함께 보낸다', () async {
+      final _FakeLink link = _FakeLink(
+        data: <String, dynamic>{
+          'editPost': <String, dynamic>{
+            'success': true,
+            'userErrors': <dynamic>[],
+          },
+        },
+      );
+
+      await _repo(link).editPost(
+        postId: '42',
+        title: 't',
+        body: 'b',
+        category: TargetCategory.restaurant,
+        tags: <String>['야간개장'],
+      );
+
+      expect(link.sentVariables?['category'], 'RESTAURANT');
+      expect(link.sentVariables?['tags'], <String>['야간개장']);
+    });
+
+    // `changeSpot`은 스키마에만 있는 인자다 — false면 서버가 spotId를 무시하므로
+    // 아예 싣지 않는다.
+    test('장소를 바꾸지 않으면 changeSpot: false로 나가고 spotId를 싣지 않는다', () async {
+      final _FakeLink link = _FakeLink(
+        data: <String, dynamic>{
+          'editPost': <String, dynamic>{
+            'success': true,
+            'userErrors': <dynamic>[],
+          },
+        },
+      );
+
+      await _repo(link).editPost(
+        postId: '42',
+        title: 't',
+        body: 'b',
+        // 호출자가 실수로 실어 보내도 changeSpot이 false면 버린다.
+        spotId: '11094',
+      );
+
+      expect(link.sentVariables?['changeSpot'], isFalse);
+      expect(link.sentVariables?.containsKey('spotId'), isFalse);
+    });
+
+    test('장소를 바꾸면 changeSpot: true와 새 spotId가 나간다', () async {
+      final _FakeLink link = _FakeLink(
+        data: <String, dynamic>{
+          'editPost': <String, dynamic>{
+            'success': true,
+            'userErrors': <dynamic>[],
+          },
+        },
+      );
+
+      await _repo(link).editPost(
+        postId: '42',
+        title: 't',
+        body: 'b',
+        changeSpot: true,
+        spotId: '11094',
+      );
+
+      expect(link.sentVariables?['changeSpot'], isTrue);
+      expect(link.sentVariables?['spotId'], '11094');
+    });
+
+    // 떼기는 **true + spotId 없음**이다. 생략된 nullable 입력은 서버에서 null로
+    // 읽히고, changeSpot이 true라 "비우라"는 뜻이 된다.
+    test('장소를 떼면 changeSpot: true만 나가고 spotId는 빠진다', () async {
+      final _FakeLink link = _FakeLink(
+        data: <String, dynamic>{
+          'editPost': <String, dynamic>{
+            'success': true,
+            'userErrors': <dynamic>[],
+          },
+        },
+      );
+
+      await _repo(
+        link,
+      ).editPost(postId: '42', title: 't', body: 'b', changeSpot: true);
+
+      expect(link.sentVariables?['changeSpot'], isTrue);
+      expect(link.sentVariables?.containsKey('spotId'), isFalse);
+    });
+
     test('숨겨진 글 수정은 POST_NOT_EDITABLE 실패가 된다', () async {
       expect(
         () => _repo(

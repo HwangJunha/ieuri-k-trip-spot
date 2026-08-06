@@ -383,6 +383,10 @@ class CommunityRepositoryImpl implements CommunityRepository {
     required String title,
     required String body,
     List<String>? photoKeys,
+    TargetCategory? category,
+    bool changeSpot = false,
+    String? spotId,
+    List<String>? tags,
   }) async {
     final Map<String, dynamic> data = await _mutate(
       documentNodeMutationEditPost,
@@ -391,8 +395,14 @@ class CommunityRepositoryImpl implements CommunityRepository {
         title: title,
         body: body,
         // null이면 변수 자체를 보내지 않아 사진을 건드리지 않는다. 빈 배열을 보내면
-        // 사진이 전부 떨어진다 — 둘은 다른 뜻이다(가이드 §5).
+        // 사진이 전부 떨어진다 — 둘은 다른 뜻이다(가이드 §5). [tags]도 같다.
         photoKeys: photoKeys,
+        category: category == null ? null : _categoryInput(category),
+        // **장소를 건드리지 않을 때는 spotId를 아예 싣지 않는다.** changeSpot이
+        // false면 서버가 spotId를 무시하지만, 보내지 않는 편이 의도가 분명하다.
+        changeSpot: changeSpot,
+        spotId: changeSpot ? spotId : null,
+        tags: tags,
       ).toJson(),
       'editPost',
     );

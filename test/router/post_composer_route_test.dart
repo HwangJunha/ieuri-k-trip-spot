@@ -87,7 +87,9 @@ void main() {
     await _pumpRoute(tester, '/post-composer?editPostId=42', repo: repo);
 
     expect(find.text('Edit post'), findsOneWidget);
-    expect(find.byType(ChoiceChip), findsNothing);
+    // 카테고리 칩은 **수정에서도 보인다** — 서버가 `editPost(category:)`를 받기
+    // 시작해 숨길 이유가 없어졌다(이 기대는 원래 "보이지 않는다"였다).
+    expect(find.byType(ChoiceChip), findsWidgets);
     expect(repo.lastFetchedPostId, '42');
     expect(
       tester.widget<TextField>(find.byType(TextField).at(0)).controller?.text,

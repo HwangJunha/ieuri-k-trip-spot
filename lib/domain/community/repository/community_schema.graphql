@@ -126,13 +126,24 @@ type CreatePostPayload {
   postId: ID
 }
 
-# 제목·본문·사진만 바꾼다. 카테고리·장소·태그는 수정할 수 없다 — 바뀌면 글이 다른
-# 피드로 순간이동하기 때문이다(가이드 §5).
+# 제목·본문·사진에 더해 **카테고리·장소·태그도 바꾼다**(서버가 뒤늦게 추가했다 —
+# 1차 가이드 §5의 "못 바꾼다"는 이제 낡은 서술이다. 라이브 스키마가 정본이다).
+#
+# `changeSpot`은 **어느 가이드에도 없고 스키마에만 있다.** 기본값 false이며,
+# `spotId: null` 하나로는 구분되지 않는 두 뜻을 가른다:
+#   - false            → 장소를 건드리지 않는다(`spotId`는 무시된다)
+#   - true + spotId    → 그 장소로 바꾼다
+#   - true + null      → 장소를 뗀다(장소 없는 글이 된다)
+# 기본이 false라 이 값을 보내지 않던 예전 클라이언트는 동작이 그대로다.
 input EditPostInput {
   postId: ID!
   title: String!
   body: String!
   photoKeys: [String!]
+  category: TargetCategory
+  changeSpot: Boolean = false
+  spotId: ID
+  tags: [String!]
 }
 
 type EditPostPayload {

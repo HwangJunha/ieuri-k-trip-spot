@@ -175,9 +175,12 @@ PostImageUploadUrl _url(int n) => PostImageUploadUrl(
 );
 
 /// 수정 모드가 조회할 글을 세운 저장소. 수정 컴포저는 라우트 파라미터가 아니라
-/// `post(id:)`로 제목·본문·**사진 키**를 받아 채운다.
+/// `post(id:)`로 제목·본문·**사진 키·카테고리·태그·장소**를 받아 채운다.
 FakeCommunityRepository _editRepo({
   List<String> photoKeys = const <String>[],
+  TargetCategory? category = TargetCategory.touristSpot,
+  List<String> tags = const <String>[],
+  bool withoutSpot = false,
 }) => FakeCommunityRepository()
   ..postById = fakePost(
     id: '42',
@@ -185,7 +188,19 @@ FakeCommunityRepository _editRepo({
     body: '원래 본문',
     ownedByViewer: true,
     photoKeys: photoKeys,
+    category: category,
+    tags: tags,
+    withoutSpot: withoutSpot,
   );
+
+/// 카테고리 칩 줄의 스크롤러. 아홉 개를 가로 스크롤 [ListView]로 두므로 뒤쪽 칩은
+/// 스크롤하기 전까지 **만들어지지도 않는다**(lazy build).
+Finder get _categoryStrip => find
+    .descendant(
+      of: find.byType(PostComposerScreen),
+      matching: find.byType(Scrollable),
+    )
+    .first;
 
 /// 시트 **안의** 카테고리 칩. 컴포저 화면 자체도 글 카테고리를 `ChoiceChip`으로
 /// 그리므로, 시트 밖의 칩과 섞이지 않도록 [BottomSheet] 아래로 범위를 좁힌다.
@@ -972,43 +987,115 @@ void main() {
     });
   });
 
-  group('수정 모드 (가이드 §5)', () {
-    // 수정은 제목·본문·사진만 바꾼다. 카테고리·태그·장소를 만지게 하면 안 된다 —
-    // 서버 `EditPostInput`이 그 셋을 아예 받지 않는다.
-    //
-    // **사진은 예외다** — `photoKeys`가 입력에 있으므로 바꿀 수 있고, 따라서 하단
-    // 바의 사진 버튼이 남는다(이 기대는 원래 "사진도 숨긴다"였다가 뒤집혔다).
-    testWidgets('카테고리·태그·장소 입력이 보이지 않고 사진만 남는다', (WidgetTester tester) async {
+  group('수정 모드', () {
+    // **이 기대는 뒤집혔다.** 원래는 "카테고리·태그·장소 입력이 보이지 않는다"였다 —
+    // 서버 `EditPostInput`이 그 셋을 받지 않던 시절의 기대다. 지금은 받으므로
+    // 수정도 새 글과 같은 입력을 준다.
+    testWidgets('새 글과 같은 입력을 모두 준다', (WidgetTester tester) async {
       await _pump(tester, _editRepo(), editPostId: '42');
 
       expect(find.text('Edit post'), findsOneWidget);
-      expect(find.byType(ChoiceChip), findsNothing);
-      expect(find.widgetWithText(TextButton, 'Tags'), findsNothing);
+      expect(find.byType(ChoiceChip), findsWidgets);
+      expect(find.widgetWithText(TextButton, 'Tags'), findsOneWidget);
       expect(
         find.widgetWithIcon(TextButton, Icons.place_outlined),
-        findsNothing,
+        findsOneWidget,
       );
       expect(find.widgetWithText(TextButton, 'Photos'), findsOneWidget);
     });
 
-    // 입력이 그냥 사라지면 고장으로 읽힌다 — 왜 못 바꾸는지 한 줄로 알린다.
-    testWidgets('바꿀 수 없는 항목이 있다는 안내가 보인다', (WidgetTester tester) async {
+    // **이 기대도 뒤집혔다.** 원래는 "바꿀 수 없는 항목이 있다는 안내가 보인다"였다.
+    // 이제 다 바꿀 수 있으므로 그 안내는 거짓말이고, 문구 자체를 지웠다.
+    testWidgets('못 바꾼다는 안내를 더는 띄우지 않는다', (WidgetTester tester) async {
       await _pump(tester, _editRepo(), editPostId: '42');
-
-      expect(
-        find.text("Category, place, and tags can't be changed after posting."),
-        findsOneWidget,
-      );
-    });
-
-    // 새 글에는 그 안내를 두지 않는다 — 거기서는 셋 다 고를 수 있다.
-    testWidgets('새 글 작성에는 그 안내가 없다', (WidgetTester tester) async {
-      await _pump(tester, FakeCommunityRepository());
 
       expect(
         find.textContaining("can't be changed after posting"),
         findsNothing,
       );
+    });
+
+    // 서버가 이제 카테고리·태그·장소를 받으므로, 빈 채로 열면 사용자가 뜻하지 않은
+    // 값이 저장된다 — 현재 값을 보고 고치게 한다.
+    testWidgets('카테고리·태그·장소를 조회한 글에서 채운다', (WidgetTester tester) async {
+      await _pump(tester, _editRepo(tags: <String>['야간개장']), editPostId: '42');
+
+      // 글의 카테고리 칩이 선택된 채로 열린다.
+      final ChoiceChip selected = tester.widget<ChoiceChip>(
+        find.widgetWithText(ChoiceChip, 'Attractions'),
+      );
+      expect(selected.selected, isTrue);
+      // 태그 줄과 장소 버튼 라벨에 현재 값이 드러난다.
+      expect(find.text('#야간개장'), findsOneWidget);
+      expect(find.text('Gyeongbokgung'), findsOneWidget);
+    });
+
+    // 수정도 카테고리를 요구한다. 서버 입력에서는 nullable이지만 null이 "지우기"인지
+    // "그대로"인지 불분명해 화면이 그 애매함을 만들지 않는다.
+    testWidgets('카테고리 없는 글은 고르기 전까지 저장할 수 없다', (WidgetTester tester) async {
+      await _pump(tester, _editRepo(category: null), editPostId: '42');
+
+      expect(tester.widget<TextButton>(_submit).onPressed, isNull);
+
+      await tester.tap(find.text('Attractions'));
+      await tester.pumpAndSettle();
+
+      expect(tester.widget<TextButton>(_submit).onPressed, isNotNull);
+    });
+
+    testWidgets('카테고리를 바꿔 저장하면 새 카테고리가 나간다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = _editRepo();
+      await _pump(tester, repo, editPostId: '42');
+
+      // 칩 줄은 가로 스크롤 [ListView]라 뒤쪽 칩은 **아직 만들어지지도 않았다** —
+      // 스크롤해서 붙여 온 뒤에 누른다.
+      final Finder food = find.widgetWithText(ChoiceChip, 'Food');
+      await tester.scrollUntilVisible(food, 100, scrollable: _categoryStrip);
+      await tester.pumpAndSettle();
+      await tester.tap(food);
+      await tester.pumpAndSettle();
+      await tester.tap(_submit);
+      await tester.pumpAndSettle();
+
+      expect(repo.lastEditPost?.category, TargetCategory.restaurant);
+    });
+
+    // `tags`는 전체 교체다 — 더한 뒤에도 원래 태그가 함께 실려야 한다.
+    testWidgets('태그를 더해 저장하면 늘어난 목록이 나간다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = _editRepo(tags: <String>['야간개장']);
+      await _pump(tester, repo, editPostId: '42');
+
+      await _openTagSheet(tester);
+      await tester.enterText(find.byType(TextField).last, '한복');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Done'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(_submit);
+      await tester.pumpAndSettle();
+
+      expect(repo.lastEditPost?.tags, <String>['야간개장', '한복']);
+    });
+
+    testWidgets('태그를 빼고 저장하면 줄어든 목록이 나간다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = _editRepo(
+        tags: <String>['야간개장', '한복'],
+      );
+      await _pump(tester, repo, editPostId: '42');
+
+      // 태그 줄의 첫 칩을 뗀다 — 칩의 삭제 버튼이 사용자가 누르는 자리다.
+      await tester.tap(
+        find.descendant(
+          of: find.widgetWithText(InputChip, '#야간개장'),
+          matching: find.byTooltip('Delete'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(_submit);
+      await tester.pumpAndSettle();
+
+      expect(repo.lastEditPost?.tags, <String>['한복']);
     });
 
     testWidgets('제목·본문을 서버에서 받아 채운다', (WidgetTester tester) async {
@@ -1053,6 +1140,91 @@ void main() {
 
       expect(find.text('Post unavailable'), findsOneWidget);
       expect(find.byType(TextField), findsNothing);
+    });
+  });
+
+  // `changeSpot`은 스키마에만 있고 문서에 없는 인자다. `spotId: null` 하나로는
+  // "장소를 그대로 두기"와 "장소를 떼기"가 구분되지 않아 이 플래그가 가른다.
+  group('수정 모드의 장소 (changeSpot)', () {
+    testWidgets('장소를 건드리지 않으면 changeSpot: false로 나간다', (
+      WidgetTester tester,
+    ) async {
+      final FakeCommunityRepository repo = _editRepo();
+      await _pump(tester, repo, editPostId: '42');
+
+      await tester.tap(_submit);
+      await tester.pumpAndSettle();
+
+      expect(repo.lastEditPost?.changeSpot, isFalse);
+      // false면 서버가 무시하는 값이라 아예 싣지 않는다.
+      expect(repo.lastEditPost?.spotId, isNull);
+    });
+
+    testWidgets('다른 장소를 고르면 changeSpot: true와 새 spotId가 나간다', (
+      WidgetTester tester,
+    ) async {
+      final FakeCommunityRepository repo = _editRepo()
+        ..nearbySpots = <NearbySpot>[_spot(id: '11915', title: '서울갤러리')];
+      await _pump(tester, repo, editPostId: '42');
+
+      await _openSpotSheet(tester);
+      await tester.tap(find.text('서울갤러리'));
+      await tester.pumpAndSettle();
+      await tester.tap(_submit);
+      await tester.pumpAndSettle();
+
+      expect(repo.lastEditPost?.changeSpot, isTrue);
+      expect(repo.lastEditPost?.spotId, '11915');
+    });
+
+    testWidgets('장소를 떼면 changeSpot: true와 spotId: null이 나간다', (
+      WidgetTester tester,
+    ) async {
+      final FakeCommunityRepository repo = _editRepo();
+      await _pump(tester, repo, editPostId: '42');
+
+      // 하단 바의 지우기 버튼이 장소를 떼는 유일한 수단이다. 앱바의 닫기도 같은
+      // 아이콘이라 툴팁으로 지목한다.
+      await tester.tap(find.byTooltip('Remove place'));
+      await tester.pumpAndSettle();
+      await tester.tap(_submit);
+      await tester.pumpAndSettle();
+
+      expect(repo.lastEditPost?.changeSpot, isTrue);
+      expect(repo.lastEditPost?.spotId, isNull);
+    });
+
+    // 원래 장소 없던 글에 장소를 붙이는 것도 "바꾼 것"이다.
+    testWidgets('장소 없던 글에 장소를 붙이면 changeSpot: true가 나간다', (
+      WidgetTester tester,
+    ) async {
+      final FakeCommunityRepository repo = _editRepo(withoutSpot: true)
+        ..nearbySpots = <NearbySpot>[_spot(id: '11915', title: '서울갤러리')];
+      await _pump(tester, repo, editPostId: '42');
+
+      await _openSpotSheet(tester);
+      await tester.tap(find.text('서울갤러리'));
+      await tester.pumpAndSettle();
+      await tester.tap(_submit);
+      await tester.pumpAndSettle();
+
+      expect(repo.lastEditPost?.changeSpot, isTrue);
+      expect(repo.lastEditPost?.spotId, '11915');
+    });
+
+    // 장소 없던 글을 그대로 저장하는 것은 "떼기"가 아니다 — 그 둘을 섞으면
+    // changeSpot이 있을 이유가 없어진다.
+    testWidgets('장소 없던 글을 그대로 저장하면 changeSpot: false다', (
+      WidgetTester tester,
+    ) async {
+      final FakeCommunityRepository repo = _editRepo(withoutSpot: true);
+      await _pump(tester, repo, editPostId: '42');
+
+      await tester.tap(_submit);
+      await tester.pumpAndSettle();
+
+      expect(repo.lastEditPost?.changeSpot, isFalse);
+      expect(repo.lastEditPost?.spotId, isNull);
     });
   });
 

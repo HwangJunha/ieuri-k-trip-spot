@@ -443,6 +443,126 @@ void main() {
       expect(draft.remoteKeys, <String>['images/20/1']);
     });
 
+    // 서버가 카테고리·장소·태그도 받기 시작했다 — 채우지 않으면 저장할 때 사용자가
+    // 뜻하지 않은 값이 나간다.
+    test('서버가 준 카테고리·태그·장소도 초안에 들어간다', () {
+      final ProviderContainer container = _container(FakeCommunityRepository());
+
+      container
+          .read(postComposerProvider(editing: true).notifier)
+          .seedFromPost(
+            title: '원래 제목',
+            body: '원래 본문',
+            photoKeys: const <String>[],
+            category: TargetCategory.restaurant,
+            tags: <String>['야간개장'],
+            spotId: '11094',
+            spotTitle: '경복궁',
+          );
+
+      final PostDraft draft = container.read(
+        postComposerProvider(editing: true),
+      );
+      expect(draft.category, TargetCategory.restaurant);
+      expect(draft.tags, <String>['야간개장']);
+      expect(draft.spotId, '11094');
+      expect(draft.spotTitle, '경복궁');
+    });
+
+    // `changeSpot`은 `spotId: null` 하나로 구분되지 않는 "그대로"와 "떼기"를 가른다
+    // (스키마에만 있고 문서에 없는 인자다).
+    group('spotChanged', () {
+      test('씨앗 그대로면 false다', () {
+        final ProviderContainer container = _container(
+          FakeCommunityRepository(),
+        );
+        final PostComposer notifier = container.read(
+          postComposerProvider(editing: true).notifier,
+        );
+        notifier.seedFromPost(
+          title: 't',
+          body: 'b',
+          photoKeys: const <String>[],
+          spotId: '11094',
+          spotTitle: '경복궁',
+        );
+
+        expect(notifier.spotChanged, isFalse);
+      });
+
+      test('다른 장소를 고르면 true다', () {
+        final ProviderContainer container = _container(
+          FakeCommunityRepository(),
+        );
+        final PostComposer notifier = container.read(
+          postComposerProvider(editing: true).notifier,
+        );
+        notifier.seedFromPost(
+          title: 't',
+          body: 'b',
+          photoKeys: const <String>[],
+          spotId: '11094',
+          spotTitle: '경복궁',
+        );
+
+        notifier.setSpot(id: '11915', title: '서울갤러리');
+
+        expect(notifier.spotChanged, isTrue);
+      });
+
+      test('장소를 떼면 true다', () {
+        final ProviderContainer container = _container(
+          FakeCommunityRepository(),
+        );
+        final PostComposer notifier = container.read(
+          postComposerProvider(editing: true).notifier,
+        );
+        notifier.seedFromPost(
+          title: 't',
+          body: 'b',
+          photoKeys: const <String>[],
+          spotId: '11094',
+          spotTitle: '경복궁',
+        );
+
+        notifier.clearSpot();
+
+        expect(notifier.spotChanged, isTrue);
+      });
+
+      // 장소 없던 글을 그대로 두는 것은 "떼기"가 아니다 — 둘을 섞으면 플래그가
+      // 있을 이유가 없어진다.
+      test('장소 없던 글을 그대로 두면 false다', () {
+        final ProviderContainer container = _container(
+          FakeCommunityRepository(),
+        );
+        final PostComposer notifier = container.read(
+          postComposerProvider(editing: true).notifier,
+        );
+        notifier.seedFromPost(
+          title: 't',
+          body: 'b',
+          photoKeys: const <String>[],
+        );
+
+        expect(notifier.spotChanged, isFalse);
+      });
+
+      // 새 글에는 바꿀 원본이 없다 — `createPost`는 이 플래그를 쓰지 않는다.
+      test('씨앗이 없는 새 글은 장소를 골라도 false다', () {
+        final ProviderContainer container = _container(
+          FakeCommunityRepository(),
+        );
+        final PostComposer notifier = container.read(
+          postComposerProvider().notifier,
+        );
+
+        notifier.setSpot(id: '11915', title: '서울갤러리');
+
+        expect(notifier.spotChanged, isFalse);
+      });
+    });
+
     // 수정 중인 키는 **아직 서버의 글에 붙어 있다** — 여기서 지우면 저장을 취소하고
     // 나갔을 때 원래 글의 사진이 깨진다. 떨어져 나간 오브젝트 정리는 서버 lifecycle의
     // 몫이다(가이드 §4).

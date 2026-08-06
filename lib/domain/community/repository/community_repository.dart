@@ -170,16 +170,30 @@ abstract interface class CommunityRepository {
     List<String> photoKeys,
   });
 
-  /// 글 수정. **제목·본문·사진만 바꾼다** — 카테고리·장소·태그는 수정할 수 없다.
-  /// 바뀌면 글이 다른 피드로 순간이동하기 때문이다(가이드 §5).
+  /// 글 수정. 제목·본문·사진에 더해 **카테고리·장소·태그도 바꾼다** — 서버가 뒤늦게
+  /// 받기 시작했다(1차 가이드 §5의 "못 바꾼다"는 낡은 서술이고, 라이브 스키마가
+  /// 정본이다).
   ///
-  /// [photoKeys]를 주면 **전체 목록으로 교체**하고, null이면 사진을 건드리지 않는다.
+  /// [photoKeys]·[tags]를 주면 **전체 목록으로 교체**하고, null이면 건드리지 않는다.
+  ///
+  /// **장소는 [changeSpot]이 가른다.** 이 인자는 스키마에만 있고 문서에 없다:
+  /// - false(기본) → 장소를 건드리지 않는다. [spotId]는 무시된다
+  /// - true + [spotId] → 그 장소로 바꾼다
+  /// - true + null → 장소를 뗀다(장소 없는 글이 된다)
+  ///
+  /// 사용자가 장소를 만지지 않았다면 false를 넘긴다 — `spotId: null` 하나로는
+  /// "그대로 두기"와 "떼기"가 구분되지 않기 때문이다.
+  ///
   /// 숨겨진 글은 수정할 수 없어 `POST_NOT_EDITABLE`이 온다.
   Future<void> editPost({
     required String postId,
     required String title,
     required String body,
     List<String>? photoKeys,
+    TargetCategory? category,
+    bool changeSpot,
+    String? spotId,
+    List<String>? tags,
   });
 
   /// 내 글 삭제. 남의 글이면 `NOT_POST_OWNER`, 이미 지워졌으면 `POST_NOT_FOUND`다.

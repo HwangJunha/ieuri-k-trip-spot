@@ -420,7 +420,6 @@
   "communityEditDisabledHidden": "已隐藏的帖子无法编辑。",
   "communityEditTitle": "编辑帖子",
   "communityEditDone": "帖子已更新。",
-  "communityEditFixedFieldsNote": "分类、地点和标签在发布后无法更改。",
   "communityComposeCategoryLabel": "选择分类",
   "communityComposeTitleLabel": "标题",
   "communityComposeTitleHint": "一句话标题",
@@ -571,7 +570,6 @@
   "communityComposeCategoryUnset": "分类",
   "communityComposeTagsAction": "标签",
   "communityComposeSpotAction": "地点",
-  "communityComposeSpotClear": "移除地点",
   "communityComposePhotosAction": "照片",
   "communityComposeTagsSheetTitle": "标签",
   "communityComposeSheetDone": "完成"

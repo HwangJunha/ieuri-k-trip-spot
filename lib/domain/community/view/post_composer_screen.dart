@@ -46,15 +46,15 @@ import '../provider/post_detail_providers.dart';
 /// **코드포인트** 기준이며(가이드 §8), 평소에는 눈에 띄지 않게 하단 바에 두고
 /// 한계에 가까워지거나 넘으면 드러낸다.
 ///
-/// [editPostId]가 있으면 **수정 모드**다. 수정은 제목·본문·사진만 바꾸므로
-/// 카테고리·태그·장소 입력을 숨긴다 — 서버가 받지 않는 값을 만지게 하면 안 된다.
-/// 다만 **숨기고 끝내지 않고 왜 못 바꾸는지 한 줄로 알린다** — 아무 설명 없이
-/// 입력이 사라지면 고장으로 읽힌다.
+/// [editPostId]가 있으면 **수정 모드**다. 수정도 새 글과 **같은 입력을 준다** —
+/// 서버가 `editPost`로 카테고리·장소·태그를 받기 시작했기 때문이다(1차 가이드 §5의
+/// "못 바꾼다"는 낡은 서술이고 라이브 스키마가 정본이다).
 ///
 /// 수정할 내용은 **서버에서 다시 받아 온다**([postDetailProvider]). 라우트
 /// 파라미터로 제목·본문만 실어 보내던 방식은 사진 키를 실을 수 없어(URL 길이·이스케이프)
 /// 수정 화면이 사진 없는 새 글처럼 열렸다 — 사용자가 기존 사진을 보지도 지키지도
-/// 못하던 원인이 이것이다.
+/// 못하던 원인이 이것이다. 카테고리·태그·장소도 같은 조회로 채우므로 사용자는
+/// **자기 글의 현재 값을 보고 고친다** — 빈 채로 열어 저장하면 값이 날아간다.
 class PostComposerScreen extends ConsumerStatefulWidget {
   const PostComposerScreen({
     super.key,
@@ -153,17 +153,20 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
               title: post.title,
               body: post.body,
               photoKeys: post.photoKeys,
+              // 카테고리·태그·장소도 채운다 — 서버가 이제 이 셋을 받으므로 비운
+              // 채로 저장하면 사용자가 뜻하지 않은 값이 나간다.
+              category: post.category,
+              tags: post.tags,
+              spotId: post.spot?.id,
+              spotTitle: post.spot?.title,
             );
       });
     }
     final PostDraft draft = ref.watch(_provider);
-    // 수정은 카테고리를 바꾸지 않으므로 제목·본문만 갖춰지면 저장할 수 있다.
-    final bool canSubmit = _isEditing
-        ? draft.hasTitle &&
-              !draft.isTitleTooLong &&
-              draft.hasBody &&
-              !draft.isBodyTooLong
-        : draft.canSubmit;
+    // **수정도 카테고리를 요구한다.** 서버 입력에서는 nullable이지만 모든 글에 이미
+    // 카테고리가 있고, null을 보내면 "지우기"인지 "그대로"인지 서버 해석이 불분명
+    // 하다 — 화면이 그 애매함을 만들지 않는다.
+    final bool canSubmit = draft.canSubmit;
 
     return Scaffold(
       appBar: AppBar(
@@ -199,17 +202,16 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            // 수정에서는 카테고리를 바꿀 수 없다 — 바뀌면 글이 다른 피드로
-            // 순간이동한다(가이드 §5).
-            if (!_isEditing)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                child: _CategorySelector(
-                  selected: draft.category,
-                  onSelected: (TargetCategory c) =>
-                      ref.read(_provider.notifier).setCategory(c),
-                ),
+            // 수정에서도 같은 선택기를 준다 — 서버가 `editPost(category:)`를
+            // 받으므로 숨길 이유가 없어졌다.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: _CategorySelector(
+                selected: draft.category,
+                onSelected: (TargetCategory c) =>
+                    ref.read(_provider.notifier).setCategory(c),
               ),
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
               child: TextField(
@@ -264,30 +266,17 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
                     ref.read(_provider.notifier).removePhoto(id),
               ),
             // 태그도 마찬가지다 — 시트에서 넣은 결과가 화면에 남아야 한다.
-            if (!_isEditing && draft.tags.isNotEmpty)
+            if (draft.tags.isNotEmpty)
               _TagRow(
                 tags: draft.tags,
                 onRemove: (String tag) =>
                     ref.read(_provider.notifier).removeTag(tag),
               ),
-            // **왜 카테고리·장소·태그가 없는지 밝힌다.** 서버가 `editPost`로 그
-            // 셋을 받지 않는데(가이드 §5), 설명 없이 입력만 사라지면 사용자는
-            // 화면이 고장난 것으로 읽는다. 사진은 바꿀 수 있으므로 여기 없다.
-            if (_isEditing)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-                child: Text(
-                  l10n.communityEditFixedFieldsNote,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
             _BottomBar(
               draft: draft,
-              isEditing: _isEditing,
               // 장소 상세에서 진입해 고정된 경우에는 바꿀 수 없다 — 그 화면의
-              // 글이라는 것이 진입의 전제다.
+              // 글이라는 것이 진입의 전제다. **수정 모드는 여기 해당하지 않는다** —
+              // 수정은 커뮤니티에서 열리므로 initialSpotId가 없다.
               spotLocked: widget.initialSpotId != null,
               onTags: _editTags,
               onSpot: _pickSpot,
@@ -429,6 +418,9 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
     if (!mounted) return;
 
     final PostDraft draft = ref.read(_provider);
+    // 장소를 실제로 바꿨는지는 초안이 아니라 **씨앗과의 차이**가 판정한다 —
+    // `spotId: null`만으로는 "뗐다"와 "원래 없었다"가 구분되지 않는다.
+    final bool spotChanged = ref.read(_provider.notifier).spotChanged;
     final ModerationOutcome outcome = await ref
         .read(moderationControllerProvider.notifier)
         .editPost(
@@ -442,6 +434,13 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
           //
           // 확정 키만 실린다 — 못 올린 장은 빠진 채로 저장된다.
           photoKeys: draft.remoteKeys,
+          // 카테고리·태그도 같은 이유로 현재 값을 그대로 보낸다(전체 교체).
+          category: draft.category,
+          tags: draft.tags,
+          // **바꾸지 않았으면 false다** — 그때 서버는 붙어 있던 장소를 유지한다.
+          // true일 때만 `spotId`가 반영되고, true + null이 "장소 떼기"다.
+          changeSpot: spotChanged,
+          spotId: spotChanged ? draft.spotId : null,
         );
     if (!mounted) return;
 
@@ -559,7 +558,6 @@ class _EditPlaceholder extends StatelessWidget {
 class _BottomBar extends StatelessWidget {
   const _BottomBar({
     required this.draft,
-    required this.isEditing,
     required this.spotLocked,
     required this.onTags,
     required this.onSpot,
@@ -568,7 +566,6 @@ class _BottomBar extends StatelessWidget {
   });
 
   final PostDraft draft;
-  final bool isEditing;
 
   /// 장소 상세에서 진입해 장소가 고정된 경우. 버튼은 남기되 누를 수 없다.
   final bool spotLocked;
@@ -594,32 +591,31 @@ class _BottomBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       child: Row(
         children: <Widget>[
-          // 태그·장소는 수정 대상이 아니다(가이드 §5) — 수정 모드에서는 숨긴다.
-          if (!isEditing) ...<Widget>[
-            _BarButton(
-              icon: Icons.tag,
-              label: l10n.communityComposeTagsAction,
-              onPressed: onTags,
+          // 태그·장소는 **수정에서도 그대로 준다** — 서버가 `editPost`로 둘 다
+          // 받기 시작했다.
+          _BarButton(
+            icon: Icons.tag,
+            label: l10n.communityComposeTagsAction,
+            onPressed: onTags,
+          ),
+          _BarButton(
+            icon: Icons.place_outlined,
+            // 고른 장소가 있으면 그 이름이 곧 상태 표시다.
+            label: draft.spotTitle ?? l10n.communityComposeSpotAction,
+            active: draft.spotId != null,
+            onPressed: spotLocked ? null : onSpot,
+          ),
+          // **장소를 떼는 유일한 수단이다**(가이드 §5 — 장소는 선택 항목이라 뗄 길이
+          // 반드시 있어야 한다). 시트 안의 "장소 없이" 항목을 걷어 냈으므로 해제는
+          // 여기서만 한다. 붙어 있고 고정되지 않았을 때만 나타난다.
+          if (draft.spotId != null && !spotLocked)
+            IconButton(
+              onPressed: onClearSpot,
+              tooltip: l10n.communityComposeSpotClear,
+              visualDensity: VisualDensity.compact,
+              iconSize: 18,
+              icon: const Icon(Icons.close),
             ),
-            _BarButton(
-              icon: Icons.place_outlined,
-              // 고른 장소가 있으면 그 이름이 곧 상태 표시다.
-              label: draft.spotTitle ?? l10n.communityComposeSpotAction,
-              active: draft.spotId != null,
-              onPressed: spotLocked ? null : onSpot,
-            ),
-            // **장소를 떼는 유일한 수단이다**(가이드 §5 — 장소는 선택 항목이라 뗄 길이
-            // 반드시 있어야 한다). 시트 안의 "장소 없이" 항목을 걷어 냈으므로 해제는
-            // 여기서만 한다. 붙어 있고 고정되지 않았을 때만 나타난다.
-            if (draft.spotId != null && !spotLocked)
-              IconButton(
-                onPressed: onClearSpot,
-                tooltip: l10n.communityComposeSpotClear,
-                visualDensity: VisualDensity.compact,
-                iconSize: 18,
-                icon: const Icon(Icons.close),
-              ),
-          ],
           _BarButton(
             icon: Icons.photo_outlined,
             label: l10n.communityComposePhotosAction,

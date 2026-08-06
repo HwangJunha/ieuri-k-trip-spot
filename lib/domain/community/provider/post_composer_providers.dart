@@ -96,19 +96,51 @@ class PostComposer extends _$PostComposer {
     category: initialCategory,
   );
 
+  /// 수정 모드에서 서버가 채워 준 장소 id. `null`은 두 가지를 함께 뜻할 수 있으므로
+  /// ([_seededSpotKnown] 참고) 이 값만으로 판단하지 않는다.
+  String? _seededSpotId;
+
+  /// [seedFromPost]가 한 번이라도 돌았는지. 새 글 작성에서는 false다.
+  bool _seededSpotKnown = false;
+
+  /// 사용자가 장소를 실제로 바꿨는지. `editPost(changeSpot:)`에 그대로 실린다.
+  ///
+  /// **`spotId`만으로는 판정할 수 없다** — 서버 입력에서 `spotId: null`은 "떼기"와
+  /// "그대로 두기" 둘 다로 읽힐 수 있어 `changeSpot`이 따로 있다. 그래서 씨앗 값과
+  /// 지금 값을 비교해 **바뀐 경우에만** true를 준다.
+  ///
+  /// 수정 모드가 아니면(씨앗이 없으면) 언제나 false다 — 새 글에는 바꿀 원본이 없다.
+  bool get spotChanged => _seededSpotKnown && state.spotId != _seededSpotId;
+
   /// 수정 모드에서 서버가 준 글 내용으로 초안을 채운다.
   ///
-  /// 제목·본문뿐 아니라 **사진 키까지 함께 받는다** — 이것이 없으면 수정 화면이
-  /// 사진 없는 새 글처럼 열려 사용자가 기존 사진을 보지도 지키지도 못한다.
+  /// 제목·본문뿐 아니라 **사진 키·카테고리·태그·장소까지 함께 받는다** — 이것이
+  /// 없으면 수정 화면이 새 글처럼 비어 열려, 사용자가 자기 글의 현재 값을 보지도
+  /// 지키지도 못한다. 서버가 `editPost`로 그 셋을 받기 시작한 이상 빈 채로 저장하면
+  /// 값이 날아간다.
   void seedFromPost({
     required String title,
     required String body,
     required List<String> photoKeys,
-  }) => state = state.copyWith(
-    title: title,
-    body: body,
-    photos: photoKeys.map(RemotePhoto.new).toList(growable: false),
-  );
+    TargetCategory? category,
+    List<String> tags = const <String>[],
+    String? spotId,
+    String? spotTitle,
+  }) {
+    _seededSpotId = spotId;
+    _seededSpotKnown = true;
+    state = PostDraft(
+      // 서버 값이 없으면(매핑 안 된 카테고리) 기존 선택을 남긴다 — 진입 인자로 받은
+      // 제안이 있을 수 있다.
+      category: category ?? state.category,
+      spotId: spotId,
+      spotTitle: spotTitle,
+      title: title,
+      body: body,
+      tags: tags,
+      photos: photoKeys.map(RemotePhoto.new).toList(growable: false),
+    );
+  }
 
   /// 카테고리를 고른다. **필수 항목이라 해제되지 않는다** — 같은 칩을 다시 눌러도
   /// 선택이 유지된다(해제하면 등록이 막히는데 사용자는 왜인지 모른다).

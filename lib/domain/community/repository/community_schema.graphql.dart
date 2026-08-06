@@ -231,11 +231,19 @@ class Input$EditPostInput {
     required String title,
     required String body,
     List<String>? photoKeys,
+    Enum$TargetCategory? category,
+    bool? changeSpot,
+    String? spotId,
+    List<String>? tags,
   }) => Input$EditPostInput._({
     r'postId': postId,
     r'title': title,
     r'body': body,
     if (photoKeys != null) r'photoKeys': photoKeys,
+    if (category != null) r'category': category,
+    if (changeSpot != null) r'changeSpot': changeSpot,
+    if (spotId != null) r'spotId': spotId,
+    if (tags != null) r'tags': tags,
   });
 
   Input$EditPostInput._(this._$data);
@@ -254,6 +262,26 @@ class Input$EditPostInput {
           ?.map((e) => (e as String))
           .toList();
     }
+    if (data.containsKey('category')) {
+      final l$category = data['category'];
+      result$data['category'] = l$category == null
+          ? null
+          : fromJson$Enum$TargetCategory((l$category as String));
+    }
+    if (data.containsKey('changeSpot')) {
+      final l$changeSpot = data['changeSpot'];
+      result$data['changeSpot'] = (l$changeSpot as bool?);
+    }
+    if (data.containsKey('spotId')) {
+      final l$spotId = data['spotId'];
+      result$data['spotId'] = (l$spotId as String?);
+    }
+    if (data.containsKey('tags')) {
+      final l$tags = data['tags'];
+      result$data['tags'] = (l$tags as List<dynamic>?)
+          ?.map((e) => (e as String))
+          .toList();
+    }
     return Input$EditPostInput._(result$data);
   }
 
@@ -267,6 +295,15 @@ class Input$EditPostInput {
 
   List<String>? get photoKeys => (_$data['photoKeys'] as List<String>?);
 
+  Enum$TargetCategory? get category =>
+      (_$data['category'] as Enum$TargetCategory?);
+
+  bool? get changeSpot => (_$data['changeSpot'] as bool?);
+
+  String? get spotId => (_$data['spotId'] as String?);
+
+  List<String>? get tags => (_$data['tags'] as List<String>?);
+
   Map<String, dynamic> toJson() {
     final result$data = <String, dynamic>{};
     final l$postId = postId;
@@ -278,6 +315,24 @@ class Input$EditPostInput {
     if (_$data.containsKey('photoKeys')) {
       final l$photoKeys = photoKeys;
       result$data['photoKeys'] = l$photoKeys?.map((e) => e).toList();
+    }
+    if (_$data.containsKey('category')) {
+      final l$category = category;
+      result$data['category'] = l$category == null
+          ? null
+          : toJson$Enum$TargetCategory(l$category);
+    }
+    if (_$data.containsKey('changeSpot')) {
+      final l$changeSpot = changeSpot;
+      result$data['changeSpot'] = l$changeSpot;
+    }
+    if (_$data.containsKey('spotId')) {
+      final l$spotId = spotId;
+      result$data['spotId'] = l$spotId;
+    }
+    if (_$data.containsKey('tags')) {
+      final l$tags = tags;
+      result$data['tags'] = l$tags?.map((e) => e).toList();
     }
     return result$data;
   }
@@ -328,6 +383,51 @@ class Input$EditPostInput {
     } else if (l$photoKeys != lOther$photoKeys) {
       return false;
     }
+    final l$category = category;
+    final lOther$category = other.category;
+    if (_$data.containsKey('category') !=
+        other._$data.containsKey('category')) {
+      return false;
+    }
+    if (l$category != lOther$category) {
+      return false;
+    }
+    final l$changeSpot = changeSpot;
+    final lOther$changeSpot = other.changeSpot;
+    if (_$data.containsKey('changeSpot') !=
+        other._$data.containsKey('changeSpot')) {
+      return false;
+    }
+    if (l$changeSpot != lOther$changeSpot) {
+      return false;
+    }
+    final l$spotId = spotId;
+    final lOther$spotId = other.spotId;
+    if (_$data.containsKey('spotId') != other._$data.containsKey('spotId')) {
+      return false;
+    }
+    if (l$spotId != lOther$spotId) {
+      return false;
+    }
+    final l$tags = tags;
+    final lOther$tags = other.tags;
+    if (_$data.containsKey('tags') != other._$data.containsKey('tags')) {
+      return false;
+    }
+    if (l$tags != null && lOther$tags != null) {
+      if (l$tags.length != lOther$tags.length) {
+        return false;
+      }
+      for (int i = 0; i < l$tags.length; i++) {
+        final l$tags$entry = l$tags[i];
+        final lOther$tags$entry = lOther$tags[i];
+        if (l$tags$entry != lOther$tags$entry) {
+          return false;
+        }
+      }
+    } else if (l$tags != lOther$tags) {
+      return false;
+    }
     return true;
   }
 
@@ -337,6 +437,10 @@ class Input$EditPostInput {
     final l$title = title;
     final l$body = body;
     final l$photoKeys = photoKeys;
+    final l$category = category;
+    final l$changeSpot = changeSpot;
+    final l$spotId = spotId;
+    final l$tags = tags;
     return Object.hashAll([
       l$postId,
       l$title,
@@ -345,6 +449,14 @@ class Input$EditPostInput {
           ? l$photoKeys == null
                 ? null
                 : Object.hashAll(l$photoKeys.map((v) => v))
+          : const {},
+      _$data.containsKey('category') ? l$category : const {},
+      _$data.containsKey('changeSpot') ? l$changeSpot : const {},
+      _$data.containsKey('spotId') ? l$spotId : const {},
+      _$data.containsKey('tags')
+          ? l$tags == null
+                ? null
+                : Object.hashAll(l$tags.map((v) => v))
           : const {},
     ]);
   }
@@ -364,6 +476,10 @@ abstract class CopyWith$Input$EditPostInput<TRes> {
     String? title,
     String? body,
     List<String>? photoKeys,
+    Enum$TargetCategory? category,
+    bool? changeSpot,
+    String? spotId,
+    List<String>? tags,
   });
 }
 
@@ -382,6 +498,10 @@ class _CopyWithImpl$Input$EditPostInput<TRes>
     Object? title = _undefined,
     Object? body = _undefined,
     Object? photoKeys = _undefined,
+    Object? category = _undefined,
+    Object? changeSpot = _undefined,
+    Object? spotId = _undefined,
+    Object? tags = _undefined,
   }) => _then(
     Input$EditPostInput._({
       ..._instance._$data,
@@ -389,6 +509,11 @@ class _CopyWithImpl$Input$EditPostInput<TRes>
       if (title != _undefined && title != null) 'title': (title as String),
       if (body != _undefined && body != null) 'body': (body as String),
       if (photoKeys != _undefined) 'photoKeys': (photoKeys as List<String>?),
+      if (category != _undefined)
+        'category': (category as Enum$TargetCategory?),
+      if (changeSpot != _undefined) 'changeSpot': (changeSpot as bool?),
+      if (spotId != _undefined) 'spotId': (spotId as String?),
+      if (tags != _undefined) 'tags': (tags as List<String>?),
     }),
   );
 }
@@ -404,6 +529,10 @@ class _CopyWithStubImpl$Input$EditPostInput<TRes>
     String? title,
     String? body,
     List<String>? photoKeys,
+    Enum$TargetCategory? category,
+    bool? changeSpot,
+    String? spotId,
+    List<String>? tags,
   }) => _res;
 }
 

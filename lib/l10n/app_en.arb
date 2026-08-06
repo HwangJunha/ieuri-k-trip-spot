@@ -475,10 +475,6 @@
   "@communityEditDone": {
     "description": "수정 완료 안내"
   },
-  "communityEditFixedFieldsNote": "Category, place, and tags can't be changed after posting.",
-  "@communityEditFixedFieldsNote": {
-    "description": "수정 모드에서 카테고리·장소·태그를 바꿀 수 없다는 안내"
-  },
   "communityComposeCategoryLabel": "Choose a category",
   "@communityComposeCategoryLabel": {
     "description": "컴포저 카테고리 섹션 라벨"
@@ -829,10 +825,6 @@
   "communityComposeSpotAction": "Place",
   "@communityComposeSpotAction": {
     "description": "컴포저 하단 액션 바의 장소 버튼"
-  },
-  "communityComposeSpotClear": "Remove place",
-  "@communityComposeSpotClear": {
-    "description": "붙은 장소를 떼는 버튼 — 장소는 선택 항목이라 해제 수단이 필요하다"
   },
   "communityComposePhotosAction": "Photos",
   "@communityComposePhotosAction": {
