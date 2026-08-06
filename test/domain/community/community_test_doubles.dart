@@ -207,10 +207,23 @@ class FakeCommunityRepository implements CommunityRepository {
     );
   }
 
+  /// `post(id:)`가 돌려줄 글. [post]와 달리 생성 후에도 바꿀 수 있다 — 수정 컴포저는
+  /// 이 조회로 제목·본문·사진을 채우므로, 테스트가 케이스마다 다른 글을 세운다.
+  /// 설정하지 않으면 [post]로 떨어진다.
+  Post? postById;
+
+  /// `post(id:)` 조회에 넘어간 마지막 id.
+  String? lastFetchedPostId;
+
+  /// 설정하면 `post(id:)`가 이 오류를 던진다(수정 컴포저의 조회 실패 상태 검증용).
+  Object? postError;
+
   @override
   Future<Post?> fetchPost(String id) async {
+    lastFetchedPostId = id;
+    if (postError != null) throw postError!;
     if (feedError != null) throw feedError!;
-    return post;
+    return postById ?? post;
   }
 
   @override

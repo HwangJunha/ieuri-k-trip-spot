@@ -285,7 +285,7 @@ void main() {
       expect(result.failedNames, <String>['a.jpg']);
     });
 
-    test('사진을 빼면 오브젝트도 지운다 (고아 오브젝트를 남기지 않는다)', () async {
+    test('새 글에서 사진을 빼면 오브젝트도 지운다 (고아 오브젝트를 남기지 않는다)', () async {
       final FakeCommunityRepository repo = FakeCommunityRepository()
         ..uploadUrls = const <PostImageUploadUrl>[
           PostImageUploadUrl(
@@ -307,6 +307,53 @@ void main() {
 
       expect(container.read(postComposerProvider()).photoKeys, isEmpty);
       expect(repo.lastDeletedImageKey, 'images/20/1');
+    });
+
+    // 수정 중인 키는 **아직 서버의 글에 붙어 있다** — 여기서 지우면 저장을 취소하고
+    // 나갔을 때 원래 글의 사진이 깨진다. 떨어져 나간 오브젝트 정리는 서버 lifecycle의
+    // 몫이다(가이드 §4).
+    test('수정 중에는 사진을 빼도 오브젝트를 지우지 않는다', () async {
+      final FakeCommunityRepository repo = FakeCommunityRepository();
+      final ProviderContainer container = _container(repo);
+      final PostComposer notifier = container.read(
+        postComposerProvider(editing: true).notifier,
+      );
+      notifier.seedFromPost(
+        title: '제목',
+        body: '본문',
+        photoKeys: <String>['images/20/1', 'images/20/2'],
+      );
+
+      await notifier.removePhoto('images/20/1');
+
+      expect(
+        container.read(postComposerProvider(editing: true)).photoKeys,
+        <String>['images/20/2'],
+      );
+      expect(repo.lastDeletedImageKey, isNull);
+    });
+  });
+
+  group('수정 모드 초안 채우기', () {
+    // 이 화면의 본래 버그 — 사진 키가 초안에 들어오지 않아 수정 화면이 사진 없는
+    // 새 글처럼 열렸다.
+    test('서버가 준 제목·본문·사진이 초안에 들어간다', () {
+      final ProviderContainer container = _container(FakeCommunityRepository());
+
+      container
+          .read(postComposerProvider(editing: true).notifier)
+          .seedFromPost(
+            title: '원래 제목',
+            body: '원래 본문',
+            photoKeys: <String>['images/20/1'],
+          );
+
+      final PostDraft draft = container.read(
+        postComposerProvider(editing: true),
+      );
+      expect(draft.title, '원래 제목');
+      expect(draft.body, '원래 본문');
+      expect(draft.photoKeys, <String>['images/20/1']);
     });
   });
 }

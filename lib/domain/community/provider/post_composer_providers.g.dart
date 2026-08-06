@@ -38,6 +38,7 @@ final class PostComposerProvider
       String? initialSpotId,
       String? initialSpotTitle,
       TargetCategory? initialCategory,
+      bool editing,
     })
     super.argument,
   }) : super(
@@ -81,7 +82,7 @@ final class PostComposerProvider
   }
 }
 
-String _$postComposerHash() => r'1957c525d8e6417c373cb51c537b57cdae360972';
+String _$postComposerHash() => r'6cf14333adbde2672b1ba24ec9cbe8b57a56609f';
 
 /// 컴포저가 편집 중인 초안. 화면 하나에 속한 상태라 autoDispose(codegen 기본)로
 /// 둔다 — 컴포저를 닫으면 초안이 사라지는 것이 맞다.
@@ -101,6 +102,7 @@ final class PostComposerFamily extends $Family
             String? initialSpotId,
             String? initialSpotTitle,
             TargetCategory? initialCategory,
+            bool editing,
           })
         > {
   const PostComposerFamily._()
@@ -123,11 +125,13 @@ final class PostComposerFamily extends $Family
     String? initialSpotId,
     String? initialSpotTitle,
     TargetCategory? initialCategory,
+    bool editing = false,
   }) => PostComposerProvider._(
     argument: (
       initialSpotId: initialSpotId,
       initialSpotTitle: initialSpotTitle,
       initialCategory: initialCategory,
+      editing: editing,
     ),
     from: this,
   );
@@ -150,15 +154,18 @@ abstract class _$PostComposer extends $Notifier<PostDraft> {
             String? initialSpotId,
             String? initialSpotTitle,
             TargetCategory? initialCategory,
+            bool editing,
           });
   String? get initialSpotId => _$args.initialSpotId;
   String? get initialSpotTitle => _$args.initialSpotTitle;
   TargetCategory? get initialCategory => _$args.initialCategory;
+  bool get editing => _$args.editing;
 
   PostDraft build({
     String? initialSpotId,
     String? initialSpotTitle,
     TargetCategory? initialCategory,
+    bool editing = false,
   });
   @$mustCallSuper
   @override
@@ -167,6 +174,7 @@ abstract class _$PostComposer extends $Notifier<PostDraft> {
       initialSpotId: _$args.initialSpotId,
       initialSpotTitle: _$args.initialSpotTitle,
       initialCategory: _$args.initialCategory,
+      editing: _$args.editing,
     );
     final ref = this.ref as $Ref<PostDraft, PostDraft>;
     final element =

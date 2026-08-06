@@ -503,7 +503,23 @@ void main() {
 
   // 2차 가이드 §2 — 게시물 숨기기.
   group('글 숨기기', () {
-    testWidgets('⋮ 메뉴에 항상 보인다 (내 글에도)', (WidgetTester tester) async {
+    testWidgets('남의 글 ⋮ 메뉴에 보인다', (WidgetTester tester) async {
+      await _pump(
+        tester,
+        FakeCommunityRepository(posts: <Post>[fakePost(ownedByViewer: false)]),
+      );
+
+      await tester.tap(find.byIcon(Icons.more_vert).first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Hide this post'), findsOneWidget);
+      expect(find.text('Block this user'), findsOneWidget);
+    });
+
+    // 2차 가이드 §2의 표는 "항상"이라고 적었지만 **내 글에는 두지 않는다** — 내
+    // 글을 내 화면에서만 감추는 것은 삭제가 이미 하는 일이라, 두 개를 나란히 두면
+    // 무엇이 다른지 알 수 없다. 사용자 피드백에 따른 의도된 이탈이다.
+    testWidgets('내 글 ⋮ 메뉴에는 없다 (삭제가 그 자리를 대신한다)', (WidgetTester tester) async {
       await _pump(
         tester,
         FakeCommunityRepository(posts: <Post>[fakePost(ownedByViewer: true)]),
@@ -512,10 +528,10 @@ void main() {
       await tester.tap(find.byIcon(Icons.more_vert).first);
       await tester.pumpAndSettle();
 
-      // 소유권을 보지 않는다 — 조치가 아니라 화면 설정이다.
-      expect(find.text('Hide this post'), findsOneWidget);
-      // 내 글이라 차단·신고는 없지만 숨기기는 있다.
+      expect(find.text('Hide this post'), findsNothing);
       expect(find.text('Block this user'), findsNothing);
+      // 내 글에 남아야 하는 것은 수정·삭제다.
+      expect(find.text('Delete post'), findsOneWidget);
     });
 
     testWidgets('숨기면 그 글로 hidePost가 나가고 피드를 다시 받는다', (

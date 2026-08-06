@@ -100,16 +100,30 @@ class PostComposer extends _$PostComposer {
   ///
   /// [initialCategory]는 그 장소의 카테고리 제안이다(`PostSpot.category`) — 서버가
   /// 그 용도로 내려주는 값이라 기본 선택으로 채운다.
+  ///
+  /// [editing]은 **이미 서버에 있는 글을 고치는 중**이라는 뜻이다. 초안의 내용은
+  /// 같지만 사진을 뺄 때의 처리가 갈린다([removePhoto] 참고).
   @override
   PostDraft build({
     String? initialSpotId,
     String? initialSpotTitle,
     TargetCategory? initialCategory,
+    bool editing = false,
   }) => PostDraft(
     spotId: initialSpotId,
     spotTitle: initialSpotTitle,
     category: initialCategory,
   );
+
+  /// 수정 모드에서 서버가 준 글 내용으로 초안을 채운다.
+  ///
+  /// 제목·본문뿐 아니라 **사진 키까지 함께 받는다** — 이것이 없으면 수정 화면이
+  /// 사진 없는 새 글처럼 열려 사용자가 기존 사진을 보지도 지키지도 못한다.
+  void seedFromPost({
+    required String title,
+    required String body,
+    required List<String> photoKeys,
+  }) => state = state.copyWith(title: title, body: body, photoKeys: photoKeys);
 
   /// 카테고리를 고른다. **필수 항목이라 해제되지 않는다** — 같은 칩을 다시 눌러도
   /// 선택이 유지된다(해제하면 등록이 막히는데 사용자는 왜인지 모른다).
@@ -212,15 +226,24 @@ class PostComposer extends _$PostComposer {
     );
   }
 
-  /// 붙였던 사진을 뺀다. **글과의 연결만 끊는 것이 아니라 오브젝트도 지운다** —
-  /// 아직 글을 만들기 전이라 이 키를 쓸 곳이 없고, 남겨두면 고아 오브젝트가 된다
-  /// (가이드 §4). 없는 키를 지워도 오류가 아니다(멱등).
+  /// 붙였던 사진을 뺀다.
+  ///
+  /// **새 글에서는 오브젝트도 지운다** — 아직 글을 만들기 전이라 이 키를 쓸 곳이
+  /// 없고, 남겨두면 고아 오브젝트가 된다(가이드 §4). 없는 키를 지워도 오류가
+  /// 아니다(멱등).
+  ///
+  /// **수정 모드에서는 지우지 않는다.** 그 키는 아직 서버의 글에 붙어 있고,
+  /// `editPost`가 성공하기 전까지는 그대로 살아 있어야 한다 — 여기서 오브젝트를
+  /// 지우면 사용자가 저장을 취소하고 나갔을 때 원래 글의 사진이 깨진다. 저장 후
+  /// 떨어져 나간 오브젝트는 서버 lifecycle이 치운다(가이드 §4 — 고아 정리는 서버
+  /// 몫이다).
   Future<void> removePhoto(String objectKey) async {
     state = state.copyWith(
       photoKeys: state.photoKeys
           .where((String k) => k != objectKey)
           .toList(growable: false),
     );
+    if (editing) return;
     try {
       await _repository.deletePostImage(objectKey);
     } on Object {

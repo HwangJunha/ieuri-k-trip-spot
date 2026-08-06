@@ -859,6 +859,7 @@
   "communityEditDisabledHidden": "숨겨진 글은 수정할 수 없습니다.",
   "communityEditTitle": "글 수정",
   "communityEditDone": "글을 수정했습니다.",
+  "communityEditFixedFieldsNote": "카테고리·장소·태그는 등록 후 바꿀 수 없습니다.",
   "communityComposeCategoryLabel": "카테고리 선택",
   "communityComposeTitleLabel": "제목",
   "communityComposeTitleHint": "한 줄 제목",

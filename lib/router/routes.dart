@@ -133,11 +133,13 @@ List<RouteBase> buildRoutes() => <RouteBase>[
   // 상세에서 열면 그 spot의 id·이름·카테고리가 실려 이미 정해진 채로 열린다 —
   // 장소가 없어도 등록된다(가이드 §5).
   //
-  // `editPostId`가 있으면 수정 모드다. 제목·본문만 함께 실린다 — 수정은 그 둘과
-  // 사진만 바꾸므로 카테고리·태그·장소는 넘길 이유가 없다.
+  // `editPostId`가 있으면 수정 모드다. **id만 실린다** — 제목·본문·사진은 화면이
+  // 그 id로 `post(id:)`를 다시 조회해서 채운다. 예전에는 제목·본문을 쿼리 파라미터로
+  // 실어 보냈는데, 사진 키 목록은 URL에 담기 어려워(길이·이스케이프) 결국 수정
+  // 화면이 사진 없는 새 글처럼 열렸다. 셋을 한 조회에서 함께 받는 편이 맞다.
   //
-  // 이름·제목·본문은 표시 전용 값이라 파라미터로 넘긴다. 모델 객체가 아니라 값만
-  // 넘기는 것이라 §6과 어긋나지 않는다.
+  // 장소 이름만 표시 전용 값으로 남는다. 모델 객체가 아니라 값만 넘기는 것이라
+  // §6과 어긋나지 않는다.
   GoRoute(
     path: '/post-composer',
     name: PostComposerScreen.routeName,
@@ -148,8 +150,6 @@ List<RouteBase> buildRoutes() => <RouteBase>[
         state.uri.queryParameters['category'],
       ),
       editPostId: state.uri.queryParameters['editPostId'],
-      initialTitle: state.uri.queryParameters['title'],
-      initialBody: state.uri.queryParameters['body'],
     ),
   ),
   // 차단한 사용자 목록(가이드 §6). 커뮤니티 앱바에서 진입하며 셸 밖이라 탭을 덮는다.

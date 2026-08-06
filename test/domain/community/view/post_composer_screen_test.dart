@@ -6,11 +6,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/location/coordinates.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_service.dart';
+import 'package:ieuri_k_trip_spot/domain/community/component/post_photo.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_chip.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_draft.dart';
+import 'package:ieuri_k_trip_spot/domain/community/model/post_image_upload.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/target_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/photo_picker_providers.dart';
@@ -41,8 +43,6 @@ Future<void> _pump(
   String? spotId,
   String? spotTitle,
   String? editPostId,
-  String? initialTitle,
-  String? initialBody,
   PhotoPicker? picker,
   Object? locationError,
 }) async {
@@ -64,8 +64,6 @@ Future<void> _pump(
           initialSpotId: spotId,
           initialSpotTitle: spotTitle,
           editPostId: editPostId,
-          initialTitle: initialTitle,
-          initialBody: initialBody,
         ),
       ),
     ),
@@ -108,6 +106,19 @@ NearbySpot _spot({
   String title = '서울갤러리',
   double distanceMeters = 16,
 }) => NearbySpot(id: id, title: title, distanceMeters: distanceMeters);
+
+/// 수정 모드가 조회할 글을 세운 저장소. 수정 컴포저는 라우트 파라미터가 아니라
+/// `post(id:)`로 제목·본문·**사진 키**를 받아 채운다.
+FakeCommunityRepository _editRepo({
+  List<String> photoKeys = const <String>[],
+}) => FakeCommunityRepository()
+  ..postById = fakePost(
+    id: '42',
+    title: '원래 제목',
+    body: '원래 본문',
+    ownedByViewer: true,
+    photoKeys: photoKeys,
+  );
 
 /// 시트 **안의** 카테고리 칩. 컴포저 화면 자체도 글 카테고리를 `ChoiceChip`으로
 /// 그리므로, 시트 밖의 칩과 섞이지 않도록 [BottomSheet] 아래로 범위를 좁힌다.
@@ -756,15 +767,12 @@ void main() {
 
   group('수정 모드 (가이드 §5)', () {
     // 수정은 제목·본문·사진만 바꾼다. 카테고리·태그·장소를 만지게 하면 안 된다 —
-    // 서버가 받지 않는 값이다.
-    testWidgets('카테고리·태그·장소 입력이 보이지 않는다', (WidgetTester tester) async {
-      await _pump(
-        tester,
-        FakeCommunityRepository(),
-        editPostId: '42',
-        initialTitle: '원래 제목',
-        initialBody: '원래 본문',
-      );
+    // 서버 `EditPostInput`이 그 셋을 아예 받지 않는다.
+    //
+    // **사진은 예외다** — `photoKeys`가 입력에 있으므로 바꿀 수 있고, 따라서 하단
+    // 바의 사진 버튼이 남는다(이 기대는 원래 "사진도 숨긴다"였다가 뒤집혔다).
+    testWidgets('카테고리·태그·장소 입력이 보이지 않고 사진만 남는다', (WidgetTester tester) async {
+      await _pump(tester, _editRepo(), editPostId: '42');
 
       expect(find.text('Edit post'), findsOneWidget);
       expect(find.byType(ChoiceChip), findsNothing);
@@ -773,19 +781,42 @@ void main() {
         find.widgetWithIcon(TextButton, Icons.place_outlined),
         findsNothing,
       );
-      // 사진은 수정 대상이라 남는다.
       expect(find.widgetWithText(TextButton, 'Photos'), findsOneWidget);
     });
 
-    testWidgets('제목·본문을 채워 열고 저장하면 editPost가 나간다', (WidgetTester tester) async {
-      final FakeCommunityRepository repo = FakeCommunityRepository();
-      await _pump(
-        tester,
-        repo,
-        editPostId: '42',
-        initialTitle: '원래 제목',
-        initialBody: '원래 본문',
+    // 입력이 그냥 사라지면 고장으로 읽힌다 — 왜 못 바꾸는지 한 줄로 알린다.
+    testWidgets('바꿀 수 없는 항목이 있다는 안내가 보인다', (WidgetTester tester) async {
+      await _pump(tester, _editRepo(), editPostId: '42');
+
+      expect(
+        find.text("Category, place, and tags can't be changed after posting."),
+        findsOneWidget,
       );
+    });
+
+    // 새 글에는 그 안내를 두지 않는다 — 거기서는 셋 다 고를 수 있다.
+    testWidgets('새 글 작성에는 그 안내가 없다', (WidgetTester tester) async {
+      await _pump(tester, FakeCommunityRepository());
+
+      expect(
+        find.textContaining("can't be changed after posting"),
+        findsNothing,
+      );
+    });
+
+    testWidgets('제목·본문을 서버에서 받아 채운다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = _editRepo();
+      await _pump(tester, repo, editPostId: '42');
+
+      // 라우트 파라미터가 아니라 `post(id:)` 조회가 출처다.
+      expect(repo.lastFetchedPostId, '42');
+      expect(tester.widget<TextField>(_titleField).controller?.text, '원래 제목');
+      expect(tester.widget<TextField>(_bodyField).controller?.text, '원래 본문');
+    });
+
+    testWidgets('저장하면 editPost가 나간다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = _editRepo();
+      await _pump(tester, repo, editPostId: '42');
 
       await tester.enterText(_titleField, '새 제목');
       await tester.pumpAndSettle();
@@ -795,25 +826,134 @@ void main() {
       expect(repo.lastEditPost?.postId, '42');
       expect(repo.lastEditPost?.title, '새 제목');
       expect(repo.lastEditPost?.body, '원래 본문');
-      // 사진을 건드리지 않았으면 변수를 보내지 않는다(빈 배열과 다른 뜻이다).
-      expect(repo.lastEditPost?.photoKeys, isNull);
     });
 
     testWidgets('숨겨진 글 수정 거부는 그 이유를 알린다', (WidgetTester tester) async {
-      final FakeCommunityRepository repo = FakeCommunityRepository()
+      final FakeCommunityRepository repo = _editRepo()
         ..mutationError = CommunityFailure.userError('POST_NOT_EDITABLE');
-      await _pump(
-        tester,
-        repo,
-        editPostId: '42',
-        initialTitle: '원래 제목',
-        initialBody: '원래 본문',
-      );
+      await _pump(tester, repo, editPostId: '42');
 
       await tester.tap(_submit);
       await tester.pumpAndSettle();
 
       expect(find.text("Hidden posts can't be edited."), findsOneWidget);
+    });
+
+    // 삭제·차단된 글은 서버가 오류가 아니라 null을 준다(가이드 §6) — 빈 편집기를
+    // 열어 저장하게 두면 안 된다.
+    testWidgets('볼 수 없는 글이면 편집기 대신 안내가 뜬다', (WidgetTester tester) async {
+      await _pump(tester, FakeCommunityRepository(), editPostId: '42');
+
+      expect(find.text('Post unavailable'), findsOneWidget);
+      expect(find.byType(TextField), findsNothing);
+    });
+  });
+
+  // 이 화면의 본래 문제 — 수정 화면이 사진 없는 새 글처럼 열려 기존 사진을 보지도
+  // 지키지도 못했다.
+  group('수정 모드의 사진', () {
+    testWidgets('기존 사진을 채워 열고 그대로 저장하면 같은 목록이 나간다', (
+      WidgetTester tester,
+    ) async {
+      final FakeCommunityRepository repo = _editRepo(
+        photoKeys: <String>['images/20/1', 'images/20/2'],
+      );
+      await _pump(tester, repo, editPostId: '42');
+
+      // 붙어 있던 사진이 화면에 보인다 — 보이지 않으면 뺄 수도 없다.
+      expect(find.byType(PostPhoto), findsNWidgets(2));
+
+      await tester.tap(_submit);
+      await tester.pumpAndSettle();
+
+      expect(repo.lastEditPost?.photoKeys, <String>[
+        'images/20/1',
+        'images/20/2',
+      ]);
+    });
+
+    // `photoKeys`는 전체 교체다(가이드 §5) — 뺀 뒤 저장하면 줄어든 목록이 나가야
+    // 한다.
+    testWidgets('한 장을 빼고 저장하면 줄어든 목록이 나간다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = _editRepo(
+        photoKeys: <String>['images/20/1', 'images/20/2'],
+      );
+      await _pump(tester, repo, editPostId: '42');
+
+      await tester.tap(find.byIcon(Icons.cancel).first);
+      await tester.pumpAndSettle();
+      await tester.tap(_submit);
+      await tester.pumpAndSettle();
+
+      expect(repo.lastEditPost?.photoKeys, <String>['images/20/2']);
+    });
+
+    // 전부 빼면 **빈 배열**이 나간다. 생략(null)은 "사진을 건드리지 않음"이라
+    // 뜻이 정반대다.
+    testWidgets('전부 빼면 빈 목록이 나간다 (생략이 아니다)', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = _editRepo(
+        photoKeys: <String>['images/20/1'],
+      );
+      await _pump(tester, repo, editPostId: '42');
+
+      await tester.tap(find.byIcon(Icons.cancel).first);
+      await tester.pumpAndSettle();
+      await tester.tap(_submit);
+      await tester.pumpAndSettle();
+
+      expect(repo.lastEditPost?.photoKeys, isEmpty);
+    });
+
+    // **오브젝트를 지우지 않는다** — 그 키는 아직 서버의 글에 붙어 있고, 저장을
+    // 취소하고 나가면 원래 사진이 그대로 살아 있어야 한다. 떨어져 나간 오브젝트
+    // 정리는 서버 lifecycle의 몫이다(가이드 §4).
+    testWidgets('사진을 빼도 deletePostImage를 부르지 않는다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = _editRepo(
+        photoKeys: <String>['images/20/1'],
+      );
+      await _pump(tester, repo, editPostId: '42');
+
+      await tester.tap(find.byIcon(Icons.cancel).first);
+      await tester.pumpAndSettle();
+
+      expect(repo.lastDeletedImageKey, isNull);
+    });
+
+    testWidgets('사진을 더 붙이면 기존 목록 뒤에 실린다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo =
+          _editRepo(photoKeys: <String>['images/20/1'])
+            ..uploadUrls = const <PostImageUploadUrl>[
+              PostImageUploadUrl(
+                uploadUrl: 'https://storage/2',
+                objectKey: 'pending/20/2',
+                expiresAt: 'x',
+              ),
+            ]
+            ..confirmation = const PostImageConfirmation(
+              confirmed: <String>['images/20/2'],
+            );
+      await _pump(
+        tester,
+        repo,
+        editPostId: '42',
+        picker: ({required int limit}) async => <PickedPhoto>[
+          PickedPhoto(
+            bytes: Uint8List.fromList(<int>[1, 2, 3]),
+            contentType: 'image/jpeg',
+            name: 'b.jpg',
+          ),
+        ],
+      );
+
+      await tester.tap(find.widgetWithText(TextButton, 'Photos'));
+      await tester.pumpAndSettle();
+      await tester.tap(_submit);
+      await tester.pumpAndSettle();
+
+      expect(repo.lastEditPost?.photoKeys, <String>[
+        'images/20/1',
+        'images/20/2',
+      ]);
     });
   });
 }

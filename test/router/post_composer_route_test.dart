@@ -13,7 +13,11 @@ import '../domain/community/community_test_doubles.dart';
 import '../domain/spot/spot_test_doubles.dart';
 
 /// 컴포저 라우트 하나만 태워 URL → 위젯 인자 변환을 검증한다.
-Future<void> _pumpRoute(WidgetTester tester, String location) async {
+Future<void> _pumpRoute(
+  WidgetTester tester,
+  String location, {
+  FakeCommunityRepository? repo,
+}) async {
   final GoRoute route = buildRoutes().whereType<GoRoute>().firstWhere(
     (GoRoute r) => r.name == PostComposerScreen.routeName,
   );
@@ -22,7 +26,7 @@ Future<void> _pumpRoute(WidgetTester tester, String location) async {
     ProviderScope(
       overrides: [
         communityRepositoryProvider.overrideWithValue(
-          FakeCommunityRepository(),
+          repo ?? FakeCommunityRepository(),
         ),
         locationServiceProvider.overrideWithValue(FakeLocationService()),
       ],
@@ -71,14 +75,23 @@ void main() {
     expect(tester.widget<TextButton>(spotButton).onPressed, isNotNull);
   });
 
-  // 수정 진입은 제목·본문을 실어 보낸다 — 카테고리·태그·장소는 수정 대상이 아니다.
-  testWidgets('editPostId가 있으면 수정 모드로 열린다', (WidgetTester tester) async {
-    await _pumpRoute(
-      tester,
-      '/post-composer?editPostId=42&title=Old%20title&body=Old%20body',
-    );
+  // 수정 진입은 **id만 실어 보낸다** — 제목·본문·사진은 화면이 그 id로 다시
+  // 조회해서 채운다. 예전에는 제목·본문을 URL에 실었는데 사진 키를 담을 수 없어
+  // 수정 화면이 사진 없는 새 글처럼 열렸다.
+  testWidgets('editPostId만 있으면 수정 모드로 열리고 내용을 조회로 채운다', (
+    WidgetTester tester,
+  ) async {
+    final FakeCommunityRepository repo = FakeCommunityRepository()
+      ..postById = fakePost(id: '42', title: 'Old title', ownedByViewer: true);
+
+    await _pumpRoute(tester, '/post-composer?editPostId=42', repo: repo);
 
     expect(find.text('Edit post'), findsOneWidget);
     expect(find.byType(ChoiceChip), findsNothing);
+    expect(repo.lastFetchedPostId, '42');
+    expect(
+      tester.widget<TextField>(find.byType(TextField).at(0)).controller?.text,
+      'Old title',
+    );
   });
 }

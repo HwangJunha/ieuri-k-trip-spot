@@ -475,6 +475,10 @@
   "@communityEditDone": {
     "description": "수정 완료 안내"
   },
+  "communityEditFixedFieldsNote": "Category, place, and tags can't be changed after posting.",
+  "@communityEditFixedFieldsNote": {
+    "description": "수정 모드에서 카테고리·장소·태그를 바꿀 수 없다는 안내"
+  },
   "communityComposeCategoryLabel": "Choose a category",
   "@communityComposeCategoryLabel": {
     "description": "컴포저 카테고리 섹션 라벨"

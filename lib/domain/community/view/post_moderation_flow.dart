@@ -197,6 +197,10 @@ Future<void> _report(
 
 /// 내 글 수정. 제목·본문·사진만 바뀌므로 컴포저를 **수정 모드**로 연다(가이드 §5).
 ///
+/// **id만 넘긴다** — 컴포저가 그 id로 글을 다시 조회해 제목·본문·사진을 채운다.
+/// 여기서 [post]의 값을 실어 보내면 사진 키가 빠져(URL에 담기 어렵다) 수정 화면이
+/// 사진 없는 새 글처럼 열린다.
+///
 /// 숨겨진 글은 시트에서 이미 비활성이라 여기 오지 않는다.
 Future<void> _edit(
   BuildContext context, {
@@ -205,11 +209,7 @@ Future<void> _edit(
 }) async {
   final bool? edited = await context.pushNamed<bool>(
     PostComposerScreen.routeName,
-    queryParameters: <String, String>{
-      'editPostId': post.id,
-      'title': post.title,
-      'body': post.body,
-    },
+    queryParameters: <String, String>{'editPostId': post.id},
   );
   if ((edited ?? false) && context.mounted) onChanged();
 }

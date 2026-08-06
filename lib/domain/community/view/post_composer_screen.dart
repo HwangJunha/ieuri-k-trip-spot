@@ -9,12 +9,14 @@ import '../component/post_photo.dart';
 import '../component/spot_picker_sheet.dart';
 import '../model/community_chip.dart';
 import '../model/nearby_spot.dart';
+import '../model/post.dart';
 import '../model/post_draft.dart';
 import '../model/target_category.dart';
 import '../provider/community_providers.dart';
 import '../provider/moderation_providers.dart';
 import '../provider/photo_picker_providers.dart';
 import '../provider/post_composer_providers.dart';
+import '../provider/post_detail_providers.dart';
 
 /// 글 작성·수정 화면 — **당근 컴포저처럼 전면(full-bleed) 입력**이다.
 ///
@@ -43,6 +45,13 @@ import '../provider/post_composer_providers.dart';
 ///
 /// [editPostId]가 있으면 **수정 모드**다. 수정은 제목·본문·사진만 바꾸므로
 /// 카테고리·태그·장소 입력을 숨긴다 — 서버가 받지 않는 값을 만지게 하면 안 된다.
+/// 다만 **숨기고 끝내지 않고 왜 못 바꾸는지 한 줄로 알린다** — 아무 설명 없이
+/// 입력이 사라지면 고장으로 읽힌다.
+///
+/// 수정할 내용은 **서버에서 다시 받아 온다**([postDetailProvider]). 라우트
+/// 파라미터로 제목·본문만 실어 보내던 방식은 사진 키를 실을 수 없어(URL 길이·이스케이프)
+/// 수정 화면이 사진 없는 새 글처럼 열렸다 — 사용자가 기존 사진을 보지도 지키지도
+/// 못하던 원인이 이것이다.
 class PostComposerScreen extends ConsumerStatefulWidget {
   const PostComposerScreen({
     super.key,
@@ -50,8 +59,6 @@ class PostComposerScreen extends ConsumerStatefulWidget {
     this.initialSpotTitle,
     this.initialCategory,
     this.editPostId,
-    this.initialTitle,
-    this.initialBody,
   });
 
   static String get routeName => 'post-composer';
@@ -64,25 +71,24 @@ class PostComposerScreen extends ConsumerStatefulWidget {
   /// 장소의 카테고리 제안(`PostSpot.category`). 서버가 그 용도로 내려주는 값이다.
   final TargetCategory? initialCategory;
 
-  /// 수정 대상 글 id. null이면 새 글 작성이다.
+  /// 수정 대상 글 id. null이면 새 글 작성이다. 제목·본문·사진은 이 id로 다시
+  /// 조회한다.
   final String? editPostId;
-  final String? initialTitle;
-  final String? initialBody;
 
   @override
   ConsumerState<PostComposerScreen> createState() => _PostComposerScreenState();
 }
 
 class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
-  late final TextEditingController _title = TextEditingController(
-    text: widget.initialTitle ?? '',
-  );
-  late final TextEditingController _body = TextEditingController(
-    text: widget.initialBody ?? '',
-  );
+  final TextEditingController _title = TextEditingController();
+  final TextEditingController _body = TextEditingController();
 
   /// 등록 진행 중인지. 중복 제출을 막고 버튼을 스피너로 바꾼다.
   bool _submitting = false;
+
+  /// 수정 모드에서 서버가 준 내용을 초안에 한 번 옮겼는지. 조회가 끝난 뒤 딱 한 번만
+  /// 채워야 한다 — 매 빌드마다 덮으면 사용자가 방금 친 글자가 되돌아간다.
+  bool _seeded = false;
 
   bool get _isEditing => widget.editPostId != null;
 
@@ -90,22 +96,10 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
     initialSpotId: widget.initialSpotId,
     initialSpotTitle: widget.initialSpotTitle,
     initialCategory: widget.initialCategory,
+    // 수정 중에는 사진을 빼도 오브젝트를 지우지 않는다 — 아직 서버의 글에 붙어
+    // 있기 때문이다(가이드 §4).
+    editing: _isEditing,
   );
-
-  @override
-  void initState() {
-    super.initState();
-    // 수정 모드에서는 서버가 준 제목·본문으로 초안을 채운다. build 중에 provider를
-    // 건드리면 안 되므로 프레임 뒤로 미룬다.
-    if (widget.initialTitle != null || widget.initialBody != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        ref.read(_provider.notifier)
-          ..setTitle(widget.initialTitle ?? '')
-          ..setBody(widget.initialBody ?? '');
-      });
-    }
-  }
 
   @override
   void dispose() {
@@ -116,7 +110,49 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 수정 모드에서는 글을 다시 받아 제목·본문·사진을 채운다. 조회 중에는 빈 폼을
+    // 보여주지 않는다 — 비었다가 갑자기 채워지면 무엇이 원본인지 알 수 없다.
+    if (_isEditing) {
+      final AsyncValue<Post?> state = ref.watch(
+        postDetailProvider(widget.editPostId!),
+      );
+      return switch (state) {
+        AsyncData<Post?>(value: final Post? post) when post != null =>
+          _buildForm(context, seedFrom: post),
+        // **null은 오류가 아니다** — 삭제·차단·숨김이면 서버가 오류 대신 null을
+        // 준다(가이드 §6). 상세와 같은 안내를 띄우고, 다시 조회해도 같은 null이라
+        // 재시도를 권하지 않는다.
+        AsyncData<Post?>() => const _EditPlaceholder(unavailable: true),
+        AsyncError<Post?>() => _EditPlaceholder(
+          unavailable: true,
+          onRetry: () => ref.invalidate(postDetailProvider(widget.editPostId!)),
+        ),
+        _ => const _EditPlaceholder(),
+      };
+    }
+    return _buildForm(context);
+  }
+
+  Widget _buildForm(BuildContext context, {Post? seedFrom}) {
     final AppLocalizations l10n = AppLocalizations.of(context);
+    // 조회가 끝난 첫 빌드에서만 초안을 채운다. build 중에 provider를 건드리면 안
+    // 되므로 프레임 뒤로 미룬다.
+    if (seedFrom != null && !_seeded) {
+      _seeded = true;
+      _title.text = seedFrom.title;
+      _body.text = seedFrom.body;
+      final Post post = seedFrom;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref
+            .read(_provider.notifier)
+            .seedFromPost(
+              title: post.title,
+              body: post.body,
+              photoKeys: post.photoKeys,
+            );
+      });
+    }
     final PostDraft draft = ref.watch(_provider);
     // 수정은 카테고리를 바꾸지 않으므로 제목·본문만 갖춰지면 저장할 수 있다.
     final bool canSubmit = _isEditing
@@ -230,6 +266,19 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
                 tags: draft.tags,
                 onRemove: (String tag) =>
                     ref.read(_provider.notifier).removeTag(tag),
+              ),
+            // **왜 카테고리·장소·태그가 없는지 밝힌다.** 서버가 `editPost`로 그
+            // 셋을 받지 않는데(가이드 §5), 설명 없이 입력만 사라지면 사용자는
+            // 화면이 고장난 것으로 읽는다. 사진은 바꿀 수 있으므로 여기 없다.
+            if (_isEditing)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                child: Text(
+                  l10n.communityEditFixedFieldsNote,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ),
             _BottomBar(
               draft: draft,
@@ -361,9 +410,11 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
           postId: widget.editPostId!,
           title: draft.title.trim(),
           body: draft.body.trim(),
-          // 사진을 건드리지 않았으면 **변수를 아예 보내지 않는다** — 빈 배열을
-          // 보내면 붙어 있던 사진이 전부 떨어진다(가이드 §5).
-          photoKeys: draft.photoKeys.isEmpty ? null : draft.photoKeys,
+          // **항상 현재 목록을 보낸다.** `photoKeys`는 전체 교체이고 생략하면
+          // 사진이 그대로 남는다(가이드 §5) — 화면이 기존 사진을 채워 열고 뺄
+          // 수단까지 주는 이상, 생략하면 "다 지웠는데 그대로"가 된다. 빈 목록도
+          // 사용자가 뜻한 결과이므로 그대로 보낸다.
+          photoKeys: draft.photoKeys,
         );
     if (!mounted) return;
 
@@ -400,6 +451,71 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
   void _toast(String message) => ScaffoldMessenger.of(
     context,
   ).showSnackBar(SnackBar(content: Text(message)));
+}
+
+/// 수정할 글을 받아 오는 동안, 또는 받아 오지 못했을 때 폼 대신 서는 화면.
+///
+/// **빈 폼을 먼저 보여주지 않는다** — 비었다가 갑자기 채워지면 사용자가 무엇이
+/// 원본인지 알 수 없고, 그 사이에 친 글자는 덮여 사라진다.
+///
+/// [unavailable]이면 삭제·차단·숨김으로 볼 수 없는 글이다(가이드 §6). [onRetry]가
+/// null이면 재시도 버튼을 두지 않는다 — 다시 조회해도 같은 null이다.
+class _EditPlaceholder extends StatelessWidget {
+  const _EditPlaceholder({this.unavailable = false, this.onRetry});
+
+  final bool unavailable;
+  final VoidCallback? onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final ThemeData theme = Theme.of(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          tooltip: l10n.communityCancel,
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+        title: Text(l10n.communityEditTitle),
+      ),
+      body: SafeArea(
+        child: Center(
+          child: unavailable
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Text(
+                        l10n.communityPostUnavailableTitle,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.communityPostUnavailable,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      if (onRetry != null) ...<Widget>[
+                        const SizedBox(height: 16),
+                        FilledButton(
+                          onPressed: onRetry,
+                          child: Text(l10n.communityRetry),
+                        ),
+                      ],
+                    ],
+                  ),
+                )
+              : const CircularProgressIndicator(),
+        ),
+      ),
+    );
+  }
 }
 
 /// 하단 액션 바 — 태그·장소·사진과 글자 수.
