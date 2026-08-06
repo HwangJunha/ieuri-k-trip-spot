@@ -6,6 +6,7 @@ import 'package:ieuri_k_trip_spot/domain/community/model/blocked_user.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/comment.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_chip.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot.dart';
+import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_author.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_image_upload.dart';
@@ -184,22 +185,49 @@ class FakeCommunityRepository implements CommunityRepository {
 
   bool nearbySpotsHasNext = false;
 
+  /// 서버가 내려주는 카테고리 줄 구성. **언어마다 다르고 빈 목록도 정상이라**
+  /// 기본값을 비워 둔다 — 칩을 그리는 테스트가 필요한 값을 직접 정한다.
+  List<NearbySpotCategory> spotCategories = const <NearbySpotCategory>[];
+
+  /// 카테고리별로 다른 목록을 돌려줄 때 쓴다. 여기 없는 카테고리는 [nearbySpots]로
+  /// 떨어진다 — 서버가 진짜로 거른다는 것을 검증하기 위한 장치다.
+  Map<NearbySpotCategory, List<NearbySpot>> nearbySpotsByCategory =
+      const <NearbySpotCategory, List<NearbySpot>>{};
+
   /// 마지막 주변 장소 조회 인자.
-  ({double latitude, double longitude, int? page})? lastFetchNearbySpots;
+  ({
+    double latitude,
+    double longitude,
+    NearbySpotCategory? category,
+    int? page,
+    int? size,
+  })?
+  lastFetchNearbySpots;
+
+  /// 주변 장소 조회 횟수. 카테고리를 바꿨을 때 실제로 다시 조회하는지 본다.
+  int nearbySpotsCalls = 0;
+
+  @override
+  Future<List<NearbySpotCategory>> fetchNearbySpotCategories() async =>
+      spotCategories;
 
   @override
   Future<OffsetPage<NearbySpot>> fetchNearbySpots({
     required double latitude,
     required double longitude,
     int? radiusMeters,
+    NearbySpotCategory? category,
     int? page,
     int? size,
   }) async {
+    nearbySpotsCalls++;
     if (nearbySpotsError != null) throw nearbySpotsError!;
     lastFetchNearbySpots = (
       latitude: latitude,
       longitude: longitude,
+      category: category,
       page: page,
+      size: size,
     );
     if ((page ?? 0) > 0) {
       return OffsetPage<NearbySpot>(
@@ -209,7 +237,9 @@ class FakeCommunityRepository implements CommunityRepository {
       );
     }
     return OffsetPage<NearbySpot>(
-      items: nearbySpots,
+      items: category == null
+          ? nearbySpots
+          : nearbySpotsByCategory[category] ?? nearbySpots,
       page: 0,
       hasNext: nearbySpotsHasNext,
     );

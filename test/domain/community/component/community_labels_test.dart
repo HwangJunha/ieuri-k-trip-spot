@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/domain/community/component/community_labels.dart';
+import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/target_category.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
 
@@ -40,6 +41,22 @@ void main() {
       for (final TargetCategory category in TargetCategory.values) {
         expect(
           targetCategoryLabel(l10n, category),
+          isNotEmpty,
+          reason: '$category 표시명 누락',
+        );
+      }
+    });
+
+    // 장소 카테고리는 **글 카테고리와 같은 ARB 키를 재사용한다** — 식별자가 같고
+    // 커뮤니티 안에서 같은 뜻으로 읽히므로 키를 9개 복제하지 않는다.
+    testWidgets('${locale.languageCode}: 장소 카테고리도 9개 모두 표시명이 있다', (
+      WidgetTester tester,
+    ) async {
+      final AppLocalizations l10n = await _l10n(tester, locale);
+
+      for (final NearbySpotCategory category in NearbySpotCategory.values) {
+        expect(
+          nearbySpotCategoryLabel(l10n, category),
           isNotEmpty,
           reason: '$category 표시명 누락',
         );

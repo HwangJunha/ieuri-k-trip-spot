@@ -6,6 +6,7 @@ import '../model/blocked_user.dart';
 import '../model/comment.dart';
 import '../model/community_chip.dart';
 import '../model/nearby_spot.dart';
+import '../model/nearby_spot_category.dart';
 import '../model/post.dart';
 import '../model/post_image_upload.dart';
 import '../model/report_reason.dart';
@@ -74,15 +75,30 @@ abstract interface class CommunityRepository {
   /// 거리 오름차순으로 준다. 이름으로 좁히는 것은 이미 받아 둔 목록에 대해
   /// 클라이언트가 한다.
   ///
+  /// [category]는 그와 달리 **서버가 거르는 진짜 필터다.** null이면 전체이며,
+  /// 값을 바꾸면 페이지 0부터 다시 받아야 한다(오프셋이 카테고리마다 다르다).
+  ///
   /// 피드와 달리 **오프셋 페이징**이라 [OffsetPage]로 돌려준다(`page`/`size` +
-  /// `hasNext`). [page]는 0-based다.
+  /// `hasNext`). [page]는 0-based이고 [size] 50까지는 서버가 그대로 지킨다
+  /// (라이브 확인).
   Future<OffsetPage<NearbySpot>> fetchNearbySpots({
     required double latitude,
     required double longitude,
     int? radiusMeters,
+    NearbySpotCategory? category,
     int? page,
     int? size,
   });
+
+  /// 장소 선택 시트의 카테고리 줄 구성.
+  ///
+  /// **언어마다 다르다**(`Accept-Language`를 따른다) — ko에는 `TRAVEL_COURSE`가
+  /// 있고 en에는 그 자리에 `TRANSPORT`가 있다(라이브 확인). 그래서 클라이언트가
+  /// 전체 목록을 하드코딩하면 안 되고, [fetchCommunityChips]와 같이 서버가 준 것만
+  /// 그린다.
+  ///
+  /// **빈 목록이 정상이다** — 그때는 카테고리 줄 자체를 그리지 않는다.
+  Future<List<NearbySpotCategory>> fetchNearbySpotCategories();
 
   /// 상단 칩 구성. **빈 목록이 정상이다**(가이드 §2) — 구성이 없는 앱이면 비어 오고
   /// 오류가 아니므로 칩 영역이 비는 레이아웃을 허용해야 한다.

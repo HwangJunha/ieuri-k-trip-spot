@@ -54,9 +54,11 @@ class CommunityScreen extends ConsumerWidget {
       // 그려진다. 기본 위치의 FAB은 그 바에 가려지므로 바 높이만큼 띄우고, 바에
       // 딱 붙지 않도록 한 칸 더 준다. 바 높이를 여기 적지 않고 셸 상수를 읽는
       // 이유는 바의 높이·여백이 바뀔 때 보정이 저절로 따라오게 하기 위해서다.
+      //
+      // 여백 27은 12에서 15 올린 값이다 — 실기기에서 바에 너무 붙어 보였다.
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(
-          bottom: FloatingBottomNavScaffold.barExtent + 12,
+          bottom: FloatingBottomNavScaffold.barExtent + 27,
         ),
         child: FloatingActionButton(
           tooltip: l10n.communityComposeAction,

@@ -675,13 +675,13 @@
   "@communitySpotPickerTitle": {
     "description": "컴포저 장소 선택 시트 제목"
   },
-  "communitySpotPickerFilterHint": "Filter by name",
+  "communitySpotPickerFilterHint": "Search within results",
   "@communitySpotPickerFilterHint": {
-    "description": "장소 선택 시트의 이름 필터 입력 힌트"
+    "description": "장소 선택 시트의 결과 내 재검색 입력 힌트"
   },
-  "communitySpotPickerFilterNote": "Filters the nearby list only — this is not a search of all places.",
+  "communitySpotPickerFilterNote": "Searches the list loaded above, not all places.",
   "@communitySpotPickerFilterNote": {
-    "description": "서버에 이름 검색 인자가 없다는 사실을 사용자에게 알리는 문구"
+    "description": "서버에 이름 검색 인자가 없어 받아 둔 목록만 좁힌다는 사실을 알리는 문구"
   },
   "communitySpotPickerNone": "No place",
   "@communitySpotPickerNone": {

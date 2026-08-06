@@ -9,6 +9,7 @@ import 'package:ieuri_k_trip_spot/common/location/location_service.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_chip.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot.dart';
+import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_draft.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/target_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.dart';
@@ -107,6 +108,15 @@ NearbySpot _spot({
   String title = '서울갤러리',
   double distanceMeters = 16,
 }) => NearbySpot(id: id, title: title, distanceMeters: distanceMeters);
+
+/// 시트 **안의** 카테고리 칩. 컴포저 화면 자체도 글 카테고리를 `ChoiceChip`으로
+/// 그리므로, 시트 밖의 칩과 섞이지 않도록 [BottomSheet] 아래로 범위를 좁힌다.
+Finder _sheetChips([String? label]) => find.descendant(
+  of: find.byType(BottomSheet),
+  matching: label == null
+      ? find.byType(ChoiceChip)
+      : find.widgetWithText(ChoiceChip, label),
+);
 
 void main() {
   group('등록 버튼 활성 조건 (가이드 §5)', () {
@@ -416,6 +426,121 @@ void main() {
         Icons.place_outlined,
       );
       expect(tester.widget<TextButton>(spotButton).onPressed, isNull);
+    });
+  });
+
+  group('장소 선택 시트의 카테고리 줄', () {
+    // **구성은 서버가 정한다** — 언어마다 가용 카테고리가 달라(ko는 여행코스, en은
+    // 교통) 클라이언트가 하드코딩하면 없는 카테고리를 보여주게 된다.
+    testWidgets('칩은 서버가 준 목록으로 그린다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..spotCategories = <NearbySpotCategory>[
+          NearbySpotCategory.touristSpot,
+          NearbySpotCategory.restaurant,
+        ]
+        ..nearbySpots = <NearbySpot>[_spot()];
+      await _pump(tester, repo);
+
+      await _openSpotSheet(tester);
+
+      expect(_sheetChips('All'), findsOneWidget);
+      expect(_sheetChips('Attractions'), findsOneWidget);
+      expect(_sheetChips('Food'), findsOneWidget);
+      // 서버가 주지 않은 카테고리는 그리지 않는다.
+      expect(_sheetChips('Stays'), findsNothing);
+    });
+
+    testWidgets('처음에는 전체가 선택돼 있다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..spotCategories = <NearbySpotCategory>[NearbySpotCategory.restaurant]
+        ..nearbySpots = <NearbySpot>[_spot()];
+      await _pump(tester, repo);
+
+      await _openSpotSheet(tester);
+
+      expect(tester.widget<ChoiceChip>(_sheetChips('All')).selected, isTrue);
+      expect(repo.lastFetchNearbySpots?.category, isNull);
+    });
+
+    // 이름 필터와 달리 **서버가 거른다** — 고른 순간 페이지 0부터 다시 받는다.
+    testWidgets('칩을 고르면 그 카테고리로 페이지 0부터 다시 조회한다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..spotCategories = <NearbySpotCategory>[NearbySpotCategory.restaurant]
+        ..nearbySpots = <NearbySpot>[_spot(id: '1', title: '경복궁')]
+        ..nearbySpotsByCategory = <NearbySpotCategory, List<NearbySpot>>{
+          NearbySpotCategory.restaurant: <NearbySpot>[
+            _spot(id: '2', title: '무교동 북어국집'),
+          ],
+        };
+      await _pump(tester, repo);
+
+      await _openSpotSheet(tester);
+      await tester.tap(_sheetChips('Food'));
+      await tester.pumpAndSettle();
+
+      expect(
+        repo.lastFetchNearbySpots?.category,
+        NearbySpotCategory.restaurant,
+      );
+      expect(repo.lastFetchNearbySpots?.page, 0);
+      expect(find.text('무교동 북어국집'), findsOneWidget);
+      expect(find.text('경복궁'), findsNothing);
+    });
+
+    // 고를 것이 하나뿐인 필터 줄은 자리만 차지한다 — 줄 자체를 그리지 않는다.
+    testWidgets('서버가 빈 목록을 주면 줄을 아예 그리지 않는다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..nearbySpots = <NearbySpot>[_spot(title: '경복궁')];
+      await _pump(tester, repo);
+
+      await _openSpotSheet(tester);
+
+      expect(_sheetChips(), findsNothing);
+      // 칩이 없어도 장소 목록은 그대로 뜬다.
+      expect(find.text('경복궁'), findsOneWidget);
+    });
+
+    // 카테고리 결과가 비는 것은 오류가 아니다 — 빈 안내를 보여준다.
+    testWidgets('카테고리 결과가 비면 오류가 아니라 빈 안내다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..spotCategories = <NearbySpotCategory>[NearbySpotCategory.lodging]
+        ..nearbySpots = <NearbySpot>[_spot(title: '경복궁')]
+        ..nearbySpotsByCategory = <NearbySpotCategory, List<NearbySpot>>{
+          NearbySpotCategory.lodging: <NearbySpot>[],
+        };
+      await _pump(tester, repo);
+
+      await _openSpotSheet(tester);
+      await tester.tap(_sheetChips('Stays'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('No places found nearby.'), findsOneWidget);
+      expect(find.widgetWithText(FilledButton, 'Retry'), findsNothing);
+    });
+
+    // 두 필터는 성격이 다르다 — 카테고리로 좁힌 결과 안에서 텍스트가 다시 거른다.
+    testWidgets('텍스트 칸은 카테고리로 받아 온 결과 안에서 좁힌다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..spotCategories = <NearbySpotCategory>[NearbySpotCategory.restaurant]
+        ..nearbySpots = <NearbySpot>[_spot(id: '1', title: '경복궁')]
+        ..nearbySpotsByCategory = <NearbySpotCategory, List<NearbySpot>>{
+          NearbySpotCategory.restaurant: <NearbySpot>[
+            _spot(id: '2', title: '무교동 북어국집'),
+            _spot(id: '3', title: '참숯골'),
+          ],
+        };
+      await _pump(tester, repo);
+
+      await _openSpotSheet(tester);
+      await tester.tap(_sheetChips('Food'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).last, '참숯');
+      await tester.pumpAndSettle();
+
+      expect(find.text('참숯골'), findsOneWidget);
+      expect(find.text('무교동 북어국집'), findsNothing);
+      // 텍스트 칸은 서버로 가지 않는다 — 마지막 조회는 여전히 카테고리 것이다.
+      expect(repo.nearbySpotsCalls, 2);
     });
   });
 

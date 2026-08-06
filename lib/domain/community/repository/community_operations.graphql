@@ -393,13 +393,16 @@ mutation ReportContent(
 # 오퍼레이션 이름이 `Spots`가 아닌 이유: codegen이 모든 오퍼레이션을 한 이름공간에
 # 모으므로 `domain/spot`의 `query Spots`와 부딪힌다.
 #
-# `category`·`copyright`·`attributionText`·`mapX`·`mapY`는 **요청하지 않는다** —
-# 시트가 그리지 않고, `SpotCategory`는 관광 도메인이 소유한 enum이라 커뮤니티 모델로
-# 끌고 오지 않는다(CLAUDE.md §3).
+# `category` 인자는 **서버가 거르는 진짜 필터다**(이름 필터와 다르다) — null이면
+# 전체다. 응답의 `category` 필드는 요청하지 않는다: 시트가 줄마다 카테고리를 그리지
+# 않고, 고른 값은 이미 앱이 알고 있다.
+#
+# `copyright`·`attributionText`·`mapX`·`mapY`도 요청하지 않는다 — 시트가 안 그린다.
 query NearbySpots(
   $latitude: Float!
   $longitude: Float!
   $radiusMeters: Int
+  $category: SpotCategory
   $page: Int
   $size: Int
 ) {
@@ -407,6 +410,7 @@ query NearbySpots(
     latitude: $latitude
     longitude: $longitude
     radiusMeters: $radiusMeters
+    category: $category
     page: $page
     size: $size
   ) {
@@ -421,4 +425,18 @@ query NearbySpots(
     hasNext
     totalCount
   }
+}
+
+# 장소 선택 시트의 카테고리 줄 구성.
+#
+# **목록은 언어마다 다르다**(`Accept-Language` 헤더를 따른다) — 라이브 확인:
+# ko는 `TRAVEL_COURSE`가 있고 en은 그 자리에 `TRANSPORT`가 있다. 그래서 앱이 8개를
+# 하드코딩하면 안 되고, 상단 칩(`communityChips`)과 같이 **서버가 준 것만** 그린다.
+#
+# **빈 목록도 정상이다** — 그때는 줄 자체를 그리지 않는다.
+#
+# 오퍼레이션 이름이 `AvailableSpotCategories`가 아닌 이유: codegen이 모든
+# 오퍼레이션을 한 이름공간에 모으므로 `domain/spot`의 같은 이름과 부딪힌다.
+query NearbySpotCategories {
+  availableSpotCategories
 }

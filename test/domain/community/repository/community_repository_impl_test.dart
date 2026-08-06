@@ -7,6 +7,7 @@ import 'package:ieuri_k_trip_spot/domain/community/model/comment.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_chip.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot.dart';
+import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_image_upload.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/report_reason.dart';
@@ -997,5 +998,92 @@ void main() {
         ),
       );
     });
+
+    // 이름 필터와 달리 카테고리는 **서버가 거른다** — 값이 실제로 전송돼야 한다.
+    test('카테고리가 서버 enum으로 전송된다', () async {
+      final _FakeLink link = _FakeLink(data: _emptySpotPage);
+
+      await _repo(link).fetchNearbySpots(
+        latitude: 37.5,
+        longitude: 127.0,
+        category: NearbySpotCategory.restaurant,
+      );
+
+      expect(link.sentVariables?['category'], 'RESTAURANT');
+    });
+
+    // null은 "전체"다 — 서버가 nullable로 받으므로 값을 지어내지 않는다.
+    test('카테고리를 주지 않으면 전체다', () async {
+      final _FakeLink link = _FakeLink(data: _emptySpotPage);
+
+      await _repo(link).fetchNearbySpots(latitude: 37.5, longitude: 127.0);
+
+      expect(link.sentVariables?['category'], isNull);
+    });
+  });
+
+  group('availableSpotCategories — 장소 선택 시트의 카테고리 줄', () {
+    test('서버 enum을 커뮤니티 도메인 enum으로 매핑한다', () async {
+      final List<NearbySpotCategory> categories = await _repo(
+        _FakeLink(
+          data: <String, dynamic>{
+            'availableSpotCategories': <dynamic>[
+              'TOURIST_SPOT',
+              'RESTAURANT',
+              'TRAVEL_COURSE',
+            ],
+          },
+        ),
+      ).fetchNearbySpotCategories();
+
+      expect(categories, <NearbySpotCategory>[
+        NearbySpotCategory.touristSpot,
+        NearbySpotCategory.restaurant,
+        NearbySpotCategory.travelCourse,
+      ]);
+    });
+
+    // 구성이 없으면 빈 목록이 오고 **그것이 정상이다** — 오류로 만들지 않는다.
+    test('빈 목록은 오류가 아니다', () async {
+      final List<NearbySpotCategory> categories = await _repo(
+        _FakeLink(
+          data: <String, dynamic>{'availableSpotCategories': <dynamic>[]},
+        ),
+      ).fetchNearbySpotCategories();
+
+      expect(categories, isEmpty);
+    });
+
+    test('errors 배열이 차 있으면 실패가 된다', () async {
+      expect(
+        () => _repo(
+          _FakeLink(
+            errors: <GraphQLError>[
+              const GraphQLError(
+                message: 'UNAUTHENTICATED',
+                path: <dynamic>['availableSpotCategories'],
+              ),
+            ],
+          ),
+        ).fetchNearbySpotCategories(),
+        throwsA(
+          isA<CommunityFailure>().having(
+            (CommunityFailure f) => f.kind,
+            'kind',
+            CommunityFailureKind.unauthenticated,
+          ),
+        ),
+      );
+    });
   });
 }
+
+/// 인자 전송만 볼 때 쓰는 빈 `SpotPage` 응답.
+const Map<String, dynamic> _emptySpotPage = <String, dynamic>{
+  'spots': <String, dynamic>{
+    'items': <dynamic>[],
+    'page': 0,
+    'hasNext': false,
+    'totalCount': 0,
+  },
+};

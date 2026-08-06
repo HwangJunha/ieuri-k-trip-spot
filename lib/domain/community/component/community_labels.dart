@@ -1,4 +1,5 @@
 import '../../../l10n/gen/app_localizations.dart';
+import '../model/nearby_spot_category.dart';
 import '../model/relative_time.dart';
 import '../model/report_reason.dart';
 import '../model/target_category.dart';
@@ -24,6 +25,29 @@ String targetCategoryLabel(AppLocalizations l10n, TargetCategory category) =>
       TargetCategory.restaurant => l10n.communityCategoryRestaurant,
       TargetCategory.transport => l10n.communityCategoryTransport,
     };
+
+/// [NearbySpotCategory]의 표시 문자열.
+///
+/// **[TargetCategory]와 같은 ARB 키를 쓴다.** 두 enum은 식별자가 같고(9개 전부),
+/// 커뮤니티 안에서 "맛집"이 글의 카테고리든 장소의 카테고리든 같은 뜻으로 읽힌다 —
+/// 키를 9개 복제하면 같은 문구가 네 파일에서 따로 늙는다.
+///
+/// 그래도 `domain/spot`의 라벨 함수를 부르지 않는 것은 여전하다(CLAUDE.md §3) —
+/// 이 키들은 커뮤니티가 소유한 키라 재사용이 기능 간 의존이 아니다.
+String nearbySpotCategoryLabel(
+  AppLocalizations l10n,
+  NearbySpotCategory category,
+) => switch (category) {
+  NearbySpotCategory.touristSpot => l10n.communityCategoryTouristSpot,
+  NearbySpotCategory.culturalFacility => l10n.communityCategoryCulturalFacility,
+  NearbySpotCategory.festivalEvent => l10n.communityCategoryFestivalEvent,
+  NearbySpotCategory.travelCourse => l10n.communityCategoryTravelCourse,
+  NearbySpotCategory.leisureSports => l10n.communityCategoryLeisureSports,
+  NearbySpotCategory.lodging => l10n.communityCategoryLodging,
+  NearbySpotCategory.shopping => l10n.communityCategoryShopping,
+  NearbySpotCategory.restaurant => l10n.communityCategoryRestaurant,
+  NearbySpotCategory.transport => l10n.communityCategoryTransport,
+};
 
 /// 상대 시각의 표시 문자열. **버킷 판정은 모델([relativeTimeSince])이 하고 여기서는
 /// 문구만 고른다** — 모델은 순수 Dart라 l10n을 알 수 없기 때문이다(CLAUDE.md §3).

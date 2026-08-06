@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot.dart';
+import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/nearby_spots_providers.dart';
 
@@ -101,5 +102,92 @@ void main() {
 
       expect(container.read(nearbySpotQueryProvider), '경복');
     });
+  });
+
+  group('카테고리 필터 — 이름 필터와 달리 서버가 거른다', () {
+    test('처음에는 전체(null)다', () {
+      final ProviderContainer container = _container(FakeCommunityRepository());
+
+      expect(container.read(nearbySpotCategoryFilterProvider), isNull);
+    });
+
+    test('카테고리를 고르면 그 값으로 페이지 0부터 다시 조회한다', () async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..nearbySpots = <NearbySpot>[_spot('1', '경복궁')]
+        ..nearbySpotsByCategory = <NearbySpotCategory, List<NearbySpot>>{
+          NearbySpotCategory.restaurant: <NearbySpot>[_spot('2', '무교동 북어국집')],
+        };
+      final ProviderContainer container = _container(repo);
+      // 구독을 유지해야 autoDispose provider가 재조회 도중 폐기되지 않는다.
+      container.listen(
+        nearbySpotsControllerProvider,
+        (_, _) {},
+        fireImmediately: true,
+      );
+      await container.read(nearbySpotsControllerProvider.future);
+
+      container
+          .read(nearbySpotCategoryFilterProvider.notifier)
+          .set(NearbySpotCategory.restaurant);
+      final NearbySpotsState state = await container.read(
+        nearbySpotsControllerProvider.future,
+      );
+
+      expect(
+        repo.lastFetchNearbySpots?.category,
+        NearbySpotCategory.restaurant,
+      );
+      // 오프셋은 카테고리마다 다르므로 이어 붙이지 않고 처음부터 받는다.
+      expect(repo.lastFetchNearbySpots?.page, 0);
+      expect(state.items.map((NearbySpot s) => s.id), <String>['2']);
+    });
+
+    test('전체로 되돌리면 카테고리 없이 다시 조회한다', () async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..nearbySpots = <NearbySpot>[_spot('1', '경복궁')];
+      final ProviderContainer container = _container(repo);
+      container.listen(
+        nearbySpotsControllerProvider,
+        (_, _) {},
+        fireImmediately: true,
+      );
+      await container.read(nearbySpotsControllerProvider.future);
+
+      container
+          .read(nearbySpotCategoryFilterProvider.notifier)
+          .set(NearbySpotCategory.lodging);
+      await container.read(nearbySpotsControllerProvider.future);
+      container.read(nearbySpotCategoryFilterProvider.notifier).set(null);
+      await container.read(nearbySpotsControllerProvider.future);
+
+      expect(repo.lastFetchNearbySpots?.category, isNull);
+    });
+
+    test('카테고리 목록은 서버가 준 것을 그대로 쓴다', () async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..spotCategories = <NearbySpotCategory>[
+          NearbySpotCategory.touristSpot,
+          NearbySpotCategory.restaurant,
+        ];
+
+      final List<NearbySpotCategory> categories = await _container(
+        repo,
+      ).read(nearbySpotCategoriesProvider.future);
+
+      expect(categories, <NearbySpotCategory>[
+        NearbySpotCategory.touristSpot,
+        NearbySpotCategory.restaurant,
+      ]);
+    });
+  });
+
+  // 한 페이지에 더 받아 둘수록 이름 필터가 짚는 범위가 넓어진다. 50은 서버가 그대로
+  // 지켜 주는 값이다(라이브 확인).
+  test('한 번에 50건을 요청한다', () async {
+    final FakeCommunityRepository repo = FakeCommunityRepository();
+
+    await _container(repo).read(nearbySpotsControllerProvider.future);
+
+    expect(repo.lastFetchNearbySpots?.size, 50);
   });
 }

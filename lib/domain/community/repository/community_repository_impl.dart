@@ -8,11 +8,18 @@ import '../../../common/network/graphql_debug_log.dart';
 import '../../../common/network/graphql_failure.dart';
 import '../../../common/pagination/offset_page.dart';
 import '../../../common/pagination/page.dart';
+// **생성 타입 하나만 가져온다 — 기능 간 의존이 아니다.** codegen은 모든 스키마를 한
+// 이름공간에 합치므로 `SpotCategory`의 생성 enum이 이 파일에 놓인다(`spots`/`SpotPage`도
+// 이미 그렇다). 같은 타입을 커뮤니티 스키마에 다시 선언하면 중복 정의로 빌드가 깨진다.
+// 이 타입은 repository 밖으로 나가지 않고, 도메인 모델은 커뮤니티가 소유한
+// `NearbySpotCategory`다(CLAUDE.md §3).
+import '../../spot/repository/spot_schema.graphql.dart';
 import '../model/blocked_user.dart';
 import '../model/comment.dart';
 import '../model/community_chip.dart';
 import '../model/community_failure.dart';
 import '../model/nearby_spot.dart';
+import '../model/nearby_spot_category.dart';
 import '../model/post.dart';
 import '../model/post_author.dart';
 import '../model/post_image_upload.dart';
@@ -134,6 +141,7 @@ class CommunityRepositoryImpl implements CommunityRepository {
     required double latitude,
     required double longitude,
     int? radiusMeters,
+    NearbySpotCategory? category,
     int? page,
     int? size,
   }) async {
@@ -143,6 +151,8 @@ class CommunityRepositoryImpl implements CommunityRepository {
         latitude: latitude,
         longitude: longitude,
         radiusMeters: radiusMeters,
+        // null이면 전체다 — 서버가 nullable로 받는다.
+        category: category == null ? null : _spotCategoryInput(category),
         page: page,
         size: size,
       ).toJson(),
@@ -171,6 +181,23 @@ class CommunityRepositoryImpl implements CommunityRepository {
       hasNext: result.hasNext,
       totalCount: result.totalCount,
     );
+  }
+
+  @override
+  Future<List<NearbySpotCategory>> fetchNearbySpotCategories() async {
+    // 언어는 인자가 아니라 `Accept-Language` 헤더로 간다 — 서버가 그 언어에서
+    // 쓰이는 카테고리만 골라 준다. 빈 목록이 정상이므로 오류로 만들지 않는다.
+    final Map<String, dynamic> data = await _query(
+      documentNodeQueryNearbySpotCategories,
+      const <String, dynamic>{},
+      'availableSpotCategories',
+    );
+    return Query$NearbySpotCategories.fromJson(data).availableSpotCategories
+        .map(_spotCategoryFromEnum)
+        // 클라이언트가 모르는 값은 그릴 수 없으므로 뺀다 — 칩 하나 때문에 줄
+        // 전체를 실패시키지 않는다(상단 칩과 같은 규약).
+        .whereType<NearbySpotCategory>()
+        .toList(growable: false);
   }
 
   @override
@@ -740,6 +767,42 @@ class CommunityRepositoryImpl implements CommunityRepository {
         TargetCategory.shopping => Enum$TargetCategory.SHOPPING,
         TargetCategory.restaurant => Enum$TargetCategory.RESTAURANT,
         TargetCategory.transport => Enum$TargetCategory.TRANSPORT,
+      };
+
+  /// 서버 `SpotCategory` → 커뮤니티 도메인 enum. 모르는 값은 null이라 카테고리 줄에서
+  /// 빠지고, 나머지 칩은 그대로 그려진다.
+  ///
+  /// **생성 enum이 `domain/spot`의 파일에 있는 것은 codegen의 이름공간이 하나이기
+  /// 때문이다** — `spots`/`SpotPage`를 이미 그렇게 쓰고 있다(같은 타입을 두 번
+  /// 선언하면 중복 정의로 빌드가 깨진다). 그 타입은 이 파일 밖으로 나가지 않고,
+  /// 도메인 모델은 커뮤니티가 소유한 [NearbySpotCategory]다(CLAUDE.md §3).
+  NearbySpotCategory? _spotCategoryFromEnum(Enum$SpotCategory value) =>
+      switch (value) {
+        Enum$SpotCategory.TOURIST_SPOT => NearbySpotCategory.touristSpot,
+        Enum$SpotCategory.CULTURAL_FACILITY =>
+          NearbySpotCategory.culturalFacility,
+        Enum$SpotCategory.FESTIVAL_EVENT => NearbySpotCategory.festivalEvent,
+        Enum$SpotCategory.TRAVEL_COURSE => NearbySpotCategory.travelCourse,
+        Enum$SpotCategory.LEISURE_SPORTS => NearbySpotCategory.leisureSports,
+        Enum$SpotCategory.LODGING => NearbySpotCategory.lodging,
+        Enum$SpotCategory.SHOPPING => NearbySpotCategory.shopping,
+        Enum$SpotCategory.RESTAURANT => NearbySpotCategory.restaurant,
+        Enum$SpotCategory.TRANSPORT => NearbySpotCategory.transport,
+        Enum$SpotCategory.$unknown => null,
+      };
+
+  Enum$SpotCategory _spotCategoryInput(NearbySpotCategory category) =>
+      switch (category) {
+        NearbySpotCategory.touristSpot => Enum$SpotCategory.TOURIST_SPOT,
+        NearbySpotCategory.culturalFacility =>
+          Enum$SpotCategory.CULTURAL_FACILITY,
+        NearbySpotCategory.festivalEvent => Enum$SpotCategory.FESTIVAL_EVENT,
+        NearbySpotCategory.travelCourse => Enum$SpotCategory.TRAVEL_COURSE,
+        NearbySpotCategory.leisureSports => Enum$SpotCategory.LEISURE_SPORTS,
+        NearbySpotCategory.lodging => Enum$SpotCategory.LODGING,
+        NearbySpotCategory.shopping => Enum$SpotCategory.SHOPPING,
+        NearbySpotCategory.restaurant => Enum$SpotCategory.RESTAURANT,
+        NearbySpotCategory.transport => Enum$SpotCategory.TRANSPORT,
       };
 
   Enum$ReportReason _reportReasonInput(ReportReason reason) => switch (reason) {
