@@ -11,9 +11,10 @@ import 'community_labels.dart';
 
 /// 시트가 돌려주는 선택 결과.
 ///
-/// **"고르지 않고 닫았다"(null)와 "장소 없음을 골랐다"([SpotPickerNone])는 다르다** —
-/// 앞은 아무것도 바꾸지 않고, 뒤는 이미 붙어 있던 장소를 뗀다. 장소는 선택 항목이라
-/// 뗄 수단이 반드시 있어야 한다(가이드 §5).
+/// 고르지 않고 닫으면 null이며 초안을 건드리지 않는다. **이미 붙어 있는 장소를 떼는
+/// 것은 이 시트가 아니라 컴포저 하단 바의 지우기 버튼이 맡는다** — 장소는 선택
+/// 항목이라 뗄 수단이 반드시 있어야 하고(가이드 §5), 그 수단을 고르는 목록 안에
+/// 항목으로 섞어 두면 "장소 없음"이 장소인 것처럼 읽힌다.
 sealed class SpotPickerResult {
   const SpotPickerResult();
 }
@@ -25,26 +26,29 @@ class SpotPickerChosen extends SpotPickerResult {
   final NearbySpot spot;
 }
 
-/// 장소 없이 쓰기로 했다.
-class SpotPickerNone extends SpotPickerResult {
-  const SpotPickerNone();
-}
-
 /// 컴포저의 장소 선택 시트.
 ///
 /// ```
-/// ├── 카테고리 줄 (서버가 거른다 — 고르면 페이지 0부터 다시 받는다)
+/// ├── 출처 탭 (주변 / 좋아요한 장소)     ← 주변이 기본이다
+/// ├── 카테고리 줄 (서버가 거른다 — 두 출처에 함께 걸린다)
+/// ├── (16dp)
 /// ├── 결과 내 재검색 (받아 둔 목록만 좁힌다 — 서버 검색이 아니다)
-/// ├── "장소 없이"                       ← 장소는 선택 항목이다(가이드 §5)
-/// └── 주변 장소 목록 (가까운 순, 오프셋 페이징)
+/// └── 장소 목록
 /// ```
 ///
-/// **두 필터는 성격이 다르다.** 카테고리는 서버 `spots(category:)`로 가는 진짜
-/// 필터이고, 텍스트 칸은 **이름 검색 인자가 없어** 이미 받아 둔 것만 좁힌다. 그
-/// 차이를 문구로 밝혀 두지 않으면 "검색했는데 안 나온다"를 고장으로 읽는다.
+/// **출처가 둘이고 페이징도 다르다.** 주변은 `spots`(오프셋, 거리 있음), 좋아요한
+/// 장소는 `likedSpots`(커서, 거리 없음)다. 컨트롤러가 각자 자기 페이지 모델을 쓰므로
+/// 그 차이가 이 위젯까지 새지 않는다 — 여기서는 둘 다 같은 줄로 그린다.
+///
+/// **카테고리 줄은 두 출처에 함께 걸린다.** 서버 `spots`와 `likedSpots`가 같은
+/// `SpotCategory` 인자를 받으므로 필터 하나로 족하다 — 탭마다 필터를 따로 두면
+/// 탭을 옮길 때 왜 결과가 달라졌는지 알기 어렵다.
+///
+/// **두 필터는 성격이 다르다.** 카테고리는 서버로 가는 진짜 필터이고, 텍스트 칸은
+/// **이름 검색 인자가 없어** 이미 받아 둔 것만 좁힌다.
 ///
 /// 위치를 얻지 못하면 **빈 시트나 무한 스피너가 아니라** 사유와 재시도를 보여준다.
-/// 그 상태에서도 "장소 없이"는 그대로 고를 수 있다.
+/// 그 상태에서도 좋아요한 장소 탭은 그대로 돈다 — 좌표를 쓰지 않기 때문이다.
 Future<SpotPickerResult?> showSpotPickerSheet(BuildContext context) =>
     showModalBottomSheet<SpotPickerResult>(
       context: context,
@@ -74,6 +78,7 @@ class _SpotPickerSheetState extends ConsumerState<_SpotPickerSheet> {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final ThemeData theme = Theme.of(context);
     final String query = ref.watch(nearbySpotQueryProvider);
+    final SpotPickerSource source = ref.watch(spotPickerSourceTabProvider);
 
     return SafeArea(
       // 화면의 3/4까지만 차지한다 — 뒤의 컴포저가 조금 보여야 어디서 고르는
@@ -93,10 +98,16 @@ class _SpotPickerSheetState extends ConsumerState<_SpotPickerSheet> {
                   style: theme.textTheme.titleMedium,
                 ),
               ),
+              // 출처를 먼저 고른다 — 아래 카테고리·이름 필터가 무엇에 걸리는지가
+              // 이 선택으로 정해진다.
+              const _SourceTabs(),
               // 카테고리 줄이 텍스트 칸 **위**에 오는 이유: 이쪽이 서버가 거르는
               // 진짜 필터라 먼저 범위를 정하고, 그 결과 안에서 다시 찾는 순서가
-              // 아래 문구와 맞아떨어진다.
+              // 자연스럽다.
               const _SpotCategoryRow(),
+              // 칩 줄과 검색 칸이 붙어 있으면 성격이 다른 두 필터가 한 덩어리로
+              // 읽힌다 — 사이를 띄워 갈라 둔다.
+              const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: TextField(
@@ -111,25 +122,14 @@ class _SpotPickerSheetState extends ConsumerState<_SpotPickerSheet> {
                       ref.read(nearbySpotQueryProvider.notifier).set(value),
                 ),
               ),
-              // **서버 검색이 아니라는 것을 밝힌다** — "전체 장소를 찾는 검색창"으로
-              // 오해하면 없는 결과를 고장으로 읽는다.
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
-                child: Text(
-                  l10n.communitySpotPickerFilterNote,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-              // 위치가 없어도 **장소 없이 쓰는 길은 항상 열려 있다**(가이드 §5).
-              ListTile(
-                leading: const Icon(Icons.not_listed_location_outlined),
-                title: Text(l10n.communitySpotPickerNone),
-                onTap: () => Navigator.pop(context, const SpotPickerNone()),
-              ),
+              const SizedBox(height: 8),
               const Divider(height: 1),
-              Expanded(child: _SpotList(query: query)),
+              Expanded(
+                child: switch (source) {
+                  SpotPickerSource.nearby => _NearbySpotList(query: query),
+                  SpotPickerSource.liked => _LikedSpotList(query: query),
+                },
+              ),
             ],
           ),
         ),
@@ -214,10 +214,46 @@ class _CategoryChip extends StatelessWidget {
   );
 }
 
+/// 출처 탭 — 주변 / 좋아요한 장소.
+///
+/// **주변이 기본이다**(가장 흔한 경우). 좋아요한 장소는 주변 목록에 없는 곳을 다시
+/// 찾아 붙이는 보조 경로이고, 좌표를 쓰지 않아 **위치를 못 얻은 상태에서도 돈다**.
+class _SourceTabs extends ConsumerWidget {
+  const _SourceTabs();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final SpotPickerSource selected = ref.watch(spotPickerSourceTabProvider);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: SegmentedButton<SpotPickerSource>(
+        segments: <ButtonSegment<SpotPickerSource>>[
+          ButtonSegment<SpotPickerSource>(
+            value: SpotPickerSource.nearby,
+            label: Text(l10n.communitySpotPickerSourceNearby),
+            icon: const Icon(Icons.near_me_outlined, size: 18),
+          ),
+          ButtonSegment<SpotPickerSource>(
+            value: SpotPickerSource.liked,
+            label: Text(l10n.communitySpotPickerSourceLiked),
+            icon: const Icon(Icons.favorite_border, size: 18),
+          ),
+        ],
+        selected: <SpotPickerSource>{selected},
+        showSelectedIcon: false,
+        onSelectionChanged: (Set<SpotPickerSource> next) =>
+            ref.read(spotPickerSourceTabProvider.notifier).set(next.first),
+      ),
+    );
+  }
+}
+
 /// 주변 장소 목록. 로딩·위치 실패·조회 실패·빈 목록·필터 미일치가 **서로 다른
 /// 상태**다 — 사용자가 할 일이 각각 다르기 때문이다.
-class _SpotList extends ConsumerWidget {
-  const _SpotList({required this.query});
+class _NearbySpotList extends ConsumerWidget {
+  const _NearbySpotList({required this.query});
 
   final String query;
 
@@ -261,7 +297,62 @@ class _SpotList extends ConsumerWidget {
   }
 }
 
-/// 장소 한 줄 — 이름과 거리, 있으면 썸네일.
+/// 좋아요한 장소 목록.
+///
+/// **주변 목록과 상태가 하나 다르다** — 위치 실패가 없다. `likedSpots`는 좌표를
+/// 받지 않으므로 위치가 꺼져 있어도 이 탭은 그대로 돈다.
+///
+/// **빈 목록은 오류가 아니다** — 아직 좋아요한 장소가 없는 계정이므로 재시도를
+/// 권하지 않고 그 사실만 알린다.
+///
+/// 스크롤·추가 로딩은 주변 목록과 같이 공용 `common/pagination`의
+/// [PaginationListView]가 담당한다(CLAUDE.md §4).
+class _LikedSpotList extends ConsumerWidget {
+  const _LikedSpotList({required this.query});
+
+  final String query;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final AsyncValue<LikedSpotsState> state = ref.watch(
+      likedSpotsControllerProvider,
+    );
+
+    return state.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, _) => _SheetMessage(
+        text: l10n.communitySpotPickerLikedFailed,
+        onRetry: () => ref.invalidate(likedSpotsControllerProvider),
+      ),
+      data: (LikedSpotsState data) {
+        if (data.isEmpty) {
+          return _SheetMessage(text: l10n.communitySpotPickerLikedEmpty);
+        }
+        final List<NearbySpot> visible = data.filtered(query);
+        if (visible.isEmpty) {
+          return _SheetMessage(text: l10n.communitySpotPickerLikedNoMatch);
+        }
+        return PaginationListView(
+          itemCount: visible.length,
+          // 주변 목록과 같은 규칙 — 필터로 좁힌 동안에는 더 받지 않는다.
+          hasMore: query.trim().isEmpty && data.hasMore,
+          isLoadingMore: data.isLoadingMore,
+          onLoadMore: () =>
+              ref.read(likedSpotsControllerProvider.notifier).loadMore(),
+          itemBuilder: (BuildContext context, int index) =>
+              _SpotTile(spot: visible[index]),
+        );
+      },
+    );
+  }
+}
+
+/// 장소 한 줄 — 이름과 썸네일, 그리고 거리(주변) 또는 주소(좋아요한 장소).
+///
+/// **부제가 출처에 따라 갈린다.** `likedSpots`는 좌표를 받지 않아 거리가 없으므로
+/// (`distanceMeters == null`) 그 자리에 주소를 그린다. 둘 다 없으면 부제를 아예
+/// 그리지 않는다 — 빈 줄을 남기면 줄 높이가 들쭉날쭉해진다.
 class _SpotTile extends StatelessWidget {
   const _SpotTile({required this.spot});
 
@@ -270,6 +361,9 @@ class _SpotTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
+    final String? subtitle = spot.distanceMeters != null
+        ? formatSpotDistance(l10n, spot.distanceMeters!)
+        : spot.address;
     return ListTile(
       leading: SizedBox(
         width: 44,
@@ -287,7 +381,9 @@ class _SpotTile extends StatelessWidget {
               ),
       ),
       title: Text(spot.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text(formatSpotDistance(l10n, spot.distanceMeters)),
+      subtitle: subtitle == null
+          ? null
+          : Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
       onTap: () => Navigator.pop(context, SpotPickerChosen(spot)),
     );
   }

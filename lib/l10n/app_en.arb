@@ -271,6 +271,16 @@
   "@communityPostOptions": {
     "description": "카드 우상단 오버플로 버튼의 접근성 라벨"
   },
+  "communityViewCountLabel": "{count, plural, =1{1 view} other{{count} views}}",
+  "@communityViewCountLabel": {
+    "description": "카드 하단 조회수의 접근성 라벨 — 화면에는 숫자만 그린다",
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
   "communityBlockAction": "Block this user",
   "@communityBlockAction": {
     "description": "모더레이션 시트의 차단 항목"
@@ -679,13 +689,25 @@
   "@communitySpotPickerFilterHint": {
     "description": "장소 선택 시트의 결과 내 재검색 입력 힌트"
   },
-  "communitySpotPickerFilterNote": "Searches the list loaded above, not all places.",
-  "@communitySpotPickerFilterNote": {
-    "description": "서버에 이름 검색 인자가 없어 받아 둔 목록만 좁힌다는 사실을 알리는 문구"
+  "communitySpotPickerSourceNearby": "Nearby",
+  "@communitySpotPickerSourceNearby": {
+    "description": "장소 선택 시트의 출처 탭 — 주변 장소(기본)"
   },
-  "communitySpotPickerNone": "No place",
-  "@communitySpotPickerNone": {
-    "description": "장소를 고르지 않는(해제) 선택지 — 장소는 선택 항목이다"
+  "communitySpotPickerSourceLiked": "Liked places",
+  "@communitySpotPickerSourceLiked": {
+    "description": "장소 선택 시트의 출처 탭 — 내가 좋아요한 장소"
+  },
+  "communitySpotPickerLikedEmpty": "You haven't liked any places yet.",
+  "@communitySpotPickerLikedEmpty": {
+    "description": "좋아요한 장소가 하나도 없는 상태 — 오류가 아니다"
+  },
+  "communitySpotPickerLikedFailed": "Couldn't load your liked places.",
+  "@communitySpotPickerLikedFailed": {
+    "description": "좋아요한 장소 조회 실패 상태"
+  },
+  "communitySpotPickerLikedNoMatch": "No liked place matches that name.",
+  "@communitySpotPickerLikedNoMatch": {
+    "description": "좋아요한 장소 탭에서 이름 필터 결과가 비었을 때"
   },
   "communitySpotPickerEmpty": "No places found nearby.",
   "@communitySpotPickerEmpty": {
@@ -737,6 +759,10 @@
   "communityComposeSpotAction": "Place",
   "@communityComposeSpotAction": {
     "description": "컴포저 하단 액션 바의 장소 버튼"
+  },
+  "communityComposeSpotClear": "Remove place",
+  "@communityComposeSpotClear": {
+    "description": "붙은 장소를 떼는 버튼 — 장소는 선택 항목이라 해제 수단이 필요하다"
   },
   "communityComposePhotosAction": "Photos",
   "@communityComposePhotosAction": {

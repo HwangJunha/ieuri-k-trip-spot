@@ -62,6 +62,9 @@ type Post {
   photoKeys: [String!]!
   likeCount: Int!
   commentCount: Int!
+  # 조회수. 서버가 라이브로 채워 준다(예: 글 5 → 330). 카드 하단에 댓글·좋아요와
+  # 나란히 그린다.
+  viewCount: Int!
   likedByViewer: Boolean!
   ownedByViewer: Boolean!
   hidden: Boolean!

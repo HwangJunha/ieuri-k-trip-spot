@@ -392,7 +392,10 @@ void main() {
     });
 
     // 장소는 선택 항목이라 뗄 수단이 반드시 있어야 한다(가이드 §5).
-    testWidgets('"장소 없이"를 고르면 붙어 있던 장소가 떨어진다', (WidgetTester tester) async {
+    //
+    // 시트 안의 "장소 없이" 항목을 걷어 냈으므로 **해제는 하단 바의 지우기 버튼이
+    // 맡는다** — 검증하는 인수 기준(붙인 장소를 뗄 수 있다)은 그대로다.
+    testWidgets('지우기 버튼을 누르면 붙어 있던 장소가 떨어진다', (WidgetTester tester) async {
       final FakeCommunityRepository repo = FakeCommunityRepository()
         ..nearbySpots = <NearbySpot>[_spot(id: '11094', title: '경복궁')];
       await _pump(tester, repo);
@@ -403,13 +406,45 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('경복궁'), findsOneWidget);
 
-      await _openSpotSheet(tester);
-      await tester.tap(find.text('No place'));
+      await tester.tap(find.byTooltip('Remove place'));
       await tester.pumpAndSettle();
 
       await tester.tap(_submit);
       await tester.pumpAndSettle();
       expect(repo.lastCreatePost?.spotId, isNull);
+    });
+
+    // 붙은 장소가 없으면 지울 것도 없다 — 버튼이 늘 떠 있으면 무엇을 지우는지
+    // 알 수 없다.
+    testWidgets('장소가 없으면 지우기 버튼이 없다', (WidgetTester tester) async {
+      await _pump(tester, FakeCommunityRepository());
+
+      expect(find.byTooltip('Remove place'), findsNothing);
+    });
+
+    // 시트는 고르는 곳이지 해제하는 곳이 아니다 — 목록에 "장소 없음"을 섞으면
+    // 그것이 장소인 것처럼 읽힌다.
+    testWidgets('시트에는 "장소 없이" 항목이 없다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..nearbySpots = <NearbySpot>[_spot(title: '경복궁')];
+      await _pump(tester, repo);
+
+      await _openSpotSheet(tester);
+
+      expect(find.text('No place'), findsNothing);
+      expect(find.text('경복궁'), findsOneWidget);
+    });
+
+    // 서버에 이름 검색 인자가 없다는 설명 문구는 걷어 냈다 — 칩 줄과 검색 칸의
+    // 간격으로 두 필터가 다르다는 것을 드러낸다.
+    testWidgets('검색 칸 아래 설명 문구가 없다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..nearbySpots = <NearbySpot>[_spot(title: '경복궁')];
+      await _pump(tester, repo);
+
+      await _openSpotSheet(tester);
+
+      expect(find.textContaining('not all places'), findsNothing);
     });
 
     // 장소 상세에서 진입하면 그 화면의 글이라는 것이 전제라 바꿀 수 없다.
@@ -426,6 +461,109 @@ void main() {
         Icons.place_outlined,
       );
       expect(tester.widget<TextButton>(spotButton).onPressed, isNull);
+    });
+  });
+
+  group('장소 선택 시트의 좋아요한 장소 탭', () {
+    // 주변 목록에 없는 곳을 다시 찾아 붙이는 경로다. 서버 `likedSpots`는 커서
+    // 페이징이고 좌표를 받지 않는다.
+    testWidgets('탭을 바꾸면 좋아요한 장소가 뜨고 고르면 초안에 붙는다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..nearbySpots = <NearbySpot>[_spot(id: '1', title: '서울갤러리')]
+        ..likedSpots = <NearbySpot>[
+          NearbySpot(id: '5092', title: '국회박물관', address: '서울 영등포구'),
+        ];
+      await _pump(tester, repo);
+      await _fill(tester);
+
+      await _openSpotSheet(tester);
+      // 주변이 기본이다.
+      expect(find.text('서울갤러리'), findsOneWidget);
+      expect(find.text('국회박물관'), findsNothing);
+
+      await tester.tap(find.text('Liked places'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('국회박물관'), findsOneWidget);
+      // 거리가 없으므로 그 자리에 주소를 그린다.
+      expect(find.text('서울 영등포구'), findsOneWidget);
+      expect(find.text('서울갤러리'), findsNothing);
+
+      await tester.tap(find.text('국회박물관'));
+      await tester.pumpAndSettle();
+      await tester.tap(_submit);
+      await tester.pumpAndSettle();
+
+      expect(repo.lastCreatePost?.spotId, '5092');
+    });
+
+    // 좋아요한 장소가 없는 계정이 정상 상태다 — 오류로 처리하면 안 된다.
+    testWidgets('좋아요한 장소가 없으면 오류가 아니라 빈 안내다', (WidgetTester tester) async {
+      await _pump(tester, FakeCommunityRepository());
+
+      await _openSpotSheet(tester);
+      await tester.tap(find.text('Liked places'));
+      await tester.pumpAndSettle();
+
+      expect(find.text("You haven't liked any places yet."), findsOneWidget);
+      expect(find.widgetWithText(FilledButton, 'Retry'), findsNothing);
+    });
+
+    // 좌표를 받지 않는 쿼리라 위치가 꺼져 있어도 이 탭은 그대로 돈다 — 위치 실패
+    // 상태에서 장소를 붙일 수 있는 유일한 길이다.
+    testWidgets('위치를 못 얻어도 좋아요한 장소 탭은 뜬다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..likedSpots = <NearbySpot>[NearbySpot(id: '5092', title: '국회박물관')];
+      await _pump(
+        tester,
+        repo,
+        locationError: const LocationUnavailable(
+          LocationUnavailableReason.serviceDisabled,
+        ),
+      );
+
+      await _openSpotSheet(tester);
+      await tester.tap(find.text('Liked places'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('국회박물관'), findsOneWidget);
+    });
+
+    // 카테고리 줄 하나가 두 출처에 함께 걸린다 — 탭마다 필터를 따로 두면 옮길 때
+    // 왜 결과가 달라졌는지 알 수 없다.
+    testWidgets('카테고리 칩이 좋아요한 장소에도 걸린다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..spotCategories = <NearbySpotCategory>[NearbySpotCategory.restaurant]
+        ..likedSpots = <NearbySpot>[NearbySpot(id: '1', title: '국회박물관')]
+        ..likedSpotsByCategory = <NearbySpotCategory, List<NearbySpot>>{
+          NearbySpotCategory.restaurant: <NearbySpot>[
+            NearbySpot(id: '2', title: '무교동 북어국집'),
+          ],
+        };
+      await _pump(tester, repo);
+
+      await _openSpotSheet(tester);
+      await tester.tap(find.text('Liked places'));
+      await tester.pumpAndSettle();
+      await tester.tap(_sheetChips('Food'));
+      await tester.pumpAndSettle();
+
+      expect(repo.lastFetchLiked?.category, NearbySpotCategory.restaurant);
+      expect(find.text('무교동 북어국집'), findsOneWidget);
+      expect(find.text('국회박물관'), findsNothing);
+    });
+
+    testWidgets('조회가 실패하면 사유와 재시도가 보인다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..likedSpotsError = CommunityFailure.network;
+      await _pump(tester, repo);
+
+      await _openSpotSheet(tester);
+      await tester.tap(find.text('Liked places'));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Couldn't load your liked places."), findsOneWidget);
+      expect(find.widgetWithText(FilledButton, 'Retry'), findsOneWidget);
     });
   });
 

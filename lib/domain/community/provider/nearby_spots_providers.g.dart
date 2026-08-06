@@ -159,6 +159,66 @@ final class NearbySpotCategoriesProvider
 String _$nearbySpotCategoriesHash() =>
     r'4f84a6e2de83dea003b4af6982680edcd8239846';
 
+/// 시트에서 지금 고른 출처(탭). 시트가 열려 있는 동안의 상태라 autoDispose다.
+
+@ProviderFor(SpotPickerSourceTab)
+const spotPickerSourceTabProvider = SpotPickerSourceTabProvider._();
+
+/// 시트에서 지금 고른 출처(탭). 시트가 열려 있는 동안의 상태라 autoDispose다.
+final class SpotPickerSourceTabProvider
+    extends $NotifierProvider<SpotPickerSourceTab, SpotPickerSource> {
+  /// 시트에서 지금 고른 출처(탭). 시트가 열려 있는 동안의 상태라 autoDispose다.
+  const SpotPickerSourceTabProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'spotPickerSourceTabProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$spotPickerSourceTabHash();
+
+  @$internal
+  @override
+  SpotPickerSourceTab create() => SpotPickerSourceTab();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SpotPickerSource value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SpotPickerSource>(value),
+    );
+  }
+}
+
+String _$spotPickerSourceTabHash() =>
+    r'53e2f050ee19a0d921a876fb834c77fb5417511e';
+
+/// 시트에서 지금 고른 출처(탭). 시트가 열려 있는 동안의 상태라 autoDispose다.
+
+abstract class _$SpotPickerSourceTab extends $Notifier<SpotPickerSource> {
+  SpotPickerSource build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref = this.ref as $Ref<SpotPickerSource, SpotPickerSource>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<SpotPickerSource, SpotPickerSource>,
+              SpotPickerSource,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}
+
 /// 시트에서 지금 고른 카테고리. null이면 "전체"다.
 ///
 /// **이름 필터와 달리 이 값은 서버로 간다** — 바뀌면 [NearbySpotsController]가
@@ -319,6 +379,86 @@ abstract class _$NearbySpotsController
             as $ClassProviderElement<
               AnyNotifier<AsyncValue<NearbySpotsState>, NearbySpotsState>,
               AsyncValue<NearbySpotsState>,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}
+
+/// 장소 선택 시트의 "좋아요한 장소" 탭.
+///
+/// **좌표가 필요 없다** — `likedSpots`는 좌표 인자를 받지 않으므로 위치를 못 얻는
+/// 상황에서도 이 탭은 그대로 돈다. 주변 탭이 위치 실패로 막혔을 때 장소를 붙일 수
+/// 있는 유일한 길이기도 하다.
+///
+/// [nearbySpotCategoryFilterProvider]를 watch하므로 **카테고리 줄 하나가 두 탭에
+/// 함께 걸린다** — 바꾸면 build가 다시 돌아 첫 페이지부터 받는다.
+
+@ProviderFor(LikedSpotsController)
+const likedSpotsControllerProvider = LikedSpotsControllerProvider._();
+
+/// 장소 선택 시트의 "좋아요한 장소" 탭.
+///
+/// **좌표가 필요 없다** — `likedSpots`는 좌표 인자를 받지 않으므로 위치를 못 얻는
+/// 상황에서도 이 탭은 그대로 돈다. 주변 탭이 위치 실패로 막혔을 때 장소를 붙일 수
+/// 있는 유일한 길이기도 하다.
+///
+/// [nearbySpotCategoryFilterProvider]를 watch하므로 **카테고리 줄 하나가 두 탭에
+/// 함께 걸린다** — 바꾸면 build가 다시 돌아 첫 페이지부터 받는다.
+final class LikedSpotsControllerProvider
+    extends $AsyncNotifierProvider<LikedSpotsController, LikedSpotsState> {
+  /// 장소 선택 시트의 "좋아요한 장소" 탭.
+  ///
+  /// **좌표가 필요 없다** — `likedSpots`는 좌표 인자를 받지 않으므로 위치를 못 얻는
+  /// 상황에서도 이 탭은 그대로 돈다. 주변 탭이 위치 실패로 막혔을 때 장소를 붙일 수
+  /// 있는 유일한 길이기도 하다.
+  ///
+  /// [nearbySpotCategoryFilterProvider]를 watch하므로 **카테고리 줄 하나가 두 탭에
+  /// 함께 걸린다** — 바꾸면 build가 다시 돌아 첫 페이지부터 받는다.
+  const LikedSpotsControllerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: communityRetryPolicy,
+        name: r'likedSpotsControllerProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$likedSpotsControllerHash();
+
+  @$internal
+  @override
+  LikedSpotsController create() => LikedSpotsController();
+}
+
+String _$likedSpotsControllerHash() =>
+    r'f3a1a9ba4130670eb612503dfd35206466e6dd69';
+
+/// 장소 선택 시트의 "좋아요한 장소" 탭.
+///
+/// **좌표가 필요 없다** — `likedSpots`는 좌표 인자를 받지 않으므로 위치를 못 얻는
+/// 상황에서도 이 탭은 그대로 돈다. 주변 탭이 위치 실패로 막혔을 때 장소를 붙일 수
+/// 있는 유일한 길이기도 하다.
+///
+/// [nearbySpotCategoryFilterProvider]를 watch하므로 **카테고리 줄 하나가 두 탭에
+/// 함께 걸린다** — 바꾸면 build가 다시 돌아 첫 페이지부터 받는다.
+
+abstract class _$LikedSpotsController extends $AsyncNotifier<LikedSpotsState> {
+  FutureOr<LikedSpotsState> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref = this.ref as $Ref<AsyncValue<LikedSpotsState>, LikedSpotsState>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<LikedSpotsState>, LikedSpotsState>,
+              AsyncValue<LikedSpotsState>,
               Object?,
               Object?
             >;

@@ -15,6 +15,7 @@ class Fragment$PostCardFields {
     required this.photoKeys,
     required this.likeCount,
     required this.commentCount,
+    required this.viewCount,
     required this.likedByViewer,
     required this.ownedByViewer,
     required this.hidden,
@@ -33,6 +34,7 @@ class Fragment$PostCardFields {
     final l$photoKeys = json['photoKeys'];
     final l$likeCount = json['likeCount'];
     final l$commentCount = json['commentCount'];
+    final l$viewCount = json['viewCount'];
     final l$likedByViewer = json['likedByViewer'];
     final l$ownedByViewer = json['ownedByViewer'];
     final l$hidden = json['hidden'];
@@ -51,6 +53,7 @@ class Fragment$PostCardFields {
           .toList(),
       likeCount: (l$likeCount as int),
       commentCount: (l$commentCount as int),
+      viewCount: (l$viewCount as int),
       likedByViewer: (l$likedByViewer as bool),
       ownedByViewer: (l$ownedByViewer as bool),
       hidden: (l$hidden as bool),
@@ -84,6 +87,8 @@ class Fragment$PostCardFields {
 
   final int commentCount;
 
+  final int viewCount;
+
   final bool likedByViewer;
 
   final bool ownedByViewer;
@@ -116,6 +121,8 @@ class Fragment$PostCardFields {
     _resultData['likeCount'] = l$likeCount;
     final l$commentCount = commentCount;
     _resultData['commentCount'] = l$commentCount;
+    final l$viewCount = viewCount;
+    _resultData['viewCount'] = l$viewCount;
     final l$likedByViewer = likedByViewer;
     _resultData['likedByViewer'] = l$likedByViewer;
     final l$ownedByViewer = ownedByViewer;
@@ -142,6 +149,7 @@ class Fragment$PostCardFields {
     final l$photoKeys = photoKeys;
     final l$likeCount = likeCount;
     final l$commentCount = commentCount;
+    final l$viewCount = viewCount;
     final l$likedByViewer = likedByViewer;
     final l$ownedByViewer = ownedByViewer;
     final l$hidden = hidden;
@@ -158,6 +166,7 @@ class Fragment$PostCardFields {
       Object.hashAll(l$photoKeys.map((v) => v)),
       l$likeCount,
       l$commentCount,
+      l$viewCount,
       l$likedByViewer,
       l$ownedByViewer,
       l$hidden,
@@ -234,6 +243,11 @@ class Fragment$PostCardFields {
     if (l$commentCount != lOther$commentCount) {
       return false;
     }
+    final l$viewCount = viewCount;
+    final lOther$viewCount = other.viewCount;
+    if (l$viewCount != lOther$viewCount) {
+      return false;
+    }
     final l$likedByViewer = likedByViewer;
     final lOther$likedByViewer = other.likedByViewer;
     if (l$likedByViewer != lOther$likedByViewer) {
@@ -292,6 +306,7 @@ abstract class CopyWith$Fragment$PostCardFields<TRes> {
     List<String>? photoKeys,
     int? likeCount,
     int? commentCount,
+    int? viewCount,
     bool? likedByViewer,
     bool? ownedByViewer,
     bool? hidden,
@@ -323,6 +338,7 @@ class _CopyWithImpl$Fragment$PostCardFields<TRes>
     Object? photoKeys = _undefined,
     Object? likeCount = _undefined,
     Object? commentCount = _undefined,
+    Object? viewCount = _undefined,
     Object? likedByViewer = _undefined,
     Object? ownedByViewer = _undefined,
     Object? hidden = _undefined,
@@ -356,6 +372,9 @@ class _CopyWithImpl$Fragment$PostCardFields<TRes>
       commentCount: commentCount == _undefined || commentCount == null
           ? _instance.commentCount
           : (commentCount as int),
+      viewCount: viewCount == _undefined || viewCount == null
+          ? _instance.viewCount
+          : (viewCount as int),
       likedByViewer: likedByViewer == _undefined || likedByViewer == null
           ? _instance.likedByViewer
           : (likedByViewer as bool),
@@ -412,6 +431,7 @@ class _CopyWithStubImpl$Fragment$PostCardFields<TRes>
     List<String>? photoKeys,
     int? likeCount,
     int? commentCount,
+    int? viewCount,
     bool? likedByViewer,
     bool? ownedByViewer,
     bool? hidden,
@@ -493,6 +513,13 @@ const fragmentDefinitionPostCardFields = FragmentDefinitionNode(
       ),
       FieldNode(
         name: NameNode(value: 'commentCount'),
+        alias: null,
+        arguments: [],
+        directives: [],
+        selectionSet: null,
+      ),
+      FieldNode(
+        name: NameNode(value: 'viewCount'),
         alias: null,
         arguments: [],
         directives: [],
@@ -14226,3 +14253,1000 @@ const documentNodeQueryNearbySpotCategories = DocumentNode(
     ),
   ],
 );
+
+class Variables$Query$CommunityLikedSpots {
+  factory Variables$Query$CommunityLikedSpots({
+    Enum$SpotCategory? category,
+    int? first,
+    String? after,
+  }) => Variables$Query$CommunityLikedSpots._({
+    if (category != null) r'category': category,
+    if (first != null) r'first': first,
+    if (after != null) r'after': after,
+  });
+
+  Variables$Query$CommunityLikedSpots._(this._$data);
+
+  factory Variables$Query$CommunityLikedSpots.fromJson(
+    Map<String, dynamic> data,
+  ) {
+    final result$data = <String, dynamic>{};
+    if (data.containsKey('category')) {
+      final l$category = data['category'];
+      result$data['category'] = l$category == null
+          ? null
+          : fromJson$Enum$SpotCategory((l$category as String));
+    }
+    if (data.containsKey('first')) {
+      final l$first = data['first'];
+      result$data['first'] = (l$first as int?);
+    }
+    if (data.containsKey('after')) {
+      final l$after = data['after'];
+      result$data['after'] = (l$after as String?);
+    }
+    return Variables$Query$CommunityLikedSpots._(result$data);
+  }
+
+  Map<String, dynamic> _$data;
+
+  Enum$SpotCategory? get category => (_$data['category'] as Enum$SpotCategory?);
+
+  int? get first => (_$data['first'] as int?);
+
+  String? get after => (_$data['after'] as String?);
+
+  Map<String, dynamic> toJson() {
+    final result$data = <String, dynamic>{};
+    if (_$data.containsKey('category')) {
+      final l$category = category;
+      result$data['category'] = l$category == null
+          ? null
+          : toJson$Enum$SpotCategory(l$category);
+    }
+    if (_$data.containsKey('first')) {
+      final l$first = first;
+      result$data['first'] = l$first;
+    }
+    if (_$data.containsKey('after')) {
+      final l$after = after;
+      result$data['after'] = l$after;
+    }
+    return result$data;
+  }
+
+  CopyWith$Variables$Query$CommunityLikedSpots<
+    Variables$Query$CommunityLikedSpots
+  >
+  get copyWith => CopyWith$Variables$Query$CommunityLikedSpots(this, (i) => i);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Variables$Query$CommunityLikedSpots ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$category = category;
+    final lOther$category = other.category;
+    if (_$data.containsKey('category') !=
+        other._$data.containsKey('category')) {
+      return false;
+    }
+    if (l$category != lOther$category) {
+      return false;
+    }
+    final l$first = first;
+    final lOther$first = other.first;
+    if (_$data.containsKey('first') != other._$data.containsKey('first')) {
+      return false;
+    }
+    if (l$first != lOther$first) {
+      return false;
+    }
+    final l$after = after;
+    final lOther$after = other.after;
+    if (_$data.containsKey('after') != other._$data.containsKey('after')) {
+      return false;
+    }
+    if (l$after != lOther$after) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    final l$category = category;
+    final l$first = first;
+    final l$after = after;
+    return Object.hashAll([
+      _$data.containsKey('category') ? l$category : const {},
+      _$data.containsKey('first') ? l$first : const {},
+      _$data.containsKey('after') ? l$after : const {},
+    ]);
+  }
+}
+
+abstract class CopyWith$Variables$Query$CommunityLikedSpots<TRes> {
+  factory CopyWith$Variables$Query$CommunityLikedSpots(
+    Variables$Query$CommunityLikedSpots instance,
+    TRes Function(Variables$Query$CommunityLikedSpots) then,
+  ) = _CopyWithImpl$Variables$Query$CommunityLikedSpots;
+
+  factory CopyWith$Variables$Query$CommunityLikedSpots.stub(TRes res) =
+      _CopyWithStubImpl$Variables$Query$CommunityLikedSpots;
+
+  TRes call({Enum$SpotCategory? category, int? first, String? after});
+}
+
+class _CopyWithImpl$Variables$Query$CommunityLikedSpots<TRes>
+    implements CopyWith$Variables$Query$CommunityLikedSpots<TRes> {
+  _CopyWithImpl$Variables$Query$CommunityLikedSpots(this._instance, this._then);
+
+  final Variables$Query$CommunityLikedSpots _instance;
+
+  final TRes Function(Variables$Query$CommunityLikedSpots) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? category = _undefined,
+    Object? first = _undefined,
+    Object? after = _undefined,
+  }) => _then(
+    Variables$Query$CommunityLikedSpots._({
+      ..._instance._$data,
+      if (category != _undefined) 'category': (category as Enum$SpotCategory?),
+      if (first != _undefined) 'first': (first as int?),
+      if (after != _undefined) 'after': (after as String?),
+    }),
+  );
+}
+
+class _CopyWithStubImpl$Variables$Query$CommunityLikedSpots<TRes>
+    implements CopyWith$Variables$Query$CommunityLikedSpots<TRes> {
+  _CopyWithStubImpl$Variables$Query$CommunityLikedSpots(this._res);
+
+  TRes _res;
+
+  call({Enum$SpotCategory? category, int? first, String? after}) => _res;
+}
+
+class Query$CommunityLikedSpots {
+  Query$CommunityLikedSpots({required this.likedSpots});
+
+  factory Query$CommunityLikedSpots.fromJson(Map<String, dynamic> json) {
+    final l$likedSpots = json['likedSpots'];
+    return Query$CommunityLikedSpots(
+      likedSpots: Query$CommunityLikedSpots$likedSpots.fromJson(
+        (l$likedSpots as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final Query$CommunityLikedSpots$likedSpots likedSpots;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$likedSpots = likedSpots;
+    _resultData['likedSpots'] = l$likedSpots.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$likedSpots = likedSpots;
+    return Object.hashAll([l$likedSpots]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$CommunityLikedSpots ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$likedSpots = likedSpots;
+    final lOther$likedSpots = other.likedSpots;
+    if (l$likedSpots != lOther$likedSpots) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$CommunityLikedSpots
+    on Query$CommunityLikedSpots {
+  CopyWith$Query$CommunityLikedSpots<Query$CommunityLikedSpots> get copyWith =>
+      CopyWith$Query$CommunityLikedSpots(this, (i) => i);
+}
+
+abstract class CopyWith$Query$CommunityLikedSpots<TRes> {
+  factory CopyWith$Query$CommunityLikedSpots(
+    Query$CommunityLikedSpots instance,
+    TRes Function(Query$CommunityLikedSpots) then,
+  ) = _CopyWithImpl$Query$CommunityLikedSpots;
+
+  factory CopyWith$Query$CommunityLikedSpots.stub(TRes res) =
+      _CopyWithStubImpl$Query$CommunityLikedSpots;
+
+  TRes call({Query$CommunityLikedSpots$likedSpots? likedSpots});
+  CopyWith$Query$CommunityLikedSpots$likedSpots<TRes> get likedSpots;
+}
+
+class _CopyWithImpl$Query$CommunityLikedSpots<TRes>
+    implements CopyWith$Query$CommunityLikedSpots<TRes> {
+  _CopyWithImpl$Query$CommunityLikedSpots(this._instance, this._then);
+
+  final Query$CommunityLikedSpots _instance;
+
+  final TRes Function(Query$CommunityLikedSpots) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? likedSpots = _undefined}) => _then(
+    Query$CommunityLikedSpots(
+      likedSpots: likedSpots == _undefined || likedSpots == null
+          ? _instance.likedSpots
+          : (likedSpots as Query$CommunityLikedSpots$likedSpots),
+    ),
+  );
+
+  CopyWith$Query$CommunityLikedSpots$likedSpots<TRes> get likedSpots {
+    final local$likedSpots = _instance.likedSpots;
+    return CopyWith$Query$CommunityLikedSpots$likedSpots(
+      local$likedSpots,
+      (e) => call(likedSpots: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Query$CommunityLikedSpots<TRes>
+    implements CopyWith$Query$CommunityLikedSpots<TRes> {
+  _CopyWithStubImpl$Query$CommunityLikedSpots(this._res);
+
+  TRes _res;
+
+  call({Query$CommunityLikedSpots$likedSpots? likedSpots}) => _res;
+
+  CopyWith$Query$CommunityLikedSpots$likedSpots<TRes> get likedSpots =>
+      CopyWith$Query$CommunityLikedSpots$likedSpots.stub(_res);
+}
+
+const documentNodeQueryCommunityLikedSpots = DocumentNode(
+  definitions: [
+    OperationDefinitionNode(
+      type: OperationType.query,
+      name: NameNode(value: 'CommunityLikedSpots'),
+      variableDefinitions: [
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'category')),
+          type: NamedTypeNode(
+            name: NameNode(value: 'SpotCategory'),
+            isNonNull: false,
+          ),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'first')),
+          type: NamedTypeNode(name: NameNode(value: 'Int'), isNonNull: false),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'after')),
+          type: NamedTypeNode(
+            name: NameNode(value: 'String'),
+            isNonNull: false,
+          ),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+      ],
+      directives: [],
+      selectionSet: SelectionSetNode(
+        selections: [
+          FieldNode(
+            name: NameNode(value: 'likedSpots'),
+            alias: null,
+            arguments: [
+              ArgumentNode(
+                name: NameNode(value: 'category'),
+                value: VariableNode(name: NameNode(value: 'category')),
+              ),
+              ArgumentNode(
+                name: NameNode(value: 'first'),
+                value: VariableNode(name: NameNode(value: 'first')),
+              ),
+              ArgumentNode(
+                name: NameNode(value: 'after'),
+                value: VariableNode(name: NameNode(value: 'after')),
+              ),
+            ],
+            directives: [],
+            selectionSet: SelectionSetNode(
+              selections: [
+                FieldNode(
+                  name: NameNode(value: 'edges'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'cursor'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'node'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: SelectionSetNode(
+                          selections: [
+                            FieldNode(
+                              name: NameNode(value: 'id'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: null,
+                            ),
+                            FieldNode(
+                              name: NameNode(value: 'title'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: null,
+                            ),
+                            FieldNode(
+                              name: NameNode(value: 'thumbnailImageUrl'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: null,
+                            ),
+                            FieldNode(
+                              name: NameNode(value: 'address'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: null,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                FieldNode(
+                  name: NameNode(value: 'pageInfo'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'hasNextPage'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'endCursor'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+);
+
+class Query$CommunityLikedSpots$likedSpots {
+  Query$CommunityLikedSpots$likedSpots({
+    required this.edges,
+    required this.pageInfo,
+  });
+
+  factory Query$CommunityLikedSpots$likedSpots.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$edges = json['edges'];
+    final l$pageInfo = json['pageInfo'];
+    return Query$CommunityLikedSpots$likedSpots(
+      edges: (l$edges as List<dynamic>)
+          .map(
+            (e) => Query$CommunityLikedSpots$likedSpots$edges.fromJson(
+              (e as Map<String, dynamic>),
+            ),
+          )
+          .toList(),
+      pageInfo: Query$CommunityLikedSpots$likedSpots$pageInfo.fromJson(
+        (l$pageInfo as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final List<Query$CommunityLikedSpots$likedSpots$edges> edges;
+
+  final Query$CommunityLikedSpots$likedSpots$pageInfo pageInfo;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$edges = edges;
+    _resultData['edges'] = l$edges.map((e) => e.toJson()).toList();
+    final l$pageInfo = pageInfo;
+    _resultData['pageInfo'] = l$pageInfo.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$edges = edges;
+    final l$pageInfo = pageInfo;
+    return Object.hashAll([Object.hashAll(l$edges.map((v) => v)), l$pageInfo]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$CommunityLikedSpots$likedSpots ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$edges = edges;
+    final lOther$edges = other.edges;
+    if (l$edges.length != lOther$edges.length) {
+      return false;
+    }
+    for (int i = 0; i < l$edges.length; i++) {
+      final l$edges$entry = l$edges[i];
+      final lOther$edges$entry = lOther$edges[i];
+      if (l$edges$entry != lOther$edges$entry) {
+        return false;
+      }
+    }
+    final l$pageInfo = pageInfo;
+    final lOther$pageInfo = other.pageInfo;
+    if (l$pageInfo != lOther$pageInfo) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$CommunityLikedSpots$likedSpots
+    on Query$CommunityLikedSpots$likedSpots {
+  CopyWith$Query$CommunityLikedSpots$likedSpots<
+    Query$CommunityLikedSpots$likedSpots
+  >
+  get copyWith => CopyWith$Query$CommunityLikedSpots$likedSpots(this, (i) => i);
+}
+
+abstract class CopyWith$Query$CommunityLikedSpots$likedSpots<TRes> {
+  factory CopyWith$Query$CommunityLikedSpots$likedSpots(
+    Query$CommunityLikedSpots$likedSpots instance,
+    TRes Function(Query$CommunityLikedSpots$likedSpots) then,
+  ) = _CopyWithImpl$Query$CommunityLikedSpots$likedSpots;
+
+  factory CopyWith$Query$CommunityLikedSpots$likedSpots.stub(TRes res) =
+      _CopyWithStubImpl$Query$CommunityLikedSpots$likedSpots;
+
+  TRes call({
+    List<Query$CommunityLikedSpots$likedSpots$edges>? edges,
+    Query$CommunityLikedSpots$likedSpots$pageInfo? pageInfo,
+  });
+  TRes edges(
+    Iterable<Query$CommunityLikedSpots$likedSpots$edges> Function(
+      Iterable<
+        CopyWith$Query$CommunityLikedSpots$likedSpots$edges<
+          Query$CommunityLikedSpots$likedSpots$edges
+        >
+      >,
+    )
+    _fn,
+  );
+  CopyWith$Query$CommunityLikedSpots$likedSpots$pageInfo<TRes> get pageInfo;
+}
+
+class _CopyWithImpl$Query$CommunityLikedSpots$likedSpots<TRes>
+    implements CopyWith$Query$CommunityLikedSpots$likedSpots<TRes> {
+  _CopyWithImpl$Query$CommunityLikedSpots$likedSpots(
+    this._instance,
+    this._then,
+  );
+
+  final Query$CommunityLikedSpots$likedSpots _instance;
+
+  final TRes Function(Query$CommunityLikedSpots$likedSpots) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? edges = _undefined, Object? pageInfo = _undefined}) =>
+      _then(
+        Query$CommunityLikedSpots$likedSpots(
+          edges: edges == _undefined || edges == null
+              ? _instance.edges
+              : (edges as List<Query$CommunityLikedSpots$likedSpots$edges>),
+          pageInfo: pageInfo == _undefined || pageInfo == null
+              ? _instance.pageInfo
+              : (pageInfo as Query$CommunityLikedSpots$likedSpots$pageInfo),
+        ),
+      );
+
+  TRes edges(
+    Iterable<Query$CommunityLikedSpots$likedSpots$edges> Function(
+      Iterable<
+        CopyWith$Query$CommunityLikedSpots$likedSpots$edges<
+          Query$CommunityLikedSpots$likedSpots$edges
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    edges: _fn(
+      _instance.edges.map(
+        (e) => CopyWith$Query$CommunityLikedSpots$likedSpots$edges(e, (i) => i),
+      ),
+    ).toList(),
+  );
+
+  CopyWith$Query$CommunityLikedSpots$likedSpots$pageInfo<TRes> get pageInfo {
+    final local$pageInfo = _instance.pageInfo;
+    return CopyWith$Query$CommunityLikedSpots$likedSpots$pageInfo(
+      local$pageInfo,
+      (e) => call(pageInfo: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Query$CommunityLikedSpots$likedSpots<TRes>
+    implements CopyWith$Query$CommunityLikedSpots$likedSpots<TRes> {
+  _CopyWithStubImpl$Query$CommunityLikedSpots$likedSpots(this._res);
+
+  TRes _res;
+
+  call({
+    List<Query$CommunityLikedSpots$likedSpots$edges>? edges,
+    Query$CommunityLikedSpots$likedSpots$pageInfo? pageInfo,
+  }) => _res;
+
+  edges(_fn) => _res;
+
+  CopyWith$Query$CommunityLikedSpots$likedSpots$pageInfo<TRes> get pageInfo =>
+      CopyWith$Query$CommunityLikedSpots$likedSpots$pageInfo.stub(_res);
+}
+
+class Query$CommunityLikedSpots$likedSpots$edges {
+  Query$CommunityLikedSpots$likedSpots$edges({
+    required this.cursor,
+    required this.node,
+  });
+
+  factory Query$CommunityLikedSpots$likedSpots$edges.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$cursor = json['cursor'];
+    final l$node = json['node'];
+    return Query$CommunityLikedSpots$likedSpots$edges(
+      cursor: (l$cursor as String),
+      node: Query$CommunityLikedSpots$likedSpots$edges$node.fromJson(
+        (l$node as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final String cursor;
+
+  final Query$CommunityLikedSpots$likedSpots$edges$node node;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$cursor = cursor;
+    _resultData['cursor'] = l$cursor;
+    final l$node = node;
+    _resultData['node'] = l$node.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$cursor = cursor;
+    final l$node = node;
+    return Object.hashAll([l$cursor, l$node]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$CommunityLikedSpots$likedSpots$edges ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$cursor = cursor;
+    final lOther$cursor = other.cursor;
+    if (l$cursor != lOther$cursor) {
+      return false;
+    }
+    final l$node = node;
+    final lOther$node = other.node;
+    if (l$node != lOther$node) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$CommunityLikedSpots$likedSpots$edges
+    on Query$CommunityLikedSpots$likedSpots$edges {
+  CopyWith$Query$CommunityLikedSpots$likedSpots$edges<
+    Query$CommunityLikedSpots$likedSpots$edges
+  >
+  get copyWith =>
+      CopyWith$Query$CommunityLikedSpots$likedSpots$edges(this, (i) => i);
+}
+
+abstract class CopyWith$Query$CommunityLikedSpots$likedSpots$edges<TRes> {
+  factory CopyWith$Query$CommunityLikedSpots$likedSpots$edges(
+    Query$CommunityLikedSpots$likedSpots$edges instance,
+    TRes Function(Query$CommunityLikedSpots$likedSpots$edges) then,
+  ) = _CopyWithImpl$Query$CommunityLikedSpots$likedSpots$edges;
+
+  factory CopyWith$Query$CommunityLikedSpots$likedSpots$edges.stub(TRes res) =
+      _CopyWithStubImpl$Query$CommunityLikedSpots$likedSpots$edges;
+
+  TRes call({
+    String? cursor,
+    Query$CommunityLikedSpots$likedSpots$edges$node? node,
+  });
+  CopyWith$Query$CommunityLikedSpots$likedSpots$edges$node<TRes> get node;
+}
+
+class _CopyWithImpl$Query$CommunityLikedSpots$likedSpots$edges<TRes>
+    implements CopyWith$Query$CommunityLikedSpots$likedSpots$edges<TRes> {
+  _CopyWithImpl$Query$CommunityLikedSpots$likedSpots$edges(
+    this._instance,
+    this._then,
+  );
+
+  final Query$CommunityLikedSpots$likedSpots$edges _instance;
+
+  final TRes Function(Query$CommunityLikedSpots$likedSpots$edges) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? cursor = _undefined, Object? node = _undefined}) => _then(
+    Query$CommunityLikedSpots$likedSpots$edges(
+      cursor: cursor == _undefined || cursor == null
+          ? _instance.cursor
+          : (cursor as String),
+      node: node == _undefined || node == null
+          ? _instance.node
+          : (node as Query$CommunityLikedSpots$likedSpots$edges$node),
+    ),
+  );
+
+  CopyWith$Query$CommunityLikedSpots$likedSpots$edges$node<TRes> get node {
+    final local$node = _instance.node;
+    return CopyWith$Query$CommunityLikedSpots$likedSpots$edges$node(
+      local$node,
+      (e) => call(node: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Query$CommunityLikedSpots$likedSpots$edges<TRes>
+    implements CopyWith$Query$CommunityLikedSpots$likedSpots$edges<TRes> {
+  _CopyWithStubImpl$Query$CommunityLikedSpots$likedSpots$edges(this._res);
+
+  TRes _res;
+
+  call({
+    String? cursor,
+    Query$CommunityLikedSpots$likedSpots$edges$node? node,
+  }) => _res;
+
+  CopyWith$Query$CommunityLikedSpots$likedSpots$edges$node<TRes> get node =>
+      CopyWith$Query$CommunityLikedSpots$likedSpots$edges$node.stub(_res);
+}
+
+class Query$CommunityLikedSpots$likedSpots$edges$node {
+  Query$CommunityLikedSpots$likedSpots$edges$node({
+    required this.id,
+    required this.title,
+    required this.thumbnailImageUrl,
+    this.address,
+  });
+
+  factory Query$CommunityLikedSpots$likedSpots$edges$node.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$id = json['id'];
+    final l$title = json['title'];
+    final l$thumbnailImageUrl = json['thumbnailImageUrl'];
+    final l$address = json['address'];
+    return Query$CommunityLikedSpots$likedSpots$edges$node(
+      id: (l$id as String),
+      title: (l$title as String),
+      thumbnailImageUrl: (l$thumbnailImageUrl as String),
+      address: (l$address as String?),
+    );
+  }
+
+  final String id;
+
+  final String title;
+
+  final String thumbnailImageUrl;
+
+  final String? address;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$id = id;
+    _resultData['id'] = l$id;
+    final l$title = title;
+    _resultData['title'] = l$title;
+    final l$thumbnailImageUrl = thumbnailImageUrl;
+    _resultData['thumbnailImageUrl'] = l$thumbnailImageUrl;
+    final l$address = address;
+    _resultData['address'] = l$address;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$id = id;
+    final l$title = title;
+    final l$thumbnailImageUrl = thumbnailImageUrl;
+    final l$address = address;
+    return Object.hashAll([l$id, l$title, l$thumbnailImageUrl, l$address]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$CommunityLikedSpots$likedSpots$edges$node ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$id = id;
+    final lOther$id = other.id;
+    if (l$id != lOther$id) {
+      return false;
+    }
+    final l$title = title;
+    final lOther$title = other.title;
+    if (l$title != lOther$title) {
+      return false;
+    }
+    final l$thumbnailImageUrl = thumbnailImageUrl;
+    final lOther$thumbnailImageUrl = other.thumbnailImageUrl;
+    if (l$thumbnailImageUrl != lOther$thumbnailImageUrl) {
+      return false;
+    }
+    final l$address = address;
+    final lOther$address = other.address;
+    if (l$address != lOther$address) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$CommunityLikedSpots$likedSpots$edges$node
+    on Query$CommunityLikedSpots$likedSpots$edges$node {
+  CopyWith$Query$CommunityLikedSpots$likedSpots$edges$node<
+    Query$CommunityLikedSpots$likedSpots$edges$node
+  >
+  get copyWith =>
+      CopyWith$Query$CommunityLikedSpots$likedSpots$edges$node(this, (i) => i);
+}
+
+abstract class CopyWith$Query$CommunityLikedSpots$likedSpots$edges$node<TRes> {
+  factory CopyWith$Query$CommunityLikedSpots$likedSpots$edges$node(
+    Query$CommunityLikedSpots$likedSpots$edges$node instance,
+    TRes Function(Query$CommunityLikedSpots$likedSpots$edges$node) then,
+  ) = _CopyWithImpl$Query$CommunityLikedSpots$likedSpots$edges$node;
+
+  factory CopyWith$Query$CommunityLikedSpots$likedSpots$edges$node.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Query$CommunityLikedSpots$likedSpots$edges$node;
+
+  TRes call({
+    String? id,
+    String? title,
+    String? thumbnailImageUrl,
+    String? address,
+  });
+}
+
+class _CopyWithImpl$Query$CommunityLikedSpots$likedSpots$edges$node<TRes>
+    implements CopyWith$Query$CommunityLikedSpots$likedSpots$edges$node<TRes> {
+  _CopyWithImpl$Query$CommunityLikedSpots$likedSpots$edges$node(
+    this._instance,
+    this._then,
+  );
+
+  final Query$CommunityLikedSpots$likedSpots$edges$node _instance;
+
+  final TRes Function(Query$CommunityLikedSpots$likedSpots$edges$node) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? id = _undefined,
+    Object? title = _undefined,
+    Object? thumbnailImageUrl = _undefined,
+    Object? address = _undefined,
+  }) => _then(
+    Query$CommunityLikedSpots$likedSpots$edges$node(
+      id: id == _undefined || id == null ? _instance.id : (id as String),
+      title: title == _undefined || title == null
+          ? _instance.title
+          : (title as String),
+      thumbnailImageUrl:
+          thumbnailImageUrl == _undefined || thumbnailImageUrl == null
+          ? _instance.thumbnailImageUrl
+          : (thumbnailImageUrl as String),
+      address: address == _undefined ? _instance.address : (address as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$CommunityLikedSpots$likedSpots$edges$node<TRes>
+    implements CopyWith$Query$CommunityLikedSpots$likedSpots$edges$node<TRes> {
+  _CopyWithStubImpl$Query$CommunityLikedSpots$likedSpots$edges$node(this._res);
+
+  TRes _res;
+
+  call({
+    String? id,
+    String? title,
+    String? thumbnailImageUrl,
+    String? address,
+  }) => _res;
+}
+
+class Query$CommunityLikedSpots$likedSpots$pageInfo {
+  Query$CommunityLikedSpots$likedSpots$pageInfo({
+    required this.hasNextPage,
+    this.endCursor,
+  });
+
+  factory Query$CommunityLikedSpots$likedSpots$pageInfo.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$hasNextPage = json['hasNextPage'];
+    final l$endCursor = json['endCursor'];
+    return Query$CommunityLikedSpots$likedSpots$pageInfo(
+      hasNextPage: (l$hasNextPage as bool),
+      endCursor: (l$endCursor as String?),
+    );
+  }
+
+  final bool hasNextPage;
+
+  final String? endCursor;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$hasNextPage = hasNextPage;
+    _resultData['hasNextPage'] = l$hasNextPage;
+    final l$endCursor = endCursor;
+    _resultData['endCursor'] = l$endCursor;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$hasNextPage = hasNextPage;
+    final l$endCursor = endCursor;
+    return Object.hashAll([l$hasNextPage, l$endCursor]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$CommunityLikedSpots$likedSpots$pageInfo ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$hasNextPage = hasNextPage;
+    final lOther$hasNextPage = other.hasNextPage;
+    if (l$hasNextPage != lOther$hasNextPage) {
+      return false;
+    }
+    final l$endCursor = endCursor;
+    final lOther$endCursor = other.endCursor;
+    if (l$endCursor != lOther$endCursor) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$CommunityLikedSpots$likedSpots$pageInfo
+    on Query$CommunityLikedSpots$likedSpots$pageInfo {
+  CopyWith$Query$CommunityLikedSpots$likedSpots$pageInfo<
+    Query$CommunityLikedSpots$likedSpots$pageInfo
+  >
+  get copyWith =>
+      CopyWith$Query$CommunityLikedSpots$likedSpots$pageInfo(this, (i) => i);
+}
+
+abstract class CopyWith$Query$CommunityLikedSpots$likedSpots$pageInfo<TRes> {
+  factory CopyWith$Query$CommunityLikedSpots$likedSpots$pageInfo(
+    Query$CommunityLikedSpots$likedSpots$pageInfo instance,
+    TRes Function(Query$CommunityLikedSpots$likedSpots$pageInfo) then,
+  ) = _CopyWithImpl$Query$CommunityLikedSpots$likedSpots$pageInfo;
+
+  factory CopyWith$Query$CommunityLikedSpots$likedSpots$pageInfo.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Query$CommunityLikedSpots$likedSpots$pageInfo;
+
+  TRes call({bool? hasNextPage, String? endCursor});
+}
+
+class _CopyWithImpl$Query$CommunityLikedSpots$likedSpots$pageInfo<TRes>
+    implements CopyWith$Query$CommunityLikedSpots$likedSpots$pageInfo<TRes> {
+  _CopyWithImpl$Query$CommunityLikedSpots$likedSpots$pageInfo(
+    this._instance,
+    this._then,
+  );
+
+  final Query$CommunityLikedSpots$likedSpots$pageInfo _instance;
+
+  final TRes Function(Query$CommunityLikedSpots$likedSpots$pageInfo) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? hasNextPage = _undefined,
+    Object? endCursor = _undefined,
+  }) => _then(
+    Query$CommunityLikedSpots$likedSpots$pageInfo(
+      hasNextPage: hasNextPage == _undefined || hasNextPage == null
+          ? _instance.hasNextPage
+          : (hasNextPage as bool),
+      endCursor: endCursor == _undefined
+          ? _instance.endCursor
+          : (endCursor as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$CommunityLikedSpots$likedSpots$pageInfo<TRes>
+    implements CopyWith$Query$CommunityLikedSpots$likedSpots$pageInfo<TRes> {
+  _CopyWithStubImpl$Query$CommunityLikedSpots$likedSpots$pageInfo(this._res);
+
+  TRes _res;
+
+  call({bool? hasNextPage, String? endCursor}) => _res;
+}

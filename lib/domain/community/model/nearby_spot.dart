@@ -1,20 +1,23 @@
-/// 컴포저의 장소 선택 시트가 그리는 주변 장소 한 건.
+/// 컴포저의 장소 선택 시트가 그리는 장소 한 건.
 ///
-/// 서버 `spots` 쿼리는 **좌표 기반이고 이름 검색이 없다** — 반경 안의 장소를 거리
-/// 오름차순으로 준다. 그래서 이 모델은 "가까운 순으로 고르는" 목록에 필요한 것만
-/// 담는다.
+/// **출처가 둘이다** — 서버 `spots`(주변, 오프셋 페이징)와 `likedSpots`(좋아요한
+/// 장소, 커서 페이징). 시트가 두 탭으로 같은 줄 모양을 그리므로 모델도 하나다:
+/// 값이 같은 것을 두 타입으로 갈라 두면 `_SpotTile`이 둘을 다 알아야 한다.
+///
+/// [distanceMeters]가 **nullable인 이유가 그 둘의 차이다** — `spots`는 좌표 기반이라
+/// 거리를 주지만 `likedSpots`는 좌표 인자가 없어 주지 않는다. null이면 시트가 거리
+/// 대신 주소를 그린다.
 ///
 /// **관광 도메인의 `TouristSpot`과 값이 겹치지만 다른 타입이다.** 커뮤니티가
 /// `domain/spot`을 import하면 기능 간 의존이 생기고(CLAUDE.md §3), 이 화면이 쓰는
-/// 것은 그 모델의 일부뿐이다. 서버 `SpotCategory`는 관광 도메인이 소유한 enum이라
-/// 아예 요청하지 않는다 — 시트가 카테고리를 그리지 않기 때문이다.
+/// 것은 그 모델의 일부뿐이다.
 ///
 /// 순수 도메인 — flutter·graphql·riverpod 의존 없음.
 class NearbySpot {
   const NearbySpot({
     required this.id,
     required this.title,
-    required this.distanceMeters,
+    this.distanceMeters,
     this.thumbnailImageUrl,
     this.address,
   });
@@ -26,7 +29,10 @@ class NearbySpot {
   final String title;
 
   /// 현재 좌표로부터의 거리(미터). 서버가 이 값 오름차순으로 정렬해 준다.
-  final double distanceMeters;
+  ///
+  /// **좋아요한 장소에는 없다**(null) — `likedSpots`는 좌표를 받지 않으므로 거리를
+  /// 계산할 수 없다. 그때 시트는 거리 대신 주소를 그린다.
+  final double? distanceMeters;
 
   /// 썸네일. 없을 수 있어 화면은 자리채움 아이콘으로 떨어진다.
   final String? thumbnailImageUrl;

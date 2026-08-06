@@ -55,6 +55,7 @@ Map<String, dynamic> _postNode({
   bool hidden = false,
   bool edited = false,
   int commentCount = 4,
+  int viewCount = 330,
   List<String> tags = const <String>[],
   List<String> photoKeys = const <String>[],
   bool withSpot = true,
@@ -68,6 +69,7 @@ Map<String, dynamic> _postNode({
   'photoKeys': photoKeys,
   'likeCount': 12,
   'commentCount': commentCount,
+  'viewCount': viewCount,
   'likedByViewer': false,
   'ownedByViewer': false,
   'hidden': hidden,
@@ -132,6 +134,8 @@ void main() {
       expect(page.items.first.tags, <String>['야간개장']);
       expect(page.items.first.spot?.title, '경복궁');
       expect(page.items.first.author.nickname, '여행자');
+      // 조회수는 서버 값을 그대로 쓴다 — 클라이언트가 세지 않는다.
+      expect(page.items.first.viewCount, 330);
       expect(page.items[1].category, TargetCategory.restaurant);
       expect(page.hasNextPage, isTrue);
       expect(page.endCursor, 'p2');
@@ -904,6 +908,87 @@ void main() {
             'NOT_POST_OWNER',
           ),
         ),
+      );
+    });
+  });
+
+  group('likedSpots — 컴포저 장소 선택의 두 번째 출처 (커서 페이징)', () {
+    // 주변 장소와 달리 커서 페이징이다 — CursorPage로 매핑된다.
+    test('LikedSpotConnection을 도메인 CursorPage로 매핑한다', () async {
+      final _FakeLink link = _FakeLink(
+        data: <String, dynamic>{
+          'likedSpots': <String, dynamic>{
+            'edges': <dynamic>[
+              <String, dynamic>{
+                'cursor': 'MjAyNi0wOC0wNA',
+                'node': <String, dynamic>{
+                  'id': '5092',
+                  'title': '국회박물관',
+                  'thumbnailImageUrl': 'https://img/liked.jpg',
+                  'address': '서울특별시 영등포구 의사당대로 1',
+                },
+              },
+            ],
+            'pageInfo': <String, dynamic>{
+              'hasNextPage': true,
+              'endCursor': 'MjAyNi0wOC0wNA',
+            },
+          },
+        },
+      );
+
+      final CursorPage<NearbySpot> page = await _repo(link).fetchLikedSpots(
+        category: NearbySpotCategory.culturalFacility,
+        first: 50,
+      );
+
+      expect(page.items, hasLength(1));
+      expect(page.items.first.id, '5092');
+      expect(page.items.first.title, '국회박물관');
+      expect(page.items.first.address, '서울특별시 영등포구 의사당대로 1');
+      // **거리가 없다** — 이 쿼리는 좌표를 받지 않는다. 시트가 그 자리에 주소를 그린다.
+      expect(page.items.first.distanceMeters, isNull);
+      expect(page.hasNextPage, isTrue);
+      expect(page.endCursor, 'MjAyNi0wOC0wNA');
+      // 카테고리는 서버로 넘어간다 — 주변 장소와 같은 필터다.
+      expect(link.sentVariables?['category'], 'CULTURAL_FACILITY');
+    });
+
+    // 좋아요한 장소가 없는 계정이 정상 상태다 — 오류가 아니라 빈 페이지다.
+    test('빈 목록은 오류가 아니다', () async {
+      final CursorPage<NearbySpot> page = await _repo(
+        _FakeLink(
+          data: <String, dynamic>{
+            'likedSpots': <String, dynamic>{
+              'edges': <dynamic>[],
+              'pageInfo': <String, dynamic>{
+                'hasNextPage': false,
+                'endCursor': null,
+              },
+            },
+          },
+        ),
+      ).fetchLikedSpots();
+
+      expect(page.items, isEmpty);
+      expect(page.hasNextPage, isFalse);
+    });
+
+    // GraphQL은 실패해도 HTTP 200이다 — errors[]가 실려 오면 실패로 올려야 한다.
+    test('errors[]가 실려 오면 실패로 올린다', () async {
+      await expectLater(
+        _repo(
+          _FakeLink(
+            errors: <GraphQLError>[
+              const GraphQLError(
+                message: '인증이 필요합니다.',
+                path: <String>['likedSpots'],
+                extensions: <String, dynamic>{'code': 'UNAUTHENTICATED'},
+              ),
+            ],
+          ),
+        ).fetchLikedSpots(),
+        throwsA(isA<CommunityFailure>()),
       );
     });
   });

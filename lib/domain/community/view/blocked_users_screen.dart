@@ -65,6 +65,15 @@ class _List extends ConsumerWidget {
       isLoadingMore: data.isLoadingMore,
       onLoadMore: () =>
           ref.read(blockedUsersControllerProvider.notifier).loadMore(),
+      // 피드와 같은 규약 — 공용 `common/pagination`의 선택 인자다(CLAUDE.md §4).
+      // 다른 기기에서 차단을 풀었을 때 목록을 맞출 수단이 필요하고, 새 값을
+      // await해야 데이터가 올 때까지 스피너가 돈다.
+      onRefresh: () async {
+        ref.invalidate(blockedUsersControllerProvider);
+        await ref
+            .read(blockedUsersControllerProvider.future)
+            .catchError((Object _) => data);
+      },
       itemBuilder: (BuildContext context, int index) {
         final BlockedUser blocked = data.items[index];
         final String? avatar = blocked.member.profileImageUrl;

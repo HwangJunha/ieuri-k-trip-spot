@@ -239,6 +239,7 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
               spotLocked: widget.initialSpotId != null,
               onTags: _editTags,
               onSpot: _pickSpot,
+              onClearSpot: () => ref.read(_provider.notifier).clearSpot(),
               onPhotos: _addPhotos,
             ),
           ],
@@ -249,16 +250,17 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
 
   /// 장소 선택 시트를 연다(가이드 §5 — 장소는 선택 항목이다).
   ///
-  /// 서버 `spots`는 좌표 기반이고 이름 검색이 없어 **주변 목록에서 고른다.**
-  /// 아무것도 고르지 않고 닫으면(null) 초안을 건드리지 않는다.
+  /// 주변 장소와 **좋아요한 장소** 두 출처에서 고른다. 아무것도 고르지 않고 닫으면
+  /// (null) 초안을 건드리지 않는다.
+  ///
+  /// **떼는 것은 이 시트가 아니라 하단 바의 지우기 버튼이 맡는다** — 고르는 목록
+  /// 안에 "장소 없음"을 항목으로 섞어 두면 그것이 장소인 것처럼 읽힌다.
   Future<void> _pickSpot() async {
     final SpotPickerResult? result = await showSpotPickerSheet(context);
     if (!mounted || result == null) return;
     switch (result) {
       case SpotPickerChosen(:final NearbySpot spot):
         ref.read(_provider.notifier).setSpot(id: spot.id, title: spot.title);
-      case SpotPickerNone():
-        ref.read(_provider.notifier).clearSpot();
     }
   }
 
@@ -414,6 +416,7 @@ class _BottomBar extends StatelessWidget {
     required this.spotLocked,
     required this.onTags,
     required this.onSpot,
+    required this.onClearSpot,
     required this.onPhotos,
   });
 
@@ -425,6 +428,11 @@ class _BottomBar extends StatelessWidget {
 
   final VoidCallback onTags;
   final VoidCallback onSpot;
+
+  /// 붙은 장소를 뗀다. 시트에서 "장소 없이"를 걷어 냈으므로 **해제 수단은 이것
+  /// 하나뿐이다**(가이드 §5).
+  final VoidCallback onClearSpot;
+
   final VoidCallback onPhotos;
 
   @override
@@ -453,6 +461,17 @@ class _BottomBar extends StatelessWidget {
               active: draft.spotId != null,
               onPressed: spotLocked ? null : onSpot,
             ),
+            // **장소를 떼는 유일한 수단이다**(가이드 §5 — 장소는 선택 항목이라 뗄 길이
+            // 반드시 있어야 한다). 시트 안의 "장소 없이" 항목을 걷어 냈으므로 해제는
+            // 여기서만 한다. 붙어 있고 고정되지 않았을 때만 나타난다.
+            if (draft.spotId != null && !spotLocked)
+              IconButton(
+                onPressed: onClearSpot,
+                tooltip: l10n.communityComposeSpotClear,
+                visualDensity: VisualDensity.compact,
+                iconSize: 18,
+                icon: const Icon(Icons.close),
+              ),
           ],
           _BarButton(
             icon: Icons.photo_outlined,

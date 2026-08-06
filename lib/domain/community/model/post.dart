@@ -33,6 +33,7 @@ class Post {
     this.photoKeys = const <String>[],
     this.likeCount = 0,
     this.commentCount = 0,
+    this.viewCount = 0,
     this.likedByViewer = false,
     this.ownedByViewer = false,
     this.hidden = false,
@@ -73,6 +74,10 @@ class Post {
   /// 처리하지 않고, 화면은 항상 이 값을 그대로 쓴다.
   final int commentCount;
 
+  /// 서버가 준 조회수. 카드 하단에 댓글·좋아요와 나란히 그린다. 클라이언트가 세는
+  /// 값이 아니라 서버 값을 그대로 쓴다 — 지어내면 실제와 어긋난다.
+  final int viewCount;
+
   /// 내가 좋아요했는지.
   final bool likedByViewer;
 
@@ -108,6 +113,7 @@ class Post {
     photoKeys: photoKeys,
     likeCount: likeCount ?? this.likeCount,
     commentCount: commentCount,
+    viewCount: viewCount,
     likedByViewer: likedByViewer ?? this.likedByViewer,
     ownedByViewer: ownedByViewer,
     hidden: hidden,
@@ -128,6 +134,7 @@ class Post {
       other.createdAt == createdAt &&
       other.likeCount == likeCount &&
       other.commentCount == commentCount &&
+      other.viewCount == viewCount &&
       other.likedByViewer == likedByViewer &&
       other.ownedByViewer == ownedByViewer &&
       other.hidden == hidden &&
@@ -145,6 +152,7 @@ class Post {
     createdAt,
     likeCount,
     commentCount,
+    viewCount,
     likedByViewer,
     ownedByViewer,
     hidden,

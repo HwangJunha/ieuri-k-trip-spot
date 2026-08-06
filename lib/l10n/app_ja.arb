@@ -270,6 +270,7 @@
   "@communityPostOptions": {
     "description": "카드 우상단 오버플로 버튼의 접근성 라벨"
   },
+  "communityViewCountLabel": "{count, plural, other{閲覧{count}回}}",
   "communityBlockAction": "このユーザーをブロック",
   "@communityBlockAction": {
     "description": "모더레이션 시트의 차단 항목"
@@ -508,8 +509,11 @@
   "communitySpotPostsTitle": "この場所の投稿",
   "communitySpotPickerTitle": "近くの場所",
   "communitySpotPickerFilterHint": "結果内で再検索",
-  "communitySpotPickerFilterNote": "上に読み込んだ一覧の中だけを検索します。全地点の検索ではありません。",
-  "communitySpotPickerNone": "場所なし",
+  "communitySpotPickerSourceNearby": "近く",
+  "communitySpotPickerSourceLiked": "いいねした場所",
+  "communitySpotPickerLikedEmpty": "まだいいねした場所がありません。",
+  "communitySpotPickerLikedFailed": "いいねした場所を読み込めませんでした。",
+  "communitySpotPickerLikedNoMatch": "その名前に一致するいいねした場所はありません。",
   "communitySpotPickerEmpty": "近くに場所が見つかりません。",
   "communitySpotPickerNoMatch": "その名前に一致する近くの場所はありません。",
   "communitySpotPickerLocationUnavailable": "位置情報が使えないため近くの場所を表示できません。場所なしでも投稿できます。",
@@ -538,6 +542,7 @@
   "communityComposeCategoryUnset": "カテゴリ",
   "communityComposeTagsAction": "タグ",
   "communityComposeSpotAction": "場所",
+  "communityComposeSpotClear": "場所を外す",
   "communityComposePhotosAction": "写真",
   "communityComposeTagsSheetTitle": "タグ",
   "communityComposeSheetDone": "完了"

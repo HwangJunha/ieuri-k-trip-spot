@@ -270,6 +270,7 @@
   "@communityPostOptions": {
     "description": "카드 우상단 오버플로 버튼의 접근성 라벨"
   },
+  "communityViewCountLabel": "{count, plural, other{{count} 次浏览}}",
   "communityBlockAction": "屏蔽此用户",
   "@communityBlockAction": {
     "description": "모더레이션 시트의 차단 항목"
@@ -508,8 +509,11 @@
   "communitySpotPostsTitle": "该地点的帖子",
   "communitySpotPickerTitle": "附近地点",
   "communitySpotPickerFilterHint": "在结果中搜索",
-  "communitySpotPickerFilterNote": "仅在上方已加载的列表中搜索，并非搜索全部地点。",
-  "communitySpotPickerNone": "不选地点",
+  "communitySpotPickerSourceNearby": "附近",
+  "communitySpotPickerSourceLiked": "收藏的地点",
+  "communitySpotPickerLikedEmpty": "你还没有收藏任何地点。",
+  "communitySpotPickerLikedFailed": "无法加载收藏的地点。",
+  "communitySpotPickerLikedNoMatch": "没有与该名称匹配的收藏地点。",
   "communitySpotPickerEmpty": "附近没有找到地点。",
   "communitySpotPickerNoMatch": "附近没有与该名称匹配的地点。",
   "communitySpotPickerLocationUnavailable": "无法获取位置，因此无法列出附近地点。你仍可以不选地点发帖。",
@@ -538,6 +542,7 @@
   "communityComposeCategoryUnset": "分类",
   "communityComposeTagsAction": "标签",
   "communityComposeSpotAction": "地点",
+  "communityComposeSpotClear": "移除地点",
   "communityComposePhotosAction": "照片",
   "communityComposeTagsSheetTitle": "标签",
   "communityComposeSheetDone": "完成"

@@ -152,7 +152,8 @@ class _Feed extends ConsumerWidget {
   }
 }
 
-/// 피드 본문. 스크롤·추가 로딩은 공용 [PaginationListView]가 담당한다(CLAUDE.md §4).
+/// 피드 본문. 스크롤·추가 로딩·**당겨서 새로고침**은 공용 [PaginationListView]가
+/// 담당한다(CLAUDE.md §4).
 ///
 /// 카드 사이는 **얇은 구분선**이다 — 당근 동네생활은 그림자 있는 카드가 아니라
 /// 구분선으로만 항목을 나눈다.
@@ -179,6 +180,22 @@ class _FeedList extends ConsumerWidget {
       isLoadingMore: data.isLoadingMore,
       onLoadMore: () =>
           ref.read(feedControllerProvider(category).notifier).loadMore(),
+      // 당겨서 새로고침. 공용 `common/pagination`의 선택 인자를 쓴다 — 화면이 자기
+      // RefreshIndicator를 따로 만들지 않는다(CLAUDE.md §4).
+      //
+      // 글을 쓰고 돌아온 뒤 목록을 다시 받는 수단이기도 하다 — `createPost`는 postId만
+      // 주므로(가이드 §5) 새 글을 응답으로 조립할 수 없고 다시 조회해야 한다.
+      //
+      // **새 값을 await한다** — 그래야 데이터가 올 때까지 스피너가 돈다. invalidate만
+      // 하고 끝내면 조회가 시작되자마자 인디케이터가 걷혀 새로고침이 안 된 것처럼
+      // 보인다. 실패는 provider가 오류 상태로 들고 화면이 그 자리에서 사유를
+      // 보여주므로 여기서 다시 던지지 않는다.
+      onRefresh: () async {
+        ref.invalidate(feedControllerProvider(category));
+        await ref
+            .read(feedControllerProvider(category).future)
+            .catchError((Object _) => data);
+      },
       itemBuilder: (BuildContext context, int index) {
         final Post post = data.items[index];
         return Column(

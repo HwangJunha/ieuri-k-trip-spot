@@ -90,6 +90,43 @@ void main() {
     expect(find.text('4'), findsOneWidget);
   });
 
+  // 서버 `Post.viewCount`가 열려 실제 값이 내려온다 — 클라이언트가 세지 않고
+  // 그대로 그린다.
+  testWidgets('하단에 조회수가 보인다', (WidgetTester tester) async {
+    await _pump(
+      tester,
+      FakeCommunityRepository(
+        posts: <Post>[fakePost(viewCount: 330, likeCount: 12, commentCount: 4)],
+      ),
+    );
+
+    expect(find.text('330'), findsOneWidget);
+    expect(find.byIcon(Icons.visibility_outlined), findsOneWidget);
+  });
+
+  // 사용자 요청으로 작성자를 목록에 드러낸다 — 당근이 닉네임을 카드 상단에 두는
+  // 자리다.
+  testWidgets('카드 상단에 작성자 닉네임이 보인다', (WidgetTester tester) async {
+    await _pump(tester, FakeCommunityRepository(posts: <Post>[fakePost()]));
+
+    final Finder nickname = find.text('Traveler');
+    expect(nickname, findsOneWidget);
+    // 제목보다 위에 있어야 한다.
+    expect(
+      tester.getTopLeft(nickname).dy,
+      lessThan(tester.getTopLeft(find.text('Night opening was great')).dy),
+    );
+  });
+
+  // 프로필 이미지는 nullable이고 개발 환경에서는 404가 정상이다 — 그래도 줄이
+  // 깨지지 않고 첫 글자 아바타로 떨어져야 한다.
+  testWidgets('프로필 이미지가 없어도 첫 글자 아바타로 그린다', (WidgetTester tester) async {
+    await _pump(tester, FakeCommunityRepository(posts: <Post>[fakePost()]));
+
+    expect(find.widgetWithText(CircleAvatar, 'T'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('장소가 있으면 하단에 장소명과 태그가 붙는다', (WidgetTester tester) async {
     await _pump(
       tester,
@@ -316,6 +353,26 @@ void main() {
     });
   });
 
+  group('당겨서 새로고침', () {
+    // 글을 쓰고 돌아온 뒤 목록을 다시 받을 길이 없던 것이 이 화면의 구멍이었다.
+    testWidgets('아래로 당기면 피드를 다시 조회한다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository(
+        posts: <Post>[fakePost(title: 'Old post')],
+      )..refreshedPosts = <Post>[fakePost(id: 'p9', title: 'Fresh post')];
+      await _pump(tester, repo);
+
+      expect(repo.firstPageCalls, 1);
+      expect(find.text('Old post'), findsOneWidget);
+
+      await tester.fling(find.byType(ListView), const Offset(0, 400), 1000);
+      await tester.pumpAndSettle();
+
+      expect(repo.firstPageCalls, 2);
+      expect(find.text('Fresh post'), findsOneWidget);
+      expect(find.text('Old post'), findsNothing);
+    });
+  });
+
   testWidgets('글이 없으면 빈 피드 안내가 뜬다', (WidgetTester tester) async {
     await _pump(tester, FakeCommunityRepository());
 
@@ -385,7 +442,8 @@ void main() {
     final double fabBottom = tester
         .getRect(find.byType(FloatingActionButton))
         .bottom;
-    final double barTop = tester.getRect(find.byType(Scaffold).last).bottom -
+    final double barTop =
+        tester.getRect(find.byType(Scaffold).last).bottom -
         FloatingBottomNavScaffold.barExtent;
 
     expect(

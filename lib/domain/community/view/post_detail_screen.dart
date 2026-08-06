@@ -130,6 +130,29 @@ class _Body extends ConsumerWidget {
             onLoadMore: () => ref
                 .read(commentsControllerProvider(post.id).notifier)
                 .loadMore(),
+            // 당겨서 새로고침 — 공용 `common/pagination`의 선택 인자다(CLAUDE.md §4).
+            //
+            // **글과 댓글을 함께 다시 받는다.** 이 목록은 둘을 한 스크롤로 엮은
+            // 것이라 한쪽만 갱신하면 좋아요 수와 댓글 목록이 서로 다른 시점을
+            // 가리킨다. 둘 다 await해야 데이터가 올 때까지 스피너가 돈다.
+            onRefresh: () async {
+              ref
+                ..invalidate(postDetailProvider(post.id))
+                ..invalidate(commentsControllerProvider(post.id));
+              await (
+                ref
+                    .read(postDetailProvider(post.id).future)
+                    .catchError((Object _) => post),
+                ref
+                    .read(commentsControllerProvider(post.id).future)
+                    .catchError(
+                      (Object _) => const CommentsState(
+                        items: <Comment>[],
+                        hasMore: false,
+                      ),
+                    ),
+              ).wait;
+            },
             itemBuilder: (BuildContext context, int index) => switch (index) {
               0 => PostCard(
                 post: post,

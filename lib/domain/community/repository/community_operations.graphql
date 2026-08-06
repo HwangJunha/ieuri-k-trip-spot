@@ -17,6 +17,7 @@ fragment PostCardFields on Post {
   photoKeys
   likeCount
   commentCount
+  viewCount
   likedByViewer
   ownedByViewer
   hidden
@@ -439,4 +440,39 @@ query NearbySpots(
 # 오퍼레이션을 한 이름공간에 모으므로 `domain/spot`의 같은 이름과 부딪힌다.
 query NearbySpotCategories {
   availableSpotCategories
+}
+
+# 장소 선택 시트의 두 번째 출처 — 내가 좋아요한 장소.
+#
+# **주변 장소와 페이징 방식이 다르다**: `spots`는 오프셋(`page`/`size`)이고 이쪽은
+# **커서**(`first`/`after` + `endCursor`)라 `common/pagination`의 `CursorPage`로
+# 매핑한다. 하나의 시트가 두 페이징을 다루는 이유는 서버가 그렇게 갈라 놓았기
+# 때문이고, 각 컨트롤러가 자기 페이지 모델을 쓰면 그 차이가 화면까지 새지 않는다.
+#
+# `category` 인자는 주변 장소와 **같은 필터**다 — 시트의 카테고리 줄 하나가 두 출처에
+# 함께 걸린다.
+#
+# 오퍼레이션 이름이 `LikedSpots`가 아닌 이유: codegen이 모든 오퍼레이션을 한
+# 이름공간에 모으므로 `domain/spot`의 `query LikedSpots`와 부딪힌다. 타입
+# (`LikedSpot`·`LikedSpotConnection`)도 그 스키마가 이미 선언하므로 여기서 다시
+# 선언하지 않는다.
+#
+# `copyright`·`attributionText`·`likedAt`은 요청하지 않는다 — 시트가 그리지 않는다.
+# `category`도 마찬가지다: 고른 값은 이미 앱이 알고 있다.
+query CommunityLikedSpots($category: SpotCategory, $first: Int, $after: String) {
+  likedSpots(category: $category, first: $first, after: $after) {
+    edges {
+      cursor
+      node {
+        id
+        title
+        thumbnailImageUrl
+        address
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
 }

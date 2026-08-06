@@ -26,8 +26,7 @@ ProviderContainer _container(
     overrides: [
       secureStorageProvider.overrideWithValue(SecureStorage(store)),
       authRepositoryProvider.overrideWithValue(repo),
-      if (snsAuth != null)
-        snsAuthenticatorProvider.overrideWithValue(snsAuth),
+      if (snsAuth != null) snsAuthenticatorProvider.overrideWithValue(snsAuth),
     ],
   );
   addTearDown(container.dispose);
@@ -307,33 +306,36 @@ void main() {
     expect(c.read(authControllerProvider).hasError, isFalse);
   });
 
-  test('signUpSns delegates to the repository and returns its result', () async {
-    final MemoryStore store = MemoryStore();
-    final ProviderContainer c = _container(
-      store,
-      repo: FakeAuthRepository(
-        session: _tokens,
-        snsRegistrationResult: const SnsRegistrationResult(
-          emailVerified: false,
-          verificationId: 'v-1',
-        ),
-      ),
-    );
-    await c.read(authControllerProvider.future);
-
-    final SnsRegistrationResult result = await c
-        .read(authControllerProvider.notifier)
-        .signUpSns(
-          credential: const SnsCredential(
-            provider: SnsProvider.apple,
-            idToken: 'id-token',
+  test(
+    'signUpSns delegates to the repository and returns its result',
+    () async {
+      final MemoryStore store = MemoryStore();
+      final ProviderContainer c = _container(
+        store,
+        repo: FakeAuthRepository(
+          session: _tokens,
+          snsRegistrationResult: const SnsRegistrationResult(
+            emailVerified: false,
+            verificationId: 'v-1',
           ),
-          email: 'a@b.com',
-          ageVerified: true,
-          agreements: const [],
-        );
+        ),
+      );
+      await c.read(authControllerProvider.future);
 
-    expect(result.needsVerification, isTrue);
-    expect(result.verificationId, 'v-1');
-  });
+      final SnsRegistrationResult result = await c
+          .read(authControllerProvider.notifier)
+          .signUpSns(
+            credential: const SnsCredential(
+              provider: SnsProvider.apple,
+              idToken: 'id-token',
+            ),
+            email: 'a@b.com',
+            ageVerified: true,
+            agreements: const [],
+          );
+
+      expect(result.needsVerification, isTrue);
+      expect(result.verificationId, 'v-1');
+    },
+  );
 }

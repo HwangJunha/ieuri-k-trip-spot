@@ -27,6 +27,7 @@ Post fakePost({
   List<String> tags = const <String>[],
   int likeCount = 3,
   int commentCount = 2,
+  int viewCount = 0,
   bool likedByViewer = false,
   bool ownedByViewer = false,
   bool hidden = false,
@@ -53,6 +54,7 @@ Post fakePost({
   photoKeys: photoKeys,
   likeCount: likeCount,
   commentCount: commentCount,
+  viewCount: viewCount,
   likedByViewer: likedByViewer,
   ownedByViewer: ownedByViewer,
   hidden: hidden,
@@ -125,6 +127,13 @@ class FakeCommunityRepository implements CommunityRepository {
   int likeCalls = 0;
   int unlikeCalls = 0;
 
+  /// 첫 페이지 조회 횟수. 당겨서 새로고침이 **실제로 다시 조회하는지** 본다.
+  int firstPageCalls = 0;
+
+  /// 설정하면 두 번째 이후의 첫 페이지 조회가 이 목록을 돌려준다 — 새로고침으로
+  /// 목록이 갱신되는 것을 검증하기 위한 장치다.
+  List<Post>? refreshedPosts;
+
   @override
   Future<CursorPage<Post>> fetchPosts({
     String? spotId,
@@ -148,8 +157,9 @@ class FakeCommunityRepository implements CommunityRepository {
     if (after != null) {
       return CursorPage<Post>(items: nextPagePosts, hasNextPage: false);
     }
+    firstPageCalls++;
     return CursorPage<Post>(
-      items: posts,
+      items: firstPageCalls > 1 ? (refreshedPosts ?? posts) : posts,
       hasNextPage: hasNextPage,
       endCursor: hasNextPage ? 'cursor-1' : null,
     );
@@ -242,6 +252,49 @@ class FakeCommunityRepository implements CommunityRepository {
           : nearbySpotsByCategory[category] ?? nearbySpots,
       page: 0,
       hasNext: nearbySpotsHasNext,
+    );
+  }
+
+  /// 장소 선택 시트의 "좋아요한 장소" 탭이 받을 목록. **빈 목록이 기본이다** —
+  /// 좋아요한 장소가 없는 계정이 정상 상태이기 때문이다.
+  List<NearbySpot> likedSpots = const <NearbySpot>[];
+
+  /// `after`가 주어진 두 번째 조회에서 돌려줄 항목들(추가 로딩 검증용).
+  List<NearbySpot> nextLikedSpots = const <NearbySpot>[];
+
+  bool likedSpotsHasNext = false;
+
+  /// 설정하면 좋아요한 장소 조회가 이 오류를 던진다.
+  Object? likedSpotsError;
+
+  /// 카테고리별로 다른 목록을 돌려줄 때 쓴다 — 카테고리 줄이 이 탭에도 걸리는지
+  /// 검증하기 위한 장치다.
+  Map<NearbySpotCategory, List<NearbySpot>> likedSpotsByCategory =
+      const <NearbySpotCategory, List<NearbySpot>>{};
+
+  /// 마지막 좋아요한 장소 조회 인자.
+  ({NearbySpotCategory? category, int? first, String? after})? lastFetchLiked;
+
+  int likedSpotsCalls = 0;
+
+  @override
+  Future<CursorPage<NearbySpot>> fetchLikedSpots({
+    NearbySpotCategory? category,
+    int? first,
+    String? after,
+  }) async {
+    likedSpotsCalls++;
+    if (likedSpotsError != null) throw likedSpotsError!;
+    lastFetchLiked = (category: category, first: first, after: after);
+    if (after != null) {
+      return CursorPage<NearbySpot>(items: nextLikedSpots, hasNextPage: false);
+    }
+    return CursorPage<NearbySpot>(
+      items: category == null
+          ? likedSpots
+          : likedSpotsByCategory[category] ?? likedSpots,
+      hasNextPage: likedSpotsHasNext,
+      endCursor: likedSpotsHasNext ? 'liked-cursor-1' : null,
     );
   }
 

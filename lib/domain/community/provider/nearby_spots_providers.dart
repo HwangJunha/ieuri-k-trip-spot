@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
 import '../../../common/pagination/offset_page.dart';
+import '../../../common/pagination/page.dart';
 import '../model/nearby_spot.dart';
 import '../model/nearby_spot_category.dart';
 import '../repository/community_repository.dart';
@@ -50,6 +51,27 @@ class NearbySpotQuery extends _$NearbySpotQuery {
 @Riverpod(retry: communityRetryPolicy)
 Future<List<NearbySpotCategory>> nearbySpotCategories(Ref ref) =>
     ref.watch(communityRepositoryProvider).fetchNearbySpotCategories();
+
+/// 장소 선택 시트가 지금 보고 있는 출처.
+///
+/// **주변이 기본이다** — 컴포저에서 고르는 장소는 대개 "지금 있는 곳"이고, 좋아요한
+/// 장소는 그 목록에 없는 곳을 다시 찾아 붙일 때 쓰는 보조 경로다.
+enum SpotPickerSource {
+  /// 서버 `spots` — 좌표 기반, 오프셋 페이징, 거리 있음.
+  nearby,
+
+  /// 서버 `likedSpots` — 커서 페이징, 거리 없음(좌표 인자가 없다).
+  liked,
+}
+
+/// 시트에서 지금 고른 출처(탭). 시트가 열려 있는 동안의 상태라 autoDispose다.
+@riverpod
+class SpotPickerSourceTab extends _$SpotPickerSourceTab {
+  @override
+  SpotPickerSource build() => SpotPickerSource.nearby;
+
+  void set(SpotPickerSource value) => state = value;
+}
 
 /// 시트에서 지금 고른 카테고리. null이면 "전체"다.
 ///
@@ -182,6 +204,112 @@ class NearbySpotsController extends _$NearbySpotsController {
         name: 'NearbySpotsController',
       );
       state = AsyncData<NearbySpotsState>(
+        current.copyWith(isLoadingMore: false),
+      );
+    }
+  }
+}
+
+/// 시트가 누적한 좋아요한 장소. 주변 목록과 달리 **커서 페이징**이라 `endCursor`를
+/// 다음 조회의 `after`로 넘긴다.
+///
+/// 페이지 한 장은 공용 `common/pagination`의 `CursorPage`를 그대로 쓴다(CLAUDE.md §4 —
+/// 기능이 자기 페이지네이션 모델을 새로 만들지 않는다). 이 클래스는 그 페이지들을
+/// 화면용으로 **누적한 상태**이지 페이지 모델이 아니다.
+///
+/// [NearbySpotsState]와 필드가 겹치지만 **이어 붙이는 열쇠가 다르다**(페이지 번호 vs
+/// 커서). 하나로 합치면 둘 중 하나는 늘 의미 없는 필드를 들고 다니게 된다.
+class LikedSpotsState {
+  const LikedSpotsState({
+    required this.items,
+    required this.hasMore,
+    this.endCursor,
+    this.isLoadingMore = false,
+  });
+
+  final List<NearbySpot> items;
+  final bool hasMore;
+  final String? endCursor;
+  final bool isLoadingMore;
+
+  /// 좋아요한 장소가 하나도 없는 상태. **오류가 아니다** — 시트가 빈 안내를 그린다.
+  bool get isEmpty => items.isEmpty && !hasMore;
+
+  /// [query]로 좁힌 목록. 주변 목록과 같이 **이미 받아 둔 것만** 거른다.
+  List<NearbySpot> filtered(String query) =>
+      items.where((NearbySpot s) => s.matches(query)).toList(growable: false);
+
+  LikedSpotsState copyWith({
+    List<NearbySpot>? items,
+    bool? hasMore,
+    String? endCursor,
+    bool? isLoadingMore,
+  }) => LikedSpotsState(
+    items: items ?? this.items,
+    hasMore: hasMore ?? this.hasMore,
+    endCursor: endCursor ?? this.endCursor,
+    isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+  );
+}
+
+/// 장소 선택 시트의 "좋아요한 장소" 탭.
+///
+/// **좌표가 필요 없다** — `likedSpots`는 좌표 인자를 받지 않으므로 위치를 못 얻는
+/// 상황에서도 이 탭은 그대로 돈다. 주변 탭이 위치 실패로 막혔을 때 장소를 붙일 수
+/// 있는 유일한 길이기도 하다.
+///
+/// [nearbySpotCategoryFilterProvider]를 watch하므로 **카테고리 줄 하나가 두 탭에
+/// 함께 걸린다** — 바꾸면 build가 다시 돌아 첫 페이지부터 받는다.
+@Riverpod(retry: communityRetryPolicy)
+class LikedSpotsController extends _$LikedSpotsController {
+  CommunityRepository get _repository => ref.read(communityRepositoryProvider);
+
+  @override
+  Future<LikedSpotsState> build() async {
+    final NearbySpotCategory? category = ref.watch(
+      nearbySpotCategoryFilterProvider,
+    );
+    final CursorPage<NearbySpot> page = await _repository.fetchLikedSpots(
+      category: category,
+      first: nearbySpotsPageSize,
+    );
+    return LikedSpotsState(
+      items: page.items,
+      hasMore: page.hasNextPage,
+      endCursor: page.endCursor,
+    );
+  }
+
+  /// 다음 페이지를 이어 붙인다. 더 받을 것이 없거나 이미 받는 중이면 아무것도 하지
+  /// 않는다 — 스크롤 끝에서 중복 호출이 들어와도 안전하다.
+  Future<void> loadMore() async {
+    final LikedSpotsState? current = state.value;
+    if (current == null || !current.hasMore || current.isLoadingMore) return;
+
+    state = AsyncData<LikedSpotsState>(current.copyWith(isLoadingMore: true));
+    try {
+      final CursorPage<NearbySpot> next = await _repository.fetchLikedSpots(
+        // 첫 페이지와 같은 카테고리로 이어 받는다 — 도중에 바뀌면 build가 다시 돌아
+        // 이 경로는 애초에 실행되지 않는다.
+        category: ref.read(nearbySpotCategoryFilterProvider),
+        first: nearbySpotsPageSize,
+        after: current.endCursor,
+      );
+      state = AsyncData<LikedSpotsState>(
+        LikedSpotsState(
+          items: <NearbySpot>[...current.items, ...next.items],
+          hasMore: next.hasNextPage,
+          endCursor: next.endCursor,
+        ),
+      );
+    } on Object catch (error) {
+      // 추가 로딩 실패는 이미 보고 있는 목록을 지우지 않는다 — 인디케이터만 걷는다.
+      // 서버 message는 PII를 담을 수 있어 싣지 않고 실패 유형만 남긴다(POL-013).
+      developer.log(
+        'liked spots loadMore failed: ${error.runtimeType}',
+        name: 'LikedSpotsController',
+      );
+      state = AsyncData<LikedSpotsState>(
         current.copyWith(isLoadingMore: false),
       );
     }

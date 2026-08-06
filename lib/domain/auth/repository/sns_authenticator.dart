@@ -29,11 +29,12 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
   const SnsAuthenticatorImpl();
 
   @override
-  Future<SnsCredential> authenticate(SnsProvider provider) => switch (provider) {
-    SnsProvider.google => _google(),
-    SnsProvider.apple => _apple(),
-    SnsProvider.kakao => _kakao(),
-  };
+  Future<SnsCredential> authenticate(SnsProvider provider) =>
+      switch (provider) {
+        SnsProvider.google => _google(),
+        SnsProvider.apple => _apple(),
+        SnsProvider.kakao => _kakao(),
+      };
 
   // --- Google (google_sign_in v7) ------------------------------------------
 
@@ -79,8 +80,8 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
 
   Future<SnsCredential> _apple() async {
     try {
-      final AuthorizationCredentialAppleID cred = await SignInWithApple
-          .getAppleIDCredential(
+      final AuthorizationCredentialAppleID cred =
+          await SignInWithApple.getAppleIDCredential(
             scopes: <AppleIDAuthorizationScopes>[
               AppleIDAuthorizationScopes.email,
               AppleIDAuthorizationScopes.fullName,
@@ -92,9 +93,10 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
       }
       // Apple sends name/email only on the FIRST authorization; both may be
       // null — the sign-up form then asks the user to type an email (spec §5.2).
-      final String name = <String?>[cred.givenName, cred.familyName]
-          .whereType<String>()
-          .join(' ');
+      final String name = <String?>[
+        cred.givenName,
+        cred.familyName,
+      ].whereType<String>().join(' ');
       return SnsCredential(
         provider: SnsProvider.apple,
         idToken: idToken,

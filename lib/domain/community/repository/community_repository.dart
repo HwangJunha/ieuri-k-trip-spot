@@ -90,6 +90,26 @@ abstract interface class CommunityRepository {
     int? size,
   });
 
+  /// 장소 선택 시트의 두 번째 출처 — 내가 좋아요한 장소 한 페이지.
+  ///
+  /// **주변 장소와 페이징 방식이 다르다**: [fetchNearbySpots]는 오프셋이고 이쪽은
+  /// **커서**라 [CursorPage]로 돌려준다. 서버가 그렇게 갈라 놓았고, 각 컨트롤러가
+  /// 자기 페이지 모델을 쓰면 그 차이가 화면까지 새지 않는다.
+  ///
+  /// [category]는 [fetchNearbySpots]와 **같은 필터다** — 시트의 카테고리 줄 하나가
+  /// 두 출처에 함께 걸린다. null이면 전체다.
+  ///
+  /// **좌표를 받지 않으므로 거리가 없다** — 돌려주는 [NearbySpot]의
+  /// `distanceMeters`는 null이고 시트가 그 자리에 주소를 그린다.
+  ///
+  /// **빈 목록이 정상이다** — 좋아요한 장소가 하나도 없는 계정이므로 오류가 아니라
+  /// 빈 안내로 처리한다.
+  Future<CursorPage<NearbySpot>> fetchLikedSpots({
+    NearbySpotCategory? category,
+    int? first,
+    String? after,
+  });
+
   /// 장소 선택 시트의 카테고리 줄 구성.
   ///
   /// **언어마다 다르다**(`Accept-Language`를 따른다) — ko에는 `TRAVEL_COURSE`가

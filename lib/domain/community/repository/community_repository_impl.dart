@@ -184,6 +184,44 @@ class CommunityRepositoryImpl implements CommunityRepository {
   }
 
   @override
+  Future<CursorPage<NearbySpot>> fetchLikedSpots({
+    NearbySpotCategory? category,
+    int? first,
+    String? after,
+  }) async {
+    final Map<String, dynamic> data = await _query(
+      documentNodeQueryCommunityLikedSpots,
+      Variables$Query$CommunityLikedSpots(
+        // 주변 장소와 같은 필터다 — null이면 전체.
+        category: category == null ? null : _spotCategoryInput(category),
+        first: first,
+        after: after,
+      ).toJson(),
+      'likedSpots',
+    );
+    final Query$CommunityLikedSpots$likedSpots result =
+        Query$CommunityLikedSpots.fromJson(data).likedSpots;
+    return CursorPage<NearbySpot>(
+      items: result.edges
+          .map(
+            (Query$CommunityLikedSpots$likedSpots$edges e) => NearbySpot(
+              id: e.node.id,
+              title: e.node.title,
+              // **거리가 없다** — `likedSpots`는 좌표를 받지 않는다. 시트가 그 자리에
+              // 주소를 그린다.
+              thumbnailImageUrl: e.node.thumbnailImageUrl.isEmpty
+                  ? null
+                  : e.node.thumbnailImageUrl,
+              address: e.node.address,
+            ),
+          )
+          .toList(growable: false),
+      hasNextPage: result.pageInfo.hasNextPage,
+      endCursor: result.pageInfo.endCursor,
+    );
+  }
+
+  @override
   Future<List<NearbySpotCategory>> fetchNearbySpotCategories() async {
     // 언어는 인자가 아니라 `Accept-Language` 헤더로 간다 — 서버가 그 언어에서
     // 쓰이는 카테고리만 골라 준다. 빈 목록이 정상이므로 오류로 만들지 않는다.
@@ -697,6 +735,7 @@ class CommunityRepositoryImpl implements CommunityRepository {
     photoKeys: n.photoKeys,
     likeCount: n.likeCount,
     commentCount: n.commentCount,
+    viewCount: n.viewCount,
     likedByViewer: n.likedByViewer,
     ownedByViewer: n.ownedByViewer,
     hidden: n.hidden,

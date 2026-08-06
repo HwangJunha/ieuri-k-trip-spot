@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/post.dart';
+import '../model/post_author.dart';
 import 'community_labels.dart';
 import 'post_photo.dart';
 
@@ -9,11 +10,11 @@ import 'post_photo.dart';
 ///
 /// ```
 /// ┌────────────────────────────────────────────────┐
-/// │ 카테고리(저강조)                          [⋮] │  ← 좌상단 카테고리, 우상단 메뉴
+/// │ (아바타) 닉네임 · 카테고리(저강조)         [⋮] │  ← 좌상단 작성자+카테고리
 /// │ ┌────┐  제목 (굵게)                            │
 /// │ │사진│  본문 2줄, 넘치면 ellipsis               │  ← 사진은 **좌측 1장만**
 /// │ └────┘                                         │
-/// │              장소명 · #태그 · 3시간 전  ♡12 💬4 │  ← 전부 우측 정렬
+/// │        장소명 · #태그 · 3시간 전  👁330 💬4 ♡12 │  ← 전부 우측 정렬
 /// └────────────────────────────────────────────────┘
 /// ```
 ///
@@ -24,12 +25,14 @@ import 'post_photo.dart';
 /// **사진은 첫 장 하나만 그리고, 없으면 영역 자체를 접는다** — 빈 상자를 자리
 /// 잡아 두면 사진 있는 카드와 없는 카드의 텍스트 시작점이 어긋난다.
 ///
-/// **조회수는 그리지 않는다.** 서버 `Post`에 조회수 필드가 없어서다 — 클라이언트가
-/// 지어내면 실제와 다른 숫자가 된다. 서버가 필드를 열면 하단 행에 붙인다.
+/// **작성자는 맨 윗줄에, 카테고리 앞에 둔다** — 당근이 닉네임을 카드 상단에 두는
+/// 자리다. 프로필 이미지가 없거나 404여도 레이아웃이 흔들리지 않도록 첫 글자
+/// 아바타로 떨어진다. 눌러도 가는 곳이 없으므로(프로필 화면 비범위) 링크로 만들지
+/// 않는다.
 ///
-/// **작성자를 목록에 표시하지 않는다** — 프로필 화면이 비범위라 닉네임을 눌러도 갈
-/// 곳이 없고, 당근도 목록 카드에 작성자를 두지 않는다. 닉네임은 차단 확인 문구에서만
-/// 쓴다.
+/// **조회수는 서버 `Post.viewCount`를 그대로 쓴다** — 클라이언트가 세지 않는다.
+/// 하단 행에서 댓글·좋아요보다 앞에 두는 이유는 그 셋 중 유일하게 누를 수 없는
+/// 값이라, 누르는 것끼리 오른쪽에 모여 있는 편이 손가락이 헷갈리지 않는다.
 ///
 /// [expanded]가 true면 상세용이다 — 본문을 자르지 않고 사진을 전부 보여준다.
 class PostCard extends StatelessWidget {
@@ -79,17 +82,15 @@ class PostCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            // 맨 위 줄: 좌측 카테고리(저강조), 우측 오버플로.
+            // 맨 위 줄: 좌측 작성자+카테고리(저강조), 우측 오버플로.
             Row(
               children: <Widget>[
                 Expanded(
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: post.category == null
-                        ? const SizedBox.shrink()
-                        : _CategoryLabel(
-                            label: targetCategoryLabel(l10n, post.category!),
-                          ),
+                  child: _AuthorLine(
+                    author: post.author,
+                    category: post.category == null
+                        ? null
+                        : targetCategoryLabel(l10n, post.category!),
                   ),
                 ),
                 if (onOptions != null)
@@ -324,6 +325,16 @@ class _FooterRow extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: <Widget>[
+            // 조회수는 서버 `viewCount` 그대로다. **누를 수 없다** — 누를 수 있는
+            // 댓글·좋아요보다 앞에 두어 탭 대상이 오른쪽에 모이게 한다.
+            _Count(
+              icon: Icons.visibility_outlined,
+              color: theme.colorScheme.onSurfaceVariant,
+              count: post.viewCount,
+              semanticLabel: l10n.communityViewCountLabel(post.viewCount),
+              onTap: null,
+            ),
+            const SizedBox(width: 4),
             // 댓글 수는 서버 `commentCount` 그대로 쓴다 — 목록 길이로 계산하지
             // 않는다(가이드 §6).
             _Count(
@@ -355,6 +366,7 @@ class _Count extends StatelessWidget {
     required this.color,
     required this.count,
     required this.onTap,
+    this.semanticLabel,
   });
 
   final IconData icon;
@@ -362,10 +374,13 @@ class _Count extends StatelessWidget {
   final int count;
   final VoidCallback? onTap;
 
+  /// 화면에는 숫자만 보이므로 스크린리더가 무엇의 수인지 알 수 있도록 붙인다.
+  final String? semanticLabel;
+
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    return InkWell(
+    final Widget content = InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: ConstrainedBox(
@@ -386,6 +401,12 @@ class _Count extends StatelessWidget {
         ),
       ),
     );
+    return semanticLabel == null
+        ? content
+        : Semantics(
+            label: semanticLabel,
+            child: ExcludeSemantics(child: content),
+          );
   }
 }
 
@@ -407,23 +428,78 @@ class _OptionsButton extends StatelessWidget {
   );
 }
 
-/// 카드 좌상단의 카테고리. **저강조다** — 당근이 게시판 이름을 작게 두는 자리라
-/// 본문 위계를 가리면 안 된다.
-class _CategoryLabel extends StatelessWidget {
-  const _CategoryLabel({required this.label});
+/// 카드 좌상단의 작성자와 카테고리. **둘 다 저강조다** — 당근이 닉네임과 게시판
+/// 이름을 작게 두는 자리라 제목의 위계를 가리면 안 된다.
+///
+/// 닉네임이 길면 잘리고 카테고리는 그대로 남는다 — 카테고리는 폭이 정해진 값이지만
+/// 닉네임은 사용자가 정하므로, 줄이 넘칠 때 양보해야 하는 쪽은 닉네임이다.
+class _AuthorLine extends StatelessWidget {
+  const _AuthorLine({required this.author, required this.category});
 
-  final String label;
+  final PostAuthor author;
+
+  /// 이미 번역된 카테고리 문구. 서버가 모르는 값을 추가했으면 null이고, 그때는
+  /// 닉네임만 남는다.
+  final String? category;
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    return Text(
-      label,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: theme.textTheme.labelSmall?.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-        fontWeight: FontWeight.w600,
+    final TextStyle? style = theme.textTheme.labelSmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+      fontWeight: FontWeight.w600,
+    );
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        _AuthorAvatar(author: author),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            author.nickname,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: style,
+          ),
+        ),
+        if (category != null) ...<Widget>[
+          Text(' · ', style: style),
+          Text(
+            category!,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: style,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// 작성자 아바타. **이미지가 없거나 실패해도 자리 크기가 같다** — 프로필 이미지는
+/// nullable이고 개발 환경에서는 404가 정상이라(가이드 §4), 실패가 레이아웃을 밀면
+/// 목록 전체가 들쭉날쭉해진다. [CircleAvatar]의 `foregroundImage`는 실패 시 child로
+/// 떨어지므로 첫 글자가 그대로 남는다.
+class _AuthorAvatar extends StatelessWidget {
+  const _AuthorAvatar({required this.author});
+
+  final PostAuthor author;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final String? url = author.profileImageUrl;
+    return CircleAvatar(
+      radius: 9,
+      backgroundColor: theme.colorScheme.surfaceContainerHighest,
+      foregroundImage: (url == null || url.isEmpty) ? null : NetworkImage(url),
+      child: Text(
+        author.nickname.isEmpty ? '?' : author.nickname.characters.first,
+        style: theme.textTheme.labelSmall?.copyWith(
+          fontSize: 9,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }
