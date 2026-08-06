@@ -106,6 +106,13 @@ class FakeAuthRepository implements AuthRepository {
   /// 않는지 검증하는 데 쓴다(로그아웃과 반대다).
   AuthFailure? withdrawFailure;
 
+  /// SNS 요청에 실려 온 authorization code(SPEC-0012 R4). 호출 여부와 구분해야
+  /// null이 "안 불렸다"가 아니라 "code 없이 불렸다"임을 검증할 수 있다.
+  String? loginSnsAuthorizationCode;
+  bool loginSnsCalled = false;
+  String? registerSnsAuthorizationCode;
+  bool registerSnsCalled = false;
+
   @override
   Future<EmailVerificationHandle> registerEmailMember({
     required String email,
@@ -147,7 +154,10 @@ class FakeAuthRepository implements AuthRepository {
   Future<AuthSession> loginSns({
     required SnsProvider provider,
     required String idToken,
+    String? authorizationCode,
   }) async {
+    loginSnsAuthorizationCode = authorizationCode;
+    loginSnsCalled = true;
     final AuthFailure? f = snsFailure ?? failure;
     if (f != null) throw f;
     if (session == null) throw UnimplementedError();
@@ -161,7 +171,10 @@ class FakeAuthRepository implements AuthRepository {
     required String email,
     required bool ageVerified,
     required List<Agreement> agreements,
+    String? authorizationCode,
   }) async {
+    registerSnsAuthorizationCode = authorizationCode;
+    registerSnsCalled = true;
     final AuthFailure? f = snsFailure ?? failure;
     if (f != null) throw f;
     return snsRegistrationResult;
@@ -230,6 +243,7 @@ class FakeSnsAuthenticator implements SnsAuthenticator {
     return SnsCredential(
       provider: provider,
       idToken: credential.idToken,
+      authorizationCode: credential.authorizationCode,
       email: credential.email,
       emailVerified: credential.emailVerified,
       nickname: credential.nickname,

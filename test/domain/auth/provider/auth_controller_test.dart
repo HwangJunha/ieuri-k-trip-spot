@@ -307,6 +307,83 @@ void main() {
   });
 
   test(
+    'signInSns sends the authorization code with the login request',
+    () async {
+      final MemoryStore store = MemoryStore();
+      final FakeAuthRepository repo = FakeAuthRepository(session: _tokens);
+      final ProviderContainer c = _container(
+        store,
+        repo: repo,
+        snsAuth: FakeSnsAuthenticator(
+          credential: const SnsCredential(
+            provider: SnsProvider.google,
+            idToken: 'id-token',
+            authorizationCode: 'server-auth-code',
+          ),
+        ),
+      );
+      await c.read(authControllerProvider.future);
+
+      await c
+          .read(authControllerProvider.notifier)
+          .signInSns(SnsProvider.google);
+
+      expect(repo.loginSnsAuthorizationCode, 'server-auth-code');
+    },
+  );
+
+  test(
+    'signInSns still authenticates when the provider gave no authorization code',
+    () async {
+      final MemoryStore store = MemoryStore();
+      final FakeAuthRepository repo = FakeAuthRepository(session: _tokens);
+      final ProviderContainer c = _container(
+        store,
+        repo: repo,
+        // 카카오처럼 code를 노출하지 않는 provider — null이 정상 경로다(R7).
+        snsAuth: FakeSnsAuthenticator(
+          credential: const SnsCredential(
+            provider: SnsProvider.kakao,
+            idToken: 'id-token',
+          ),
+        ),
+      );
+      await c.read(authControllerProvider.future);
+
+      final SnsSignInOutcome outcome = await c
+          .read(authControllerProvider.notifier)
+          .signInSns(SnsProvider.kakao);
+
+      expect(outcome, isA<SnsAuthenticated>());
+      expect(c.read(authControllerProvider).value!.isAuthenticated, isTrue);
+      expect(repo.loginSnsCalled, isTrue);
+      expect(repo.loginSnsAuthorizationCode, isNull);
+    },
+  );
+
+  test('signUpSns sends the credential authorization code', () async {
+    final MemoryStore store = MemoryStore();
+    final FakeAuthRepository repo = FakeAuthRepository(session: _tokens);
+    final ProviderContainer c = _container(store, repo: repo);
+    await c.read(authControllerProvider.future);
+
+    await c
+        .read(authControllerProvider.notifier)
+        .signUpSns(
+          credential: const SnsCredential(
+            provider: SnsProvider.apple,
+            idToken: 'id-token',
+            authorizationCode: 'apple-code',
+          ),
+          email: 'a@b.com',
+          ageVerified: true,
+          agreements: const [],
+        );
+
+    expect(repo.registerSnsAuthorizationCode, 'apple-code');
+  });
+
+  test(
     'signUpSns delegates to the repository and returns its result',
     () async {
       final MemoryStore store = MemoryStore();

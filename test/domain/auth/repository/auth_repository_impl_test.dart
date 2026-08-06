@@ -18,8 +18,18 @@ class _FakeLink extends Link {
   final List<GraphQLError>? errors;
   final bool throwLinkException;
 
+  /// 마지막 요청이 실어 보낸 변수. 요청이 어떻게 구성됐는지 검증할 때 쓴다.
+  Map<String, dynamic>? lastVariables;
+
+  /// 마지막 요청 변수의 `input` 맵(없으면 null).
+  Map<String, dynamic>? get lastInput {
+    final input = lastVariables?['input'];
+    return input is Map<String, dynamic> ? input : null;
+  }
+
   @override
   Stream<Response> request(Request request, [NextLink? forward]) async* {
+    lastVariables = request.variables;
     if (throwLinkException) {
       throw const ServerException(originalException: 'down');
     }
@@ -344,6 +354,90 @@ void main() {
       ),
     );
   });
+
+  // 서버가 아직 `authorizationCode`를 모르므로 전송은 잠겨 있다
+  // (`_sendAuthorizationCode == false`). 정의되지 않은 input 필드를 보내면
+  // 서버가 ValidationError로 요청을 통째로 거부하고, 그러면 code를 주는
+  // provider의 로그인이 전부 깨진다 — 그래서 "보내지 않는다"가 지금의 계약이다.
+  // 서버 배포 후 플래그를 켜면 이 두 테스트가 실패하며 갱신을 요구한다.
+  test('loginSns does not send an authorizationCode field yet', () async {
+    final _FakeLink link = _FakeLink(
+      data: <String, dynamic>{
+        'loginSns': <String, dynamic>{
+          'success': true,
+          'userErrors': <dynamic>[],
+          'accessToken': 'access',
+          'refreshToken': 'refresh',
+          'tokenType': 'Bearer',
+          'accessTokenExpiresIn': 300,
+          'refreshTokenExpiresIn': 2592000,
+        },
+      },
+    );
+
+    await _repo(link).loginSns(
+      provider: SnsProvider.google,
+      idToken: 'id-token',
+      authorizationCode: 'server-auth-code',
+    );
+
+    expect(link.lastInput, isNotNull);
+    expect(link.lastInput!.containsKey('authorizationCode'), isFalse);
+    // code가 있어도 요청은 정상적으로 나간다 — 막히지 않는다(R7).
+    expect(link.lastInput?['idToken'], 'id-token');
+  });
+
+  test('loginSns sends a plain request when there is no code', () async {
+    final _FakeLink link = _FakeLink(
+      data: <String, dynamic>{
+        'loginSns': <String, dynamic>{
+          'success': true,
+          'userErrors': <dynamic>[],
+          'accessToken': 'access',
+          'refreshToken': 'refresh',
+          'tokenType': 'Bearer',
+          'accessTokenExpiresIn': 300,
+          'refreshTokenExpiresIn': 2592000,
+        },
+      },
+    );
+
+    await _repo(
+      link,
+    ).loginSns(provider: SnsProvider.kakao, idToken: 'id-token');
+
+    expect(link.lastInput!.containsKey('authorizationCode'), isFalse);
+    expect(link.lastInput?['idToken'], 'id-token');
+  });
+
+  test(
+    'registerSnsMember accepts a code without failing the request',
+    () async {
+      final _FakeLink link = _FakeLink(
+        data: <String, dynamic>{
+          'registerSnsMember': <String, dynamic>{
+            'success': true,
+            'userErrors': <dynamic>[],
+            'emailVerified': true,
+            'verificationId': null,
+          },
+        },
+      );
+
+      final SnsRegistrationResult result = await _repo(link).registerSnsMember(
+        provider: SnsProvider.apple,
+        idToken: 'id-token',
+        email: 'a@b.com',
+        ageVerified: true,
+        agreements: const [],
+        authorizationCode: 'apple-code',
+      );
+
+      expect(result.emailVerified, isTrue);
+      expect(link.lastInput!.containsKey('authorizationCode'), isFalse);
+      expect(link.lastInput?['email'], 'a@b.com');
+    },
+  );
 
   test(
     'registerSnsMember maps an already-verified payload (no verificationId)',

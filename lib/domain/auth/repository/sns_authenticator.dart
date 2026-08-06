@@ -62,6 +62,7 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
       return SnsCredential(
         provider: SnsProvider.google,
         idToken: idToken,
+        authorizationCode: await _googleServerAuthCode(account),
         email: account.email,
         // Google-verified emails are trustworthy, but the server re-decides;
         // we don't get a per-account verified flag here, so leave it false.
@@ -73,6 +74,28 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
         throw const SnsCancelledException();
       }
       throw const AuthFailure(AuthFailureKind.unknown);
+    }
+  }
+
+  /// 구글의 server auth code를 얻는다(SPEC-0012 R4). 없으면 null.
+  ///
+  /// v7에서 code는 `authenticate()` 결과에 담겨 오지 않고 별도 호출로 받는다.
+  /// 이 호출은 정상적으로도 null을 준다 — 플랫폼에 따라 최초 로그인에서만
+  /// 발급되기 때문이다. 실패도 마찬가지로 삼킨다: code는 인증의 곁가지이고
+  /// 여기서 던지면 로그인 자체가 막힌다(R7).
+  ///
+  /// 이 호출은 동의 화면을 띄울 수 있어(SDK가 `promptIfUnauthorized: true`를
+  /// 고정한다) 사용자가 응답하지 않으면 무한정 기다린다. 로그인을 보류시키는
+  /// 것 역시 R7이 금지하는 바이므로 시간을 잘라 낸다 — 못 얻으면 없는 것이다.
+  Future<String?> _googleServerAuthCode(GoogleSignInAccount account) async {
+    try {
+      final GoogleSignInServerAuthorization? auth = await account
+          .authorizationClient
+          .authorizeServer(const <String>[])
+          .timeout(const Duration(seconds: 5), onTimeout: () => null);
+      return auth?.serverAuthCode;
+    } on Exception {
+      return null;
     }
   }
 
@@ -100,6 +123,8 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
       return SnsCredential(
         provider: SnsProvider.apple,
         idToken: idToken,
+        // Apple은 code를 항상 준다(SDK가 non-nullable로 보장, 5분 내 만료).
+        authorizationCode: cred.authorizationCode,
         email: cred.email,
         nickname: name.isEmpty ? null : name,
       );
@@ -130,6 +155,12 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
       return SnsCredential(
         provider: SnsProvider.kakao,
         idToken: idToken,
+
+        // 카카오는 code를 노출하지 않는다(SPEC-0012 §7). `UserApi` 로그인이
+        // 내부에서 code를 access token으로 교환하고 버리므로 `OAuthToken`에
+        // 남지 않는다. 얻으려면 `AuthCodeClient` + PKCE + 서버 교환으로
+        // 인증 구조를 바꿔야 해서, 서버가 어드민 키 경로를 택하는지 결론이
+        // 날 때까지 null로 둔다 — null은 정상 경로다(R7).
         email: me.kakaoAccount?.email,
         nickname: me.kakaoAccount?.profile?.nickname,
         profileImageUrl: me.kakaoAccount?.profile?.profileImageUrl,

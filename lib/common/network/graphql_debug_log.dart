@@ -22,6 +22,11 @@ class GraphqlDebugLog {
     'password',
     'token',
     'secret',
+    // OAuth authorization code (SPEC-0012). refresh token으로 교환 가능한
+    // 값이라 토큰과 같은 급의 비밀이다. `authorizationCode`/`serverAuthCode`를
+    // 함께 덮으면서 `termsCode`는 건드리지 않는다.
+    'authorizationcode',
+    'authcode',
   ];
 
   /// Variable keys masked by an exact (case-insensitive) match only — `code`

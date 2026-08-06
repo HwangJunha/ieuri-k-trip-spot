@@ -152,6 +152,10 @@ class AuthController extends _$AuthController {
       final AuthSession tokens = await _repo.loginSns(
         provider: provider,
         idToken: credential.idToken,
+        // 로그인에도 code를 실어야 한다(SPEC-0012 §3). 클라이언트 업데이트
+        // 전에 가입한 회원은 토큰이 없고 다음 로그인 때 보충되므로, 이 경로를
+        // 빠뜨리면 기존 회원이 영영 연동 해제 대상이 되지 못한다.
+        authorizationCode: credential.authorizationCode,
       );
       state = await AsyncValue.guard(() => _establishSession(tokens));
       return const SnsAuthenticated();
@@ -182,6 +186,7 @@ class AuthController extends _$AuthController {
     email: email,
     ageVerified: ageVerified,
     agreements: agreements,
+    authorizationCode: credential.authorizationCode,
   );
 
   /// Registers a member (spec §4.2/§5.2). Returns the [EmailVerificationHandle]

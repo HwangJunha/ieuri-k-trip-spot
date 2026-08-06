@@ -134,15 +134,19 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<AuthSession> loginSns({
     required SnsProvider provider,
     required String idToken,
+    String? authorizationCode,
   }) async {
     final Map<String, dynamic> data = await _mutate(
       documentNodeMutationLoginSns,
-      Variables$Mutation$LoginSns(
-        input: Input$LoginSnsInput(
-          provider: _provider(provider),
-          idToken: idToken,
-        ),
-      ).toJson(),
+      _withAuthorizationCode(
+        Variables$Mutation$LoginSns(
+          input: Input$LoginSnsInput(
+            provider: _provider(provider),
+            idToken: idToken,
+          ),
+        ).toJson(),
+        authorizationCode,
+      ),
       'loginSns',
     );
     final payload = Mutation$LoginSns.fromJson(data).loginSns;
@@ -163,25 +167,29 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required bool ageVerified,
     required List<Agreement> agreements,
+    String? authorizationCode,
   }) async {
     final Map<String, dynamic> data = await _mutate(
       documentNodeMutationRegisterSnsMember,
-      Variables$Mutation$RegisterSnsMember(
-        input: Input$RegisterSnsMemberInput(
-          provider: _provider(provider),
-          idToken: idToken,
-          email: email,
-          ageVerified: ageVerified,
-          agreements: agreements
-              .map(
-                (Agreement a) => Input$AgreementInput(
-                  termsCode: _termsCode(a.termsCode),
-                  agreed: a.agreed,
-                ),
-              )
-              .toList(),
-        ),
-      ).toJson(),
+      _withAuthorizationCode(
+        Variables$Mutation$RegisterSnsMember(
+          input: Input$RegisterSnsMemberInput(
+            provider: _provider(provider),
+            idToken: idToken,
+            email: email,
+            ageVerified: ageVerified,
+            agreements: agreements
+                .map(
+                  (Agreement a) => Input$AgreementInput(
+                    termsCode: _termsCode(a.termsCode),
+                    agreed: a.agreed,
+                  ),
+                )
+                .toList(),
+          ),
+        ).toJson(),
+        authorizationCode,
+      ),
       'registerSnsMember',
     );
     final payload = Mutation$RegisterSnsMember.fromJson(data).registerSnsMember;
@@ -309,6 +317,58 @@ class AuthRepositoryImpl implements AuthRepository {
     SnsProvider.apple => Enum$Provider.APPLE,
     SnsProvider.kakao => Enum$Provider.KAKAO,
   };
+
+  /// 서버가 `authorizationCode`를 받을 준비가 됐는지(SPEC-0012 R4).
+  ///
+  /// **지금은 false다.** 서버 SPEC-0012가 배포되지 않아 `LoginSnsInput`과
+  /// `RegisterSnsMemberInput`에 이 필드가 없고, 정의되지 않은 input 필드를
+  /// 보내면 서버가 요청을 통째로 거부한다(실측):
+  ///
+  /// ```
+  /// {"errors":[{"message":"The variables input contains a field name
+  ///  'authorizationCode' that is not defined for input object type
+  ///  'LoginSnsInput'","extensions":{"classification":"ValidationError"}}]}
+  /// ```
+  ///
+  /// 즉 켠 채로 두면 code를 주는 provider(Apple은 항상, Google은 발급될 때)의
+  /// 로그인·가입이 전부 실패한다 — code가 있다는 이유로 인증이 막히는 것이라
+  /// R7 위반이기도 하다. 그래서 배선은 모두 연결해 두고 전송만 잠가 둔다.
+  ///
+  /// **서버 배포 후 할 일:** `auth_schema.graphql`의 두 input에 필드를 넣고
+  /// codegen을 돌린 뒤, 이 상수와 [_withAuthorizationCode]를 지우고 값을
+  /// `Input$…` 생성자에 직접 넘긴다.
+  static const bool _sendAuthorizationCode = false;
+
+  /// SNS 요청 변수의 `input`에 `authorizationCode`를 얹는다.
+  ///
+  /// 생성 타입에 넣지 않고 직렬화 뒤에 얹는 것은 커밋된 SDL에 필드가 없어
+  /// 생성자에 파라미터 자체가 없기 때문이다. [_sendAuthorizationCode]가
+  /// 꺼져 있으면 아무것도 하지 않는다.
+  ///
+  /// code가 없으면 아무것도 얹지 않는다 — 필드가 빠진 요청이 R7의 정상 경로다.
+  Map<String, dynamic> _withAuthorizationCode(
+    Map<String, dynamic> variables,
+    String? authorizationCode,
+  ) {
+    if (!_sendAuthorizationCode ||
+        authorizationCode == null ||
+        authorizationCode.isEmpty) {
+      return variables;
+    }
+    final Object? input = variables['input'];
+    if (input is! Map<String, dynamic>) {
+      // 두 호출자 모두 생성 타입의 toJson()을 넘기므로 도달할 수 없다.
+      // 변수 모양이 바뀌면 조용히 code를 흘리는 대신 여기서 드러나야 한다.
+      throw StateError('SNS 요청 변수에 input 맵이 없다: $variables');
+    }
+    return <String, dynamic>{
+      ...variables,
+      'input': <String, dynamic>{
+        ...input,
+        'authorizationCode': authorizationCode,
+      },
+    };
+  }
 
   AuthSession _sessionFrom({
     required String? accessToken,

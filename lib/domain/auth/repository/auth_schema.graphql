@@ -55,6 +55,8 @@ input LoginEmailInput {
   password: String!
 }
 
+# TODO(SPEC-0012): 서버가 authorizationCode를 배포하면 `authorizationCode: String`을
+# 추가하고 codegen 후 AuthRepositoryImpl._sendAuthorizationCode를 켠다(true).
 input LoginSnsInput {
   provider: Provider!
   idToken: String!
@@ -180,6 +182,7 @@ type RegisterEmailMemberPayload {
   verificationId: String
 }
 
+# TODO(SPEC-0012): LoginSnsInput과 같다 — authorizationCode: String을 함께 추가한다.
 input RegisterSnsMemberInput {
   provider: Provider!
   idToken: String!

@@ -43,21 +43,26 @@ abstract interface class AuthRepository {
   /// [AuthSession] with the token pair (no user — the caller fetches [fetchMe]),
   /// exactly like [loginEmail]. Throws `AuthFailure`; a `memberNotFound` kind
   /// means the identity isn't registered and the caller routes to SNS sign-up.
+  /// [authorizationCode]는 SPEC-0012 R4의 code다. null이 정상 경로이며
+  /// (provider가 주지 않거나 획득에 실패), 없다고 요청을 막지 않는다(R7).
   Future<AuthSession> loginSns({
     required SnsProvider provider,
     required String idToken,
+    String? authorizationCode,
   });
 
   /// SNS sign-up (spec §5.2). Issues NO tokens — returns an
   /// [SnsRegistrationResult] telling the caller whether email verification is
   /// still needed. [email] is required (provider-prefilled but user-editable).
   /// Throws `AuthFailure` on e.g. a taken email or an invalid/expired idToken.
+  /// [authorizationCode]는 [loginSns]와 같은 규약이다 — null이 정상이다.
   Future<SnsRegistrationResult> registerSnsMember({
     required SnsProvider provider,
     required String idToken,
     required String email,
     required bool ageVerified,
     required List<Agreement> agreements,
+    String? authorizationCode,
   });
 
   /// Fetches the authenticated account via the `me` query (spec §6.2). Throws
