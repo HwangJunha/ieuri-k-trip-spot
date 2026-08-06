@@ -8,7 +8,7 @@ part of 'moderation_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 차단·신고·삭제를 실행하는 컨트롤러(R15·R16·R22).
+/// 차단·신고·삭제·수정을 실행하는 컨트롤러.
 ///
 /// 상태를 들고 있지 않고 **동작만 노출한다** — 이 기능들은 결과가 피드 재조회로
 /// 나타나지 자체 화면 상태를 만들지 않기 때문이다. 그래서 `build()`는 void를
@@ -17,12 +17,12 @@ part of 'moderation_providers.dart';
 /// **전부 인증 필수 뮤테이션이다.** 미인증이면 서버가 최상위 `errors[]`로
 /// `UNAUTHENTICATED`를 주고 repository가 [CommunityFailureKind.unauthenticated]로
 /// 번역한다 — 그때 [ModerationOutcome.unauthenticated]가 나와 화면이 로그인으로
-/// 보낸다. **버튼을 숨기지 않는다**(가이드 §13, 디자인 §7).
+/// 보낸다.
 
 @ProviderFor(ModerationController)
 const moderationControllerProvider = ModerationControllerProvider._();
 
-/// 차단·신고·삭제를 실행하는 컨트롤러(R15·R16·R22).
+/// 차단·신고·삭제·수정을 실행하는 컨트롤러.
 ///
 /// 상태를 들고 있지 않고 **동작만 노출한다** — 이 기능들은 결과가 피드 재조회로
 /// 나타나지 자체 화면 상태를 만들지 않기 때문이다. 그래서 `build()`는 void를
@@ -31,10 +31,10 @@ const moderationControllerProvider = ModerationControllerProvider._();
 /// **전부 인증 필수 뮤테이션이다.** 미인증이면 서버가 최상위 `errors[]`로
 /// `UNAUTHENTICATED`를 주고 repository가 [CommunityFailureKind.unauthenticated]로
 /// 번역한다 — 그때 [ModerationOutcome.unauthenticated]가 나와 화면이 로그인으로
-/// 보낸다. **버튼을 숨기지 않는다**(가이드 §13, 디자인 §7).
+/// 보낸다.
 final class ModerationControllerProvider
     extends $NotifierProvider<ModerationController, void> {
-  /// 차단·신고·삭제를 실행하는 컨트롤러(R15·R16·R22).
+  /// 차단·신고·삭제·수정을 실행하는 컨트롤러.
   ///
   /// 상태를 들고 있지 않고 **동작만 노출한다** — 이 기능들은 결과가 피드 재조회로
   /// 나타나지 자체 화면 상태를 만들지 않기 때문이다. 그래서 `build()`는 void를
@@ -43,7 +43,7 @@ final class ModerationControllerProvider
   /// **전부 인증 필수 뮤테이션이다.** 미인증이면 서버가 최상위 `errors[]`로
   /// `UNAUTHENTICATED`를 주고 repository가 [CommunityFailureKind.unauthenticated]로
   /// 번역한다 — 그때 [ModerationOutcome.unauthenticated]가 나와 화면이 로그인으로
-  /// 보낸다. **버튼을 숨기지 않는다**(가이드 §13, 디자인 §7).
+  /// 보낸다.
   const ModerationControllerProvider._()
     : super(
         from: null,
@@ -72,9 +72,9 @@ final class ModerationControllerProvider
 }
 
 String _$moderationControllerHash() =>
-    r'b5ac46207a915e2de44bef2d9c8c4edc5e0a00c1';
+    r'5c49c3bb8b178a4a361b2b3b48fa17ebb565b407';
 
-/// 차단·신고·삭제를 실행하는 컨트롤러(R15·R16·R22).
+/// 차단·신고·삭제·수정을 실행하는 컨트롤러.
 ///
 /// 상태를 들고 있지 않고 **동작만 노출한다** — 이 기능들은 결과가 피드 재조회로
 /// 나타나지 자체 화면 상태를 만들지 않기 때문이다. 그래서 `build()`는 void를
@@ -83,7 +83,7 @@ String _$moderationControllerHash() =>
 /// **전부 인증 필수 뮤테이션이다.** 미인증이면 서버가 최상위 `errors[]`로
 /// `UNAUTHENTICATED`를 주고 repository가 [CommunityFailureKind.unauthenticated]로
 /// 번역한다 — 그때 [ModerationOutcome.unauthenticated]가 나와 화면이 로그인으로
-/// 보낸다. **버튼을 숨기지 않는다**(가이드 §13, 디자인 §7).
+/// 보낸다.
 
 abstract class _$ModerationController extends $Notifier<void> {
   void build();

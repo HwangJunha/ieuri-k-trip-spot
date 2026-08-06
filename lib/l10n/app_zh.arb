@@ -182,30 +182,6 @@
   "@communityNearbyTitle": {
     "description": "지역 피드 섹션 헤더"
   },
-  "communityTopicAll": "全部",
-  "@communityTopicAll": {
-    "description": "주제 태그 칩 — 전체(선택 없음)"
-  },
-  "communityTopicQuestion": "提问",
-  "@communityTopicQuestion": {
-    "description": "주제 태그 QUESTION 표시명"
-  },
-  "communityTopicTip": "贴士",
-  "@communityTopicTip": {
-    "description": "주제 태그 TIP 표시명"
-  },
-  "communityTopicReview": "点评",
-  "@communityTopicReview": {
-    "description": "주제 태그 REVIEW 표시명"
-  },
-  "communityTopicCompanion": "结伴",
-  "@communityTopicCompanion": {
-    "description": "주제 태그 COMPANION 표시명"
-  },
-  "communityTopicPhoto": "照片",
-  "@communityTopicPhoto": {
-    "description": "주제 태그 PHOTO 표시명"
-  },
   "communityFeedEmpty": "附近还没有帖子。",
   "@communityFeedEmpty": {
     "description": "지역 피드에 글이 하나도 없을 때"
@@ -289,10 +265,6 @@
   "communityComposeAction": "写帖子",
   "@communityComposeAction": {
     "description": "글 작성 FAB의 접근성 라벨"
-  },
-  "communityCommentsUnavailable": "评论加载失败。",
-  "@communityCommentsUnavailable": {
-    "description": "댓글을 불러오지 못했을 때 (글 본문은 정상)"
   },
   "communityPostOptions": "帖子选项",
   "@communityPostOptions": {
@@ -407,26 +379,9 @@
   "@communityComposeBodyHint": {
     "description": "본문 입력 힌트"
   },
-  "communityComposeTopicLabel": "选择版块",
-  "@communityComposeTopicLabel": {
-    "description": "컴포저에서 주제를 먼저 고르게 하는 라벨"
-  },
   "communityComposeSpotLabel": "地点",
   "@communityComposeSpotLabel": {
     "description": "컴포저의 대상(관광지) 라벨"
-  },
-  "communityComposeSpotMissing": "选择地点",
-  "@communityComposeSpotMissing": {
-    "description": "대상이 아직 정해지지 않았을 때"
-  },
-  "communityComposeCounter": "{count} / 500",
-  "@communityComposeCounter": {
-    "description": "본문 잔여 글자 수 — 서버와 같은 코드포인트 기준 (가이드 §12)",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
   },
   "communityComposeTooLong": "超出 {count} 个字符。",
   "@communityComposeTooLong": {
@@ -441,14 +396,6 @@
   "@communityComposeDone": {
     "description": "글 등록 성공 안내"
   },
-  "communityComposeErrorBodyRequired": "请先输入内容。",
-  "@communityComposeErrorBodyRequired": {
-    "description": "POST_BODY_REQUIRED"
-  },
-  "communityComposeErrorBodyLength": "内容太长了，请控制在 500 字以内。",
-  "@communityComposeErrorBodyLength": {
-    "description": "POST_BODY_LENGTH_INVALID"
-  },
   "communityComposeErrorSpotNotFound": "找不到该地点。",
   "@communityComposeErrorSpotNotFound": {
     "description": "SPOT_NOT_FOUND"
@@ -456,5 +403,107 @@
   "communityComposeErrorTooManyPhotos": "最多可添加 5 张照片。",
   "@communityComposeErrorTooManyPhotos": {
     "description": "TOO_MANY_PHOTOS"
-  }
+  },
+  "communityCategoryAll": "全部",
+  "communityCategoryTouristSpot": "景点",
+  "communityCategoryCulturalFacility": "文化设施",
+  "communityCategoryFestivalEvent": "节庆活动",
+  "communityCategoryTravelCourse": "旅行路线",
+  "communityCategoryLeisureSports": "休闲运动",
+  "communityCategoryLodging": "住宿",
+  "communityCategoryShopping": "购物",
+  "communityCategoryRestaurant": "美食",
+  "communityCategoryTransport": "交通",
+  "communityEditedBadge": "已编辑",
+  "communityEditAction": "编辑帖子",
+  "communityEditDisabledHidden": "已隐藏的帖子无法编辑。",
+  "communityEditTitle": "编辑帖子",
+  "communityEditDone": "帖子已更新。",
+  "communityComposeCategoryLabel": "选择分类",
+  "communityComposeTitleLabel": "标题",
+  "communityComposeTitleHint": "一句话标题",
+  "communityComposeBodyLabel": "正文",
+  "communityComposeTagsLabel": "标签（可选）",
+  "communityComposeTagHint": "输入标签（不能有空格）",
+  "communityComposeTagInvalid": "标签不能包含空格。",
+  "communityComposeTagLimit": "最多可添加 5 个标签。",
+  "communityComposeSpotOptional": "添加地点（可选）",
+  "communityComposeSpotClear": "移除地点",
+  "communityComposePhotosLabel": "照片（可选）",
+  "communityComposePhotoAdd": "添加照片",
+  "communityComposePhotoUnavailable": "此版本暂不支持选择照片。",
+  "communityComposePhotoFailed": "有 {count} 张照片上传失败，请重试。",
+  "@communityComposePhotoFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityComposeErrorTitleRequired": "请填写标题。",
+  "communityComposeErrorTitleLength": "标题过长，请控制在 50 个字符以内。",
+  "communityComposeErrorBodyRequired": "请先写点内容。",
+  "communityComposeErrorBodyLength": "内容过长，请控制在 500 个字符以内。",
+  "communityComposeErrorInvalidTag": "有标签不可用。",
+  "communityComposeErrorTooManyTags": "最多可添加 5 个标签。",
+  "communityComposeErrorPhotoNotUploaded": "照片上传失败，请重新添加。",
+  "communityComposeErrorNotEditable": "已隐藏的帖子无法编辑。",
+  "communityTitleCounter": "{count} / 50",
+  "@communityTitleCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityBodyCounter": "{count} / 500",
+  "@communityBodyCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityCommentComposerHint": "写评论",
+  "communityCommentSend": "发送",
+  "communityCommentDone": "评论已发布。",
+  "communityCommentDeleteAction": "删除评论",
+  "communityCommentDeleteDone": "评论已删除。",
+  "communityCommentReportAction": "举报评论",
+  "communityCommentsUnavailable": "无法加载评论。",
+  "communityCommentsLoadMore": "查看更多评论",
+  "communityBlockedUsersTitle": "已屏蔽的用户",
+  "communityBlockedUsersEmpty": "你还没有屏蔽任何人。",
+  "communityBlockedUsersNote": "这里只显示你发起的屏蔽。别人屏蔽你时，你无法解除。",
+  "communityUnblockAction": "解除屏蔽",
+  "communityUnblockDone": "已解除屏蔽。",
+  "communityBlockedUsersAction": "已屏蔽的用户",
+  "communityPhotoViewerTitle": "第 {current} 张，共 {total} 张",
+  "@communityPhotoViewerTitle": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeMonths": "{count} 个月前",
+  "@communityTimeMonths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeYears": "{count} 年前",
+  "@communityTimeYears": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communitySpotPostsTitle": "该地点的帖子"
 }

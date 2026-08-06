@@ -46,23 +46,39 @@ Future<void> _pumpRoute(WidgetTester tester, String location) async {
 }
 
 void main() {
-  // 관광지 상세에서 진입하면 대상이 이미 정해진 채로 열린다(디자인 §3).
-  testWidgets('targetId·targetTitle 쿼리 파라미터가 컴포저에 전달된다', (
+  // 장소 상세에서 진입하면 장소가 이미 정해진 채로 열린다.
+  testWidgets('spotId·spotTitle 쿼리 파라미터가 컴포저에 전달된다', (
     WidgetTester tester,
   ) async {
     await _pumpRoute(
       tester,
-      '/post-composer?targetId=11094&targetTitle=Gyeongbokgung',
+      '/post-composer?spotId=11094&spotTitle=Gyeongbokgung',
     );
+    // 장소 섹션은 화면 아래쪽이라 스크롤해야 보인다.
+    await tester.drag(find.byType(ListView), const Offset(0, -600));
+    await tester.pumpAndSettle();
 
     expect(find.text('Gyeongbokgung'), findsOneWidget);
-    expect(find.text('Select a spot'), findsNothing);
   });
 
-  // 커뮤니티 탭에서 진입하면 파라미터가 없고 화면이 장소 선택을 요구한다.
-  testWidgets('파라미터 없는 진입은 장소 선택을 요구한다', (WidgetTester tester) async {
+  // 커뮤니티 탭에서 진입하면 파라미터가 없다. **그래도 등록할 수 있다** — 장소는
+  // 선택 항목이라 화면이 요구하지 않고 "선택"이라고 알려 준다(가이드 §5).
+  testWidgets('파라미터 없는 진입은 장소를 선택 항목으로 보여준다', (WidgetTester tester) async {
     await _pumpRoute(tester, '/post-composer');
+    await tester.drag(find.byType(ListView), const Offset(0, -600));
+    await tester.pumpAndSettle();
 
-    expect(find.text('Select a spot'), findsOneWidget);
+    expect(find.text('Add a place (optional)'), findsOneWidget);
+  });
+
+  // 수정 진입은 제목·본문을 실어 보낸다 — 카테고리·태그·장소는 수정 대상이 아니다.
+  testWidgets('editPostId가 있으면 수정 모드로 열린다', (WidgetTester tester) async {
+    await _pumpRoute(
+      tester,
+      '/post-composer?editPostId=42&title=Old%20title&body=Old%20body',
+    );
+
+    expect(find.text('Edit post'), findsOneWidget);
+    expect(find.byType(ChoiceChip), findsNothing);
   });
 }

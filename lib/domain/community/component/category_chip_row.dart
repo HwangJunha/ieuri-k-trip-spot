@@ -1,38 +1,41 @@
 import 'package:flutter/material.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
-import '../model/post_topic.dart';
-import 'post_topic_label.dart';
+import '../model/community_chip.dart';
+import '../model/target_category.dart';
+import 'community_labels.dart';
 
-/// 상단 카테고리 행(당근 동네생활의 상단 진입 줄을 따른다).
+/// 상단 카테고리 줄(당근 동네생활의 상단 진입 줄을 따른다).
 ///
-/// **당근은 여기를 얇은 아웃라인 pill이 아니라 아이콘+라벨의 부드러운 원형 항목
-/// 한 줄로 둔다.** 그래서 이 위젯도 `ChoiceChip` 대신 원형 아이콘 위에 라벨을 붙인
-/// 항목을 가로로 늘어놓는다 — 눌러야 할 곳이 크고, 아이콘이 태그를 글자 없이도
-/// 구분해 준다.
+/// **항목 구성은 서버가 정한다** — `communityChips`가 카테고리와 순서를 내려주고
+/// (이미 `position` 오름차순으로 정렬돼 있다) 앱은 표시 문구만 매핑한다(가이드 §2).
+/// 언어마다 가용 카테고리가 다르므로 클라이언트가 전체 목록을 하드코딩하면 안 된다.
 ///
-/// **지금은 [PostTopic]으로 채운다.** 사용자가 원한 것은 `SpotCategory` 줄이지만
-/// 서버 피드는 `topic: PostTopic`만 받고 `nearbyPosts`/`targetPosts`에 category 인자도,
-/// `Post`에 category 필드도 없다. 서버가 그 인자를 열면 **이 파일 하나만** 데이터
-/// 출처를 바꾸면 되도록 항목 생성을 여기에 가둬 두었다([_entries]).
-/// 서버 작업이 필요한 사항이며 [AMEND] 대상이다.
+/// **[chips]가 비어도 정상이다.** 구성이 없는 앱이면 서버가 빈 목록을 준다 — 그때는
+/// "전체" 하나만 남는 것이 아니라 **줄 자체를 그리지 않는다**: 고를 것이 하나뿐인
+/// 필터 줄은 자리만 차지한다.
 ///
 /// 단일 선택이다. 선택된 항목을 다시 누르면 전체([selected]가 null)로 돌아간다.
-/// 언어별 길이 차이에 대비해 고정 폭을 두지 않는다(디자인 §8).
-class TopicChipRow extends StatelessWidget {
-  const TopicChipRow({
+/// 언어별 길이 차이에 대비해 고정 폭을 두지 않는다(폭 상한 + ellipsis).
+class CategoryChipRow extends StatelessWidget {
+  const CategoryChipRow({
     super.key,
+    required this.chips,
     required this.selected,
     required this.onSelected,
   });
 
-  /// 지금 선택된 태그. null이면 "전체" 항목이 선택 상태다.
-  final PostTopic? selected;
+  final List<CommunityChip> chips;
 
-  final ValueChanged<PostTopic?> onSelected;
+  /// 지금 선택된 카테고리. null이면 "전체" 항목이 선택 상태다.
+  final TargetCategory? selected;
+
+  final ValueChanged<TargetCategory?> onSelected;
 
   @override
   Widget build(BuildContext context) {
+    if (chips.isEmpty) return const SizedBox.shrink();
+
     final AppLocalizations l10n = AppLocalizations.of(context);
     return SizedBox(
       height: 88,
@@ -42,31 +45,36 @@ class TopicChipRow extends StatelessWidget {
         children: <Widget>[
           _Entry(
             icon: Icons.grid_view_rounded,
-            label: l10n.communityTopicAll,
+            label: l10n.communityCategoryAll,
             selected: selected == null,
             onTap: () => onSelected(null),
           ),
-          for (final PostTopic topic in PostTopic.values)
+          for (final CommunityChip chip in chips)
             _Entry(
-              icon: _iconFor(topic),
-              label: postTopicLabel(l10n, topic),
-              selected: selected == topic,
+              icon: _iconFor(chip.category),
+              label: targetCategoryLabel(l10n, chip.category),
+              selected: selected == chip.category,
               // 같은 항목을 다시 누르면 해제 — 전체로 돌아간다.
-              onTap: () => onSelected(selected == topic ? null : topic),
+              onTap: () =>
+                  onSelected(selected == chip.category ? null : chip.category),
             ),
         ],
       ),
     );
   }
 
-  /// 태그별 아이콘. 라벨이 번역돼도 모양은 그대로라 언어를 바꿔도 같은 자리를
+  /// 카테고리별 아이콘. 라벨이 번역돼도 모양은 그대로라 언어를 바꿔도 같은 자리를
   /// 찾을 수 있다.
-  IconData _iconFor(PostTopic topic) => switch (topic) {
-    PostTopic.question => Icons.help_outline_rounded,
-    PostTopic.tip => Icons.lightbulb_outline_rounded,
-    PostTopic.review => Icons.rate_review_outlined,
-    PostTopic.companion => Icons.groups_outlined,
-    PostTopic.photo => Icons.photo_camera_outlined,
+  IconData _iconFor(TargetCategory category) => switch (category) {
+    TargetCategory.touristSpot => Icons.photo_camera_outlined,
+    TargetCategory.culturalFacility => Icons.museum_outlined,
+    TargetCategory.festivalEvent => Icons.celebration_outlined,
+    TargetCategory.travelCourse => Icons.route_outlined,
+    TargetCategory.leisureSports => Icons.hiking_outlined,
+    TargetCategory.lodging => Icons.hotel_outlined,
+    TargetCategory.shopping => Icons.shopping_bag_outlined,
+    TargetCategory.restaurant => Icons.restaurant_outlined,
+    TargetCategory.transport => Icons.directions_subway_outlined,
   };
 }
 

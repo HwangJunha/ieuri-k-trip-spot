@@ -1,17 +1,22 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:gql/ast.dart' show DocumentNode;
 import 'package:graphql_flutter/graphql_flutter.dart';
 
 import '../../../common/network/graphql_debug_log.dart';
 import '../../../common/network/graphql_failure.dart';
 import '../../../common/pagination/page.dart';
+import '../model/blocked_user.dart';
 import '../model/comment.dart';
+import '../model/community_chip.dart';
 import '../model/community_failure.dart';
-import '../model/discovery_tile.dart';
 import '../model/post.dart';
 import '../model/post_author.dart';
-import '../model/post_target.dart';
-import '../model/post_topic.dart';
+import '../model/post_image_upload.dart';
+import '../model/post_spot.dart';
 import '../model/report_reason.dart';
+import '../model/target_category.dart';
 import 'community_operations.graphql.dart';
 import 'community_repository.dart';
 import 'community_schema.graphql.dart';
@@ -21,40 +26,62 @@ import 'community_schema.graphql.dart';
 /// (`*.graphql.dart`)은 **이 파일 밖으로 나가지 않는다**(CLAUDE.md §3, POL-020).
 ///
 /// 실패 판정은 두 갈래다(가이드 §7):
-///  - 조회: 최상위 `errors[]`. `path`로 전체/부분 실패를 가른다(`hasRootFailure`).
-///  - 뮤테이션: payload의 `success`·`userErrors[]`. **HTTP는 실패해도 200이다.**
+///  - 최상위 `errors[]` — **인증 실패만**. `path`로 전체/부분 실패를 가른다.
+///  - payload의 `success`·`userErrors[]` — 나머지 전부. **HTTP는 실패해도 200이다.**
+///
+/// [uploadPostImage]만 GraphQL이 아니다 — 사진 바이트는 서버를 거치지 않고 앱이
+/// 스토리지로 직접 PUT한다(가이드 §4). 그래도 repository에 두는 이유는 그것이
+/// 데이터 접근이고, 위젯이나 provider가 HTTP를 직접 부르면 계층이 무너지기 때문이다.
 class CommunityRepositoryImpl implements CommunityRepository {
-  CommunityRepositoryImpl(this._client);
+  CommunityRepositoryImpl(this._client, {HttpClient? httpClient})
+    : _httpClient = httpClient,
+      // 우리가 만든 클라이언트만 닫는다 — 주입받은 것은 호출부 소유다.
+      _ownsHttpClient = httpClient == null;
 
   final GraphQLClient _client;
 
+  /// 스토리지 PUT 전용 클라이언트. **`package:http`가 의존성에 없어 `dart:io`의
+  /// [HttpClient]를 쓴다** — 이것 하나 때문에 새 패키지를 들이지 않는다.
+  /// 테스트가 갈아끼울 수 있도록 주입 가능하게 두고, 없으면 그때 만든다.
+  final HttpClient? _httpClient;
+
+  /// 클라이언트를 우리가 만들었는지. 주입받은 것을 닫으면 호출부의 다음 요청이
+  /// 깨진다.
+  final bool _ownsHttpClient;
+
   @override
-  Future<CursorPage<Post>> fetchNearbyPosts({
-    required double latitude,
-    required double longitude,
+  Future<CursorPage<Post>> fetchPosts({
+    String? spotId,
+    double? latitude,
+    double? longitude,
     int? radiusMeters,
-    PostTopic? topic,
+    TargetCategory? category,
+    String? tag,
     int? first,
     String? after,
   }) async {
+    // 좌표는 **둘 다** 있어야 의미가 있다. 하나만 주면 서버가 둘 다 무시하므로,
+    // 어중간한 요청을 보내느니 여기서 아예 빼서 "전체 피드"라는 의도를 분명히 한다
+    // (가이드 §2).
+    final bool hasCoords = latitude != null && longitude != null;
     final Map<String, dynamic> data = await _query(
-      documentNodeQueryNearbyPosts,
-      Variables$Query$NearbyPosts(
-        latitude: latitude,
-        longitude: longitude,
-        radiusMeters: radiusMeters,
-        topic: topic == null ? null : _topicInput(topic),
+      documentNodeQueryPosts,
+      Variables$Query$Posts(
+        spotId: spotId,
+        latitude: hasCoords ? latitude : null,
+        longitude: hasCoords ? longitude : null,
+        radiusMeters: hasCoords ? radiusMeters : null,
+        category: category == null ? null : _categoryInput(category),
+        tag: tag,
         first: first,
         after: after,
       ).toJson(),
-      'nearbyPosts',
+      'posts',
     );
-    final Query$NearbyPosts$nearbyPosts result = Query$NearbyPosts.fromJson(
-      data,
-    ).nearbyPosts;
+    final Query$Posts$posts result = Query$Posts.fromJson(data).posts;
     return CursorPage<Post>(
       items: result.edges
-          .map((Query$NearbyPosts$nearbyPosts$edges e) => _postFromCard(e.node))
+          .map((Query$Posts$posts$edges e) => _postFromCard(e.node))
           .toList(growable: false),
       hasNextPage: result.pageInfo.hasNextPage,
       endCursor: result.pageInfo.endCursor,
@@ -62,105 +89,90 @@ class CommunityRepositoryImpl implements CommunityRepository {
   }
 
   @override
-  Future<CursorPage<Post>> fetchTargetPosts({
-    required String targetType,
-    required String targetId,
-    PostTopic? topic,
-    int? first,
-    String? after,
-  }) async {
-    final Map<String, dynamic> data = await _query(
-      documentNodeQueryTargetPosts,
-      Variables$Query$TargetPosts(
-        targetType: _targetTypeInput(targetType),
-        targetId: targetId,
-        topic: topic == null ? null : _topicInput(topic),
-        first: first,
-        after: after,
-      ).toJson(),
-      'targetPosts',
-    );
-    final Query$TargetPosts$targetPosts result = Query$TargetPosts.fromJson(
-      data,
-    ).targetPosts;
-    return CursorPage<Post>(
-      items: result.edges
-          .map((Query$TargetPosts$targetPosts$edges e) => _postFromCard(e.node))
-          .toList(growable: false),
-      hasNextPage: result.pageInfo.hasNextPage,
-      endCursor: result.pageInfo.endCursor,
-    );
-  }
-
-  @override
-  Future<Post?> fetchPost(String id, {int? commentCount}) async {
-    final Query$PostDetail$post? result = await _fetchPostDetail(
-      id,
-      commentCount: commentCount,
-      withComments: true,
-    );
-
-    // null은 두 가지를 뜻할 수 있다. 하나는 계약대로 "차단·숨김이라 볼 수 없음"이고
-    // (가이드 §6), 다른 하나는 **댓글 해소가 실패해 글까지 통째로 날아간 경우**다 —
-    // `comments: CommentConnection!`이 non-null이라 하위 실패가 부모를 null로 만든다.
-    //
-    // 둘을 응답만으로 구분할 수 없으므로 **댓글 없이 한 번 더 조회해 본다.** 그때
-    // 글이 나오면 원인은 댓글이었던 것이고, 본문만이라도 보여주는 편이 멀쩡한 글을
-    // "볼 수 없는 글"로 잘못 안내하는 것보다 낫다. 여전히 null이면 진짜로 볼 수 없는
-    // 글이다.
-    if (result == null) {
-      final Query$PostDetail$post? withoutComments = await _fetchPostDetail(
-        id,
-        commentCount: commentCount,
-        withComments: false,
-      );
-      if (withoutComments == null) return null;
-      // 댓글은 못 받았다. null로 두면 화면이 "댓글 없음"과 구분해 다룰 수 있다.
-      return _postFromCard(withoutComments);
-    }
-
-    return _postFromCard(
-      result,
-      comments:
-          result.comments?.edges
-              .map(
-                (Query$PostDetail$post$comments$edges e) =>
-                    _commentFromNode(e.node),
-              )
-              .toList(growable: false) ??
-          const <Comment>[],
-    );
-  }
-
-  Future<Query$PostDetail$post?> _fetchPostDetail(
-    String id, {
-    required int? commentCount,
-    required bool withComments,
-  }) async {
+  Future<Post?> fetchPost(String id) async {
     final Map<String, dynamic> data = await _query(
       documentNodeQueryPostDetail,
-      Variables$Query$PostDetail(
-        id: id,
-        commentCount: commentCount,
-        withComments: withComments,
-      ).toJson(),
+      Variables$Query$PostDetail(id: id).toJson(),
       'post',
     );
-    return Query$PostDetail.fromJson(data).post;
+    // null은 오류가 아니다 — 차단·숨김·삭제면 서버가 오류 대신 null을 준다(가이드 §6).
+    final Fragment$PostCardFields? node = Query$PostDetail.fromJson(data).post;
+    return node == null ? null : _postFromCard(node);
   }
 
   @override
-  Future<List<DiscoveryTile>> fetchDiscoveryTiles() async {
-    // 언어는 인자가 아니라 Accept-Language 헤더로 전달된다(가이드 §10). 활성 언어의
-    // 타일이 없으면 빈 목록이며 그것이 정상이다(§15).
+  Future<CursorPage<Comment>> fetchComments(
+    String postId, {
+    int? first,
+    String? after,
+  }) async {
     final Map<String, dynamic> data = await _query(
-      documentNodeQueryDiscoveryTiles,
-      const <String, dynamic>{},
-      'discoveryTiles',
+      documentNodeQueryComments,
+      Variables$Query$Comments(
+        postId: postId,
+        first: first,
+        after: after,
+      ).toJson(),
+      'comments',
     );
-    return Query$DiscoveryTiles.fromJson(
+    final Query$Comments$comments result = Query$Comments.fromJson(
       data,
-    ).discoveryTiles.map(_tileFromNode).toList(growable: false);
+    ).comments;
+    return CursorPage<Comment>(
+      items: result.edges
+          .map((Query$Comments$comments$edges e) => _commentFromNode(e.node))
+          .toList(growable: false),
+      hasNextPage: result.pageInfo.hasNextPage,
+      endCursor: result.pageInfo.endCursor,
+    );
+  }
+
+  @override
+  Future<List<CommunityChip>> fetchCommunityChips() async {
+    // 앱 구분(X-App-Key)과 언어(Accept-Language)는 인자가 아니라 헤더로 간다
+    // (가이드 §1). 빈 목록이 정상이므로 오류로 만들지 않는다(§2).
+    final Map<String, dynamic> data = await _query(
+      documentNodeQueryCommunityChips,
+      const <String, dynamic>{},
+      'communityChips',
+    );
+    return Query$CommunityChips.fromJson(data).communityChips
+        .map(_chipFromNode)
+        // 클라이언트가 모르는 카테고리는 그릴 수 없으므로 뺀다 — 칩 하나 때문에
+        // 상단 줄 전체를 실패시키지 않는다.
+        .whereType<CommunityChip>()
+        .toList(growable: false);
+  }
+
+  @override
+  Future<CursorPage<BlockedUser>> fetchBlockedUsers({
+    int? first,
+    String? after,
+  }) async {
+    final Map<String, dynamic> data = await _query(
+      documentNodeQueryBlockedUsers,
+      Variables$Query$BlockedUsers(first: first, after: after).toJson(),
+      'blockedUsers',
+    );
+    final Query$BlockedUsers$blockedUsers result = Query$BlockedUsers.fromJson(
+      data,
+    ).blockedUsers;
+    return CursorPage<BlockedUser>(
+      items: result.edges
+          .map(
+            (Query$BlockedUsers$blockedUsers$edges e) => BlockedUser(
+              member: _authorFromNode(
+                id: e.node.id,
+                nickname: e.node.nickname,
+                profileImageUrl: e.node.profileImageUrl,
+              ),
+              blockedAt: _parseTime(e.blockedAt),
+            ),
+          )
+          .toList(growable: false),
+      hasNextPage: result.pageInfo.hasNextPage,
+      endCursor: result.pageInfo.endCursor,
+    );
   }
 
   @override
@@ -211,18 +223,20 @@ class CommunityRepositoryImpl implements CommunityRepository {
 
   @override
   Future<String?> createPost({
-    required String targetType,
-    required String targetId,
-    required PostTopic topic,
+    required TargetCategory category,
+    required String title,
     required String body,
+    String? spotId,
+    List<String> tags = const <String>[],
     List<String> photoKeys = const <String>[],
   }) async {
     final Map<String, dynamic> data = await _mutate(
       documentNodeMutationCreatePost,
       Variables$Mutation$CreatePost(
-        targetType: _targetTypeInput(targetType),
-        targetId: targetId,
-        topic: _topicInput(topic),
+        category: _categoryInput(category),
+        spotId: spotId,
+        tags: tags,
+        title: title,
         body: body,
         photoKeys: photoKeys,
       ).toJson(),
@@ -242,8 +256,42 @@ class CommunityRepositoryImpl implements CommunityRepository {
           .toList(growable: false),
     );
     // `post`는 항상 null이라 요청조차 하지 않는다 — id만 돌려주고 화면이 그 id로
-    // 다시 조회하거나 피드를 새로 고친다(가이드 §11).
+    // 다시 조회하거나 피드를 새로 고친다(가이드 §5).
     return payload.postId;
+  }
+
+  @override
+  Future<void> editPost({
+    required String postId,
+    required String title,
+    required String body,
+    List<String>? photoKeys,
+  }) async {
+    final Map<String, dynamic> data = await _mutate(
+      documentNodeMutationEditPost,
+      Variables$Mutation$EditPost(
+        postId: postId,
+        title: title,
+        body: body,
+        // null이면 변수 자체를 보내지 않아 사진을 건드리지 않는다. 빈 배열을 보내면
+        // 사진이 전부 떨어진다 — 둘은 다른 뜻이다(가이드 §5).
+        photoKeys: photoKeys,
+      ).toJson(),
+      'editPost',
+    );
+    final Mutation$EditPost$editPost payload = Mutation$EditPost.fromJson(
+      data,
+    ).editPost;
+    _check(
+      'editPost',
+      payload.success,
+      payload.userErrors
+          .map(
+            (Mutation$EditPost$editPost$userErrors e) =>
+                (code: e.code, field: e.field),
+          )
+          .toList(growable: false),
+    );
   }
 
   @override
@@ -262,6 +310,209 @@ class CommunityRepositoryImpl implements CommunityRepository {
       payload.userErrors
           .map(
             (Mutation$DeletePost$deletePost$userErrors e) =>
+                (code: e.code, field: e.field),
+          )
+          .toList(growable: false),
+    );
+  }
+
+  @override
+  Future<String?> createComment({
+    required String postId,
+    required String body,
+  }) async {
+    final Map<String, dynamic> data = await _mutate(
+      documentNodeMutationCreateComment,
+      Variables$Mutation$CreateComment(postId: postId, body: body).toJson(),
+      'createComment',
+    );
+    final Mutation$CreateComment$createComment payload =
+        Mutation$CreateComment.fromJson(data).createComment;
+    _check(
+      'createComment',
+      payload.success,
+      payload.userErrors
+          .map(
+            (Mutation$CreateComment$createComment$userErrors e) =>
+                (code: e.code, field: e.field),
+          )
+          .toList(growable: false),
+    );
+    return payload.commentId;
+  }
+
+  @override
+  Future<void> deleteComment(String commentId) async {
+    final Map<String, dynamic> data = await _mutate(
+      documentNodeMutationDeleteComment,
+      Variables$Mutation$DeleteComment(commentId: commentId).toJson(),
+      'deleteComment',
+    );
+    final Mutation$DeleteComment$deleteComment payload =
+        Mutation$DeleteComment.fromJson(data).deleteComment;
+    _check(
+      'deleteComment',
+      payload.success,
+      payload.userErrors
+          .map(
+            (Mutation$DeleteComment$deleteComment$userErrors e) =>
+                (code: e.code, field: e.field),
+          )
+          .toList(growable: false),
+    );
+  }
+
+  @override
+  Future<List<PostImageUploadUrl>> createPostImageUploadUrls(
+    List<PostImageUploadRequest> images,
+  ) async {
+    final Map<String, dynamic> data = await _mutate(
+      documentNodeMutationCreatePostImageUploadUrls,
+      Variables$Mutation$CreatePostImageUploadUrls(
+        images: images
+            .map(
+              (PostImageUploadRequest r) => Input$PostImageUploadRequest(
+                contentType: r.contentType,
+                contentLength: r.contentLength,
+              ),
+            )
+            .toList(growable: false),
+      ).toJson(),
+      'createPostImageUploadUrls',
+    );
+    final Mutation$CreatePostImageUploadUrls$createPostImageUploadUrls payload =
+        Mutation$CreatePostImageUploadUrls.fromJson(
+          data,
+        ).createPostImageUploadUrls;
+    _check(
+      'createPostImageUploadUrls',
+      payload.success,
+      payload.userErrors
+          .map(
+            (
+              Mutation$CreatePostImageUploadUrls$createPostImageUploadUrls$userErrors
+              e,
+            ) => (code: e.code, field: e.field),
+          )
+          .toList(growable: false),
+    );
+    return payload.uploadUrls
+        .map(
+          (
+            Mutation$CreatePostImageUploadUrls$createPostImageUploadUrls$uploadUrls
+            u,
+          ) => PostImageUploadUrl(
+            uploadUrl: u.uploadUrl,
+            objectKey: u.objectKey,
+            expiresAt: u.expiresAt,
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  @override
+  Future<void> uploadPostImage({
+    required String uploadUrl,
+    required String contentType,
+    required Uint8List bytes,
+  }) async {
+    final HttpClient client = _httpClient ?? HttpClient();
+    try {
+      final HttpClientRequest request = await client.putUrl(
+        Uri.parse(uploadUrl),
+      );
+      // **두 헤더가 1단계 선언과 정확히 같아야 한다** — 서명에 들어 있어서 다르면
+      // 스토리지가 403 SignatureDoesNotMatch로 거부한다(가이드 §4).
+      //
+      // `contentType` 대신 `set`을 쓰는 이유: HttpHeaders.contentType은 파싱 후
+      // 다시 조립하며 charset을 덧붙일 수 있고, 그러면 서명이 깨진다.
+      request.headers.set(HttpHeaders.contentTypeHeader, contentType);
+      request.headers.contentLength = bytes.length;
+      // 압축이 걸리면 Content-Length가 바뀌어 서명이 깨진다.
+      request.headers.set(HttpHeaders.acceptEncodingHeader, 'identity');
+      // **인증 헤더를 붙이지 않는다** — 서명이 이미 URL에 들어 있다.
+      request.add(bytes);
+
+      final HttpClientResponse response = await request.close();
+      // 바이트를 비워야 연결이 반환된다.
+      await response.drain<void>();
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        // 서버를 거치지 않은 실패라 GraphQL 응답에 안 나온다 — 여기서만 보인다.
+        GraphqlDebugLog.clientThrew(
+          'uploadPostImage',
+          HttpException('status ${response.statusCode}'),
+        );
+        throw CommunityFailure.network;
+      }
+    } on CommunityFailure {
+      rethrow;
+    } on Exception catch (error) {
+      GraphqlDebugLog.clientThrew('uploadPostImage', error);
+      throw CommunityFailure.network;
+    } finally {
+      if (_ownsHttpClient) client.close();
+    }
+  }
+
+  @override
+  Future<PostImageConfirmation> confirmPostImageUploads(
+    List<String> objectKeys,
+  ) async {
+    final Map<String, dynamic> data = await _mutate(
+      documentNodeMutationConfirmPostImageUploads,
+      Variables$Mutation$ConfirmPostImageUploads(
+        objectKeys: objectKeys,
+      ).toJson(),
+      'confirmPostImageUploads',
+    );
+    final Mutation$ConfirmPostImageUploads$confirmPostImageUploads payload =
+        Mutation$ConfirmPostImageUploads.fromJson(data).confirmPostImageUploads;
+
+    // **`_check`를 부르지 않는다.** 이 뮤테이션은 장별로 성패가 갈려서, `failed`가
+    // 하나라도 있으면 `success: false`지만 `confirmed`의 키는 여전히 유효하다.
+    // 실패로 던지면 통과한 장까지 버려져 사용자가 전부 다시 올려야 한다(가이드 §4).
+    //
+    // 다만 `userErrors`가 온 경우는 요청 자체가 거부된 것이라 실패로 다룬다.
+    final List<({String code, String? field})> userErrors = payload.userErrors
+        .map(
+          (
+            Mutation$ConfirmPostImageUploads$confirmPostImageUploads$userErrors
+            e,
+          ) => (code: e.code, field: e.field),
+        )
+        .toList(growable: false);
+    if (userErrors.isNotEmpty) {
+      GraphqlDebugLog.userErrors('confirmPostImageUploads', userErrors);
+      throw CommunityFailure.userError(userErrors.first.code);
+    }
+
+    return PostImageConfirmation(
+      confirmed: payload.confirmed,
+      failed: payload.failed
+          .map(
+            (
+              Mutation$ConfirmPostImageUploads$confirmPostImageUploads$failed f,
+            ) => PostImageUploadFailure(objectKey: f.objectKey, code: f.code),
+          )
+          .toList(growable: false),
+    );
+  }
+
+  @override
+  Future<void> deletePostImage(String objectKey) async {
+    final Map<String, dynamic> data = await _mutate(
+      documentNodeMutationDeletePostImage,
+      Variables$Mutation$DeletePostImage(objectKey: objectKey).toJson(),
+      'deletePostImage',
+    );
+    final Mutation$DeletePostImage$deletePostImage payload =
+        Mutation$DeletePostImage.fromJson(data).deletePostImage;
+    _check(
+      'deletePostImage',
+      payload.success,
+      payload.userErrors
+          .map(
+            (Mutation$DeletePostImage$deletePostImage$userErrors e) =>
                 (code: e.code, field: e.field),
           )
           .toList(growable: false),
@@ -346,60 +597,66 @@ class CommunityRepositoryImpl implements CommunityRepository {
   // --- 매핑 (생성 타입 → 도메인) ---------------------------------------------
 
   /// 카드 필드 fragment → 도메인 [Post]. 목록과 상세가 같은 fragment를 쓰므로 매핑도
-  /// 하나다 — 상세만 [comments]를 덧붙인다(가이드 §4).
-  Post _postFromCard(Fragment$PostCardFields n, {List<Comment>? comments}) =>
-      Post(
-        id: n.id,
-        body: n.body,
-        topic: _topicFromEnum(n.topic),
-        target: PostTarget(
-          type: _targetTypeFromEnum(n.target.type),
-          id: n.target.id,
-          title: n.target.title,
-          thumbnailImageUrl: n.target.thumbnailImageUrl,
-        ),
-        author: PostAuthor(
-          id: n.author.id,
-          nickname: n.author.nickname,
-          profileImageUrl: n.author.profileImageUrl,
-        ),
-        createdAt: _parseTime(n.createdAt),
-        photoKeys: n.photoKeys,
-        likeCount: n.likeCount,
-        commentCount: n.commentCount,
-        likedByViewer: n.likedByViewer,
-        ownedByViewer: n.ownedByViewer,
-        hidden: n.hidden,
-        comments: comments,
-      );
+  /// 하나다 — 댓글은 루트 쿼리가 따로 받는다(가이드 §2).
+  Post _postFromCard(Fragment$PostCardFields n) => Post(
+    id: n.id,
+    title: n.title,
+    body: n.body,
+    tags: n.tags,
+    category: _categoryFromEnum(n.category),
+    // **null일 수 있다** — 장소 없는 글이 허용된다(가이드 §5).
+    spot: n.spot == null
+        ? null
+        : PostSpot(
+            id: n.spot!.id,
+            title: n.spot!.title,
+            thumbnailImageUrl: n.spot!.thumbnailImageUrl,
+            category: n.spot!.category == null
+                ? null
+                : _categoryFromEnum(n.spot!.category!),
+          ),
+    author: _authorFromNode(
+      id: n.author.id,
+      nickname: n.author.nickname,
+      profileImageUrl: n.author.profileImageUrl,
+    ),
+    createdAt: _parseTime(n.createdAt),
+    photoKeys: n.photoKeys,
+    likeCount: n.likeCount,
+    commentCount: n.commentCount,
+    likedByViewer: n.likedByViewer,
+    ownedByViewer: n.ownedByViewer,
+    hidden: n.hidden,
+    edited: n.edited,
+  );
 
-  Comment _commentFromNode(Query$PostDetail$post$comments$edges$node n) =>
-      Comment(
-        id: n.id,
-        body: n.body,
-        author: PostAuthor(
-          id: n.author.id,
-          nickname: n.author.nickname,
-          profileImageUrl: n.author.profileImageUrl,
-        ),
-        createdAt: _parseTime(n.createdAt),
-        ownedByViewer: n.ownedByViewer,
-        hidden: n.hidden,
-      );
+  Comment _commentFromNode(Query$Comments$comments$edges$node n) => Comment(
+    id: n.id,
+    body: n.body,
+    author: _authorFromNode(
+      id: n.author.id,
+      nickname: n.author.nickname,
+      profileImageUrl: n.author.profileImageUrl,
+    ),
+    createdAt: _parseTime(n.createdAt),
+    ownedByViewer: n.ownedByViewer,
+    hidden: n.hidden,
+  );
 
-  DiscoveryTile _tileFromNode(Query$DiscoveryTiles$discoveryTiles n) =>
-      DiscoveryTile(
-        id: n.id,
-        // 서버 문자열 그대로 — 매핑하지 않는다(가이드 §10).
-        title: n.title,
-        imageUrl: n.imageUrl,
-        filterTopic: n.filterTopic == null
-            ? null
-            : _topicFromEnum(n.filterTopic!),
-        filterTargetType: n.filterTargetType == null
-            ? null
-            : _targetTypeFromEnum(n.filterTargetType!),
-      );
+  PostAuthor _authorFromNode({
+    required String id,
+    required String nickname,
+    required String? profileImageUrl,
+  }) =>
+      PostAuthor(id: id, nickname: nickname, profileImageUrl: profileImageUrl);
+
+  /// 칩 하나. 클라이언트가 모르는 카테고리면 null이라 호출부가 걸러 낸다.
+  CommunityChip? _chipFromNode(Query$CommunityChips$communityChips n) {
+    final TargetCategory? category = _categoryFromEnum(n.category);
+    return category == null
+        ? null
+        : CommunityChip(category: category, position: n.position);
+  }
 
   /// 서버가 준 ISO-8601 문자열을 시각으로 파싱한다. 형식이 어긋나면 글 전체를
   /// 실패시키지 않고 epoch로 떨어뜨린다 — 상대 시각 하나 때문에 피드가 비면 손해가
@@ -409,28 +666,34 @@ class CommunityRepositoryImpl implements CommunityRepository {
       DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
 
   /// 생성 enum → 도메인 enum. 서버가 새 값을 추가하면 `$unknown`이 되어 null이며,
-  /// 그 글은 태그 pill만 빠지고 나머지는 정상 표시된다.
-  PostTopic? _topicFromEnum(Enum$PostTopic value) => switch (value) {
-    Enum$PostTopic.QUESTION => PostTopic.question,
-    Enum$PostTopic.TIP => PostTopic.tip,
-    Enum$PostTopic.REVIEW => PostTopic.review,
-    Enum$PostTopic.COMPANION => PostTopic.companion,
-    Enum$PostTopic.PHOTO => PostTopic.photo,
-    Enum$PostTopic.$unknown => null,
-  };
-
-  Enum$PostTopic _topicInput(PostTopic topic) => switch (topic) {
-    PostTopic.question => Enum$PostTopic.QUESTION,
-    PostTopic.tip => Enum$PostTopic.TIP,
-    PostTopic.review => Enum$PostTopic.REVIEW,
-    PostTopic.companion => Enum$PostTopic.COMPANION,
-    PostTopic.photo => Enum$PostTopic.PHOTO,
-  };
-
-  PostTargetType? _targetTypeFromEnum(Enum$PostTargetType value) =>
+  /// 그 글은 카테고리 라벨만 빠지고 나머지는 정상 표시된다.
+  TargetCategory? _categoryFromEnum(Enum$TargetCategory value) =>
       switch (value) {
-        Enum$PostTargetType.SPOT => PostTargetType.spot,
-        Enum$PostTargetType.$unknown => null,
+        Enum$TargetCategory.TOURIST_SPOT => TargetCategory.touristSpot,
+        Enum$TargetCategory.CULTURAL_FACILITY =>
+          TargetCategory.culturalFacility,
+        Enum$TargetCategory.FESTIVAL_EVENT => TargetCategory.festivalEvent,
+        Enum$TargetCategory.TRAVEL_COURSE => TargetCategory.travelCourse,
+        Enum$TargetCategory.LEISURE_SPORTS => TargetCategory.leisureSports,
+        Enum$TargetCategory.LODGING => TargetCategory.lodging,
+        Enum$TargetCategory.SHOPPING => TargetCategory.shopping,
+        Enum$TargetCategory.RESTAURANT => TargetCategory.restaurant,
+        Enum$TargetCategory.TRANSPORT => TargetCategory.transport,
+        Enum$TargetCategory.$unknown => null,
+      };
+
+  Enum$TargetCategory _categoryInput(TargetCategory category) =>
+      switch (category) {
+        TargetCategory.touristSpot => Enum$TargetCategory.TOURIST_SPOT,
+        TargetCategory.culturalFacility =>
+          Enum$TargetCategory.CULTURAL_FACILITY,
+        TargetCategory.festivalEvent => Enum$TargetCategory.FESTIVAL_EVENT,
+        TargetCategory.travelCourse => Enum$TargetCategory.TRAVEL_COURSE,
+        TargetCategory.leisureSports => Enum$TargetCategory.LEISURE_SPORTS,
+        TargetCategory.lodging => Enum$TargetCategory.LODGING,
+        TargetCategory.shopping => Enum$TargetCategory.SHOPPING,
+        TargetCategory.restaurant => Enum$TargetCategory.RESTAURANT,
+        TargetCategory.transport => Enum$TargetCategory.TRANSPORT,
       };
 
   Enum$ReportReason _reportReasonInput(ReportReason reason) => switch (reason) {
@@ -447,14 +710,6 @@ class CommunityRepositoryImpl implements CommunityRepository {
         ReportTargetType.comment => Enum$ReportTargetType.COMMENT,
         ReportTargetType.member => Enum$ReportTargetType.MEMBER,
       };
-
-  /// 대상 종류는 **문자열로 받아** 생성 enum으로 옮긴다. 인터페이스가 값으로 다루기
-  /// 때문이며(가이드 §1), 아직 클라이언트가 모르는 값이면 `$unknown`으로 보내 서버가
-  /// 판정하게 한다 — 클라이언트가 미리 거부하면 서버가 값을 늘렸을 때 앱만 막힌다.
-  Enum$PostTargetType _targetTypeInput(String value) => switch (value) {
-    'SPOT' => Enum$PostTargetType.SPOT,
-    _ => Enum$PostTargetType.$unknown,
-  };
 
   // --- 전송/실행 (spot repository와 동일한 2단계 실패 검사) -------------------
 

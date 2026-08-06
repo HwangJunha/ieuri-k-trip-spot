@@ -1,37 +1,37 @@
 import 'package:flutter/material.dart';
 
-import '../../../common/network/media_cdn.dart';
-import '../../../common/widget/image_placeholder.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/post.dart';
-import '../model/post_body_split.dart';
-import '../model/post_topic.dart';
-import 'post_topic_label.dart';
+import 'community_labels.dart';
+import 'post_photo.dart';
 
 /// 피드 항목 하나 — **당근 동네생활 카드 배치**를 따른다.
 ///
 /// ```
-/// ┌──────────────────────────────────────────┐
-/// │ 주제 태그(저강조)                  [⋮]  │  ← 태그가 맨 위, 우상단에 오버플로
-/// │ 제목 줄 (굵게)                           │
-/// │ 본문 2줄, 넘치면 ellipsis                │
-/// │ [사진]                                   │
-/// │ 스팟명 · 3시간 전        ♡ 12  💬 4      │  ← 좌: 위치+시각, 우: 좋아요·댓글
-/// └──────────────────────────────────────────┘
+/// ┌────────────────────────────────────────────────┐
+/// │ 카테고리(저강조)                          [⋮] │  ← 좌상단 카테고리, 우상단 메뉴
+/// │ ┌────┐  제목 (굵게)                            │
+/// │ │사진│  본문 2줄, 넘치면 ellipsis               │  ← 사진은 **좌측 1장만**
+/// │ └────┘                                         │
+/// │              장소명 · #태그 · 3시간 전  ♡12 💬4 │  ← 전부 우측 정렬
+/// └────────────────────────────────────────────────┘
 /// ```
 ///
 /// 당근 카드는 **납작하다** — 그림자 있는 Material 카드가 아니라 얇은 구분선으로만
-/// 나뉘고 세로 여백이 넉넉하다. 그래서 [Card]도 [Material] elevation도 쓰지 않고
-/// 구분선은 목록 쪽(`_FeedList`)이 그린다.
+/// 나뉘고 세로 여백이 넉넉하다. 그래서 [Card]도 elevation도 쓰지 않고 구분선은
+/// 목록 쪽이 그린다.
 ///
-/// **제목은 서버 필드가 아니다.** `Post`에는 `body`만 있어 [splitPostBody]가 본문에서
-/// 첫 문장을 떼어 제목 자리에 놓는다 — 서버에 `title`이 생기면 그 함수와 여기 두 줄만
-/// 바꾸면 된다(자세한 내용은 `model/post_body_split.dart`).
+/// **사진은 첫 장 하나만 그리고, 없으면 영역 자체를 접는다** — 빈 상자를 자리
+/// 잡아 두면 사진 있는 카드와 없는 카드의 텍스트 시작점이 어긋난다.
 ///
-/// **작성자를 눌러도 이동할 곳이 없다** — 프로필 화면이 비범위라 닉네임은 표시조차
-/// 하지 않는다: 당근 카드도 목록에서 작성자를 보여주지 않는다(설계 §6).
+/// **조회수는 그리지 않는다.** 서버 `Post`에 조회수 필드가 없어서다 — 클라이언트가
+/// 지어내면 실제와 다른 숫자가 된다. 서버가 필드를 열면 하단 행에 붙인다.
 ///
-/// [expanded]가 true면 상세용이다 — 본문을 자르지 않고 사진을 전부 보여준다(디자인 §4).
+/// **작성자를 목록에 표시하지 않는다** — 프로필 화면이 비범위라 닉네임을 눌러도 갈
+/// 곳이 없고, 당근도 목록 카드에 작성자를 두지 않는다. 닉네임은 차단 확인 문구에서만
+/// 쓴다.
+///
+/// [expanded]가 true면 상세용이다 — 본문을 자르지 않고 사진을 전부 보여준다.
 class PostCard extends StatelessWidget {
   const PostCard({
     super.key,
@@ -39,9 +39,10 @@ class PostCard extends StatelessWidget {
     required this.now,
     this.onTap,
     this.onLike,
-    this.onTargetTap,
+    this.onSpotTap,
     this.onOptions,
-    this.showTarget = true,
+    this.onPhotoTap,
+    this.showSpot = true,
     this.expanded = false,
   });
 
@@ -52,29 +53,24 @@ class PostCard extends StatelessWidget {
 
   final VoidCallback? onTap;
   final VoidCallback? onLike;
-  final VoidCallback? onTargetTap;
+  final VoidCallback? onSpotTap;
 
-  /// 우상단 오버플로 — 차단·신고·삭제 시트를 연다. null이면 버튼을 그리지 않는다.
-  ///
-  /// **미인증이라고 해서 null로 넘기지 않는다**(가이드 §13, 디자인 §7). 감추면
-  /// 기능이 없는 것처럼 보이므로, 눌렀을 때 로그인으로 유도하는 쪽을 택한다.
+  /// 우상단 오버플로 — 신고·차단(+내 글이면 수정·삭제) 메뉴를 연다. null이면 버튼을
+  /// 그리지 않는다.
   final VoidCallback? onOptions;
 
-  /// 대상 이름 표시 여부. spot 상세 안의 피드에서는 false다 — 이미 그 spot의
-  /// 화면이라 같은 이름을 두 번 보여줄 이유가 없다(디자인 §2).
-  final bool showTarget;
+  /// 사진 탭 — 전체 화면 뷰어를 연다. 인덱스를 넘겨 그 장부터 보여준다.
+  final ValueChanged<int>? onPhotoTap;
+
+  /// 장소 이름 표시 여부. 장소 상세 안의 피드에서는 false다 — 이미 그 장소의
+  /// 화면이라 같은 이름을 두 번 보여줄 이유가 없다.
+  final bool showSpot;
 
   final bool expanded;
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
     final AppLocalizations l10n = AppLocalizations.of(context);
-    // 상세에서는 본문을 자르지 않으므로 제목/본문으로 가르지 않는다 — 원문 그대로
-    // 읽히는 편이 낫다.
-    final PostBodySplit split = expanded
-        ? PostBodySplit(title: '', rest: post.body)
-        : splitPostBody(post.body);
 
     return InkWell(
       onTap: onTap,
@@ -83,20 +79,19 @@ class PostCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            // 맨 위 줄: 저강조 태그(당근의 "동네질문" 자리) + 우상단 오버플로.
+            // 맨 위 줄: 좌측 카테고리(저강조), 우측 오버플로.
             Row(
               children: <Widget>[
-                if (post.topic != null)
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: _TopicTag(
-                        label: postTopicLabel(l10n, post.topic!),
-                      ),
-                    ),
-                  )
-                else
-                  const Spacer(),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: post.category == null
+                        ? const SizedBox.shrink()
+                        : _CategoryLabel(
+                            label: targetCategoryLabel(l10n, post.category!),
+                          ),
+                  ),
+                ),
                 if (onOptions != null)
                   _OptionsButton(
                     tooltip: l10n.communityPostOptions,
@@ -110,41 +105,17 @@ class PostCard extends StatelessWidget {
               const SizedBox(height: 6),
               _HiddenBadge(label: l10n.communityHiddenBadge),
             ],
-            // 제목 줄. 본문에서 갈라낼 수 없으면 비어 있고, 그때는 본문만 그린다.
-            if (split.title.isNotEmpty) ...<Widget>[
-              const SizedBox(height: 4),
-              Text(
-                split.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-            if (split.rest.isNotEmpty) ...<Widget>[
-              const SizedBox(height: 4),
-              Text(
-                split.rest,
-                maxLines: expanded ? null : 2,
-                overflow: expanded ? null : TextOverflow.ellipsis,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-            // 사진이 없으면 자리를 비워두지 않고 **영역 자체를 렌더하지 않는다**
-            // (디자인 §1). 시드 키는 404가 정상이라 실패해도 레이아웃이 유지된다.
-            if (post.photoKeys.isNotEmpty) ...<Widget>[
-              const SizedBox(height: 10),
-              _Photos(photoKeys: post.photoKeys, expanded: expanded),
-            ],
+            const SizedBox(height: 4),
+            if (expanded)
+              _ExpandedBody(post: post, onPhotoTap: onPhotoTap)
+            else
+              _CompactBody(post: post, onPhotoTap: onPhotoTap),
             const SizedBox(height: 10),
             _FooterRow(
               post: post,
               now: now,
-              showTarget: showTarget,
-              onTargetTap: onTargetTap,
+              showSpot: showSpot,
+              onSpotTap: onSpotTap,
               onLike: onLike,
               onComment: onTap,
             ),
@@ -155,22 +126,158 @@ class PostCard extends StatelessWidget {
   }
 }
 
-/// 카드 하단 한 줄. **좌측은 장소 이름 + 상대 시각**(당근의 "신림동 · 3시간 전"
-/// 자리에 spot 이름을 넣는다), **우측은 좋아요 수와 댓글 수**다.
+/// 목록 카드의 본문 — **좌측에 사진 1장, 우측에 제목+본문**이다.
+///
+/// 사진이 없으면 [Row] 대신 텍스트만 그린다. 빈 상자를 남겨 두면 사진 있는 카드와
+/// 없는 카드의 제목 시작점이 어긋나 목록이 들쭉날쭉해진다.
+class _CompactBody extends StatelessWidget {
+  const _CompactBody({required this.post, required this.onPhotoTap});
+
+  final Post post;
+  final ValueChanged<int>? onPhotoTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget text = _TitleAndBody(post: post, expanded: false);
+    if (post.photoKeys.isEmpty) return text;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        // **첫 장만 그린다** — 목록에서 여러 장을 늘어놓으면 카드 높이가 장수에 따라
+        // 출렁이고, 훑어보는 흐름이 끊긴다.
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: SizedBox(
+            width: 84,
+            height: 84,
+            child: PostPhoto(
+              photoKey: post.photoKeys.first,
+              onTap: onPhotoTap == null ? null : () => onPhotoTap!(0),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(child: text),
+      ],
+    );
+  }
+}
+
+/// 상세의 본문 — 본문을 자르지 않고 사진을 **전부** 가로로 보여준다.
+class _ExpandedBody extends StatelessWidget {
+  const _ExpandedBody({required this.post, required this.onPhotoTap});
+
+  final Post post;
+  final ValueChanged<int>? onPhotoTap;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: <Widget>[
+      _TitleAndBody(post: post, expanded: true),
+      if (post.photoKeys.isNotEmpty) ...<Widget>[
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 200,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: post.photoKeys.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemBuilder: (BuildContext context, int index) => ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                width: 200,
+                child: PostPhoto(
+                  photoKey: post.photoKeys[index],
+                  onTap: onPhotoTap == null ? null : () => onPhotoTap!(index),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    ],
+  );
+}
+
+/// 굵은 제목 한 줄과 그 아래 본문.
+///
+/// 목록에서는 **본문을 잘라 ellipsis를 붙인다** — 카드 높이가 글 길이에 따라
+/// 달라지면 목록을 훑는 리듬이 깨진다. 상세에서는 자르지 않는다.
+class _TitleAndBody extends StatelessWidget {
+  const _TitleAndBody({required this.post, required this.expanded});
+
+  final Post post;
+  final bool expanded;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Flexible(
+              child: Text(
+                post.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            // 수정 이력은 보관하지 않으므로 "수정됨" 표시만 붙인다(가이드 §5).
+            if (post.edited) ...<Widget>[
+              const SizedBox(width: 6),
+              Padding(
+                padding: const EdgeInsets.only(top: 3),
+                child: Text(
+                  l10n.communityEditedBadge,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          post.body,
+          maxLines: expanded ? null : 2,
+          overflow: expanded ? null : TextOverflow.ellipsis,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// 카드 하단 한 줄. **전부 우측 정렬이다** — 좌측은 사진 폭에 맞춰 비워 둔다.
+///
+/// 순서는 장소명 · 태그 · 상대시각 / 좋아요 · 댓글이다. 장소가 없으면(가이드 §5)
+/// **장소 자리를 아예 그리지 않는다.**
 class _FooterRow extends StatelessWidget {
   const _FooterRow({
     required this.post,
     required this.now,
-    required this.showTarget,
-    required this.onTargetTap,
+    required this.showSpot,
+    required this.onSpotTap,
     required this.onLike,
     required this.onComment,
   });
 
   final Post post;
   final DateTime now;
-  final bool showTarget;
-  final VoidCallback? onTargetTap;
+  final bool showSpot;
+  final VoidCallback? onSpotTap;
   final VoidCallback? onLike;
   final VoidCallback? onComment;
 
@@ -181,63 +288,67 @@ class _FooterRow extends StatelessWidget {
     final TextStyle? meta = theme.textTheme.labelMedium?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
     );
+    final bool hasSpot = showSpot && post.spot != null;
 
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: <Widget>[
-        Expanded(
-          child: Row(
-            children: <Widget>[
-              if (showTarget) ...<Widget>[
-                // 이름만 눌러도 대상 상세로 간다. 카드 전체 탭(글 상세)과 겹치지
-                // 않도록 InkWell을 이름에만 씌운다.
-                Flexible(
-                  child: InkWell(
-                    onTap: post.target.type == PostTargetType.spot
-                        ? onTargetTap
-                        : null,
-                    borderRadius: BorderRadius.circular(6),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Text(
-                        post.target.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: meta?.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                    ),
+        // 장소·태그·시각. 넘치면 줄바꿈한다 — 태그 수가 사용자마다 다르다.
+        Wrap(
+          alignment: WrapAlignment.end,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 6,
+          runSpacing: 2,
+          children: <Widget>[
+            if (hasSpot)
+              // 이름만 눌러도 장소 상세로 간다. 카드 전체 탭(글 상세)과 겹치지
+              // 않도록 InkWell을 이름에만 씌운다.
+              InkWell(
+                onTap: onSpotTap,
+                borderRadius: BorderRadius.circular(6),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Text(
+                    post.spot!.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: meta?.copyWith(fontWeight: FontWeight.w600),
                   ),
                 ),
-                Text(' · ', style: meta),
-              ],
-              Text(relativePostTime(l10n, post.createdAt, now), style: meta),
-            ],
-          ),
+              ),
+            // 태그는 **번역하지 않는다** — 사용자가 입력한 원문 그대로다(가이드 §9).
+            for (final String tag in post.tags) Text('#$tag', style: meta),
+            Text(relativePostTime(l10n, post.createdAt, now), style: meta),
+          ],
         ),
-        // 우측: 좋아요 수와 댓글 수. 댓글 수는 서버 `commentCount` 그대로 쓴다 —
-        // 목록 길이로 계산하지 않는다(가이드 §6).
-        _Count(
-          icon: post.likedByViewer ? Icons.favorite : Icons.favorite_border,
-          color: post.likedByViewer
-              ? theme.colorScheme.primary
-              : theme.colorScheme.onSurfaceVariant,
-          count: post.likeCount,
-          onTap: onLike,
-        ),
-        const SizedBox(width: 4),
-        _Count(
-          icon: Icons.chat_bubble_outline_rounded,
-          color: theme.colorScheme.onSurfaceVariant,
-          count: post.commentCount,
-          onTap: onComment,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: <Widget>[
+            // 댓글 수는 서버 `commentCount` 그대로 쓴다 — 목록 길이로 계산하지
+            // 않는다(가이드 §6).
+            _Count(
+              icon: Icons.chat_bubble_outline_rounded,
+              color: theme.colorScheme.onSurfaceVariant,
+              count: post.commentCount,
+              onTap: onComment,
+            ),
+            const SizedBox(width: 4),
+            _Count(
+              icon: post.likedByViewer ? Icons.favorite : Icons.favorite_border,
+              color: post.likedByViewer
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant,
+              count: post.likeCount,
+              onTap: onLike,
+            ),
+          ],
         ),
       ],
     );
   }
 }
 
-/// 하단 우측의 수 하나. 터치 영역 ≥48dp(디자인 §1).
-///
-/// **미인증이어도 감추지 않는다** — 눌렀을 때 로그인으로 유도한다(R17).
+/// 하단의 수 하나. 터치 영역 ≥48dp.
 class _Count extends StatelessWidget {
   const _Count({
     required this.icon,
@@ -278,7 +389,7 @@ class _Count extends StatelessWidget {
   }
 }
 
-/// 카드 우상단 오버플로. 차단·신고·삭제 시트를 연다.
+/// 카드 우상단 오버플로. 신고·차단·수정·삭제 메뉴를 연다.
 class _OptionsButton extends StatelessWidget {
   const _OptionsButton({required this.tooltip, required this.onPressed});
 
@@ -296,10 +407,10 @@ class _OptionsButton extends StatelessWidget {
   );
 }
 
-/// 카드 맨 위의 주제 태그. **저강조다** — 당근이 게시판 이름을 작게 두는 자리라
+/// 카드 좌상단의 카테고리. **저강조다** — 당근이 게시판 이름을 작게 두는 자리라
 /// 본문 위계를 가리면 안 된다.
-class _TopicTag extends StatelessWidget {
-  const _TopicTag({required this.label});
+class _CategoryLabel extends StatelessWidget {
+  const _CategoryLabel({required this.label});
 
   final String label;
 
@@ -316,71 +427,6 @@ class _TopicTag extends StatelessWidget {
       ),
     );
   }
-}
-
-/// 사진 표시. 1장이면 와이드, 여러 장이면 가로 스크롤 썸네일 행이다.
-///
-/// 배치(그리드 vs 가로 스크롤)는 목업의 제안일 뿐 확정이 아니라(디자인 §10) 가로
-/// 스크롤을 택했다 — 개수가 1~5로 적고, 그리드는 장수에 따라 카드 높이가 크게
-/// 출렁인다.
-///
-/// **개발 환경 시드의 키는 실제 오브젝트가 없어 404가 정상이다**(가이드 §3).
-/// 그래서 항상 플레이스홀더를 깔고 그 위에 이미지를 그린다 — 실패해도 레이아웃이
-/// 무너지지 않는다.
-class _Photos extends StatelessWidget {
-  const _Photos({required this.photoKeys, required this.expanded});
-
-  final List<String> photoKeys;
-  final bool expanded;
-
-  @override
-  Widget build(BuildContext context) {
-    if (photoKeys.length == 1) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: AspectRatio(
-          aspectRatio: 16 / 9,
-          child: _Photo(photoKey: photoKeys.first),
-        ),
-      );
-    }
-    return SizedBox(
-      height: expanded ? 200 : 120,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: photoKeys.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
-        itemBuilder: (BuildContext context, int index) => ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: SizedBox(
-            width: expanded ? 200 : 120,
-            child: _Photo(photoKey: photoKeys[index]),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Photo extends StatelessWidget {
-  const _Photo({required this.photoKey});
-
-  final String photoKey;
-
-  @override
-  Widget build(BuildContext context) => Stack(
-    fit: StackFit.expand,
-    children: <Widget>[
-      ImagePlaceholder(imageRef: photoKey),
-      // 키 → URL 조합은 앱 설정의 CDN 베이스로 한다(가이드 §3). 위젯에 문자열을
-      // 박지 않는다.
-      Image.network(
-        MediaCdn.urlFor(photoKey),
-        fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => const SizedBox.shrink(),
-      ),
-    ],
-  );
 }
 
 class _HiddenBadge extends StatelessWidget {

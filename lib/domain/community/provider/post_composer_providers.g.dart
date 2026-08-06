@@ -8,33 +8,37 @@ part of 'post_composer_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 컴포저가 편집 중인 초안(R1~R4). 화면 하나에 속한 상태라 autoDispose(codegen 기본)로
+/// 컴포저가 편집 중인 초안. 화면 하나에 속한 상태라 autoDispose(codegen 기본)로
 /// 둔다 — 컴포저를 닫으면 초안이 사라지는 것이 맞다.
 ///
 /// **등록 가능 여부는 [PostDraft.canSubmit]이 판정한다.** 서버 검증을 기다렸다가
 /// 에러를 보여주는 방식이 아니라 화면이 애초에 잘못된 상태를 만들지 못하게 한다
-/// (설계 §3, R1-1).
+/// (디자인 §3).
 
 @ProviderFor(PostComposer)
 const postComposerProvider = PostComposerFamily._();
 
-/// 컴포저가 편집 중인 초안(R1~R4). 화면 하나에 속한 상태라 autoDispose(codegen 기본)로
+/// 컴포저가 편집 중인 초안. 화면 하나에 속한 상태라 autoDispose(codegen 기본)로
 /// 둔다 — 컴포저를 닫으면 초안이 사라지는 것이 맞다.
 ///
 /// **등록 가능 여부는 [PostDraft.canSubmit]이 판정한다.** 서버 검증을 기다렸다가
 /// 에러를 보여주는 방식이 아니라 화면이 애초에 잘못된 상태를 만들지 못하게 한다
-/// (설계 §3, R1-1).
+/// (디자인 §3).
 final class PostComposerProvider
     extends $NotifierProvider<PostComposer, PostDraft> {
-  /// 컴포저가 편집 중인 초안(R1~R4). 화면 하나에 속한 상태라 autoDispose(codegen 기본)로
+  /// 컴포저가 편집 중인 초안. 화면 하나에 속한 상태라 autoDispose(codegen 기본)로
   /// 둔다 — 컴포저를 닫으면 초안이 사라지는 것이 맞다.
   ///
   /// **등록 가능 여부는 [PostDraft.canSubmit]이 판정한다.** 서버 검증을 기다렸다가
   /// 에러를 보여주는 방식이 아니라 화면이 애초에 잘못된 상태를 만들지 못하게 한다
-  /// (설계 §3, R1-1).
+  /// (디자인 §3).
   const PostComposerProvider._({
     required PostComposerFamily super.from,
-    required ({String? initialTargetId, String? initialTargetTitle})
+    required ({
+      String? initialSpotId,
+      String? initialSpotTitle,
+      TargetCategory? initialCategory,
+    })
     super.argument,
   }) : super(
          retry: null,
@@ -77,14 +81,14 @@ final class PostComposerProvider
   }
 }
 
-String _$postComposerHash() => r'd1cbd5a4e56dbcb7d943d393e74e1bca64e0f9aa';
+String _$postComposerHash() => r'1957c525d8e6417c373cb51c537b57cdae360972';
 
-/// 컴포저가 편집 중인 초안(R1~R4). 화면 하나에 속한 상태라 autoDispose(codegen 기본)로
+/// 컴포저가 편집 중인 초안. 화면 하나에 속한 상태라 autoDispose(codegen 기본)로
 /// 둔다 — 컴포저를 닫으면 초안이 사라지는 것이 맞다.
 ///
 /// **등록 가능 여부는 [PostDraft.canSubmit]이 판정한다.** 서버 검증을 기다렸다가
 /// 에러를 보여주는 방식이 아니라 화면이 애초에 잘못된 상태를 만들지 못하게 한다
-/// (설계 §3, R1-1).
+/// (디자인 §3).
 
 final class PostComposerFamily extends $Family
     with
@@ -93,7 +97,11 @@ final class PostComposerFamily extends $Family
           PostDraft,
           PostDraft,
           PostDraft,
-          ({String? initialTargetId, String? initialTargetTitle})
+          ({
+            String? initialSpotId,
+            String? initialSpotTitle,
+            TargetCategory? initialCategory,
+          })
         > {
   const PostComposerFamily._()
     : super(
@@ -104,20 +112,22 @@ final class PostComposerFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// 컴포저가 편집 중인 초안(R1~R4). 화면 하나에 속한 상태라 autoDispose(codegen 기본)로
+  /// 컴포저가 편집 중인 초안. 화면 하나에 속한 상태라 autoDispose(codegen 기본)로
   /// 둔다 — 컴포저를 닫으면 초안이 사라지는 것이 맞다.
   ///
   /// **등록 가능 여부는 [PostDraft.canSubmit]이 판정한다.** 서버 검증을 기다렸다가
   /// 에러를 보여주는 방식이 아니라 화면이 애초에 잘못된 상태를 만들지 못하게 한다
-  /// (설계 §3, R1-1).
+  /// (디자인 §3).
 
   PostComposerProvider call({
-    String? initialTargetId,
-    String? initialTargetTitle,
+    String? initialSpotId,
+    String? initialSpotTitle,
+    TargetCategory? initialCategory,
   }) => PostComposerProvider._(
     argument: (
-      initialTargetId: initialTargetId,
-      initialTargetTitle: initialTargetTitle,
+      initialSpotId: initialSpotId,
+      initialSpotTitle: initialSpotTitle,
+      initialCategory: initialCategory,
     ),
     from: this,
   );
@@ -126,26 +136,37 @@ final class PostComposerFamily extends $Family
   String toString() => r'postComposerProvider';
 }
 
-/// 컴포저가 편집 중인 초안(R1~R4). 화면 하나에 속한 상태라 autoDispose(codegen 기본)로
+/// 컴포저가 편집 중인 초안. 화면 하나에 속한 상태라 autoDispose(codegen 기본)로
 /// 둔다 — 컴포저를 닫으면 초안이 사라지는 것이 맞다.
 ///
 /// **등록 가능 여부는 [PostDraft.canSubmit]이 판정한다.** 서버 검증을 기다렸다가
 /// 에러를 보여주는 방식이 아니라 화면이 애초에 잘못된 상태를 만들지 못하게 한다
-/// (설계 §3, R1-1).
+/// (디자인 §3).
 
 abstract class _$PostComposer extends $Notifier<PostDraft> {
   late final _$args =
-      ref.$arg as ({String? initialTargetId, String? initialTargetTitle});
-  String? get initialTargetId => _$args.initialTargetId;
-  String? get initialTargetTitle => _$args.initialTargetTitle;
+      ref.$arg
+          as ({
+            String? initialSpotId,
+            String? initialSpotTitle,
+            TargetCategory? initialCategory,
+          });
+  String? get initialSpotId => _$args.initialSpotId;
+  String? get initialSpotTitle => _$args.initialSpotTitle;
+  TargetCategory? get initialCategory => _$args.initialCategory;
 
-  PostDraft build({String? initialTargetId, String? initialTargetTitle});
+  PostDraft build({
+    String? initialSpotId,
+    String? initialSpotTitle,
+    TargetCategory? initialCategory,
+  });
   @$mustCallSuper
   @override
   void runBuild() {
     final created = build(
-      initialTargetId: _$args.initialTargetId,
-      initialTargetTitle: _$args.initialTargetTitle,
+      initialSpotId: _$args.initialSpotId,
+      initialSpotTitle: _$args.initialSpotTitle,
+      initialCategory: _$args.initialCategory,
     );
     final ref = this.ref as $Ref<PostDraft, PostDraft>;
     final element =

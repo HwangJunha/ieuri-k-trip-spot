@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/comment.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.dart';
@@ -17,21 +16,19 @@ ProviderContainer _container(FakeCommunityRepository repo) {
 }
 
 void main() {
-  test('글과 댓글을 데이터로 노출한다', () async {
+  test('글을 데이터로 노출한다', () async {
     final ProviderContainer container = _container(
-      FakeCommunityRepository(
-        post: fakePost(comments: <Comment>[fakeComment()]),
-      ),
+      FakeCommunityRepository(post: fakePost()),
     );
 
     final Post? post = await container.read(postDetailProvider('p1').future);
 
     expect(post, isNotNull);
-    expect(post!.comments, hasLength(1));
+    expect(post!.title, isNotEmpty);
   });
 
-  // 가이드 §6 — 차단·숨김은 **오류가 아니라 null**이다. AsyncValue.error가 아니라
-  // data(null)로 와야 화면이 "볼 수 없는 글" 안내를 띄울 수 있다.
+  // 가이드 §6 — 차단·숨김·삭제는 **오류가 아니라 null**이다. AsyncValue.error가
+  // 아니라 data(null)로 와야 화면이 "볼 수 없는 글" 안내를 띄울 수 있다.
   test('차단·숨김이면 오류가 아니라 data(null)이다', () async {
     final ProviderContainer container = _container(FakeCommunityRepository());
 

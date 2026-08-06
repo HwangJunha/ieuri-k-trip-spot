@@ -1,84 +1,154 @@
-import 'post_topic.dart';
+import '../../../common/model/list_equality.dart';
+import 'target_category.dart';
 
-/// 본문 최대 길이. **서버는 코드포인트로 센다**(가이드 §12) — `String.length`(UTF-16)나
+/// 제목 최대 길이(코드포인트).
+const int maxPostTitleRunes = 50;
+
+/// 본문 최대 길이. **서버는 코드포인트로 센다**(가이드 §8) — `String.length`(UTF-16)나
 /// grapheme으로 세면 이모지가 든 본문에서 "499자인데 거부됨"이 난다.
 const int maxPostBodyRunes = 500;
 
-/// 컴포저가 편집 중인 글 한 건(SPEC-0010 R1~R4). 순수 도메인 — 위젯·GraphQL·Riverpod
+/// 태그 하나의 최대 길이(코드포인트).
+const int maxPostTagRunes = 30;
+
+/// 글 하나에 붙일 수 있는 태그 수. 넘기면 서버가 `TOO_MANY_TAGS`로 거부하므로
+/// **입력 단계에서 미리 막는다**(가이드 §7).
+const int maxPostTags = 5;
+
+/// 글 하나에 붙일 수 있는 사진 수. 넘기면 `TOO_MANY_PHOTOS`다.
+const int maxPostPhotos = 5;
+
+/// 컴포저가 편집 중인 글 한 건(SPEC-0010). 순수 도메인 — 위젯·GraphQL·Riverpod
 /// 의존 없음.
 ///
 /// **등록 가능 여부를 이 모델이 판정한다**([canSubmit]). 서버 검증을 기다렸다가
 /// 에러를 보여주는 방식이 아니라 화면이 애초에 잘못된 상태를 만들지 못하게 하기
-/// 위해서다(설계 §3, R1-1).
+/// 위해서다(디자인 §3).
+///
+/// **카테고리가 필수이고 장소는 선택이다**(가이드 §5) — 장소 없는 글이 허용된다.
+/// 다만 그 글은 좌표 반경 조회에 잡히지 않는다(§10).
 class PostDraft {
   const PostDraft({
-    this.targetType = 'SPOT',
-    this.targetId,
-    this.targetTitle,
-    this.topic,
+    this.category,
+    this.spotId,
+    this.spotTitle,
+    this.title = '',
     this.body = '',
+    this.tags = const <String>[],
     this.photoKeys = const <String>[],
   });
 
-  /// 대상 종류. **값으로 다룬다** — 지금은 `SPOT` 하나뿐이지만 늘어날 자리가 열려
-  /// 있어 하드코딩하지 않는다(가이드 §1).
-  final String targetType;
+  /// **필수.** 미선택이면 등록이 막힌다.
+  final TargetCategory? category;
 
-  /// 어느 대상(관광지)에 붙는 글인지. 미선택이면 null이고 등록이 막힌다.
-  final String? targetId;
+  /// 어느 장소에 붙는 글인지. **선택이다** — null이면 장소 없는 글로 등록된다.
+  final String? spotId;
 
-  /// 선택된 대상의 표시 이름. 서버에 보내지 않고 화면 표시에만 쓴다.
-  final String? targetTitle;
+  /// 선택된 장소의 표시 이름. 서버에 보내지 않고 화면 표시에만 쓴다.
+  final String? spotTitle;
 
-  final PostTopic? topic;
+  final String title;
   final String body;
 
+  /// 사용자가 입력한 태그. 각 태그는 **공백을 포함할 수 없고**(`INVALID_TAG`)
+  /// 30 코드포인트 이내여야 한다(가이드 §5).
+  final List<String> tags;
+
   /// **최종 키**(`images/...`)만 담는다. 1단계가 준 `pending/...` 키를 그대로 넘기면
-  /// 서버가 `PHOTO_NOT_UPLOADED`로 거부한다(가이드 §3-(2)).
+  /// 서버가 `PHOTO_NOT_UPLOADED`로 거부한다(가이드 §4).
   final List<String> photoKeys;
 
-  /// 본문 길이(코드포인트). 화면의 잔여 카운터가 이 값을 쓴다.
+  /// 제목 길이(코드포인트). 화면 카운터가 이 값을 쓴다.
+  int get titleRunes => title.runes.length;
+
+  /// 본문 길이(코드포인트).
   int get bodyRunes => body.runes.length;
 
-  /// 남은 글자 수. 음수면 초과분이다 — 화면은 이 값을 **드러내고** 입력을 자르지
-  /// 않는다(설계 §3: 붙여넣기한 유저가 무엇이 사라졌는지 모르면 안 된다).
-  int get remainingRunes => maxPostBodyRunes - bodyRunes;
+  /// 남은 본문 글자 수. 음수면 초과분이다 — 화면은 이 값을 **드러내고** 입력을
+  /// 자르지 않는다(디자인 §3: 붙여넣기한 유저가 무엇이 사라졌는지 모르면 안 된다).
+  int get remainingBodyRunes => maxPostBodyRunes - bodyRunes;
+
+  int get remainingTitleRunes => maxPostTitleRunes - titleRunes;
+
+  bool get isTitleTooLong => titleRunes > maxPostTitleRunes;
 
   bool get isBodyTooLong => bodyRunes > maxPostBodyRunes;
 
-  /// 공백만 있는 본문은 빈 것으로 본다 — 서버도 `POST_BODY_REQUIRED`로 거부한다.
+  /// 공백만 있는 제목은 빈 것으로 본다 — 서버도 `POST_TITLE_REQUIRED`로 거부한다.
+  bool get hasTitle => title.trim().isNotEmpty;
+
   bool get hasBody => body.trim().isNotEmpty;
 
-  /// 등록 버튼 활성 조건: 대상·태그·본문이 모두 갖춰지고 길이가 넘지 않을 것(R1-1).
+  /// 태그를 더 넣을 수 있는지. 상한에 닿으면 입력 자체를 막는다(가이드 §7).
+  bool get canAddTag => tags.length < maxPostTags;
+
+  /// 등록 버튼 활성 조건(가이드 §5): 카테고리가 골라졌고, 제목·본문이 비지 않았고,
+  /// 길이가 넘지 않을 것. **장소는 조건이 아니다** — 선택 항목이다.
   bool get canSubmit =>
-      targetId != null && topic != null && hasBody && !isBodyTooLong;
+      category != null &&
+      hasTitle &&
+      !isTitleTooLong &&
+      hasBody &&
+      !isBodyTooLong;
+
+  /// [value]가 태그로 유효한지. 공백이 하나라도 있으면 거부다 — "맛집 추천"이 한
+  /// 태그인지 둘인지 애매해서 서버가 `INVALID_TAG`로 막는다(가이드 §5).
+  ///
+  /// 앞의 `#`은 서버가 제거하므로 클라이언트가 정규화할 필요가 없다.
+  static bool isValidTag(String value) {
+    final String trimmed = value.trim();
+    if (trimmed.isEmpty) return false;
+    if (trimmed.contains(RegExp(r'\s'))) return false;
+    return trimmed.runes.length <= maxPostTagRunes;
+  }
 
   PostDraft copyWith({
-    String? targetType,
-    String? targetId,
-    String? targetTitle,
-    PostTopic? topic,
+    TargetCategory? category,
+    String? spotId,
+    String? spotTitle,
+    String? title,
     String? body,
+    List<String>? tags,
     List<String>? photoKeys,
   }) => PostDraft(
-    targetType: targetType ?? this.targetType,
-    targetId: targetId ?? this.targetId,
-    targetTitle: targetTitle ?? this.targetTitle,
-    topic: topic ?? this.topic,
+    category: category ?? this.category,
+    spotId: spotId ?? this.spotId,
+    spotTitle: spotTitle ?? this.spotTitle,
+    title: title ?? this.title,
     body: body ?? this.body,
+    tags: tags ?? this.tags,
     photoKeys: photoKeys ?? this.photoKeys,
+  );
+
+  /// 장소를 비운다. [copyWith]는 null을 "안 바꿈"으로 보기 때문에 해제 전용
+  /// 생성자가 따로 필요하다.
+  PostDraft withoutSpot() => PostDraft(
+    category: category,
+    title: title,
+    body: body,
+    tags: tags,
+    photoKeys: photoKeys,
   );
 
   @override
   bool operator ==(Object other) =>
       other is PostDraft &&
-      other.targetType == targetType &&
-      other.targetId == targetId &&
-      other.targetTitle == targetTitle &&
-      other.topic == topic &&
-      other.body == body;
+      other.category == category &&
+      other.spotId == spotId &&
+      other.spotTitle == spotTitle &&
+      other.title == title &&
+      other.body == body &&
+      listEquals(other.tags, tags) &&
+      listEquals(other.photoKeys, photoKeys);
 
   @override
-  int get hashCode =>
-      Object.hash(targetType, targetId, targetTitle, topic, body);
+  int get hashCode => Object.hash(
+    category,
+    spotId,
+    spotTitle,
+    title,
+    body,
+    Object.hashAll(tags),
+    Object.hashAll(photoKeys),
+  );
 }

@@ -182,30 +182,6 @@
   "@communityNearbyTitle": {
     "description": "지역 피드 섹션 헤더"
   },
-  "communityTopicAll": "すべて",
-  "@communityTopicAll": {
-    "description": "주제 태그 칩 — 전체(선택 없음)"
-  },
-  "communityTopicQuestion": "質問",
-  "@communityTopicQuestion": {
-    "description": "주제 태그 QUESTION 표시명"
-  },
-  "communityTopicTip": "豆知識",
-  "@communityTopicTip": {
-    "description": "주제 태그 TIP 표시명"
-  },
-  "communityTopicReview": "レビュー",
-  "@communityTopicReview": {
-    "description": "주제 태그 REVIEW 표시명"
-  },
-  "communityTopicCompanion": "同行者",
-  "@communityTopicCompanion": {
-    "description": "주제 태그 COMPANION 표시명"
-  },
-  "communityTopicPhoto": "写真",
-  "@communityTopicPhoto": {
-    "description": "주제 태그 PHOTO 표시명"
-  },
   "communityFeedEmpty": "近くにはまだ投稿がありません。",
   "@communityFeedEmpty": {
     "description": "지역 피드에 글이 하나도 없을 때"
@@ -289,10 +265,6 @@
   "communityComposeAction": "投稿する",
   "@communityComposeAction": {
     "description": "글 작성 FAB의 접근성 라벨"
-  },
-  "communityCommentsUnavailable": "コメントを読み込めませんでした。",
-  "@communityCommentsUnavailable": {
-    "description": "댓글을 불러오지 못했을 때 (글 본문은 정상)"
   },
   "communityPostOptions": "投稿オプション",
   "@communityPostOptions": {
@@ -407,26 +379,9 @@
   "@communityComposeBodyHint": {
     "description": "본문 입력 힌트"
   },
-  "communityComposeTopicLabel": "掲示板を選ぶ",
-  "@communityComposeTopicLabel": {
-    "description": "컴포저에서 주제를 먼저 고르게 하는 라벨"
-  },
   "communityComposeSpotLabel": "場所",
   "@communityComposeSpotLabel": {
     "description": "컴포저의 대상(관광지) 라벨"
-  },
-  "communityComposeSpotMissing": "スポットを選択",
-  "@communityComposeSpotMissing": {
-    "description": "대상이 아직 정해지지 않았을 때"
-  },
-  "communityComposeCounter": "{count} / 500",
-  "@communityComposeCounter": {
-    "description": "본문 잔여 글자 수 — 서버와 같은 코드포인트 기준 (가이드 §12)",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
   },
   "communityComposeTooLong": "{count}文字オーバーしています。",
   "@communityComposeTooLong": {
@@ -441,14 +396,6 @@
   "@communityComposeDone": {
     "description": "글 등록 성공 안내"
   },
-  "communityComposeErrorBodyRequired": "本文を入力してください。",
-  "@communityComposeErrorBodyRequired": {
-    "description": "POST_BODY_REQUIRED"
-  },
-  "communityComposeErrorBodyLength": "本文が長すぎます。500文字以内で入力してください。",
-  "@communityComposeErrorBodyLength": {
-    "description": "POST_BODY_LENGTH_INVALID"
-  },
   "communityComposeErrorSpotNotFound": "その場所は見つかりませんでした。",
   "@communityComposeErrorSpotNotFound": {
     "description": "SPOT_NOT_FOUND"
@@ -456,5 +403,107 @@
   "communityComposeErrorTooManyPhotos": "写真は最大5枚まで添付できます。",
   "@communityComposeErrorTooManyPhotos": {
     "description": "TOO_MANY_PHOTOS"
-  }
+  },
+  "communityCategoryAll": "すべて",
+  "communityCategoryTouristSpot": "観光地",
+  "communityCategoryCulturalFacility": "文化施設",
+  "communityCategoryFestivalEvent": "祭り・イベント",
+  "communityCategoryTravelCourse": "旅行コース",
+  "communityCategoryLeisureSports": "レジャー",
+  "communityCategoryLodging": "宿泊",
+  "communityCategoryShopping": "ショッピング",
+  "communityCategoryRestaurant": "グルメ",
+  "communityCategoryTransport": "交通",
+  "communityEditedBadge": "編集済み",
+  "communityEditAction": "投稿を編集",
+  "communityEditDisabledHidden": "非表示の投稿は編集できません。",
+  "communityEditTitle": "投稿の編集",
+  "communityEditDone": "投稿を更新しました。",
+  "communityComposeCategoryLabel": "カテゴリーを選択",
+  "communityComposeTitleLabel": "タイトル",
+  "communityComposeTitleHint": "短いタイトル",
+  "communityComposeBodyLabel": "本文",
+  "communityComposeTagsLabel": "タグ（任意）",
+  "communityComposeTagHint": "タグを入力（スペースなし）",
+  "communityComposeTagInvalid": "タグにスペースは使えません。",
+  "communityComposeTagLimit": "タグは5つまでです。",
+  "communityComposeSpotOptional": "場所を追加（任意）",
+  "communityComposeSpotClear": "場所を外す",
+  "communityComposePhotosLabel": "写真（任意）",
+  "communityComposePhotoAdd": "写真を追加",
+  "communityComposePhotoUnavailable": "このビルドでは写真を選べません。",
+  "communityComposePhotoFailed": "写真{count}枚をアップロードできませんでした。もう一度お試しください。",
+  "@communityComposePhotoFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityComposeErrorTitleRequired": "タイトルを入力してください。",
+  "communityComposeErrorTitleLength": "タイトルが長すぎます。50文字以内にしてください。",
+  "communityComposeErrorBodyRequired": "本文を入力してください。",
+  "communityComposeErrorBodyLength": "本文が長すぎます。500文字以内にしてください。",
+  "communityComposeErrorInvalidTag": "使用できないタグがあります。",
+  "communityComposeErrorTooManyTags": "タグは5つまでです。",
+  "communityComposeErrorPhotoNotUploaded": "写真のアップロードに失敗しました。もう一度追加してください。",
+  "communityComposeErrorNotEditable": "非表示の投稿は編集できません。",
+  "communityTitleCounter": "{count} / 50",
+  "@communityTitleCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityBodyCounter": "{count} / 500",
+  "@communityBodyCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityCommentComposerHint": "コメントを入力",
+  "communityCommentSend": "送信",
+  "communityCommentDone": "コメントを投稿しました。",
+  "communityCommentDeleteAction": "コメントを削除",
+  "communityCommentDeleteDone": "コメントを削除しました。",
+  "communityCommentReportAction": "コメントを報告",
+  "communityCommentsUnavailable": "コメントを読み込めませんでした。",
+  "communityCommentsLoadMore": "コメントをもっと見る",
+  "communityBlockedUsersTitle": "ブロックしたユーザー",
+  "communityBlockedUsersEmpty": "ブロックしたユーザーはいません。",
+  "communityBlockedUsersNote": "自分がブロックした相手のみ表示されます。相手からのブロックは解除できません。",
+  "communityUnblockAction": "ブロック解除",
+  "communityUnblockDone": "ブロックを解除しました。",
+  "communityBlockedUsersAction": "ブロックしたユーザー",
+  "communityPhotoViewerTitle": "{total}枚中{current}枚目",
+  "@communityPhotoViewerTitle": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeMonths": "{count}か月前",
+  "@communityTimeMonths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeYears": "{count}年前",
+  "@communityTimeYears": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communitySpotPostsTitle": "この場所の投稿"
 }

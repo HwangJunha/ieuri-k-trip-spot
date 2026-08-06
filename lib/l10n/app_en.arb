@@ -183,30 +183,6 @@
   "@communityNearbyTitle": {
     "description": "지역 피드 섹션 헤더"
   },
-  "communityTopicAll": "All",
-  "@communityTopicAll": {
-    "description": "주제 태그 칩 — 전체(선택 없음)"
-  },
-  "communityTopicQuestion": "Questions",
-  "@communityTopicQuestion": {
-    "description": "주제 태그 QUESTION 표시명"
-  },
-  "communityTopicTip": "Tips",
-  "@communityTopicTip": {
-    "description": "주제 태그 TIP 표시명"
-  },
-  "communityTopicReview": "Reviews",
-  "@communityTopicReview": {
-    "description": "주제 태그 REVIEW 표시명"
-  },
-  "communityTopicCompanion": "Companions",
-  "@communityTopicCompanion": {
-    "description": "주제 태그 COMPANION 표시명"
-  },
-  "communityTopicPhoto": "Photos",
-  "@communityTopicPhoto": {
-    "description": "주제 태그 PHOTO 표시명"
-  },
   "communityFeedEmpty": "No posts around you yet.",
   "@communityFeedEmpty": {
     "description": "지역 피드에 글이 하나도 없을 때"
@@ -290,10 +266,6 @@
   "communityComposeAction": "Write a post",
   "@communityComposeAction": {
     "description": "글 작성 FAB의 접근성 라벨"
-  },
-  "communityCommentsUnavailable": "Comments couldn't be loaded.",
-  "@communityCommentsUnavailable": {
-    "description": "댓글을 불러오지 못했을 때 (글 본문은 정상)"
   },
   "communityPostOptions": "Post options",
   "@communityPostOptions": {
@@ -408,26 +380,9 @@
   "@communityComposeBodyHint": {
     "description": "본문 입력 힌트"
   },
-  "communityComposeTopicLabel": "Choose a board",
-  "@communityComposeTopicLabel": {
-    "description": "컴포저에서 주제를 먼저 고르게 하는 라벨"
-  },
   "communityComposeSpotLabel": "Where",
   "@communityComposeSpotLabel": {
     "description": "컴포저의 대상(관광지) 라벨"
-  },
-  "communityComposeSpotMissing": "Select a spot",
-  "@communityComposeSpotMissing": {
-    "description": "대상이 아직 정해지지 않았을 때"
-  },
-  "communityComposeCounter": "{count} / 500",
-  "@communityComposeCounter": {
-    "description": "본문 잔여 글자 수 — 서버와 같은 코드포인트 기준 (가이드 §12)",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
   },
   "communityComposeTooLong": "{count} characters over the limit.",
   "@communityComposeTooLong": {
@@ -442,6 +397,143 @@
   "@communityComposeDone": {
     "description": "글 등록 성공 안내"
   },
+  "communityComposeErrorSpotNotFound": "That place is no longer available.",
+  "@communityComposeErrorSpotNotFound": {
+    "description": "SPOT_NOT_FOUND"
+  },
+  "communityComposeErrorTooManyPhotos": "You can attach up to 5 photos.",
+  "@communityComposeErrorTooManyPhotos": {
+    "description": "TOO_MANY_PHOTOS"
+  },
+  "communityCategoryAll": "All",
+  "@communityCategoryAll": {
+    "description": "상단 칩 — 전체(선택 없음)"
+  },
+  "communityCategoryTouristSpot": "Attractions",
+  "@communityCategoryTouristSpot": {
+    "description": "카테고리 TOURIST_SPOT 표시명"
+  },
+  "communityCategoryCulturalFacility": "Culture",
+  "@communityCategoryCulturalFacility": {
+    "description": "카테고리 CULTURAL_FACILITY 표시명"
+  },
+  "communityCategoryFestivalEvent": "Festivals",
+  "@communityCategoryFestivalEvent": {
+    "description": "카테고리 FESTIVAL_EVENT 표시명"
+  },
+  "communityCategoryTravelCourse": "Courses",
+  "@communityCategoryTravelCourse": {
+    "description": "카테고리 TRAVEL_COURSE 표시명"
+  },
+  "communityCategoryLeisureSports": "Leisure",
+  "@communityCategoryLeisureSports": {
+    "description": "카테고리 LEISURE_SPORTS 표시명"
+  },
+  "communityCategoryLodging": "Stays",
+  "@communityCategoryLodging": {
+    "description": "카테고리 LODGING 표시명"
+  },
+  "communityCategoryShopping": "Shopping",
+  "@communityCategoryShopping": {
+    "description": "카테고리 SHOPPING 표시명"
+  },
+  "communityCategoryRestaurant": "Food",
+  "@communityCategoryRestaurant": {
+    "description": "카테고리 RESTAURANT 표시명"
+  },
+  "communityCategoryTransport": "Transport",
+  "@communityCategoryTransport": {
+    "description": "카테고리 TRANSPORT 표시명"
+  },
+  "communityEditedBadge": "Edited",
+  "@communityEditedBadge": {
+    "description": "수정된 글 표시"
+  },
+  "communityEditAction": "Edit post",
+  "@communityEditAction": {
+    "description": "⋮ 메뉴 — 글 수정"
+  },
+  "communityEditDisabledHidden": "Hidden posts can't be edited.",
+  "@communityEditDisabledHidden": {
+    "description": "숨김 글이라 수정 불가 안내"
+  },
+  "communityEditTitle": "Edit post",
+  "@communityEditTitle": {
+    "description": "글 수정 화면 제목"
+  },
+  "communityEditDone": "Your post was updated.",
+  "@communityEditDone": {
+    "description": "수정 완료 안내"
+  },
+  "communityComposeCategoryLabel": "Choose a category",
+  "@communityComposeCategoryLabel": {
+    "description": "컴포저 카테고리 섹션 라벨"
+  },
+  "communityComposeTitleLabel": "Title",
+  "@communityComposeTitleLabel": {
+    "description": "컴포저 제목 섹션 라벨"
+  },
+  "communityComposeTitleHint": "A short headline",
+  "@communityComposeTitleHint": {
+    "description": "컴포저 제목 입력 힌트"
+  },
+  "communityComposeBodyLabel": "Body",
+  "@communityComposeBodyLabel": {
+    "description": "컴포저 본문 섹션 라벨"
+  },
+  "communityComposeTagsLabel": "Tags (optional)",
+  "@communityComposeTagsLabel": {
+    "description": "컴포저 태그 섹션 라벨"
+  },
+  "communityComposeTagHint": "Add a tag, no spaces",
+  "@communityComposeTagHint": {
+    "description": "컴포저 태그 입력 힌트"
+  },
+  "communityComposeTagInvalid": "Tags can't contain spaces.",
+  "@communityComposeTagInvalid": {
+    "description": "태그에 공백이 있을 때"
+  },
+  "communityComposeTagLimit": "You can add up to 5 tags.",
+  "@communityComposeTagLimit": {
+    "description": "태그 상한 안내"
+  },
+  "communityComposeSpotOptional": "Add a place (optional)",
+  "@communityComposeSpotOptional": {
+    "description": "장소 미선택 표시 — 선택 항목"
+  },
+  "communityComposeSpotClear": "Remove place",
+  "@communityComposeSpotClear": {
+    "description": "선택한 장소 해제"
+  },
+  "communityComposePhotosLabel": "Photos (optional)",
+  "@communityComposePhotosLabel": {
+    "description": "컴포저 사진 섹션 라벨"
+  },
+  "communityComposePhotoAdd": "Add photo",
+  "@communityComposePhotoAdd": {
+    "description": "사진 추가 버튼"
+  },
+  "communityComposePhotoUnavailable": "Photo picking is not available in this build.",
+  "@communityComposePhotoUnavailable": {
+    "description": "사진 선택 수단이 붙지 않았을 때"
+  },
+  "communityComposePhotoFailed": "Couldn't upload {count} photo(s). Try those again.",
+  "@communityComposePhotoFailed": {
+    "description": "사진 업로드 일부 실패",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityComposeErrorTitleRequired": "Please add a title.",
+  "@communityComposeErrorTitleRequired": {
+    "description": "POST_TITLE_REQUIRED"
+  },
+  "communityComposeErrorTitleLength": "Your title is too long. Keep it under 50 characters.",
+  "@communityComposeErrorTitleLength": {
+    "description": "POST_TITLE_LENGTH_INVALID"
+  },
   "communityComposeErrorBodyRequired": "Please write something first.",
   "@communityComposeErrorBodyRequired": {
     "description": "POST_BODY_REQUIRED"
@@ -450,12 +542,128 @@
   "@communityComposeErrorBodyLength": {
     "description": "POST_BODY_LENGTH_INVALID"
   },
-  "communityComposeErrorSpotNotFound": "That place is no longer available.",
-  "@communityComposeErrorSpotNotFound": {
-    "description": "SPOT_NOT_FOUND"
+  "communityComposeErrorInvalidTag": "One of your tags is not allowed.",
+  "@communityComposeErrorInvalidTag": {
+    "description": "INVALID_TAG"
   },
-  "communityComposeErrorTooManyPhotos": "You can attach up to 5 photos.",
-  "@communityComposeErrorTooManyPhotos": {
-    "description": "TOO_MANY_PHOTOS"
+  "communityComposeErrorTooManyTags": "You can add up to 5 tags.",
+  "@communityComposeErrorTooManyTags": {
+    "description": "TOO_MANY_TAGS"
+  },
+  "communityComposeErrorPhotoNotUploaded": "A photo failed to upload. Please add it again.",
+  "@communityComposeErrorPhotoNotUploaded": {
+    "description": "PHOTO_NOT_UPLOADED"
+  },
+  "communityComposeErrorNotEditable": "Hidden posts can't be edited.",
+  "@communityComposeErrorNotEditable": {
+    "description": "POST_NOT_EDITABLE"
+  },
+  "communityTitleCounter": "{count} / 50",
+  "@communityTitleCounter": {
+    "description": "제목 글자 수 카운터 (코드포인트)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityBodyCounter": "{count} / 500",
+  "@communityBodyCounter": {
+    "description": "본문 글자 수 카운터 (코드포인트)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityCommentComposerHint": "Write a comment",
+  "@communityCommentComposerHint": {
+    "description": "댓글 입력 힌트"
+  },
+  "communityCommentSend": "Send",
+  "@communityCommentSend": {
+    "description": "댓글 전송 버튼"
+  },
+  "communityCommentDone": "Comment posted.",
+  "@communityCommentDone": {
+    "description": "댓글 작성 완료"
+  },
+  "communityCommentDeleteAction": "Delete comment",
+  "@communityCommentDeleteAction": {
+    "description": "댓글 삭제 메뉴"
+  },
+  "communityCommentDeleteDone": "Comment deleted.",
+  "@communityCommentDeleteDone": {
+    "description": "댓글 삭제 완료"
+  },
+  "communityCommentReportAction": "Report comment",
+  "@communityCommentReportAction": {
+    "description": "댓글 신고 메뉴"
+  },
+  "communityCommentsUnavailable": "Comments couldn't be loaded.",
+  "@communityCommentsUnavailable": {
+    "description": "댓글 조회 실패"
+  },
+  "communityCommentsLoadMore": "Load more comments",
+  "@communityCommentsLoadMore": {
+    "description": "댓글 더 보기"
+  },
+  "communityBlockedUsersTitle": "Blocked users",
+  "@communityBlockedUsersTitle": {
+    "description": "차단 목록 화면 제목"
+  },
+  "communityBlockedUsersEmpty": "You haven't blocked anyone.",
+  "@communityBlockedUsersEmpty": {
+    "description": "차단 목록이 빌 때"
+  },
+  "communityBlockedUsersNote": "Only blocks you made appear here. If someone blocked you, you can't undo it.",
+  "@communityBlockedUsersNote": {
+    "description": "차단 목록 안내 — 나를 차단한 사람은 없다"
+  },
+  "communityUnblockAction": "Unblock",
+  "@communityUnblockAction": {
+    "description": "차단 해제 버튼"
+  },
+  "communityUnblockDone": "Unblocked.",
+  "@communityUnblockDone": {
+    "description": "차단 해제 완료"
+  },
+  "communityBlockedUsersAction": "Blocked users",
+  "@communityBlockedUsersAction": {
+    "description": "오버플로 진입 — 차단 목록"
+  },
+  "communityPhotoViewerTitle": "{current} of {total}",
+  "@communityPhotoViewerTitle": {
+    "description": "사진 뷰어 상단 표시",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeMonths": "{count}mo ago",
+  "@communityTimeMonths": {
+    "description": "상대 시각 — n개월 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeYears": "{count}y ago",
+  "@communityTimeYears": {
+    "description": "상대 시각 — n년 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communitySpotPostsTitle": "Posts",
+  "@communitySpotPostsTitle": {
+    "description": "장소 상세의 글 섹션 헤더"
   }
 }

@@ -113,4 +113,45 @@ void main() {
 
     expect(repo.lastUnblockedMemberId, '19');
   });
+
+  test('댓글 삭제는 댓글 id로 나간다', () async {
+    final FakeCommunityRepository repo = FakeCommunityRepository();
+    final ProviderContainer container = _container(repo);
+
+    final ModerationOutcome outcome = await container
+        .read(moderationControllerProvider.notifier)
+        .deleteComment('c1');
+
+    expect(outcome, ModerationOutcome.success);
+    expect(repo.lastDeletedCommentId, 'c1');
+  });
+
+  group('수정 (가이드 §5)', () {
+    test('제목·본문만 넘기고 사진은 건드리지 않는다', () async {
+      final FakeCommunityRepository repo = FakeCommunityRepository();
+      final ProviderContainer container = _container(repo);
+
+      await container
+          .read(moderationControllerProvider.notifier)
+          .editPost(postId: '42', title: '새 제목', body: '새 본문');
+
+      expect(repo.lastEditPost?.postId, '42');
+      // null과 빈 배열은 다른 뜻이다 — null이면 사진을 그대로 둔다.
+      expect(repo.lastEditPost?.photoKeys, isNull);
+    });
+
+    // 숨겨진 글은 메뉴에서 미리 막지만 서버 판정도 구분해 다룬다 — 화면이 일반
+    // 오류가 아니라 그 이유를 안내할 수 있어야 한다.
+    test('POST_NOT_EDITABLE은 전용 결과로 구분된다', () async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..mutationError = CommunityFailure.userError('POST_NOT_EDITABLE');
+      final ProviderContainer container = _container(repo);
+
+      final ModerationOutcome outcome = await container
+          .read(moderationControllerProvider.notifier)
+          .editPost(postId: '42', title: 't', body: 'b');
+
+      expect(outcome, ModerationOutcome.notEditable);
+    });
+  });
 }

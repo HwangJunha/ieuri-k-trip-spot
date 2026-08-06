@@ -1,15 +1,18 @@
 # SPEC-0010 커뮤니티 오퍼레이션. 생성 타입은 repository 안에서만 쓰이고 도메인
 # 모델로 매핑된다(CLAUDE.md §3, POL-020).
 #
-# `Post.target`/`author`/`comments`는 **지연 필드**다 — 요청할 때만 서버가 조회한다.
-# 그래서 목록과 상세가 서로 다른 필드 집합을 쓴다(가이드 §4).
+# `Post`의 `tags`·`photoKeys`·`category`·`likedByViewer`·`spot`·`author`·
+# `commentPreview`는 **각각 다른 테이블에 있다** — 고르지 않으면 서버가 조회조차
+# 하지 않는다. 다만 이 조회들은 **글 개수와 무관하게 각각 1회**라서(서버가 묶어
+# 읽는다) 카드에 실제로 그리는 필드는 마음 놓고 요청한다(가이드 §3).
 
-# 목록 카드가 쓰는 필드 집합. **`comments`를 넣지 않는다** — 20건짜리 피드에 댓글
-# 쿼리가 20번 붙는다. 댓글 수는 commentCount로 충분하다(가이드 §4).
+# 목록 카드가 그리는 것만. `commentPreview`는 상세에서만 쓰므로 넣지 않는다.
 fragment PostCardFields on Post {
   id
+  title
   body
-  topic
+  tags
+  category
   createdAt
   photoKeys
   likeCount
@@ -17,11 +20,12 @@ fragment PostCardFields on Post {
   likedByViewer
   ownedByViewer
   hidden
-  target {
-    type
+  edited
+  spot {
     id
     title
     thumbnailImageUrl
+    category
   }
   author {
     id
@@ -30,22 +34,34 @@ fragment PostCardFields on Post {
   }
 }
 
-# 지역(좌표 기반) 피드 한 페이지. 커서 페이징이며 `after: pageInfo.endCursor`로
-# 다음 장을 받는다. radiusMeters 기본 20000 / 상한 100000(초과해도 오류가 아니라
-# 잘린다, 가이드 §14). 언어는 Accept-Language 헤더로 전달된다.
-query NearbyPosts(
-  $latitude: Float!
-  $longitude: Float!
+# 피드는 이 쿼리 하나뿐이고 **인자 조합이 범위를 정한다**(가이드 §2):
+#   - 커뮤니티 탭   → latitude·longitude(+radiusMeters)
+#   - 장소 상세     → spotId
+#   - 상단 칩       → category
+#   - 태그          → tag
+#
+# 규칙: 좌표는 **둘 다** 줘야 하고(하나만 주면 둘 다 무시), `spotId`와 좌표를 같이
+# 주면 `spotId`가 이긴다. `category`·`tag`는 범위와 독립이라 단독으로도 걸린다.
+#
+# `hasPreviousPage`는 요청하지 않는다 — 앞으로만 가는 피드라 믿을 수 없는 값이다
+# (가이드 §2).
+query Posts(
+  $spotId: ID
+  $latitude: Float
+  $longitude: Float
   $radiusMeters: Int
-  $topic: PostTopic
+  $category: TargetCategory
+  $tag: String
   $first: Int
   $after: String
 ) {
-  nearbyPosts(
+  posts(
+    spotId: $spotId
     latitude: $latitude
     longitude: $longitude
     radiusMeters: $radiusMeters
-    topic: $topic
+    category: $category
+    tag: $tag
     first: $first
     after: $after
   ) {
@@ -62,87 +78,75 @@ query NearbyPosts(
   }
 }
 
-# 특정 대상(지금은 관광지)의 글 피드. targetType은 하드코딩하지 않고 값으로 넘긴다
-# (가이드 §1 — 값이 늘어난다).
+# 글 상세. 댓글은 **루트 쿼리로 따로 받는다**(아래 Comments) — 목록 안에 목록을
+# 중첩해 페이지네이션하면 어느 카드의 커서인지 추적하기 어렵기 때문이다(가이드 §2).
 #
-# `hasPreviousPage`는 요청하지 않는다 — 앞으로만 가는 피드라 신뢰할 수 없는 값이다
-# (가이드 §5).
-query TargetPosts(
-  $targetType: PostTargetType!
-  $targetId: ID!
-  $topic: PostTopic
-  $first: Int
-  $after: String
-) {
-  targetPosts(
-    targetType: $targetType
-    targetId: $targetId
-    topic: $topic
-    first: $first
-    after: $after
-  ) {
-    edges {
-      cursor
-      node {
-        ...PostCardFields
-      }
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
-  }
-}
-
-# 글 상세. 여기서만 댓글을 함께 받는다(가이드 §4).
-#
-# 차단·숨김이면 **오류가 아니라 null**이 온다 — errors[]를 기대하면 안 되고,
+# 차단·숨김·삭제면 **오류가 아니라 null**이 온다 — errors[]를 기대하면 안 되고,
 # "삭제되었거나 볼 수 없는 글" 안내로 처리한다(가이드 §6).
-#
-# $withComments는 댓글을 함께 받을지 고르는 스위치다. `CommentConnection!`이
-# non-null이라 댓글 해소가 실패하면 서버가 **글 전체를 null로 만든다** — 그러면
-# 멀쩡한 글이 "볼 수 없는 글"로 보인다. repository가 그 경우를 감지해 댓글 없이
-# 한 번 더 조회하고, 본문만이라도 보여준다.
-query PostDetail($id: ID!, $commentCount: Int, $withComments: Boolean!) {
+query PostDetail($id: ID!) {
   post(id: $id) {
     ...PostCardFields
-    comments(first: $commentCount) @include(if: $withComments) {
-      edges {
-        cursor
-        node {
+  }
+}
+
+# 글의 댓글 한 페이지(커서 페이징).
+#
+# **`commentCount`와 이 목록의 길이는 다를 수 있다** — 숫자는 차단을 반영하지 않고
+# 목록은 반영하기 때문이다. 불일치를 오류로 처리하지 않는다(가이드 §6).
+query Comments($postId: ID!, $first: Int, $after: String) {
+  comments(postId: $postId, first: $first, after: $after) {
+    edges {
+      cursor
+      node {
+        id
+        body
+        createdAt
+        ownedByViewer
+        hidden
+        author {
           id
-          body
-          createdAt
-          ownedByViewer
-          hidden
-          author {
-            id
-            nickname
-            profileImageUrl
-          }
+          nickname
+          profileImageUrl
         }
       }
-      pageInfo {
-        hasNextPage
-        endCursor
-      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }
 
-# 탐색 타일. title은 서버가 언어에 맞춰 내려준 문자열이라 그대로 표시한다.
-# 해당 언어의 타일이 없으면 **빈 목록이 정상**이다(가이드 §10·§15).
-query DiscoveryTiles {
-  discoveryTiles {
-    id
-    title
-    imageUrl
-    filterTopic
-    filterTargetType
+# 상단 칩 구성. `position` 오름차순으로 이미 정렬돼 있어 그대로 그리면 된다.
+# 표시 문구는 앱이 매핑하고, **구성이 없는 앱이면 빈 목록이 정상**이다(가이드 §2).
+query CommunityChips {
+  communityChips {
+    category
+    position
   }
 }
 
-# 좋아요/해제. 멱등이라 이미 좋아요한 글에 다시 눌러도 success: true다(가이드 §8).
+# 내가 차단한 사람 목록. **나를 차단한 사람은 여기 없다** — 남이 건 차단은 내가
+# 풀 수 없기 때문이다(가이드 §6).
+query BlockedUsers($first: Int, $after: String) {
+  blockedUsers(first: $first, after: $after) {
+    edges {
+      cursor
+      blockedAt
+      node {
+        id
+        nickname
+        profileImageUrl
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+# 좋아요/해제. 멱등이라 이미 좋아요한 글에 다시 눌러도 success: true다(가이드 §7).
 # 낙관적 업데이트는 응답의 likeCount로 **되맞춘다** — 서버 값이 정본이다.
 mutation LikePost($postId: ID!) {
   likePost(input: { postId: $postId }) {
@@ -168,20 +172,25 @@ mutation UnlikePost($postId: ID!) {
   }
 }
 
-# 글 작성. **postId만 온다 — post는 항상 null이다**(가이드 §11). 작성 직후 상세로
-# 가려면 post(id:)를 한 번 더 조회하고, 피드로 돌아간다면 목록을 새로 고친다.
+# 글 작성. **postId만 온다**(가이드 §5). 작성 직후 상세로 가려면 post(id:)를 한 번
+# 더 조회하고, 피드로 돌아간다면 목록을 새로 고친다.
+#
+# `category`는 필수이고 `spotId`는 선택이다 — 장소 없는 글이 허용된다. 다만 그 글은
+# 좌표 반경 조회에 잡히지 않는다(가이드 §10).
 mutation CreatePost(
-  $targetType: PostTargetType!
-  $targetId: ID!
-  $topic: PostTopic!
+  $category: TargetCategory!
+  $spotId: ID
+  $tags: [String!]!
+  $title: String!
   $body: String!
   $photoKeys: [String!]!
 ) {
   createPost(
     input: {
-      targetType: $targetType
-      targetId: $targetId
-      topic: $topic
+      category: $category
+      spotId: $spotId
+      tags: $tags
+      title: $title
       body: $body
       photoKeys: $photoKeys
     }
@@ -196,7 +205,33 @@ mutation CreatePost(
   }
 }
 
-# 댓글 작성. createPost와 같이 commentId만 온다(가이드 §11).
+# 글 수정. 제목·본문·사진만 바뀐다 — 카테고리·장소·태그는 못 바꾼다(가이드 §5).
+# `photoKeys`를 주면 **전체 목록으로 교체**하고, 생략하면 사진을 건드리지 않는다.
+# 숨겨진 글은 수정할 수 없어 `POST_NOT_EDITABLE`이 온다.
+mutation EditPost(
+  $postId: ID!
+  $title: String!
+  $body: String!
+  $photoKeys: [String!]
+) {
+  editPost(
+    input: {
+      postId: $postId
+      title: $title
+      body: $body
+      photoKeys: $photoKeys
+    }
+  ) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+# 댓글 작성. createPost와 같이 commentId만 온다(가이드 §5).
 mutation CreateComment($postId: ID!, $body: String!) {
   createComment(input: { postId: $postId, body: $body }) {
     success
@@ -206,6 +241,17 @@ mutation CreateComment($postId: ID!, $body: String!) {
       field
     }
     commentId
+  }
+}
+
+mutation DeleteComment($commentId: ID!) {
+  deleteComment(input: { commentId: $commentId }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
   }
 }
 
@@ -222,8 +268,67 @@ mutation DeletePost($postId: ID!) {
   }
 }
 
+# 사진 업로드 1단계 — 서명 URL 발급(가이드 §4).
+#
+# `contentLength`는 추정치가 아니라 **실제 파일 바이트 수**여야 한다. 이 값이 서명에
+# 들어가므로 1바이트만 달라도 2단계에서 스토리지가 403으로 거부한다.
+#
+# **하나라도 어긋나면 전부 발급되지 않는다**(uploadUrls가 빈 목록) — 부분 발급은
+# 클라이언트가 추적하기 어려워서다. 응답 순서는 요청 순서와 같다.
+mutation CreatePostImageUploadUrls($images: [PostImageUploadRequest!]!) {
+  createPostImageUploadUrls(input: { images: $images }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    uploadUrls {
+      uploadUrl
+      objectKey
+      expiresAt
+    }
+  }
+}
+
+# 사진 업로드 3단계 — 확인. 서버가 실제 크기와 매직바이트를 다시 보고, 통과한 것만
+# `pending/` → `images/`로 옮긴다.
+#
+# **장별로 성패가 갈린다**: `failed`가 비어 있지 않으면 `success`는 false지만
+# `confirmed`의 키는 여전히 유효하다 — 실패한 장만 다시 올리게 하고 나머지는 살린다.
+mutation ConfirmPostImageUploads($objectKeys: [String!]!) {
+  confirmPostImageUploads(input: { objectKeys: $objectKeys }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    confirmed
+    failed {
+      objectKey
+      code
+    }
+  }
+}
+
+# 사진 오브젝트 삭제. 없는 키를 지워도 오류가 아니다(멱등).
+#
+# **글에서 사진을 빼도 오브젝트는 남는다** — `editPost(photoKeys:)`는 글과의 연결만
+# 바꾸므로 스토리지에서 지우려면 이걸 따로 부른다(가이드 §4).
+mutation DeletePostImage($objectKey: String!) {
+  deletePostImage(input: { objectKey: $objectKey }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
 # 사용자 차단. **양방향이다** — 이 뮤테이션 하나로 서로의 글·댓글이 모든 피드에서
-# 사라진다(가이드 §6). 이미 차단한 사람에게 다시 불러도 멱등하게 성공한다(§8).
+# 사라진다(가이드 §6). 이미 차단한 사람에게 다시 불러도 멱등하게 성공한다(§7).
 #
 # 성공 후에는 로컬에서 글을 지우는 것이 아니라 **피드를 다시 불러온다** — 필터링은
 # 서버가 한다.
@@ -238,7 +343,6 @@ mutation BlockUser($targetMemberId: ID!) {
   }
 }
 
-# 차단 해제. 차단하지 않은 사람에게 불러도 멱등하게 성공한다(가이드 §8).
 mutation UnblockUser($targetMemberId: ID!) {
   unblockUser(input: { targetMemberId: $targetMemberId }) {
     success
@@ -251,7 +355,7 @@ mutation UnblockUser($targetMemberId: ID!) {
 }
 
 # 신고. reason이 OTHER면 detail이 **필수**이며, 비면 `REPORT_DETAIL_REQUIRED`가 온다
-# — 폼에서 미리 막지만 서버 판정도 함께 처리한다(가이드 §9).
+# — 폼에서 미리 막지만 서버 판정도 함께 처리한다(가이드 §6).
 #
 # 같은 대상 재신고는 `ALREADY_REPORTED`다. 오류로 터뜨리지 않고 "이미 신고했다"는
 # 안내로 접는다.
