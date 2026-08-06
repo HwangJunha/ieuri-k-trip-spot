@@ -505,5 +505,40 @@
       }
     }
   },
-  "communitySpotPostsTitle": "この場所の投稿"
+  "communitySpotPostsTitle": "この場所の投稿",
+  "communitySpotPickerTitle": "近くの場所",
+  "communitySpotPickerFilterHint": "名前で絞り込む",
+  "communitySpotPickerFilterNote": "取得済みの近くの一覧だけを絞り込みます — 全地点の検索ではありません。",
+  "communitySpotPickerNone": "場所なし",
+  "communitySpotPickerEmpty": "近くに場所が見つかりません。",
+  "communitySpotPickerNoMatch": "その名前に一致する近くの場所はありません。",
+  "communitySpotPickerLocationUnavailable": "位置情報が使えないため近くの場所を表示できません。場所なしでも投稿できます。",
+  "communitySpotPickerFailed": "近くの場所を読み込めませんでした。",
+  "communitySpotDistanceMeters": "{meters}m",
+  "@communitySpotDistanceMeters": {
+    "placeholders": {
+      "meters": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "communitySpotDistanceKilometers": "{km}km",
+  "@communitySpotDistanceKilometers": {
+    "placeholders": {
+      "km": {
+        "type": "num",
+        "format": "decimalPattern",
+        "optionalParameters": {
+          "decimalDigits": 1
+        }
+      }
+    }
+  },
+  "communityComposeCategoryUnset": "カテゴリ",
+  "communityComposeTagsAction": "タグ",
+  "communityComposeSpotAction": "場所",
+  "communityComposePhotosAction": "写真",
+  "communityComposeTagsSheetTitle": "タグ",
+  "communityComposeSheetDone": "完了"
 }

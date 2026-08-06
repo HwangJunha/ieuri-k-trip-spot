@@ -6,7 +6,9 @@ import '../../../common/navigation/auth_route.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/community_labels.dart';
 import '../component/post_photo.dart';
+import '../component/spot_picker_sheet.dart';
 import '../model/community_chip.dart';
+import '../model/nearby_spot.dart';
 import '../model/post_draft.dart';
 import '../model/target_category.dart';
 import '../provider/community_providers.dart';
@@ -14,18 +16,21 @@ import '../provider/moderation_providers.dart';
 import '../provider/photo_picker_providers.dart';
 import '../provider/post_composer_providers.dart';
 
-/// 글 작성·수정 화면 — **당근 동네생활 컴포저 순서**를 따른다.
+/// 글 작성·수정 화면 — **당근 컴포저처럼 전면(full-bleed) 입력**이다.
 ///
 /// ```
 /// AppBar   "새 글" · 닫기(X) · 우측 [등록] (조건 미충족 시 비활성)
 /// 본문
-///   ├── 카테고리 선택      ← **필수**. 당근처럼 먼저 고른다
-///   ├── 제목 (50 코드포인트 카운터)
-///   ├── 내용 (500 코드포인트 카운터)
-///   ├── 태그 (최대 5, 공백 불가)
-///   ├── 장소 (선택 — 없어도 등록된다)
-///   └── 사진 (최대 5, 4단계 업로드)
+///   ├── 카테고리 인라인 선택기   ← **필수**. 한 줄짜리 드롭다운형 칩
+///   ├── 제목 (테두리 없음, 크고 굵게)
+///   ├── 얇은 구분선
+///   └── 내용 (테두리 없음, **남은 높이를 전부 채운다**)
+/// 하단 액션 바   태그 · 장소 · 사진 + 카운터
 /// ```
+///
+/// **테두리 있는 짧은 입력 상자를 두지 않는다.** 글쓰기 화면에서 가장 큰 면적을
+/// 차지해야 하는 것은 본문이며, 테두리는 그 면적을 잘라 먹기만 한다. 태그·장소·사진은
+/// 세로로 긴 라벨 섹션이 아니라 하단 바의 버튼으로 접어 각자 시트에서 다룬다.
 ///
 /// **등록 버튼은 카테고리·제목·내용이 갖춰지기 전까지 비활성이다.** 서버 검증을
 /// 기다렸다가 에러를 보여주는 방식이 아니라 화면이 애초에 잘못된 상태를 만들지
@@ -33,7 +38,8 @@ import '../provider/post_composer_providers.dart';
 ///
 /// **길이 제한을 넘으면 입력이 막히는 것이 아니라 등록이 막히고 초과분이 드러난다** —
 /// 입력을 자르면 붙여넣기한 유저가 무엇이 사라졌는지 모른다. 카운터는 전부
-/// **코드포인트** 기준이다(가이드 §8).
+/// **코드포인트** 기준이며(가이드 §8), 평소에는 눈에 띄지 않게 하단 바에 두고
+/// 한계에 가까워지거나 넘으면 드러낸다.
 ///
 /// [editPostId]가 있으면 **수정 모드**다. 수정은 제목·본문·사진만 바꾸므로
 /// 카테고리·태그·장소 입력을 숨긴다 — 서버가 받지 않는 값을 만지게 하면 안 된다.
@@ -74,7 +80,6 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
   late final TextEditingController _body = TextEditingController(
     text: widget.initialBody ?? '',
   );
-  final TextEditingController _tag = TextEditingController();
 
   /// 등록 진행 중인지. 중복 제출을 막고 버튼을 스피너로 바꾼다.
   bool _submitting = false;
@@ -106,7 +111,6 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
   void dispose() {
     _title.dispose();
     _body.dispose();
-    _tag.dispose();
     super.dispose();
   }
 
@@ -150,93 +154,92 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
           ),
         ],
       ),
+      // 키보드가 올라와도 본문이 그만큼 줄어들 뿐 넘치지 않는다 — Scaffold가
+      // viewInsets를 body 높이에서 빼 주고, 본문은 Expanded라 그 높이를 따라간다.
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             // 수정에서는 카테고리를 바꿀 수 없다 — 바뀌면 글이 다른 피드로
             // 순간이동한다(가이드 §5).
-            if (!_isEditing) ...<Widget>[
-              _SectionLabel(text: l10n.communityComposeCategoryLabel),
-              const SizedBox(height: 8),
-              _CategoryPicker(
-                selected: draft.category,
-                onSelected: (TargetCategory c) =>
-                    ref.read(_provider.notifier).setCategory(c),
+            if (!_isEditing)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                child: _CategorySelector(
+                  selected: draft.category,
+                  onSelected: (TargetCategory c) =>
+                      ref.read(_provider.notifier).setCategory(c),
+                ),
               ),
-              const SizedBox(height: 20),
-            ],
-            _SectionLabel(text: l10n.communityComposeTitleLabel),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _title,
-              // **maxLength를 두지 않는다** — 두면 입력이 잘려 초과분이 사라진다.
-              decoration: InputDecoration(
-                hintText: l10n.communityComposeTitleHint,
-                border: const OutlineInputBorder(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: TextField(
+                controller: _title,
+                // **maxLength를 두지 않는다** — 두면 입력이 잘려 초과분이 사라진다.
+                style: Theme.of(context).textTheme.titleLarge,
+                decoration: InputDecoration(
+                  hintText: l10n.communityComposeTitleHint,
+                  // 테두리 없음 — 화면 가득 쓰는 입력이 이 화면의 요지다.
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+                textInputAction: TextInputAction.next,
+                onChanged: (String value) =>
+                    ref.read(_provider.notifier).setTitle(value),
               ),
-              onChanged: (String value) =>
-                  ref.read(_provider.notifier).setTitle(value),
             ),
-            _Counter(
-              text: draft.isTitleTooLong
-                  ? l10n.communityComposeTooLong(-draft.remainingTitleRunes)
-                  : l10n.communityTitleCounter(draft.titleRunes),
-              isError: draft.isTitleTooLong,
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Divider(height: 1, thickness: 0.5),
             ),
-            const SizedBox(height: 12),
-            _SectionLabel(text: l10n.communityComposeBodyLabel),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _body,
-              maxLines: 8,
-              minLines: 5,
-              decoration: InputDecoration(
-                hintText: l10n.communityComposeBodyHint,
-                border: const OutlineInputBorder(),
+            // **본문이 남은 높이를 전부 차지한다.** 이 화면에서 가장 큰 면적을
+            // 차지해야 하는 것이 본문이고, 짧은 상자는 쓸 공간이 없어 보인다.
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: TextField(
+                  controller: _body,
+                  // null이면 높이 제한 없이 부모(Expanded)를 채우고 스크롤한다.
+                  maxLines: null,
+                  expands: true,
+                  textAlignVertical: TextAlignVertical.top,
+                  keyboardType: TextInputType.multiline,
+                  decoration: InputDecoration(
+                    hintText: l10n.communityComposeBodyHint,
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  onChanged: (String value) =>
+                      ref.read(_provider.notifier).setBody(value),
+                ),
               ),
-              onChanged: (String value) =>
-                  ref.read(_provider.notifier).setBody(value),
             ),
-            _Counter(
-              text: draft.isBodyTooLong
-                  ? l10n.communityComposeTooLong(-draft.remainingBodyRunes)
-                  : l10n.communityBodyCounter(draft.bodyRunes),
-              isError: draft.isBodyTooLong,
-            ),
-            // 태그·장소도 수정 대상이 아니다(가이드 §5).
-            if (!_isEditing) ...<Widget>[
-              const SizedBox(height: 20),
-              _SectionLabel(text: l10n.communityComposeTagsLabel),
-              const SizedBox(height: 8),
-              _TagField(
-                controller: _tag,
+            // 붙인 사진은 하단 바 바로 위에 줄로 남는다 — 무엇을 붙였는지 보이지
+            // 않으면 지울 수도 없다.
+            if (draft.photoKeys.isNotEmpty)
+              _PhotoRow(
+                photoKeys: draft.photoKeys,
+                onRemove: (String key) =>
+                    ref.read(_provider.notifier).removePhoto(key),
+              ),
+            // 태그도 마찬가지다 — 시트에서 넣은 결과가 화면에 남아야 한다.
+            if (!_isEditing && draft.tags.isNotEmpty)
+              _TagRow(
                 tags: draft.tags,
-                canAdd: draft.canAddTag,
-                onAdd: _addTag,
                 onRemove: (String tag) =>
                     ref.read(_provider.notifier).removeTag(tag),
               ),
-              const SizedBox(height: 20),
-              _SectionLabel(text: l10n.communityComposeSpotLabel),
-              const SizedBox(height: 8),
-              _SpotField(
-                title: draft.spotTitle,
-                // 장소 상세에서 진입해 고정된 경우에는 바꿀 수 없다 — 그 화면의
-                // 글이라는 것이 진입의 전제다.
-                onClear: widget.initialSpotId != null || draft.spotId == null
-                    ? null
-                    : () => ref.read(_provider.notifier).clearSpot(),
-              ),
-            ],
-            const SizedBox(height: 20),
-            _SectionLabel(text: l10n.communityComposePhotosLabel),
-            const SizedBox(height: 8),
-            _PhotoRow(
-              photoKeys: draft.photoKeys,
-              onAdd: _addPhotos,
-              onRemove: (String key) =>
-                  ref.read(_provider.notifier).removePhoto(key),
+            _BottomBar(
+              draft: draft,
+              isEditing: _isEditing,
+              // 장소 상세에서 진입해 고정된 경우에는 바꿀 수 없다 — 그 화면의
+              // 글이라는 것이 진입의 전제다.
+              spotLocked: widget.initialSpotId != null,
+              onTags: _editTags,
+              onSpot: _pickSpot,
+              onPhotos: _addPhotos,
             ),
           ],
         ),
@@ -244,24 +247,29 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
     );
   }
 
-  /// 태그를 더한다. 공백이 들어가면 서버가 `INVALID_TAG`로 거부하므로 **여기서
-  /// 미리 막고 그 이유를 보여준다**(가이드 §5).
-  void _addTag() {
-    final AppLocalizations l10n = AppLocalizations.of(context);
-    final String raw = _tag.text;
-    if (raw.trim().isEmpty) return;
-
-    final PostDraft draft = ref.read(_provider);
-    if (!draft.canAddTag) {
-      _toast(l10n.communityComposeTagLimit);
-      return;
+  /// 장소 선택 시트를 연다(가이드 §5 — 장소는 선택 항목이다).
+  ///
+  /// 서버 `spots`는 좌표 기반이고 이름 검색이 없어 **주변 목록에서 고른다.**
+  /// 아무것도 고르지 않고 닫으면(null) 초안을 건드리지 않는다.
+  Future<void> _pickSpot() async {
+    final SpotPickerResult? result = await showSpotPickerSheet(context);
+    if (!mounted || result == null) return;
+    switch (result) {
+      case SpotPickerChosen(:final NearbySpot spot):
+        ref.read(_provider.notifier).setSpot(id: spot.id, title: spot.title);
+      case SpotPickerNone():
+        ref.read(_provider.notifier).clearSpot();
     }
-    if (!PostDraft.isValidTag(raw)) {
-      _toast(l10n.communityComposeTagInvalid);
-      return;
-    }
-    if (ref.read(_provider.notifier).addTag(raw)) _tag.clear();
   }
+
+  /// 태그 입력 시트를 연다. 공백이 든 태그는 서버가 `INVALID_TAG`로 거부하므로
+  /// **시트가 미리 막고 그 이유를 보여준다**(가이드 §5).
+  Future<void> _editTags() => showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (BuildContext context) => _TagSheet(provider: _provider),
+  );
 
   /// 사진을 고르고 4단계 업로드 중 1~3단계를 돌린다(가이드 §4).
   ///
@@ -392,51 +400,164 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
   ).showSnackBar(SnackBar(content: Text(message)));
 }
 
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({required this.text});
+/// 하단 액션 바 — 태그·장소·사진과 글자 수.
+///
+/// 세로로 긴 라벨 섹션 대신 한 줄로 접는다. 본문이 화면 대부분을 차지해야 하고,
+/// 이 셋은 **선택 항목이라 늘 펼쳐 둘 이유가 없다.**
+///
+/// 카운터는 **평소에 조용하다** — 한계에 가까워지거나(90%) 넘었을 때만 드러낸다.
+/// 늘 띄워 두면 500자 중 12자를 쓴 사람에게도 남은 분량을 재촉하는 것처럼 보인다.
+class _BottomBar extends StatelessWidget {
+  const _BottomBar({
+    required this.draft,
+    required this.isEditing,
+    required this.spotLocked,
+    required this.onTags,
+    required this.onSpot,
+    required this.onPhotos,
+  });
 
-  final String text;
+  final PostDraft draft;
+  final bool isEditing;
+
+  /// 장소 상세에서 진입해 장소가 고정된 경우. 버튼은 남기되 누를 수 없다.
+  final bool spotLocked;
+
+  final VoidCallback onTags;
+  final VoidCallback onSpot;
+  final VoidCallback onPhotos;
 
   @override
-  Widget build(BuildContext context) =>
-      Text(text, style: Theme.of(context).textTheme.titleSmall);
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final ThemeData theme = Theme.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: theme.dividerColor, width: 0.5)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      child: Row(
+        children: <Widget>[
+          // 태그·장소는 수정 대상이 아니다(가이드 §5) — 수정 모드에서는 숨긴다.
+          if (!isEditing) ...<Widget>[
+            _BarButton(
+              icon: Icons.tag,
+              label: l10n.communityComposeTagsAction,
+              onPressed: onTags,
+            ),
+            _BarButton(
+              icon: Icons.place_outlined,
+              // 고른 장소가 있으면 그 이름이 곧 상태 표시다.
+              label: draft.spotTitle ?? l10n.communityComposeSpotAction,
+              active: draft.spotId != null,
+              onPressed: spotLocked ? null : onSpot,
+            ),
+          ],
+          _BarButton(
+            icon: Icons.photo_outlined,
+            label: l10n.communityComposePhotosAction,
+            onPressed: onPhotos,
+          ),
+          const Spacer(),
+          _Counters(draft: draft),
+        ],
+      ),
+    );
+  }
 }
 
-/// 글자 수 카운터. 초과했으면 남은 수 대신 **넘긴 수**를 보여준다 — 음수 카운터보다
-/// "몇 자를 줄여야 하는지"가 바로 읽힌다.
-class _Counter extends StatelessWidget {
-  const _Counter({required this.text, required this.isError});
+/// 하단 바의 버튼 하나. 값이 정해져 있으면 강조색으로 그 사실을 알린다.
+class _BarButton extends StatelessWidget {
+  const _BarButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+    this.active = false,
+  });
 
-  final String text;
-  final bool isError;
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+  final bool active;
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(top: 6),
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: Text(
-          text,
-          style: theme.textTheme.labelMedium?.copyWith(
-            color: isError
-                ? theme.colorScheme.error
-                : theme.colorScheme.onSurfaceVariant,
-          ),
+    return Flexible(
+      child: TextButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 18),
+        label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+        style: TextButton.styleFrom(
+          foregroundColor: active
+              ? theme.colorScheme.primary
+              : theme.colorScheme.onSurfaceVariant,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
         ),
       ),
     );
   }
 }
 
-/// 카테고리 선택. **서버가 내려준 칩 구성을 그대로 쓴다** — 언어마다 가용 카테고리가
-/// 달라 클라이언트가 전체 목록을 하드코딩하면 안 된다(가이드 §2).
+/// 글자 수 카운터(코드포인트 기준, 가이드 §8).
+///
+/// **한계 근처에서만 나타난다.** 초과했으면 남은 수 대신 **넘긴 수**를 보여준다 —
+/// 음수 카운터보다 "몇 자를 줄여야 하는지"가 바로 읽힌다.
+class _Counters extends StatelessWidget {
+  const _Counters({required this.draft});
+
+  final PostDraft draft;
+
+  /// 카운터를 드러내는 문턱 — 한계의 90%.
+  static const double _showFrom = 0.9;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final ThemeData theme = Theme.of(context);
+
+    final bool showTitle =
+        draft.isTitleTooLong ||
+        draft.titleRunes >= maxPostTitleRunes * _showFrom;
+    final bool showBody =
+        draft.isBodyTooLong || draft.bodyRunes >= maxPostBodyRunes * _showFrom;
+
+    final String? text = draft.isTitleTooLong
+        ? l10n.communityComposeTooLong(-draft.remainingTitleRunes)
+        : draft.isBodyTooLong
+        ? l10n.communityComposeTooLong(-draft.remainingBodyRunes)
+        : showTitle
+        ? l10n.communityTitleCounter(draft.titleRunes)
+        : showBody
+        ? l10n.communityBodyCounter(draft.bodyRunes)
+        : null;
+    if (text == null) return const SizedBox.shrink();
+
+    final bool isError = draft.isTitleTooLong || draft.isBodyTooLong;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Text(
+        text,
+        style: theme.textTheme.labelMedium?.copyWith(
+          color: isError
+              ? theme.colorScheme.error
+              : theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+}
+
+/// 카테고리 인라인 선택기. **서버가 내려준 칩 구성을 그대로 쓴다** — 언어마다 가용
+/// 카테고리가 달라 클라이언트가 전체 목록을 하드코딩하면 안 된다(가이드 §2).
 ///
 /// 칩 조회가 실패하거나 비면 [TargetCategory]의 전체 집합으로 떨어진다 — 카테고리가
 /// 필수라 고를 수단이 없으면 글을 아예 쓸 수 없기 때문이다.
-class _CategoryPicker extends ConsumerWidget {
-  const _CategoryPicker({required this.selected, required this.onSelected});
+///
+/// 아홉 개를 Wrap으로 펼치면 화면 위쪽을 다 먹으므로 **한 줄 가로 스크롤**로 둔다.
+class _CategorySelector extends ConsumerWidget {
+  const _CategorySelector({required this.selected, required this.onSelected});
 
   final TargetCategory? selected;
   final ValueChanged<TargetCategory> onSelected;
@@ -456,179 +577,202 @@ class _CategoryPicker extends ConsumerWidget {
         ? TargetCategory.values
         : categories;
 
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: <Widget>[
-        for (final TargetCategory category in options)
-          ChoiceChip(
-            label: Text(targetCategoryLabel(l10n, category)),
-            selected: selected == category,
-            // 필수 항목이라 해제되지 않는다 — 다시 눌러도 선택이 유지된다.
-            onSelected: (_) => onSelected(category),
-          ),
-      ],
+    return SizedBox(
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: options.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 6),
+        itemBuilder: (BuildContext context, int index) {
+          final TargetCategory category = options[index];
+          return Center(
+            child: ChoiceChip(
+              label: Text(targetCategoryLabel(l10n, category)),
+              selected: selected == category,
+              visualDensity: VisualDensity.compact,
+              // 필수 항목이라 해제되지 않는다 — 다시 눌러도 선택이 유지된다.
+              onSelected: (_) => onSelected(category),
+            ),
+          );
+        },
+      ),
     );
   }
 }
 
-/// 태그 입력. 공백이 든 태그는 서버가 거부하므로 **여기서 미리 막는다**(가이드 §5).
-class _TagField extends StatelessWidget {
-  const _TagField({
-    required this.controller,
-    required this.tags,
-    required this.canAdd,
-    required this.onAdd,
-    required this.onRemove,
-  });
+/// 태그 입력 시트. 공백이 든 태그는 서버가 거부하므로 **여기서 미리 막는다**
+/// (가이드 §5).
+class _TagSheet extends ConsumerStatefulWidget {
+  const _TagSheet({required this.provider});
 
-  final TextEditingController controller;
+  final PostComposerProvider provider;
+
+  @override
+  ConsumerState<_TagSheet> createState() => _TagSheetState();
+}
+
+class _TagSheetState extends ConsumerState<_TagSheet> {
+  final TextEditingController _tag = TextEditingController();
+
+  @override
+  void dispose() {
+    _tag.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final PostDraft draft = ref.watch(widget.provider);
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        bottom: MediaQuery.viewInsetsOf(context).bottom + 16,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            l10n.communityComposeTagsSheetTitle,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _tag,
+            enabled: draft.canAddTag,
+            autofocus: true,
+            decoration: InputDecoration(
+              hintText: l10n.communityComposeTagHint,
+              border: const OutlineInputBorder(),
+              suffixIcon: IconButton(
+                onPressed: draft.canAddTag ? _addTag : null,
+                icon: const Icon(Icons.add),
+              ),
+            ),
+            onSubmitted: (_) => _addTag(),
+          ),
+          if (draft.tags.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: <Widget>[
+                for (final String tag in draft.tags)
+                  // 태그는 사용자가 입력한 원문 그대로 보여준다 — 번역 대상이
+                  // 아니다(가이드 §9).
+                  InputChip(
+                    label: Text('#$tag'),
+                    onDeleted: () =>
+                        ref.read(widget.provider.notifier).removeTag(tag),
+                  ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l10n.communityComposeSheetDone),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 태그를 더한다. 상한과 공백은 **여기서 미리 막고 그 이유를 보여준다**.
+  void _addTag() {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final String raw = _tag.text;
+    if (raw.trim().isEmpty) return;
+
+    final PostDraft draft = ref.read(widget.provider);
+    if (!draft.canAddTag) {
+      _toast(l10n.communityComposeTagLimit);
+      return;
+    }
+    if (!PostDraft.isValidTag(raw)) {
+      _toast(l10n.communityComposeTagInvalid);
+      return;
+    }
+    if (ref.read(widget.provider.notifier).addTag(raw)) _tag.clear();
+  }
+
+  void _toast(String message) => ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text(message)));
+}
+
+/// 붙인 태그 줄. 시트를 닫아도 무엇을 넣었는지 화면에 남아야 뺄 수 있다.
+class _TagRow extends StatelessWidget {
+  const _TagRow({required this.tags, required this.onRemove});
+
   final List<String> tags;
-  final bool canAdd;
-  final VoidCallback onAdd;
   final ValueChanged<String> onRemove;
 
   @override
-  Widget build(BuildContext context) {
-    final AppLocalizations l10n = AppLocalizations.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        TextField(
-          controller: controller,
-          enabled: canAdd,
-          decoration: InputDecoration(
-            hintText: l10n.communityComposeTagHint,
-            border: const OutlineInputBorder(),
-            suffixIcon: IconButton(
-              onPressed: canAdd ? onAdd : null,
-              icon: const Icon(Icons.add),
-            ),
-          ),
-          onSubmitted: (_) => onAdd(),
+  Widget build(BuildContext context) => SizedBox(
+    height: 44,
+    child: ListView.separated(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: tags.length,
+      separatorBuilder: (_, _) => const SizedBox(width: 8),
+      itemBuilder: (BuildContext context, int index) => Center(
+        child: InputChip(
+          label: Text('#${tags[index]}'),
+          visualDensity: VisualDensity.compact,
+          onDeleted: () => onRemove(tags[index]),
         ),
-        if (tags.isNotEmpty) ...<Widget>[
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: <Widget>[
-              for (final String tag in tags)
-                // 태그는 사용자가 입력한 원문 그대로 보여준다 — 번역 대상이
-                // 아니다(가이드 §9).
-                InputChip(label: Text('#$tag'), onDeleted: () => onRemove(tag)),
-            ],
-          ),
-        ],
-      ],
-    );
-  }
+      ),
+    ),
+  );
 }
 
-/// 선택된 장소. **비어 있어도 등록할 수 있다** — 장소는 선택 항목이다(가이드 §5).
-class _SpotField extends StatelessWidget {
-  const _SpotField({required this.title, required this.onClear});
-
-  final String? title;
-
-  /// 장소를 뺄 수 있으면 콜백, 고정이거나 아예 없으면 null.
-  final VoidCallback? onClear;
-
-  @override
-  Widget build(BuildContext context) {
-    final AppLocalizations l10n = AppLocalizations.of(context);
-    final ThemeData theme = Theme.of(context);
-    final bool chosen = title != null;
-    return InputDecorator(
-      decoration: InputDecoration(
-        border: const OutlineInputBorder(),
-        suffixIcon: onClear == null
-            ? null
-            : IconButton(
-                onPressed: onClear,
-                tooltip: l10n.communityComposeSpotClear,
-                icon: const Icon(Icons.close),
-              ),
-      ),
-      child: Row(
-        children: <Widget>[
-          Icon(
-            Icons.place_outlined,
-            size: 18,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              title ?? l10n.communityComposeSpotOptional,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: chosen
-                    ? theme.colorScheme.onSurface
-                    : theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// 첨부한 사진 줄. 최대 5장이며 상한에 닿으면 추가 버튼이 사라진다.
+/// 첨부한 사진 줄. 붙인 것이 있을 때만 나타나며, 추가는 하단 바가 맡는다.
 class _PhotoRow extends StatelessWidget {
-  const _PhotoRow({
-    required this.photoKeys,
-    required this.onAdd,
-    required this.onRemove,
-  });
+  const _PhotoRow({required this.photoKeys, required this.onRemove});
 
   final List<String> photoKeys;
-  final VoidCallback onAdd;
   final ValueChanged<String> onRemove;
 
   @override
-  Widget build(BuildContext context) {
-    final AppLocalizations l10n = AppLocalizations.of(context);
-    return SizedBox(
-      height: 84,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        children: <Widget>[
-          for (final String key in photoKeys)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Stack(
-                children: <Widget>[
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: SizedBox(
-                      width: 84,
-                      height: 84,
-                      child: PostPhoto(photoKey: key),
-                    ),
+  Widget build(BuildContext context) => SizedBox(
+    height: 84,
+    child: ListView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      children: <Widget>[
+        for (final String key in photoKeys)
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Stack(
+              children: <Widget>[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: SizedBox(
+                    width: 84,
+                    height: 84,
+                    child: PostPhoto(photoKey: key),
                   ),
-                  Positioned(
-                    top: -6,
-                    right: -6,
-                    child: IconButton(
-                      onPressed: () => onRemove(key),
-                      iconSize: 18,
-                      icon: const Icon(Icons.cancel),
-                    ),
+                ),
+                Positioned(
+                  top: -6,
+                  right: -6,
+                  child: IconButton(
+                    onPressed: () => onRemove(key),
+                    iconSize: 18,
+                    icon: const Icon(Icons.cancel),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          if (photoKeys.length < maxPostPhotos)
-            OutlinedButton.icon(
-              onPressed: onAdd,
-              icon: const Icon(Icons.add_a_photo_outlined),
-              label: Text(l10n.communityComposePhotoAdd),
-            ),
-        ],
-      ),
-    );
-  }
+          ),
+      ],
+    ),
+  );
 }

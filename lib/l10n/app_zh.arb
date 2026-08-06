@@ -505,5 +505,40 @@
       }
     }
   },
-  "communitySpotPostsTitle": "该地点的帖子"
+  "communitySpotPostsTitle": "该地点的帖子",
+  "communitySpotPickerTitle": "附近地点",
+  "communitySpotPickerFilterHint": "按名称筛选",
+  "communitySpotPickerFilterNote": "仅筛选已加载的附近列表 — 并非搜索全部地点。",
+  "communitySpotPickerNone": "不选地点",
+  "communitySpotPickerEmpty": "附近没有找到地点。",
+  "communitySpotPickerNoMatch": "附近没有与该名称匹配的地点。",
+  "communitySpotPickerLocationUnavailable": "无法获取位置，因此无法列出附近地点。你仍可以不选地点发帖。",
+  "communitySpotPickerFailed": "无法加载附近地点。",
+  "communitySpotDistanceMeters": "{meters}m",
+  "@communitySpotDistanceMeters": {
+    "placeholders": {
+      "meters": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "communitySpotDistanceKilometers": "{km}km",
+  "@communitySpotDistanceKilometers": {
+    "placeholders": {
+      "km": {
+        "type": "num",
+        "format": "decimalPattern",
+        "optionalParameters": {
+          "decimalDigits": 1
+        }
+      }
+    }
+  },
+  "communityComposeCategoryUnset": "分类",
+  "communityComposeTagsAction": "标签",
+  "communityComposeSpotAction": "地点",
+  "communityComposePhotosAction": "照片",
+  "communityComposeTagsSheetTitle": "标签",
+  "communityComposeSheetDone": "完成"
 }

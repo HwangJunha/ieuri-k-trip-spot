@@ -670,5 +670,84 @@
   "communitySpotPostsTitle": "Posts",
   "@communitySpotPostsTitle": {
     "description": "장소 상세의 글 섹션 헤더"
+  },
+  "communitySpotPickerTitle": "Nearby places",
+  "@communitySpotPickerTitle": {
+    "description": "컴포저 장소 선택 시트 제목"
+  },
+  "communitySpotPickerFilterHint": "Filter by name",
+  "@communitySpotPickerFilterHint": {
+    "description": "장소 선택 시트의 이름 필터 입력 힌트"
+  },
+  "communitySpotPickerFilterNote": "Filters the nearby list only — this is not a search of all places.",
+  "@communitySpotPickerFilterNote": {
+    "description": "서버에 이름 검색 인자가 없다는 사실을 사용자에게 알리는 문구"
+  },
+  "communitySpotPickerNone": "No place",
+  "@communitySpotPickerNone": {
+    "description": "장소를 고르지 않는(해제) 선택지 — 장소는 선택 항목이다"
+  },
+  "communitySpotPickerEmpty": "No places found nearby.",
+  "@communitySpotPickerEmpty": {
+    "description": "반경 안에 장소가 하나도 없는 상태 — 위치 실패와 구분된다"
+  },
+  "communitySpotPickerNoMatch": "No nearby place matches that name.",
+  "@communitySpotPickerNoMatch": {
+    "description": "필터 결과가 비었을 때"
+  },
+  "communitySpotPickerLocationUnavailable": "Location is off, so nearby places can't be listed. You can still post without a place.",
+  "@communitySpotPickerLocationUnavailable": {
+    "description": "장소 선택 시트의 위치 실패 상태 — 빈 시트로 두지 않는다"
+  },
+  "communitySpotPickerFailed": "Couldn't load nearby places.",
+  "@communitySpotPickerFailed": {
+    "description": "장소 선택 시트의 조회 실패 상태"
+  },
+  "communitySpotDistanceMeters": "{meters} m",
+  "@communitySpotDistanceMeters": {
+    "description": "장소까지의 거리 (1km 미만)",
+    "placeholders": {
+      "meters": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "communitySpotDistanceKilometers": "{km} km",
+  "@communitySpotDistanceKilometers": {
+    "description": "장소까지의 거리 (1km 이상)",
+    "placeholders": {
+      "km": {
+        "type": "num",
+        "format": "decimalPattern",
+        "optionalParameters": {
+          "decimalDigits": 1
+        }
+      }
+    }
+  },
+  "communityComposeCategoryUnset": "Category",
+  "@communityComposeCategoryUnset": {
+    "description": "컴포저 상단 인라인 카테고리 선택기 — 미선택 상태"
+  },
+  "communityComposeTagsAction": "Tags",
+  "@communityComposeTagsAction": {
+    "description": "컴포저 하단 액션 바의 태그 버튼"
+  },
+  "communityComposeSpotAction": "Place",
+  "@communityComposeSpotAction": {
+    "description": "컴포저 하단 액션 바의 장소 버튼"
+  },
+  "communityComposePhotosAction": "Photos",
+  "@communityComposePhotosAction": {
+    "description": "컴포저 하단 액션 바의 사진 버튼"
+  },
+  "communityComposeTagsSheetTitle": "Tags",
+  "@communityComposeTagsSheetTitle": {
+    "description": "태그 입력 시트 제목"
+  },
+  "communityComposeSheetDone": "Done",
+  "@communityComposeSheetDone": {
+    "description": "시트를 닫는 확인 버튼"
   }
 }

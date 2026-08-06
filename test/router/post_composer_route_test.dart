@@ -54,21 +54,21 @@ void main() {
       tester,
       '/post-composer?spotId=11094&spotTitle=Gyeongbokgung',
     );
-    // 장소 섹션은 화면 아래쪽이라 스크롤해야 보인다.
-    await tester.drag(find.byType(ListView), const Offset(0, -600));
-    await tester.pumpAndSettle();
 
+    // 고른 장소는 하단 액션 바의 장소 버튼 라벨로 드러난다.
     expect(find.text('Gyeongbokgung'), findsOneWidget);
   });
 
   // 커뮤니티 탭에서 진입하면 파라미터가 없다. **그래도 등록할 수 있다** — 장소는
-  // 선택 항목이라 화면이 요구하지 않고 "선택"이라고 알려 준다(가이드 §5).
-  testWidgets('파라미터 없는 진입은 장소를 선택 항목으로 보여준다', (WidgetTester tester) async {
+  // 선택 항목이라 화면이 요구하지 않고, 시트를 여는 버튼만 남는다(가이드 §5).
+  testWidgets('파라미터 없는 진입은 장소가 비어 있고 고를 수 있다', (WidgetTester tester) async {
     await _pumpRoute(tester, '/post-composer');
-    await tester.drag(find.byType(ListView), const Offset(0, -600));
-    await tester.pumpAndSettle();
 
-    expect(find.text('Add a place (optional)'), findsOneWidget);
+    final Finder spotButton = find.widgetWithText(TextButton, 'Place');
+    expect(spotButton, findsOneWidget);
+    // 고정이 아니므로 눌러서 시트를 열 수 있다 — 이것이 없어 장소를 못 고르던
+    // 것이 원래 버그였다.
+    expect(tester.widget<TextButton>(spotButton).onPressed, isNotNull);
   });
 
   // 수정 진입은 제목·본문을 실어 보낸다 — 카테고리·태그·장소는 수정 대상이 아니다.

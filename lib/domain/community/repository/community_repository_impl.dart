@@ -6,11 +6,13 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 
 import '../../../common/network/graphql_debug_log.dart';
 import '../../../common/network/graphql_failure.dart';
+import '../../../common/pagination/offset_page.dart';
 import '../../../common/pagination/page.dart';
 import '../model/blocked_user.dart';
 import '../model/comment.dart';
 import '../model/community_chip.dart';
 import '../model/community_failure.dart';
+import '../model/nearby_spot.dart';
 import '../model/post.dart';
 import '../model/post_author.dart';
 import '../model/post_image_upload.dart';
@@ -124,6 +126,50 @@ class CommunityRepositoryImpl implements CommunityRepository {
           .toList(growable: false),
       hasNextPage: result.pageInfo.hasNextPage,
       endCursor: result.pageInfo.endCursor,
+    );
+  }
+
+  @override
+  Future<OffsetPage<NearbySpot>> fetchNearbySpots({
+    required double latitude,
+    required double longitude,
+    int? radiusMeters,
+    int? page,
+    int? size,
+  }) async {
+    final Map<String, dynamic> data = await _query(
+      documentNodeQueryNearbySpots,
+      Variables$Query$NearbySpots(
+        latitude: latitude,
+        longitude: longitude,
+        radiusMeters: radiusMeters,
+        page: page,
+        size: size,
+      ).toJson(),
+      'spots',
+    );
+    final Query$NearbySpots$spots result = Query$NearbySpots.fromJson(
+      data,
+    ).spots;
+    return OffsetPage<NearbySpot>(
+      items: result.items
+          .map(
+            (Query$NearbySpots$spots$items s) => NearbySpot(
+              id: s.id,
+              title: s.title,
+              distanceMeters: s.distanceMeters,
+              // 서버가 빈 문자열을 줄 수 있다 — 화면이 자리채움으로 떨어지도록
+              // 여기서 null로 접는다.
+              thumbnailImageUrl: s.thumbnailImageUrl.isEmpty
+                  ? null
+                  : s.thumbnailImageUrl,
+              address: s.address,
+            ),
+          )
+          .toList(growable: false),
+      page: result.page,
+      hasNext: result.hasNext,
+      totalCount: result.totalCount,
     );
   }
 

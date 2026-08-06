@@ -944,5 +944,40 @@
       }
     }
   },
-  "communitySpotPostsTitle": "이 장소의 글"
+  "communitySpotPostsTitle": "이 장소의 글",
+  "communitySpotPickerTitle": "주변 장소",
+  "communitySpotPickerFilterHint": "이름으로 좁히기",
+  "communitySpotPickerFilterNote": "받아 둔 주변 목록만 좁혀요 — 전체 장소 검색이 아니에요.",
+  "communitySpotPickerNone": "장소 없이",
+  "communitySpotPickerEmpty": "주변에 장소가 없어요.",
+  "communitySpotPickerNoMatch": "그 이름과 맞는 주변 장소가 없어요.",
+  "communitySpotPickerLocationUnavailable": "위치를 사용할 수 없어 주변 장소를 불러올 수 없어요. 장소 없이도 글을 올릴 수 있어요.",
+  "communitySpotPickerFailed": "주변 장소를 불러오지 못했어요.",
+  "communitySpotDistanceMeters": "{meters}m",
+  "@communitySpotDistanceMeters": {
+    "placeholders": {
+      "meters": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "communitySpotDistanceKilometers": "{km}km",
+  "@communitySpotDistanceKilometers": {
+    "placeholders": {
+      "km": {
+        "type": "num",
+        "format": "decimalPattern",
+        "optionalParameters": {
+          "decimalDigits": 1
+        }
+      }
+    }
+  },
+  "communityComposeCategoryUnset": "카테고리",
+  "communityComposeTagsAction": "태그",
+  "communityComposeSpotAction": "장소",
+  "communityComposePhotosAction": "사진",
+  "communityComposeTagsSheetTitle": "태그",
+  "communityComposeSheetDone": "완료"
 }

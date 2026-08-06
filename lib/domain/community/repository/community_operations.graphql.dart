@@ -13241,3 +13241,814 @@ class _CopyWithStubImpl$Mutation$ReportContent$reportContent$userErrors<TRes>
 
   call({String? code, String? message, String? field}) => _res;
 }
+
+class Variables$Query$NearbySpots {
+  factory Variables$Query$NearbySpots({
+    required double latitude,
+    required double longitude,
+    int? radiusMeters,
+    int? page,
+    int? size,
+  }) => Variables$Query$NearbySpots._({
+    r'latitude': latitude,
+    r'longitude': longitude,
+    if (radiusMeters != null) r'radiusMeters': radiusMeters,
+    if (page != null) r'page': page,
+    if (size != null) r'size': size,
+  });
+
+  Variables$Query$NearbySpots._(this._$data);
+
+  factory Variables$Query$NearbySpots.fromJson(Map<String, dynamic> data) {
+    final result$data = <String, dynamic>{};
+    final l$latitude = data['latitude'];
+    result$data['latitude'] = (l$latitude as num).toDouble();
+    final l$longitude = data['longitude'];
+    result$data['longitude'] = (l$longitude as num).toDouble();
+    if (data.containsKey('radiusMeters')) {
+      final l$radiusMeters = data['radiusMeters'];
+      result$data['radiusMeters'] = (l$radiusMeters as int?);
+    }
+    if (data.containsKey('page')) {
+      final l$page = data['page'];
+      result$data['page'] = (l$page as int?);
+    }
+    if (data.containsKey('size')) {
+      final l$size = data['size'];
+      result$data['size'] = (l$size as int?);
+    }
+    return Variables$Query$NearbySpots._(result$data);
+  }
+
+  Map<String, dynamic> _$data;
+
+  double get latitude => (_$data['latitude'] as double);
+
+  double get longitude => (_$data['longitude'] as double);
+
+  int? get radiusMeters => (_$data['radiusMeters'] as int?);
+
+  int? get page => (_$data['page'] as int?);
+
+  int? get size => (_$data['size'] as int?);
+
+  Map<String, dynamic> toJson() {
+    final result$data = <String, dynamic>{};
+    final l$latitude = latitude;
+    result$data['latitude'] = l$latitude;
+    final l$longitude = longitude;
+    result$data['longitude'] = l$longitude;
+    if (_$data.containsKey('radiusMeters')) {
+      final l$radiusMeters = radiusMeters;
+      result$data['radiusMeters'] = l$radiusMeters;
+    }
+    if (_$data.containsKey('page')) {
+      final l$page = page;
+      result$data['page'] = l$page;
+    }
+    if (_$data.containsKey('size')) {
+      final l$size = size;
+      result$data['size'] = l$size;
+    }
+    return result$data;
+  }
+
+  CopyWith$Variables$Query$NearbySpots<Variables$Query$NearbySpots>
+  get copyWith => CopyWith$Variables$Query$NearbySpots(this, (i) => i);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Variables$Query$NearbySpots ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$latitude = latitude;
+    final lOther$latitude = other.latitude;
+    if (l$latitude != lOther$latitude) {
+      return false;
+    }
+    final l$longitude = longitude;
+    final lOther$longitude = other.longitude;
+    if (l$longitude != lOther$longitude) {
+      return false;
+    }
+    final l$radiusMeters = radiusMeters;
+    final lOther$radiusMeters = other.radiusMeters;
+    if (_$data.containsKey('radiusMeters') !=
+        other._$data.containsKey('radiusMeters')) {
+      return false;
+    }
+    if (l$radiusMeters != lOther$radiusMeters) {
+      return false;
+    }
+    final l$page = page;
+    final lOther$page = other.page;
+    if (_$data.containsKey('page') != other._$data.containsKey('page')) {
+      return false;
+    }
+    if (l$page != lOther$page) {
+      return false;
+    }
+    final l$size = size;
+    final lOther$size = other.size;
+    if (_$data.containsKey('size') != other._$data.containsKey('size')) {
+      return false;
+    }
+    if (l$size != lOther$size) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    final l$latitude = latitude;
+    final l$longitude = longitude;
+    final l$radiusMeters = radiusMeters;
+    final l$page = page;
+    final l$size = size;
+    return Object.hashAll([
+      l$latitude,
+      l$longitude,
+      _$data.containsKey('radiusMeters') ? l$radiusMeters : const {},
+      _$data.containsKey('page') ? l$page : const {},
+      _$data.containsKey('size') ? l$size : const {},
+    ]);
+  }
+}
+
+abstract class CopyWith$Variables$Query$NearbySpots<TRes> {
+  factory CopyWith$Variables$Query$NearbySpots(
+    Variables$Query$NearbySpots instance,
+    TRes Function(Variables$Query$NearbySpots) then,
+  ) = _CopyWithImpl$Variables$Query$NearbySpots;
+
+  factory CopyWith$Variables$Query$NearbySpots.stub(TRes res) =
+      _CopyWithStubImpl$Variables$Query$NearbySpots;
+
+  TRes call({
+    double? latitude,
+    double? longitude,
+    int? radiusMeters,
+    int? page,
+    int? size,
+  });
+}
+
+class _CopyWithImpl$Variables$Query$NearbySpots<TRes>
+    implements CopyWith$Variables$Query$NearbySpots<TRes> {
+  _CopyWithImpl$Variables$Query$NearbySpots(this._instance, this._then);
+
+  final Variables$Query$NearbySpots _instance;
+
+  final TRes Function(Variables$Query$NearbySpots) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? latitude = _undefined,
+    Object? longitude = _undefined,
+    Object? radiusMeters = _undefined,
+    Object? page = _undefined,
+    Object? size = _undefined,
+  }) => _then(
+    Variables$Query$NearbySpots._({
+      ..._instance._$data,
+      if (latitude != _undefined && latitude != null)
+        'latitude': (latitude as double),
+      if (longitude != _undefined && longitude != null)
+        'longitude': (longitude as double),
+      if (radiusMeters != _undefined) 'radiusMeters': (radiusMeters as int?),
+      if (page != _undefined) 'page': (page as int?),
+      if (size != _undefined) 'size': (size as int?),
+    }),
+  );
+}
+
+class _CopyWithStubImpl$Variables$Query$NearbySpots<TRes>
+    implements CopyWith$Variables$Query$NearbySpots<TRes> {
+  _CopyWithStubImpl$Variables$Query$NearbySpots(this._res);
+
+  TRes _res;
+
+  call({
+    double? latitude,
+    double? longitude,
+    int? radiusMeters,
+    int? page,
+    int? size,
+  }) => _res;
+}
+
+class Query$NearbySpots {
+  Query$NearbySpots({required this.spots});
+
+  factory Query$NearbySpots.fromJson(Map<String, dynamic> json) {
+    final l$spots = json['spots'];
+    return Query$NearbySpots(
+      spots: Query$NearbySpots$spots.fromJson(
+        (l$spots as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final Query$NearbySpots$spots spots;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$spots = spots;
+    _resultData['spots'] = l$spots.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$spots = spots;
+    return Object.hashAll([l$spots]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$NearbySpots || runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$spots = spots;
+    final lOther$spots = other.spots;
+    if (l$spots != lOther$spots) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$NearbySpots on Query$NearbySpots {
+  CopyWith$Query$NearbySpots<Query$NearbySpots> get copyWith =>
+      CopyWith$Query$NearbySpots(this, (i) => i);
+}
+
+abstract class CopyWith$Query$NearbySpots<TRes> {
+  factory CopyWith$Query$NearbySpots(
+    Query$NearbySpots instance,
+    TRes Function(Query$NearbySpots) then,
+  ) = _CopyWithImpl$Query$NearbySpots;
+
+  factory CopyWith$Query$NearbySpots.stub(TRes res) =
+      _CopyWithStubImpl$Query$NearbySpots;
+
+  TRes call({Query$NearbySpots$spots? spots});
+  CopyWith$Query$NearbySpots$spots<TRes> get spots;
+}
+
+class _CopyWithImpl$Query$NearbySpots<TRes>
+    implements CopyWith$Query$NearbySpots<TRes> {
+  _CopyWithImpl$Query$NearbySpots(this._instance, this._then);
+
+  final Query$NearbySpots _instance;
+
+  final TRes Function(Query$NearbySpots) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? spots = _undefined}) => _then(
+    Query$NearbySpots(
+      spots: spots == _undefined || spots == null
+          ? _instance.spots
+          : (spots as Query$NearbySpots$spots),
+    ),
+  );
+
+  CopyWith$Query$NearbySpots$spots<TRes> get spots {
+    final local$spots = _instance.spots;
+    return CopyWith$Query$NearbySpots$spots(local$spots, (e) => call(spots: e));
+  }
+}
+
+class _CopyWithStubImpl$Query$NearbySpots<TRes>
+    implements CopyWith$Query$NearbySpots<TRes> {
+  _CopyWithStubImpl$Query$NearbySpots(this._res);
+
+  TRes _res;
+
+  call({Query$NearbySpots$spots? spots}) => _res;
+
+  CopyWith$Query$NearbySpots$spots<TRes> get spots =>
+      CopyWith$Query$NearbySpots$spots.stub(_res);
+}
+
+const documentNodeQueryNearbySpots = DocumentNode(
+  definitions: [
+    OperationDefinitionNode(
+      type: OperationType.query,
+      name: NameNode(value: 'NearbySpots'),
+      variableDefinitions: [
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'latitude')),
+          type: NamedTypeNode(name: NameNode(value: 'Float'), isNonNull: true),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'longitude')),
+          type: NamedTypeNode(name: NameNode(value: 'Float'), isNonNull: true),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'radiusMeters')),
+          type: NamedTypeNode(name: NameNode(value: 'Int'), isNonNull: false),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'page')),
+          type: NamedTypeNode(name: NameNode(value: 'Int'), isNonNull: false),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'size')),
+          type: NamedTypeNode(name: NameNode(value: 'Int'), isNonNull: false),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+      ],
+      directives: [],
+      selectionSet: SelectionSetNode(
+        selections: [
+          FieldNode(
+            name: NameNode(value: 'spots'),
+            alias: null,
+            arguments: [
+              ArgumentNode(
+                name: NameNode(value: 'latitude'),
+                value: VariableNode(name: NameNode(value: 'latitude')),
+              ),
+              ArgumentNode(
+                name: NameNode(value: 'longitude'),
+                value: VariableNode(name: NameNode(value: 'longitude')),
+              ),
+              ArgumentNode(
+                name: NameNode(value: 'radiusMeters'),
+                value: VariableNode(name: NameNode(value: 'radiusMeters')),
+              ),
+              ArgumentNode(
+                name: NameNode(value: 'page'),
+                value: VariableNode(name: NameNode(value: 'page')),
+              ),
+              ArgumentNode(
+                name: NameNode(value: 'size'),
+                value: VariableNode(name: NameNode(value: 'size')),
+              ),
+            ],
+            directives: [],
+            selectionSet: SelectionSetNode(
+              selections: [
+                FieldNode(
+                  name: NameNode(value: 'items'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'id'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'title'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'address'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'thumbnailImageUrl'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'distanceMeters'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
+                FieldNode(
+                  name: NameNode(value: 'page'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'hasNext'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'totalCount'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+);
+
+class Query$NearbySpots$spots {
+  Query$NearbySpots$spots({
+    required this.items,
+    required this.page,
+    required this.hasNext,
+    this.totalCount,
+  });
+
+  factory Query$NearbySpots$spots.fromJson(Map<String, dynamic> json) {
+    final l$items = json['items'];
+    final l$page = json['page'];
+    final l$hasNext = json['hasNext'];
+    final l$totalCount = json['totalCount'];
+    return Query$NearbySpots$spots(
+      items: (l$items as List<dynamic>)
+          .map(
+            (e) => Query$NearbySpots$spots$items.fromJson(
+              (e as Map<String, dynamic>),
+            ),
+          )
+          .toList(),
+      page: (l$page as int),
+      hasNext: (l$hasNext as bool),
+      totalCount: (l$totalCount as int?),
+    );
+  }
+
+  final List<Query$NearbySpots$spots$items> items;
+
+  final int page;
+
+  final bool hasNext;
+
+  final int? totalCount;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$items = items;
+    _resultData['items'] = l$items.map((e) => e.toJson()).toList();
+    final l$page = page;
+    _resultData['page'] = l$page;
+    final l$hasNext = hasNext;
+    _resultData['hasNext'] = l$hasNext;
+    final l$totalCount = totalCount;
+    _resultData['totalCount'] = l$totalCount;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$items = items;
+    final l$page = page;
+    final l$hasNext = hasNext;
+    final l$totalCount = totalCount;
+    return Object.hashAll([
+      Object.hashAll(l$items.map((v) => v)),
+      l$page,
+      l$hasNext,
+      l$totalCount,
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$NearbySpots$spots || runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$items = items;
+    final lOther$items = other.items;
+    if (l$items.length != lOther$items.length) {
+      return false;
+    }
+    for (int i = 0; i < l$items.length; i++) {
+      final l$items$entry = l$items[i];
+      final lOther$items$entry = lOther$items[i];
+      if (l$items$entry != lOther$items$entry) {
+        return false;
+      }
+    }
+    final l$page = page;
+    final lOther$page = other.page;
+    if (l$page != lOther$page) {
+      return false;
+    }
+    final l$hasNext = hasNext;
+    final lOther$hasNext = other.hasNext;
+    if (l$hasNext != lOther$hasNext) {
+      return false;
+    }
+    final l$totalCount = totalCount;
+    final lOther$totalCount = other.totalCount;
+    if (l$totalCount != lOther$totalCount) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$NearbySpots$spots on Query$NearbySpots$spots {
+  CopyWith$Query$NearbySpots$spots<Query$NearbySpots$spots> get copyWith =>
+      CopyWith$Query$NearbySpots$spots(this, (i) => i);
+}
+
+abstract class CopyWith$Query$NearbySpots$spots<TRes> {
+  factory CopyWith$Query$NearbySpots$spots(
+    Query$NearbySpots$spots instance,
+    TRes Function(Query$NearbySpots$spots) then,
+  ) = _CopyWithImpl$Query$NearbySpots$spots;
+
+  factory CopyWith$Query$NearbySpots$spots.stub(TRes res) =
+      _CopyWithStubImpl$Query$NearbySpots$spots;
+
+  TRes call({
+    List<Query$NearbySpots$spots$items>? items,
+    int? page,
+    bool? hasNext,
+    int? totalCount,
+  });
+  TRes items(
+    Iterable<Query$NearbySpots$spots$items> Function(
+      Iterable<
+        CopyWith$Query$NearbySpots$spots$items<Query$NearbySpots$spots$items>
+      >,
+    )
+    _fn,
+  );
+}
+
+class _CopyWithImpl$Query$NearbySpots$spots<TRes>
+    implements CopyWith$Query$NearbySpots$spots<TRes> {
+  _CopyWithImpl$Query$NearbySpots$spots(this._instance, this._then);
+
+  final Query$NearbySpots$spots _instance;
+
+  final TRes Function(Query$NearbySpots$spots) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? items = _undefined,
+    Object? page = _undefined,
+    Object? hasNext = _undefined,
+    Object? totalCount = _undefined,
+  }) => _then(
+    Query$NearbySpots$spots(
+      items: items == _undefined || items == null
+          ? _instance.items
+          : (items as List<Query$NearbySpots$spots$items>),
+      page: page == _undefined || page == null ? _instance.page : (page as int),
+      hasNext: hasNext == _undefined || hasNext == null
+          ? _instance.hasNext
+          : (hasNext as bool),
+      totalCount: totalCount == _undefined
+          ? _instance.totalCount
+          : (totalCount as int?),
+    ),
+  );
+
+  TRes items(
+    Iterable<Query$NearbySpots$spots$items> Function(
+      Iterable<
+        CopyWith$Query$NearbySpots$spots$items<Query$NearbySpots$spots$items>
+      >,
+    )
+    _fn,
+  ) => call(
+    items: _fn(
+      _instance.items.map(
+        (e) => CopyWith$Query$NearbySpots$spots$items(e, (i) => i),
+      ),
+    ).toList(),
+  );
+}
+
+class _CopyWithStubImpl$Query$NearbySpots$spots<TRes>
+    implements CopyWith$Query$NearbySpots$spots<TRes> {
+  _CopyWithStubImpl$Query$NearbySpots$spots(this._res);
+
+  TRes _res;
+
+  call({
+    List<Query$NearbySpots$spots$items>? items,
+    int? page,
+    bool? hasNext,
+    int? totalCount,
+  }) => _res;
+
+  items(_fn) => _res;
+}
+
+class Query$NearbySpots$spots$items {
+  Query$NearbySpots$spots$items({
+    required this.id,
+    required this.title,
+    this.address,
+    required this.thumbnailImageUrl,
+    required this.distanceMeters,
+  });
+
+  factory Query$NearbySpots$spots$items.fromJson(Map<String, dynamic> json) {
+    final l$id = json['id'];
+    final l$title = json['title'];
+    final l$address = json['address'];
+    final l$thumbnailImageUrl = json['thumbnailImageUrl'];
+    final l$distanceMeters = json['distanceMeters'];
+    return Query$NearbySpots$spots$items(
+      id: (l$id as String),
+      title: (l$title as String),
+      address: (l$address as String?),
+      thumbnailImageUrl: (l$thumbnailImageUrl as String),
+      distanceMeters: (l$distanceMeters as num).toDouble(),
+    );
+  }
+
+  final String id;
+
+  final String title;
+
+  final String? address;
+
+  final String thumbnailImageUrl;
+
+  final double distanceMeters;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$id = id;
+    _resultData['id'] = l$id;
+    final l$title = title;
+    _resultData['title'] = l$title;
+    final l$address = address;
+    _resultData['address'] = l$address;
+    final l$thumbnailImageUrl = thumbnailImageUrl;
+    _resultData['thumbnailImageUrl'] = l$thumbnailImageUrl;
+    final l$distanceMeters = distanceMeters;
+    _resultData['distanceMeters'] = l$distanceMeters;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$id = id;
+    final l$title = title;
+    final l$address = address;
+    final l$thumbnailImageUrl = thumbnailImageUrl;
+    final l$distanceMeters = distanceMeters;
+    return Object.hashAll([
+      l$id,
+      l$title,
+      l$address,
+      l$thumbnailImageUrl,
+      l$distanceMeters,
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$NearbySpots$spots$items ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$id = id;
+    final lOther$id = other.id;
+    if (l$id != lOther$id) {
+      return false;
+    }
+    final l$title = title;
+    final lOther$title = other.title;
+    if (l$title != lOther$title) {
+      return false;
+    }
+    final l$address = address;
+    final lOther$address = other.address;
+    if (l$address != lOther$address) {
+      return false;
+    }
+    final l$thumbnailImageUrl = thumbnailImageUrl;
+    final lOther$thumbnailImageUrl = other.thumbnailImageUrl;
+    if (l$thumbnailImageUrl != lOther$thumbnailImageUrl) {
+      return false;
+    }
+    final l$distanceMeters = distanceMeters;
+    final lOther$distanceMeters = other.distanceMeters;
+    if (l$distanceMeters != lOther$distanceMeters) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$NearbySpots$spots$items
+    on Query$NearbySpots$spots$items {
+  CopyWith$Query$NearbySpots$spots$items<Query$NearbySpots$spots$items>
+  get copyWith => CopyWith$Query$NearbySpots$spots$items(this, (i) => i);
+}
+
+abstract class CopyWith$Query$NearbySpots$spots$items<TRes> {
+  factory CopyWith$Query$NearbySpots$spots$items(
+    Query$NearbySpots$spots$items instance,
+    TRes Function(Query$NearbySpots$spots$items) then,
+  ) = _CopyWithImpl$Query$NearbySpots$spots$items;
+
+  factory CopyWith$Query$NearbySpots$spots$items.stub(TRes res) =
+      _CopyWithStubImpl$Query$NearbySpots$spots$items;
+
+  TRes call({
+    String? id,
+    String? title,
+    String? address,
+    String? thumbnailImageUrl,
+    double? distanceMeters,
+  });
+}
+
+class _CopyWithImpl$Query$NearbySpots$spots$items<TRes>
+    implements CopyWith$Query$NearbySpots$spots$items<TRes> {
+  _CopyWithImpl$Query$NearbySpots$spots$items(this._instance, this._then);
+
+  final Query$NearbySpots$spots$items _instance;
+
+  final TRes Function(Query$NearbySpots$spots$items) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? id = _undefined,
+    Object? title = _undefined,
+    Object? address = _undefined,
+    Object? thumbnailImageUrl = _undefined,
+    Object? distanceMeters = _undefined,
+  }) => _then(
+    Query$NearbySpots$spots$items(
+      id: id == _undefined || id == null ? _instance.id : (id as String),
+      title: title == _undefined || title == null
+          ? _instance.title
+          : (title as String),
+      address: address == _undefined ? _instance.address : (address as String?),
+      thumbnailImageUrl:
+          thumbnailImageUrl == _undefined || thumbnailImageUrl == null
+          ? _instance.thumbnailImageUrl
+          : (thumbnailImageUrl as String),
+      distanceMeters: distanceMeters == _undefined || distanceMeters == null
+          ? _instance.distanceMeters
+          : (distanceMeters as double),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$NearbySpots$spots$items<TRes>
+    implements CopyWith$Query$NearbySpots$spots$items<TRes> {
+  _CopyWithStubImpl$Query$NearbySpots$spots$items(this._res);
+
+  TRes _res;
+
+  call({
+    String? id,
+    String? title,
+    String? address,
+    String? thumbnailImageUrl,
+    double? distanceMeters,
+  }) => _res;
+}

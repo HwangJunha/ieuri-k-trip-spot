@@ -51,12 +51,12 @@ class CommunityScreen extends ConsumerWidget {
         ],
       ),
       // 셸이 `extendBody: true`라 이 화면의 body가 떠 있는 내비 바 **아래까지**
-      // 그려진다. 기본 위치의 FAB은 그 바에 가려지므로 바 높이만큼 띄운다.
-      // 값을 여기 적지 않고 셸 상수를 읽는 이유는, 바의 높이·여백이 바뀔 때
-      // 보정이 저절로 따라오게 하기 위해서다.
+      // 그려진다. 기본 위치의 FAB은 그 바에 가려지므로 바 높이만큼 띄우고, 바에
+      // 딱 붙지 않도록 한 칸 더 준다. 바 높이를 여기 적지 않고 셸 상수를 읽는
+      // 이유는 바의 높이·여백이 바뀔 때 보정이 저절로 따라오게 하기 위해서다.
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(
-          bottom: FloatingBottomNavScaffold.barExtent,
+          bottom: FloatingBottomNavScaffold.barExtent + 12,
         ),
         child: FloatingActionButton(
           tooltip: l10n.communityComposeAction,

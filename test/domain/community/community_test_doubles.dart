@@ -1,9 +1,11 @@
 import 'dart:typed_data';
 
+import 'package:ieuri_k_trip_spot/common/pagination/offset_page.dart';
 import 'package:ieuri_k_trip_spot/common/pagination/page.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/blocked_user.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/comment.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_chip.dart';
+import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_author.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_image_upload.dart';
@@ -170,6 +172,48 @@ class FakeCommunityRepository implements CommunityRepository {
 
   @override
   Future<List<CommunityChip>> fetchCommunityChips() async => chips;
+
+  /// 컴포저 장소 선택 시트가 받을 주변 장소. 거리 오름차순으로 오는 것을 흉내 낸다.
+  List<NearbySpot> nearbySpots = const <NearbySpot>[];
+
+  /// `page`가 0보다 클 때 돌려줄 항목들(추가 로딩 검증용).
+  List<NearbySpot> nextNearbySpots = const <NearbySpot>[];
+
+  /// 설정하면 주변 장소 조회가 이 오류를 던진다 — 위치 실패·조회 실패 상태 검증용.
+  Object? nearbySpotsError;
+
+  bool nearbySpotsHasNext = false;
+
+  /// 마지막 주변 장소 조회 인자.
+  ({double latitude, double longitude, int? page})? lastFetchNearbySpots;
+
+  @override
+  Future<OffsetPage<NearbySpot>> fetchNearbySpots({
+    required double latitude,
+    required double longitude,
+    int? radiusMeters,
+    int? page,
+    int? size,
+  }) async {
+    if (nearbySpotsError != null) throw nearbySpotsError!;
+    lastFetchNearbySpots = (
+      latitude: latitude,
+      longitude: longitude,
+      page: page,
+    );
+    if ((page ?? 0) > 0) {
+      return OffsetPage<NearbySpot>(
+        items: nextNearbySpots,
+        page: page!,
+        hasNext: false,
+      );
+    }
+    return OffsetPage<NearbySpot>(
+      items: nearbySpots,
+      page: 0,
+      hasNext: nearbySpotsHasNext,
+    );
+  }
 
   @override
   Future<CursorPage<BlockedUser>> fetchBlockedUsers({

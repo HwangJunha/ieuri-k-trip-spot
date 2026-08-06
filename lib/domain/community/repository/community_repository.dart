@@ -1,9 +1,11 @@
 import 'dart:typed_data';
 
+import '../../../common/pagination/offset_page.dart';
 import '../../../common/pagination/page.dart';
 import '../model/blocked_user.dart';
 import '../model/comment.dart';
 import '../model/community_chip.dart';
+import '../model/nearby_spot.dart';
 import '../model/post.dart';
 import '../model/post_image_upload.dart';
 import '../model/report_reason.dart';
@@ -64,6 +66,22 @@ abstract interface class CommunityRepository {
     String postId, {
     int? first,
     String? after,
+  });
+
+  /// 컴포저의 장소 선택 시트가 그리는 주변 장소 한 페이지.
+  ///
+  /// **좌표 기반이고 이름 검색 인자가 없다** — 서버 `spots`는 반경 안의 장소를
+  /// 거리 오름차순으로 준다. 이름으로 좁히는 것은 이미 받아 둔 목록에 대해
+  /// 클라이언트가 한다.
+  ///
+  /// 피드와 달리 **오프셋 페이징**이라 [OffsetPage]로 돌려준다(`page`/`size` +
+  /// `hasNext`). [page]는 0-based다.
+  Future<OffsetPage<NearbySpot>> fetchNearbySpots({
+    required double latitude,
+    required double longitude,
+    int? radiusMeters,
+    int? page,
+    int? size,
   });
 
   /// 상단 칩 구성. **빈 목록이 정상이다**(가이드 §2) — 구성이 없는 앱이면 비어 오고

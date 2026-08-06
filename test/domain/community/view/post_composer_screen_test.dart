@@ -3,8 +3,12 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ieuri_k_trip_spot/common/location/coordinates.dart';
+import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
+import 'package:ieuri_k_trip_spot/common/location/location_service.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_chip.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_failure.dart';
+import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_draft.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/target_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.dart';
@@ -14,6 +18,20 @@ import 'package:ieuri_k_trip_spot/domain/community/view/post_composer_screen.dar
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
 
 import '../community_test_doubles.dart';
+
+/// 좌표를 정해 주는 [LocationService]. 장소 선택 시트가 `spots`를 부르려면 좌표가
+/// 있어야 한다 — 실제 GPS를 타지 않도록 항상 오버라이드한다.
+class _FakeLocationService implements LocationService {
+  _FakeLocationService([this.error]);
+
+  final Object? error;
+
+  @override
+  Future<Coordinates> currentCoordinates() async {
+    if (error != null) throw error!;
+    return const Coordinates(latitude: 37.5665, longitude: 126.9780);
+  }
+}
 
 /// 커뮤니티 탭에서 진입한 컴포저 — 장소가 정해져 있지 않다(가이드 §5: 선택 항목).
 Future<void> _pump(
@@ -25,11 +43,15 @@ Future<void> _pump(
   String? initialTitle,
   String? initialBody,
   PhotoPicker? picker,
+  Object? locationError,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         communityRepositoryProvider.overrideWithValue(repo),
+        locationServiceProvider.overrideWithValue(
+          _FakeLocationService(locationError),
+        ),
         // 실제 picker는 갤러리를 연다 — 테스트는 항상 override한다.
         if (picker != null) photoPickerProvider.overrideWithValue(picker),
       ],
@@ -52,11 +74,9 @@ Future<void> _pump(
 
 Finder get _submit => find.widgetWithText(TextButton, 'Post');
 
-/// 컴포저는 한 화면보다 길다 — 아래쪽 섹션(태그·장소·사진)을 보려면 스크롤한다.
-Future<void> _scrollToBottom(WidgetTester tester) async {
-  await tester.drag(find.byType(ListView), const Offset(0, -600));
-  await tester.pumpAndSettle();
-}
+/// 제목·본문 입력. 화면 가득 쓰는 배치라 둘 다 처음부터 보인다.
+Finder get _titleField => find.byType(TextField).at(0);
+Finder get _bodyField => find.byType(TextField).at(1);
 
 Future<void> _fill(
   WidgetTester tester, {
@@ -65,10 +85,28 @@ Future<void> _fill(
 }) async {
   await tester.tap(find.text('Attractions'));
   await tester.pumpAndSettle();
-  await tester.enterText(find.byType(TextField).at(0), title);
-  await tester.enterText(find.byType(TextField).at(1), body);
+  await tester.enterText(_titleField, title);
+  await tester.enterText(_bodyField, body);
   await tester.pumpAndSettle();
 }
+
+/// 하단 액션 바의 태그 시트를 연다.
+Future<void> _openTagSheet(WidgetTester tester) async {
+  await tester.tap(find.widgetWithText(TextButton, 'Tags').first);
+  await tester.pumpAndSettle();
+}
+
+/// 하단 액션 바의 장소 선택 시트를 연다.
+Future<void> _openSpotSheet(WidgetTester tester) async {
+  await tester.tap(find.widgetWithIcon(TextButton, Icons.place_outlined));
+  await tester.pumpAndSettle();
+}
+
+NearbySpot _spot({
+  String id = '11915',
+  String title = '서울갤러리',
+  double distanceMeters = 16,
+}) => NearbySpot(id: id, title: title, distanceMeters: distanceMeters);
 
 void main() {
   group('등록 버튼 활성 조건 (가이드 §5)', () {
@@ -98,6 +136,25 @@ void main() {
       expect(repo.lastCreatePost?.title, '경복궁 야간개장');
     });
 
+    // 위치를 못 얻어 주변 장소를 못 부르는 상황에서도 등록이 막히면 안 된다.
+    testWidgets('위치를 못 얻어도 장소 없이 등록된다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository();
+      await _pump(
+        tester,
+        repo,
+        locationError: const LocationUnavailable(
+          LocationUnavailableReason.permissionDenied,
+        ),
+      );
+      await _fill(tester);
+
+      await tester.tap(_submit);
+      await tester.pumpAndSettle();
+
+      expect(repo.lastCreatePost?.spotId, isNull);
+      expect(repo.lastCreatePost?.body, '한복 입고 가면 무료예요');
+    });
+
     testWidgets('제목이 비면 비활성이다', (WidgetTester tester) async {
       await _pump(tester, FakeCommunityRepository());
       await _fill(tester, title: '   ');
@@ -106,25 +163,67 @@ void main() {
     });
   });
 
+  group('본문 입력 영역', () {
+    // 짧은 상자가 아니라 **남은 높이를 전부 채운다** — 컴포저가 답답해 보이던 원인이
+    // 이것이었다.
+    testWidgets('본문은 남은 세로 공간을 채운다', (WidgetTester tester) async {
+      await _pump(tester, FakeCommunityRepository());
+
+      final TextField body = tester.widget<TextField>(_bodyField);
+      expect(body.expands, isTrue);
+      expect(body.maxLines, isNull);
+
+      // 고정된 짧은 높이가 아니라 화면 대부분을 차지한다.
+      final double bodyHeight = tester.getSize(_bodyField).height;
+      final double screenHeight = tester.getSize(find.byType(Scaffold)).height;
+      expect(bodyHeight, greaterThan(screenHeight * 0.4));
+    });
+
+    // 테두리 있는 상자를 걷어 내는 것이 이 재설계의 요지다.
+    testWidgets('제목·본문에 테두리가 없다', (WidgetTester tester) async {
+      await _pump(tester, FakeCommunityRepository());
+
+      expect(
+        tester.widget<TextField>(_titleField).decoration?.border,
+        InputBorder.none,
+      );
+      expect(
+        tester.widget<TextField>(_bodyField).decoration?.border,
+        InputBorder.none,
+      );
+    });
+  });
+
   group('길이 카운터 — 코드포인트 (가이드 §8)', () {
+    // 카운터는 한계 근처에서만 드러난다. 그래도 세는 단위는 코드포인트여야 한다 —
+    // `String.length`로 세면 서버와 숫자가 어긋난다.
     testWidgets('제목 카운터가 코드포인트를 센다', (WidgetTester tester) async {
       await _pump(tester, FakeCommunityRepository());
 
-      // 🥲는 UTF-16 코드유닛 2개지만 서버는 1로 센다.
-      await tester.enterText(find.byType(TextField).at(0), '🥲');
+      // 🥲는 UTF-16 코드유닛 2개지만 서버는 1로 센다. 45자 + 🥲 = 46 코드포인트.
+      await tester.enterText(_titleField, '${'A' * 45}🥲');
       await tester.pumpAndSettle();
 
-      expect(find.text('1 / 50'), findsOneWidget);
+      expect(find.text('46 / 50'), findsOneWidget);
     });
 
     testWidgets('본문 카운터가 코드포인트를 센다', (WidgetTester tester) async {
       await _pump(tester, FakeCommunityRepository());
 
-      await tester.enterText(find.byType(TextField).at(1), '🇰🇷');
+      // 국기는 코드포인트 2개다 — 서버와 같은 숫자를 보여줘야 한다.
+      await tester.enterText(_bodyField, '${'A' * 450}🇰🇷');
       await tester.pumpAndSettle();
 
-      // 국기는 코드포인트 2개다 — 서버와 같은 숫자를 보여줘야 한다.
-      expect(find.text('2 / 500'), findsOneWidget);
+      expect(find.text('452 / 500'), findsOneWidget);
+    });
+
+    // 평소에는 조용하다 — 500자 중 12자를 쓴 사람에게 분량을 재촉할 이유가 없다.
+    testWidgets('한계에서 멀면 카운터를 감춘다', (WidgetTester tester) async {
+      await _pump(tester, FakeCommunityRepository());
+      await _fill(tester);
+
+      expect(find.textContaining('/ 500'), findsNothing);
+      expect(find.textContaining('/ 50'), findsNothing);
     });
 
     // 입력을 자르지 않는다 — 붙여넣기한 유저가 무엇이 사라졌는지 모르면 안 된다.
@@ -136,7 +235,7 @@ void main() {
       expect(tester.widget<TextButton>(_submit).onPressed, isNull);
       // 입력은 그대로 남아 있다.
       expect(
-        tester.widget<TextField>(find.byType(TextField).at(1)).controller?.text,
+        tester.widget<TextField>(_bodyField).controller?.text,
         hasLength(503),
       );
     });
@@ -161,10 +260,9 @@ void main() {
     testWidgets('칩이 비면 전체 카테고리로 떨어진다', (WidgetTester tester) async {
       await _pump(tester, FakeCommunityRepository());
 
-      expect(
-        find.byType(ChoiceChip),
-        findsNWidgets(TargetCategory.values.length),
-      );
+      // 한 줄 가로 스크롤이라 전부가 동시에 그려지지는 않는다 — 몇 개는 보여야 한다.
+      expect(find.byType(ChoiceChip), findsWidgets);
+      expect(find.widgetWithText(ChoiceChip, 'Attractions'), findsOneWidget);
     });
   });
 
@@ -172,9 +270,8 @@ void main() {
     testWidgets('공백이 든 태그는 거부하고 이유를 알린다', (WidgetTester tester) async {
       await _pump(tester, FakeCommunityRepository());
 
-      // 태그 입력은 제목·본문 다음이다.
-      await tester.enterText(find.byType(TextField).at(2), '맛집 추천');
-      await _scrollToBottom(tester);
+      await _openTagSheet(tester);
+      await tester.enterText(find.byType(TextField).last, '맛집 추천');
       await tester.tap(find.byIcon(Icons.add));
       await tester.pumpAndSettle();
 
@@ -182,14 +279,17 @@ void main() {
       expect(find.text('#맛집 추천'), findsNothing);
     });
 
-    testWidgets('공백 없는 태그는 칩으로 붙는다', (WidgetTester tester) async {
+    testWidgets('공백 없는 태그는 칩으로 붙어 등록에 실린다', (WidgetTester tester) async {
       final FakeCommunityRepository repo = FakeCommunityRepository();
       await _pump(tester, repo);
       await _fill(tester);
 
-      await tester.enterText(find.byType(TextField).at(2), '야간개장');
-      await _scrollToBottom(tester);
+      await _openTagSheet(tester);
+      await tester.enterText(find.byType(TextField).last, '야간개장');
       await tester.tap(find.byIcon(Icons.add));
+      await tester.pumpAndSettle();
+      // 시트를 닫아도 붙은 태그가 화면에 남아야 뺄 수 있다.
+      await tester.tap(find.widgetWithText(FilledButton, 'Done'));
       await tester.pumpAndSettle();
 
       expect(find.text('#야간개장'), findsOneWidget);
@@ -198,6 +298,124 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(repo.lastCreatePost?.tags, <String>['야간개장']);
+    });
+  });
+
+  group('장소 선택 시트', () {
+    // 이 화면의 버그였던 지점 — 고를 수단이 아예 없어 장소 칸이 영영 비어 있었다.
+    testWidgets('주변 장소를 가까운 순으로 보여주고 고르면 초안에 붙는다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..nearbySpots = <NearbySpot>[
+          _spot(id: '11915', title: '서울갤러리', distanceMeters: 16),
+          _spot(id: '11094', title: '경복궁', distanceMeters: 1200),
+        ];
+      await _pump(tester, repo);
+      await _fill(tester);
+
+      await _openSpotSheet(tester);
+      expect(find.text('서울갤러리'), findsOneWidget);
+      // 1km 미만은 미터, 그 이상은 킬로미터로 읽힌다.
+      expect(find.text('16 m'), findsOneWidget);
+      expect(find.text('1.2 km'), findsOneWidget);
+
+      await tester.tap(find.text('경복궁'));
+      await tester.pumpAndSettle();
+
+      // 고른 장소가 하단 바에 드러나고 등록에 실린다.
+      expect(find.text('경복궁'), findsOneWidget);
+      await tester.tap(_submit);
+      await tester.pumpAndSettle();
+      expect(repo.lastCreatePost?.spotId, '11094');
+    });
+
+    // 서버에 이름 검색 인자가 없어 **받아 둔 목록만** 좁힌다.
+    testWidgets('이름 필터가 받아 둔 목록을 좁힌다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..nearbySpots = <NearbySpot>[
+          _spot(id: '1', title: '서울갤러리'),
+          _spot(id: '2', title: '경복궁'),
+        ];
+      await _pump(tester, repo);
+
+      await _openSpotSheet(tester);
+      await tester.enterText(find.byType(TextField).last, '경복');
+      await tester.pumpAndSettle();
+
+      expect(find.text('경복궁'), findsOneWidget);
+      expect(find.text('서울갤러리'), findsNothing);
+    });
+
+    testWidgets('대소문자를 가리지 않는다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..nearbySpots = <NearbySpot>[
+          _spot(id: '1', title: 'Seoul Gallery'),
+          _spot(id: '2', title: 'Gyeongbokgung'),
+        ];
+      await _pump(tester, repo);
+
+      await _openSpotSheet(tester);
+      await tester.enterText(find.byType(TextField).last, 'seoul');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Seoul Gallery'), findsOneWidget);
+      expect(find.text('Gyeongbokgung'), findsNothing);
+    });
+
+    // 빈 시트나 무한 스피너로 두지 않는다 — 사유와 재시도를 함께 보여준다.
+    testWidgets('위치를 못 얻으면 사유와 재시도를 보여준다', (WidgetTester tester) async {
+      await _pump(
+        tester,
+        FakeCommunityRepository(),
+        locationError: const LocationUnavailable(
+          LocationUnavailableReason.serviceDisabled,
+        ),
+      );
+
+      await _openSpotSheet(tester);
+
+      expect(
+        find.textContaining("nearby places can't be listed"),
+        findsOneWidget,
+      );
+      expect(find.widgetWithText(FilledButton, 'Retry'), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+    });
+
+    // 장소는 선택 항목이라 뗄 수단이 반드시 있어야 한다(가이드 §5).
+    testWidgets('"장소 없이"를 고르면 붙어 있던 장소가 떨어진다', (WidgetTester tester) async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..nearbySpots = <NearbySpot>[_spot(id: '11094', title: '경복궁')];
+      await _pump(tester, repo);
+      await _fill(tester);
+
+      await _openSpotSheet(tester);
+      await tester.tap(find.text('경복궁'));
+      await tester.pumpAndSettle();
+      expect(find.text('경복궁'), findsOneWidget);
+
+      await _openSpotSheet(tester);
+      await tester.tap(find.text('No place'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(_submit);
+      await tester.pumpAndSettle();
+      expect(repo.lastCreatePost?.spotId, isNull);
+    });
+
+    // 장소 상세에서 진입하면 그 화면의 글이라는 것이 전제라 바꿀 수 없다.
+    testWidgets('상세에서 진입해 고정된 장소는 시트를 열 수 없다', (WidgetTester tester) async {
+      await _pump(
+        tester,
+        FakeCommunityRepository(),
+        spotId: '11094',
+        spotTitle: '경복궁',
+      );
+
+      final Finder spotButton = find.widgetWithIcon(
+        TextButton,
+        Icons.place_outlined,
+      );
+      expect(tester.widget<TextButton>(spotButton).onPressed, isNull);
     });
   });
 
@@ -217,8 +435,7 @@ void main() {
         ],
       );
 
-      await _scrollToBottom(tester);
-      await tester.tap(find.text('Add photo'));
+      await tester.tap(find.widgetWithText(TextButton, 'Photos'));
       await tester.pumpAndSettle();
 
       expect(find.text('1 photo was too large (max 10MB).'), findsOneWidget);
@@ -233,8 +450,7 @@ void main() {
         picker: ({required int limit}) async => null,
       );
 
-      await _scrollToBottom(tester);
-      await tester.tap(find.text('Add photo'));
+      await tester.tap(find.widgetWithText(TextButton, 'Photos'));
       await tester.pumpAndSettle();
 
       expect(find.byType(SnackBar), findsNothing);
@@ -289,8 +505,13 @@ void main() {
 
       expect(find.text('Edit post'), findsOneWidget);
       expect(find.byType(ChoiceChip), findsNothing);
-      expect(find.text('Tags (optional)'), findsNothing);
-      expect(find.text('Where'), findsNothing);
+      expect(find.widgetWithText(TextButton, 'Tags'), findsNothing);
+      expect(
+        find.widgetWithIcon(TextButton, Icons.place_outlined),
+        findsNothing,
+      );
+      // 사진은 수정 대상이라 남는다.
+      expect(find.widgetWithText(TextButton, 'Photos'), findsOneWidget);
     });
 
     testWidgets('제목·본문을 채워 열고 저장하면 editPost가 나간다', (WidgetTester tester) async {
@@ -303,7 +524,7 @@ void main() {
         initialBody: '원래 본문',
       );
 
-      await tester.enterText(find.byType(TextField).at(0), '새 제목');
+      await tester.enterText(_titleField, '새 제목');
       await tester.pumpAndSettle();
       await tester.tap(_submit);
       await tester.pumpAndSettle();

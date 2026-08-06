@@ -1,10 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:ieuri_k_trip_spot/common/pagination/offset_page.dart';
 import 'package:ieuri_k_trip_spot/common/pagination/page.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/blocked_user.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/comment.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_chip.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_failure.dart';
+import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_image_upload.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/report_reason.dart';
@@ -899,6 +901,98 @@ void main() {
             (CommunityFailure f) => f.code,
             'code',
             'NOT_POST_OWNER',
+          ),
+        ),
+      );
+    });
+  });
+
+  group('spots — 컴포저 장소 선택 (오프셋 페이징)', () {
+    test('SpotPage를 도메인 OffsetPage로 매핑한다', () async {
+      final _FakeLink link = _FakeLink(
+        data: <String, dynamic>{
+          'spots': <String, dynamic>{
+            'items': <dynamic>[
+              <String, dynamic>{
+                'id': '11915',
+                'title': '내 친구 서울 서울갤러리',
+                'address': '서울특별시 종로구',
+                'thumbnailImageUrl': 'https://img/spot.jpg',
+                'distanceMeters': 16.0,
+              },
+            ],
+            'page': 0,
+            'hasNext': true,
+            'totalCount': 3386,
+          },
+        },
+      );
+
+      final OffsetPage<NearbySpot> page = await _repo(link).fetchNearbySpots(
+        latitude: 37.5665,
+        longitude: 126.978,
+        radiusMeters: 5000,
+        page: 0,
+        size: 30,
+      );
+
+      expect(page.items, hasLength(1));
+      expect(page.items.first.id, '11915');
+      expect(page.items.first.title, '내 친구 서울 서울갤러리');
+      expect(page.items.first.distanceMeters, 16.0);
+      expect(page.items.first.address, '서울특별시 종로구');
+      expect(page.hasNext, isTrue);
+      expect(page.totalCount, 3386);
+      // 좌표·반경·페이지가 그대로 서버로 넘어간다.
+      expect(link.sentVariables?['latitude'], 37.5665);
+      expect(link.sentVariables?['radiusMeters'], 5000);
+      expect(link.sentVariables?['page'], 0);
+    });
+
+    // 서버가 빈 문자열을 주면 화면이 자리채움으로 떨어져야 한다.
+    test('빈 썸네일 URL은 null로 접는다', () async {
+      final OffsetPage<NearbySpot> page = await _repo(
+        _FakeLink(
+          data: <String, dynamic>{
+            'spots': <String, dynamic>{
+              'items': <dynamic>[
+                <String, dynamic>{
+                  'id': '1',
+                  'title': '이름',
+                  'address': null,
+                  'thumbnailImageUrl': '',
+                  'distanceMeters': 5.0,
+                },
+              ],
+              'page': 0,
+              'hasNext': false,
+              'totalCount': 1,
+            },
+          },
+        ),
+      ).fetchNearbySpots(latitude: 37.5, longitude: 127.0);
+
+      expect(page.items.first.thumbnailImageUrl, isNull);
+    });
+
+    // GraphQL은 실패해도 HTTP 200이다 — errors 배열이 차 있으면 실패로 올려야 한다.
+    test('errors 배열이 차 있으면 실패가 된다', () async {
+      expect(
+        () => _repo(
+          _FakeLink(
+            errors: <GraphQLError>[
+              const GraphQLError(
+                message: 'UNAUTHENTICATED',
+                path: <dynamic>['spots'],
+              ),
+            ],
+          ),
+        ).fetchNearbySpots(latitude: 37.5, longitude: 127.0),
+        throwsA(
+          isA<CommunityFailure>().having(
+            (CommunityFailure f) => f.kind,
+            'kind',
+            CommunityFailureKind.unauthenticated,
           ),
         ),
       );
