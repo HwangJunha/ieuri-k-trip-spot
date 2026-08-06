@@ -2,16 +2,19 @@
 # `schema/schema.introspection.json` 스냅샷에서 손으로 추린 안정 빌드 입력이며,
 # gitignore된 스냅샷을 codegen이 직접 읽지 않는다(CLAUDE.md §13).
 
-enum PostTopic {
-  QUESTION
-  TIP
-  REVIEW
-  COMPANION
-  PHOTO
-}
-
-enum PostTargetType {
-  SPOT
+# 커뮤니티가 쓰는 카테고리는 `SpotCategory`와 값이 같지만 **다른 타입이다** —
+# 글의 카테고리는 커뮤니티가 소유하고 장소의 카테고리는 관광 도메인이 소유한다.
+# 값이 같다고 한 타입으로 합치면 한쪽 도메인의 변경이 다른 쪽을 끌고 간다.
+enum TargetCategory {
+  TOURIST_SPOT
+  CULTURAL_FACILITY
+  FESTIVAL_EVENT
+  TRAVEL_COURSE
+  LEISURE_SPORTS
+  LODGING
+  SHOPPING
+  RESTAURANT
+  TRANSPORT
 }
 
 type PostAuthor {
@@ -20,13 +23,21 @@ type PostAuthor {
   profileImageUrl: String
 }
 
-type PostTarget {
-  type: PostTargetType!
+# 글에 붙은 장소. **null일 수 있다** — 장소 없는 글이 허용된다(가이드 §5).
+# 제목·썸네일은 `Accept-Language`를 따른다(가이드 §9).
+type PostSpot {
   id: ID!
   title: String!
   thumbnailImageUrl: String!
+  category: TargetCategory
 }
 
+# 댓글은 **깊이 2단계**다(2차 가이드 §1). `comments(postId:)`는 최상위만 주고
+# 답글은 각 댓글의 `replies`로 온다 — 요청하지 않으면 조회되지 않는다.
+#
+# `parentCommentId`가 null이면 최상위, 있으면 답글이다(들여쓰기 판정에 쓴다).
+# `replies`에는 페이지네이션이 없고, 답글의 `replies`는 항상 빈 목록이다(3단계가
+# 없다) — 그래서 오퍼레이션이 한 단계만 내려가 요청한다.
 type Comment {
   id: ID!
   body: String!
@@ -34,6 +45,8 @@ type Comment {
   ownedByViewer: Boolean!
   hidden: Boolean!
   createdAt: String!
+  parentCommentId: ID
+  replies: [Comment!]!
 }
 
 type CommentEdge {
@@ -48,18 +61,24 @@ type CommentConnection {
 
 type Post {
   id: ID!
+  title: String!
   body: String!
-  topic: PostTopic!
-  target: PostTarget!
+  tags: [String!]!
+  category: TargetCategory!
+  spot: PostSpot
   author: PostAuthor!
   photoKeys: [String!]!
   likeCount: Int!
   commentCount: Int!
+  # 조회수. 서버가 라이브로 채워 준다(예: 글 5 → 330). 카드 하단에 댓글·좋아요와
+  # 나란히 그린다.
+  viewCount: Int!
   likedByViewer: Boolean!
   ownedByViewer: Boolean!
   hidden: Boolean!
+  edited: Boolean!
   createdAt: String!
-  comments(first: Int, after: String): CommentConnection!
+  commentPreview: [Comment!]!
 }
 
 type PostEdge {
@@ -75,18 +94,28 @@ type PostConnection {
 # `PageInfo`·`UserError`는 auth 스키마 조각이 이미 선언한다. codegen이 모든 조각을
 # 한 네임스페이스에서 합치므로 여기서 다시 선언하면 중복이다.
 
-type DiscoveryTile {
-  id: ID!
-  title: String!
-  imageUrl: String
-  filterTopic: PostTopic
-  filterTargetType: PostTargetType
+# 상단 칩. **표시 문구는 서버가 주지 않는다** — enum 값과 순서만 온다(가이드 §2).
+type CommunityChip {
+  category: TargetCategory!
+  position: Int!
+}
+
+type BlockedUserEdge {
+  cursor: String!
+  node: PostAuthor!
+  blockedAt: String!
+}
+
+type BlockedUserConnection {
+  edges: [BlockedUserEdge!]!
+  pageInfo: PageInfo!
 }
 
 input CreatePostInput {
-  targetType: PostTargetType!
-  targetId: ID!
-  topic: PostTopic!
+  category: TargetCategory!
+  spotId: ID
+  tags: [String!]!
+  title: String!
   body: String!
   photoKeys: [String!]!
 }
@@ -95,19 +124,55 @@ type CreatePostPayload {
   success: Boolean!
   userErrors: [UserError!]!
   postId: ID
-  post: Post
+}
+
+# 제목·본문·사진에 더해 **카테고리·장소·태그도 바꾼다**(서버가 뒤늦게 추가했다 —
+# 1차 가이드 §5의 "못 바꾼다"는 이제 낡은 서술이다. 라이브 스키마가 정본이다).
+#
+# `changeSpot`은 **어느 가이드에도 없고 스키마에만 있다.** 기본값 false이며,
+# `spotId: null` 하나로는 구분되지 않는 두 뜻을 가른다:
+#   - false            → 장소를 건드리지 않는다(`spotId`는 무시된다)
+#   - true + spotId    → 그 장소로 바꾼다
+#   - true + null      → 장소를 뗀다(장소 없는 글이 된다)
+# 기본이 false라 이 값을 보내지 않던 예전 클라이언트는 동작이 그대로다.
+input EditPostInput {
+  postId: ID!
+  title: String!
+  body: String!
+  photoKeys: [String!]
+  category: TargetCategory
+  changeSpot: Boolean = false
+  spotId: ID
+  tags: [String!]
+}
+
+type EditPostPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
 }
 
 input CreateCommentInput {
   postId: ID!
   body: String!
+  # 생략하면 최상위 댓글이다. **답글에 답글을 달아도 거부되지 않고** 그 답글의
+  # 최상위 부모에 눕혀지므로, 응답의 `parentCommentId`가 넘긴 값과 다를 수 있다
+  # (2차 가이드 §1). 그래서 앱은 답글에 "답글 달기"를 두지 않는다.
+  parentCommentId: ID
 }
 
 type CreateCommentPayload {
   success: Boolean!
   userErrors: [UserError!]!
   commentId: ID
-  comment: Comment
+}
+
+input DeleteCommentInput {
+  commentId: ID!
+}
+
+type DeleteCommentPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
 }
 
 input DeletePostInput {
@@ -119,7 +184,55 @@ type DeletePostPayload {
   userErrors: [UserError!]!
 }
 
-# 모더레이션(가이드 §6·§9). 차단은 **양방향**이라 내가 차단한 사람과 나를 차단한
+# 사진 업로드(가이드 §4). **서버는 이미지 바이트를 받지 않는다** — 앱이 스토리지로
+# 직접 PUT하고, 그 PUT만 GraphQL이 아니다.
+input PostImageUploadRequest {
+  contentType: String!
+  contentLength: Int!
+}
+
+input CreatePostImageUploadUrlsInput {
+  images: [PostImageUploadRequest!]!
+}
+
+type PostImageUploadUrl {
+  uploadUrl: String!
+  objectKey: String!
+  expiresAt: String!
+}
+
+type CreatePostImageUploadUrlsPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  uploadUrls: [PostImageUploadUrl!]!
+}
+
+input ConfirmPostImageUploadsInput {
+  objectKeys: [String!]!
+}
+
+type PostImageUploadFailure {
+  objectKey: String!
+  code: String!
+}
+
+type ConfirmPostImageUploadsPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  confirmed: [String!]!
+  failed: [PostImageUploadFailure!]!
+}
+
+input DeletePostImageInput {
+  objectKey: String!
+}
+
+type DeletePostImagePayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+# 모더레이션(가이드 §6). 차단은 **양방향**이라 내가 차단한 사람과 나를 차단한
 # 사람의 글이 모두 사라진다 — 서버가 걸러 주므로 앱이 필터링할 것은 없고, 차단
 # 직후에는 피드를 다시 불러온다.
 enum ReportReason {
@@ -154,7 +267,7 @@ type UnblockUserPayload {
 }
 
 # `detail`은 reason이 OTHER일 때 **필수**다. 스키마상 nullable이라 GraphQL이 막아
-# 주지 않으므로 클라이언트 폼에서 미리 거른다(가이드 §9).
+# 주지 않으므로 클라이언트 폼에서 미리 거른다(가이드 §6).
 input ReportContentInput {
   targetType: ReportTargetType!
   targetId: ID!
@@ -165,6 +278,47 @@ input ReportContentInput {
 type ReportContentPayload {
   success: Boolean!
   userErrors: [UserError!]!
+}
+
+# 게시물 숨기기(2차 가이드 §2). **신고·차단과 각각 다르다** — 글 하나를 **내
+# 화면에서만** 감추고, 되돌릴 수 있으며, 소유권을 보지 않아 내 글도 숨길 수 있다.
+# 조치가 아니라 화면 설정이다.
+#
+# **`Post.hidden`과 헷갈리면 안 된다.** 그쪽은 신고 5건 누적으로 **모두에게** 감춰진
+# 글(작성자 본인에게만 보인다)이고, 이건 내가 나에게만 감춘 것이다.
+#
+# 둘 다 멱등이며(이미 숨긴 글에 다시 불러도 success), 해제는 **삭제된 글에도**
+# 동작한다 — 그래야 숨김 목록에 남지 않는다.
+input HidePostInput {
+  postId: ID!
+}
+
+type HidePostPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+input UnhidePostInput {
+  postId: ID!
+}
+
+type UnhidePostPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+# 피드 정렬(2차 가이드 §3).
+#
+# | 값 | 무엇이 보이나 | 순서 |
+# |---|---|---|
+# | `LATEST`(기본) | 반경 안 글 + **장소 없이 쓴 글** | 최신순 |
+# | `DISTANCE` | 반경 안 장소에 붙은 글만 | 가까운 장소 순 |
+#
+# **두 정렬의 커서 형식이 다르다** — 정렬을 바꾸면 커서를 버리고 첫 페이지부터 다시
+# 조회해야 하며, 이전 커서를 그대로 넘기면 `INVALID_INPUT`이다.
+enum PostSortOrder {
+  LATEST
+  DISTANCE
 }
 
 input LikePostInput {
@@ -190,31 +344,44 @@ type UnlikePostPayload {
 # Query·Mutation은 auth 조각이 선언한 것을 **확장**한다(spot 조각과 같은 규약) —
 # 다시 선언하면 앞선 조각의 필드가 사라져 다른 기능의 codegen이 깨진다.
 extend type Query {
-  targetPosts(
-    targetType: PostTargetType!
-    targetId: ID!
-    topic: PostTopic
-    first: Int
-    after: String
-  ): PostConnection!
-  nearbyPosts(
-    latitude: Float!
-    longitude: Float!
+  posts(
+    spotId: ID
+    latitude: Float
+    longitude: Float
     radiusMeters: Int
-    topic: PostTopic
+    category: TargetCategory
+    tag: String
+    sort: PostSortOrder
+    # true면 **내가 숨긴 글만** 온다(해제 화면용). 숨긴 글은 그 밖의 모든 조회에서
+    # 빠지며 `post(id:)` 단건도 null이다(2차 가이드 §2). 카테고리·태그 필터와
+    # 정렬은 여기에도 그대로 걸리므로 별도 쿼리를 두지 않았다.
+    hiddenByViewer: Boolean
     first: Int
     after: String
   ): PostConnection!
+  comments(postId: ID!, first: Int, after: String): CommentConnection!
   post(id: ID!): Post
-  discoveryTiles: [DiscoveryTile!]!
+  blockedUsers(first: Int, after: String): BlockedUserConnection!
+  communityChips: [CommunityChip!]!
 }
 
 extend type Mutation {
   createPost(input: CreatePostInput!): CreatePostPayload!
-  createComment(input: CreateCommentInput!): CreateCommentPayload!
+  editPost(input: EditPostInput!): EditPostPayload!
   deletePost(input: DeletePostInput!): DeletePostPayload!
+  createComment(input: CreateCommentInput!): CreateCommentPayload!
+  deleteComment(input: DeleteCommentInput!): DeleteCommentPayload!
   likePost(input: LikePostInput!): LikePostPayload!
   unlikePost(input: UnlikePostInput!): UnlikePostPayload!
+  createPostImageUploadUrls(
+    input: CreatePostImageUploadUrlsInput!
+  ): CreatePostImageUploadUrlsPayload!
+  confirmPostImageUploads(
+    input: ConfirmPostImageUploadsInput!
+  ): ConfirmPostImageUploadsPayload!
+  deletePostImage(input: DeletePostImageInput!): DeletePostImagePayload!
+  hidePost(input: HidePostInput!): HidePostPayload!
+  unhidePost(input: UnhidePostInput!): UnhidePostPayload!
   blockUser(input: BlockUserInput!): BlockUserPayload!
   unblockUser(input: UnblockUserInput!): UnblockUserPayload!
   reportContent(input: ReportContentInput!): ReportContentPayload!

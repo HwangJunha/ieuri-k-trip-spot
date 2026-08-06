@@ -2,24 +2,100 @@ import 'package:flutter/material.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/report_reason.dart';
+import 'community_labels.dart';
 
 /// 오버플로 시트에서 고른 동작.
-enum PostModerationAction { block, report, delete }
+enum PostModerationAction { report, block, hide, edit, delete }
 
-/// 카드 우상단 오버플로가 여는 바텀 시트(R15·R16, 디자인 §5).
+/// 카드 우상단 ⋮ 가 여는 바텀 시트(가이드 §5, 2차 가이드 §2).
 ///
 /// ```
-/// ├── 이 사용자 차단하기   (blockUser)
-/// ├── 신고하기             (reportContent)
-/// └── 글 삭제하기          (deletePost) — 내 글일 때만
+/// ├── 이 글 숨기기          (hidePost)        — 남의 글일 때
+/// ├── 이 글 신고하기        (reportContent)   — 남의 글일 때
+/// ├── 이 사용자 차단하기     (blockUser)       — 남의 글일 때
+/// ├── 글 수정하기           (editPost)        — 내 글이고 숨김이 아닐 때
+/// └── 글 삭제하기           (deletePost)      — 내 글일 때
 /// ```
 ///
-/// **미인증이어도 항목을 감추지 않는다**(가이드 §13, 디자인 §7) — 감추면 기능이
-/// 없는 것처럼 보이므로 눌렀을 때 로그인으로 유도한다. 감추는 것은 [ownedByViewer]
-/// 하나뿐이고, 그것도 "내 글이 아니면 삭제 항목이 아예 의미가 없어서"다.
+/// **내 글에는 신고·차단·숨기기를 두지 않는다** — 자기 자신은 차단할 수 없고
+/// (`CANNOT_BLOCK_SELF`), 자기 글 신고는 의미가 없으며, 내 글을 내 화면에서만
+/// 감추는 것은 **삭제가 이미 하는 일이라** 고를 이유가 없다.
+///
+/// 2차 가이드 §2의 표는 숨기기 노출 조건을 "항상"으로 적었지만, **여기서는 일부러
+/// `!ownedByViewer`로 좁혔다** — 사용자 피드백에 따른 의도된 이탈이다. 가이드에
+/// 맞춘다고 되돌리지 말 것.
+///
+/// **숨겨진 내 글은 수정을 비활성화하고 이유를 안내한다** — 눌러서
+/// `POST_NOT_EDITABLE` 오류를 보는 것보다 낫다(가이드 §5). 여기서 [hidden]은
+/// **신고 누적으로 모두에게 감춰진 것**이지 위의 "이 글 숨기기"와 다른 값이다.
 ///
 /// [Navigator.pop]으로 [PostModerationAction]을 돌려주며, 배경을 눌러 닫으면 null이다.
 Future<PostModerationAction?> showPostModerationSheet(
+  BuildContext context, {
+  required bool ownedByViewer,
+  required bool hidden,
+}) => showModalBottomSheet<PostModerationAction>(
+  context: context,
+  showDragHandle: true,
+  builder: (BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final ThemeData theme = Theme.of(context);
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          if (!ownedByViewer) ...<Widget>[
+            // 2차 가이드 §2는 "항상"이라고 적었지만 **내 글에는 두지 않는다** —
+            // 내 글을 내 화면에서만 감추는 것은 삭제가 이미 하는 일이라, 두 개를
+            // 나란히 두면 무엇이 다른지 알 수 없다. 의도된 이탈이니 되돌리지 말 것.
+            ListTile(
+              leading: const Icon(Icons.visibility_off_outlined),
+              title: Text(l10n.communityHidePostAction),
+              onTap: () => Navigator.pop(context, PostModerationAction.hide),
+            ),
+            ListTile(
+              leading: const Icon(Icons.flag_outlined),
+              title: Text(l10n.communityReportAction),
+              onTap: () => Navigator.pop(context, PostModerationAction.report),
+            ),
+            ListTile(
+              leading: const Icon(Icons.block),
+              title: Text(l10n.communityBlockAction),
+              onTap: () => Navigator.pop(context, PostModerationAction.block),
+            ),
+          ],
+          if (ownedByViewer) ...<Widget>[
+            ListTile(
+              enabled: !hidden,
+              leading: const Icon(Icons.edit_outlined),
+              title: Text(l10n.communityEditAction),
+              // 왜 못 누르는지 밝힌다 — 비활성 이유가 없으면 고장으로 보인다.
+              subtitle: hidden ? Text(l10n.communityEditDisabledHidden) : null,
+              onTap: hidden
+                  ? null
+                  : () => Navigator.pop(context, PostModerationAction.edit),
+            ),
+            ListTile(
+              leading: Icon(
+                Icons.delete_outline,
+                color: theme.colorScheme.error,
+              ),
+              title: Text(
+                l10n.communityDeleteAction,
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+              onTap: () => Navigator.pop(context, PostModerationAction.delete),
+            ),
+          ],
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  },
+);
+
+/// 댓글 ⋮ 가 여는 시트. 내 댓글이면 삭제, 남의 댓글이면 신고다.
+Future<PostModerationAction?> showCommentModerationSheet(
   BuildContext context, {
   required bool ownedByViewer,
 }) => showModalBottomSheet<PostModerationAction>(
@@ -32,19 +108,6 @@ Future<PostModerationAction?> showPostModerationSheet(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          ListTile(
-            leading: const Icon(Icons.block),
-            title: Text(l10n.communityBlockAction),
-            onTap: () => Navigator.pop(context, PostModerationAction.block),
-          ),
-          ListTile(
-            leading: const Icon(Icons.flag_outlined),
-            title: Text(l10n.communityReportAction),
-            onTap: () => Navigator.pop(context, PostModerationAction.report),
-          ),
-          // 내 글이 아니면 서버가 `NOT_POST_OWNER`로 거부한다 — 애초에 보여주지
-          // 않는다. 차단·신고와 달리 미인증 유도의 대상이 아니다(내 글이라는 판정
-          // 자체가 로그인을 전제한다).
           if (ownedByViewer)
             ListTile(
               leading: Icon(
@@ -52,10 +115,16 @@ Future<PostModerationAction?> showPostModerationSheet(
                 color: theme.colorScheme.error,
               ),
               title: Text(
-                l10n.communityDeleteAction,
+                l10n.communityCommentDeleteAction,
                 style: TextStyle(color: theme.colorScheme.error),
               ),
               onTap: () => Navigator.pop(context, PostModerationAction.delete),
+            )
+          else
+            ListTile(
+              leading: const Icon(Icons.flag_outlined),
+              title: Text(l10n.communityCommentReportAction),
+              onTap: () => Navigator.pop(context, PostModerationAction.report),
             ),
           const SizedBox(height: 8),
         ],
@@ -64,8 +133,8 @@ Future<PostModerationAction?> showPostModerationSheet(
   },
 );
 
-/// 차단 확인(R15). **양방향임을 문구에 명시한다** — 되돌리기 전까지 서로 안 보이게
-/// 되며, 유저가 그 결과를 알고 눌러야 한다(가이드 §6, 디자인 §5).
+/// 차단 확인(가이드 §6). **양방향임을 문구에 명시한다** — 되돌리기 전까지 서로 안
+/// 보이게 되며, 유저가 그 결과를 알고 눌러야 한다.
 ///
 /// true를 돌려주면 실행한다. 배경 탭·취소는 false다.
 Future<bool> confirmBlock(BuildContext context, String nickname) async {
@@ -95,8 +164,7 @@ Future<bool> confirmBlock(BuildContext context, String nickname) async {
   return confirmed ?? false;
 }
 
-/// 글 삭제 확인. 글 수정 기능이 없어(가이드 §15) 삭제는 재작성을 뜻하므로 확인을
-/// 둔다.
+/// 글 삭제 확인. 되돌릴 수 없으므로 확인을 둔다.
 Future<bool> confirmDeletePost(BuildContext context) async {
   final AppLocalizations l10n = AppLocalizations.of(context);
   final ThemeData theme = Theme.of(context);
@@ -134,18 +202,11 @@ class ReportSubmission {
   final String? detail;
 }
 
-/// 신고 사유 시트(R16, 디자인 §5).
-///
-/// ```
-/// ├── 제목 "신고"
-/// ├── 사유 라디오 4종 (서버 ReportReason와 1:1)
-/// ├── 상세 TextField — "기타" 선택 시에만 노출, 이때 필수
-/// └── [제출] (사유 미선택·기타인데 상세 없음 → 비활성)
-/// ```
+/// 신고 사유 시트(가이드 §6).
 ///
 /// **`OTHER`인데 상세가 비면 제출을 클라이언트에서 막는다** — 서버는
 /// `REPORT_DETAIL_REQUIRED`로 거부하지만, 왕복해서 거절당하는 것보다 애초에 누를 수
-/// 없는 편이 낫다(가이드 §9).
+/// 없는 편이 낫다.
 Future<ReportSubmission?> showReportSheet(BuildContext context) =>
     showModalBottomSheet<ReportSubmission>(
       context: context,
@@ -215,7 +276,7 @@ class _ReportSheetBodyState extends State<_ReportSheetBody> {
                   for (final ReportReason reason in ReportReason.values)
                     RadioListTile<ReportReason>(
                       value: reason,
-                      title: Text(_reasonLabel(l10n, reason)),
+                      title: Text(reportReasonLabel(l10n, reason)),
                     ),
                 ],
               ),
@@ -260,14 +321,3 @@ class _ReportSheetBodyState extends State<_ReportSheetBody> {
     );
   }
 }
-
-/// 사유의 표시 문자열(POL-023). `PostTopic`과 같이 **서버는 표시명을 주지 않는다** —
-/// enum은 안정 식별자이고 매핑은 클라이언트 몫이다.
-String _reasonLabel(AppLocalizations l10n, ReportReason reason) =>
-    switch (reason) {
-      ReportReason.spam => l10n.communityReportReasonSpam,
-      ReportReason.abuse => l10n.communityReportReasonAbuse,
-      ReportReason.inappropriateContent =>
-        l10n.communityReportReasonInappropriate,
-      ReportReason.other => l10n.communityReportReasonOther,
-    };

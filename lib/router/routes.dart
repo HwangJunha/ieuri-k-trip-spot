@@ -10,7 +10,10 @@ import '../domain/auth/model/sns_credential.dart';
 import '../domain/auth/view/password_reset_screen.dart';
 import '../domain/auth/view/sign_up_screen.dart';
 import '../domain/auth/view/sns_sign_up_screen.dart';
+import '../domain/community/model/target_category.dart';
+import '../domain/community/view/blocked_users_screen.dart';
 import '../domain/community/view/community_screen.dart';
+import '../domain/community/view/hidden_posts_screen.dart';
 import '../domain/community/view/post_composer_screen.dart';
 import '../domain/community/view/post_detail_screen.dart';
 import '../domain/onboarding/view/onboarding_screen.dart';
@@ -124,21 +127,43 @@ List<RouteBase> buildRoutes() => <RouteBase>[
     builder: (_, GoRouterState state) =>
         PostDetailScreen(postId: state.pathParameters['id']!),
   ),
-  // 글 작성(SPEC-0010 R1~R4). 셸 밖의 최상위 라우트라 하단 탭을 덮는다.
+  // 글 작성·수정(SPEC-0010). 셸 밖의 최상위 라우트라 하단 탭을 덮는다.
   //
-  // 대상(관광지)은 **쿼리 파라미터**다. 커뮤니티 탭에서 열면 없고(화면이 선택을
-  // 요구한다), 관광지 상세에서 열면 그 spot의 id·이름이 실려 이미 정해진 채로
-  // 열린다 — 두 진입의 차이는 그것뿐이다(디자인 §3).
+  // 장소는 **쿼리 파라미터**이며 선택 항목이다. 커뮤니티 탭에서 열면 없고, 관광지
+  // 상세에서 열면 그 spot의 id·이름·카테고리가 실려 이미 정해진 채로 열린다 —
+  // 장소가 없어도 등록된다(가이드 §5).
   //
-  // 이름은 표시 전용이라 파라미터로 넘긴다. 모델 객체가 아니라 값만 넘기는 것이라
+  // `editPostId`가 있으면 수정 모드다. **id만 실린다** — 제목·본문·사진은 화면이
+  // 그 id로 `post(id:)`를 다시 조회해서 채운다. 예전에는 제목·본문을 쿼리 파라미터로
+  // 실어 보냈는데, 사진 키 목록은 URL에 담기 어려워(길이·이스케이프) 결국 수정
+  // 화면이 사진 없는 새 글처럼 열렸다. 셋을 한 조회에서 함께 받는 편이 맞다.
+  //
+  // 장소 이름만 표시 전용 값으로 남는다. 모델 객체가 아니라 값만 넘기는 것이라
   // §6과 어긋나지 않는다.
   GoRoute(
     path: '/post-composer',
     name: PostComposerScreen.routeName,
     builder: (_, GoRouterState state) => PostComposerScreen(
-      initialTargetId: state.uri.queryParameters['targetId'],
-      initialTargetTitle: state.uri.queryParameters['targetTitle'],
+      initialSpotId: state.uri.queryParameters['spotId'],
+      initialSpotTitle: state.uri.queryParameters['spotTitle'],
+      initialCategory: _targetCategoryFrom(
+        state.uri.queryParameters['category'],
+      ),
+      editPostId: state.uri.queryParameters['editPostId'],
     ),
+  ),
+  // 차단한 사용자 목록(가이드 §6). 커뮤니티 앱바에서 진입하며 셸 밖이라 탭을 덮는다.
+  GoRoute(
+    path: '/blocked-users',
+    name: BlockedUsersScreen.routeName,
+    builder: (_, _) => const BlockedUsersScreen(),
+  ),
+  // 내가 숨긴 글 목록(2차 가이드 §2). 차단 목록과 같은 자리·같은 성격의 화면이라
+  // 나란히 둔다 — 다만 차단은 사람, 숨김은 글 하나가 대상이다.
+  GoRoute(
+    path: '/hidden-posts',
+    name: HiddenPostsScreen.routeName,
+    builder: (_, _) => const HiddenPostsScreen(),
   ),
   // The post-onboarding 5-tab shell. Each tab keeps its own navigation stack.
   StatefulShellRoute.indexedStack(
@@ -184,6 +209,14 @@ Widget _slideUpFromBottom(
 /// "전체" 피드를 뜻하므로 기본값으로 떨어뜨리면 안 된다.
 SpotCategory? _feedCategoryFrom(String? name) =>
     SpotCategory.values.where((SpotCategory c) => c.name == name).firstOrNull;
+
+/// 컴포저에 넘어온 카테고리 제안을 되돌린다. **null이 유효한 값이다** — 커뮤니티
+/// 탭에서 열면 제안이 없고 사용자가 직접 고른다(가이드 §5).
+///
+/// `SpotCategory`와 값이 같아도 다른 타입이다 — 커뮤니티가 자기 enum을 소유한다.
+TargetCategory? _targetCategoryFrom(String? name) => TargetCategory.values
+    .where((TargetCategory c) => c.name == name)
+    .firstOrNull;
 
 SpotCategory _spotCategoryFrom(String? name) =>
     SpotCategory.values.where((SpotCategory c) => c.name == name).firstOrNull ??

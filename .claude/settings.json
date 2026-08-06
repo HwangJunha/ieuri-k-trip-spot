@@ -45,6 +45,10 @@
       "Bash(dart pub upgrade:*)"
     ],
     "deny": [
+      "Read(./**/*.graphql.dart)",
+      "Read(./**/*.g.dart)",
+      "Read(./**/*.freezed.dart)",
+      "Read(./schema/schema.introspection.json)",
       "Read(./.env)",
       "Read(./**/.env)",
       "Read(./**/.env.*)",

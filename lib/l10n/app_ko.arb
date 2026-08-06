@@ -621,30 +621,6 @@
   "@communityNearbyTitle": {
     "description": "지역 피드 섹션 헤더"
   },
-  "communityTopicAll": "전체",
-  "@communityTopicAll": {
-    "description": "주제 태그 칩 — 전체(선택 없음)"
-  },
-  "communityTopicQuestion": "질문",
-  "@communityTopicQuestion": {
-    "description": "주제 태그 QUESTION 표시명"
-  },
-  "communityTopicTip": "팁",
-  "@communityTopicTip": {
-    "description": "주제 태그 TIP 표시명"
-  },
-  "communityTopicReview": "후기",
-  "@communityTopicReview": {
-    "description": "주제 태그 REVIEW 표시명"
-  },
-  "communityTopicCompanion": "동행",
-  "@communityTopicCompanion": {
-    "description": "주제 태그 COMPANION 표시명"
-  },
-  "communityTopicPhoto": "사진",
-  "@communityTopicPhoto": {
-    "description": "주제 태그 PHOTO 표시명"
-  },
   "communityFeedEmpty": "주변에 아직 글이 없어요.",
   "@communityFeedEmpty": {
     "description": "지역 피드에 글이 하나도 없을 때"
@@ -729,14 +705,11 @@
   "@communityComposeAction": {
     "description": "글 작성 FAB의 접근성 라벨"
   },
-  "communityCommentsUnavailable": "댓글을 불러오지 못했어요.",
-  "@communityCommentsUnavailable": {
-    "description": "댓글을 불러오지 못했을 때 (글 본문은 정상)"
-  },
   "communityPostOptions": "게시글 옵션",
   "@communityPostOptions": {
     "description": "카드 우상단 오버플로 버튼의 접근성 라벨"
   },
+  "communityViewCountLabel": "{count, plural, other{조회 {count}회}}",
   "communityBlockAction": "이 사용자 차단하기",
   "@communityBlockAction": {
     "description": "모더레이션 시트의 차단 항목"
@@ -846,26 +819,9 @@
   "@communityComposeBodyHint": {
     "description": "본문 입력 힌트"
   },
-  "communityComposeTopicLabel": "게시판 선택",
-  "@communityComposeTopicLabel": {
-    "description": "컴포저에서 주제를 먼저 고르게 하는 라벨"
-  },
   "communityComposeSpotLabel": "장소",
   "@communityComposeSpotLabel": {
     "description": "컴포저의 대상(관광지) 라벨"
-  },
-  "communityComposeSpotMissing": "장소를 선택하세요",
-  "@communityComposeSpotMissing": {
-    "description": "대상이 아직 정해지지 않았을 때"
-  },
-  "communityComposeCounter": "{count} / 500",
-  "@communityComposeCounter": {
-    "description": "본문 잔여 글자 수 — 서버와 같은 코드포인트 기준 (가이드 §12)",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
   },
   "communityComposeTooLong": "{count}자를 초과했어요.",
   "@communityComposeTooLong": {
@@ -880,14 +836,6 @@
   "@communityComposeDone": {
     "description": "글 등록 성공 안내"
   },
-  "communityComposeErrorBodyRequired": "본문을 입력해 주세요.",
-  "@communityComposeErrorBodyRequired": {
-    "description": "POST_BODY_REQUIRED"
-  },
-  "communityComposeErrorBodyLength": "본문이 너무 길어요. 500자 이내로 써 주세요.",
-  "@communityComposeErrorBodyLength": {
-    "description": "POST_BODY_LENGTH_INVALID"
-  },
   "communityComposeErrorSpotNotFound": "그 장소를 찾을 수 없어요.",
   "@communityComposeErrorSpotNotFound": {
     "description": "SPOT_NOT_FOUND"
@@ -895,5 +843,173 @@
   "communityComposeErrorTooManyPhotos": "사진은 최대 5장까지 첨부할 수 있어요.",
   "@communityComposeErrorTooManyPhotos": {
     "description": "TOO_MANY_PHOTOS"
-  }
+  },
+  "communityCategoryAll": "전체",
+  "communityCategoryTouristSpot": "관광지",
+  "communityCategoryCulturalFacility": "문화시설",
+  "communityCategoryFestivalEvent": "축제·행사",
+  "communityCategoryTravelCourse": "여행코스",
+  "communityCategoryLeisureSports": "레포츠",
+  "communityCategoryLodging": "숙박",
+  "communityCategoryShopping": "쇼핑",
+  "communityCategoryRestaurant": "맛집",
+  "communityCategoryTransport": "교통",
+  "communityEditedBadge": "수정됨",
+  "communityEditAction": "글 수정하기",
+  "communityEditDisabledHidden": "숨겨진 글은 수정할 수 없습니다.",
+  "communityEditTitle": "글 수정",
+  "communityEditDone": "글을 수정했습니다.",
+  "communityComposeCategoryLabel": "카테고리 선택",
+  "communityComposeTitleLabel": "제목",
+  "communityComposeTitleHint": "한 줄 제목",
+  "communityComposeBodyLabel": "내용",
+  "communityComposeTagsLabel": "태그 (선택)",
+  "communityComposeTagHint": "태그 입력 (공백 없이)",
+  "communityComposeTagInvalid": "태그에는 공백을 넣을 수 없습니다.",
+  "communityComposeTagLimit": "태그는 5개까지 넣을 수 있습니다.",
+  "communityComposeSpotOptional": "장소 추가 (선택)",
+  "communityComposeSpotClear": "장소 빼기",
+  "communityComposePhotosLabel": "사진 (선택)",
+  "communityComposePhotoAdd": "사진 추가",
+  "communityComposePhotoTooLarge": "{count, plural, other{사진 {count}장이 너무 큽니다(최대 10MB).}}",
+  "communityComposeDonePhotosFailed": "글은 등록했지만 사진 {count}장을 올리지 못했습니다.",
+  "@communityComposeDonePhotosFailed": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "communityEditDonePhotosFailed": "글은 수정했지만 사진 {count}장을 올리지 못했습니다.",
+  "@communityEditDonePhotosFailed": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "communityComposeErrorTitleRequired": "제목을 입력해 주세요.",
+  "communityComposeErrorTitleLength": "제목이 너무 깁니다. 50자 이내로 줄여 주세요.",
+  "communityComposeErrorBodyRequired": "내용을 입력해 주세요.",
+  "communityComposeErrorBodyLength": "내용이 너무 깁니다. 500자 이내로 줄여 주세요.",
+  "communityComposeErrorInvalidTag": "사용할 수 없는 태그가 있습니다.",
+  "communityComposeErrorTooManyTags": "태그는 5개까지 넣을 수 있습니다.",
+  "communityComposeErrorPhotoNotUploaded": "사진 업로드에 실패했습니다. 다시 첨부해 주세요.",
+  "communityComposeErrorNotEditable": "숨겨진 글은 수정할 수 없습니다.",
+  "communityTitleCounter": "{count} / 50",
+  "@communityTitleCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityBodyCounter": "{count} / 500",
+  "@communityBodyCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityCommentComposerHint": "댓글을 입력하세요",
+  "communityCommentSend": "등록",
+  "communityCommentDone": "댓글을 등록했습니다.",
+  "communityCommentDeleteAction": "댓글 삭제하기",
+  "communityCommentDeleteDone": "댓글을 삭제했습니다.",
+  "communityCommentReportAction": "댓글 신고하기",
+  "communityCommentsUnavailable": "댓글을 불러오지 못했습니다.",
+  "communityCommentsLoadMore": "댓글 더 보기",
+  "communityBlockedUsersTitle": "차단한 사용자",
+  "communityBlockedUsersEmpty": "차단한 사용자가 없습니다.",
+  "communityBlockedUsersNote": "내가 건 차단만 표시됩니다. 상대가 나를 차단한 경우에는 내가 풀 수 없습니다.",
+  "communityUnblockAction": "차단 해제",
+  "communityUnblockDone": "차단을 해제했습니다.",
+  "communityBlockedUsersAction": "차단한 사용자",
+  "communityHidePostAction": "이 글 숨기기",
+  "communityHidePostDone": "글을 숨겼습니다. 나에게만 보이지 않습니다.",
+  "communityHiddenPostsAction": "숨긴 글",
+  "communityHiddenPostsTitle": "숨긴 글",
+  "communityHiddenPostsEmpty": "숨긴 글이 없습니다.",
+  "communityHiddenPostsNote": "내 피드에서만 숨겨집니다. 다른 사람에게는 그대로 보입니다.",
+  "communityUnhideAction": "숨김 해제",
+  "communityUnhideDone": "다시 피드에 표시됩니다.",
+  "communitySortLatest": "최신순",
+  "communitySortDistance": "거리순",
+  "communityReplyAction": "답글 달기",
+  "communityReplyComposerHint": "{nickname}님에게 답글",
+  "@communityReplyComposerHint": {
+    "placeholders": {
+      "nickname": {
+        "type": "String"
+      }
+    }
+  },
+  "communityReplyCancel": "답글 취소",
+  "communityPhotoViewerTitle": "{total}장 중 {current}장",
+  "@communityPhotoViewerTitle": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeMonths": "{count}개월 전",
+  "@communityTimeMonths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeYears": "{count}년 전",
+  "@communityTimeYears": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communitySpotPostsTitle": "이 장소의 글",
+  "communitySpotPickerTitle": "주변 장소",
+  "communitySpotPickerFilterHint": "결과 내 재검색",
+  "communitySpotPickerSourceNearby": "주변",
+  "communitySpotPickerSourceLiked": "좋아요한 장소",
+  "communitySpotPickerLikedEmpty": "아직 좋아요한 장소가 없어요.",
+  "communitySpotPickerLikedFailed": "좋아요한 장소를 불러오지 못했어요.",
+  "communitySpotPickerLikedNoMatch": "그 이름과 맞는 좋아요한 장소가 없어요.",
+  "communitySpotPickerEmpty": "주변에 장소가 없어요.",
+  "communitySpotPickerNoMatch": "그 이름과 맞는 주변 장소가 없어요.",
+  "communitySpotPickerLocationUnavailable": "위치를 사용할 수 없어 주변 장소를 불러올 수 없어요. 장소 없이도 글을 올릴 수 있어요.",
+  "communitySpotPickerFailed": "주변 장소를 불러오지 못했어요.",
+  "communitySpotDistanceMeters": "{meters}m",
+  "@communitySpotDistanceMeters": {
+    "placeholders": {
+      "meters": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "communitySpotDistanceKilometers": "{km}km",
+  "@communitySpotDistanceKilometers": {
+    "placeholders": {
+      "km": {
+        "type": "num",
+        "format": "decimalPattern",
+        "optionalParameters": {
+          "decimalDigits": 1
+        }
+      }
+    }
+  },
+  "communityComposeCategoryUnset": "카테고리",
+  "communityComposeTagsAction": "태그",
+  "communityComposeSpotAction": "장소",
+  "communityComposePhotosAction": "사진",
+  "communityComposeTagsSheetTitle": "태그",
+  "communityComposeSheetDone": "완료"
 }

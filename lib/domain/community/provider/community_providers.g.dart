@@ -64,66 +64,60 @@ final class CommunityRepositoryProvider
 String _$communityRepositoryHash() =>
     r'7986e4e6d2a4317266b467814894b5d4d235f38d';
 
-/// 탐색 타일(R11). **빈 목록이 정상**이므로 빈 결과를 오류로 다루지 않는다 —
-/// 어드민이 아직 없고, 활성 언어의 타일이 없으면 다른 언어로 대체되지 않는다
-/// (가이드 §10·§15). 화면은 타일 영역이 비는 경우를 허용해야 한다.
+/// 상단 칩 구성(가이드 §2). **빈 목록이 정상**이므로 빈 결과를 오류로 다루지 않는다 —
+/// 구성이 없는 앱이면 비어 오고, 칩 영역이 비는 레이아웃을 화면이 허용해야 한다.
 ///
 /// 피드와 **분리된 provider**인 이유는 실패가 서로를 가리지 않게 하기 위해서다.
-/// 지금 서버는 커넥션 조회만 깨져 있어 타일은 정상으로 내려오는데, 하나로 묶었으면
-/// 화면 전체가 오류가 됐을 것이다.
+/// 칩 조회가 실패해도 피드는 그대로 뜨고, 그 반대도 같다.
 
-@ProviderFor(discoveryTiles)
-const discoveryTilesProvider = DiscoveryTilesProvider._();
+@ProviderFor(communityChips)
+const communityChipsProvider = CommunityChipsProvider._();
 
-/// 탐색 타일(R11). **빈 목록이 정상**이므로 빈 결과를 오류로 다루지 않는다 —
-/// 어드민이 아직 없고, 활성 언어의 타일이 없으면 다른 언어로 대체되지 않는다
-/// (가이드 §10·§15). 화면은 타일 영역이 비는 경우를 허용해야 한다.
+/// 상단 칩 구성(가이드 §2). **빈 목록이 정상**이므로 빈 결과를 오류로 다루지 않는다 —
+/// 구성이 없는 앱이면 비어 오고, 칩 영역이 비는 레이아웃을 화면이 허용해야 한다.
 ///
 /// 피드와 **분리된 provider**인 이유는 실패가 서로를 가리지 않게 하기 위해서다.
-/// 지금 서버는 커넥션 조회만 깨져 있어 타일은 정상으로 내려오는데, 하나로 묶었으면
-/// 화면 전체가 오류가 됐을 것이다.
+/// 칩 조회가 실패해도 피드는 그대로 뜨고, 그 반대도 같다.
 
-final class DiscoveryTilesProvider
+final class CommunityChipsProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<DiscoveryTile>>,
-          List<DiscoveryTile>,
-          FutureOr<List<DiscoveryTile>>
+          AsyncValue<List<CommunityChip>>,
+          List<CommunityChip>,
+          FutureOr<List<CommunityChip>>
         >
     with
-        $FutureModifier<List<DiscoveryTile>>,
-        $FutureProvider<List<DiscoveryTile>> {
-  /// 탐색 타일(R11). **빈 목록이 정상**이므로 빈 결과를 오류로 다루지 않는다 —
-  /// 어드민이 아직 없고, 활성 언어의 타일이 없으면 다른 언어로 대체되지 않는다
-  /// (가이드 §10·§15). 화면은 타일 영역이 비는 경우를 허용해야 한다.
+        $FutureModifier<List<CommunityChip>>,
+        $FutureProvider<List<CommunityChip>> {
+  /// 상단 칩 구성(가이드 §2). **빈 목록이 정상**이므로 빈 결과를 오류로 다루지 않는다 —
+  /// 구성이 없는 앱이면 비어 오고, 칩 영역이 비는 레이아웃을 화면이 허용해야 한다.
   ///
   /// 피드와 **분리된 provider**인 이유는 실패가 서로를 가리지 않게 하기 위해서다.
-  /// 지금 서버는 커넥션 조회만 깨져 있어 타일은 정상으로 내려오는데, 하나로 묶었으면
-  /// 화면 전체가 오류가 됐을 것이다.
-  const DiscoveryTilesProvider._()
+  /// 칩 조회가 실패해도 피드는 그대로 뜨고, 그 반대도 같다.
+  const CommunityChipsProvider._()
     : super(
         from: null,
         argument: null,
         retry: communityRetryPolicy,
-        name: r'discoveryTilesProvider',
+        name: r'communityChipsProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$discoveryTilesHash();
+  String debugGetCreateSourceHash() => _$communityChipsHash();
 
   @$internal
   @override
-  $FutureProviderElement<List<DiscoveryTile>> $createElement(
+  $FutureProviderElement<List<CommunityChip>> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<List<DiscoveryTile>> create(Ref ref) {
-    return discoveryTiles(ref);
+  FutureOr<List<CommunityChip>> create(Ref ref) {
+    return communityChips(ref);
   }
 }
 
-String _$discoveryTilesHash() => r'443a4e2fadca55fe3da92a5423fe16f7f36c03e9';
+String _$communityChipsHash() => r'4388a7e24151113c15385a8a47baab9e076ca5a1';

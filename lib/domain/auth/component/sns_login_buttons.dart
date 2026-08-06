@@ -47,7 +47,11 @@ class SnsLoginButtons extends StatelessWidget {
         _SnsButton(
           label: l10n.continueWithGoogle,
           // Google's multicolor mark is drawn as-is (no tint).
-          icon: SvgPicture.asset('asset/icon/sns_google.svg', width: 20, height: 20),
+          icon: SvgPicture.asset(
+            'asset/icon/sns_google.svg',
+            width: 20,
+            height: 20,
+          ),
           background: Colors.white,
           foreground: Colors.black87,
           side: BorderSide(color: theme.dividerColor),
@@ -122,9 +126,7 @@ class _SnsButton extends StatelessWidget {
         child: Row(
           children: <Widget>[
             icon,
-            Expanded(
-              child: Text(label, textAlign: TextAlign.center),
-            ),
+            Expanded(child: Text(label, textAlign: TextAlign.center)),
             const SizedBox(width: 20),
           ],
         ),

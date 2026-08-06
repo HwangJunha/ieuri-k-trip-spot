@@ -8,41 +8,41 @@ part of 'post_detail_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 글 상세(R13). [postId]별 패밀리 — id를 인자로 두면 codegen이 family를 만든다
+/// 글 상세. [postId]별 패밀리 — id를 인자로 두면 codegen이 family를 만든다
 /// (CLAUDE.md §5, provider를 복제하지 않는다).
 ///
-/// **`null`은 오류가 아니다.** 차단·숨김이면 서버가 오류 대신 null을 주므로(가이드 §6)
-/// 그대로 데이터로 올리고, 화면이 "삭제되었거나 볼 수 없는 글" 안내를 띄운다.
-/// `errors[]`를 기대하면 안 된다.
+/// **`null`은 오류가 아니다.** 차단·숨김·삭제면 서버가 오류 대신 null을 주므로
+/// (가이드 §6) 그대로 데이터로 올리고, 화면이 "삭제되었거나 볼 수 없는 글" 안내를
+/// 띄운다. `errors[]`를 기대하면 안 된다.
 ///
-/// 댓글은 여기서만 함께 받는다 — 목록에서 요청하면 20건짜리 피드에 댓글 쿼리가
-/// 20번 붙는다(가이드 §4).
+/// **댓글은 여기 없다** — 루트 쿼리가 되면서 `commentsControllerProvider`가 따로
+/// 받는다(가이드 §2). 덕분에 댓글 조회가 실패해도 글 본문은 그대로 뜬다.
 
 @ProviderFor(postDetail)
 const postDetailProvider = PostDetailFamily._();
 
-/// 글 상세(R13). [postId]별 패밀리 — id를 인자로 두면 codegen이 family를 만든다
+/// 글 상세. [postId]별 패밀리 — id를 인자로 두면 codegen이 family를 만든다
 /// (CLAUDE.md §5, provider를 복제하지 않는다).
 ///
-/// **`null`은 오류가 아니다.** 차단·숨김이면 서버가 오류 대신 null을 주므로(가이드 §6)
-/// 그대로 데이터로 올리고, 화면이 "삭제되었거나 볼 수 없는 글" 안내를 띄운다.
-/// `errors[]`를 기대하면 안 된다.
+/// **`null`은 오류가 아니다.** 차단·숨김·삭제면 서버가 오류 대신 null을 주므로
+/// (가이드 §6) 그대로 데이터로 올리고, 화면이 "삭제되었거나 볼 수 없는 글" 안내를
+/// 띄운다. `errors[]`를 기대하면 안 된다.
 ///
-/// 댓글은 여기서만 함께 받는다 — 목록에서 요청하면 20건짜리 피드에 댓글 쿼리가
-/// 20번 붙는다(가이드 §4).
+/// **댓글은 여기 없다** — 루트 쿼리가 되면서 `commentsControllerProvider`가 따로
+/// 받는다(가이드 §2). 덕분에 댓글 조회가 실패해도 글 본문은 그대로 뜬다.
 
 final class PostDetailProvider
     extends $FunctionalProvider<AsyncValue<Post?>, Post?, FutureOr<Post?>>
     with $FutureModifier<Post?>, $FutureProvider<Post?> {
-  /// 글 상세(R13). [postId]별 패밀리 — id를 인자로 두면 codegen이 family를 만든다
+  /// 글 상세. [postId]별 패밀리 — id를 인자로 두면 codegen이 family를 만든다
   /// (CLAUDE.md §5, provider를 복제하지 않는다).
   ///
-  /// **`null`은 오류가 아니다.** 차단·숨김이면 서버가 오류 대신 null을 주므로(가이드 §6)
-  /// 그대로 데이터로 올리고, 화면이 "삭제되었거나 볼 수 없는 글" 안내를 띄운다.
-  /// `errors[]`를 기대하면 안 된다.
+  /// **`null`은 오류가 아니다.** 차단·숨김·삭제면 서버가 오류 대신 null을 주므로
+  /// (가이드 §6) 그대로 데이터로 올리고, 화면이 "삭제되었거나 볼 수 없는 글" 안내를
+  /// 띄운다. `errors[]`를 기대하면 안 된다.
   ///
-  /// 댓글은 여기서만 함께 받는다 — 목록에서 요청하면 20건짜리 피드에 댓글 쿼리가
-  /// 20번 붙는다(가이드 §4).
+  /// **댓글은 여기 없다** — 루트 쿼리가 되면서 `commentsControllerProvider`가 따로
+  /// 받는다(가이드 §2). 덕분에 댓글 조회가 실패해도 글 본문은 그대로 뜬다.
   const PostDetailProvider._({
     required PostDetailFamily super.from,
     required String super.argument,
@@ -86,17 +86,17 @@ final class PostDetailProvider
   }
 }
 
-String _$postDetailHash() => r'ad1c345d5a12d1f7d916af0e49a7c561b732f949';
+String _$postDetailHash() => r'8ec7bfa0ec2c6190a76bb706fd9eed237392fd61';
 
-/// 글 상세(R13). [postId]별 패밀리 — id를 인자로 두면 codegen이 family를 만든다
+/// 글 상세. [postId]별 패밀리 — id를 인자로 두면 codegen이 family를 만든다
 /// (CLAUDE.md §5, provider를 복제하지 않는다).
 ///
-/// **`null`은 오류가 아니다.** 차단·숨김이면 서버가 오류 대신 null을 주므로(가이드 §6)
-/// 그대로 데이터로 올리고, 화면이 "삭제되었거나 볼 수 없는 글" 안내를 띄운다.
-/// `errors[]`를 기대하면 안 된다.
+/// **`null`은 오류가 아니다.** 차단·숨김·삭제면 서버가 오류 대신 null을 주므로
+/// (가이드 §6) 그대로 데이터로 올리고, 화면이 "삭제되었거나 볼 수 없는 글" 안내를
+/// 띄운다. `errors[]`를 기대하면 안 된다.
 ///
-/// 댓글은 여기서만 함께 받는다 — 목록에서 요청하면 20건짜리 피드에 댓글 쿼리가
-/// 20번 붙는다(가이드 §4).
+/// **댓글은 여기 없다** — 루트 쿼리가 되면서 `commentsControllerProvider`가 따로
+/// 받는다(가이드 §2). 덕분에 댓글 조회가 실패해도 글 본문은 그대로 뜬다.
 
 final class PostDetailFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Post?>, String> {
@@ -109,15 +109,15 @@ final class PostDetailFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// 글 상세(R13). [postId]별 패밀리 — id를 인자로 두면 codegen이 family를 만든다
+  /// 글 상세. [postId]별 패밀리 — id를 인자로 두면 codegen이 family를 만든다
   /// (CLAUDE.md §5, provider를 복제하지 않는다).
   ///
-  /// **`null`은 오류가 아니다.** 차단·숨김이면 서버가 오류 대신 null을 주므로(가이드 §6)
-  /// 그대로 데이터로 올리고, 화면이 "삭제되었거나 볼 수 없는 글" 안내를 띄운다.
-  /// `errors[]`를 기대하면 안 된다.
+  /// **`null`은 오류가 아니다.** 차단·숨김·삭제면 서버가 오류 대신 null을 주므로
+  /// (가이드 §6) 그대로 데이터로 올리고, 화면이 "삭제되었거나 볼 수 없는 글" 안내를
+  /// 띄운다. `errors[]`를 기대하면 안 된다.
   ///
-  /// 댓글은 여기서만 함께 받는다 — 목록에서 요청하면 20건짜리 피드에 댓글 쿼리가
-  /// 20번 붙는다(가이드 §4).
+  /// **댓글은 여기 없다** — 루트 쿼리가 되면서 `commentsControllerProvider`가 따로
+  /// 받는다(가이드 §2). 덕분에 댓글 조회가 실패해도 글 본문은 그대로 뜬다.
 
   PostDetailProvider call(String postId) =>
       PostDetailProvider._(argument: postId, from: this);
