@@ -125,6 +125,36 @@ void main() {
       expect(repo.lastCreateComment?.body, '좋은 글이네요');
       expect(find.text('Comment posted.'), findsOneWidget);
     });
+
+    // 기본 스낵바는 Scaffold 바닥에 붙는데 그 자리가 곧 댓글 입력줄이라, 안내가
+    // 입력창을 덮었다. 떠 있는 형태로 두고 입력줄 위로 올린다.
+    testWidgets('완료 안내가 댓글 입력창을 가리지 않는다', (WidgetTester tester) async {
+      await _pump(tester, FakeCommunityRepository(post: fakePost()));
+
+      await tester.enterText(find.byType(TextField), '좋은 글이네요');
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithIcon(IconButton, Icons.send));
+      await tester.pumpAndSettle();
+
+      final SnackBar bar = tester.widget<SnackBar>(find.byType(SnackBar));
+      expect(bar.behavior, SnackBarBehavior.floating);
+
+      // `find.byType(SnackBar)`는 화면 폭을 채우는 애니메이션 래퍼라 실제로 보이는
+      // 카드가 아니다 — 안내 문구를 감싼 Material로 눈에 보이는 사각형을 잰다.
+      final Rect card = tester.getRect(
+        find
+            .ancestor(
+              of: find.text('Comment posted.'),
+              matching: find.byType(Material),
+            )
+            .first,
+      );
+      // 카드 아래끝이 입력줄 윗변보다 위에 있어야 겹치지 않는다.
+      expect(
+        card.bottom,
+        lessThanOrEqualTo(tester.getRect(find.byType(TextField)).top),
+      );
+    });
   });
 
   group('댓글 ⋮ 메뉴', () {

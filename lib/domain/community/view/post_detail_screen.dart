@@ -378,6 +378,11 @@ class _CommentComposerBar extends ConsumerStatefulWidget {
 
 class _CommentComposerBarState extends ConsumerState<_CommentComposerBar> {
   final TextEditingController _controller = TextEditingController();
+
+  /// 입력줄 전체의 높이를 재기 위한 키. 안내 스낵바를 이 높이만큼 띄워 겹침을
+  /// 피한다([_toast]).
+  final GlobalKey _barKey = GlobalKey();
+
   bool _sending = false;
 
   @override
@@ -399,6 +404,7 @@ class _CommentComposerBarState extends ConsumerState<_CommentComposerBar> {
     final ThemeData theme = Theme.of(context);
     final Comment? replyTo = widget.replyTo;
     return Material(
+      key: _barKey,
       color: theme.colorScheme.surface,
       elevation: 2,
       child: SafeArea(
@@ -508,9 +514,26 @@ class _CommentComposerBarState extends ConsumerState<_CommentComposerBar> {
     }
   }
 
-  void _toast(String message) => ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(SnackBar(content: Text(message)));
+  /// 안내를 띄운다.
+  ///
+  /// **[SnackBarBehavior.floating]이어야 한다.** 기본값(fixed)은 Scaffold 바닥에
+  /// 붙는데, 이 화면은 바로 그 자리에 댓글 입력줄이 있어 스낵바가 입력창을 덮는다.
+  /// 떠 있는 형태로 두고 입력줄 높이만큼 띄워 둘이 겹치지 않게 한다.
+  void _toast(String message) {
+    final double barHeight = _barKey.currentContext?.size?.height ?? 0;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          // 입력줄 위로 올린다. 높이를 못 재면(레이아웃 전) 기본 여백으로 떨어진다.
+          bottom: barHeight + 12,
+        ),
+      ),
+    );
+  }
 }
 
 /// 볼 수 없는 글·조회 실패 안내. [onRetry]가 null이면 재시도 버튼을 두지 않는다 —
