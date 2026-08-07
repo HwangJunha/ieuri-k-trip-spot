@@ -16,7 +16,6 @@ import '../model/post_sort_order.dart';
 import '../model/target_category.dart';
 import '../provider/community_providers.dart';
 import '../provider/feed_providers.dart';
-import 'blocked_users_screen.dart';
 import 'hidden_posts_screen.dart';
 import 'post_composer_screen.dart';
 import 'post_detail_screen.dart';
@@ -47,18 +46,19 @@ class CommunityScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l10n.communityTitle),
         actions: <Widget>[
-          // 숨긴 글 목록은 차단 목록 **옆**에 둔다 — 둘 다 "내가 안 보이게 한 것"을
-          // 되돌리는 화면이라 같은 자리에 있어야 찾는다. 다만 축은 다르다:
-          // 차단은 사람, 숨김은 글 하나다(2차 가이드 §2).
+          // 숨긴 글만 남는다(SPEC-0011 R2) — 차단 목록 진입점은 설정으로 옮겼다.
+          //
+          // 원래 둘을 나란히 둔 근거는 "둘 다 내가 안 보이게 한 것을 되돌리는
+          // 화면이라 같은 자리에 있어야 찾는다"였다(2차 가이드 §2). 차단이
+          // 빠지면서 **그 근거는 깨졌다.** 스펙의 결정이므로 따르되, 남은 하나가
+          // 왜 여기 홀로 있는지를 나중에 되짚을 수 있게 적어 둔다.
+          //
+          // 차단 목록 화면 자체는 이 기능에 그대로 있다 — 옮기면 커뮤니티
+          // 리포지토리 의존이 `settings`로 끌려 들어간다(설계 §1).
           IconButton(
             icon: const Icon(Icons.visibility_off_outlined),
             tooltip: l10n.communityHiddenPostsAction,
             onPressed: () => context.pushNamed(HiddenPostsScreen.routeName),
-          ),
-          IconButton(
-            icon: const Icon(Icons.block),
-            tooltip: l10n.communityBlockedUsersAction,
-            onPressed: () => context.pushNamed(BlockedUsersScreen.routeName),
           ),
         ],
       ),

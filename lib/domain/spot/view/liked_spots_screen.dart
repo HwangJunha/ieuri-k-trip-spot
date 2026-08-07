@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../common/navigation/settings_routes.dart';
 import '../../../common/pagination/pagination_list_view.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/category_bar.dart';
@@ -24,7 +25,7 @@ import 'spot_detail_view.dart';
 class LikedSpotsScreen extends ConsumerWidget {
   const LikedSpotsScreen({super.key});
 
-  static String get routeName => 'liked';
+  static String get routeName => likedSpotsRouteName;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

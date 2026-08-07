@@ -6985,3 +6985,480 @@ class _CopyWithStubImpl$Query$Me$me<TRes>
     String? createdAt,
   }) => _res;
 }
+
+class Mutation$WithdrawMember {
+  Mutation$WithdrawMember({required this.withdrawMember});
+
+  factory Mutation$WithdrawMember.fromJson(Map<String, dynamic> json) {
+    final l$withdrawMember = json['withdrawMember'];
+    return Mutation$WithdrawMember(
+      withdrawMember: Mutation$WithdrawMember$withdrawMember.fromJson(
+        (l$withdrawMember as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final Mutation$WithdrawMember$withdrawMember withdrawMember;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$withdrawMember = withdrawMember;
+    _resultData['withdrawMember'] = l$withdrawMember.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$withdrawMember = withdrawMember;
+    return Object.hashAll([l$withdrawMember]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$WithdrawMember || runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$withdrawMember = withdrawMember;
+    final lOther$withdrawMember = other.withdrawMember;
+    if (l$withdrawMember != lOther$withdrawMember) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$WithdrawMember on Mutation$WithdrawMember {
+  CopyWith$Mutation$WithdrawMember<Mutation$WithdrawMember> get copyWith =>
+      CopyWith$Mutation$WithdrawMember(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$WithdrawMember<TRes> {
+  factory CopyWith$Mutation$WithdrawMember(
+    Mutation$WithdrawMember instance,
+    TRes Function(Mutation$WithdrawMember) then,
+  ) = _CopyWithImpl$Mutation$WithdrawMember;
+
+  factory CopyWith$Mutation$WithdrawMember.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$WithdrawMember;
+
+  TRes call({Mutation$WithdrawMember$withdrawMember? withdrawMember});
+  CopyWith$Mutation$WithdrawMember$withdrawMember<TRes> get withdrawMember;
+}
+
+class _CopyWithImpl$Mutation$WithdrawMember<TRes>
+    implements CopyWith$Mutation$WithdrawMember<TRes> {
+  _CopyWithImpl$Mutation$WithdrawMember(this._instance, this._then);
+
+  final Mutation$WithdrawMember _instance;
+
+  final TRes Function(Mutation$WithdrawMember) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? withdrawMember = _undefined}) => _then(
+    Mutation$WithdrawMember(
+      withdrawMember: withdrawMember == _undefined || withdrawMember == null
+          ? _instance.withdrawMember
+          : (withdrawMember as Mutation$WithdrawMember$withdrawMember),
+    ),
+  );
+
+  CopyWith$Mutation$WithdrawMember$withdrawMember<TRes> get withdrawMember {
+    final local$withdrawMember = _instance.withdrawMember;
+    return CopyWith$Mutation$WithdrawMember$withdrawMember(
+      local$withdrawMember,
+      (e) => call(withdrawMember: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Mutation$WithdrawMember<TRes>
+    implements CopyWith$Mutation$WithdrawMember<TRes> {
+  _CopyWithStubImpl$Mutation$WithdrawMember(this._res);
+
+  TRes _res;
+
+  call({Mutation$WithdrawMember$withdrawMember? withdrawMember}) => _res;
+
+  CopyWith$Mutation$WithdrawMember$withdrawMember<TRes> get withdrawMember =>
+      CopyWith$Mutation$WithdrawMember$withdrawMember.stub(_res);
+}
+
+const documentNodeMutationWithdrawMember = DocumentNode(
+  definitions: [
+    OperationDefinitionNode(
+      type: OperationType.mutation,
+      name: NameNode(value: 'WithdrawMember'),
+      variableDefinitions: [],
+      directives: [],
+      selectionSet: SelectionSetNode(
+        selections: [
+          FieldNode(
+            name: NameNode(value: 'withdrawMember'),
+            alias: null,
+            arguments: [],
+            directives: [],
+            selectionSet: SelectionSetNode(
+              selections: [
+                FieldNode(
+                  name: NameNode(value: 'success'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'userErrors'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'code'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'message'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'field'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+);
+
+class Mutation$WithdrawMember$withdrawMember {
+  Mutation$WithdrawMember$withdrawMember({
+    required this.success,
+    required this.userErrors,
+  });
+
+  factory Mutation$WithdrawMember$withdrawMember.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$success = json['success'];
+    final l$userErrors = json['userErrors'];
+    return Mutation$WithdrawMember$withdrawMember(
+      success: (l$success as bool),
+      userErrors: (l$userErrors as List<dynamic>)
+          .map(
+            (e) => Mutation$WithdrawMember$withdrawMember$userErrors.fromJson(
+              (e as Map<String, dynamic>),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  final bool success;
+
+  final List<Mutation$WithdrawMember$withdrawMember$userErrors> userErrors;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$success = success;
+    _resultData['success'] = l$success;
+    final l$userErrors = userErrors;
+    _resultData['userErrors'] = l$userErrors.map((e) => e.toJson()).toList();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$success = success;
+    final l$userErrors = userErrors;
+    return Object.hashAll([
+      l$success,
+      Object.hashAll(l$userErrors.map((v) => v)),
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$WithdrawMember$withdrawMember ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$success = success;
+    final lOther$success = other.success;
+    if (l$success != lOther$success) {
+      return false;
+    }
+    final l$userErrors = userErrors;
+    final lOther$userErrors = other.userErrors;
+    if (l$userErrors.length != lOther$userErrors.length) {
+      return false;
+    }
+    for (int i = 0; i < l$userErrors.length; i++) {
+      final l$userErrors$entry = l$userErrors[i];
+      final lOther$userErrors$entry = lOther$userErrors[i];
+      if (l$userErrors$entry != lOther$userErrors$entry) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$WithdrawMember$withdrawMember
+    on Mutation$WithdrawMember$withdrawMember {
+  CopyWith$Mutation$WithdrawMember$withdrawMember<
+    Mutation$WithdrawMember$withdrawMember
+  >
+  get copyWith =>
+      CopyWith$Mutation$WithdrawMember$withdrawMember(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$WithdrawMember$withdrawMember<TRes> {
+  factory CopyWith$Mutation$WithdrawMember$withdrawMember(
+    Mutation$WithdrawMember$withdrawMember instance,
+    TRes Function(Mutation$WithdrawMember$withdrawMember) then,
+  ) = _CopyWithImpl$Mutation$WithdrawMember$withdrawMember;
+
+  factory CopyWith$Mutation$WithdrawMember$withdrawMember.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$WithdrawMember$withdrawMember;
+
+  TRes call({
+    bool? success,
+    List<Mutation$WithdrawMember$withdrawMember$userErrors>? userErrors,
+  });
+  TRes userErrors(
+    Iterable<Mutation$WithdrawMember$withdrawMember$userErrors> Function(
+      Iterable<
+        CopyWith$Mutation$WithdrawMember$withdrawMember$userErrors<
+          Mutation$WithdrawMember$withdrawMember$userErrors
+        >
+      >,
+    )
+    _fn,
+  );
+}
+
+class _CopyWithImpl$Mutation$WithdrawMember$withdrawMember<TRes>
+    implements CopyWith$Mutation$WithdrawMember$withdrawMember<TRes> {
+  _CopyWithImpl$Mutation$WithdrawMember$withdrawMember(
+    this._instance,
+    this._then,
+  );
+
+  final Mutation$WithdrawMember$withdrawMember _instance;
+
+  final TRes Function(Mutation$WithdrawMember$withdrawMember) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? success = _undefined, Object? userErrors = _undefined}) =>
+      _then(
+        Mutation$WithdrawMember$withdrawMember(
+          success: success == _undefined || success == null
+              ? _instance.success
+              : (success as bool),
+          userErrors: userErrors == _undefined || userErrors == null
+              ? _instance.userErrors
+              : (userErrors
+                    as List<Mutation$WithdrawMember$withdrawMember$userErrors>),
+        ),
+      );
+
+  TRes userErrors(
+    Iterable<Mutation$WithdrawMember$withdrawMember$userErrors> Function(
+      Iterable<
+        CopyWith$Mutation$WithdrawMember$withdrawMember$userErrors<
+          Mutation$WithdrawMember$withdrawMember$userErrors
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    userErrors: _fn(
+      _instance.userErrors.map(
+        (e) => CopyWith$Mutation$WithdrawMember$withdrawMember$userErrors(
+          e,
+          (i) => i,
+        ),
+      ),
+    ).toList(),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$WithdrawMember$withdrawMember<TRes>
+    implements CopyWith$Mutation$WithdrawMember$withdrawMember<TRes> {
+  _CopyWithStubImpl$Mutation$WithdrawMember$withdrawMember(this._res);
+
+  TRes _res;
+
+  call({
+    bool? success,
+    List<Mutation$WithdrawMember$withdrawMember$userErrors>? userErrors,
+  }) => _res;
+
+  userErrors(_fn) => _res;
+}
+
+class Mutation$WithdrawMember$withdrawMember$userErrors {
+  Mutation$WithdrawMember$withdrawMember$userErrors({
+    required this.code,
+    required this.message,
+    this.field,
+  });
+
+  factory Mutation$WithdrawMember$withdrawMember$userErrors.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$code = json['code'];
+    final l$message = json['message'];
+    final l$field = json['field'];
+    return Mutation$WithdrawMember$withdrawMember$userErrors(
+      code: (l$code as String),
+      message: (l$message as String),
+      field: (l$field as String?),
+    );
+  }
+
+  final String code;
+
+  final String message;
+
+  final String? field;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$message = message;
+    _resultData['message'] = l$message;
+    final l$field = field;
+    _resultData['field'] = l$field;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$code = code;
+    final l$message = message;
+    final l$field = field;
+    return Object.hashAll([l$code, l$message, l$field]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$WithdrawMember$withdrawMember$userErrors ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$message = message;
+    final lOther$message = other.message;
+    if (l$message != lOther$message) {
+      return false;
+    }
+    final l$field = field;
+    final lOther$field = other.field;
+    if (l$field != lOther$field) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$WithdrawMember$withdrawMember$userErrors
+    on Mutation$WithdrawMember$withdrawMember$userErrors {
+  CopyWith$Mutation$WithdrawMember$withdrawMember$userErrors<
+    Mutation$WithdrawMember$withdrawMember$userErrors
+  >
+  get copyWith => CopyWith$Mutation$WithdrawMember$withdrawMember$userErrors(
+    this,
+    (i) => i,
+  );
+}
+
+abstract class CopyWith$Mutation$WithdrawMember$withdrawMember$userErrors<
+  TRes
+> {
+  factory CopyWith$Mutation$WithdrawMember$withdrawMember$userErrors(
+    Mutation$WithdrawMember$withdrawMember$userErrors instance,
+    TRes Function(Mutation$WithdrawMember$withdrawMember$userErrors) then,
+  ) = _CopyWithImpl$Mutation$WithdrawMember$withdrawMember$userErrors;
+
+  factory CopyWith$Mutation$WithdrawMember$withdrawMember$userErrors.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Mutation$WithdrawMember$withdrawMember$userErrors;
+
+  TRes call({String? code, String? message, String? field});
+}
+
+class _CopyWithImpl$Mutation$WithdrawMember$withdrawMember$userErrors<TRes>
+    implements
+        CopyWith$Mutation$WithdrawMember$withdrawMember$userErrors<TRes> {
+  _CopyWithImpl$Mutation$WithdrawMember$withdrawMember$userErrors(
+    this._instance,
+    this._then,
+  );
+
+  final Mutation$WithdrawMember$withdrawMember$userErrors _instance;
+
+  final TRes Function(Mutation$WithdrawMember$withdrawMember$userErrors) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? code = _undefined,
+    Object? message = _undefined,
+    Object? field = _undefined,
+  }) => _then(
+    Mutation$WithdrawMember$withdrawMember$userErrors(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      message: message == _undefined || message == null
+          ? _instance.message
+          : (message as String),
+      field: field == _undefined ? _instance.field : (field as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$WithdrawMember$withdrawMember$userErrors<TRes>
+    implements
+        CopyWith$Mutation$WithdrawMember$withdrawMember$userErrors<TRes> {
+  _CopyWithStubImpl$Mutation$WithdrawMember$withdrawMember$userErrors(
+    this._res,
+  );
+
+  TRes _res;
+
+  call({String? code, String? message, String? field}) => _res;
+}

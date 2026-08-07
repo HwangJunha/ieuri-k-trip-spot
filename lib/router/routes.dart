@@ -17,6 +17,10 @@ import '../domain/community/view/hidden_posts_screen.dart';
 import '../domain/community/view/post_composer_screen.dart';
 import '../domain/community/view/post_detail_screen.dart';
 import '../domain/onboarding/view/onboarding_screen.dart';
+import '../domain/settings/view/account_deletion_screen.dart';
+import '../domain/settings/view/my_posts_screen.dart';
+import '../domain/settings/view/preferences_screen.dart';
+import '../domain/settings/view/settings_screen.dart';
 import '../domain/spot/model/spot_category.dart';
 import '../domain/spot/view/discover_screen.dart';
 import '../domain/spot/view/home_screen.dart';
@@ -158,12 +162,42 @@ List<RouteBase> buildRoutes() => <RouteBase>[
     name: BlockedUsersScreen.routeName,
     builder: (_, _) => const BlockedUsersScreen(),
   ),
-  // 내가 숨긴 글 목록(2차 가이드 §2). 차단 목록과 같은 자리·같은 성격의 화면이라
-  // 나란히 둔다 — 다만 차단은 사람, 숨김은 글 하나가 대상이다.
+  // 내가 숨긴 글 목록(2차 가이드 §2).
+  //
+  // SPEC-0011 R2로 커뮤니티 앱바에서 **차단 목록만** 빠지고 숨긴 글은 남았다.
+  // SPEC-0010은 "둘 다 내가 안 보이게 한 것을 되돌리는 화면이라 같은 자리에 있어야
+  // 한다"는 근거로 둘을 묶어 놨는데, 차단이 설정으로 옮겨가면서 **그 근거가 깨졌다**.
+  // 스펙의 결정이므로 따르되, 나중에 "왜 하나만 남았나"를 되짚을 수 있게 남긴다.
   GoRoute(
     path: '/hidden-posts',
     name: HiddenPostsScreen.routeName,
     builder: (_, _) => const HiddenPostsScreen(),
+  ),
+  // 설정(SPEC-0011 R1). 하위 화면을 **자식 라우트로 중첩한다** — 뒤로 가기가 설정
+  // 홈을 거쳐 진입 직전 화면으로 돌아가야 한다(R1 세 번째 기준).
+  //
+  // 셸 밖의 최상위 라우트라 하단 탭을 덮는다(관광지 상세·글 상세와 같은 성격).
+  GoRoute(
+    path: '/settings',
+    name: SettingsScreen.routeName,
+    builder: (_, _) => const SettingsScreen(),
+    routes: <RouteBase>[
+      GoRoute(
+        path: 'my-posts',
+        name: MyPostsScreen.routeName,
+        builder: (_, _) => const MyPostsScreen(),
+      ),
+      GoRoute(
+        path: 'preferences',
+        name: PreferencesScreen.routeName,
+        builder: (_, _) => const PreferencesScreen(),
+      ),
+      GoRoute(
+        path: 'delete-account',
+        name: AccountDeletionScreen.routeName,
+        builder: (_, _) => const AccountDeletionScreen(),
+      ),
+    ],
   ),
   // The post-onboarding 5-tab shell. Each tab keeps its own navigation stack.
   StatefulShellRoute.indexedStack(

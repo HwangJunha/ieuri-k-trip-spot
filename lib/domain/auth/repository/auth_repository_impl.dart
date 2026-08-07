@@ -247,6 +247,19 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<void> withdrawMember() async {
+    // 로그아웃과 달리 실패를 삼키지 않는다(SPEC-0011 R16) — 서버에서 지워지지
+    // 않았는데 로컬만 정리하면 사용자가 계정이 사라졌다고 오해한다.
+    final Map<String, dynamic> data = await _mutate(
+      documentNodeMutationWithdrawMember,
+      const <String, dynamic>{},
+      'withdrawMember',
+    );
+    final payload = Mutation$WithdrawMember.fromJson(data).withdrawMember;
+    _check('withdrawMember', payload.success, payload.userErrors);
+  }
+
+  @override
   Future<void> requestPasswordReset({required String email}) async {
     final Map<String, dynamic> data = await _mutate(
       documentNodeMutationRequestPasswordReset,

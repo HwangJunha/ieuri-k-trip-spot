@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../common/widget/logout_button.dart';
+import '../../../common/widget/settings_button.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../event/component/happening_now_section.dart';
 import '../component/home_search_bar.dart';
@@ -42,7 +42,10 @@ class HomeScreen extends ConsumerWidget {
               context,
             ).showSnackBar(SnackBar(content: Text(l10n.comingSoon))),
           ),
-          const LogoutButton(),
+          // 설정 진입점(SPEC-0011 R1). 하단 탭 5개는 SPEC-0008에서 고정됐으므로
+          // 설정은 탭이 아니라 여기서 들어간다. 로그아웃은 설정 안으로 옮겨갔다
+          // (R15) — 그 자리를 이 아이콘이 대신한다.
+          const SettingsButton(),
         ],
       ),
       body: SafeArea(

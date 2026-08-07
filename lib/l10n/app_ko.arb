@@ -1011,5 +1011,358 @@
   "communityComposeSpotAction": "장소",
   "communityComposePhotosAction": "사진",
   "communityComposeTagsSheetTitle": "태그",
-  "communityComposeSheetDone": "완료"
+  "communityComposeSheetDone": "완료",
+  "settingsTitle": "설정",
+  "settingsTooltip": "설정",
+  "settingsSectionActivity": "활동",
+  "settingsSectionAccount": "계정",
+  "settingsSectionPreferences": "환경설정",
+  "settingsSectionLegal": "약관",
+  "settingsMyPosts": "내가 쓴 글",
+  "settingsLikedSpots": "찜한 장소",
+  "settingsEditProfile": "프로필 수정",
+  "settingsChangeEmail": "이메일 변경",
+  "settingsBlockedUsers": "차단한 사용자",
+  "settingsSearchRadius": "검색 반경",
+  "settingsLanguage": "언어",
+  "settingsTerms": "약관 동의 관리",
+  "settingsLogOut": "로그아웃",
+  "settingsDeleteAccount": "회원 탈퇴",
+  "preferencesTitle": "환경설정",
+  "preferencesRadiusSection": "검색 반경",
+  "preferencesLanguageSection": "언어",
+  "preferencesRadiusValue": "{km}km",
+  "preferencesRadiusHint": "0km로 두면 현재 위치만 검색합니다.",
+  "myPostsTitle": "내가 쓴 글",
+  "myPostsEmpty": "아직 작성한 글이 없습니다",
+  "myPostsWriteFirst": "첫 글 쓰기",
+  "deleteAccountTitle": "회원 탈퇴",
+  "deleteAccountHeadline": "되돌릴 수 없습니다",
+  "deleteAccountIntro": "탈퇴하면 다음이 영구히 삭제됩니다:",
+  "deleteAccountItemPosts": "작성한 글과 댓글",
+  "deleteAccountItemLikes": "찜한 장소",
+  "deleteAccountItemProfile": "프로필과 설정",
+  "deleteAccountCaution": "삭제된 데이터는 복구할 수 없습니다.",
+  "deleteAccountCancel": "취소",
+  "deleteAccountConfirm": "탈퇴하기",
+  "deleteAccountFailed": "탈퇴하지 못했습니다. 다시 시도해 주세요.",
+  "@spotDetailOverviewTitle": {},
+  "@spotDetailContactTitle": {},
+  "@spotDetailHomepageLabel": {},
+  "@spotDetailTelLabel": {},
+  "@spotDetailLikeAction": {},
+  "@spotDetailDislikeAction": {},
+  "@spotDetailLoading": {},
+  "@spotDetailNotFoundTitle": {},
+  "@spotDetailNotFoundBody": {},
+  "@spotDetailRateLimitedTitle": {},
+  "@spotDetailRateLimitedBody": {},
+  "@spotDetailUnavailableTitle": {},
+  "@spotDetailUnavailableBody": {},
+  "@spotDetailRetryButton": {},
+  "@spotDetailReactionFailed": {},
+  "@spotDetailLinkFailed": {},
+  "@spotDetailIntroTitle": {},
+  "@spotDetailIntroBusinessHours": {},
+  "@spotDetailIntroClosedDays": {},
+  "@spotDetailIntroFee": {},
+  "@spotDetailIntroParking": {},
+  "@spotDetailIntroPetAllowed": {},
+  "@spotDetailIntroCreditCard": {},
+  "@spotDetailIntroInquiryPhone": {},
+  "@spotDetailInfoTitle": {},
+  "@communityViewCountLabel": {
+    "description": "카드 하단 조회수의 접근성 라벨 — 화면에는 숫자만 그린다",
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "@communityCategoryAll": {
+    "description": "상단 칩 — 전체(선택 없음)"
+  },
+  "@communityCategoryTouristSpot": {
+    "description": "카테고리 TOURIST_SPOT 표시명"
+  },
+  "@communityCategoryCulturalFacility": {
+    "description": "카테고리 CULTURAL_FACILITY 표시명"
+  },
+  "@communityCategoryFestivalEvent": {
+    "description": "카테고리 FESTIVAL_EVENT 표시명"
+  },
+  "@communityCategoryTravelCourse": {
+    "description": "카테고리 TRAVEL_COURSE 표시명"
+  },
+  "@communityCategoryLeisureSports": {
+    "description": "카테고리 LEISURE_SPORTS 표시명"
+  },
+  "@communityCategoryLodging": {
+    "description": "카테고리 LODGING 표시명"
+  },
+  "@communityCategoryShopping": {
+    "description": "카테고리 SHOPPING 표시명"
+  },
+  "@communityCategoryRestaurant": {
+    "description": "카테고리 RESTAURANT 표시명"
+  },
+  "@communityCategoryTransport": {
+    "description": "카테고리 TRANSPORT 표시명"
+  },
+  "@communityEditedBadge": {
+    "description": "수정된 글 표시"
+  },
+  "@communityEditAction": {
+    "description": "⋮ 메뉴 — 글 수정"
+  },
+  "@communityEditDisabledHidden": {
+    "description": "숨김 글이라 수정 불가 안내"
+  },
+  "@communityEditTitle": {
+    "description": "글 수정 화면 제목"
+  },
+  "@communityEditDone": {
+    "description": "수정 완료 안내"
+  },
+  "@communityComposeCategoryLabel": {
+    "description": "컴포저 카테고리 섹션 라벨"
+  },
+  "@communityComposeTitleLabel": {
+    "description": "컴포저 제목 섹션 라벨"
+  },
+  "@communityComposeTitleHint": {
+    "description": "컴포저 제목 입력 힌트"
+  },
+  "@communityComposeBodyLabel": {
+    "description": "컴포저 본문 섹션 라벨"
+  },
+  "@communityComposeTagsLabel": {
+    "description": "컴포저 태그 섹션 라벨"
+  },
+  "@communityComposeTagHint": {
+    "description": "컴포저 태그 입력 힌트"
+  },
+  "@communityComposeTagInvalid": {
+    "description": "태그에 공백이 있을 때"
+  },
+  "@communityComposeTagLimit": {
+    "description": "태그 상한 안내"
+  },
+  "@communityComposeSpotOptional": {
+    "description": "장소 미선택 표시 — 선택 항목"
+  },
+  "@communityComposeSpotClear": {
+    "description": "선택한 장소 해제"
+  },
+  "@communityComposePhotosLabel": {
+    "description": "컴포저 사진 섹션 라벨"
+  },
+  "@communityComposePhotoAdd": {
+    "description": "사진 추가 버튼"
+  },
+  "@communityComposePhotoTooLarge": {
+    "description": "사진이 10MiB를 넘어 제외된 장 수",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "@communityComposeErrorTitleRequired": {
+    "description": "POST_TITLE_REQUIRED"
+  },
+  "@communityComposeErrorTitleLength": {
+    "description": "POST_TITLE_LENGTH_INVALID"
+  },
+  "@communityComposeErrorBodyRequired": {
+    "description": "POST_BODY_REQUIRED"
+  },
+  "@communityComposeErrorBodyLength": {
+    "description": "POST_BODY_LENGTH_INVALID"
+  },
+  "@communityComposeErrorInvalidTag": {
+    "description": "INVALID_TAG"
+  },
+  "@communityComposeErrorTooManyTags": {
+    "description": "TOO_MANY_TAGS"
+  },
+  "@communityComposeErrorPhotoNotUploaded": {
+    "description": "PHOTO_NOT_UPLOADED"
+  },
+  "@communityComposeErrorNotEditable": {
+    "description": "POST_NOT_EDITABLE"
+  },
+  "@communityCommentComposerHint": {
+    "description": "댓글 입력 힌트"
+  },
+  "@communityCommentSend": {
+    "description": "댓글 전송 버튼"
+  },
+  "@communityCommentDone": {
+    "description": "댓글 작성 완료"
+  },
+  "@communityCommentDeleteAction": {
+    "description": "댓글 삭제 메뉴"
+  },
+  "@communityCommentDeleteDone": {
+    "description": "댓글 삭제 완료"
+  },
+  "@communityCommentReportAction": {
+    "description": "댓글 신고 메뉴"
+  },
+  "@communityCommentsUnavailable": {
+    "description": "댓글 조회 실패"
+  },
+  "@communityCommentsLoadMore": {
+    "description": "댓글 더 보기"
+  },
+  "@communityBlockedUsersTitle": {
+    "description": "차단 목록 화면 제목"
+  },
+  "@communityBlockedUsersEmpty": {
+    "description": "차단 목록이 빌 때"
+  },
+  "@communityBlockedUsersNote": {
+    "description": "차단 목록 안내 — 나를 차단한 사람은 없다"
+  },
+  "@communityUnblockAction": {
+    "description": "차단 해제 버튼"
+  },
+  "@communityUnblockDone": {
+    "description": "차단 해제 완료"
+  },
+  "@communityBlockedUsersAction": {
+    "description": "오버플로 진입 — 차단 목록"
+  },
+  "@communityHidePostAction": {
+    "description": "⋮ 메뉴 — 이 글 숨기기(hidePost). 항상 노출, 내 글도 가능"
+  },
+  "@communityHidePostDone": {
+    "description": "숨김 성공 토스트 — 내 화면에서만 사라진다는 것을 밝힌다"
+  },
+  "@communityHiddenPostsAction": {
+    "description": "앱바 진입 — 숨긴 글 목록(차단 목록 옆)"
+  },
+  "@communityHiddenPostsTitle": {
+    "description": "숨긴 글 목록 화면 제목"
+  },
+  "@communityHiddenPostsEmpty": {
+    "description": "숨긴 글 목록이 빌 때"
+  },
+  "@communityHiddenPostsNote": {
+    "description": "숨김 목록 안내 — 차단·신고와 다르다는 것"
+  },
+  "@communityUnhideAction": {
+    "description": "숨김 해제 버튼"
+  },
+  "@communityUnhideDone": {
+    "description": "숨김 해제 성공 토스트"
+  },
+  "@communitySortLatest": {
+    "description": "피드 정렬 토글 — 최신순(기본)"
+  },
+  "@communitySortDistance": {
+    "description": "피드 정렬 토글 — 거리순. 장소 없는 글은 빠진다"
+  },
+  "@communityReplyAction": {
+    "description": "최상위 댓글에만 붙는 답글 달기 버튼 (답글에는 두지 않는다)"
+  },
+  "@communityReplyCancel": {
+    "description": "답글 대상을 해제하고 일반 댓글로 돌아가는 버튼"
+  },
+  "@communitySpotPostsTitle": {
+    "description": "장소 상세의 글 섹션 헤더"
+  },
+  "@communitySpotPickerTitle": {
+    "description": "컴포저 장소 선택 시트 제목"
+  },
+  "@communitySpotPickerFilterHint": {
+    "description": "장소 선택 시트의 결과 내 재검색 입력 힌트"
+  },
+  "@communitySpotPickerSourceNearby": {
+    "description": "장소 선택 시트의 출처 탭 — 주변 장소(기본)"
+  },
+  "@communitySpotPickerSourceLiked": {
+    "description": "장소 선택 시트의 출처 탭 — 내가 좋아요한 장소"
+  },
+  "@communitySpotPickerLikedEmpty": {
+    "description": "좋아요한 장소가 하나도 없는 상태 — 오류가 아니다"
+  },
+  "@communitySpotPickerLikedFailed": {
+    "description": "좋아요한 장소 조회 실패 상태"
+  },
+  "@communitySpotPickerLikedNoMatch": {
+    "description": "좋아요한 장소 탭에서 이름 필터 결과가 비었을 때"
+  },
+  "@communitySpotPickerEmpty": {
+    "description": "반경 안에 장소가 하나도 없는 상태 — 위치 실패와 구분된다"
+  },
+  "@communitySpotPickerNoMatch": {
+    "description": "필터 결과가 비었을 때"
+  },
+  "@communitySpotPickerLocationUnavailable": {
+    "description": "장소 선택 시트의 위치 실패 상태 — 빈 시트로 두지 않는다"
+  },
+  "@communitySpotPickerFailed": {
+    "description": "장소 선택 시트의 조회 실패 상태"
+  },
+  "@communityComposeCategoryUnset": {
+    "description": "컴포저 상단 인라인 카테고리 선택기 — 미선택 상태"
+  },
+  "@communityComposeTagsAction": {
+    "description": "컴포저 하단 액션 바의 태그 버튼"
+  },
+  "@communityComposeSpotAction": {
+    "description": "컴포저 하단 액션 바의 장소 버튼"
+  },
+  "@communityComposePhotosAction": {
+    "description": "컴포저 하단 액션 바의 사진 버튼"
+  },
+  "@communityComposeTagsSheetTitle": {
+    "description": "태그 입력 시트 제목"
+  },
+  "@communityComposeSheetDone": {
+    "description": "시트를 닫는 확인 버튼"
+  },
+  "@settingsTitle": {},
+  "@settingsTooltip": {},
+  "@settingsSectionActivity": {},
+  "@settingsSectionAccount": {},
+  "@settingsSectionPreferences": {},
+  "@settingsSectionLegal": {},
+  "@settingsMyPosts": {},
+  "@settingsLikedSpots": {},
+  "@settingsEditProfile": {},
+  "@settingsChangeEmail": {},
+  "@settingsBlockedUsers": {},
+  "@settingsSearchRadius": {},
+  "@settingsLanguage": {},
+  "@settingsTerms": {},
+  "@settingsLogOut": {},
+  "@settingsDeleteAccount": {},
+  "@preferencesTitle": {},
+  "@preferencesRadiusSection": {},
+  "@preferencesLanguageSection": {},
+  "@preferencesRadiusValue": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "@preferencesRadiusHint": {},
+  "@myPostsTitle": {},
+  "@myPostsEmpty": {},
+  "@myPostsWriteFirst": {},
+  "@deleteAccountTitle": {},
+  "@deleteAccountHeadline": {},
+  "@deleteAccountIntro": {},
+  "@deleteAccountItemPosts": {},
+  "@deleteAccountItemLikes": {},
+  "@deleteAccountItemProfile": {},
+  "@deleteAccountCaution": {},
+  "@deleteAccountCancel": {},
+  "@deleteAccountConfirm": {},
+  "@deleteAccountFailed": {}
 }

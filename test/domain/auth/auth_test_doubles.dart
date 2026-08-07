@@ -99,6 +99,13 @@ class FakeAuthRepository implements AuthRepository {
 
   final List<String> logoutCalls = <String>[];
 
+  /// `withdrawMember` 호출 횟수 — 확인 전에는 실행되지 않아야 한다(SPEC-0011 R16).
+  int withdrawCalls = 0;
+
+  /// 설정하면 `withdrawMember`가 이걸 던진다. 서버 실패 시 로컬 세션을 건드리지
+  /// 않는지 검증하는 데 쓴다(로그아웃과 반대다).
+  AuthFailure? withdrawFailure;
+
   @override
   Future<EmailVerificationHandle> registerEmailMember({
     required String email,
@@ -178,6 +185,14 @@ class FakeAuthRepository implements AuthRepository {
   @override
   Future<void> logout({required String refreshToken}) async =>
       logoutCalls.add(refreshToken);
+
+  @override
+  Future<void> withdrawMember() async {
+    withdrawCalls++;
+    // 탈퇴는 로그아웃과 달리 실패를 삼키지 않는다(SPEC-0011 R16) — 실패를 그대로
+    // 올려서 컨트롤러가 로컬을 건드리지 않는지 검증할 수 있게 한다.
+    if (withdrawFailure != null) throw withdrawFailure!;
+  }
 
   @override
   Future<void> requestPasswordReset({required String email}) async {}

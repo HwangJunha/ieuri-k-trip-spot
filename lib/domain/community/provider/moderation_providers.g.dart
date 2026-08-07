@@ -72,7 +72,7 @@ final class ModerationControllerProvider
 }
 
 String _$moderationControllerHash() =>
-    r'4c7cc4ae1babd166bb76a5a334e444e48af43d4e';
+    r'a4bbbb5b8efe28b94683fb315e36c28c54f258c0';
 
 /// 차단·신고·삭제·수정을 실행하는 컨트롤러.
 ///

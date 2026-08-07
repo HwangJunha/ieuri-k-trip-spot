@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../common/navigation/settings_routes.dart';
 import '../../../common/pagination/pagination_list_view.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/blocked_user.dart';
@@ -15,7 +16,7 @@ import '../provider/moderation_providers.dart';
 class BlockedUsersScreen extends ConsumerWidget {
   const BlockedUsersScreen({super.key});
 
-  static String get routeName => 'blocked-users';
+  static String get routeName => blockedUsersRouteName;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

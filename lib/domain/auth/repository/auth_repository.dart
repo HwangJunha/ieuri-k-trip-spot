@@ -90,4 +90,11 @@ abstract interface class AuthRepository {
     required String code,
     required String newPassword,
   });
+
+  /// 회원 탈퇴(SPEC-0011 R16). 인자가 없다 — 서버가 토큰의 주체를 지운다.
+  ///
+  /// **[logout]과 달리 실패를 삼키지 않는다.** 로그아웃은 실패해도 로컬을 정리하는
+  /// 것이 옳지만(R15), 탈퇴는 서버에서 지워지지 않았는데 로컬만 지우면 사용자가
+  /// 계정이 사라졌다고 오해한다. 실패는 `AuthFailure`로 올린다.
+  Future<void> withdrawMember();
 }

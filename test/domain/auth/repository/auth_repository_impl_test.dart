@@ -399,4 +399,47 @@ void main() {
     expect(result.needsVerification, isTrue);
     expect(result.verificationId, 'verify-9');
   });
+
+  // 회원 탈퇴(SPEC-0011 R16). 로그아웃과 달리 실패를 삼키지 않는 경로라, 실패가
+  // 실제로 올라오는지가 이 오퍼레이션에서 가장 중요하다 — 서버에서 안 지워졌는데
+  // 성공으로 읽히면 사용자는 계정이 사라진 줄 안다.
+  test('withdrawMember completes when success is true', () async {
+    final AuthRepositoryImpl repo = _repo(
+      _FakeLink(
+        data: <String, dynamic>{
+          'withdrawMember': <String, dynamic>{
+            'success': true,
+            'userErrors': <dynamic>[],
+          },
+        },
+      ),
+    );
+
+    await expectLater(repo.withdrawMember(), completes);
+  });
+
+  test('withdrawMember surfaces a userError as an AuthFailure', () async {
+    final AuthRepositoryImpl repo = _repo(
+      _FakeLink(
+        data: <String, dynamic>{
+          'withdrawMember': <String, dynamic>{
+            'success': false,
+            'userErrors': _oneUserError(code: 'UNAUTHORIZED'),
+          },
+        },
+      ),
+    );
+
+    await expectLater(repo.withdrawMember(), throwsA(isA<AuthFailure>()));
+  });
+
+  test('withdrawMember treats a populated errors array as failure', () async {
+    // GraphQL은 실패해도 HTTP 200을 준다 — `errors` 배열이 차 있으면 실패다
+    // (CLAUDE.md §4). 탈퇴에서 이걸 놓치면 성공으로 읽힌다.
+    final AuthRepositoryImpl repo = _repo(
+      _FakeLink(errors: <GraphQLError>[const GraphQLError(message: 'boom')]),
+    );
+
+    await expectLater(repo.withdrawMember(), throwsA(isA<AuthFailure>()));
+  });
 }

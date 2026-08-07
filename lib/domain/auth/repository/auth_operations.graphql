@@ -149,3 +149,15 @@ query Me {
     createdAt
   }
 }
+
+# 회원 탈퇴(SPEC-0011 R16). 인자가 없다 — 서버가 토큰의 주체를 지운다.
+mutation WithdrawMember {
+  withdrawMember {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
