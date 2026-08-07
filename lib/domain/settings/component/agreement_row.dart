@@ -47,10 +47,11 @@ class RequiredAgreementRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final String? agreedAt = status.agreedAt;
+    // 서버의 ISO 타임스탬프를 값으로 바꾼다 — 표시 형식은 l10n이 언어별로 정한다.
+    final DateTime? agreedAt = status.agreedAtDate;
 
     // 동의했으면 **일자만**, 안 했으면 서비스를 쓸 수 없다는 사실을 보여준다.
-    // 서버가 준 일자 문자열을 그대로 쓴다 — 형식을 클라이언트가 정하지 않는다.
+    // 형식은 l10n(`yMMMd`)이 언어별로 정한다 — 여기서 문자열로 박지 않는다.
     final Widget subtitle = Text(
       status.agreed && agreedAt != null
           ? l10n.termsAgreedOn(agreedAt)
@@ -116,8 +117,8 @@ class OptionalAgreementRow extends StatelessWidget {
         // 동의했으면 **일자**를, 아니면 무엇에 동의하는지 설명한다. 필수 항목과
         // 같은 규칙이다 — 이미 동의한 항목에서 사용자가 궁금한 것은 설명이 아니라
         // "언제 동의했나"다.
-        status.agreed && status.agreedAt != null
-            ? l10n.termsAgreedOn(status.agreedAt!)
+        status.agreed && status.agreedAtDate != null
+            ? l10n.termsAgreedOn(status.agreedAtDate!)
             : termsDescription(l10n, status.termsCode),
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,

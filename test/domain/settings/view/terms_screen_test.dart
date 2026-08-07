@@ -82,7 +82,8 @@ void main() {
       ),
     );
 
-    expect(find.text('Agreed 2026-01-12'), findsOneWidget);
+    // 형식은 l10n(yMMMd)이 로케일별로 정한다 — 원문을 그대로 쓰지 않는다.
+    expect(find.text('Agreed Jan 12, 2026'), findsOneWidget);
   });
 
   testWidgets('필수·선택 모두 토글할 수 있다 (R10)', (WidgetTester tester) async {
@@ -123,6 +124,29 @@ void main() {
 
     expect(find.text("Couldn't load your agreements."), findsOneWidget);
     expect(find.text('Try again'), findsOneWidget);
+  });
+
+  // 사용자가 본 증상: "2026-08-07T18:42:30.024670Z동의함" — ISO 원문이 그대로 나왔다.
+  testWidgets('동의 일자를 사람이 읽는 형식으로 보여준다 (R9)', (WidgetTester tester) async {
+    await _pump(
+      tester,
+      FakeSettingsRepository(
+        agreements: <AgreementStatus>[
+          agreement(
+            TermsCode.service,
+            required: true,
+            agreed: true,
+            agreedAt: '2026-08-07T18:42:30.024670Z',
+          ),
+        ],
+      ),
+    );
+
+    // 원문 타임스탬프가 화면에 남아 있으면 안 된다.
+    expect(find.textContaining('T18:42:30'), findsNothing);
+    expect(find.textContaining('024670Z'), findsNothing);
+    // 사람이 읽는 형식(en 로케일)으로 나온다.
+    expect(find.textContaining('2026'), findsOneWidget);
   });
 }
 
