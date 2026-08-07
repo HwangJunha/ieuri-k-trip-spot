@@ -106,7 +106,17 @@ class FakeSettingsRepository implements SettingsRepository {
     if (failUpdate || failCodes.contains(termsCode)) {
       throw SettingsFailure.userError('NOPE');
     }
-    return agreement(termsCode, agreed: agreed);
+    // **`required`를 보존한다.** 서버는 그 약관이 필수인지 여부를 그대로 되돌려
+    // 주는데, 여기서 기본값(false)으로 새로 만들면 필수 항목이 갱신 후 선택으로
+    // 둔갑해 `requiredSatisfied`가 늘 true가 된다 — 게이트 검증이 통째로 무의미해진다.
+    final AgreementStatus? existing = agreements
+        .where((AgreementStatus a) => a.termsCode == termsCode)
+        .firstOrNull;
+    return agreement(
+      termsCode,
+      agreed: agreed,
+      required: existing?.required ?? false,
+    );
   }
 
   @override

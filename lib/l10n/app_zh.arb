@@ -580,7 +580,6 @@
   "settingsSectionPreferences": "偏好设置",
   "settingsSectionLegal": "条款",
   "settingsMyPosts": "我的帖子",
-  "settingsLikedSpots": "收藏的景点",
   "settingsEditProfile": "编辑资料",
   "settingsChangeEmail": "更改邮箱",
   "settingsBlockedUsers": "已屏蔽用户",
@@ -648,5 +647,6 @@
   "profilePhotoUnavailable": "此设备无法选择照片。",
   "myPostsFailed": "无法加载帖子，请重试。",
   "myPostsRetry": "重试",
-  "discoverRadiusAtMax": "已是最大范围（100 公里）。"
+  "discoverRadiusAtMax": "已是最大范围（100 公里）。",
+  "termsRequiredNotice": "不同意则无法使用服务。"
 }

@@ -66,23 +66,14 @@ class SettingsScreen extends ConsumerWidget {
             ),
             const Divider(height: 1),
 
+            // **"찜한 장소"는 여기 없다.** 좋아요를 누른 장소는 하단 탭에 이미
+            // 있고, 같은 목적지를 두 곳에서 여는 것은 중복이다 — 목업이 제안했으나
+            // 스펙 인수 기준에 없었고 사용자가 빼기로 정했다.
             SettingsSectionHeader(l10n.settingsSectionActivity),
             SettingsTile(
               icon: Icons.article_outlined,
               title: l10n.settingsMyPosts,
               onTap: () => context.pushNamed(MyPostsScreen.routeName),
-            ),
-            // 찜한 장소는 **하단 탭(셸 브랜치)이라 push하면 안 된다.** 셸이 이미
-            // 그 라우트의 페이지 키를 잡고 있어서, 루트 내비게이터에 같은 것을
-            // 얹으면 `!keyReservation.contains(key)` assertion으로 앱이 빨간
-            // 화면이 된다(실제로 그렇게 터졌다).
-            //
-            // 탭으로 **전환**한다 — `go`는 스택을 쌓지 않고 셸의 해당 브랜치를
-            // 보여준다. 설정은 셸 밖이라 뒤로 가기가 아니라 탭 이동이 맞다.
-            SettingsTile(
-              icon: Icons.favorite_border,
-              title: l10n.settingsLikedSpots,
-              onTap: () => context.goNamed(likedSpotsRouteName),
             ),
 
             SettingsSectionHeader(l10n.settingsSectionAccount),

@@ -30,8 +30,9 @@ Future<void> _pump(WidgetTester tester, FakeSettingsRepository repo) async {
 }
 
 void main() {
-  testWidgets('필수 항목에는 토글이 붙지 않는다 (R9)', (WidgetTester tester) async {
-    // 철회 경로가 없어서 스위치를 두면 누를 수 있는 것처럼 보인다.
+  testWidgets('필수 항목에도 토글이 붙는다 (R9)', (WidgetTester tester) async {
+    // 동의를 거두는 것을 막지 않는다 — 누를 수 없는 스위치는 고장으로 읽힌다.
+    // 끄면 게이트(R11)가 걸려 서비스가 막히고, 그 사실은 부제로 미리 알린다.
     await _pump(
       tester,
       FakeSettingsRepository(
@@ -47,8 +48,23 @@ void main() {
     );
 
     expect(find.text('Terms of Service'), findsOneWidget);
-    expect(find.byType(Switch), findsNothing);
-    expect(find.byType(SwitchListTile), findsNothing);
+    expect(find.byType(SwitchListTile), findsOneWidget);
+  });
+
+  testWidgets('필수 항목을 끄면 서비스 이용 불가를 알린다 (R9)', (WidgetTester tester) async {
+    await _pump(
+      tester,
+      FakeSettingsRepository(
+        agreements: <AgreementStatus>[
+          agreement(TermsCode.service, required: true),
+        ],
+      ),
+    );
+
+    expect(
+      find.text("You can't use the service without agreeing."),
+      findsOneWidget,
+    );
   });
 
   testWidgets('필수 항목은 동의 일자를 보여준다 (R9)', (WidgetTester tester) async {
@@ -69,7 +85,7 @@ void main() {
     expect(find.text('Agreed 2026-01-12'), findsOneWidget);
   });
 
-  testWidgets('선택 항목만 토글할 수 있다 (R10)', (WidgetTester tester) async {
+  testWidgets('필수·선택 모두 토글할 수 있다 (R10)', (WidgetTester tester) async {
     await _pump(
       tester,
       FakeSettingsRepository(
@@ -81,7 +97,7 @@ void main() {
       ),
     );
 
-    expect(find.byType(SwitchListTile), findsNWidgets(2));
+    expect(find.byType(SwitchListTile), findsNWidgets(3));
     expect(find.text('Location Data'), findsOneWidget);
     expect(find.text('Marketing Notifications'), findsOneWidget);
   });

@@ -54,17 +54,25 @@ class AgreementsController extends _$AgreementsController {
     return ref.watch(settingsRepositoryProvider).fetchAgreements();
   }
 
-  /// 선택 약관 하나를 토글한다(R10). 필수 항목은 **철회 경로가 없어** 호출부가 부르지
-  /// 않지만, 여기서도 막아 라우터 게이트가 조용히 열리는 일이 없게 한다.
-  Future<void> toggleOptional(TermsCode code, bool agreed) async {
+  /// 약관 하나를 토글한다(R10).
+  ///
+  /// **필수 항목도 끌 수 있다.** 사용자가 동의를 거두는 것은 막을 일이 아니고,
+  /// 막으면 스위치가 있는데 안 움직이는 화면이 된다. 대신 끄는 순간 라우터 게이트
+  /// (R11)가 걸려 홈·탐색·커뮤니티가 막히고 동의 화면으로 보내진다 — "동의하지
+  /// 않으면 서비스를 이용할 수 없다"가 문구가 아니라 **동작으로** 드러난다.
+  /// 설정·로그아웃·탈퇴는 그때도 열려 있어 빠져나갈 길이 있다.
+  ///
+  /// 필수/선택 구분은 **서버가 정한다**(`AgreementStatus.required`) — 클라이언트가
+  /// 정책을 복제하지 않는다. 위치정보가 지금 선택인 것도 서버 판단이다.
+  Future<void> toggle(TermsCode code, bool agreed) async {
     final List<AgreementStatus>? current = state.value;
     if (current == null) return;
 
     final AgreementStatus? target = current
         .where((AgreementStatus a) => a.termsCode == code)
         .firstOrNull;
-    // 필수 항목과 모르는 항목은 토글 대상이 아니다.
-    if (target == null || target.required) return;
+    // 모르는 항목은 토글 대상이 아니다.
+    if (target == null) return;
 
     // 1) 낙관적 반영 — 사용자는 즉시 스위치가 움직이는 것을 본다.
     state = AsyncValue<List<AgreementStatus>>.data(

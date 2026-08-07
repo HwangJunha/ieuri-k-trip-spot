@@ -24,12 +24,24 @@ String termsDescription(AppLocalizations l10n, TermsCode code) =>
       TermsCode.marketing => l10n.termsMarketingDescription,
     };
 
-/// 필수 약관 한 줄(디자인 참조 §5). **토글이 없다** — 철회 경로가 없어서 스위치를
-/// 두면 누를 수 있는 것처럼 보인다. 대신 체크 표시와 동의 일자를 보여준다.
+/// 필수 약관 한 줄(디자인 참조 §5).
+///
+/// **토글이 있다.** 사용자가 동의를 거두는 것을 막지 않는다 — 막으면 스위치가
+/// 있는데 안 움직이는 화면이 되고, 그건 고장으로 읽힌다. 대신 끄면 라우터
+/// 게이트(R11)가 걸려 서비스를 쓸 수 없게 되고, 그 사실을 **끄기 전에** 부제로
+/// 알린다.
+///
+/// 부제는 동의했을 때 **동의 일자만** 보여준다 — 나머지 설명은 사용자가 이미 아는
+/// 것이고, 정작 필요한 정보(언제 동의했나)를 가린다.
 class RequiredAgreementRow extends StatelessWidget {
-  const RequiredAgreementRow({super.key, required this.status});
+  const RequiredAgreementRow({super.key, required this.status, this.onChanged});
 
   final AgreementStatus status;
+
+  /// null이면 **읽기 전용**이다. 동의 안내 화면(`RequiredTermsScreen`)이 그렇게
+  /// 쓴다 — 거기서는 아래의 "동의하고 계속" 하나가 유일한 동작이고, 끌 수 있는
+  /// 스위치를 같이 두면 무엇을 눌러야 하는지 흐려진다.
+  final ValueChanged<bool>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -37,23 +49,39 @@ class RequiredAgreementRow extends StatelessWidget {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final String? agreedAt = status.agreedAt;
 
-    return ListTile(
-      title: Text(
-        termsLabel(l10n, status.termsCode),
-        style: theme.textTheme.bodyLarge,
+    // 동의했으면 **일자만**, 안 했으면 서비스를 쓸 수 없다는 사실을 보여준다.
+    // 서버가 준 일자 문자열을 그대로 쓴다 — 형식을 클라이언트가 정하지 않는다.
+    final Widget subtitle = Text(
+      status.agreed && agreedAt != null
+          ? l10n.termsAgreedOn(agreedAt)
+          : l10n.termsRequiredNotice,
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: status.agreed
+            ? theme.colorScheme.onSurfaceVariant
+            : theme.colorScheme.error,
       ),
-      subtitle: Text(
-        // 서버가 준 문자열을 그대로 쓴다 — 형식을 클라이언트가 정하지 않는다.
-        agreedAt == null
-            ? l10n.termsAgreedRequired
-            : l10n.termsAgreedOn(agreedAt),
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
-      ),
-      trailing: status.agreed
-          ? Icon(Icons.check, color: theme.colorScheme.primary)
-          : null,
+    );
+    final Widget title = Text(
+      termsLabel(l10n, status.termsCode),
+      style: theme.textTheme.bodyLarge,
+    );
+
+    // 읽기 전용이면 스위치를 그리지 않는다 — 누를 수 없는 스위치는 고장으로 읽힌다.
+    if (onChanged == null) {
+      return ListTile(
+        title: title,
+        subtitle: subtitle,
+        trailing: status.agreed
+            ? Icon(Icons.check, color: theme.colorScheme.primary)
+            : null,
+      );
+    }
+
+    return SwitchListTile(
+      value: status.agreed,
+      onChanged: onChanged,
+      title: title,
+      subtitle: subtitle,
     );
   }
 }
@@ -85,7 +113,12 @@ class OptionalAgreementRow extends StatelessWidget {
         style: theme.textTheme.bodyLarge,
       ),
       subtitle: Text(
-        termsDescription(l10n, status.termsCode),
+        // 동의했으면 **일자**를, 아니면 무엇에 동의하는지 설명한다. 필수 항목과
+        // 같은 규칙이다 — 이미 동의한 항목에서 사용자가 궁금한 것은 설명이 아니라
+        // "언제 동의했나"다.
+        status.agreed && status.agreedAt != null
+            ? l10n.termsAgreedOn(status.agreedAt!)
+            : termsDescription(l10n, status.termsCode),
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
         ),

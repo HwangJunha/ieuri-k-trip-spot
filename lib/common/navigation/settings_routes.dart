@@ -17,7 +17,8 @@ const String settingsRouteName = 'settings';
 /// (SPEC-0011 R2).
 const String blockedUsersRouteName = 'blocked-users';
 
-/// 찜한 장소 목록. 하단 탭이자 설정의 진입점이다.
+/// 찜한 장소 목록. **하단 탭에서만 들어간다** — 설정의 활동 항목에서는 뺐다
+/// (좋아요를 누른 장소가 곧 이 목록이라 탭과 중복이었다).
 const String likedSpotsRouteName = 'liked';
 
 /// 내가 쓴 글(SPEC-0011 R3). 설정 홈 아래에 중첩된다.

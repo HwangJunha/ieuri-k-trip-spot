@@ -1019,7 +1019,6 @@
   "settingsSectionPreferences": "환경설정",
   "settingsSectionLegal": "약관",
   "settingsMyPosts": "내가 쓴 글",
-  "settingsLikedSpots": "찜한 장소",
   "settingsEditProfile": "프로필 수정",
   "settingsChangeEmail": "이메일 변경",
   "settingsBlockedUsers": "차단한 사용자",
@@ -1353,7 +1352,6 @@
   "@settingsSectionPreferences": {},
   "@settingsSectionLegal": {},
   "@settingsMyPosts": {},
-  "@settingsLikedSpots": {},
   "@settingsEditProfile": {},
   "@settingsChangeEmail": {},
   "@settingsBlockedUsers": {},
@@ -1471,5 +1469,9 @@
   "discoverRadiusAtMax": "이미 최대 반경(100km)입니다.",
   "@discoverRadiusAtMax": {
     "description": "반경이 이미 상한이라 더 넓힐 수 없을 때의 안내"
+  },
+  "termsRequiredNotice": "동의하지 않으면 서비스를 이용할 수 없습니다.",
+  "@termsRequiredNotice": {
+    "description": "필수 약관을 끄면 서비스를 쓸 수 없다는 안내"
   }
 }

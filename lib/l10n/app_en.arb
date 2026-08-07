@@ -852,8 +852,6 @@
   "@settingsSectionLegal": {},
   "settingsMyPosts": "My Posts",
   "@settingsMyPosts": {},
-  "settingsLikedSpots": "Liked Spots",
-  "@settingsLikedSpots": {},
   "settingsEditProfile": "Edit Profile",
   "@settingsEditProfile": {},
   "settingsChangeEmail": "Change Email",
@@ -1009,5 +1007,6 @@
   "@myPostsFailed": {},
   "myPostsRetry": "Retry",
   "@myPostsRetry": {},
-  "discoverRadiusAtMax": "You're already at the maximum radius (100 km)."
+  "discoverRadiusAtMax": "You're already at the maximum radius (100 km).",
+  "termsRequiredNotice": "You can't use the service without agreeing."
 }

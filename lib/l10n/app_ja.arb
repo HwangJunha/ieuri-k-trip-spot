@@ -580,7 +580,6 @@
   "settingsSectionPreferences": "環境設定",
   "settingsSectionLegal": "規約",
   "settingsMyPosts": "自分の投稿",
-  "settingsLikedSpots": "お気に入りスポット",
   "settingsEditProfile": "プロフィール編集",
   "settingsChangeEmail": "メールアドレス変更",
   "settingsBlockedUsers": "ブロックしたユーザー",
@@ -648,5 +647,6 @@
   "profilePhotoUnavailable": "この端末では写真を選択できません。",
   "myPostsFailed": "投稿を読み込めませんでした。もう一度お試しください。",
   "myPostsRetry": "再試行",
-  "discoverRadiusAtMax": "すでに最大範囲（100km）です。"
+  "discoverRadiusAtMax": "すでに最大範囲（100km）です。",
+  "termsRequiredNotice": "同意しない場合、サービスをご利用いただけません。"
 }

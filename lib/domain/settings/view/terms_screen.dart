@@ -50,7 +50,11 @@ class TermsScreen extends ConsumerWidget {
               if (items.requiredItems.isNotEmpty) ...<Widget>[
                 SettingsSectionHeader(l10n.termsSectionRequired),
                 for (final AgreementStatus status in items.requiredItems)
-                  RequiredAgreementRow(status: status),
+                  RequiredAgreementRow(
+                    status: status,
+                    onChanged: (bool agreed) =>
+                        _toggle(context, ref, status.termsCode, agreed),
+                  ),
               ],
               if (items.optionalItems.isNotEmpty) ...<Widget>[
                 SettingsSectionHeader(l10n.termsSectionOptional),
@@ -83,7 +87,7 @@ class TermsScreen extends ConsumerWidget {
     try {
       await ref
           .read(agreementsControllerProvider.notifier)
-          .toggleOptional(code, agreed);
+          .toggle(code, agreed);
     } on Object {
       messenger.showSnackBar(SnackBar(content: Text(failedMessage)));
     }
