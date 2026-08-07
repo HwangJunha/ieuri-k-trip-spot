@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/relative_time.dart';
+import 'package:ieuri_k_trip_spot/common/model/relative_time.dart';
 
 /// 버킷 경계만 검증한다. 표시 문자열은 위젯 계층(l10n)의 몫이라 여기서 다루지 않는다.
 void main() {

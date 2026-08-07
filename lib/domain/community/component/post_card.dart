@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
-import '../model/post.dart';
-import '../model/post_author.dart';
+import '../../../common/model/post.dart';
+import '../../../common/model/post_author.dart';
 import 'community_labels.dart';
 import 'post_photo.dart';
 

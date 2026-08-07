@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/community_chip.dart';
-import '../model/target_category.dart';
+import '../../../common/model/target_category.dart';
 import 'community_labels.dart';
 
 /// 상단 카테고리 줄(당근 동네생활의 상단 진입 줄을 따른다).

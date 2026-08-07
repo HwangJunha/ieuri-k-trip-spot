@@ -2,52 +2,11 @@
 # `schema/schema.introspection.json` 스냅샷에서 손으로 추린 안정 빌드 입력이며,
 # gitignore된 스냅샷을 codegen이 직접 읽지 않는다(CLAUDE.md §13).
 
-# 커뮤니티가 쓰는 카테고리는 `SpotCategory`와 값이 같지만 **다른 타입이다** —
-# 글의 카테고리는 커뮤니티가 소유하고 장소의 카테고리는 관광 도메인이 소유한다.
-# 값이 같다고 한 타입으로 합치면 한쪽 도메인의 변경이 다른 쪽을 끌고 간다.
-enum TargetCategory {
-  TOURIST_SPOT
-  CULTURAL_FACILITY
-  FESTIVAL_EVENT
-  TRAVEL_COURSE
-  LEISURE_SPORTS
-  LODGING
-  SHOPPING
-  RESTAURANT
-  TRANSPORT
-}
-
-type PostAuthor {
-  id: ID!
-  nickname: String!
-  profileImageUrl: String
-}
-
-# 글에 붙은 장소. **null일 수 있다** — 장소 없는 글이 허용된다(가이드 §5).
-# 제목·썸네일은 `Accept-Language`를 따른다(가이드 §9).
-type PostSpot {
-  id: ID!
-  title: String!
-  thumbnailImageUrl: String!
-  category: TargetCategory
-}
-
-# 댓글은 **깊이 2단계**다(2차 가이드 §1). `comments(postId:)`는 최상위만 주고
-# 답글은 각 댓글의 `replies`로 온다 — 요청하지 않으면 조회되지 않는다.
-#
-# `parentCommentId`가 null이면 최상위, 있으면 답글이다(들여쓰기 판정에 쓴다).
-# `replies`에는 페이지네이션이 없고, 답글의 `replies`는 항상 빈 목록이다(3단계가
-# 없다) — 그래서 오퍼레이션이 한 단계만 내려가 요청한다.
-type Comment {
-  id: ID!
-  body: String!
-  author: PostAuthor!
-  ownedByViewer: Boolean!
-  hidden: Boolean!
-  createdAt: String!
-  parentCommentId: ID
-  replies: [Comment!]!
-}
+# `TargetCategory`·`PostAuthor`·`PostSpot`·`Comment`·`Post`·`PostEdge`·`PostConnection`은
+# **`common/network/shared_schema.graphql`로 옮겼다** — 설정의 "내가 쓴 글"(SPEC-0011 R3)이
+# 같은 타입을 쓰게 되면서, 이 파일에 두면 설정이 커뮤니티의 생성 파일을 import하게 되어
+# 기능 간 의존이 생긴다(CLAUDE.md §3·§4). codegen은 조각을 한 네임스페이스로 합치므로
+# 여기서 참조만 해도 그대로 해석된다.
 
 type CommentEdge {
   cursor: String!
@@ -56,38 +15,6 @@ type CommentEdge {
 
 type CommentConnection {
   edges: [CommentEdge!]!
-  pageInfo: PageInfo!
-}
-
-type Post {
-  id: ID!
-  title: String!
-  body: String!
-  tags: [String!]!
-  category: TargetCategory!
-  spot: PostSpot
-  author: PostAuthor!
-  photoKeys: [String!]!
-  likeCount: Int!
-  commentCount: Int!
-  # 조회수. 서버가 라이브로 채워 준다(예: 글 5 → 330). 카드 하단에 댓글·좋아요와
-  # 나란히 그린다.
-  viewCount: Int!
-  likedByViewer: Boolean!
-  ownedByViewer: Boolean!
-  hidden: Boolean!
-  edited: Boolean!
-  createdAt: String!
-  commentPreview: [Comment!]!
-}
-
-type PostEdge {
-  cursor: String!
-  node: Post!
-}
-
-type PostConnection {
-  edges: [PostEdge!]!
   pageInfo: PageInfo!
 }
 

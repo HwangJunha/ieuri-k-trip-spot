@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
-import '../model/terms_code.dart';
+import '../../../common/model/terms_code.dart';
 
 /// The consent items shown in the sign-up form. `null` [termsCode] is the
 /// age-verification item (maps to `ageVerified`, not an agreement).

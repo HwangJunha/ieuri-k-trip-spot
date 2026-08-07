@@ -15,7 +15,7 @@ import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_draft.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_image_upload.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/target_category.dart';
+import 'package:ieuri_k_trip_spot/common/model/target_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/photo_picker_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/community/view/post_composer_screen.dart';

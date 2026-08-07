@@ -1,0 +1,53 @@
+# SPEC-0011 약관 관리·필수 약관 게이트가 쓰는 서버 스키마 조각(committed codegen 입력).
+# `schema/schema.introspection.json` 스냅샷(2026-08-08 갱신)에서 손으로 추린 안정 빌드
+# 입력이며, gitignore된 스냅샷을 codegen이 직접 읽지 않는다(CLAUDE.md §13).
+#
+# `TermsCode`와 `UserError`는 **여기서 다시 선언하지 않는다** — auth 조각이 이미
+# 선언했고 codegen이 모든 조각을 한 이름공간에 합치므로 중복 정의가 되면 빌드가 깨진다.
+
+# 약관 하나의 동의 상태. `agreedAt`은 미동의면 null이고, 형식은 서버가 정하는
+# 문자열이라 파싱하지 않고 표시용으로만 쓴다.
+type AgreementStatus {
+  termsCode: TermsCode!
+  required: Boolean!
+  agreed: Boolean!
+  agreedAt: String
+  version: String!
+}
+
+input UpdateAgreementInput {
+  termsCode: TermsCode!
+  agreed: Boolean!
+}
+
+# 갱신된 항목 하나만 돌려준다. 실패하면 `agreement`가 null일 수 있어 호출부가
+# 낙관적 갱신을 되돌린다.
+type UpdateAgreementPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  agreement: AgreementStatus
+}
+
+input AgreeToRequiredTermsInput {
+  termsCodes: [TermsCode!]!
+}
+
+# 동의 후 **전체 상태**를 돌려준다 — 게이트가 재조회 없이 풀리는 근거다(R12 첫 기준).
+type AgreeToRequiredTermsPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  agreements: [AgreementStatus!]!
+}
+
+# Query·Mutation은 auth 조각이 선언한 것을 **확장**한다(spot·community 조각과 같은
+# 규약) — 다시 선언하면 앞선 조각의 필드가 사라져 다른 기능의 codegen이 깨진다.
+extend type Query {
+  agreements: [AgreementStatus!]!
+}
+
+extend type Mutation {
+  updateAgreement(input: UpdateAgreementInput!): UpdateAgreementPayload!
+  agreeToRequiredTerms(
+    input: AgreeToRequiredTermsInput!
+  ): AgreeToRequiredTermsPayload!
+}

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/blocked_user.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/post_author.dart';
+import 'package:ieuri_k_trip_spot/common/model/post_author.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/community/view/blocked_users_screen.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';

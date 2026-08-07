@@ -9,7 +9,7 @@ import '../component/auth_text_field.dart';
 import '../model/password_policy.dart';
 import '../model/sns_credential.dart';
 import '../model/sns_registration_result.dart';
-import '../model/terms_code.dart';
+import '../../../common/model/terms_code.dart';
 import '../provider/auth_controller.dart';
 import 'email_verification_screen.dart';
 import 'login_screen.dart';

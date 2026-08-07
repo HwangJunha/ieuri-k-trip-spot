@@ -10,7 +10,7 @@ import '../model/email_verification_handle.dart';
 import '../model/me.dart';
 import '../model/sns_provider.dart';
 import '../model/sns_registration_result.dart';
-import '../model/terms_code.dart';
+import '../../../common/model/terms_code.dart';
 import 'auth_operations.graphql.dart';
 import 'auth_repository.dart';
 import 'auth_schema.graphql.dart';

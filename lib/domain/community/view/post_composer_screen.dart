@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../common/navigation/auth_route.dart';
+import '../../../common/navigation/settings_routes.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/community_labels.dart';
 import '../component/post_photo.dart';
@@ -12,9 +13,9 @@ import '../component/spot_picker_sheet.dart';
 import '../model/community_chip.dart';
 import '../model/composer_photo.dart';
 import '../model/nearby_spot.dart';
-import '../model/post.dart';
+import '../../../common/model/post.dart';
 import '../model/post_draft.dart';
-import '../model/target_category.dart';
+import '../../../common/model/target_category.dart';
 import '../provider/community_providers.dart';
 import '../provider/moderation_providers.dart';
 import '../provider/photo_picker_providers.dart';
@@ -64,7 +65,7 @@ class PostComposerScreen extends ConsumerStatefulWidget {
     this.editPostId,
   });
 
-  static String get routeName => 'post-composer';
+  static String get routeName => postComposerRouteName;
 
   /// 장소 상세에서 진입하면 장소가 이미 정해져 있다. 커뮤니티 탭에서 열면 null이고
   /// **그래도 등록할 수 있다**(가이드 §5).

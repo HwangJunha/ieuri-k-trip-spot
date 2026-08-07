@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../common/pagination/pagination_list_view.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/community_labels.dart';
-import '../model/post.dart';
+import '../../../common/model/post.dart';
 import '../provider/hidden_posts_providers.dart';
 import '../provider/moderation_providers.dart';
 

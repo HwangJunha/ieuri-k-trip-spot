@@ -15,45 +15,44 @@
 
 ## 0. 서버 계약 상태 — 읽고 시작할 것
 
-**이 스펙이 요구하는 서버 오퍼레이션 대부분이 아직 없다.** 2026-08-07 07:08 라이브
-introspection(`localhost:8888/graphql`) 기준이며, 사용자가 "서버는 아직 작업 진행중"이라고
-확인했다.
+**이메일 변경(R7·R8)을 뺀 나머지 계약이 모두 들어왔다.** 2026-08-08 01:52 라이브
+introspection(`localhost:8888/graphql`) 기준이다.
 
 | 스펙 요구 | 오퍼레이션 | 라이브 스키마 |
 |---|---|---|
-| R11·R12 약관 게이트 | `agreements`, `agreeToRequiredTerms` | **없음** |
-| R3 내가 쓴 글 | `myPosts` | **없음** |
-| R5 닉네임 변경 | — | **없음** |
-| R6 프로필 이미지 | 3단계 업로드·`removeProfileImage` | **없음** |
-| R7·R8 이메일 변경 | `confirmEmailChange` | **없음** |
-| R9·R10 약관 토글 | — | **없음** |
+| R3 내가 쓴 글 | `myPosts(first, after): PostConnection!` | ✅ 있음 |
+| R5 닉네임 변경 | `changeNickname` | ✅ 있음 |
+| R6 프로필 이미지 | `createProfileImageUploadUrl` → `confirmProfileImageUpload`, `removeProfileImage` | ✅ 있음 |
+| R9·R10 약관 토글 | `agreements`, `updateAgreement` | ✅ 있음 |
+| R11·R12 약관 게이트 | `agreements`, `agreeToRequiredTerms` | ✅ 있음 |
 | R15 로그아웃 | `logout` | ✅ 있음 |
 | R16 탈퇴 | `withdrawMember` | ✅ 있음 |
+| **R7·R8 이메일 변경** | `requestEmailChange`/`confirmEmailChange` | **없음 — SPEC-0012 선행** |
 
-`TermsCode` enum(`SERVICE`/`PRIVACY`/`LOCATION`/`MARKETING`)과 `AgreementInput`은 존재하지만
-**가입 시점 입력용**이고 조회·수정 경로가 없다. `MemberDetail`에도 약관 동의 상태 필드가 없다.
+**R7·R8은 SPEC-0012가 서버에서 끝나야 진행할 수 있다.** 사용자가 확인해 준 의존 관계다.
+스키마에 이메일 변경 경로가 없고, 기존 `verifyEmail`은 **가입 검증 전용**이라 돌려 쓰면 안
+된다 — 같은 뮤테이션에 두 의미를 얹으면 가입 흐름의 상태 기계가 이메일 변경에 끌려간다.
+SPEC-0012가 끝난 뒤 이 문서 §4를 그대로 구현하면 된다.
 
-**따라서 UI/UX를 먼저 만들고 서버 계약이 붙으면 연결한다.** 이 문서는 그 UI의 기준이다.
-계약이 붙는 시점에 필드 이름이 여기 적힌 가정과 다를 수 있으므로, repository를 쓸 때
-**스냅샷을 다시 확인한다**(CLAUDE.md §13).
+`AgreementStatus`는 `termsCode`·`required`·`agreed`·`agreedAt`·`version`을 준다 — 필수/선택
+구분과 동의 일자가 서버에서 오므로 클라이언트가 정하지 않는다.
 
-### 이번 작업에서 구현된 것 / 안 된 것
+### 구현 상태
 
 | 요구 | 상태 |
 |---|---|
 | R1 설정 진입점·라우팅 | **구현** — 홈 우상단, `/settings` 아래 중첩 |
 | R2 차단 목록 진입점 이동 | **구현** — 커뮤니티에서 제거, 설정에 추가 |
+| R3 내가 쓴 글 | **구현** — `myPosts` 커서 페이징 |
+| R4·R5·R6 프로필 수정 | **구현** — 닉네임·이미지 3단계·제거 |
+| R9·R10 약관 관리 | **구현** — 필수 읽기 전용, 선택만 낙관적 토글 |
+| R11·R12 필수 약관 게이트 | **구현** — 기존 세션 게이트와 같은 redirect에서 판정 |
 | R13 반경 저장·복원 | **구현** — `AppPreferences` + `SearchRadiusController` |
 | R14 언어 선택 UI | **구현** — 기존 `LocaleController`에 UI만 연결 |
 | R15 로그아웃 위치 이동 | **구현** — 기존 로직 그대로, 설정으로 이동 |
-| R16 탈퇴 | **구현** — `withdrawMember` 오퍼레이션 추가 |
+| R16 탈퇴 | **구현** — `withdrawMember` |
 | R19 연령 확인 게이트 | **이미 충족** — `AgreementItem.age`가 `required: true`라 `requiredSatisfied`에 포함됨. 스펙의 "확인 필요"는 확인 결과 보정 불필요 |
-| R3 내가 쓴 글 | **빈 상태만** — `myPosts` 없음 |
-| R4~R8 프로필·이메일 | **미구현** — 계약 없음 |
-| R9~R12 약관·게이트 | **미구현** — 계약 없음 |
-
-R11·R12 약관 게이트를 계약 없이 만들면 **항상 통과하거나 항상 막는 게이트**가 되어
-라우터에 위험만 남는다. §10에 설계만 적어 두고 구현하지 않았다.
+| **R7·R8 이메일 변경** | **미구현 — SPEC-0012 선행 필요** |
 
 ---
 
@@ -151,9 +150,17 @@ R11·R12 약관 게이트를 계약 없이 만들면 **항상 통과하거나 �
 
 ---
 
-## 4. 이메일 변경 — 2단계 (R7·R8)
+## 4. 이메일 변경 — 2단계 (R7·R8) · **보류: SPEC-0012 선행**
 
 > Stitch 화면: `screens/dbd1f6c981574e7cb8e95e238178af57` (입력), `screens/c2561988c97749898ace403d390c70eb` (검증)
+
+**아직 구현하지 않는다.** 서버에 이메일 변경 경로가 없고, 이는 **SPEC-0012가 끝나야 열린다**
+(사용자 확인). 아래 설계는 그때 그대로 쓰기 위한 것이며, 착수 전에 **스냅샷을 다시 확인해**
+실제 뮤테이션 이름과 `failureReason` 값이 여기 적힌 가정과 맞는지 대조한다(CLAUDE.md §13).
+
+기존 `verifyEmail`을 돌려 쓰지 않는다 — **가입 검증 전용**이라 한 뮤테이션에 두 의미를
+얹으면 가입 흐름의 상태 기계가 이메일 변경에 끌려간다. 설정 화면의 "Change Email" 진입점도
+목적지가 생길 때까지 두지 않는다(비활성 진입점보다 없는 편이 낫다).
 
 ```
 1) Change Email                    2) Verify Email
@@ -362,6 +369,28 @@ R11·R12 약관 게이트를 계약 없이 만들면 **항상 통과하거나 �
 동의 안내 화면 자체는 Stitch 목업이 없다. §5의 약관 화면과 같은 컴포넌트를 쓰되 필수 항목만
 보여주고 "동의하고 계속" 버튼을 두는 형태로 만든다.
 
+### 구현하며 정한 것 (설계와 다른 지점)
+
+**1. 조회 실패는 게이트를 연다(fail-open).** 서버가 잠깐 죽으면 미동의 사용자가 잠시 홈에
+닿는다. 반대로 막으면 **동의 화면의 동의 버튼도 같은 실패를 맞아** 사용자가 앱에 갇힌다 —
+빠져나갈 길이 없는 쪽이 더 나쁘다고 판단했다. 서버가 각 뮤테이션에서 동의를 다시 검사하므로
+게이트가 새도 실제 동의가 필요한 동작은 막힌다. **정책 보장을 가용성과 맞바꾼 것이라
+확인이 필요하다.**
+
+**2. 동의 화면은 `/required-terms` 최상위 라우트다.** 설계 §12에는 이 화면의 라우트가 아예
+없었다. 설정 아래에 중첩하면 게이트가 로그인 직후에도 뜰 수 있어 뒤로 가기가 게이트에 다시
+막히는 화면으로 떨어진다.
+
+**3. 목적지 보관은 provider가 아니라 라우터 지역 상태다.** 리다이렉트는 **위젯 트리가
+빌드되는 중에** 돌기 때문에, provider의 state를 여기서 쓰면 Riverpod이
+`Tried to modify a provider while the widget tree was building`으로 던진다. 처음에 provider로
+만들었다가 실기기에서 터질 버그를 라우터 통합 테스트가 잡았다. 이 값은 화면이 그리지 않으므로
+provider일 이유도 없다.
+
+**4. 순수 판정 함수만으로는 부족하다.** `resolveGate`를 표처럼 검증해도 **라우터에 연결되지
+않으면 그대로 통과한다** — 실제로 목적지를 꺼내는 `take()`의 호출부가 없어 R12가 동작하지
+않는데도 단위 테스트는 전부 초록이었다. `test/router/app_router_test.dart`가 배선까지 본다.
+
 ---
 
 ## 11. 가입 폼 보정 (R18·R19) — 신규 화면 없음
@@ -390,7 +419,7 @@ R11·R12 약관 게이트를 계약 없이 만들면 **항상 통과하거나 �
 /settings                   설정 홈 (R1)
 /settings/my-posts          내가 쓴 글 (R3)
 /settings/profile           프로필 수정 (R4·R5·R6)
-/settings/profile/email     이메일 변경 (R7·R8)
+/settings/profile/email     이메일 변경 (R7·R8) — 보류, SPEC-0012 선행
 /settings/terms             약관 동의 관리 (R9·R10)
 /settings/preferences       반경·언어 (R13·R14)
 /settings/delete-account    탈퇴 확인 (R16)

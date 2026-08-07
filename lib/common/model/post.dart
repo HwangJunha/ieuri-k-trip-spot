@@ -1,5 +1,5 @@
-import '../../../common/model/list_equality.dart';
 import 'comment.dart';
+import 'list_equality.dart';
 import 'post_author.dart';
 import 'post_spot.dart';
 import 'target_category.dart';

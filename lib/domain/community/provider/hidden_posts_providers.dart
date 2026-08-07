@@ -3,7 +3,7 @@ import 'dart:developer' as developer;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/pagination/page.dart';
-import '../model/post.dart';
+import '../../../common/model/post.dart';
 import '../repository/community_repository.dart';
 import 'community_providers.dart';
 

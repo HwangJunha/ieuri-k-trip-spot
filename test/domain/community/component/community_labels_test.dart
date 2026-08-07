@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/domain/community/component/community_labels.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot_category.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/target_category.dart';
+import 'package:ieuri_k_trip_spot/common/model/target_category.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
 
 /// 서버는 표시 문자열을 주지 않는다 — enum은 안정 식별자이고 매핑은 클라이언트

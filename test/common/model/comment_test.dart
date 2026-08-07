@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/comment.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/post_author.dart';
+import 'package:ieuri_k_trip_spot/common/model/comment.dart';
+import 'package:ieuri_k_trip_spot/common/model/post_author.dart';
 
 Comment _comment({
   String id = 'c1',

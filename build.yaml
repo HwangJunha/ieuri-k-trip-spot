@@ -15,9 +15,17 @@ targets:
             _FieldSet:
               type: Object
         generate_for:
+          # 둘 이상의 기능이 쓰는 타입 조각. codegen이 모든 조각을 한 네임스페이스로
+          # 합치므로 생성 타입의 집은 하나뿐이고, 그 집이 어느 기능 폴더에 있으면
+          # 다른 기능이 그 폴더를 import하게 된다(CLAUDE.md §3). 공용은 공용 자리에 둔다.
+          - lib/common/network/shared_schema.graphql
           - lib/domain/auth/repository/auth_operations.graphql
           - lib/domain/auth/repository/auth_schema.graphql
           - lib/domain/spot/repository/spot_operations.graphql
           - lib/domain/spot/repository/spot_schema.graphql
           - lib/domain/community/repository/community_operations.graphql
           - lib/domain/community/repository/community_schema.graphql
+          - lib/domain/settings/repository/settings_operations.graphql
+          - lib/domain/settings/repository/settings_schema.graphql
+          - lib/domain/settings/repository/profile_operations.graphql
+          - lib/domain/settings/repository/profile_schema.graphql

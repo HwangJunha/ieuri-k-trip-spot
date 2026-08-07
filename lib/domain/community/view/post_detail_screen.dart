@@ -3,13 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../common/navigation/auth_route.dart';
+import '../../../common/navigation/settings_routes.dart';
 import '../../../common/pagination/pagination_list_view.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/comment_tile.dart';
 import '../component/post_card.dart';
 import '../component/post_photo.dart';
-import '../model/comment.dart';
-import '../model/post.dart';
+import '../../../common/model/comment.dart';
+import '../../../common/model/post.dart';
 import '../model/post_draft.dart';
 import '../provider/comments_providers.dart';
 import '../provider/post_detail_providers.dart';
@@ -35,7 +36,7 @@ import 'post_moderation_flow.dart';
 class PostDetailScreen extends ConsumerWidget {
   const PostDetailScreen({super.key, required this.postId});
 
-  static String get routeName => 'post-detail';
+  static String get routeName => postDetailRouteName;
 
   final String postId;
 

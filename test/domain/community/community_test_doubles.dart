@@ -3,86 +3,22 @@ import 'dart:typed_data';
 import 'package:ieuri_k_trip_spot/common/pagination/offset_page.dart';
 import 'package:ieuri_k_trip_spot/common/pagination/page.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/blocked_user.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/comment.dart';
+import 'package:ieuri_k_trip_spot/common/model/comment.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_chip.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot_category.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/post.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/post_author.dart';
+import 'package:ieuri_k_trip_spot/common/model/post.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_image_upload.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_sort_order.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/post_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/report_reason.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/target_category.dart';
+import 'package:ieuri_k_trip_spot/common/model/target_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/repository/community_repository.dart';
 
-/// 테스트용 [Post] 하나. 값을 지정하지 않은 필드는 검증에 쓰이지 않는 자리채움이다.
-///
-/// [spot]의 기본값이 있는 이유는 대부분의 테스트가 장소 있는 글을 다루기 때문이다.
-/// **장소 없는 글**(가이드 §5)을 만들려면 `withoutSpot: true`를 준다.
-Post fakePost({
-  String id = 'p1',
-  String title = 'Night opening was great',
-  String body = 'Wear a hanbok and get in free.',
-  TargetCategory? category = TargetCategory.touristSpot,
-  List<String> tags = const <String>[],
-  int likeCount = 3,
-  int commentCount = 2,
-  int viewCount = 0,
-  bool likedByViewer = false,
-  bool ownedByViewer = false,
-  bool hidden = false,
-  bool edited = false,
-  bool withoutSpot = false,
-  List<String> photoKeys = const <String>[],
-  List<Comment> commentPreview = const <Comment>[],
-}) => Post(
-  id: id,
-  title: title,
-  body: body,
-  category: category,
-  tags: tags,
-  spot: withoutSpot
-      ? null
-      : const PostSpot(
-          id: '11094',
-          title: 'Gyeongbokgung',
-          thumbnailImageUrl: 'https://img/spot.jpg',
-          category: TargetCategory.touristSpot,
-        ),
-  author: const PostAuthor(id: '20', nickname: 'Traveler'),
-  createdAt: DateTime.utc(2026, 8, 5, 9),
-  photoKeys: photoKeys,
-  likeCount: likeCount,
-  commentCount: commentCount,
-  viewCount: viewCount,
-  likedByViewer: likedByViewer,
-  ownedByViewer: ownedByViewer,
-  hidden: hidden,
-  edited: edited,
-  commentPreview: commentPreview,
-);
-
-/// 테스트용 댓글 하나.
-///
-/// [replies]는 **최상위 댓글에만** 준다 — 답글의 답글은 없다(2차 가이드 §1).
-/// [parentCommentId]가 있으면 답글이며 화면이 들여쓴다.
-Comment fakeComment({
-  String id = 'c1',
-  String body = 'Nice!',
-  String nickname = 'Minji',
-  bool ownedByViewer = false,
-  String? parentCommentId,
-  List<Comment> replies = const <Comment>[],
-}) => Comment(
-  id: id,
-  body: body,
-  author: PostAuthor(id: '12', nickname: nickname),
-  createdAt: DateTime.utc(2026, 8, 5, 10),
-  ownedByViewer: ownedByViewer,
-  parentCommentId: parentCommentId,
-  replies: replies,
-);
+/// [fakePost]·[fakeComment]는 **`test/common/post_fixtures.dart`로 옮겼다** —
+/// 모델이 `common/model/`로 올라오면서 설정의 "내가 쓴 글"(SPEC-0011 R3)도 같은
+/// 픽스처를 쓰기 때문이다. 커뮤니티 테스트가 계속 이 파일 하나만 import하도록
+/// 다시 내보낸다.
+export '../../common/post_fixtures.dart' show fakeComment, fakePost;
 
 /// 정형 응답을 돌려주는 [CommunityRepository]. provider·위젯 테스트가 이 하나만
 /// 오버라이드해 네트워크 없이 상태 전이를 검증한다.

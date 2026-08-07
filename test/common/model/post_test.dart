@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/comment.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/post.dart';
+import 'package:ieuri_k_trip_spot/common/model/comment.dart';
+import 'package:ieuri_k_trip_spot/common/model/post.dart';
 
-import '../community_test_doubles.dart';
+import '../post_fixtures.dart';
 
 void main() {
   test('두 Post가 같은 값이면 동등하다', () {

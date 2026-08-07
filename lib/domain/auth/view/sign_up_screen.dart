@@ -8,7 +8,7 @@ import '../component/auth_failure_message.dart';
 import '../component/auth_text_field.dart';
 import '../model/email_verification_handle.dart';
 import '../model/password_policy.dart';
-import '../model/terms_code.dart';
+import '../../../common/model/terms_code.dart';
 import '../provider/auth_controller.dart';
 import 'email_verification_screen.dart';
 

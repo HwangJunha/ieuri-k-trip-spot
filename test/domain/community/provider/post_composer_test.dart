@@ -6,7 +6,7 @@ import 'package:ieuri_k_trip_spot/domain/community/model/community_failure.dart'
 import 'package:ieuri_k_trip_spot/domain/community/model/composer_photo.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_draft.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_image_upload.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/target_category.dart';
+import 'package:ieuri_k_trip_spot/common/model/target_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/post_composer_providers.dart';
 

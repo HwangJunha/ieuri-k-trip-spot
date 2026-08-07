@@ -2,9 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_failure.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/post.dart';
+import 'package:ieuri_k_trip_spot/common/model/post.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_sort_order.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/target_category.dart';
+import 'package:ieuri_k_trip_spot/common/model/target_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/feed_providers.dart';
 

@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/composer_photo.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_draft.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/target_category.dart';
+import 'package:ieuri_k_trip_spot/common/model/target_category.dart';
 
 /// 등록 가능 판정과 **코드포인트 길이 세기**가 이 모델의 전부다(가이드 §5·§8).
 void main() {

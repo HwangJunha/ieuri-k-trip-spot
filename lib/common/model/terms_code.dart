@@ -1,6 +1,9 @@
-/// The consent categories the server accepts on registration (schema
-/// `TermsCode`). Pure domain enum so the sign-up form and repository share one
-/// source of truth without importing the generated GraphQL enum.
+/// 서버가 다루는 약관 종류(스키마 `TermsCode`). 생성된 GraphQL enum을 가져오지 않고도
+/// 하나의 출처를 공유하기 위한 순수 도메인 enum이다.
+///
+/// **왜 `common/`에 있는가.** 가입 폼(`domain/auth`)과 약관 관리·게이트
+/// (`domain/settings`) **둘 다** 쓴다(SPEC-0011 R9~R12). 기능 간 import는 금지되어
+/// 있으므로(CLAUDE.md §3), 둘 이상이 쓰는 값은 여기로 올린다(§4).
 enum TermsCode {
   service,
   privacy,

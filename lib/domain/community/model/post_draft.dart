@@ -1,6 +1,6 @@
 import '../../../common/model/list_equality.dart';
 import 'composer_photo.dart';
-import 'target_category.dart';
+import '../../../common/model/target_category.dart';
 
 /// 제목 최대 길이(코드포인트).
 const int maxPostTitleRunes = 50;

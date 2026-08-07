@@ -12,7 +12,7 @@ import '../model/sns_credential.dart';
 import '../model/sns_provider.dart';
 import '../model/sns_registration_result.dart';
 import '../model/sns_sign_in_outcome.dart';
-import '../model/terms_code.dart';
+import '../../../common/model/terms_code.dart';
 import '../repository/auth_repository.dart';
 import '../repository/sns_authenticator.dart';
 import 'auth_repository_provider.dart';
@@ -229,6 +229,31 @@ class AuthController extends _$AuthController {
     }
     await _storage.clearSession();
     state = const AsyncValue<AuthState>.data(AuthState.unauthenticated);
+  }
+
+  /// 세션에 실린 `Me`를 서버 값으로 다시 맞춘다(SPEC-0011 R4~R6).
+  ///
+  /// 프로필(닉네임·이미지)이 바뀌면 설정 화면과 홈이 그리는 값은 세션의 `Me`인데,
+  /// 그 값은 로그인 시점의 것이라 저절로 갱신되지 않는다. 변경한 쪽이 여기를 부른다.
+  ///
+  /// **로딩 상태로 떨어뜨리지 않는다.** `AuthController`의 로딩은 라우터 게이트가
+  /// "판정 불가"로 읽어 화면이 스플래시로 튄다 — 프로필 한 줄 때문에 앱이 껌뻑이면
+  /// 안 된다. 그래서 성공했을 때만 데이터를 갈아 끼운다.
+  ///
+  /// **실패해도 던지지 않는다.** 서버 변경 자체는 이미 성공한 뒤라, 표시값 동기화가
+  /// 실패했다고 사용자에게 "실패했다"고 말하면 거짓이 된다.
+  Future<void> refreshMe() async {
+    final AuthState? current = state.value;
+    final AuthSession? session = current?.session;
+    if (current == null || session == null) return;
+    try {
+      final Me me = await _repo.fetchMe();
+      state = AsyncValue<AuthState>.data(
+        current.copyWith(session: session.copyWith(user: me)),
+      );
+    } on Object {
+      // 표시값만 옛것으로 남는다 — 다음 조회에서 맞춰진다.
+    }
   }
 
   /// Marks onboarding done for the current account and updates state so the

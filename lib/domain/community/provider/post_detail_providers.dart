@@ -1,6 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../model/post.dart';
+import '../../../common/model/post.dart';
 import 'community_providers.dart';
 
 part 'post_detail_providers.g.dart';

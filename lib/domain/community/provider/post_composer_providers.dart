@@ -4,7 +4,7 @@ import '../model/community_failure.dart';
 import '../model/composer_photo.dart';
 import '../model/post_draft.dart';
 import '../model/post_image_upload.dart';
-import '../model/target_category.dart';
+import '../../../common/model/target_category.dart';
 import '../repository/community_repository.dart';
 import 'community_providers.dart';
 

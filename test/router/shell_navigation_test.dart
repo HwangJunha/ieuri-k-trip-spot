@@ -7,9 +7,10 @@ import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
 import 'package:ieuri_k_trip_spot/common/storage/secure_storage.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/provider/auth_controller.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/provider/auth_repository_provider.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/post.dart';
+import 'package:ieuri_k_trip_spot/common/model/post.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/event/provider/event_providers.dart';
+import 'package:ieuri_k_trip_spot/domain/settings/provider/agreements_controller.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/spot_providers.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
 import 'package:ieuri_k_trip_spot/router/app_router.dart';
@@ -18,6 +19,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../domain/auth/auth_test_doubles.dart';
 import '../domain/community/community_test_doubles.dart';
 import '../domain/event/event_test_doubles.dart';
+import '../domain/settings/settings_test_doubles.dart';
 import '../domain/spot/spot_test_doubles.dart';
 
 Future<ProviderContainer> _homeContainer() async {
@@ -42,6 +44,10 @@ Future<ProviderContainer> _homeContainer() async {
         FakeCommunityRepository(posts: <Post>[fakePost()]),
       ),
       locationServiceProvider.overrideWithValue(FakeLocationService()),
+      // SPEC-0011 R11: 게이트가 필수 약관 상태를 읽는다. 오버라이드가 없으면 실제
+      // GraphQL 클라이언트로 나가 상태가 loading에 머물고, 게이트가 사용자를
+      // 스플래시에 묶어 탭 자체가 렌더링되지 않는다.
+      settingsRepositoryProvider.overrideWithValue(FakeSettingsRepository()),
     ],
   );
   addTearDown(container.dispose);

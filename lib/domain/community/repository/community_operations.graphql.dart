@@ -1,5 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, unused_import, unused_element
+import '../../../common/network/shared_schema.graphql.dart';
 import '../../spot/repository/spot_schema.graphql.dart';
 import 'community_schema.graphql.dart';
 import 'package:gql/ast.dart';

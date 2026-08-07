@@ -3,15 +3,15 @@ import 'dart:typed_data';
 import '../../../common/pagination/offset_page.dart';
 import '../../../common/pagination/page.dart';
 import '../model/blocked_user.dart';
-import '../model/comment.dart';
+import '../../../common/model/comment.dart';
 import '../model/community_chip.dart';
 import '../model/nearby_spot.dart';
 import '../model/nearby_spot_category.dart';
-import '../model/post.dart';
+import '../../../common/model/post.dart';
 import '../model/post_image_upload.dart';
 import '../model/post_sort_order.dart';
 import '../model/report_reason.dart';
-import '../model/target_category.dart';
+import '../../../common/model/target_category.dart';
 
 /// 커뮤니티 데이터 접근(SPEC-0010). 도메인 모델만 돌려주며, 생성 타입
 /// (`*.graphql.dart`)은 구현체 밖으로 나가지 않는다(CLAUDE.md §3, POL-020).

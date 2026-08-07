@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ieuri_k_trip_spot/domain/auth/model/terms_code.dart';
+import 'package:ieuri_k_trip_spot/common/model/terms_code.dart';
 
 void main() {
   test('every TermsCode maps to its schema wire name', () {

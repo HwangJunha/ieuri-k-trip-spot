@@ -10,7 +10,7 @@ import '../domain/auth/model/sns_credential.dart';
 import '../domain/auth/view/password_reset_screen.dart';
 import '../domain/auth/view/sign_up_screen.dart';
 import '../domain/auth/view/sns_sign_up_screen.dart';
-import '../domain/community/model/target_category.dart';
+import '../common/model/target_category.dart';
 import '../domain/community/view/blocked_users_screen.dart';
 import '../domain/community/view/community_screen.dart';
 import '../domain/community/view/hidden_posts_screen.dart';
@@ -20,7 +20,10 @@ import '../domain/onboarding/view/onboarding_screen.dart';
 import '../domain/settings/view/account_deletion_screen.dart';
 import '../domain/settings/view/my_posts_screen.dart';
 import '../domain/settings/view/preferences_screen.dart';
+import '../domain/settings/view/profile_edit_screen.dart';
+import '../domain/settings/view/required_terms_screen.dart';
 import '../domain/settings/view/settings_screen.dart';
+import '../domain/settings/view/terms_screen.dart';
 import '../domain/spot/model/spot_category.dart';
 import '../domain/spot/view/discover_screen.dart';
 import '../domain/spot/view/home_screen.dart';
@@ -187,10 +190,26 @@ List<RouteBase> buildRoutes() => <RouteBase>[
         name: MyPostsScreen.routeName,
         builder: (_, _) => const MyPostsScreen(),
       ),
+      // 프로필 수정(R4~R6). 설정 홈의 프로필 요약을 탭하면 여기로 온다.
+      //
+      // **이메일 변경(R7·R8)의 자식 라우트는 없다** — 라이브 스키마에
+      // `requestEmailChange`/`confirmEmailChange`가 없어 화면을 만들지 않았다.
+      GoRoute(
+        path: 'profile',
+        name: ProfileEditScreen.routeName,
+        builder: (_, _) => const ProfileEditScreen(),
+      ),
       GoRoute(
         path: 'preferences',
         name: PreferencesScreen.routeName,
         builder: (_, _) => const PreferencesScreen(),
+      ),
+      // 약관 동의 관리(R9·R10). 설정 계열이라 필수 약관 게이트가 막지 않는다 —
+      // 미동의 상태에서도 여기서 무엇에 동의했는지 볼 수 있어야 한다(R11).
+      GoRoute(
+        path: 'terms',
+        name: TermsScreen.routeName,
+        builder: (_, _) => const TermsScreen(),
       ),
       GoRoute(
         path: 'delete-account',
@@ -198,6 +217,14 @@ List<RouteBase> buildRoutes() => <RouteBase>[
         builder: (_, _) => const AccountDeletionScreen(),
       ),
     ],
+  ),
+  // 필수 약관 동의 안내(R11·R12). 게이트가 막았을 때 착지하는 곳이라 **설정 아래가
+  // 아니라 최상위**다 — 게이트는 로그인 직후에도 걸리는데, 그때 설정 홈을 뒤에 깔면
+  // 뒤로 가기가 게이트에 다시 막힌 화면으로 돌아간다.
+  GoRoute(
+    path: '/required-terms',
+    name: RequiredTermsScreen.routeName,
+    builder: (_, _) => const RequiredTermsScreen(),
   ),
   // The post-onboarding 5-tab shell. Each tab keeps its own navigation stack.
   StatefulShellRoute.indexedStack(

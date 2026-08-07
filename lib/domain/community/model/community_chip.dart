@@ -1,4 +1,4 @@
-import 'target_category.dart';
+import '../../../common/model/target_category.dart';
 
 /// 커뮤니티 상단 칩 하나(서버 `CommunityChip`).
 ///

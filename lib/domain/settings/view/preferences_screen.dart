@@ -52,7 +52,9 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
                 children: <Widget>[
                   Center(
                     child: Text(
-                      l10n.preferencesRadiusValue(AppPreferences.formatKm(radius)),
+                      l10n.preferencesRadiusValue(
+                        AppPreferences.formatKm(radius),
+                      ),
                       style: theme.textTheme.headlineSmall,
                     ),
                   ),
@@ -73,7 +75,9 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
                     children: <Widget>[
                       Text(
                         l10n.preferencesRadiusValue(
-                          AppPreferences.formatKm(AppPreferences.minSearchRadiusKm),
+                          AppPreferences.formatKm(
+                            AppPreferences.minSearchRadiusKm,
+                          ),
                         ),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
@@ -81,7 +85,9 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
                       ),
                       Text(
                         l10n.preferencesRadiusValue(
-                          AppPreferences.formatKm(AppPreferences.maxSearchRadiusKm),
+                          AppPreferences.formatKm(
+                            AppPreferences.maxSearchRadiusKm,
+                          ),
                         ),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,

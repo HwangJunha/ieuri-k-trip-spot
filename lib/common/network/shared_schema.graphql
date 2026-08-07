@@ -1,0 +1,101 @@
+# 두 기능 이상이 쓰는 서버 스키마 조각(committed codegen 입력).
+# `schema/schema.introspection.json` 스냅샷에서 손으로 추린 안정 빌드 입력이며,
+# gitignore된 스냅샷을 codegen이 직접 읽지 않는다(CLAUDE.md §13).
+#
+# **왜 `common/network/`에 있는가.** `graphql_codegen`은 모든 조각을 **한 네임스페이스**로
+# 합치므로 생성 타입(`Enum$TargetCategory` 등)의 집은 하나뿐이다. 그 집이 어느 한 기능의
+# 폴더면, 같은 타입을 쓰는 다른 기능이 그 기능의 `repository/`를 import하게 되어
+# 기능 간 의존이 생긴다(CLAUDE.md §3).
+#
+# 실제로 그랬다 — `domain/settings`의 `myPosts`가 `domain/community`의 생성 파일에서
+# `Enum$TargetCategory`를 끌어 썼다. 도메인 모델(`Post`·`TargetCategory` …)을 이미
+# `common/model/`로 올렸으므로, 그 모델로 매핑되는 **생성 타입의 스키마 조각도 같이**
+# 올라와야 짝이 맞는다(§4 — 둘 이상이 쓰면 공용).
+#
+# 여기 두는 기준은 "둘 이상의 기능이 쓴다"이다. 한 기능만 쓰는 타입은 그 기능의
+# 조각에 그대로 둔다.
+
+# 글의 카테고리. `SpotCategory`와 값이 같지만 **다른 타입이다** — 글의 카테고리와
+# 장소의 카테고리는 서로 다른 것을 가리키며, 값이 같다고 합치면 한쪽의 변경이 다른
+# 쪽을 끌고 간다.
+#
+# 커뮤니티(피드·작성·상세)와 설정(내가 쓴 글)이 함께 쓴다.
+enum TargetCategory {
+  TOURIST_SPOT
+  CULTURAL_FACILITY
+  FESTIVAL_EVENT
+  TRAVEL_COURSE
+  LEISURE_SPORTS
+  LODGING
+  SHOPPING
+  RESTAURANT
+  TRANSPORT
+}
+
+type PostAuthor {
+  id: ID!
+  nickname: String!
+  profileImageUrl: String
+}
+
+# 글에 붙은 장소. **null일 수 있다** — 장소 없는 글이 허용된다(가이드 §5).
+# 제목·썸네일은 `Accept-Language`를 따른다(가이드 §9).
+type PostSpot {
+  id: ID!
+  title: String!
+  thumbnailImageUrl: String!
+  category: TargetCategory
+}
+
+# 댓글은 **깊이 2단계**다(2차 가이드 §1). `comments(postId:)`는 최상위만 주고
+# 답글은 각 댓글의 `replies`로 온다 — 요청하지 않으면 조회되지 않는다.
+#
+# `parentCommentId`가 null이면 최상위, 있으면 답글이다(들여쓰기 판정에 쓴다).
+# `replies`에는 페이지네이션이 없고, 답글의 `replies`는 항상 빈 목록이다(3단계가
+# 없다) — 그래서 오퍼레이션이 한 단계만 내려가 요청한다.
+type Comment {
+  id: ID!
+  body: String!
+  author: PostAuthor!
+  ownedByViewer: Boolean!
+  hidden: Boolean!
+  createdAt: String!
+  parentCommentId: ID
+  replies: [Comment!]!
+}
+
+type Post {
+  id: ID!
+  title: String!
+  body: String!
+  tags: [String!]!
+  category: TargetCategory!
+  spot: PostSpot
+  author: PostAuthor!
+  photoKeys: [String!]!
+  likeCount: Int!
+  commentCount: Int!
+  # 조회수. 서버가 라이브로 채워 준다(예: 글 5 → 330). 카드 하단에 댓글·좋아요와
+  # 나란히 그린다.
+  viewCount: Int!
+  likedByViewer: Boolean!
+  ownedByViewer: Boolean!
+  hidden: Boolean!
+  edited: Boolean!
+  createdAt: String!
+  commentPreview: [Comment!]!
+}
+
+type PostEdge {
+  cursor: String!
+  node: Post!
+}
+
+# 커뮤니티 피드·숨긴 글과 설정의 "내가 쓴 글"이 같은 커넥션을 쓴다.
+type PostConnection {
+  edges: [PostEdge!]!
+  pageInfo: PageInfo!
+}
+
+# `PageInfo`·`UserError`는 auth 스키마 조각이 이미 선언한다. codegen이 모든 조각을
+# 한 네임스페이스에서 합치므로 여기서 다시 선언하면 중복이다.

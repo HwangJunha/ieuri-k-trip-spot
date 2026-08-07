@@ -1,4 +1,4 @@
-import 'post_author.dart';
+import '../../../common/model/post_author.dart';
 
 /// 내가 차단한 사람 한 명(서버 `BlockedUserEdge`).
 ///

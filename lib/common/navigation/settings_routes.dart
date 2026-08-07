@@ -19,3 +19,17 @@ const String blockedUsersRouteName = 'blocked-users';
 
 /// 찜한 장소 목록. 하단 탭이자 설정의 진입점이다.
 const String likedSpotsRouteName = 'liked';
+
+/// 내가 쓴 글(SPEC-0011 R3). 설정 홈 아래에 중첩된다.
+const String myPostsRouteName = 'settings-my-posts';
+
+/// 프로필 수정(SPEC-0011 R4~R6). 설정 홈 아래에 중첩된다.
+const String profileEditRouteName = 'settings-profile';
+
+/// 커뮤니티 글 상세. 화면은 `domain/community`가 소유하고, "내가 쓴 글"(R3)도 여기로
+/// 보낸다 — 둘 이상이 쓰게 되어 이름만 공용으로 올렸다.
+const String postDetailRouteName = 'post-detail';
+
+/// 글 작성·수정. 위와 같은 이유로 이름만 공용이다 — "내가 쓴 글"의 빈 상태가
+/// "첫 글 쓰기"로 보낸다.
+const String postComposerRouteName = 'post-composer';

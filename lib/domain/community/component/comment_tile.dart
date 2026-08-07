@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
-import '../model/comment.dart';
+import '../../../common/model/comment.dart';
 import 'community_labels.dart';
 
 /// 댓글 한 줄: 아바타 · 닉네임 · 상대시각 · 본문 · [답글 달기] · [⋮].

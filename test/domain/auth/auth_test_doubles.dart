@@ -6,7 +6,7 @@ import 'package:ieuri_k_trip_spot/domain/auth/model/me.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/sns_credential.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/sns_provider.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/sns_registration_result.dart';
-import 'package:ieuri_k_trip_spot/domain/auth/model/terms_code.dart';
+import 'package:ieuri_k_trip_spot/common/model/terms_code.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/repository/auth_repository.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/repository/sns_authenticator.dart';
 

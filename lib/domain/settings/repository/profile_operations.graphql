@@ -1,0 +1,107 @@
+# SPEC-0011 프로필 수정(R4~R6)·내가 쓴 글(R3) 오퍼레이션.
+# 스키마 조각은 `profile_schema.graphql`이며 생성 타입은 repository 밖으로 나가지
+# 않는다(CLAUDE.md §3).
+
+# 내가 쓴 글(R3). 커서 페이징이며 `common/pagination/`의 `CursorPage`로 매핑한다.
+#
+# **필드 집합을 여기 직접 쓴다.** 커뮤니티의 `PostCardFields` fragment를 참조하면
+# 설정의 오퍼레이션이 커뮤니티 문서에 묶여 한쪽 변경이 다른 쪽을 끌고 간다. 타입은
+# 같아도(설계 §10) 요청하는 필드는 화면이 정하는 것이고, 이 목록은 내 글만 나오므로
+# 작성자 프로필을 쓰지 않는다 — 그래서 `author`는 id만 받는다.
+#
+# `commentPreview`도 받지 않는다. 행 하나에 댓글 미리보기를 그리지 않기 때문이다
+# (디자인 §7 — 카테고리·장소 / 제목 / 본문 2줄 / 메타 한 줄).
+query MyPosts($first: Int, $after: String) {
+  myPosts(first: $first, after: $after) {
+    edges {
+      node {
+        id
+        title
+        body
+        tags
+        category
+        createdAt
+        photoKeys
+        likeCount
+        commentCount
+        viewCount
+        likedByViewer
+        ownedByViewer
+        hidden
+        edited
+        spot {
+          id
+          title
+          thumbnailImageUrl
+          category
+        }
+        author {
+          id
+          nickname
+          profileImageUrl
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+# 닉네임 변경(R5). 중복은 `userErrors`의 `NICKNAME_ALREADY_TAKEN`으로 온다 —
+# 클라이언트가 미리 조회하지 않는다(조회와 제출 사이에 선점당한다).
+mutation ChangeNickname($input: ChangeNicknameInput!) {
+  changeNickname(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    nickname
+  }
+}
+
+# 프로필 이미지 업로드 1단계(R6). 여기 선언한 contentType·contentLength가 실제 PUT과
+# 정확히 일치해야 서명이 유효하다.
+mutation CreateProfileImageUploadUrl(
+  $input: CreateProfileImageUploadUrlInput!
+) {
+  createProfileImageUploadUrl(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    uploadUrl
+    objectKey
+    expiresAt
+  }
+}
+
+# 3단계 확정(R6). 2단계 PUT은 GraphQL이 아니라 스토리지 직접 요청이다.
+mutation ConfirmProfileImageUpload($input: ConfirmProfileImageUploadInput!) {
+  confirmProfileImageUpload(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    profileImageKey
+  }
+}
+
+# 제거(R6). 교체와 **별도 동작**이라 화면에서도 구분해 보여준다. 인자가 없다.
+mutation RemoveProfileImage {
+  removeProfileImage {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}

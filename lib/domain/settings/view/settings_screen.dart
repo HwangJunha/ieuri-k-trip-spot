@@ -15,16 +15,21 @@ import '../provider/search_radius_controller.dart';
 import 'account_deletion_screen.dart';
 import 'my_posts_screen.dart';
 import 'preferences_screen.dart';
+import 'profile_edit_screen.dart';
+import 'terms_screen.dart';
 
 /// 설정 홈(SPEC-0011 R1). 홈 화면 우상단에서 진입하며 하위 화면들이 여기 아래로
 /// 중첩된다 — 뒤로 가기가 설정 홈을 거쳐 진입 직전 화면으로 돌아간다.
 ///
 /// 셸 밖의 최상위 라우트라 하단 탭을 덮는다(관광지 상세·글 상세와 같은 성격).
 ///
-/// **서버 계약이 아직 없는 항목이 많다.** 프로필 수정·이메일 변경·약관 관리는
-/// `agreements`/닉네임·이미지·이메일 변경 오퍼레이션이 라이브 스키마에 없어
-/// (2026-08-07 introspection 기준) 진입점만 두고 목적지는 서버가 붙을 때 잇는다.
-/// 자세한 것은 `docs/design/SPEC-0011-settings-mypage.md` §0.
+/// 약관 관리(R9·R10)와 프로필 수정(R4~R6)·내가 쓴 글(R3)은 라이브 스키마에 계약이
+/// 붙어(2026-08-08 introspection 기준) 실제 화면으로 이어진다.
+///
+/// **이메일 변경(R7·R8)만 진입점이 없다** — `requestEmailChange`/`confirmEmailChange`가
+/// 스키마에 없고 가입 전용 `verifyEmail`을 돌려 쓸 수 없어 갈 곳이 없다. 눌리지 않는
+/// 행을 두면 고장으로 보이므로 아예 두지 않았다
+/// (`docs/design/SPEC-0011-settings-mypage.md` §0).
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -54,7 +59,10 @@ class SettingsScreen extends ConsumerWidget {
       body: SafeArea(
         child: ListView(
           children: <Widget>[
-            _ProfileSummaryTile(me: me),
+            _ProfileSummaryTile(
+              me: me,
+              onTap: () => context.pushNamed(ProfileEditScreen.routeName),
+            ),
             const Divider(height: 1),
 
             SettingsSectionHeader(l10n.settingsSectionActivity),
@@ -70,6 +78,17 @@ class SettingsScreen extends ConsumerWidget {
             ),
 
             SettingsSectionHeader(l10n.settingsSectionAccount),
+            // 프로필 수정(R4~R6). 맨 위 프로필 요약과 **같은 목적지**다 — 목업이
+            // 둘 다 두었고, 요약을 못 알아본 사용자에게 이름 붙은 행이 남는다.
+            //
+            // **"Change Email" 행은 없다**(R7·R8). 라이브 스키마(2026-08-08)에
+            // `requestEmailChange`/`confirmEmailChange`가 없어 갈 곳이 없다 —
+            // 눌리지 않는 행을 두면 고장으로 보인다.
+            SettingsTile(
+              icon: Icons.person_outline,
+              title: l10n.settingsEditProfile,
+              onTap: () => context.pushNamed(ProfileEditScreen.routeName),
+            ),
             // 차단 목록의 진입점만 커뮤니티에서 여기로 옮긴다(R2). 화면 자체는
             // `community`에 그대로 둔다 — 옮기면 커뮤니티 리포지토리 의존이
             // `settings`로 끌려 들어온다(설계 §1).
@@ -93,6 +112,13 @@ class SettingsScreen extends ConsumerWidget {
               title: l10n.settingsLanguage,
               value: language.nativeName,
               onTap: () => context.pushNamed(PreferencesScreen.routeName),
+            ),
+
+            SettingsSectionHeader(l10n.settingsSectionLegal),
+            SettingsTile(
+              icon: Icons.assignment_outlined,
+              title: l10n.settingsTerms,
+              onTap: () => context.pushNamed(TermsScreen.routeName),
             ),
 
             const SizedBox(height: 24),
@@ -121,14 +147,12 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
-/// 설정 홈 맨 위의 프로필 요약. 탭하면 프로필 수정으로 간다.
-///
-/// **프로필 수정 화면은 서버 계약이 없어 아직 없다** — 목적지가 생길 때까지
-/// 탭 동작을 두지 않는다(비활성 진입점보다 없는 편이 낫다).
+/// 설정 홈 맨 위의 프로필 요약. 탭하면 프로필 수정으로 간다(R4).
 class _ProfileSummaryTile extends StatelessWidget {
-  const _ProfileSummaryTile({required this.me});
+  const _ProfileSummaryTile({required this.me, required this.onTap});
 
   final Me? me;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -136,6 +160,11 @@ class _ProfileSummaryTile extends StatelessWidget {
     final String? imageUrl = me?.profileImageUrl;
 
     return ListTile(
+      onTap: onTap,
+      trailing: Icon(
+        Icons.chevron_right,
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       leading: CircleAvatar(
         radius: 28,

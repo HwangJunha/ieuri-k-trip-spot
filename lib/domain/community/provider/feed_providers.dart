@@ -5,9 +5,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
 import '../../../common/pagination/page.dart';
-import '../model/post.dart';
+import '../../../common/model/post.dart';
 import '../model/post_sort_order.dart';
-import '../model/target_category.dart';
+import '../../../common/model/target_category.dart';
 import '../repository/community_repository.dart';
 import 'community_providers.dart';
 

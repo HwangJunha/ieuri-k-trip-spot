@@ -3,16 +3,16 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:ieuri_k_trip_spot/common/pagination/offset_page.dart';
 import 'package:ieuri_k_trip_spot/common/pagination/page.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/blocked_user.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/comment.dart';
+import 'package:ieuri_k_trip_spot/common/model/comment.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_chip.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot_category.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/post.dart';
+import 'package:ieuri_k_trip_spot/common/model/post.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_image_upload.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_sort_order.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/report_reason.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/target_category.dart';
+import 'package:ieuri_k_trip_spot/common/model/target_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/repository/community_repository_impl.dart';
 
 /// 정형 [Response] 하나를 돌려주는 링크. 실제 네트워크 대신 repository의 매핑과
