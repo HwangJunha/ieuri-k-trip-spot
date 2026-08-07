@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../common/localization/app_language.dart';
 import '../../../common/localization/locale_controller.dart';
 import '../../../common/navigation/settings_routes.dart';
+import '../../../common/network/media_cdn.dart';
 import '../../../common/storage/app_preferences.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/model/auth_state.dart';
@@ -71,10 +72,17 @@ class SettingsScreen extends ConsumerWidget {
               title: l10n.settingsMyPosts,
               onTap: () => context.pushNamed(MyPostsScreen.routeName),
             ),
+            // 찜한 장소는 **하단 탭(셸 브랜치)이라 push하면 안 된다.** 셸이 이미
+            // 그 라우트의 페이지 키를 잡고 있어서, 루트 내비게이터에 같은 것을
+            // 얹으면 `!keyReservation.contains(key)` assertion으로 앱이 빨간
+            // 화면이 된다(실제로 그렇게 터졌다).
+            //
+            // 탭으로 **전환**한다 — `go`는 스택을 쌓지 않고 셸의 해당 브랜치를
+            // 보여준다. 설정은 셸 밖이라 뒤로 가기가 아니라 탭 이동이 맞다.
             SettingsTile(
               icon: Icons.favorite_border,
               title: l10n.settingsLikedSpots,
-              onTap: () => context.pushNamed(likedSpotsRouteName),
+              onTap: () => context.goNamed(likedSpotsRouteName),
             ),
 
             SettingsSectionHeader(l10n.settingsSectionAccount),
@@ -157,7 +165,8 @@ class _ProfileSummaryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final String? imageUrl = me?.profileImageUrl;
+    // 서버 값은 키일 수 있어 그대로 NetworkImage에 넘기면 페인트 중에 터진다.
+    final String? imageUrl = MediaCdn.profileImage(me?.profileImageUrl);
 
     return ListTile(
       onTap: onTap,
@@ -166,13 +175,13 @@ class _ProfileSummaryTile extends StatelessWidget {
         color: theme.colorScheme.onSurfaceVariant,
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      // `foregroundImage`를 쓴다 — 이미지가 실패해도 아래의 [child]가 남아 아바타
+      // 자리가 비지 않는다. `backgroundImage`는 실패하면 그릴 것이 없다.
       leading: CircleAvatar(
         radius: 28,
         backgroundColor: theme.colorScheme.surfaceContainerHighest,
-        backgroundImage: imageUrl == null ? null : NetworkImage(imageUrl),
-        child: imageUrl == null
-            ? Icon(Icons.person, color: theme.colorScheme.onSurfaceVariant)
-            : null,
+        foregroundImage: imageUrl == null ? null : NetworkImage(imageUrl),
+        child: Icon(Icons.person, color: theme.colorScheme.onSurfaceVariant),
       ),
       title: Text(
         me?.nickname ?? '',

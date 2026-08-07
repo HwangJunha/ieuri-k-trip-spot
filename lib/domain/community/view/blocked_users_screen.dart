@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../common/network/media_cdn.dart';
 import '../../../common/navigation/settings_routes.dart';
 import '../../../common/pagination/pagination_list_view.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -77,7 +78,10 @@ class _List extends ConsumerWidget {
       },
       itemBuilder: (BuildContext context, int index) {
         final BlockedUser blocked = data.items[index];
-        final String? avatar = blocked.member.profileImageUrl;
+        // 서버 값은 키일 수 있다 — 그대로 넘기면 페인트 중에 터진다.
+        final String? avatar = MediaCdn.profileImage(
+          blocked.member.profileImageUrl,
+        );
         return ListTile(
           leading: CircleAvatar(
             backgroundColor: theme.colorScheme.surfaceContainerHighest,

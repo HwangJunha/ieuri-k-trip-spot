@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../common/network/media_cdn.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/profile_image_upload.dart';
 import '../provider/profile_image_controller.dart';
@@ -113,6 +114,9 @@ class _Avatar extends StatelessWidget {
   final String? imageUrl;
   final bool busy;
 
+  /// 서버 값(완전한 URL일 수도, 오브젝트 키일 수도 있다)을 표시 가능한 URL로.
+  String? get _resolved => MediaCdn.profileImage(imageUrl);
+
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
@@ -126,7 +130,12 @@ class _Avatar extends StatelessWidget {
             backgroundColor: theme.colorScheme.surfaceContainerHighest,
             // `foregroundImage`는 실패 시 child로 떨어져 기본 아이콘이 남는다 —
             // 개발 환경에서 404가 정상이라 레이아웃이 흔들리면 안 된다.
-            foregroundImage: imageUrl == null ? null : NetworkImage(imageUrl!),
+            //
+            // 서버 값이 키일 수 있어 CDN 베이스를 붙여 URL로 만든다 — 키를 그대로
+            // 넘기면 스킴이 없어 페인트 중에 예외가 난다.
+            foregroundImage: _resolved == null
+                ? null
+                : NetworkImage(_resolved!),
             child: Icon(
               Icons.person,
               size: 44,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../common/network/media_cdn.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../common/model/comment.dart';
 import 'community_labels.dart';
@@ -41,7 +42,8 @@ class CommentTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final String? avatar = comment.author.profileImageUrl;
+    // 서버 값은 키일 수 있다 — 그대로 NetworkImage에 넘기면 페인트 중에 터진다.
+    final String? avatar = MediaCdn.profileImage(comment.author.profileImageUrl);
     return Padding(
       // 답글은 왼쪽을 한 단계(24) 더 들여 부모에 딸린 것으로 읽히게 한다.
       padding: EdgeInsets.fromLTRB(isReply ? 40 : 16, 10, 8, 10),

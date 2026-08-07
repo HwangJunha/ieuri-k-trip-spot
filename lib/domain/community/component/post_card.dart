@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../common/network/media_cdn.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../common/model/post.dart';
 import '../../../common/model/post_author.dart';
@@ -489,7 +490,8 @@ class _AuthorAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final String? url = author.profileImageUrl;
+    // 서버 값은 키일 수 있다 — 그대로 NetworkImage에 넘기면 페인트 중에 터진다.
+    final String? url = MediaCdn.profileImage(author.profileImageUrl);
     return CircleAvatar(
       radius: 9,
       backgroundColor: theme.colorScheme.surfaceContainerHighest,

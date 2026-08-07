@@ -85,4 +85,66 @@ void main() {
 
     expect(find.text('settings-landed'), findsOneWidget);
   });
+
+  // 찜한 장소는 하단 탭(셸 브랜치)이라 **push하면 안 된다.** 셸이 이미 그 라우트의
+  // 페이지 키를 잡고 있어, 루트 내비게이터에 같은 것을 얹으면
+  // `!keyReservation.contains(key)` assertion으로 앱이 빨간 화면이 된다.
+  // 실제로 그렇게 터졌다.
+  testWidgets('설정에서 찜한 장소로 가면 탭으로 전환되고 크래시하지 않는다 (R1)', (
+    WidgetTester tester,
+  ) async {
+    final GoRouter router = GoRouter(
+      initialLocation: '/settings',
+      routes: <RouteBase>[
+        GoRoute(
+          path: '/settings',
+          name: settingsRouteName,
+          builder: (_, _) => Scaffold(
+            body: Builder(
+              builder: (BuildContext context) => TextButton(
+                onPressed: () => context.goNamed(likedSpotsRouteName),
+                child: const Text('liked'),
+              ),
+            ),
+          ),
+        ),
+        StatefulShellRoute.indexedStack(
+          builder: (_, _, StatefulNavigationShell shell) =>
+              Scaffold(body: shell),
+          branches: <StatefulShellBranch>[
+            StatefulShellBranch(
+              routes: <RouteBase>[
+                GoRoute(
+                  path: '/liked',
+                  name: likedSpotsRouteName,
+                  builder: (_, _) =>
+                      const Scaffold(body: Text('liked-landed')),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp.router(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('en'),
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('liked'));
+    await tester.pumpAndSettle();
+
+    // 예외 없이 도착해야 한다 — push였다면 여기서 assertion이 터진다.
+    expect(tester.takeException(), isNull);
+    expect(find.text('liked-landed'), findsOneWidget);
+  });
 }

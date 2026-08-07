@@ -26,4 +26,23 @@ class MediaCdn {
         : photoKey;
     return '$base/$key';
   }
+
+  /// 프로필 이미지 값을 **표시 가능한 URL로** 만든다. 값이 없거나 비었으면 null이다.
+  ///
+  /// 서버의 `profileImageUrl`은 이름과 달리 **완전한 URL이 아닐 수 있다** — 업로드
+  /// 확정이 돌려주는 것은 오브젝트 키(`confirmProfileImageUpload.profileImageKey`)이고,
+  /// 그 값이 그대로 이 필드로 나온다. 키를 `NetworkImage`에 그대로 넘기면
+  /// `_HttpClient._openUrl`에서 예외가 나 **위젯 페인트 중에 터진다**(스킴이 없어
+  /// 호스트를 못 정한다).
+  ///
+  /// 그래서 스킴이 있으면 그대로 쓰고, 없으면 키로 보고 CDN 베이스를 붙인다. 서버가
+  /// 나중에 완전한 URL을 주도록 바뀌어도 이 함수는 그대로 맞는다.
+  static String? profileImage(String? value) {
+    if (value == null) return null;
+    final String trimmed = value.trim();
+    if (trimmed.isEmpty) return null;
+    final Uri? parsed = Uri.tryParse(trimmed);
+    if (parsed != null && parsed.hasScheme) return trimmed;
+    return urlFor(trimmed);
+  }
 }
