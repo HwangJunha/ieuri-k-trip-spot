@@ -6,7 +6,7 @@ import '../../../common/localization/locale_controller.dart';
 import '../../../common/storage/app_preferences.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/settings_tile.dart';
-import '../provider/search_radius_controller.dart';
+import '../../../common/storage/search_radius_controller.dart';
 
 /// 검색 반경과 언어 설정(SPEC-0011 R13·R14).
 ///

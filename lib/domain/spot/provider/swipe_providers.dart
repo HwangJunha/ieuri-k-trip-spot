@@ -8,6 +8,7 @@ import '../../../common/localization/locale_controller.dart';
 import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
 import '../../../common/pagination/offset_page.dart';
+import '../../../common/storage/search_radius_controller.dart';
 import '../model/retry_budget.dart';
 import '../model/retry_exhausted.dart';
 import '../model/spot_category.dart';
@@ -120,6 +121,13 @@ class SwipeController extends _$SwipeController {
       currentCoordinatesProvider.future,
     );
 
+    // 검색 반경도 watch 한다(SPEC-0011 R13) — 설정에서 반경을 바꾸면 **피드를 다시
+    // 받아야 한다.** 좌표와 같은 성격의 조회 조건이라 같은 자리에서 구독한다.
+    //
+    // read로 하면 값은 읽히지만 재빌드 계기가 없어, 설정을 바꾸고 돌아와도 옛 반경의
+    // 카드가 그대로 남는다(실제로 그렇게 보고됐다).
+    final double radiusKm = ref.watch(searchRadiusControllerProvider);
+
     // 상한을 이미 소진했으면 repository를 호출하지 않고 종료 상태를 그대로 돌려준다
     // (AC-11·AC-12). 재빌드가 몇 번 일어나도 조회 횟수는 늘지 않는다. 원인은 예산이
     // 들고 있던 실제 실패를 쓴다 — 지어내면 로깅·분기가 실제와 어긋난다.
@@ -128,16 +136,20 @@ class SwipeController extends _$SwipeController {
       throw RetryExhausted(budget.lastFailure ?? SpotFailure.network);
     }
 
-    return _fetchFirstPage(coords);
+    return _fetchFirstPage(coords, radiusKm);
   }
 
   /// 첫 페이지를 조회하고 실패를 상한에 계상한다. 계상 대상은 설계문서 §2.3의 표를
   /// 따른다 — 인증 실패는 SPEC-0005 갱신 경로 소관이라 계상하지 않는다(AC-14·AC-15).
-  Future<SwipeQueue> _fetchFirstPage(Coordinates coords) async {
+  Future<SwipeQueue> _fetchFirstPage(
+    Coordinates coords,
+    double radiusKm,
+  ) async {
     try {
       final OffsetPage<TouristSpot> page = await _repository.fetchSpotPage(
         latitude: coords.latitude,
         longitude: coords.longitude,
+        radiusMeters: radiusMetersOf(radiusKm),
         category: category,
         page: 0,
         size: _pageSize,
@@ -290,8 +302,11 @@ class SwipeController extends _$SwipeController {
       final Coordinates coords = await ref.read(
         currentCoordinatesProvider.future,
       );
+      // 명시적 재시도라 read다 — 여기서 watch하면 재시도 자체가 구독을 새로 걸어
+      // 반경이 바뀔 때마다 이 경로가 또 돈다(build가 이미 그 일을 한다).
+      final double radiusKm = ref.read(searchRadiusControllerProvider);
       try {
-        final SwipeQueue queue = await _fetchFirstPage(coords);
+        final SwipeQueue queue = await _fetchFirstPage(coords, radiusKm);
         _budget.reset(); // 성공 → 카운터 초기화(AC-9).
         return queue;
       } on RetryExhausted {

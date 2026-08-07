@@ -10,8 +10,12 @@ part of 'search_radius_controller.dart';
 // ignore_for_file: type=lint, type=warning
 /// 검색 반경(km) 설정을 들고 있는 컨트롤러(SPEC-0011 R13).
 ///
-/// **서버 상태가 아니다** — 로컬 [AppPreferences]에만 산다. 이 값을 실제 조회에
-/// 반영하는 것은 이 스펙의 인수 기준에 없고, 저장과 복원까지가 범위다.
+/// **서버 상태가 아니다** — 로컬 [AppPreferences]에만 산다.
+///
+/// **왜 `common/`에 있는가.** 설정 화면이 값을 정하지만 쓰는 쪽은 조회다 —
+/// Discover 스와이프(`domain/spot`)가 이 값을 조회 반경으로 보낸다. 설정 기능 안에
+/// 두면 spot이 settings를 import하게 되어 기능 간 의존이 생긴다(CLAUDE.md §3).
+/// 언어 설정([LocaleController])이 같은 이유로 `common/`에 있는 것과 같다.
 ///
 /// `autoDispose`(codegen 기본)로 둔다. 값을 지키는 것은 이 provider가 아니라
 /// SharedPreferences이므로 화면을 벗어나 버려져도 다음에 같은 값이 복원되고,
@@ -23,8 +27,12 @@ const searchRadiusControllerProvider = SearchRadiusControllerProvider._();
 
 /// 검색 반경(km) 설정을 들고 있는 컨트롤러(SPEC-0011 R13).
 ///
-/// **서버 상태가 아니다** — 로컬 [AppPreferences]에만 산다. 이 값을 실제 조회에
-/// 반영하는 것은 이 스펙의 인수 기준에 없고, 저장과 복원까지가 범위다.
+/// **서버 상태가 아니다** — 로컬 [AppPreferences]에만 산다.
+///
+/// **왜 `common/`에 있는가.** 설정 화면이 값을 정하지만 쓰는 쪽은 조회다 —
+/// Discover 스와이프(`domain/spot`)가 이 값을 조회 반경으로 보낸다. 설정 기능 안에
+/// 두면 spot이 settings를 import하게 되어 기능 간 의존이 생긴다(CLAUDE.md §3).
+/// 언어 설정([LocaleController])이 같은 이유로 `common/`에 있는 것과 같다.
 ///
 /// `autoDispose`(codegen 기본)로 둔다. 값을 지키는 것은 이 provider가 아니라
 /// SharedPreferences이므로 화면을 벗어나 버려져도 다음에 같은 값이 복원되고,
@@ -34,8 +42,12 @@ final class SearchRadiusControllerProvider
     extends $NotifierProvider<SearchRadiusController, double> {
   /// 검색 반경(km) 설정을 들고 있는 컨트롤러(SPEC-0011 R13).
   ///
-  /// **서버 상태가 아니다** — 로컬 [AppPreferences]에만 산다. 이 값을 실제 조회에
-  /// 반영하는 것은 이 스펙의 인수 기준에 없고, 저장과 복원까지가 범위다.
+  /// **서버 상태가 아니다** — 로컬 [AppPreferences]에만 산다.
+  ///
+  /// **왜 `common/`에 있는가.** 설정 화면이 값을 정하지만 쓰는 쪽은 조회다 —
+  /// Discover 스와이프(`domain/spot`)가 이 값을 조회 반경으로 보낸다. 설정 기능 안에
+  /// 두면 spot이 settings를 import하게 되어 기능 간 의존이 생긴다(CLAUDE.md §3).
+  /// 언어 설정([LocaleController])이 같은 이유로 `common/`에 있는 것과 같다.
   ///
   /// `autoDispose`(codegen 기본)로 둔다. 값을 지키는 것은 이 provider가 아니라
   /// SharedPreferences이므로 화면을 벗어나 버려져도 다음에 같은 값이 복원되고,
@@ -73,8 +85,12 @@ String _$searchRadiusControllerHash() =>
 
 /// 검색 반경(km) 설정을 들고 있는 컨트롤러(SPEC-0011 R13).
 ///
-/// **서버 상태가 아니다** — 로컬 [AppPreferences]에만 산다. 이 값을 실제 조회에
-/// 반영하는 것은 이 스펙의 인수 기준에 없고, 저장과 복원까지가 범위다.
+/// **서버 상태가 아니다** — 로컬 [AppPreferences]에만 산다.
+///
+/// **왜 `common/`에 있는가.** 설정 화면이 값을 정하지만 쓰는 쪽은 조회다 —
+/// Discover 스와이프(`domain/spot`)가 이 값을 조회 반경으로 보낸다. 설정 기능 안에
+/// 두면 spot이 settings를 import하게 되어 기능 간 의존이 생긴다(CLAUDE.md §3).
+/// 언어 설정([LocaleController])이 같은 이유로 `common/`에 있는 것과 같다.
 ///
 /// `autoDispose`(codegen 기본)로 둔다. 값을 지키는 것은 이 provider가 아니라
 /// SharedPreferences이므로 화면을 벗어나 버려져도 다음에 같은 값이 복원되고,

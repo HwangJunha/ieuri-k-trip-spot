@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/localization/locale_controller.dart';
 import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
-import 'package:ieuri_k_trip_spot/domain/settings/provider/search_radius_controller.dart';
+import 'package:ieuri_k_trip_spot/common/storage/search_radius_controller.dart';
 import 'package:ieuri_k_trip_spot/domain/settings/view/preferences_screen.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';

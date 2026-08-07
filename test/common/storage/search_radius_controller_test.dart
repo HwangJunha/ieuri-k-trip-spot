@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
-import 'package:ieuri_k_trip_spot/domain/settings/provider/search_radius_controller.dart';
+import 'package:ieuri_k_trip_spot/common/storage/search_radius_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// SPEC-0011 R13 — 반경 설정 저장·복원. 서버가 아니라 로컬 저장소가 진실이다.

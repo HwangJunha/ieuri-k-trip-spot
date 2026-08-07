@@ -51,6 +51,10 @@ class FakeSpotRepository implements SpotRepository {
   /// `fetchSpotPage` 호출 횟수(검증용). 상한 소진 후 호출이 늘지 않는지 확인한다.
   int spotPageCallCount = 0;
 
+  /// 호출마다 실린 `radiusMeters`(설정 반경이 실제로 조회에 실리는지 확인용,
+  /// SPEC-0011 R13). null은 인자를 보내지 않은 것 — 0km가 그 경우다.
+  final List<int?> requestedRadiiMeters = <int?>[];
+
   final List<TouristSpot> recommended;
   final List<TouristSpot> popular;
   final List<TouristSpot> feed;
@@ -157,6 +161,7 @@ class FakeSpotRepository implements SpotRepository {
     required int size,
   }) async {
     spotPageCallCount++;
+    requestedRadiiMeters.add(radiusMeters);
     if (pageFailure != null &&
         (failPageTimes == 0 || spotPageCallCount <= failPageTimes)) {
       throw pageFailure!;

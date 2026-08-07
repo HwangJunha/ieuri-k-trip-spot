@@ -11,7 +11,7 @@ import '../../auth/model/auth_state.dart';
 import '../../auth/model/me.dart';
 import '../../auth/provider/auth_controller.dart';
 import '../component/settings_tile.dart';
-import '../provider/search_radius_controller.dart';
+import '../../../common/storage/search_radius_controller.dart';
 import 'account_deletion_screen.dart';
 import 'my_posts_screen.dart';
 import 'preferences_screen.dart';
