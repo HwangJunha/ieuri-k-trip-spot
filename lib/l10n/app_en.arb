@@ -954,8 +954,6 @@
   "@deleteAccountConfirm": {},
   "deleteAccountFailed": "Could not delete your account. Please try again.",
   "@deleteAccountFailed": {},
-  "settingsEditProfile": "Edit Profile",
-  "@settingsEditProfile": {},
   "profileEditTitle": "Edit Profile",
   "@profileEditTitle": {},
   "profileEditSave": "Save",
@@ -965,11 +963,26 @@
   "profileEditNicknameLabel": "Nickname",
   "@profileEditNicknameLabel": {},
   "profileEditNicknameCounter": "{count}/{max}",
-  "@profileEditNicknameCounter": {"placeholders": {"count": {"type": "int"}, "max": {"type": "int"}}},
+  "@profileEditNicknameCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "profileEditNicknameEmpty": "Please enter a nickname.",
   "@profileEditNicknameEmpty": {},
   "profileEditNicknameTooLong": "A nickname can be at most {max} characters.",
-  "@profileEditNicknameTooLong": {"placeholders": {"max": {"type": "int"}}},
+  "@profileEditNicknameTooLong": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "profileEditNicknameTaken": "This nickname is already taken.",
   "@profileEditNicknameTaken": {},
   "profileEditEmailLabel": "Email",
@@ -995,5 +1008,6 @@
   "myPostsFailed": "Could not load your posts. Please try again.",
   "@myPostsFailed": {},
   "myPostsRetry": "Retry",
-  "@myPostsRetry": {}
+  "@myPostsRetry": {},
+  "discoverRadiusAtMax": "You're already at the maximum radius (100 km)."
 }

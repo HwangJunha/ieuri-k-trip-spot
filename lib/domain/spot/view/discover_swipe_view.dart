@@ -6,6 +6,7 @@ import '../../../common/permission/component/permission_blocked_notice.dart';
 import '../../../common/permission/model/permission_kind.dart';
 import '../../../common/permission/model/permission_state.dart';
 import '../../../common/permission/provider/permission_providers.dart';
+import '../../../common/storage/search_radius_controller.dart';
 import '../../../common/widget/failure_notice.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/category_bar.dart';
@@ -148,10 +149,32 @@ class _ErrorState extends StatelessWidget {
   }
 }
 
-/// 소진/0건 빈 상태: 반경 확대·카테고리 변경 유도(§7). 반경 슬라이더는 이 스펙 범위
-/// 밖이라, 카테고리 변경은 "전체" 선택으로 되돌려 재조회를 유도한다.
+/// 소진/0건 빈 상태: 반경 확대·카테고리 변경 유도(§7).
+///
+/// **"반경 넓히기"는 실제로 반경을 넓힌다**(SPEC-0011 R13으로 반경이 조회에 실리게
+/// 되면서 가능해졌다). 그전에는 소비처가 없어 빈 콜백이었다 — 눌러도 아무 일이
+/// 없는 버튼이었다.
 class _EmptyState extends ConsumerWidget {
   const _EmptyState();
+
+  /// 반경을 한 단계 넓힌다. 피드는 [SwipeController]가 반경을 watch하고 있어
+  /// **저절로 다시 받는다** — 여기서 따로 reload를 부르지 않는다.
+  ///
+  /// 이미 상한이면 넓힐 수 없다는 것을 알린다. 조용히 아무 일도 안 하면 사용자는
+  /// 버튼이 고장 난 것으로 읽는다(실제로 그 상태였다).
+  Future<void> _widen(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+  ) async {
+    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+    final bool widened = await ref
+        .read(searchRadiusControllerProvider.notifier)
+        .widen();
+    if (!widened) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.discoverRadiusAtMax)));
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -183,7 +206,7 @@ class _EmptyState extends ConsumerWidget {
               spacing: 12,
               children: <Widget>[
                 OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () => _widen(context, ref, l10n),
                   icon: const Icon(Icons.zoom_out_map),
                   label: Text(l10n.discoverWidenRadius),
                 ),

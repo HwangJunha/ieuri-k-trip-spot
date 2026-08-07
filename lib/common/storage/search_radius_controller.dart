@@ -4,6 +4,12 @@ import 'app_preferences.dart';
 
 part 'search_radius_controller.g.dart';
 
+/// "반경 넓히기"가 한 번에 올리는 폭(km).
+///
+/// 20km 안팎에서 한 단계가 의미 있게 넓어지되, 100km 상한까지 몇 번이면 닿는 크기다.
+/// 배로 늘리는 방식(1→2→4)은 작은 값에서 체감이 없고 큰 값에서 상한을 바로 넘긴다.
+const double searchRadiusStepKm = 10;
+
 /// 설정의 km 값을 서버가 받는 미터로 바꾼다.
 ///
 /// **0km는 null이 된다**(R13 네 번째 기준 — "현재 위치만"). 서버의 `radiusMeters`는
@@ -39,5 +45,25 @@ class SearchRadiusController extends _$SearchRadiusController {
     );
     await ref.read(appPreferencesProvider).saveSearchRadiusKm(clamped);
     state = clamped;
+  }
+
+  /// 반경을 한 단계 넓힌다. Discover의 빈 상태 "반경 넓히기"가 쓴다.
+  ///
+  /// **이미 상한이면 아무 일도 하지 않고 false를 돌려준다.** 상한에서 눌렀을 때
+  /// 같은 값을 다시 저장하면 상태가 안 바뀌어 피드도 다시 받지 않는데, 화면은
+  /// 눌렀다고 생각한다 — 호출부가 "더 넓힐 수 없다"를 안내할 수 있게 결과를 준다.
+  ///
+  /// **0km에서는 한 단계가 아니라 기본값으로 올린다.** 0은 "현재 위치만"이라
+  /// 여기서 10km로 가면 사용자가 의도한 좁힘을 한 번에 뒤집는 폭이 아니게 된다 —
+  /// 빈 상태에서 넓히려는 의도에는 기본값 복귀가 가장 예측 가능하다.
+  Future<bool> widen() async {
+    final double current = state;
+    if (current >= AppPreferences.maxSearchRadiusKm) return false;
+
+    final double next = current <= 0
+        ? AppPreferences.defaultSearchRadiusKm
+        : current + searchRadiusStepKm;
+    await select(next);
+    return true;
   }
 }

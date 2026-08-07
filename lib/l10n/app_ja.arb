@@ -628,7 +628,6 @@
   "deleteAccountCancel": "キャンセル",
   "deleteAccountConfirm": "退会する",
   "deleteAccountFailed": "退会できませんでした。もう一度お試しください。",
-  "settingsEditProfile": "プロフィール編集",
   "profileEditTitle": "プロフィール編集",
   "profileEditSave": "保存",
   "profileEditSaved": "プロフィールを保存しました",
@@ -648,5 +647,6 @@
   "profilePhotoFailed": "写真を変更できませんでした。もう一度お試しください。",
   "profilePhotoUnavailable": "この端末では写真を選択できません。",
   "myPostsFailed": "投稿を読み込めませんでした。もう一度お試しください。",
-  "myPostsRetry": "再試行"
+  "myPostsRetry": "再試行",
+  "discoverRadiusAtMax": "すでに最大範囲（100km）です。"
 }

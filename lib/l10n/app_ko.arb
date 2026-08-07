@@ -1413,7 +1413,6 @@
   "@requiredTermsIntro": {},
   "@requiredTermsAgree": {},
   "@requiredTermsFailed": {},
-  "settingsEditProfile": "프로필 수정",
   "profileEditTitle": "프로필 수정",
   "profileEditSave": "저장",
   "profileEditSaved": "프로필을 저장했습니다",
@@ -1434,14 +1433,28 @@
   "profilePhotoUnavailable": "이 기기에서는 사진을 고를 수 없습니다.",
   "myPostsFailed": "글을 불러오지 못했습니다. 다시 시도해 주세요.",
   "myPostsRetry": "다시 시도",
-  "@settingsEditProfile": {},
   "@profileEditTitle": {},
   "@profileEditSave": {},
   "@profileEditSaved": {},
   "@profileEditNicknameLabel": {},
-  "@profileEditNicknameCounter": {"placeholders": {"count": {"type": "int"}, "max": {"type": "int"}}},
+  "@profileEditNicknameCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "@profileEditNicknameEmpty": {},
-  "@profileEditNicknameTooLong": {"placeholders": {"max": {"type": "int"}}},
+  "@profileEditNicknameTooLong": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "@profileEditNicknameTaken": {},
   "@profileEditEmailLabel": {},
   "@profileEditEmailReadOnly": {},
@@ -1454,5 +1467,9 @@
   "@profilePhotoFailed": {},
   "@profilePhotoUnavailable": {},
   "@myPostsFailed": {},
-  "@myPostsRetry": {}
+  "@myPostsRetry": {},
+  "discoverRadiusAtMax": "이미 최대 반경(100km)입니다.",
+  "@discoverRadiusAtMax": {
+    "description": "반경이 이미 상한이라 더 넓힐 수 없을 때의 안내"
+  }
 }

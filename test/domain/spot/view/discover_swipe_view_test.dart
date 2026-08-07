@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
 import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
+import 'package:ieuri_k_trip_spot/common/storage/search_radius_controller.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/component/drag_feedback_overlay.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/component/swipe_card.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
@@ -15,18 +16,28 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../spot_test_doubles.dart';
 
-Future<void> _pump(
+Future<ProviderContainer> _pump(
   WidgetTester tester, {
   required FakeSpotRepository repo,
+  double? radiusKm,
 }) async {
+  if (radiusKm != null) {
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      'search_radius_km': radiusKm,
+    });
+  }
   final prefs = await SharedPreferences.getInstance();
+  final ProviderContainer container = ProviderContainer(
+    overrides: [
+      spotRepositoryProvider.overrideWithValue(repo),
+      sharedPreferencesProvider.overrideWithValue(prefs),
+      locationServiceProvider.overrideWithValue(FakeLocationService()),
+    ],
+  );
+  addTearDown(container.dispose);
   await tester.pumpWidget(
-    ProviderScope(
-      overrides: [
-        spotRepositoryProvider.overrideWithValue(repo),
-        sharedPreferencesProvider.overrideWithValue(prefs),
-        locationServiceProvider.overrideWithValue(FakeLocationService()),
-      ],
+    UncontrolledProviderScope(
+      container: container,
       child: const MaterialApp(
         localizationsDelegates: <LocalizationsDelegate<Object>>[
           AppLocalizations.delegate,
@@ -40,6 +51,7 @@ Future<void> _pump(
       ),
     ),
   );
+  return container;
 }
 
 List<TouristSpot> _spots(int n) =>
@@ -120,5 +132,53 @@ void main() {
     expect(find.text('Transport'), findsOneWidget);
     expect(find.text('Tourist Spots'), findsOneWidget);
     expect(find.text('Travel Courses'), findsNothing);
+  });
+
+  // "반경 넓히기"는 오랫동안 빈 콜백이라 눌러도 아무 일이 없었다(사용자 보고).
+  // 렌더링만 확인하는 위 테스트는 그 상태에서도 통과했다.
+  testWidgets('반경 넓히기를 누르면 반경이 실제로 넓어진다', (tester) async {
+    final ProviderContainer container = await _pump(
+      tester,
+      repo: FakeSpotRepository(feed: const <TouristSpot>[]),
+      radiusKm: 20,
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Widen radius'));
+    await tester.pumpAndSettle();
+
+    expect(container.read(searchRadiusControllerProvider), 30);
+  });
+
+  testWidgets('반경 넓히기가 새 반경으로 피드를 다시 받는다', (tester) async {
+    final FakeSpotRepository repo = FakeSpotRepository(
+      feed: const <TouristSpot>[],
+    );
+    await _pump(tester, repo: repo, radiusKm: 20);
+    await tester.pumpAndSettle();
+    expect(repo.requestedRadiiMeters, <int?>[20000]);
+
+    await tester.tap(find.text('Widen radius'));
+    await tester.pumpAndSettle();
+
+    expect(repo.requestedRadiiMeters, <int?>[20000, 30000]);
+  });
+
+  testWidgets('이미 상한이면 더 넓힐 수 없다고 알린다', (tester) async {
+    final ProviderContainer container = await _pump(
+      tester,
+      repo: FakeSpotRepository(feed: const <TouristSpot>[]),
+      radiusKm: 100,
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Widen radius'));
+    await tester.pumpAndSettle();
+
+    expect(container.read(searchRadiusControllerProvider), 100);
+    expect(
+      find.text("You're already at the maximum radius (100 km)."),
+      findsOneWidget,
+    );
   });
 }

@@ -628,7 +628,6 @@
   "deleteAccountCancel": "取消",
   "deleteAccountConfirm": "确认注销",
   "deleteAccountFailed": "注销失败，请重试。",
-  "settingsEditProfile": "编辑资料",
   "profileEditTitle": "编辑资料",
   "profileEditSave": "保存",
   "profileEditSaved": "资料已保存",
@@ -648,5 +647,6 @@
   "profilePhotoFailed": "更换照片失败，请重试。",
   "profilePhotoUnavailable": "此设备无法选择照片。",
   "myPostsFailed": "无法加载帖子，请重试。",
-  "myPostsRetry": "重试"
+  "myPostsRetry": "重试",
+  "discoverRadiusAtMax": "已是最大范围（100 公里）。"
 }

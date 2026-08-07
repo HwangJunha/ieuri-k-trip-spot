@@ -76,4 +76,66 @@ void main() {
 
     expect(container.read(searchRadiusControllerProvider), 0);
   });
+
+  // Discover 빈 상태의 "반경 넓히기"가 쓰는 동작. 예전에는 이 버튼이 빈 콜백이라
+  // 눌러도 아무 일이 없었다.
+  group('반경 넓히기', () {
+    test('한 단계 넓힌다', () async {
+      final ProviderContainer container = await _container(
+        initial: <String, Object>{'search_radius_km': 20.0},
+      );
+
+      final bool widened = await container
+          .read(searchRadiusControllerProvider.notifier)
+          .widen();
+
+      expect(widened, isTrue);
+      expect(container.read(searchRadiusControllerProvider), 30);
+    });
+
+    test('넓힌 값이 저장돼 복원된다', () async {
+      final ProviderContainer container = await _container(
+        initial: <String, Object>{'search_radius_km': 20.0},
+      );
+
+      await container.read(searchRadiusControllerProvider.notifier).widen();
+
+      expect(container.read(appPreferencesProvider).searchRadiusKm, 30);
+    });
+
+    // 0km는 "현재 위치만"이라 한 단계(10km)보다 기본값 복귀가 예측 가능하다.
+    test('0km에서는 기본값으로 올린다', () async {
+      final ProviderContainer container = await _container(
+        initial: <String, Object>{'search_radius_km': 0.0},
+      );
+
+      await container.read(searchRadiusControllerProvider.notifier).widen();
+
+      expect(container.read(searchRadiusControllerProvider), 20);
+    });
+
+    test('상한을 넘지 않는다', () async {
+      final ProviderContainer container = await _container(
+        initial: <String, Object>{'search_radius_km': 95.0},
+      );
+
+      await container.read(searchRadiusControllerProvider.notifier).widen();
+
+      expect(container.read(searchRadiusControllerProvider), 100);
+    });
+
+    // 상한에서 조용히 아무 일도 안 하면 화면이 "고장 났다"와 구분하지 못한다.
+    test('이미 상한이면 false를 돌려준다', () async {
+      final ProviderContainer container = await _container(
+        initial: <String, Object>{'search_radius_km': 100.0},
+      );
+
+      final bool widened = await container
+          .read(searchRadiusControllerProvider.notifier)
+          .widen();
+
+      expect(widened, isFalse);
+      expect(container.read(searchRadiusControllerProvider), 100);
+    });
+  });
 }
