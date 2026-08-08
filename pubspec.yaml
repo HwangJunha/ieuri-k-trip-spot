@@ -37,6 +37,9 @@ dependencies:
   gql: any
   # HttpLink에 응답 시한을 거는 http.BaseClient용 (common/network 전용)
   http: ^1.6.0
+  # 동의 창 없이 google server auth code를 묻기 위한 저수준 API.
+  # google_sign_in의 authorizeServer()는 prompt를 강제해 창이 두 번 뜬다(SPEC-0012).
+  google_sign_in_platform_interface: ^3.1.0
 
   # Secure storage for tokens (via common/storage wrapper only)
   flutter_secure_storage: ^9.2.2

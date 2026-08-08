@@ -4,6 +4,54 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/repository/sns_authenticator.dart';
 
 void main() {
+  group('codeSilentlyOrPrompt', () {
+    test('조용히 얻으면 동의 창을 띄우지 않는다', () async {
+      // iOS가 이 경로다 — 로그인 때 받은 code가 캐시돼 있다. 여기서 창을
+      // 띄우면 로그인 한 번에 동의 창이 두 번 뜬다(실기기에서 관측된 버그).
+      bool prompted = false;
+
+      final String? code = await codeSilentlyOrPrompt(
+        silently: () async => 'cached-code',
+        withPrompt: () async {
+          prompted = true;
+          return 'prompted-code';
+        },
+      );
+
+      expect(code, 'cached-code');
+      expect(prompted, isFalse);
+    });
+
+    test('조용히 못 얻으면 동의 창으로 넘어간다', () async {
+      // 안드로이드의 첫 로그인이 이 경로다.
+      final String? code = await codeSilentlyOrPrompt(
+        silently: () async => null,
+        withPrompt: () async => 'prompted-code',
+      );
+
+      expect(code, 'prompted-code');
+    });
+
+    test('빈 문자열은 값이 아니라 없음으로 본다', () async {
+      final String? code = await codeSilentlyOrPrompt(
+        silently: () async => '',
+        withPrompt: () async => 'prompted-code',
+      );
+
+      expect(code, 'prompted-code');
+    });
+
+    test('둘 다 빈손이면 null이다', () async {
+      // code가 없다고 로그인이 막히면 안 된다(R7) — 판단은 optionalCode가 한다.
+      final String? code = await codeSilentlyOrPrompt(
+        silently: () async => null,
+        withPrompt: () async => null,
+      );
+
+      expect(code, isNull);
+    });
+  });
+
   test('returns the code when the provider gives one', () async {
     expect(
       await optionalCode(() async => 'server-auth-code'),
