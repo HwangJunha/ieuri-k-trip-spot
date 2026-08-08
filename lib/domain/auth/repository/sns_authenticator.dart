@@ -25,6 +25,38 @@ abstract interface class SnsAuthenticator {
   Future<SnsCredential> authenticate(SnsProvider provider);
 }
 
+/// authorization code 획득을 인증 흐름에서 떼어 낸다(SPEC-0012 R7).
+///
+/// [fetch]가 무엇을 하든 결과는 `String?` 하나다 — 값을 얻으면 그 값,
+/// 못 얻으면 null이다. 실패는 **전부** 삼킨다:
+///
+/// - `Exception`(SDK가 던지는 대부분)
+/// - `Error`(플러그인 미초기화의 `StateError` 등). `on Exception`은 이것을
+///   잡지 못해 그대로 빠져나가고, 그러면 code를 못 얻었다는 이유로 로그인
+///   자체가 실패한다 — R7이 정확히 금지하는 것이다.
+/// - 응답 없음. 이 호출은 동의 화면을 띄울 수 있어(구글 SDK가
+///   `promptIfUnauthorized: true`를 고정한다) 사용자가 응답하지 않으면
+///   무한정 기다린다. 로그인을 보류시키는 것 역시 R7 위반이라 잘라 낸다.
+///
+/// code는 인증의 곁가지다. 여기서 나온 실패가 본류로 전파되어서는 안 된다.
+Future<String?> optionalCode(
+  Future<String?> Function() fetch, {
+  Duration timeout = const Duration(seconds: 5),
+}) async {
+  // `Future.timeout`이 아니라 `Future.any`인 이유: 전자는 테스트의 가짜 시계
+  // 아래에서 타이머가 진행되지 않아 값이 준비돼 있어도 즉시 onTimeout으로
+  // 떨어진다. 그러면 SNS 로그인을 태우는 위젯 테스트가 실제와 다른 것(code가
+  // 항상 null)을 검증하게 된다. `any`는 먼저 끝나는 쪽을 그대로 쓴다.
+  try {
+    return await Future.any(<Future<String?>>[
+      fetch(),
+      Future<String?>.delayed(timeout),
+    ]);
+  } on Object {
+    return null;
+  }
+}
+
 class SnsAuthenticatorImpl implements SnsAuthenticator {
   const SnsAuthenticatorImpl();
 
@@ -80,24 +112,14 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
   /// 구글의 server auth code를 얻는다(SPEC-0012 R4). 없으면 null.
   ///
   /// v7에서 code는 `authenticate()` 결과에 담겨 오지 않고 별도 호출로 받는다.
-  /// 이 호출은 정상적으로도 null을 준다 — 플랫폼에 따라 최초 로그인에서만
-  /// 발급되기 때문이다. 실패도 마찬가지로 삼킨다: code는 인증의 곁가지이고
-  /// 여기서 던지면 로그인 자체가 막힌다(R7).
-  ///
-  /// 이 호출은 동의 화면을 띄울 수 있어(SDK가 `promptIfUnauthorized: true`를
-  /// 고정한다) 사용자가 응답하지 않으면 무한정 기다린다. 로그인을 보류시키는
-  /// 것 역시 R7이 금지하는 바이므로 시간을 잘라 낸다 — 못 얻으면 없는 것이다.
-  Future<String?> _googleServerAuthCode(GoogleSignInAccount account) async {
-    try {
-      final GoogleSignInServerAuthorization? auth = await account
-          .authorizationClient
-          .authorizeServer(const <String>[])
-          .timeout(const Duration(seconds: 5), onTimeout: () => null);
-      return auth?.serverAuthCode;
-    } on Exception {
-      return null;
-    }
-  }
+  /// 이 호출은 **정상적으로도 null을 준다** — 플랫폼에 따라 최초 로그인에서만
+  /// 발급되기 때문이다. 실패 처리는 [optionalCode]가 맡는다.
+  Future<String?> _googleServerAuthCode(GoogleSignInAccount account) =>
+      optionalCode(
+        () async => (await account.authorizationClient.authorizeServer(
+          const <String>[],
+        ))?.serverAuthCode,
+      );
 
   // --- Apple (sign_in_with_apple) ------------------------------------------
 
