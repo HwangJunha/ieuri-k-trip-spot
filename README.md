@@ -102,6 +102,36 @@ nc -z -v 192.168.0.10 8888
 둘 다 정상인데 폰만 안 되면 맥의 방화벽이나 공유기의 AP 격리(클라이언트 간
 통신 차단)를 본다.
 
+### 카카오: 안드로이드 키 해시 등록
+
+안드로이드에서 카카오 로그인이 이 오류로 실패하면:
+
+```
+[SNS] kakao 인증 실패: AuthErrorCause.misconfigured Android keyHash validation failed.
+```
+
+앱 서명의 키 해시가 카카오 개발자 콘솔에 등록되지 않은 것이다. 코드가 아니라
+콘솔 설정 문제다. 해시를 뽑아 **내 애플리케이션 → 플랫폼 → Android**에 추가한다:
+
+```sh
+keytool -exportcert -alias androiddebugkey -keystore ~/.android/debug.keystore \
+  -storepass android -keypass android | openssl sha1 -binary | openssl base64
+```
+
+**개발자마다 디버그 키스토어가 다르므로 각자의 해시를 등록해야 한다.** 배포용
+키로 서명하면 그 키의 해시도 따로 등록한다. 실제 APK의 서명을 확인하려면:
+
+```sh
+apksigner verify --print-certs build/app/outputs/flutter-apk/app-debug.apk
+```
+
+### 안드로이드에서 애플 로그인은 제공하지 않는다
+
+`sign_in_with_apple`은 애플 기기 밖에서 웹 흐름을 쓰는데, `webAuthenticationOptions`
+(Apple Developer의 Service ID·리다이렉트 URL과 그 리다이렉트를 받아 앱으로
+되돌려줄 서버 엔드포인트)가 필요하다. 그것이 없는 동안에는 안드로이드에서 애플
+버튼을 노출하지 않는다 — 눌러도 예외만 나기 때문이다.
+
 ### GOOGLE_SERVER_CLIENT_ID가 왜 필요한가
 
 이 값이 없으면 로그인은 되더라도 **authorization code가 오지 않는다**(SPEC-0012).
