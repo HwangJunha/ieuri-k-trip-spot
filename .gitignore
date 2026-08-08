@@ -393,3 +393,7 @@ hs_err_pid*
 # GraphQL introspection snapshot — regenerated per session from the live server,
 # never committed (see hooks/require-fresh-schema.sh + CLAUDE.md §13).
 /schema/schema.introspection.json
+
+# SNS 클라이언트 식별자 등 빌드 시 주입값. 값 자체는 공개 식별자지만 환경마다
+# 다르므로 커밋하지 않는다 — 형식은 .env.example을 본다.
+/.env
