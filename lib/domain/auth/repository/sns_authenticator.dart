@@ -248,6 +248,14 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
       final String? idToken = token.idToken;
       if (idToken == null || idToken.isEmpty) {
         // Null id_token means OIDC isn't enabled for the Kakao app.
+        // 로그인 자체는 성공했는데(access token은 받았다) id_token만 없는
+        // 상태다 — 카카오 개발자 콘솔에서 OpenID Connect를 켜야 한다.
+        if (kDebugMode) {
+          debugPrint(
+            '[SNS] kakao id_token 없음 — 개발자 콘솔에서 OpenID Connect를 '
+            '활성화해야 한다 (accessToken은 받았다: ${token.accessToken.isNotEmpty})',
+          );
+        }
         throw const AuthFailure(AuthFailureKind.unknown);
       }
       // Fetch profile for prefill; email/nickname require consent scopes and may
@@ -270,8 +278,15 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
       if (e.error == AuthErrorCause.accessDenied) {
         throw const SnsCancelledException();
       }
+      // 사용자 취소가 아닌 인증 실패 — 앱 키·redirect URI 불일치, 콘솔 설정
+      // 누락 등이 여기로 온다. 원인을 남기지 않으면 화면에 "문제가
+      // 발생했습니다"만 뜨고 무엇이 잘못됐는지 알 수 없다.
+      if (kDebugMode) {
+        debugPrint('[SNS] kakao 인증 실패: ${e.error} ${e.errorDescription}');
+      }
       throw const AuthFailure(AuthFailureKind.unknown);
-    } on KakaoException {
+    } on KakaoException catch (e) {
+      if (kDebugMode) debugPrint('[SNS] kakao SDK 오류: $e');
       throw const AuthFailure(AuthFailureKind.unknown);
     }
   }
