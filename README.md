@@ -20,6 +20,9 @@ GOOGLE_IOS_CLIENT_ID=
 
 # 카카오 네이티브 앱 키. Info.plist의 `kakao{키}` URL scheme과 같은 값이어야 한다.
 KAKAO_NATIVE_APP_KEY=
+
+# 실기기에서만 필요하다 — 아래 "실기기로 로컬 서버에 붙기" 참고.
+# GRAPHQL_ENDPOINT=http://192.168.0.10:8888/graphql
 ```
 
 여기 값들은 전부 **공개 클라이언트 식별자**이지 시크릿이 아니다. 그럼에도
@@ -46,6 +49,39 @@ CI에서는 `.env`가 없으므로 값을 시크릿에서 직접 넘긴다:
       --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }} \
       --dart-define=KAKAO_NATIVE_APP_KEY=${{ secrets.KAKAO_NATIVE_APP_KEY }}
 ```
+
+### 실기기로 로컬 서버에 붙기
+
+기본 엔드포인트는 **시뮬레이터/에뮬레이터 전용**이다(iOS는 `localhost`,
+안드로이드 에뮬레이터는 `10.0.2.2`). 실기기에서는 둘 다 통하지 않는다 —
+실기기의 `localhost`는 폰 자신이고 `10.0.2.2`는 아무 데도 가리키지 않는다.
+증상은 `linkException: UnknownException`과 `data: null`이다.
+
+개발 머신의 LAN IP를 `.env`에 넣는다. 폰과 **같은 Wi-Fi**여야 한다.
+
+```sh
+# 맥의 Wi-Fi IP 확인
+ipconfig getifaddr en0
+```
+
+```sh
+# .env
+GRAPHQL_ENDPOINT=http://192.168.0.10:8888/graphql
+```
+
+닿지 않으면 순서대로 확인한다:
+
+```sh
+# 1. 서버가 루프백에만 묶여 있지 않은지 — `*:8888`이어야 한다.
+#    `127.0.0.1:8888`이면 외부에서 붙을 수 없다.
+lsof -nP -iTCP:8888 -sTCP:LISTEN
+
+# 2. 그 IP:포트로 TCP가 열리는지
+nc -z -v 192.168.0.10 8888
+```
+
+둘 다 정상인데 폰만 안 되면 맥의 방화벽이나 공유기의 AP 격리(클라이언트 간
+통신 차단)를 본다.
 
 ### GOOGLE_SERVER_CLIENT_ID가 왜 필요한가
 

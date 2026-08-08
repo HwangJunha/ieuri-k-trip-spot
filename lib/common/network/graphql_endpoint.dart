@@ -1,9 +1,22 @@
 import 'dart:io' show Platform;
 
 /// Resolves the GraphQL endpoint (spec §6.1). Injected via
-/// `--dart-define=GRAPHQL_ENDPOINT=...`; when unset, defaults per emulator host
-/// — Android emulators reach the host loopback at `10.0.2.2`, iOS simulators use
-/// `localhost`. Both targets are emulators.
+/// `--dart-define=GRAPHQL_ENDPOINT=...`.
+///
+/// **기본값은 시뮬레이터/에뮬레이터 전용이다.** 안드로이드 에뮬레이터는 호스트
+/// 루프백을 `10.0.2.2`로 보고, iOS 시뮬레이터는 맥과 루프백을 공유해 `localhost`가
+/// 통한다.
+///
+/// **실기기에서는 둘 다 통하지 않는다** — 실기기의 `localhost`는 폰 자신이고
+/// `10.0.2.2`는 아무 데도 가리키지 않는다. 개발 머신의 LAN IP를 넣어야 한다:
+///
+/// ```
+/// GRAPHQL_ENDPOINT=http://192.168.0.10:8888/graphql
+/// ```
+///
+/// 값은 `.env`에 두고 `--dart-define-from-file=.env`로 넘긴다(README 참고).
+/// 서버가 루프백에만 바인딩돼 있으면 IP를 맞춰도 닿지 않으므로, `lsof -nP
+/// -iTCP:8888 -sTCP:LISTEN`이 `*:8888`인지 함께 본다.
 class GraphqlEndpoint {
   const GraphqlEndpoint._();
 
