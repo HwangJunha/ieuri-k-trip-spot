@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
@@ -91,10 +92,20 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
         // No id_token usually means serverClientId wasn't configured.
         throw const AuthFailure(AuthFailureKind.unknown);
       }
+      final String? serverAuthCode = await _googleServerAuthCode(account);
+      if (kDebugMode && serverAuthCode == null) {
+        // code 없이도 로그인은 진행된다(R7). 다만 서버가 연동 해제용 토큰을
+        // 보충하지 못하므로, 원인을 짚을 수 있게 디버그 빌드에서만 남긴다 —
+        // 가장 흔한 원인은 serverClientId(웹 클라이언트 id) 미주입이다.
+        debugPrint(
+          '[SNS] google server auth code 없음 '
+          '(serverClientId ${SnsConfig.googleServerClientId.isEmpty ? "미설정" : "설정됨"})',
+        );
+      }
       return SnsCredential(
         provider: SnsProvider.google,
         idToken: idToken,
-        authorizationCode: await _googleServerAuthCode(account),
+        authorizationCode: serverAuthCode,
         email: account.email,
         // Google-verified emails are trustworthy, but the server re-decides;
         // we don't get a per-account verified flag here, so leave it false.
@@ -109,15 +120,32 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
     }
   }
 
+  /// 구글이 서버에 넘길 code를 받기 위해 요청하는 scope.
+  ///
+  /// **비워 두면 안 된다.** 안드로이드 플러그인은 accessToken이 null이면
+  /// serverAuthCode를 받았더라도 버리는데(`google_sign_in_android`), 빈 scope는
+  /// access token을 만들 근거가 없어 정확히 그 상태가 된다. 로그인에 이미 쓰는
+  /// 세 가지를 그대로 요청해 추가 동의를 만들지 않는다.
+  static const List<String> _googleServerScopes = <String>[
+    'openid',
+    'email',
+    'profile',
+  ];
+
   /// 구글의 server auth code를 얻는다(SPEC-0012 R4). 없으면 null.
   ///
   /// v7에서 code는 `authenticate()` 결과에 담겨 오지 않고 별도 호출로 받는다.
   /// 이 호출은 **정상적으로도 null을 준다** — 플랫폼에 따라 최초 로그인에서만
   /// 발급되기 때문이다. 실패 처리는 [optionalCode]가 맡는다.
+  ///
+  /// 안드로이드에서 code를 받으려면 `initialize(serverClientId:)`에 **웹**
+  /// 클라이언트 id가 들어가 있어야 한다. 없으면 네이티브가 `requestOfflineAccess`
+  /// 를 호출하지 않아 code를 요청조차 하지 않는다 — 값은 `SnsConfig`가 빌드
+  /// 시점에 받는다.
   Future<String?> _googleServerAuthCode(GoogleSignInAccount account) =>
       optionalCode(
         () async => (await account.authorizationClient.authorizeServer(
-          const <String>[],
+          _googleServerScopes,
         ))?.serverAuthCode,
       );
 
