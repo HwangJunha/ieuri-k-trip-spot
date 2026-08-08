@@ -111,20 +111,10 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
         // No id_token usually means serverClientId wasn't configured.
         throw const AuthFailure(AuthFailureKind.unknown);
       }
-      final String? serverAuthCode = await _googleServerAuthCode(account);
-      if (kDebugMode && serverAuthCode == null) {
-        // code 없이도 로그인은 진행된다(R7). 다만 서버가 연동 해제용 토큰을
-        // 보충하지 못하므로, 원인을 짚을 수 있게 디버그 빌드에서만 남긴다 —
-        // 가장 흔한 원인은 serverClientId(웹 클라이언트 id) 미주입이다.
-        debugPrint(
-          '[SNS] google server auth code 없음 '
-          '(serverClientId ${SnsConfig.googleServerClientId.isEmpty ? "미설정" : "설정됨"})',
-        );
-      }
       return SnsCredential(
         provider: SnsProvider.google,
         idToken: idToken,
-        authorizationCode: serverAuthCode,
+        authorizationCode: await _googleServerAuthCode(account),
         email: account.email,
         // Google-verified emails are trustworthy, but the server re-decides;
         // we don't get a per-account verified flag here, so leave it false.
