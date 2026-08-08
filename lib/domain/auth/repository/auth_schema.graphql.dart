@@ -324,7 +324,12 @@ class Input$LoginSnsInput {
   factory Input$LoginSnsInput({
     required Enum$Provider provider,
     required String idToken,
-  }) => Input$LoginSnsInput._({r'provider': provider, r'idToken': idToken});
+    String? authorizationCode,
+  }) => Input$LoginSnsInput._({
+    r'provider': provider,
+    r'idToken': idToken,
+    if (authorizationCode != null) r'authorizationCode': authorizationCode,
+  });
 
   Input$LoginSnsInput._(this._$data);
 
@@ -334,6 +339,10 @@ class Input$LoginSnsInput {
     result$data['provider'] = fromJson$Enum$Provider((l$provider as String));
     final l$idToken = data['idToken'];
     result$data['idToken'] = (l$idToken as String);
+    if (data.containsKey('authorizationCode')) {
+      final l$authorizationCode = data['authorizationCode'];
+      result$data['authorizationCode'] = (l$authorizationCode as String?);
+    }
     return Input$LoginSnsInput._(result$data);
   }
 
@@ -343,12 +352,18 @@ class Input$LoginSnsInput {
 
   String get idToken => (_$data['idToken'] as String);
 
+  String? get authorizationCode => (_$data['authorizationCode'] as String?);
+
   Map<String, dynamic> toJson() {
     final result$data = <String, dynamic>{};
     final l$provider = provider;
     result$data['provider'] = toJson$Enum$Provider(l$provider);
     final l$idToken = idToken;
     result$data['idToken'] = l$idToken;
+    if (_$data.containsKey('authorizationCode')) {
+      final l$authorizationCode = authorizationCode;
+      result$data['authorizationCode'] = l$authorizationCode;
+    }
     return result$data;
   }
 
@@ -373,6 +388,15 @@ class Input$LoginSnsInput {
     if (l$idToken != lOther$idToken) {
       return false;
     }
+    final l$authorizationCode = authorizationCode;
+    final lOther$authorizationCode = other.authorizationCode;
+    if (_$data.containsKey('authorizationCode') !=
+        other._$data.containsKey('authorizationCode')) {
+      return false;
+    }
+    if (l$authorizationCode != lOther$authorizationCode) {
+      return false;
+    }
     return true;
   }
 
@@ -380,7 +404,12 @@ class Input$LoginSnsInput {
   int get hashCode {
     final l$provider = provider;
     final l$idToken = idToken;
-    return Object.hashAll([l$provider, l$idToken]);
+    final l$authorizationCode = authorizationCode;
+    return Object.hashAll([
+      l$provider,
+      l$idToken,
+      _$data.containsKey('authorizationCode') ? l$authorizationCode : const {},
+    ]);
   }
 }
 
@@ -393,7 +422,11 @@ abstract class CopyWith$Input$LoginSnsInput<TRes> {
   factory CopyWith$Input$LoginSnsInput.stub(TRes res) =
       _CopyWithStubImpl$Input$LoginSnsInput;
 
-  TRes call({Enum$Provider? provider, String? idToken});
+  TRes call({
+    Enum$Provider? provider,
+    String? idToken,
+    String? authorizationCode,
+  });
 }
 
 class _CopyWithImpl$Input$LoginSnsInput<TRes>
@@ -406,16 +439,21 @@ class _CopyWithImpl$Input$LoginSnsInput<TRes>
 
   static const _undefined = <dynamic, dynamic>{};
 
-  TRes call({Object? provider = _undefined, Object? idToken = _undefined}) =>
-      _then(
-        Input$LoginSnsInput._({
-          ..._instance._$data,
-          if (provider != _undefined && provider != null)
-            'provider': (provider as Enum$Provider),
-          if (idToken != _undefined && idToken != null)
-            'idToken': (idToken as String),
-        }),
-      );
+  TRes call({
+    Object? provider = _undefined,
+    Object? idToken = _undefined,
+    Object? authorizationCode = _undefined,
+  }) => _then(
+    Input$LoginSnsInput._({
+      ..._instance._$data,
+      if (provider != _undefined && provider != null)
+        'provider': (provider as Enum$Provider),
+      if (idToken != _undefined && idToken != null)
+        'idToken': (idToken as String),
+      if (authorizationCode != _undefined)
+        'authorizationCode': (authorizationCode as String?),
+    }),
+  );
 }
 
 class _CopyWithStubImpl$Input$LoginSnsInput<TRes>
@@ -424,7 +462,8 @@ class _CopyWithStubImpl$Input$LoginSnsInput<TRes>
 
   TRes _res;
 
-  call({Enum$Provider? provider, String? idToken}) => _res;
+  call({Enum$Provider? provider, String? idToken, String? authorizationCode}) =>
+      _res;
 }
 
 class Input$LogoutInput {
@@ -897,12 +936,14 @@ class Input$RegisterSnsMemberInput {
     required String email,
     required bool ageVerified,
     required List<Input$AgreementInput> agreements,
+    String? authorizationCode,
   }) => Input$RegisterSnsMemberInput._({
     r'provider': provider,
     r'idToken': idToken,
     r'email': email,
     r'ageVerified': ageVerified,
     r'agreements': agreements,
+    if (authorizationCode != null) r'authorizationCode': authorizationCode,
   });
 
   Input$RegisterSnsMemberInput._(this._$data);
@@ -921,6 +962,10 @@ class Input$RegisterSnsMemberInput {
     result$data['agreements'] = (l$agreements as List<dynamic>)
         .map((e) => Input$AgreementInput.fromJson((e as Map<String, dynamic>)))
         .toList();
+    if (data.containsKey('authorizationCode')) {
+      final l$authorizationCode = data['authorizationCode'];
+      result$data['authorizationCode'] = (l$authorizationCode as String?);
+    }
     return Input$RegisterSnsMemberInput._(result$data);
   }
 
@@ -937,6 +982,8 @@ class Input$RegisterSnsMemberInput {
   List<Input$AgreementInput> get agreements =>
       (_$data['agreements'] as List<Input$AgreementInput>);
 
+  String? get authorizationCode => (_$data['authorizationCode'] as String?);
+
   Map<String, dynamic> toJson() {
     final result$data = <String, dynamic>{};
     final l$provider = provider;
@@ -949,6 +996,10 @@ class Input$RegisterSnsMemberInput {
     result$data['ageVerified'] = l$ageVerified;
     final l$agreements = agreements;
     result$data['agreements'] = l$agreements.map((e) => e.toJson()).toList();
+    if (_$data.containsKey('authorizationCode')) {
+      final l$authorizationCode = authorizationCode;
+      result$data['authorizationCode'] = l$authorizationCode;
+    }
     return result$data;
   }
 
@@ -996,6 +1047,15 @@ class Input$RegisterSnsMemberInput {
         return false;
       }
     }
+    final l$authorizationCode = authorizationCode;
+    final lOther$authorizationCode = other.authorizationCode;
+    if (_$data.containsKey('authorizationCode') !=
+        other._$data.containsKey('authorizationCode')) {
+      return false;
+    }
+    if (l$authorizationCode != lOther$authorizationCode) {
+      return false;
+    }
     return true;
   }
 
@@ -1006,12 +1066,14 @@ class Input$RegisterSnsMemberInput {
     final l$email = email;
     final l$ageVerified = ageVerified;
     final l$agreements = agreements;
+    final l$authorizationCode = authorizationCode;
     return Object.hashAll([
       l$provider,
       l$idToken,
       l$email,
       l$ageVerified,
       Object.hashAll(l$agreements.map((v) => v)),
+      _$data.containsKey('authorizationCode') ? l$authorizationCode : const {},
     ]);
   }
 }
@@ -1031,6 +1093,7 @@ abstract class CopyWith$Input$RegisterSnsMemberInput<TRes> {
     String? email,
     bool? ageVerified,
     List<Input$AgreementInput>? agreements,
+    String? authorizationCode,
   });
   TRes agreements(
     Iterable<Input$AgreementInput> Function(
@@ -1056,6 +1119,7 @@ class _CopyWithImpl$Input$RegisterSnsMemberInput<TRes>
     Object? email = _undefined,
     Object? ageVerified = _undefined,
     Object? agreements = _undefined,
+    Object? authorizationCode = _undefined,
   }) => _then(
     Input$RegisterSnsMemberInput._({
       ..._instance._$data,
@@ -1068,6 +1132,8 @@ class _CopyWithImpl$Input$RegisterSnsMemberInput<TRes>
         'ageVerified': (ageVerified as bool),
       if (agreements != _undefined && agreements != null)
         'agreements': (agreements as List<Input$AgreementInput>),
+      if (authorizationCode != _undefined)
+        'authorizationCode': (authorizationCode as String?),
     }),
   );
 
@@ -1097,6 +1163,7 @@ class _CopyWithStubImpl$Input$RegisterSnsMemberInput<TRes>
     String? email,
     bool? ageVerified,
     List<Input$AgreementInput>? agreements,
+    String? authorizationCode,
   }) => _res;
 
   agreements(_fn) => _res;

@@ -134,6 +134,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<AuthSession> loginSns({
     required SnsProvider provider,
     required String idToken,
+    String? authorizationCode,
   }) async {
     final Map<String, dynamic> data = await _mutate(
       documentNodeMutationLoginSns,
@@ -141,6 +142,7 @@ class AuthRepositoryImpl implements AuthRepository {
         input: Input$LoginSnsInput(
           provider: _provider(provider),
           idToken: idToken,
+          authorizationCode: _codeOrNull(authorizationCode),
         ),
       ).toJson(),
       'loginSns',
@@ -163,6 +165,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required bool ageVerified,
     required List<Agreement> agreements,
+    String? authorizationCode,
   }) async {
     final Map<String, dynamic> data = await _mutate(
       documentNodeMutationRegisterSnsMember,
@@ -180,6 +183,7 @@ class AuthRepositoryImpl implements AuthRepository {
                 ),
               )
               .toList(),
+          authorizationCode: _codeOrNull(authorizationCode),
         ),
       ).toJson(),
       'registerSnsMember',
@@ -309,6 +313,15 @@ class AuthRepositoryImpl implements AuthRepository {
     SnsProvider.apple => Enum$Provider.APPLE,
     SnsProvider.kakao => Enum$Provider.KAKAO,
   };
+
+  /// 빈 문자열을 null로 눕힌다(SPEC-0012 R4).
+  ///
+  /// provider가 빈 code를 줄 이유는 없지만, 준다면 그것은 "없음"이지 "빈 값을
+  /// 보내라"가 아니다. 필드를 아예 빼는 쪽이 R7의 정상 경로와 같은 모양이다.
+  static String? _codeOrNull(String? authorizationCode) =>
+      (authorizationCode == null || authorizationCode.isEmpty)
+      ? null
+      : authorizationCode;
 
   AuthSession _sessionFrom({
     required String? accessToken,

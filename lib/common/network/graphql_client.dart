@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:http/http.dart' as http;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../localization/locale_controller.dart';
@@ -47,6 +48,13 @@ class TokenRefreshBridge {
 @Riverpod(keepAlive: true)
 TokenRefreshBridge tokenRefreshBridge(Ref ref) => TokenRefreshBridge();
 
+/// 모든 GraphQL 요청의 응답 시한.
+///
+/// 두 곳에 같은 값을 건다 — `queryRequestTimeout`(링크 체인 바깥, 실제로
+/// 요청을 끊는 쪽)과 [_TimeoutHttpClient](HTTP 소켓 쪽). 앞의 것만으로도
+/// 충분하지만, 뒤가 없으면 소켓이 열린 채 남을 수 있다.
+const Duration _requestTimeout = Duration(seconds: 30);
+
 /// The shared `graphql_flutter` client (CLAUDE.md §4 — lives only in
 /// `common/network`). Injects `Authorization: Bearer <accessToken>` from
 /// [SecureStorage] on every request, sends the app's active language as an
@@ -57,7 +65,10 @@ GraphQLClient graphqlClient(Ref ref) {
   final SecureStorage storage = ref.watch(secureStorageProvider);
   final TokenRefreshBridge bridge = ref.watch(tokenRefreshBridgeProvider);
 
-  final HttpLink httpLink = HttpLink(GraphqlEndpoint.resolve());
+  final HttpLink httpLink = HttpLink(
+    GraphqlEndpoint.resolve(),
+    httpClient: _TimeoutHttpClient(),
+  );
 
   final AuthLink authLink = AuthLink(
     getToken: () async {
@@ -77,6 +88,15 @@ GraphQLClient graphqlClient(Ref ref) {
   return GraphQLClient(
     link: languageLink.concat(refreshLink).concat(authLink).concat(httpLink),
     cache: GraphQLCache(),
+    // **graphql_flutter의 기본값은 5초다.** 이 시한이 링크 체인 바깥에 있어서,
+    // HttpLink에 더 긴 시한을 걸어도 여기서 먼저 끊긴다. 5초는 회원가입·인증
+    // 코드 발송처럼 서버가 외부(메일 등)를 거치는 요청에 턱없이 짧아, 정상
+    // 처리 중인 요청이 "네트워크 오류"로 실패했다.
+    //
+    // 더 나쁜 것은 부수 효과가 있는 요청에서다 — 서버에는 가입이 반영되고
+    // 클라이언트만 실패로 알게 되어, 재시도가 "이미 가입된 계정"으로 막힌다.
+    // 끊는 것보다 기다리는 편이 안전하므로 넉넉히 잡는다.
+    queryRequestTimeout: _requestTimeout,
     defaultPolicies: DefaultPolicies(
       // `ErrorPolicy.all`이어야 **부분 실패**를 다룰 수 있다(SPEC-0008 R-7).
       //
@@ -91,6 +111,29 @@ GraphQLClient graphqlClient(Ref ref) {
       query: Policies(fetch: FetchPolicy.noCache, error: ErrorPolicy.all),
     ),
   );
+}
+
+/// HTTP 소켓 수준의 응답 시한([_requestTimeout]).
+///
+/// 실제로 요청을 끊는 것은 `queryRequestTimeout`이다 — 그쪽이 링크 체인
+/// 바깥에 있어 먼저 발동한다. 이 클라이언트는 그 아래에서 소켓이 열린 채
+/// 남지 않도록 같은 시한을 한 번 더 거는 안전장치다.
+class _TimeoutHttpClient extends http.BaseClient {
+  _TimeoutHttpClient({http.Client? inner, this.timeout = _requestTimeout})
+    : _inner = inner ?? http.Client();
+
+  final http.Client _inner;
+  final Duration timeout;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) =>
+      _inner.send(request).timeout(timeout);
+
+  @override
+  void close() {
+    _inner.close();
+    super.close();
+  }
 }
 
 /// 앱 활성 언어를 `Accept-Language` 요청 헤더로 실어 서버가 언어별 콘텐츠를
@@ -123,6 +166,12 @@ class _AcceptLanguageLink extends Link {
 /// (SPEC-0005 §4).
 @visibleForTesting
 Link buildRefreshLink(TokenRefreshBridge bridge) => _RefreshLink(bridge);
+
+@visibleForTesting
+http.Client buildTimeoutHttpClient({
+  required http.Client inner,
+  required Duration timeout,
+}) => _TimeoutHttpClient(inner: inner, timeout: timeout);
 
 /// 인증 실패 응답을 받으면 등록된 refresher로 토큰을 갱신하고 요청을 재시도한다
 /// (SPEC-0005 §2.3~§2.4). 갱신에 실패하면 원래 오류를 그대로 통과시켜 상위가

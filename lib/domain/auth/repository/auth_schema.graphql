@@ -58,6 +58,7 @@ input LoginEmailInput {
 input LoginSnsInput {
   provider: Provider!
   idToken: String!
+  authorizationCode: String
 }
 
 input LogoutInput {
@@ -186,6 +187,7 @@ input RegisterSnsMemberInput {
   email: String!
   ageVerified: Boolean!
   agreements: [AgreementInput!]!
+  authorizationCode: String
 }
 
 type RegisterSnsMemberPayload {

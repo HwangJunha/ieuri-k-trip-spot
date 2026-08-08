@@ -105,6 +105,7 @@
   "snsSignUpButton": "登録を完了",
   "snsCancelled": "ログインがキャンセルされました。",
   "errorSnsMemberNotFound": "登録されていないアカウントです。会員登録を行ってください。",
+  "errorSnsVerificationExpired": "認証の有効期限が切れました。もう一度ログインしてください。",
   "logoutTooltip": "ログアウト",
   "permissionLocationRationaleTitle": "周辺のスポットを探す",
   "permissionLocationRationaleBody": "K-Trip Spotはアプリの使用中のみ位置情報を利用し、近くの名所やリアルタイムの混雑状況を表示します。バックグラウンドで追跡することはありません。",
