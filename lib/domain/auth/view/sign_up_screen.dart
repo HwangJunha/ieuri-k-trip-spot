@@ -7,6 +7,7 @@ import '../component/agreement_checklist.dart';
 import '../component/auth_failure_message.dart';
 import '../component/auth_text_field.dart';
 import '../model/email_verification_handle.dart';
+import '../../../common/model/email_format.dart';
 import '../model/password_policy.dart';
 import '../../../common/model/terms_code.dart';
 import '../provider/auth_controller.dart';

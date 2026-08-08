@@ -27,6 +27,13 @@ const String myPostsRouteName = 'settings-my-posts';
 /// 프로필 수정(SPEC-0011 R4~R6). 설정 홈 아래에 중첩된다.
 const String profileEditRouteName = 'settings-profile';
 
+/// 이메일 변경(SPEC-0011 R7·R8). 프로필 수정 아래에 중첩된다.
+///
+/// **두 단계(주소 입력 → 코드 입력)가 라우트 하나를 쓴다.** 단계를 라우트로 나누면
+/// `verificationId`를 route extra로 넘겨야 하고, 그러면 뒤로 가기로 돌아온 주소
+/// 화면이 이미 죽은 검증 건을 들고 있게 된다. 단계 전이는 controller 상태가 쥔다.
+const String emailChangeRouteName = 'settings-email-change';
+
 /// 커뮤니티 글 상세. 화면은 `domain/community`가 소유하고, "내가 쓴 글"(R3)도 여기로
 /// 보낸다 — 둘 이상이 쓰게 되어 이름만 공용으로 올렸다.
 const String postDetailRouteName = 'post-detail';

@@ -8,7 +8,7 @@ import '../component/auth_failure_message.dart';
 import '../component/auth_text_field.dart';
 import '../component/sns_login_buttons.dart';
 import '../model/auth_state.dart';
-import '../model/password_policy.dart';
+import '../../../common/model/email_format.dart';
 import '../model/sns_provider.dart';
 import '../model/sns_sign_in_outcome.dart';
 import '../provider/auth_controller.dart';

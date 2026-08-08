@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../common/navigation/settings_routes.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -9,6 +10,7 @@ import '../../auth/provider/auth_controller.dart';
 import '../component/profile_avatar_editor.dart';
 import '../model/nickname_validation.dart';
 import '../provider/profile_edit_controller.dart';
+import 'email_change_screen.dart';
 
 /// 프로필 수정(SPEC-0011 R4~R6, 디자인 §3).
 ///
@@ -20,14 +22,13 @@ import '../provider/profile_edit_controller.dart';
 /// │ Nickname                                 │
 /// │ ┌──────────────────────────────┐  7/20   │
 /// │ ⚠ This nickname is already taken.        │  ← 서버 판정
-/// │ Email  (읽기 전용)                        │
+/// │ Email  (읽기 전용)          Change       │  ← 별도 화면으로
 /// └──────────────────────────────────────────┘
 /// ```
 ///
-/// **이메일 변경(R7·R8)은 없다.** 라이브 스키마(2026-08-08)에 `requestEmailChange`/
-/// `confirmEmailChange`가 없고, 가입 전용인 `verifyEmail`을 돌려 쓰면 다른 흐름의
-/// 검증 상태를 건드린다. 그래서 이메일은 **읽기 전용으로만** 보여주고, 바꿀 수 없다는
-/// 사실을 안내 문구로 드러낸다 — 눌리지 않는 "Change" 버튼을 두면 고장으로 보인다.
+/// **이메일은 이 폼의 Save로 저장되지 않는다**(R7·R8). 인증 2단계를 거쳐야 바뀌므로
+/// 별도 화면(`EmailChangeScreen`)으로 보낸다 — 닉네임과 같은 Save에 묶으면 "저장했다"는
+/// 응답과 "아직 안 바뀌었다"는 사실이 한 화면에서 충돌한다.
 class ProfileEditScreen extends ConsumerStatefulWidget {
   const ProfileEditScreen({super.key});
 
@@ -132,19 +133,28 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
             const SizedBox(height: 24),
             Text(l10n.profileEditEmailLabel, style: theme.textTheme.labelLarge),
             const SizedBox(height: 8),
-            TextField(
-              // **읽기 전용이다**(R7·R8 계약 없음). 값은 세션의 것을 그대로 그린다.
-              key: const Key('profile-email-field'),
-              enabled: false,
-              controller: TextEditingController(text: me?.email ?? ''),
-              decoration: const InputDecoration(border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.profileEditEmailReadOnly,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: TextField(
+                    // **여기서는 읽기 전용이다** — 이메일은 인증을 거쳐야 바뀌므로
+                    // 이 폼의 Save와 같이 저장되지 않는다(R7). 값은 세션의 것이다.
+                    key: const Key('profile-email-field'),
+                    enabled: false,
+                    controller: TextEditingController(text: me?.email ?? ''),
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                TextButton(
+                  key: const Key('profile-email-change-button'),
+                  onPressed: () =>
+                      context.pushNamed(EmailChangeScreen.routeName),
+                  child: Text(l10n.profileEditEmailChange),
+                ),
+              ],
             ),
           ],
         ),

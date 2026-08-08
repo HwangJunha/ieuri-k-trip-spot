@@ -19,14 +19,4 @@ void main() {
       expect(PasswordPolicy.isValid('abcdefg!'), isFalse);
     });
   });
-
-  group('EmailFormat', () {
-    test('accepts a normal address', () {
-      expect(EmailFormat.isValid('user@example.com'), isTrue);
-    });
-
-    test('rejects an address without a domain dot', () {
-      expect(EmailFormat.isValid('user@example'), isFalse);
-    });
-  });
 }

@@ -1,0 +1,48 @@
+# SPEC-0011 이메일 변경(R7·R8) 오퍼레이션. 스키마 조각은 `email_change_schema.graphql`
+# 이며 생성 타입은 repository 밖으로 나가지 않는다(CLAUDE.md §3).
+#
+# **가입 검증의 `verifyEmail`을 돌려 쓰지 않는다**(디자인 §4). 한 뮤테이션에 두 의미를
+# 얹으면 가입 흐름의 상태 기계가 이메일 변경에 끌려온다.
+
+# 1단계 — 새 주소로 코드 발송을 요청한다(R7).
+mutation ChangeEmail($input: ChangeEmailInput!) {
+  changeEmail(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    verificationId
+    expiresAt
+  }
+}
+
+# 2단계 — 코드 검증(R8). 여기서 성공해야 비로소 프로필 이메일이 바뀐다.
+mutation ConfirmEmailChange($input: ConfirmEmailChangeInput!) {
+  confirmEmailChange(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    email
+    failureReason
+  }
+}
+
+# 재발송(R8). 성공하면 서버가 **새 verificationId를 줄 수 있으므로** 받은 값으로
+# 갈아끼운다 — 옛 id로 다음 검증을 보내면 실패한다.
+mutation ResendEmailChange($input: ResendEmailChangeInput!) {
+  resendEmailChange(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    verificationId
+    expiresAt
+  }
+}

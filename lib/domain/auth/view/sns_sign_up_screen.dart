@@ -7,7 +7,7 @@ import '../component/agreement_checklist.dart';
 import '../component/auth_failure_message.dart';
 import '../component/auth_text_field.dart';
 import '../model/auth_failure.dart';
-import '../model/password_policy.dart';
+import '../../../common/model/email_format.dart';
 import '../model/sns_credential.dart';
 import '../model/sns_registration_result.dart';
 import '../../../common/model/terms_code.dart';

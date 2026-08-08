@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/auth_failure_message.dart';
 import '../component/auth_text_field.dart';
+import '../../../common/model/email_format.dart';
 import '../model/password_policy.dart';
 import '../provider/auth_controller.dart';
 import 'login_screen.dart';

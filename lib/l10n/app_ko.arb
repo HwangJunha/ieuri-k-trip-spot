@@ -1425,7 +1425,6 @@
   "profileEditNicknameTooLong": "닉네임은 {max}자를 넘을 수 없습니다.",
   "profileEditNicknameTaken": "이미 사용 중인 닉네임입니다.",
   "profileEditEmailLabel": "이메일",
-  "profileEditEmailReadOnly": "이메일은 아직 앱에서 바꿀 수 없습니다.",
   "profileEditFailed": "저장하지 못했습니다. 다시 시도해 주세요.",
   "profilePhotoChange": "사진 변경",
   "profilePhotoRemove": "사진 삭제",
@@ -1460,7 +1459,6 @@
   },
   "@profileEditNicknameTaken": {},
   "@profileEditEmailLabel": {},
-  "@profileEditEmailReadOnly": {},
   "@profileEditFailed": {},
   "@profilePhotoChange": {},
   "@profilePhotoRemove": {},
@@ -1478,5 +1476,82 @@
   "termsRequiredNotice": "동의하지 않으면 서비스를 이용할 수 없습니다.",
   "@termsRequiredNotice": {
     "description": "필수 약관을 끄면 서비스를 쓸 수 없다는 안내"
-  }
+  },
+  "profileEditEmailChange": "변경",
+  "@profileEditEmailChange": {
+    "description": "프로필 수정에서 이메일 변경 화면으로 가는 버튼"
+  },
+  "emailChangeTitle": "이메일 변경",
+  "@emailChangeTitle": {},
+  "emailChangeCurrentLabel": "현재 이메일",
+  "@emailChangeCurrentLabel": {},
+  "emailChangeNewLabel": "새 이메일 주소",
+  "@emailChangeNewLabel": {},
+  "emailChangeHint": "이 주소로 6자리 인증 코드를 보냅니다.",
+  "@emailChangeHint": {},
+  "emailChangeSendCode": "코드 보내기",
+  "@emailChangeSendCode": {},
+  "emailChangeSameAsCurrent": "현재 이메일과 같은 주소입니다.",
+  "@emailChangeSameAsCurrent": {},
+  "emailChangeVerifyTitle": "이메일 인증",
+  "@emailChangeVerifyTitle": {},
+  "emailChangePendingBanner": "인증을 마쳐야 이메일이 바뀝니다. 지금은 아직 기존 주소입니다.",
+  "@emailChangePendingBanner": {
+    "description": "검증 전이라 프로필 이메일이 아직 안 바뀌었다는 대기 안내 (R7)"
+  },
+  "emailChangeCodeSentTo": "{email}(으)로 보낸 코드를 입력해 주세요.",
+  "@emailChangeCodeSentTo": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "emailChangeCodeLabel": "인증 코드",
+  "@emailChangeCodeLabel": {},
+  "emailChangeVerifyButton": "인증하기",
+  "@emailChangeVerifyButton": {},
+  "emailChangeCodeRequired": "인증 코드를 입력해 주세요.",
+  "@emailChangeCodeRequired": {},
+  "emailChangeResend": "코드 다시 보내기",
+  "@emailChangeResend": {},
+  "emailChangeResendIn": "{seconds}초 후에 다시 보낼 수 있습니다",
+  "@emailChangeResendIn": {
+    "description": "재발송 60초 쿨다운의 남은 시간 카운트다운 (R8)",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "emailChangeResent": "인증 코드를 다시 보냈습니다.",
+  "@emailChangeResent": {},
+  "emailChangeResendCooldown": "잠시 후에 다시 시도해 주세요.",
+  "@emailChangeResendCooldown": {
+    "description": "서버가 RESEND_COOLDOWN_ACTIVE로 거절했을 때"
+  },
+  "emailChangeCodeMismatch": "코드가 일치하지 않습니다. 다시 입력해 주세요.",
+  "@emailChangeCodeMismatch": {
+    "description": "failureReason=CODE_MISMATCH — 재입력하면 된다"
+  },
+  "emailChangeCodeExpired": "코드가 만료되었습니다. 다시 보내기를 눌러 주세요.",
+  "@emailChangeCodeExpired": {
+    "description": "failureReason=EXPIRED — 재발송이 필요하다"
+  },
+  "emailChangeMaxAttempts": "시도 횟수를 모두 사용했습니다. 주소 입력부터 다시 해주세요.",
+  "@emailChangeMaxAttempts": {
+    "description": "failureReason=MAX_ATTEMPTS_EXCEEDED — 처음부터 다시"
+  },
+  "emailChangeVerifyFailed": "인증하지 못했습니다. 다시 시도해 주세요.",
+  "@emailChangeVerifyFailed": {
+    "description": "failureReason이 알려지지 않은 값일 때의 일반 실패"
+  },
+  "emailChangeFailed": "요청하지 못했습니다. 다시 시도해 주세요.",
+  "@emailChangeFailed": {},
+  "emailChangeEmailTaken": "이미 사용 중인 이메일입니다.",
+  "@emailChangeEmailTaken": {
+    "description": "서버 userErrors의 EMAIL_ALREADY_IN_USE"
+  },
+  "emailChangeSucceeded": "이메일을 변경했습니다.",
+  "@emailChangeSucceeded": {}
 }

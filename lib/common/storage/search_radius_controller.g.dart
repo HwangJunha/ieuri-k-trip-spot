@@ -81,7 +81,7 @@ final class SearchRadiusControllerProvider
 }
 
 String _$searchRadiusControllerHash() =>
-    r'e13b8e9aca654d6d10398fa41cc1fdf6fc1d5ffb';
+    r'00ce615f8dfa8cf0a4782beae71041c25e8e410b';
 
 /// 검색 반경(km) 설정을 들고 있는 컨트롤러(SPEC-0011 R13).
 ///

@@ -15,8 +15,8 @@
 
 ## 0. 서버 계약 상태 — 읽고 시작할 것
 
-**이메일 변경(R7·R8)을 뺀 나머지 계약이 모두 들어왔다.** 2026-08-08 01:52 라이브
-introspection(`localhost:8888/graphql`) 기준이다.
+**계약이 모두 들어왔다.** 2026-08-09 라이브 introspection(`localhost:8888/graphql`)
+기준이며, 마지막까지 비어 있던 이메일 변경(R7·R8)도 채워졌다.
 
 | 스펙 요구 | 오퍼레이션 | 라이브 스키마 |
 |---|---|---|
@@ -27,12 +27,13 @@ introspection(`localhost:8888/graphql`) 기준이다.
 | R11·R12 약관 게이트 | `agreements`, `agreeToRequiredTerms` | ✅ 있음 |
 | R15 로그아웃 | `logout` | ✅ 있음 |
 | R16 탈퇴 | `withdrawMember` | ✅ 있음 |
-| **R7·R8 이메일 변경** | `requestEmailChange`/`confirmEmailChange` | **없음 — SPEC-0012 선행** |
+| R7·R8 이메일 변경 | `changeEmail` → `confirmEmailChange`, `resendEmailChange` | ✅ 있음 |
 
-**R7·R8은 SPEC-0012가 서버에서 끝나야 진행할 수 있다.** 사용자가 확인해 준 의존 관계다.
-스키마에 이메일 변경 경로가 없고, 기존 `verifyEmail`은 **가입 검증 전용**이라 돌려 쓰면 안
-된다 — 같은 뮤테이션에 두 의미를 얹으면 가입 흐름의 상태 기계가 이메일 변경에 끌려간다.
-SPEC-0012가 끝난 뒤 이 문서 §4를 그대로 구현하면 된다.
+**이름이 설계의 가정과 다르다.** 1단계는 `requestEmailChange`가 아니라 `changeEmail`이고,
+재발송 전용 `resendEmailChange`가 따로 있다. `ConfirmEmailChangePayload.failureReason`은
+**enum이 아니라 `String`**이라 모르는 값이 올 수 있고, 클라이언트가 그것을 일반 실패로
+흡수한다. 기존 `verifyEmail`은 **가입 검증 전용**이라 돌려 쓰지 않았다 — 같은 뮤테이션에
+두 의미를 얹으면 가입 흐름의 상태 기계가 이메일 변경에 끌려간다.
 
 `AgreementStatus`는 `termsCode`·`required`·`agreed`·`agreedAt`·`version`을 준다 — 필수/선택
 구분과 동의 일자가 서버에서 오므로 클라이언트가 정하지 않는다.
@@ -52,7 +53,7 @@ SPEC-0012가 끝난 뒤 이 문서 §4를 그대로 구현하면 된다.
 | R15 로그아웃 위치 이동 | **구현** — 기존 로직 그대로, 설정으로 이동 |
 | R16 탈퇴 | **구현** — `withdrawMember` |
 | R19 연령 확인 게이트 | **이미 충족** — `AgreementItem.age`가 `required: true`라 `requiredSatisfied`에 포함됨. 스펙의 "확인 필요"는 확인 결과 보정 불필요 |
-| **R7·R8 이메일 변경** | **미구현 — SPEC-0012 선행 필요** |
+| R7·R8 이메일 변경 | **구현** — `/settings/profile/email` 한 라우트가 2단계를 모두 그린다 |
 
 ---
 
@@ -150,17 +151,13 @@ SPEC-0012가 끝난 뒤 이 문서 §4를 그대로 구현하면 된다.
 
 ---
 
-## 4. 이메일 변경 — 2단계 (R7·R8) · **보류: SPEC-0012 선행**
+## 4. 이메일 변경 — 2단계 (R7·R8)
 
 > Stitch 화면: `screens/dbd1f6c981574e7cb8e95e238178af57` (입력), `screens/c2561988c97749898ace403d390c70eb` (검증)
 
-**아직 구현하지 않는다.** 서버에 이메일 변경 경로가 없고, 이는 **SPEC-0012가 끝나야 열린다**
-(사용자 확인). 아래 설계는 그때 그대로 쓰기 위한 것이며, 착수 전에 **스냅샷을 다시 확인해**
-실제 뮤테이션 이름과 `failureReason` 값이 여기 적힌 가정과 맞는지 대조한다(CLAUDE.md §13).
-
 기존 `verifyEmail`을 돌려 쓰지 않는다 — **가입 검증 전용**이라 한 뮤테이션에 두 의미를
-얹으면 가입 흐름의 상태 기계가 이메일 변경에 끌려간다. 설정 화면의 "Change Email" 진입점도
-목적지가 생길 때까지 두지 않는다(비활성 진입점보다 없는 편이 낫다).
+얹으면 가입 흐름의 상태 기계가 이메일 변경에 끌려간다. 진입점은 프로필 수정 화면의
+이메일 행 오른쪽 "Change"다(목적지가 생겼으므로 이제 둔다).
 
 ```
 1) Change Email                    2) Verify Email
@@ -199,6 +196,18 @@ SPEC-0012가 끝난 뒤 이 문서 §4를 그대로 구현하면 된다.
 | `CODE_MISMATCH` | 재입력 |
 | `EXPIRED` | 재발송 |
 | `MAX_ATTEMPTS_EXCEEDED` | 처음부터 |
+
+### 구현하며 정한 것
+
+- **두 단계가 라우트 하나**(`/settings/profile/email`)를 쓴다. 단계를 라우트로 나누면
+  `verificationId`를 route extra로 넘겨야 하고, 뒤로 가기로 돌아온 주소 화면이 이미 죽은
+  검증 건을 들고 있게 된다. 전이는 `EmailChangeController` 상태가 쥔다.
+- **`failureReason`은 예외가 아니라 값으로 내려온다.** 전송 실패와 달리 사유마다 화면
+  문구와 다음 행동이 다르므로, 예외로 만들면 그 분기가 catch로 흩어진다.
+  `MAX_ATTEMPTS_EXCEEDED`만 주소 입력 단계로 되돌린다 — 남은 시도가 없는 화면에 붙잡아
+  두면 무엇을 눌러도 같은 오류다.
+- **카운트다운은 `ResendCountdownButton` 안에서만 초당 다시 그린다.** 남은 초를 provider
+  상태에 넣으면 화면 전체가 매초 리빌드된다. 컴포넌트는 마감 시각만 받는다.
 
 ---
 
@@ -430,7 +439,7 @@ provider일 이유도 없다.
 /settings                   설정 홈 (R1)
 /settings/my-posts          내가 쓴 글 (R3)
 /settings/profile           프로필 수정 (R4·R5·R6)
-/settings/profile/email     이메일 변경 (R7·R8) — 보류, SPEC-0012 선행
+/settings/profile/email     이메일 변경 (R7·R8) — 주소·코드 두 단계가 이 하나를 쓴다
 /settings/terms             약관 동의 관리 (R9·R10)
 /settings/preferences       반경·언어 (R13·R14)
 /settings/delete-account    탈퇴 확인 (R16)

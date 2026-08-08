@@ -29,3 +29,5 @@ targets:
           - lib/domain/settings/repository/settings_schema.graphql
           - lib/domain/settings/repository/profile_operations.graphql
           - lib/domain/settings/repository/profile_schema.graphql
+          - lib/domain/settings/repository/email_change_operations.graphql
+          - lib/domain/settings/repository/email_change_schema.graphql

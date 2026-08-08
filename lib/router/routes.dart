@@ -18,6 +18,7 @@ import '../domain/community/view/post_composer_screen.dart';
 import '../domain/community/view/post_detail_screen.dart';
 import '../domain/onboarding/view/onboarding_screen.dart';
 import '../domain/settings/view/account_deletion_screen.dart';
+import '../domain/settings/view/email_change_screen.dart';
 import '../domain/settings/view/my_posts_screen.dart';
 import '../domain/settings/view/preferences_screen.dart';
 import '../domain/settings/view/profile_edit_screen.dart';
@@ -191,13 +192,20 @@ List<RouteBase> buildRoutes() => <RouteBase>[
         builder: (_, _) => const MyPostsScreen(),
       ),
       // 프로필 수정(R4~R6). 설정 홈의 프로필 요약을 탭하면 여기로 온다.
-      //
-      // **이메일 변경(R7·R8)의 자식 라우트는 없다** — 라이브 스키마에
-      // `requestEmailChange`/`confirmEmailChange`가 없어 화면을 만들지 않았다.
       GoRoute(
         path: 'profile',
         name: ProfileEditScreen.routeName,
         builder: (_, _) => const ProfileEditScreen(),
+        routes: <RouteBase>[
+          // 이메일 변경(R7·R8). **두 단계가 라우트 하나를 쓴다** — 단계를 나누면
+          // `verificationId`를 route extra로 넘겨야 하고, 뒤로 가기로 돌아온 주소
+          // 화면이 죽은 검증 건을 들고 있게 된다. 전이는 controller 상태가 쥔다.
+          GoRoute(
+            path: 'email',
+            name: EmailChangeScreen.routeName,
+            builder: (_, _) => const EmailChangeScreen(),
+          ),
+        ],
       ),
       GoRoute(
         path: 'preferences',

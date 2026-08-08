@@ -70,17 +70,18 @@ void main() {
     expect(find.text('This nickname is already taken.'), findsOneWidget);
   });
 
-  testWidgets('이메일은 읽기 전용이며 변경 진입점이 없다 (R7·R8 계약 없음)', (
+  testWidgets('이메일은 읽기 전용이되 변경 진입점이 있다 (R7·R8)', (
     WidgetTester tester,
   ) async {
     await _pump(tester, FakeProfileRepository());
 
+    // 이 자리에서 직접 고치지 않는다 — 검증을 거쳐야 바뀌므로 별도 화면으로 간다.
     final TextField email = tester.widget<TextField>(
       find.byKey(const Key('profile-email-field')),
     );
     expect(email.enabled, isFalse);
-    // 눌리지 않는 "Change" 버튼을 두면 고장으로 보인다 — 아예 없어야 한다.
-    expect(find.widgetWithText(TextButton, 'Change'), findsNothing);
+    // 서버 계약(changeEmail)이 생겨 목적지가 있다 — 예전에는 갈 곳이 없어 뺐었다.
+    expect(find.widgetWithText(TextButton, 'Change'), findsOneWidget);
   });
 
   testWidgets('사진 변경 진입점이 있다 (R6)', (WidgetTester tester) async {
