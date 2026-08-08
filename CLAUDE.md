@@ -25,7 +25,8 @@ This file is the **operating contract** for this repository. Rules here are enfo
 있는 것을 산문으로 옮겨 적지 않는다.
 
 검증 결과는 예외다: 테스트가 **실패했거나 건너뛴 것이 있으면** 반드시 말한다. 통과했으면
-"통과" 한 줄로 족하다.
+"통과" 한 줄로 족하다. 개발 중이라 테스트를 안 돌린 경우(§8)에는 `flutter analyze` 결과를
+같은 방식으로 말한다.
 
 ---
 
@@ -143,6 +144,20 @@ component ─▶ provider, model
 
 ## 8. Testing (keep them simple)
 
+### 언제 쓰는가 — **작업 완료 시점에 한 번**
+
+**개발 중에는 테스트를 쓰지도, 돌리지도 않는다.** 요건이 자주 바뀌는 구간에서 테스트를
+같이 쓰면, 바뀔 때마다 코드와 테스트를 두 번 고치게 되고 그 대부분이 버려진다. 빌드
+검증은 `flutter analyze`로 한다 — 컴파일 오류만 잡으면 개발 중에는 충분하다.
+
+**완료 시점은 사용자가 "작업 완료"라고 말한 때다.** 내가 판단하지 않는다. 그 말을 듣고
+나서 비로소 테스트를 작성하고 전체 스위트를 돌린다.
+
+예외는 하나뿐이다: **내 변경으로 기존 테스트가 거짓이 되면 그 자리에서 고친다.** 이건 새
+테스트를 쓰는 것이 아니라 내가 깨뜨린 것을 치우는 일이다(§8 마지막 항목).
+
+### 무엇을 쓰는가
+
 One behavior per test. Minimal mocks. Arrange–Act–Assert. Per-layer shape:
 
 | Layer | Test shape |
@@ -224,16 +239,37 @@ A design reference records the layout, the components (named so they map onto `c
 loading/empty/error states, and the Stitch screen id it came from. It is a *reference*, not an
 authority: when it conflicts with the spec's acceptance criteria, the spec wins.
 
-### When the spec is wrong
+### 요건이 바뀌면 — **문서를 직접 고친다**
 
-**Do not fix it in code.** On hitting an uncovered case, a technical impossibility, or a needed
-contract change:
+구현하면서 요건이 바뀌는 일은 흔하다. 예전에는 `[AMEND]`를 남기고 planner를 기다렸는데,
+그 왕복 때문에 설계 문서가 코드보다 늘 뒤처졌다. 이제 **`problem/SPEC-*.md`는 이 저장소에서
+직접 고친다.**
 
-1. Stop.
-2. Comment on the issue: `[AMEND] SPEC-XXXX: <what you hit and why>`
-3. Wait for the planner's `/amend`.
+- 바뀐 요건을 문서에 반영하고 **같은 커밋에 담는다** — 코드와 근거가 갈라지지 않게.
+- **무엇이 왜 바뀌었는지 적는다.** "사용자 결정", "서버 계약이 달랐다"처럼 근거를 남겨야
+  나중에 diff에서 되짚을 수 있다.
+- 코드로 때우고 문서를 그대로 두는 것이 가장 나쁘다 — 다음 사람이 문서를 믿고 반대로 고친다.
 
-The deviation that feels too small to report is exactly the one that makes the spec unreliable.
+`Specs/SPEC-XXXX/spec.md`(Obsidian vault)는 **여전히 못 고친다.** 그건 원본이고 recorder의
+것이다(아래).
+
+### 정책이 걸리면 — **recorder에 요청 문서를 남긴다**
+
+정책(`Specs/`의 POL-*, 정책 카탈로그)은 **여러 앱이 공유한다.** 한 앱의 사정으로 여기서
+고치면 규칙이 조용히 갈라지고, 어느 쪽이 진짜인지 아무도 모르게 된다. 그래서 vault는
+훅이 계속 막는다.
+
+정책과 충돌하거나 정책을 바꿔야 한다고 판단하면, **사용자가 "작업 완료"라고 한 뒤에**
+요청 문서를 만든다:
+
+```
+ieuri-recorder/problem/POLICY-<주제>.md
+```
+
+담을 것은 넷이다 — **무엇에 걸렸는지**(정책 번호와 문구), **실제로 부딪힌 상황**(어느 스펙의
+어느 요구에서), **왜 지금 정책으로는 안 되는지**, **제안**(대안과 그 대가). 결정은 recorder가
+한다. 작업 도중에 만들지 않는 이유는, 구현이 끝나 봐야 진짜 충돌인지 오해였는지 갈리기
+때문이다.
 
 ### Contract
 
@@ -396,8 +432,11 @@ git checkout -b feature/SPEC-0007-home-screen
   `git switch -c` / `git branch` are allowed so you can get onto a topic branch.
 - When a task starts on a protected branch, create the topic branch **before** the first edit.
   The hook wins over this text — if it blocks you, switch branches, don't work around it.
-- Commit/push remain gated by the permission policy (`ask`/`deny`); the branch hook is an
-  additional, independent guard.
+- **커밋은 사용자가 한다.** `git commit`은 권한 정책에서 `deny`다 — 내가 실행할 수 없고,
+  우회할 방법을 찾지도 않는다. 작업이 끝나면 **변경만 남기고** 커밋 메시지를 제안한다.
+  `git add`와 `git push`는 여전히 내가 할 수 있으므로, 스테이징까지 해 두고 사용자가
+  커밋하면 된다.
+- 브랜치 훅은 그와 별개인 독립 방어선이다.
 
 ---
 

@@ -41,10 +41,10 @@
       "Bash(pkill -f build_runner:*)"
     ],
     "ask": [
-      "Bash(git commit:*)",
       "Bash(dart pub upgrade:*)"
     ],
     "deny": [
+      "Bash(git commit:*)",
       "Read(./**/*.graphql.dart)",
       "Read(./**/*.g.dart)",
       "Read(./**/*.freezed.dart)",
@@ -71,7 +71,9 @@
       "Bash(dart pub publish:*)"
     ]
   },
-  "env": { "IEURI_VAULT": "/Users/junha/Documents/Obsidian Vault" },
+  "env": {
+    "IEURI_VAULT": "/Users/junha/Documents/Obsidian Vault"
+  },
   "hooks": {
     "PreToolUse": [
       {
@@ -98,8 +100,7 @@
           {
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-spec-docs.sh\""
-          }
-          ,
+          },
           {
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/require-fresh-schema.sh\""
@@ -123,17 +124,6 @@
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/format-and-analyze.sh\"",
             "timeout": 60
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/block-stop-without-tests.sh\"",
-            "timeout": 180
           }
         ]
       }
