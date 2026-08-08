@@ -112,6 +112,11 @@ class GraphqlDebugLog {
         buffer.writeln('  originalException: ${link.originalException}');
       } else if (link is HttpLinkParserException) {
         buffer.writeln('  parseError: ${link.originalException}');
+      } else {
+        // 타입을 특정하지 못한 경우(`UnknownException` 등)에도 원인은 남긴다.
+        // 이게 없으면 "linkException: UnknownException" 한 줄만 남아 무엇이
+        // 잘못됐는지 알 수 없다 — 실기기에서 연결 실패를 짚지 못한 원인이었다.
+        buffer.writeln('  cause: $link');
       }
     }
 

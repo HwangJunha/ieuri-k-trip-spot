@@ -60,14 +60,33 @@ CI에서는 `.env`가 없으므로 값을 시크릿에서 직접 넘긴다:
 개발 머신의 LAN IP를 `.env`에 넣는다. 폰과 **같은 Wi-Fi**여야 한다.
 
 ```sh
-# 맥의 Wi-Fi IP 확인
+# 맥의 Wi-Fi IP 확인 — 아래 <MY_IP>에 이 결과를 넣는다.
 ipconfig getifaddr en0
 ```
 
 ```sh
-# .env
-GRAPHQL_ENDPOINT=http://192.168.0.10:8888/graphql
+# .env — <MY_IP>를 위 명령의 출력으로 바꾼다. 예시를 그대로 두면 닿지 않는다.
+GRAPHQL_ENDPOINT=http://<MY_IP>:8888/graphql
 ```
+
+**앱이 어디로 보내는지는 APK에서 직접 확인할 수 있다.** 값이 반영됐는지
+의심되면:
+
+```sh
+unzip -p build/app/outputs/flutter-apk/app-debug.apk \
+  assets/flutter_assets/kernel_blob.bin | strings \
+  | grep -oE "http://[0-9a-zA-Z.:_-]+/graphql" | sort -u
+```
+
+**폰에서 서버에 닿는지도 앱과 무관하게 확인할 수 있다:**
+
+```sh
+adb shell curl -s -o /dev/null -w "HTTP=%{http_code}\n" \
+  -X POST http://<MY_IP>:8888/graphql \
+  -H "Content-Type: application/json" -d '{"query":"{__typename}"}'
+```
+
+`HTTP=200`이면 네트워크는 정상이고 앱 설정 문제다.
 
 닿지 않으면 순서대로 확인한다:
 
