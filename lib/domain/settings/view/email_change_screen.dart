@@ -76,9 +76,13 @@ class _EmailChangeScreenState extends ConsumerState<EmailChangeScreen> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.emailChangeSucceeded)));
-        // 변경이 끝났으니 프로필 화면으로 돌려보낸다 — 거기 이메일이 새 값으로
+        // 변경이 끝났으니 **프로필 수정 화면으로 보낸다** — 거기 이메일이 새 값으로
         // 갱신돼 있다(controller가 `refreshMe`를 이미 마쳤다).
-        if (context.mounted && context.canPop()) context.pop();
+        //
+        // `pop()`이 아니라 목적지를 지정하는 이유: pop은 "바로 아래 화면"으로만
+        // 돌아가므로, 프로필을 거치지 않고 이 화면에 들어온 경로가 생기면 엉뚱한
+        // 곳에 떨어진다. 갈 곳이 정해져 있으면 그곳을 이름으로 말하는 편이 낫다.
+        if (context.mounted) context.goNamed(profileEditRouteName);
       } else if (next.resent && !(previous?.resent ?? false)) {
         _showSnack(l10n.emailChangeResent);
       }
