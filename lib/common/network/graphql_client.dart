@@ -48,6 +48,13 @@ class TokenRefreshBridge {
 @Riverpod(keepAlive: true)
 TokenRefreshBridge tokenRefreshBridge(Ref ref) => TokenRefreshBridge();
 
+/// 모든 GraphQL 요청의 응답 시한.
+///
+/// 두 곳에 같은 값을 건다 — `queryRequestTimeout`(링크 체인 바깥, 실제로
+/// 요청을 끊는 쪽)과 [_TimeoutHttpClient](HTTP 소켓 쪽). 앞의 것만으로도
+/// 충분하지만, 뒤가 없으면 소켓이 열린 채 남을 수 있다.
+const Duration _requestTimeout = Duration(seconds: 30);
+
 /// The shared `graphql_flutter` client (CLAUDE.md §4 — lives only in
 /// `common/network`). Injects `Authorization: Bearer <accessToken>` from
 /// [SecureStorage] on every request, sends the app's active language as an
@@ -81,6 +88,15 @@ GraphQLClient graphqlClient(Ref ref) {
   return GraphQLClient(
     link: languageLink.concat(refreshLink).concat(authLink).concat(httpLink),
     cache: GraphQLCache(),
+    // **graphql_flutter의 기본값은 5초다.** 이 시한이 링크 체인 바깥에 있어서,
+    // HttpLink에 더 긴 시한을 걸어도 여기서 먼저 끊긴다. 5초는 회원가입·인증
+    // 코드 발송처럼 서버가 외부(메일 등)를 거치는 요청에 턱없이 짧아, 정상
+    // 처리 중인 요청이 "네트워크 오류"로 실패했다.
+    //
+    // 더 나쁜 것은 부수 효과가 있는 요청에서다 — 서버에는 가입이 반영되고
+    // 클라이언트만 실패로 알게 되어, 재시도가 "이미 가입된 계정"으로 막힌다.
+    // 끊는 것보다 기다리는 편이 안전하므로 넉넉히 잡는다.
+    queryRequestTimeout: _requestTimeout,
     defaultPolicies: DefaultPolicies(
       // `ErrorPolicy.all`이어야 **부분 실패**를 다룰 수 있다(SPEC-0008 R-7).
       //
@@ -97,22 +113,14 @@ GraphQLClient graphqlClient(Ref ref) {
   );
 }
 
-/// 모든 GraphQL 요청에 응답 시한을 건다.
+/// HTTP 소켓 수준의 응답 시한([_requestTimeout]).
 ///
-/// 시한이 없으면 서버가 조용히 멎었을 때 요청이 끝나지 않고, 화면은 로딩
-/// 스피너에 갇힌 채 사용자가 할 수 있는 일이 없어진다. 시한이 지나면 요청을
-/// 끊어 `transportFailure`로 분류되게 하고, 사용자는 "네트워크 오류"를 보고
-/// 다시 시도할 수 있다.
-///
-/// **[timeout]은 넉넉해야 한다.** 짧게 잡으면 서버가 처리 중인 요청을 끊는데,
-/// 회원가입처럼 부수 효과가 있는 요청에서는 서버에는 반영되고 클라이언트는
-/// 실패로 알게 되어, 재시도가 "이미 가입된 계정"으로 막히는 최악의 형태가 된다.
-/// 끊는 것보다 기다리는 편이 안전하다.
+/// 실제로 요청을 끊는 것은 `queryRequestTimeout`이다 — 그쪽이 링크 체인
+/// 바깥에 있어 먼저 발동한다. 이 클라이언트는 그 아래에서 소켓이 열린 채
+/// 남지 않도록 같은 시한을 한 번 더 거는 안전장치다.
 class _TimeoutHttpClient extends http.BaseClient {
-  _TimeoutHttpClient({
-    http.Client? inner,
-    this.timeout = const Duration(seconds: 30),
-  }) : _inner = inner ?? http.Client();
+  _TimeoutHttpClient({http.Client? inner, this.timeout = _requestTimeout})
+    : _inner = inner ?? http.Client();
 
   final http.Client _inner;
   final Duration timeout;
