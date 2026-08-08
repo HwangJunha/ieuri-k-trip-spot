@@ -355,12 +355,7 @@ void main() {
     );
   });
 
-  // 서버가 아직 `authorizationCode`를 모르므로 전송은 잠겨 있다
-  // (`_sendAuthorizationCode == false`). 정의되지 않은 input 필드를 보내면
-  // 서버가 ValidationError로 요청을 통째로 거부하고, 그러면 code를 주는
-  // provider의 로그인이 전부 깨진다 — 그래서 "보내지 않는다"가 지금의 계약이다.
-  // 서버 배포 후 플래그를 켜면 이 두 테스트가 실패하며 갱신을 요구한다.
-  test('loginSns does not send an authorizationCode field yet', () async {
+  test('loginSns puts the authorization code in the request input', () async {
     final _FakeLink link = _FakeLink(
       data: <String, dynamic>{
         'loginSns': <String, dynamic>{
@@ -381,13 +376,11 @@ void main() {
       authorizationCode: 'server-auth-code',
     );
 
-    expect(link.lastInput, isNotNull);
-    expect(link.lastInput!.containsKey('authorizationCode'), isFalse);
-    // code가 있어도 요청은 정상적으로 나간다 — 막히지 않는다(R7).
+    expect(link.lastInput?['authorizationCode'], 'server-auth-code');
     expect(link.lastInput?['idToken'], 'id-token');
   });
 
-  test('loginSns sends a plain request when there is no code', () async {
+  test('loginSns leaves authorizationCode empty when there is none', () async {
     final _FakeLink link = _FakeLink(
       data: <String, dynamic>{
         'loginSns': <String, dynamic>{
@@ -402,16 +395,18 @@ void main() {
       },
     );
 
+    // 카카오처럼 code를 주지 않는 provider — 요청은 그대로 나가고 필드만
+    // 비어 있다(R4·R7). 값이 없다는 것과 요청이 막히는 것은 다르다.
     await _repo(
       link,
     ).loginSns(provider: SnsProvider.kakao, idToken: 'id-token');
 
-    expect(link.lastInput!.containsKey('authorizationCode'), isFalse);
+    expect(link.lastInput?['authorizationCode'], isNull);
     expect(link.lastInput?['idToken'], 'id-token');
   });
 
   test(
-    'registerSnsMember accepts a code without failing the request',
+    'registerSnsMember puts the authorization code in the request input',
     () async {
       final _FakeLink link = _FakeLink(
         data: <String, dynamic>{
@@ -434,7 +429,7 @@ void main() {
       );
 
       expect(result.emailVerified, isTrue);
-      expect(link.lastInput!.containsKey('authorizationCode'), isFalse);
+      expect(link.lastInput?['authorizationCode'], 'apple-code');
       expect(link.lastInput?['email'], 'a@b.com');
     },
   );
