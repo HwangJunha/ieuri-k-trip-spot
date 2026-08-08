@@ -26,15 +26,26 @@ KAKAO_NATIVE_APP_KEY=
 커밋하지 않는 것은 환경(개발/운영)마다 다르기 때문이다. 구글 웹 클라이언트의
 **시크릿은 서버만 가지며 클라이언트에 두지 않는다.**
 
-실행:
+실행할 때 `--dart-define-from-file`로 `.env`를 읽힌다(Flutter 기본 기능이라
+별도 스크립트가 필요 없다):
 
 ```sh
-./scripts/run.sh                # flutter run
-./scripts/run.sh -d <device>    # 인자는 그대로 전달된다
-BUILD=1 ./scripts/run.sh apk    # flutter build apk
+flutter run --dart-define-from-file=.env
+flutter build apk --dart-define-from-file=.env
+flutter build ipa --dart-define-from-file=.env
 ```
 
-`flutter run`을 직접 쓰면 이 값들이 빠져 SNS 로그인이 동작하지 않는다.
+IDE에서는 실행 구성의 추가 인자에 `--dart-define-from-file=.env` 한 줄을
+넣어 둔다. **이 인자가 빠지면 SNS 로그인이 동작하지 않는다.**
+
+CI에서는 `.env`가 없으므로 값을 시크릿에서 직접 넘긴다:
+
+```yaml
+- run: |
+    flutter build apk \
+      --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }} \
+      --dart-define=KAKAO_NATIVE_APP_KEY=${{ secrets.KAKAO_NATIVE_APP_KEY }}
+```
 
 ### GOOGLE_SERVER_CLIENT_ID가 왜 필요한가
 
