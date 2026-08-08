@@ -35,6 +35,8 @@ dependencies:
   graphql_flutter: ^5.1.2
   # DocumentNode type for the graphql_codegen-generated operations (repo only)
   gql: any
+  # HttpLink에 응답 시한을 거는 http.BaseClient용 (common/network 전용)
+  http: ^1.6.0
 
   # Secure storage for tokens (via common/storage wrapper only)
   flutter_secure_storage: ^9.2.2

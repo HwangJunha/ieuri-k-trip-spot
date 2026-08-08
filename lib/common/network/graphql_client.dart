@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:http/http.dart' as http;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../localization/locale_controller.dart';
@@ -57,7 +58,10 @@ GraphQLClient graphqlClient(Ref ref) {
   final SecureStorage storage = ref.watch(secureStorageProvider);
   final TokenRefreshBridge bridge = ref.watch(tokenRefreshBridgeProvider);
 
-  final HttpLink httpLink = HttpLink(GraphqlEndpoint.resolve());
+  final HttpLink httpLink = HttpLink(
+    GraphqlEndpoint.resolve(),
+    httpClient: _TimeoutHttpClient(),
+  );
 
   final AuthLink authLink = AuthLink(
     getToken: () async {
@@ -93,6 +97,37 @@ GraphQLClient graphqlClient(Ref ref) {
   );
 }
 
+/// 모든 GraphQL 요청에 응답 시한을 건다.
+///
+/// 시한이 없으면 서버가 조용히 멎었을 때 요청이 끝나지 않고, 화면은 로딩
+/// 스피너에 갇힌 채 사용자가 할 수 있는 일이 없어진다. 시한이 지나면 요청을
+/// 끊어 `transportFailure`로 분류되게 하고, 사용자는 "네트워크 오류"를 보고
+/// 다시 시도할 수 있다.
+///
+/// **[timeout]은 넉넉해야 한다.** 짧게 잡으면 서버가 처리 중인 요청을 끊는데,
+/// 회원가입처럼 부수 효과가 있는 요청에서는 서버에는 반영되고 클라이언트는
+/// 실패로 알게 되어, 재시도가 "이미 가입된 계정"으로 막히는 최악의 형태가 된다.
+/// 끊는 것보다 기다리는 편이 안전하다.
+class _TimeoutHttpClient extends http.BaseClient {
+  _TimeoutHttpClient({
+    http.Client? inner,
+    this.timeout = const Duration(seconds: 30),
+  }) : _inner = inner ?? http.Client();
+
+  final http.Client _inner;
+  final Duration timeout;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) =>
+      _inner.send(request).timeout(timeout);
+
+  @override
+  void close() {
+    _inner.close();
+    super.close();
+  }
+}
+
 /// 앱 활성 언어를 `Accept-Language` 요청 헤더로 실어 서버가 언어별 콘텐츠를
 /// 내려주게 한다(spec §2). 요청 컨텍스트의 [HttpLinkHeaders]에 얹어 HttpLink가
 /// 정적 헤더와 병합한다 — AuthLink가 토큰을 다루는 방식과 동일.
@@ -123,6 +158,12 @@ class _AcceptLanguageLink extends Link {
 /// (SPEC-0005 §4).
 @visibleForTesting
 Link buildRefreshLink(TokenRefreshBridge bridge) => _RefreshLink(bridge);
+
+@visibleForTesting
+http.Client buildTimeoutHttpClient({
+  required http.Client inner,
+  required Duration timeout,
+}) => _TimeoutHttpClient(inner: inner, timeout: timeout);
 
 /// 인증 실패 응답을 받으면 등록된 refresher로 토큰을 갱신하고 요청을 재시도한다
 /// (SPEC-0005 §2.3~§2.4). 갱신에 실패하면 원래 오류를 그대로 통과시켜 상위가

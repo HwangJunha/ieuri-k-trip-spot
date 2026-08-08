@@ -11,6 +11,12 @@ void main() {
       AuthFailure.fromCode('EMAIL_TAKEN').kind,
       AuthFailureKind.emailAlreadyInUse,
     );
+    // 서버가 실제로 주는 코드다(실측). unknown으로 떨어지면 사용자는
+    // "문제가 발생했습니다"만 보고 만료가 원인인 줄 알 수 없다.
+    expect(
+      AuthFailure.fromCode('SNS_VERIFICATION_FAILED').kind,
+      AuthFailureKind.snsVerificationFailed,
+    );
   });
 
   test('maps an unknown code to unknown, preserving the field', () {

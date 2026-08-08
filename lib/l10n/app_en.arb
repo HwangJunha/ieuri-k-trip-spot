@@ -105,6 +105,7 @@
   "snsSignUpButton": "Complete sign-up",
   "snsCancelled": "Sign-in was cancelled.",
   "errorSnsMemberNotFound": "This account isn't registered yet. Please sign up.",
+  "errorSnsVerificationExpired": "Sign-in has expired. Please sign in again.",
   "logoutTooltip": "Log out",
   "permissionLocationRationaleTitle": "Find spots around you",
   "permissionLocationRationaleBody": "K-Trip Spot uses your location while you use the app to show nearby attractions and real-time crowd levels. We never track you in the background.",

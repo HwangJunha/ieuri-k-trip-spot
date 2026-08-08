@@ -13,6 +13,14 @@ enum AuthFailureKind {
   /// one; the caller routes the user to SNS sign-up.
   memberNotFound,
 
+  /// 서버가 provider의 id_token을 검증하지 못했다 — 대개 **만료**다.
+  ///
+  /// SNS 가입은 provider 인증 → 이메일·약관 입력 → 가입 요청 순이라, 사용자가
+  /// 입력에 오래 머물면 그 사이 토큰이 만료된다(애플은 code가 5분이다). 이때
+  /// 가입 화면에 남아 재시도해도 같은 토큰을 다시 보낼 뿐이라 영영 실패한다.
+  /// 유일한 복구는 provider 재인증이므로 호출자는 로그인 화면으로 되돌린다.
+  snsVerificationFailed,
+
   /// accessToken이 만료/무효라 갱신이 필요하다(SPEC-0005 E1·E2, R4·R5).
   unauthenticated,
 
@@ -53,6 +61,8 @@ class AuthFailure implements Exception {
         return AuthFailure(AuthFailureKind.emailAlreadyInUse, field: field);
       case 'MEMBER_NOT_FOUND':
         return AuthFailure(AuthFailureKind.memberNotFound, field: field);
+      case 'SNS_VERIFICATION_FAILED':
+        return AuthFailure(AuthFailureKind.snsVerificationFailed, field: field);
       default:
         return AuthFailure(AuthFailureKind.unknown, field: field);
     }

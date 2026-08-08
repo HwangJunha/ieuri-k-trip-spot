@@ -6,6 +6,7 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../component/agreement_checklist.dart';
 import '../component/auth_failure_message.dart';
 import '../component/auth_text_field.dart';
+import '../model/auth_failure.dart';
 import '../model/password_policy.dart';
 import '../model/sns_credential.dart';
 import '../model/sns_registration_result.dart';
@@ -107,6 +108,17 @@ class _SnsSignUpScreenState extends ConsumerState<SnsSignUpScreen> {
       }
     } on Object catch (error) {
       if (!mounted) return;
+      // provider 토큰이 만료됐다면 이 화면에 남아 재시도해도 같은 토큰을 다시
+      // 보낼 뿐이라 영영 실패한다. 유일한 복구는 provider 재인증이므로 오류를
+      // 들고 로그인 화면으로 되돌린다.
+      if (error is AuthFailure &&
+          error.kind == AuthFailureKind.snsVerificationFailed) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(authFailureMessage(l10n, error))),
+        );
+        context.goNamed(LoginScreen.routeName, extra: email);
+        return;
+      }
       setState(() => _serverError = authFailureMessage(l10n, error));
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -151,7 +163,11 @@ class _SnsSignUpScreenState extends ConsumerState<SnsSignUpScreen> {
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.done,
                 errorText: _emailError,
-                enabled: !_submitting,
+                // provider가 이메일을 준 경우 고칠 수 없다. 그 이메일은 이미
+                // provider가 검증한 것이라 그대로 쓰면 인증 절차가 없어도 되는데,
+                // 사용자가 다른 주소로 바꾸면 검증되지 않은 값이 되어 인증을
+                // 다시 받아야 한다. 편집을 막아 그 우회 자체를 없앤다.
+                enabled: !_submitting && providerGaveNoEmail,
               ),
               if (providerGaveNoEmail)
                 Padding(

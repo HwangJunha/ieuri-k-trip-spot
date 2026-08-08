@@ -425,6 +425,10 @@
   "@errorSnsMemberNotFound": {
     "description": "SNS 로그인 시 미가입 계정 문구(폴백)"
   },
+  "errorSnsVerificationExpired": "인증이 만료되었습니다. 다시 로그인해 주세요.",
+  "@errorSnsVerificationExpired": {
+    "description": "SNS 가입 중 provider 토큰이 만료돼 서버 검증에 실패했을 때"
+  },
   "logoutTooltip": "로그아웃",
   "@logoutTooltip": {
     "description": "홈 상단 로그아웃 버튼 툴팁"
