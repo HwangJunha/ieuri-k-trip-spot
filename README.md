@@ -111,7 +111,13 @@ nc -z -v 192.168.0.10 8888
 ```
 
 앱 서명의 키 해시가 카카오 개발자 콘솔에 등록되지 않은 것이다. 코드가 아니라
-콘솔 설정 문제다. 해시를 뽑아 **내 애플리케이션 → 플랫폼 → Android**에 추가한다:
+콘솔 설정 문제다.
+
+등록 위치는 **앱 설정 → 앱 → 플랫폼 키 → 네이티브 앱 키 카드의 `Android 패키지`**
+다(예전의 "플랫폼 → Android"가 여기로 옮겨졌다). 두 값을 넣는다:
+
+- 패키지명: `kr.ieuri.ktripspot` (`android/app/build.gradle.kts`의 `applicationId`)
+- 키 해시: 아래 명령의 출력
 
 ```sh
 keytool -exportcert -alias androiddebugkey -keystore ~/.android/debug.keystore \
