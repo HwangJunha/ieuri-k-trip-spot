@@ -55,6 +55,11 @@
 | R19 연령 확인 게이트 | **이미 충족** — `AgreementItem.age`가 `required: true`라 `requiredSatisfied`에 포함됨. 스펙의 "확인 필요"는 확인 결과 보정 불필요 |
 | R7·R8 이메일 변경 | **구현** — `/settings/profile/email` 한 라우트가 2단계를 모두 그린다 |
 
+**정책 확정 요청을 남겼다.** `ieuri-recorder/problem/POLICY-이메일변경-검증정책-확정요청.md` —
+POL-004의 `[TBD]`가 이메일 *변경* 흐름에서 비어 있다. 코드 TTL·시도 상한·재발송 쿨다운(60초)과
+`failureReason`의 허용 값 집합이 정책에 없어 **구현이 값을 가정했다.** `failureReason`이 enum이
+아니라 `String`이라 어긋나도 컴파일이 잡지 못하므로, 문서로 못 박거나 enum으로 바꿔야 한다.
+
 ---
 
 ## 1. 진입점 (R1·R2)
