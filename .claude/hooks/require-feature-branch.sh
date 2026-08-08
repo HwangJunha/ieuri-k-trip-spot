@@ -41,8 +41,10 @@ fi
 {
   echo "BLOCKED (branch policy): you are on protected branch '$branch'."
   echo "  All work must be on a topic branch — create one first:"
-  echo "      git checkout -b feature/<short-kebab-name>"
+  echo "      git switch -c feature/<short-kebab-name> --no-track origin/dev"
   echo "  Convention: feature/ for new work (also allowed: fix/ hotfix/ chore/ refactor/)."
+  echo "  --no-track가 중요하다: 빼면 upstream이 origin/dev로 잡혀, 인자 없는"
+  echo "  git push 한 번이 작업 브랜치가 아니라 dev로 직행한다(CLAUDE.md §12)."
   echo "  Then re-run the edit/command. See CLAUDE.md §12 (Branch policy)."
 } >&2
 exit 2

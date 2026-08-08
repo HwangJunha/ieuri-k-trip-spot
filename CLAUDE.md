@@ -396,11 +396,36 @@ worktree를 만든다.** `EnterWorktree`로 만들고 그 안에서 작업한다
 ```
 git fetch origin
 git log --oneline -3 origin/dev     # 로컬 dev와 다른지 확인
-git checkout -b feature/SPEC-0007-home-screen origin/dev
+git switch -c feature/SPEC-0007-home-screen --no-track origin/dev
 ```
 
 **분기 기준은 `origin/dev`이지 로컬 `dev`가 아니다.** worktree를 쓸 때도 같다 — EnterWorktree가
 만든 브랜치가 낡은 기준에서 출발했다면 즉시 `origin/dev` 위로 옮긴다.
+
+### `--no-track`이 붙은 이유 — 실제로 사고가 났다
+
+**`git checkout -b <새브랜치> origin/dev`는 upstream을 `origin/dev`로 자동 설정한다.**
+분기 기준을 준 것뿐인데 추적 대상까지 걸린다. 그러면 인자 없는 `git push` 한 번이
+**작업 브랜치가 아니라 `dev`로 직행**하고, PR도 리뷰도 없이 보호 브랜치에 커밋이 쌓인다.
+
+SPEC-0011에서 실제로 그렇게 됐다. 브랜치를 딸 때 출력에 `set up to track 'origin/dev'`가
+찍혔는데 흘려봤고, 나중에 `origin/dev..HEAD`가 0으로 나왔을 때도 원인을 짚지 못했다 —
+**브랜치를 갓 딴 직후가 아닌데 원격과 차이가 0이면 그 자체가 이상 신호다.**
+
+그래서 두 가지를 지킨다:
+
+1. **분기할 때 `--no-track`을 붙인다.** 기준으로 삼는 것과 추적하는 것은 다른 일이다.
+2. **`git push`를 인자 없이 쓰지 않는다.** 항상 대상을 적어 어디로 가는지 명령에 드러낸다:
+
+   ```
+   git push -u origin feature/SPEC-0007-home-screen
+   ```
+
+이미 upstream이 잘못 걸린 브랜치는 `git branch --unset-upstream`으로 뗀다 — 커밋을
+건드리지 않는 안전한 작업이다.
+
+**`dev`·`master`에 직접 push하거나 머지하지 않는다.** 그건 사용자의 몫이고, 내 권한이
+아니다(§12 커밋 항목과 같은 이유).
 
 실제로 이걸 빠뜨려 SPEC-0007을 SPEC-0006이 빠진 코드 위에서 전부 구현한 적이 있다. 시작 전
 `git fetch` 한 번이면 없었을 일이다.
@@ -414,7 +439,7 @@ git checkout -b feature/SPEC-0007-home-screen origin/dev
 change — code, tests, specs — happens on a **topic branch** created first:
 
 ```
-git checkout -b feature/SPEC-0007-home-screen
+git switch -c feature/SPEC-0007-home-screen --no-track origin/dev
 ```
 
 - `feature/SPEC-XXXX-<short-kebab-name>` is the **required convention** for spec-driven work.
