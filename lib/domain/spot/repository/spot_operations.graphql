@@ -123,3 +123,117 @@ mutation ReactToSpot($input: ReactToSpotInput!) {
     }
   }
 }
+
+# ── SPEC-0013 검색 · 자동완성 · Popular ────────────────────────────────────
+
+# R1–R8. 반경 내 spot 검색. 언어는 Accept-Language 헤더로 전달된다(다른 조회와 동일).
+#
+# **오프셋 페이징이다**(page/size) — 초안은 커서였으나 서버가 커서 방식에서 정확히
+# 동작하지 않아 전환됐다. 기존 `spots`와 같은 모양이며 `SpotSearchEdge`는 사라졌다.
+#
+# 정렬은 서버가 보장하므로 클라이언트가 재정렬하지 않는다(POL-019).
+#
+# userErrors는 입력 검증 실패(EMPTY_QUERY·QUERY_TOO_LONG·RADIUS_TOO_LARGE)를 데이터로
+# 돌려주는 경로다(POL-015 — HTTP는 항상 200). 결과 0건은 오류가 아니다.
+query SearchSpots(
+  $query: String!
+  $latitude: Float!
+  $longitude: Float!
+  $radiusMeters: Int
+  $category: SpotCategory
+  $page: Int
+  $size: Int
+) {
+  searchSpots(
+    query: $query
+    latitude: $latitude
+    longitude: $longitude
+    radiusMeters: $radiusMeters
+    category: $category
+    page: $page
+    size: $size
+  ) {
+    success
+    userErrors {
+      code
+      field
+    }
+    connection {
+      items {
+        id
+        title
+        address
+        thumbnailImageUrl
+        distanceMeters
+        category
+        copyright
+        attributionText
+      }
+      page
+      hasNext
+      totalCount
+    }
+  }
+}
+
+# R9. 제목 접두 자동완성. 페이지네이션하지 않으며 빈 질의는 빈 목록이다.
+query SpotSearchSuggestions(
+  $query: String!
+  $latitude: Float!
+  $longitude: Float!
+  $radiusMeters: Int
+  $limit: Int
+) {
+  spotSearchSuggestions(
+    query: $query
+    latitude: $latitude
+    longitude: $longitude
+    radiusMeters: $radiusMeters
+    limit: $limit
+  ) {
+    id
+    title
+    category
+  }
+}
+
+# R18. 좋아요 총합 내림차순. likeCount는 랭킹 근거라 edge에 실린다.
+#
+# **totalCount가 없다** — 라이브 스키마의 PopularSpotConnection에는 그 필드가 없다
+# (제안에는 있었으나 서버가 다르다). 홈 섹션은 건수를 표시하지 않으므로 문제없다.
+query PopularSpots(
+  $latitude: Float!
+  $longitude: Float!
+  $radiusMeters: Int
+  $category: SpotCategory
+  $first: Int
+  $after: String
+) {
+  popularSpots(
+    latitude: $latitude
+    longitude: $longitude
+    radiusMeters: $radiusMeters
+    category: $category
+    first: $first
+    after: $after
+  ) {
+    edges {
+      node {
+        id
+        title
+        address
+        thumbnailImageUrl
+        distanceMeters
+        category
+        copyright
+        attributionText
+      }
+      cursor
+      likeCount
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

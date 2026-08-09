@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ieuri_k_trip_spot/domain/spot/model/congestion_level.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/swipe_queue.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/tourist_spot.dart';
 
@@ -8,7 +7,6 @@ const TouristSpot _a = TouristSpot(
   name: 'A',
   imageRef: 'a',
   location: 'Seoul',
-  congestion: CongestionLevel.low,
 );
 
 const TouristSpot _b = TouristSpot(
@@ -16,7 +14,6 @@ const TouristSpot _b = TouristSpot(
   name: 'B',
   imageRef: 'b',
   location: 'Seoul',
-  congestion: CongestionLevel.low,
 );
 
 void main() {

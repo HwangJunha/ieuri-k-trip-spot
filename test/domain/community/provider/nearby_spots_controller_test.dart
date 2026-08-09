@@ -79,18 +79,94 @@ void main() {
     expect(repo.lastFetchNearbySpots?.page, 0);
   });
 
-  group('filtered — 받아 둔 목록만 좁힌다', () {
-    test('제목으로 좁힌다', () async {
+  // SPEC-0013 R14 — 주변 탭은 이제 받아 둔 목록을 거르지 않고 서버 검색을 부른다.
+  group('SpotSearchList — 서버 검색 (R14)', () {
+    test('AC-14.1 · 질의를 서버로 보낸다 (클라이언트 필터가 아니다)', () async {
       final FakeCommunityRepository repo = FakeCommunityRepository()
-        ..nearbySpots = <NearbySpot>[_spot('1', '서울갤러리'), _spot('2', '경복궁')];
+        // 주변 목록에는 '경복궁'이 없다. 클라이언트 필터였다면 결과가 비었을 것이다.
+        ..nearbySpots = <NearbySpot>[_spot('1', '서울갤러리')]
+        ..searchResults = <NearbySpot>[_spot('2', '경복궁')];
+      final ProviderContainer container = _container(repo);
+      // 디바운스 대기 중 autoDispose provider가 폐기되면 조회가 나가지 않는다 —
+      // 구독을 유지해 실제 화면과 같은 조건으로 둔다.
+      container.listen(
+        spotSearchListProvider('경복'),
+        (_, _) {},
+        fireImmediately: true,
+      );
 
-      final NearbySpotsState state = await _container(
-        repo,
-      ).read(nearbySpotsControllerProvider.future);
+      final SpotSearchListState state = await container.read(
+        spotSearchListProvider('경복').future,
+      );
 
-      expect(state.filtered('경복').map((NearbySpot s) => s.id), <String>['2']);
-      // 빈 질의는 전부를 남긴다.
-      expect(state.filtered(''), hasLength(2));
+      expect(repo.lastSearchQuery, '경복');
+      expect(state.items.map((NearbySpot s) => s.id), <String>['2']);
+    });
+
+    test('AC-14.2 · 질의가 있어도 다음 페이지를 이어 받는다', () async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..searchResults = <NearbySpot>[_spot('1', '경복궁')]
+        ..searchHasNextPage = true;
+      final ProviderContainer container = _container(repo);
+      // autoDispose provider가 조회 도중 폐기되지 않도록 구독을 유지한다.
+      container.listen(
+        spotSearchListProvider('경복'),
+        (_, _) {},
+        fireImmediately: true,
+      );
+      await container.read(spotSearchListProvider('경복').future);
+
+      repo.searchResults = <NearbySpot>[_spot('2', '경복궁 야간개장')];
+      repo.searchHasNextPage = false;
+      await container
+          .read(spotSearchListProvider('경복').notifier)
+          .loadMore();
+
+      final SpotSearchListState state = container
+          .read(spotSearchListProvider('경복'))
+          .value!;
+      expect(state.items.map((NearbySpot s) => s.id), <String>['1', '2']);
+      // 다음 페이지 번호로 이어 받았다(오프셋 페이징).
+      expect(repo.lastSearchPage, 1);
+    });
+
+    test('시트 카테고리 칩이 검색에도 걸린다', () async {
+      final FakeCommunityRepository repo = FakeCommunityRepository()
+        ..searchResults = <NearbySpot>[_spot('1', '무교동 북어국집')];
+      final ProviderContainer container = _container(repo);
+      container
+          .read(nearbySpotCategoryFilterProvider.notifier)
+          .set(NearbySpotCategory.restaurant);
+      container.listen(
+        spotSearchListProvider('북어'),
+        (_, _) {},
+        fireImmediately: true,
+      );
+
+      // 카테고리를 바꾸면 build가 다시 도는데, 그 재빌드가 끝날 때까지 기다린다.
+      await container.read(spotSearchListProvider('북어').future);
+      await container.read(spotSearchListProvider('북어').future);
+
+      // 칩과 검색창이 한 시트에 있으니 둘이 함께 걸린다.
+      expect(repo.lastSearchCategory, NearbySpotCategory.restaurant);
+    });
+
+    test('AC-14.3 · 빈 질의는 서버를 부르지 않는다', () async {
+      final FakeCommunityRepository repo = FakeCommunityRepository();
+      final ProviderContainer container = _container(repo);
+      container.listen(
+        spotSearchListProvider('   '),
+        (_, _) {},
+        fireImmediately: true,
+      );
+
+      final SpotSearchListState state = await container.read(
+        spotSearchListProvider('   ').future,
+      );
+
+      // 질의를 지우면 시트가 좌표 기반 목록으로 되돌아가므로 검색은 나가지 않는다.
+      expect(repo.searchCallCount, 0);
+      expect(state.items, isEmpty);
     });
   });
 

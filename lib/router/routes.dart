@@ -30,6 +30,7 @@ import '../domain/spot/view/discover_screen.dart';
 import '../domain/spot/view/home_screen.dart';
 import '../domain/spot/view/liked_spots_screen.dart';
 import '../domain/spot/view/map_screen.dart';
+import '../domain/spot/view/search_screen.dart';
 import '../domain/spot/view/spot_detail_view.dart';
 
 /// The app's flat route table. Each screen owns its `routeName`; navigation is
@@ -117,6 +118,27 @@ List<RouteBase> buildRoutes() => <RouteBase>[
         // 파라미터가 없으면 전체 피드(null)로 본다 — 직접 진입도 같은 경로다.
         feedCategory: _feedCategoryFrom(state.uri.queryParameters['feed']),
       ),
+      transitionDuration: const Duration(milliseconds: 300),
+      reverseTransitionDuration: const Duration(milliseconds: 250),
+      transitionsBuilder: _slideUpFromBottom,
+    ),
+  ),
+  // 검색 페이지(SPEC-0013 R10). **셸 밖의 최상위 라우트**라 루트 내비게이터에
+  // push되어 하단 탭을 덮는다 — 검색은 탭 전환이 아니라 홈에서 밀고 올라오는
+  // 전체 화면 흐름이다(설계 §1).
+  //
+  // 전환도 그 성격을 따라 아래→위다. 관광지 상세와 같은 `_slideUpFromBottom`을
+  // 쓰므로 두 화면이 같은 방식으로 열리고 닫힌다.
+  //
+  // 인자를 받지 않는다 — 질의는 라우트가 아니라 검색 상태(keepAlive)가 쥔다.
+  // 질의를 URL에 실으면 상세를 다녀올 때마다 라우트를 갈아 끼워야 하고, 그러면
+  // 결과 목록이 다시 조회된다(AC-13.2가 유지를 요구한다).
+  GoRoute(
+    path: '/search',
+    name: SearchScreen.routeName,
+    pageBuilder: (_, GoRouterState state) => CustomTransitionPage<void>(
+      key: state.pageKey,
+      child: const SearchScreen(),
       transitionDuration: const Duration(milliseconds: 300),
       reverseTransitionDuration: const Duration(milliseconds: 250),
       transitionsBuilder: _slideUpFromBottom,

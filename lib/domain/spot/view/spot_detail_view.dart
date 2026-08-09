@@ -12,6 +12,7 @@ import '../component/spot_gallery.dart';
 import '../component/spot_info_item_list.dart';
 import '../component/spot_intro_rows.dart';
 import '../model/retry_exhausted.dart';
+import '../../../common/navigation/spot_detail_route.dart';
 import '../model/spot_category.dart';
 import '../model/spot_detail.dart';
 import '../model/spot_failure.dart';
@@ -57,7 +58,7 @@ class SpotDetailView extends ConsumerWidget {
   /// 받은 값을 그대로 넘긴다(추가 왕복 없음).
   final SpotCategory category;
 
-  static String get routeName => 'spotDetail';
+  static String get routeName => spotDetailRouteName;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

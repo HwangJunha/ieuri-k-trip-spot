@@ -268,6 +268,47 @@ class FakeCommunityRepository implements CommunityRepository {
 
   int likedSpotsCalls = 0;
 
+  /// `searchSpots`가 돌려줄 결과(설정 시).
+  List<NearbySpot> searchResults = const <NearbySpot>[];
+
+  /// `searchSpots`가 던질 실패(설정 시).
+  Object? searchFailure;
+
+  /// 마지막 검색에 실린 질의·페이지(검증용) — 클라이언트 필터가 아니라 서버로
+  /// 나갔는지, 다음 장을 이어 받는지 본다(AC-14.1·14.2).
+  String? lastSearchQuery;
+  int? lastSearchPage;
+
+  /// 마지막 검색에 실린 카테고리(검증용) — 시트 칩이 검색까지 걸리는지 본다.
+  NearbySpotCategory? lastSearchCategory;
+
+  int searchCallCount = 0;
+
+  /// `searchSpots`가 다음 페이지가 있다고 답할지.
+  bool searchHasNextPage = false;
+
+  @override
+  Future<OffsetPage<NearbySpot>> searchSpots({
+    required String query,
+    required double latitude,
+    required double longitude,
+    int? radiusMeters,
+    NearbySpotCategory? category,
+    int? page,
+    int? size,
+  }) async {
+    searchCallCount++;
+    lastSearchQuery = query;
+    lastSearchPage = page;
+    lastSearchCategory = category;
+    if (searchFailure != null) throw searchFailure!;
+    return OffsetPage<NearbySpot>(
+      items: searchResults,
+      page: page ?? 0,
+      hasNext: searchHasNextPage,
+    );
+  }
+
   @override
   Future<CursorPage<NearbySpot>> fetchLikedSpots({
     NearbySpotCategory? category,

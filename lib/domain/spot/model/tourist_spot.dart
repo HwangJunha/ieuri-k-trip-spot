@@ -1,34 +1,31 @@
-import 'congestion_level.dart';
 import 'copyright_type.dart';
 import 'distance.dart';
 import 'spot_category.dart';
 
 /// A tourist spot. Pure domain model — no widgets, no transport types. The
-/// repository maps its source (mock now, GraphQL later) into this.
+/// repository maps the GraphQL response into this.
 ///
 /// Two surfaces share it:
-/// - Home cards (recommended + popular) use [name], [imageRef], [location],
-///   [congestion], [rating], [distanceKm].
+/// - Home cards (Near you + Popular) use [name], [imageRef], [location],
+///   [distanceMeters].
 /// - The Discover swipe card (SPEC-0002) uses [thumbnailImageUrl], [address],
 ///   [distanceMeters], [copyright], [attributionText], [category].
 ///
-/// The swipe fields are optional so Home construction is untouched; a spot built
-/// for the swipe feed fills them, a Home spot leaves them null.
+/// 별점과 혼잡도 필드는 SPEC-0013에서 **제거**했다. 서버에 rating 컬럼도
+/// 혼잡도 소스도 없어 클라이언트가 지어낸 값이었고, AC-15.2·AC-15.3이 이
+/// 모델에 두 필드가 **없을 것**을 요구한다. 화면에서 감추는 것으로는 부족해
+/// 모델에서 지운다 — 남겨 두면 다음 사람이 다시 채운다.
 ///
-/// [imageRef] is an opaque image reference. Mock data uses it as a stable seed
-/// for a color-block placeholder (offline/test stability, spec §4) rather than a
-/// network URL; when the real API lands it can carry an asset key or URL without
-/// changing the model shape. [thumbnailImageUrl] is the swipe-card variant of the
-/// same idea — kept separate so the two surfaces can diverge later.
+/// [imageRef] is an opaque image reference: a network URL when the server
+/// provides one, otherwise a stable seed for a color-block placeholder.
+/// [thumbnailImageUrl] is the swipe-card variant of the same idea — kept
+/// separate so the two surfaces can diverge later.
 class TouristSpot {
   const TouristSpot({
     required this.id,
     required this.name,
     required this.imageRef,
     required this.location,
-    required this.congestion,
-    this.rating,
-    this.distanceKm,
     this.thumbnailImageUrl,
     this.address,
     this.distanceMeters,
@@ -43,23 +40,15 @@ class TouristSpot {
 
   /// Human-readable location label, e.g. "Seoul, Jongno-gu".
   final String location;
-  final CongestionLevel congestion;
 
-  /// Star rating (e.g. 4.8). Null when not applicable (recommended cards).
-  final double? rating;
-
-  /// Distance from the user in kilometres (Home popular cards). Null when not
-  /// shown. The swipe surface uses [distanceMeters] instead.
-  final double? distanceKm;
-
-  /// Swipe-card image reference (opaque; mock uses it as a placeholder seed).
+  /// Swipe-card image reference (opaque; a non-URL value renders as a placeholder).
   final String? thumbnailImageUrl;
 
-  /// Full address shown on the swipe card overlay. Null on Home spots.
+  /// Full address shown on the swipe card overlay.
   final String? address;
 
-  /// Server-computed distance in metres for the swipe card. The client localizes
-  /// the display via [distance] (POL-024). Null on Home spots.
+  /// Server-computed distance in metres. The client localizes the display via
+  /// [distance] (POL-024). Null when the server did not compute one.
   final int? distanceMeters;
 
   /// Image copyright type — drives the swipe card's BoxFit branch (spec §6).
@@ -83,9 +72,6 @@ class TouristSpot {
       other.name == name &&
       other.imageRef == imageRef &&
       other.location == location &&
-      other.congestion == congestion &&
-      other.rating == rating &&
-      other.distanceKm == distanceKm &&
       other.thumbnailImageUrl == thumbnailImageUrl &&
       other.address == address &&
       other.distanceMeters == distanceMeters &&
@@ -99,9 +85,6 @@ class TouristSpot {
     name,
     imageRef,
     location,
-    congestion,
-    rating,
-    distanceKm,
     thumbnailImageUrl,
     address,
     distanceMeters,

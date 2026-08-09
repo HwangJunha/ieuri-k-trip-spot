@@ -3,9 +3,9 @@ import 'package:ieuri_k_trip_spot/common/location/coordinates.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_service.dart';
 import 'package:ieuri_k_trip_spot/common/pagination/offset_page.dart';
 import 'package:ieuri_k_trip_spot/common/pagination/page.dart';
-import 'package:ieuri_k_trip_spot/domain/spot/model/congestion_level.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/liked_spot.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/popular_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_detail.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
@@ -13,6 +13,8 @@ import 'package:ieuri_k_trip_spot/domain/spot/model/spot_image.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_info_item.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_intro.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_reaction.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/spot_search_result.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/spot_suggestion.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/tourist_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/repository/spot_repository.dart';
 
@@ -21,8 +23,6 @@ import 'package:ieuri_k_trip_spot/domain/spot/repository/spot_repository.dart';
 /// through [feed] in [pageSize] chunks so prefetch/exhaustion are testable.
 class FakeSpotRepository implements SpotRepository {
   FakeSpotRepository({
-    List<TouristSpot>? recommended,
-    List<TouristSpot>? popular,
     List<TouristSpot>? feed,
     this.categories,
     this.pageSize = 5,
@@ -36,9 +36,7 @@ class FakeSpotRepository implements SpotRepository {
     this.likedPageSize = 2,
     this.likedSpotsFailure,
     this.failLikedAfter = 0,
-  }) : recommended = recommended ?? const <TouristSpot>[_spot],
-       popular = popular ?? const <TouristSpot>[_spot],
-       feed = feed ?? const <TouristSpot>[],
+  }) : feed = feed ?? const <TouristSpot>[],
        liked = liked ?? const <LikedSpot>[];
 
   /// `fetchSpotPage`가 던질 실패(설정 시). [failPageTimes]와 함께 쓰면 앞의 N회만
@@ -55,8 +53,6 @@ class FakeSpotRepository implements SpotRepository {
   /// SPEC-0011 R13). null은 인자를 보내지 않은 것 — 0km가 그 경우다.
   final List<int?> requestedRadiiMeters = <int?>[];
 
-  final List<TouristSpot> recommended;
-  final List<TouristSpot> popular;
   final List<TouristSpot> feed;
   final List<SpotCategory>? categories;
   final int pageSize;
@@ -101,16 +97,6 @@ class FakeSpotRepository implements SpotRepository {
   /// 마지막 조회에 실린 카테고리(검증용) — 필터가 서버까지 전달되는지 본다.
   SpotCategory? lastLikedCategory;
 
-  static const TouristSpot _spot = TouristSpot(
-    id: 'spot-1',
-    name: 'Gyeongbokgung Palace',
-    imageRef: 'gyeongbokgung',
-    location: 'Seoul, Jongno-gu',
-    congestion: CongestionLevel.low,
-    rating: 4.7,
-    distanceKm: 1.2,
-  );
-
   /// 좋아요 목록 커서 페이징(SPEC-0008 R-18). [likedPageSize]씩 잘라 돌려주며,
   /// 커서는 다음 항목의 인덱스 문자열이다 — 실제 서버의 불투명 커서를 흉내내되
   /// 테스트가 페이지 경계를 예측할 수 있게 한다.
@@ -145,11 +131,79 @@ class FakeSpotRepository implements SpotRepository {
     );
   }
 
-  @override
-  Future<List<TouristSpot>> fetchRecommendedSpots() async => recommended;
+  /// `searchSpots`가 돌려줄 결과(설정 시). [searchFailure]가 있으면 그게 우선한다.
+  SpotSearchResult searchResult = SpotSearchResult.empty;
+
+  /// `searchSpots`가 던질 실패(설정 시) — 검색 실패 상태(AC-11.3) 검증용.
+  Object? searchFailure;
+
+  /// 마지막 조회에 실린 질의·페이지·카테고리(검증용).
+  String? lastSearchQuery;
+  int? lastSearchPage;
+  SpotCategory? lastSearchCategory;
+
+  /// `searchSpots` 호출 횟수(검증용) — 재시도가 실제로 다시 조회하는지 본다.
+  int searchCallCount = 0;
+
+  /// `fetchPopularSpots`가 돌려줄 항목(설정 시).
+  List<PopularSpot> popular = const <PopularSpot>[];
+
+  /// 인기 조회에 실린 반경(검증용). **`requestedRadiiMeters`와 분리한다** — 두
+  /// 조회가 한 리스트를 공유하면 "몇 번째 값이 누구 것인지"가 섞여 단언이 흔들린다.
+  final List<int?> popularRadiiMeters = <int?>[];
+
+  /// `fetchPopularSpots`가 던질 실패(설정 시) — 섹션 실패 경로 검증용.
+  Object? popularFailure;
+
+  /// `spotSearchSuggestions`가 돌려줄 제안(설정 시).
+  List<SpotSuggestion> suggestions = const <SpotSuggestion>[];
+
+  /// 마지막 자동완성 조회에 실린 질의(검증용).
+  String? lastSuggestionQuery;
 
   @override
-  Future<List<TouristSpot>> fetchPopularSpots() async => popular;
+  Future<CursorPage<PopularSpot>> fetchPopularSpots({
+    required double latitude,
+    required double longitude,
+    int? radiusMeters,
+    SpotCategory? category,
+    int? first,
+    String? after,
+  }) async {
+    popularRadiiMeters.add(radiusMeters);
+    if (popularFailure != null) throw popularFailure!;
+    return CursorPage<PopularSpot>(items: popular, hasNextPage: false);
+  }
+
+  @override
+  Future<List<SpotSuggestion>> spotSearchSuggestions({
+    required String query,
+    required double latitude,
+    required double longitude,
+    int? radiusMeters,
+    int? limit,
+  }) async {
+    lastSuggestionQuery = query;
+    return suggestions;
+  }
+
+  @override
+  Future<SpotSearchResult> searchSpots({
+    required String query,
+    required double latitude,
+    required double longitude,
+    int? radiusMeters,
+    SpotCategory? category,
+    int? page,
+    int? size,
+  }) async {
+    searchCallCount++;
+    lastSearchQuery = query;
+    lastSearchPage = page;
+    lastSearchCategory = category;
+    if (searchFailure != null) throw searchFailure!;
+    return searchResult;
+  }
 
   @override
   Future<OffsetPage<TouristSpot>> fetchSpotPage({
@@ -271,6 +325,17 @@ SpotDetail detailSpot(
   infoItems: infoItems,
 );
 
+/// 홈 카드 하나를 최소 필드로 만든다(SPEC-0013). 서버가 주는 값만 채운다 —
+/// 별점·혼잡도는 모델에서 제거됐다(AC-15.2·AC-15.3).
+TouristSpot homeSpot(String id, {int? distanceMeters = 1200}) => TouristSpot(
+  id: id,
+  name: 'Spot $id',
+  imageRef: id,
+  location: 'Seoul',
+  thumbnailImageUrl: 'https://example.test/$id.jpg',
+  distanceMeters: distanceMeters,
+);
+
 /// 스와이프 카드 하나를 최소 필드로 만든다(테스트 데이터 생성 편의).
 TouristSpot swipeSpot(
   String id, {
@@ -282,7 +347,6 @@ TouristSpot swipeSpot(
   name: 'Spot $id',
   imageRef: id,
   location: 'Seoul',
-  congestion: CongestionLevel.low,
   thumbnailImageUrl: id,
   address: '$id-ro, Seoul',
   distanceMeters: distanceMeters,

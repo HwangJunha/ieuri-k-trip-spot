@@ -457,10 +457,17 @@ git switch -c feature/SPEC-0007-home-screen --no-track origin/dev
   `git switch -c` / `git branch` are allowed so you can get onto a topic branch.
 - When a task starts on a protected branch, create the topic branch **before** the first edit.
   The hook wins over this text — if it blocks you, switch branches, don't work around it.
-- **커밋은 사용자가 한다.** `git commit`은 권한 정책에서 `deny`다 — 내가 실행할 수 없고,
-  우회할 방법을 찾지도 않는다. 작업이 끝나면 **변경만 남기고** 커밋 메시지를 제안한다.
-  `git add`와 `git push`는 여전히 내가 할 수 있으므로, 스테이징까지 해 두고 사용자가
-  커밋하면 된다.
+- **커밋은 내가 한다.** `git commit`은 권한 정책에서 `allow`다(2026-08-10 사용자 결정 —
+  그전에는 `deny`였고 메시지만 제안했다). 작업이 끝나면 스테이징하고 커밋까지 마친다.
+  - **커밋 단위는 작업 단위다.** 한 커밋에 관련 없는 변경을 섞지 않는다 — 나중에 되돌릴 때
+    같이 딸려 온다. 계층을 가로지르는 한 기능(model→view+테스트)은 한 커밋이 맞다.
+  - **설계 문서(`problem/SPEC-*.md`)를 같은 커밋에 담는다**(§10) — 코드와 근거가 갈라지지
+    않게.
+  - `dev`·`master`에 직접 커밋하지 않는다. 그건 브랜치 훅이 막지만, 막히기 전에 내가
+    지킨다.
+- **`git push`도 할 수 있지만 대상을 명시한다**(`git push -u origin feature/...`). 인자 없는
+  `git push`는 쓰지 않는다 — upstream이 잘못 걸려 있으면 보호 브랜치로 직행한다(§12).
+- **머지와 PR 머지는 여전히 사용자 몫이다.** 커밋 권한이 생겼다고 그것까지 넘어온 것은 아니다.
 - 브랜치 훅은 그와 별개인 독립 방어선이다.
 
 ---

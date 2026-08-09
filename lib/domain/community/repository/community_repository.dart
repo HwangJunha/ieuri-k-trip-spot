@@ -16,9 +16,11 @@ import '../../../common/model/target_category.dart';
 /// 커뮤니티 데이터 접근(SPEC-0010). 도메인 모델만 돌려주며, 생성 타입
 /// (`*.graphql.dart`)은 구현체 밖으로 나가지 않는다(CLAUDE.md §3, POL-020).
 ///
-/// 페이징은 전부 **커서**다 — `common/pagination`의 [CursorPage]를 그대로 쓰고
-/// 기능이 자기 페이지네이션을 새로 만들지 않는다(CLAUDE.md §4). 커서는 불투명
-/// 문자열이라 파싱하거나 만들어 내면 `INVALID_INPUT`이다(가이드 §2).
+/// 페이징은 **서버 쿼리에 따라 갈린다** — 글·댓글·차단·좋아요한 장소는 커서
+/// ([CursorPage]), 주변 장소와 spot 검색은 오프셋([OffsetPage])이다. 둘 다
+/// `common/pagination`의 공용 타입이고 기능이 자기 페이지네이션을 새로 만들지
+/// 않는다(CLAUDE.md §4). 커서는 불투명 문자열이라 파싱하거나 만들어 내면
+/// `INVALID_INPUT`이다(가이드 §2).
 ///
 /// **모든 요청이 인증을 요구한다**(가이드 §1). 비로그인 열람 경로는 없다.
 abstract interface class CommunityRepository {
@@ -96,6 +98,31 @@ abstract interface class CommunityRepository {
   /// `hasNext`). [page]는 0-based이고 [size] 50까지는 서버가 그대로 지킨다
   /// (라이브 확인).
   Future<OffsetPage<NearbySpot>> fetchNearbySpots({
+    required double latitude,
+    required double longitude,
+    int? radiusMeters,
+    NearbySpotCategory? category,
+    int? page,
+    int? size,
+  });
+
+  /// 장소 선택 시트의 **서버 검색**(SPEC-0013 R14).
+  ///
+  /// [fetchNearbySpots]로 받아 둔 목록을 클라이언트에서 거르던 것을 대체한다.
+  /// 제목뿐 아니라 **주소도 검색 대상이 되고**, 오타·형태소 일치가 생기며, 결과가
+  /// 페이지로 오므로 질의가 있는 상태에서도 다음 장을 이어 받을 수 있다(AC-14.2).
+  ///
+  /// **오프셋 페이징이다**([page]는 0-based). 초안은 커서였으나 서버가 커서 방식에서
+  /// 정확히 동작하지 않아 전환됐다 — 주변 목록(`fetchNearbySpots`)과 같은 모양이다.
+  /// 정렬은 서버가 보장하므로 재정렬하지 않는다(POL-019).
+  ///
+  /// [category]는 [fetchNearbySpots]와 **같은 필터다** — 시트의 카테고리 칩 하나가
+  /// 주변 목록과 검색 양쪽에 걸린다. null이면 전체다.
+  ///
+  /// 결과 0건은 오류가 아니라 빈 페이지다. 질의가 공백뿐이거나 100자를 넘으면
+  /// 서버가 `userErrors`로 거절하며 [CommunityFailure]로 번역된다.
+  Future<OffsetPage<NearbySpot>> searchSpots({
+    required String query,
     required double latitude,
     required double longitude,
     int? radiusMeters,

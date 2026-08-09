@@ -191,6 +191,73 @@ class CommunityRepositoryImpl implements CommunityRepository {
   }
 
   @override
+  Future<OffsetPage<NearbySpot>> searchSpots({
+    required String query,
+    required double latitude,
+    required double longitude,
+    int? radiusMeters,
+    NearbySpotCategory? category,
+    int? page,
+    int? size,
+  }) async {
+    final Map<String, dynamic> data = await _query(
+      documentNodeQueryCommunitySearchSpots,
+      Variables$Query$CommunitySearchSpots(
+        query: query,
+        latitude: latitude,
+        longitude: longitude,
+        radiusMeters: radiusMeters,
+        // null이면 전체다 — 주변 목록과 같은 규약.
+        category: category == null ? null : _spotCategoryInput(category),
+        page: page,
+        size: size,
+      ).toJson(),
+      'searchSpots',
+    );
+    final Query$CommunitySearchSpots$searchSpots payload =
+        Query$CommunitySearchSpots.fromJson(data).searchSpots;
+
+    // 입력 검증 실패(EMPTY_QUERY·QUERY_TOO_LONG·RADIUS_TOO_LARGE)는 최상위
+    // errors[]가 아니라 payload로 온다(POL-015). 질의 원문은 사용자 입력이라
+    // 로깅하지 않고 코드만 남긴다(POL-013).
+    final List<({String code, String? field})> userErrors = payload.userErrors
+        .map(
+          (Query$CommunitySearchSpots$searchSpots$userErrors e) =>
+              (code: e.code, field: e.field),
+        )
+        .toList(growable: false);
+    if (userErrors.isNotEmpty) {
+      GraphqlDebugLog.userErrors('searchSpots', userErrors);
+      throw CommunityFailure.userError(userErrors.first.code);
+    }
+    if (!payload.success) throw CommunityFailure.unknown;
+
+    final Query$CommunitySearchSpots$searchSpots$connection c =
+        payload.connection;
+    return OffsetPage<NearbySpot>(
+      items: c.items
+          .map(
+            (Query$CommunitySearchSpots$searchSpots$connection$items i) =>
+                NearbySpot(
+                  id: i.id,
+                  title: i.title,
+                  distanceMeters: i.distanceMeters,
+                  // 서버가 빈 문자열을 줄 수 있다 — 화면이 자리채움으로 떨어지도록
+                  // 여기서 null로 접는다(주변 목록과 같은 규칙).
+                  thumbnailImageUrl: i.thumbnailImageUrl.isEmpty
+                      ? null
+                      : i.thumbnailImageUrl,
+                  address: i.address,
+                ),
+          )
+          .toList(growable: false),
+      page: c.page,
+      hasNext: c.hasNext,
+      totalCount: c.totalCount,
+    );
+  }
+
+  @override
   Future<CursorPage<NearbySpot>> fetchLikedSpots({
     NearbySpotCategory? category,
     int? first,

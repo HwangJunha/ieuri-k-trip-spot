@@ -23,6 +23,10 @@ targets:
           - lib/domain/auth/repository/auth_schema.graphql
           - lib/domain/spot/repository/spot_operations.graphql
           - lib/domain/spot/repository/spot_schema.graphql
+          # SPEC-0013 R17. Festival 타입은 SpotCategory·CopyrightType을 참조하는데,
+          # codegen이 모든 조각을 하나로 병합하므로 spot 쪽 정의를 그대로 쓴다.
+          - lib/domain/event/repository/event_operations.graphql
+          - lib/domain/event/repository/event_schema.graphql
           - lib/domain/community/repository/community_operations.graphql
           - lib/domain/community/repository/community_schema.graphql
           - lib/domain/settings/repository/settings_operations.graphql

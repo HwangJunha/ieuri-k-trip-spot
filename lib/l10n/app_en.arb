@@ -26,17 +26,27 @@
   "onboardingLocation3": "Seoul, KR",
   "homeSearchHint": "Search for spots, hidden gems…",
   "homeFavoritesTooltip": "Favorites",
-  "homeSectionRecommended": "Recommended for You",
   "homeSectionHappeningNow": "Happening Now",
+  "festivalPeriod": "{start} – {end}",
   "homeSectionPopular": "Popular Spots",
+  "homeSectionNearYou": "Near You",
+  "homeNearYouEmpty": "No spots within your search radius. Try widening it in settings.",
+  "homeHappeningNowEmpty": "No festivals running near you right now.",
+  "homePopularEmpty": "No popular spots near you yet.",
+  "popularLikeCount": "{count} likes",
+  "homeSectionRetry": "Retry",
+  "homeSectionError": "Couldn't load this section.",
+  "searchTitle": "Search",
+  "searchHint": "Search spots by name or address",
+  "searchRecentTitle": "Recent searches",
+  "searchRecentOpen": "Recent searches",
+  "searchRecentClose": "Close",
+  "searchRecentClearAll": "Clear all",
+  "searchRecentRemove": "Remove",
+  "searchEmptyResult": "No spots matched your search.",
+  "searchError": "Couldn't run the search.",
+  "searchRetry": "Retry",
   "viewAll": "View all",
-  "congestionLow": "Low",
-  "congestionModerate": "Moderate",
-  "congestionHigh": "High",
-  "eventCategoryFestival": "Festival",
-  "eventCategoryLive": "Live",
-  "eventCategoryArt": "Art",
-  "distanceAway": "{distance}km away",
   "navHome": "Home",
   "navMap": "Map",
   "navDiscover": "Discover",
@@ -749,20 +759,11 @@
     "description": "장소 상세의 글 섹션 헤더"
   },
   "communitySpotPickerTitle": "Nearby places",
+  "communitySpotPickerSourceNearby": "Nearby",
+  "communitySpotPickerSourceLiked": "Liked places",
+  "communitySpotPickerSearchHint": "Search places",
   "@communitySpotPickerTitle": {
     "description": "컴포저 장소 선택 시트 제목"
-  },
-  "communitySpotPickerFilterHint": "Search within results",
-  "@communitySpotPickerFilterHint": {
-    "description": "장소 선택 시트의 결과 내 재검색 입력 힌트"
-  },
-  "communitySpotPickerSourceNearby": "Nearby",
-  "@communitySpotPickerSourceNearby": {
-    "description": "장소 선택 시트의 출처 탭 — 주변 장소(기본)"
-  },
-  "communitySpotPickerSourceLiked": "Liked places",
-  "@communitySpotPickerSourceLiked": {
-    "description": "장소 선택 시트의 출처 탭 — 내가 좋아요한 장소"
   },
   "communitySpotPickerLikedEmpty": "You haven't liked any places yet.",
   "@communitySpotPickerLikedEmpty": {

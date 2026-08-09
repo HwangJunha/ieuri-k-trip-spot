@@ -8,10 +8,12 @@ part of 'nearby_spots_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 장소 선택 시트가 입력한 이름 필터.
+/// 장소 선택 시트에 입력한 검색어.
 ///
-/// **서버에 이름 검색 인자가 없다** — `spots`는 좌표 기반이다. 그래서 이 값은 이미
-/// 받아 둔 목록만 좁히며, 시트가 그 사실을 문구로 알린다.
+/// **주변 탭에서는 서버 검색어다**(SPEC-0013 R14) — 값이 있으면 시트가
+/// `searchSpots`를 부르고, 지우면 좌표 기반 목록으로 돌아온다(AC-14.3).
+/// 좋아요 탭에서는 여전히 이미 받아 둔 목록을 좁히는 이름 필터다 — `searchSpots`는
+/// 좌표 기반 반경 검색이라 "내가 좋아요한 것 중에서"를 표현할 수 없다.
 ///
 /// 필터는 시트가 열려 있는 동안의 상태라 autoDispose(codegen 기본)로 둔다 — 시트를
 /// 닫으면 사라지는 것이 맞다.
@@ -19,19 +21,23 @@ part of 'nearby_spots_providers.dart';
 @ProviderFor(NearbySpotQuery)
 const nearbySpotQueryProvider = NearbySpotQueryProvider._();
 
-/// 장소 선택 시트가 입력한 이름 필터.
+/// 장소 선택 시트에 입력한 검색어.
 ///
-/// **서버에 이름 검색 인자가 없다** — `spots`는 좌표 기반이다. 그래서 이 값은 이미
-/// 받아 둔 목록만 좁히며, 시트가 그 사실을 문구로 알린다.
+/// **주변 탭에서는 서버 검색어다**(SPEC-0013 R14) — 값이 있으면 시트가
+/// `searchSpots`를 부르고, 지우면 좌표 기반 목록으로 돌아온다(AC-14.3).
+/// 좋아요 탭에서는 여전히 이미 받아 둔 목록을 좁히는 이름 필터다 — `searchSpots`는
+/// 좌표 기반 반경 검색이라 "내가 좋아요한 것 중에서"를 표현할 수 없다.
 ///
 /// 필터는 시트가 열려 있는 동안의 상태라 autoDispose(codegen 기본)로 둔다 — 시트를
 /// 닫으면 사라지는 것이 맞다.
 final class NearbySpotQueryProvider
     extends $NotifierProvider<NearbySpotQuery, String> {
-  /// 장소 선택 시트가 입력한 이름 필터.
+  /// 장소 선택 시트에 입력한 검색어.
   ///
-  /// **서버에 이름 검색 인자가 없다** — `spots`는 좌표 기반이다. 그래서 이 값은 이미
-  /// 받아 둔 목록만 좁히며, 시트가 그 사실을 문구로 알린다.
+  /// **주변 탭에서는 서버 검색어다**(SPEC-0013 R14) — 값이 있으면 시트가
+  /// `searchSpots`를 부르고, 지우면 좌표 기반 목록으로 돌아온다(AC-14.3).
+  /// 좋아요 탭에서는 여전히 이미 받아 둔 목록을 좁히는 이름 필터다 — `searchSpots`는
+  /// 좌표 기반 반경 검색이라 "내가 좋아요한 것 중에서"를 표현할 수 없다.
   ///
   /// 필터는 시트가 열려 있는 동안의 상태라 autoDispose(codegen 기본)로 둔다 — 시트를
   /// 닫으면 사라지는 것이 맞다.
@@ -64,10 +70,12 @@ final class NearbySpotQueryProvider
 
 String _$nearbySpotQueryHash() => r'63e79ee800d2432273edd5098c4b24db16eecd17';
 
-/// 장소 선택 시트가 입력한 이름 필터.
+/// 장소 선택 시트에 입력한 검색어.
 ///
-/// **서버에 이름 검색 인자가 없다** — `spots`는 좌표 기반이다. 그래서 이 값은 이미
-/// 받아 둔 목록만 좁히며, 시트가 그 사실을 문구로 알린다.
+/// **주변 탭에서는 서버 검색어다**(SPEC-0013 R14) — 값이 있으면 시트가
+/// `searchSpots`를 부르고, 지우면 좌표 기반 목록으로 돌아온다(AC-14.3).
+/// 좋아요 탭에서는 여전히 이미 받아 둔 목록을 좁히는 이름 필터다 — `searchSpots`는
+/// 좌표 기반 반경 검색이라 "내가 좋아요한 것 중에서"를 표현할 수 없다.
 ///
 /// 필터는 시트가 열려 있는 동안의 상태라 autoDispose(codegen 기본)로 둔다 — 시트를
 /// 닫으면 사라지는 것이 맞다.
@@ -379,6 +387,155 @@ abstract class _$NearbySpotsController
             as $ClassProviderElement<
               AnyNotifier<AsyncValue<NearbySpotsState>, NearbySpotsState>,
               AsyncValue<NearbySpotsState>,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}
+
+/// 시트 검색 결과(SPEC-0013 R14, AC-14.1·14.2).
+///
+/// **질의를 인자로 받는다**(family) — 질의가 바뀌면 Riverpod이 새 provider를 만들고
+/// 이전 것을 폐기하므로, 이어 붙이던 커서가 자동으로 초기화된다. 질의를 상태로 들고
+/// 있으면 그 초기화를 손으로 해야 하고, 한 번 빠뜨리면 이전 질의의 다음 페이지를
+/// 새 질의 결과에 붙이게 된다.
+///
+/// 디바운스도 여기서 처리한다 — 시트는 입력할 때마다 질의를 갱신하므로, 그대로
+/// 두면 키 입력마다 서버를 부른다.
+
+@ProviderFor(SpotSearchList)
+const spotSearchListProvider = SpotSearchListFamily._();
+
+/// 시트 검색 결과(SPEC-0013 R14, AC-14.1·14.2).
+///
+/// **질의를 인자로 받는다**(family) — 질의가 바뀌면 Riverpod이 새 provider를 만들고
+/// 이전 것을 폐기하므로, 이어 붙이던 커서가 자동으로 초기화된다. 질의를 상태로 들고
+/// 있으면 그 초기화를 손으로 해야 하고, 한 번 빠뜨리면 이전 질의의 다음 페이지를
+/// 새 질의 결과에 붙이게 된다.
+///
+/// 디바운스도 여기서 처리한다 — 시트는 입력할 때마다 질의를 갱신하므로, 그대로
+/// 두면 키 입력마다 서버를 부른다.
+final class SpotSearchListProvider
+    extends $AsyncNotifierProvider<SpotSearchList, SpotSearchListState> {
+  /// 시트 검색 결과(SPEC-0013 R14, AC-14.1·14.2).
+  ///
+  /// **질의를 인자로 받는다**(family) — 질의가 바뀌면 Riverpod이 새 provider를 만들고
+  /// 이전 것을 폐기하므로, 이어 붙이던 커서가 자동으로 초기화된다. 질의를 상태로 들고
+  /// 있으면 그 초기화를 손으로 해야 하고, 한 번 빠뜨리면 이전 질의의 다음 페이지를
+  /// 새 질의 결과에 붙이게 된다.
+  ///
+  /// 디바운스도 여기서 처리한다 — 시트는 입력할 때마다 질의를 갱신하므로, 그대로
+  /// 두면 키 입력마다 서버를 부른다.
+  const SpotSearchListProvider._({
+    required SpotSearchListFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: communityRetryPolicy,
+         name: r'spotSearchListProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$spotSearchListHash();
+
+  @override
+  String toString() {
+    return r'spotSearchListProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  SpotSearchList create() => SpotSearchList();
+
+  @override
+  bool operator ==(Object other) {
+    return other is SpotSearchListProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$spotSearchListHash() => r'7471feb95781379e3cc65036669961cd5f30cac6';
+
+/// 시트 검색 결과(SPEC-0013 R14, AC-14.1·14.2).
+///
+/// **질의를 인자로 받는다**(family) — 질의가 바뀌면 Riverpod이 새 provider를 만들고
+/// 이전 것을 폐기하므로, 이어 붙이던 커서가 자동으로 초기화된다. 질의를 상태로 들고
+/// 있으면 그 초기화를 손으로 해야 하고, 한 번 빠뜨리면 이전 질의의 다음 페이지를
+/// 새 질의 결과에 붙이게 된다.
+///
+/// 디바운스도 여기서 처리한다 — 시트는 입력할 때마다 질의를 갱신하므로, 그대로
+/// 두면 키 입력마다 서버를 부른다.
+
+final class SpotSearchListFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          SpotSearchList,
+          AsyncValue<SpotSearchListState>,
+          SpotSearchListState,
+          FutureOr<SpotSearchListState>,
+          String
+        > {
+  const SpotSearchListFamily._()
+    : super(
+        retry: communityRetryPolicy,
+        name: r'spotSearchListProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// 시트 검색 결과(SPEC-0013 R14, AC-14.1·14.2).
+  ///
+  /// **질의를 인자로 받는다**(family) — 질의가 바뀌면 Riverpod이 새 provider를 만들고
+  /// 이전 것을 폐기하므로, 이어 붙이던 커서가 자동으로 초기화된다. 질의를 상태로 들고
+  /// 있으면 그 초기화를 손으로 해야 하고, 한 번 빠뜨리면 이전 질의의 다음 페이지를
+  /// 새 질의 결과에 붙이게 된다.
+  ///
+  /// 디바운스도 여기서 처리한다 — 시트는 입력할 때마다 질의를 갱신하므로, 그대로
+  /// 두면 키 입력마다 서버를 부른다.
+
+  SpotSearchListProvider call(String query) =>
+      SpotSearchListProvider._(argument: query, from: this);
+
+  @override
+  String toString() => r'spotSearchListProvider';
+}
+
+/// 시트 검색 결과(SPEC-0013 R14, AC-14.1·14.2).
+///
+/// **질의를 인자로 받는다**(family) — 질의가 바뀌면 Riverpod이 새 provider를 만들고
+/// 이전 것을 폐기하므로, 이어 붙이던 커서가 자동으로 초기화된다. 질의를 상태로 들고
+/// 있으면 그 초기화를 손으로 해야 하고, 한 번 빠뜨리면 이전 질의의 다음 페이지를
+/// 새 질의 결과에 붙이게 된다.
+///
+/// 디바운스도 여기서 처리한다 — 시트는 입력할 때마다 질의를 갱신하므로, 그대로
+/// 두면 키 입력마다 서버를 부른다.
+
+abstract class _$SpotSearchList extends $AsyncNotifier<SpotSearchListState> {
+  late final _$args = ref.$arg as String;
+  String get query => _$args;
+
+  FutureOr<SpotSearchListState> build(String query);
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build(_$args);
+    final ref =
+        this.ref as $Ref<AsyncValue<SpotSearchListState>, SpotSearchListState>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<SpotSearchListState>, SpotSearchListState>,
+              AsyncValue<SpotSearchListState>,
               Object?,
               Object?
             >;
