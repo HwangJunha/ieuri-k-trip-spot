@@ -16,6 +16,7 @@
       "Bash(git diff:*)",
       "Bash(git log:*)",
       "Bash(git add:*)",
+      "Bash(git commit:*)",
       "Bash(git push:*)",
       "Read(./**)",
       "Edit(lib/**)",
@@ -44,7 +45,6 @@
       "Bash(dart pub upgrade:*)"
     ],
     "deny": [
-      "Bash(git commit:*)",
       "Read(./**/*.graphql.dart)",
       "Read(./**/*.g.dart)",
       "Read(./**/*.freezed.dart)",

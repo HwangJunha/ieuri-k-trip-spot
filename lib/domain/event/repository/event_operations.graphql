@@ -1,0 +1,41 @@
+# SPEC-0013 R17 "Happening Now" 오퍼레이션. 생성 타입은 repository 안에서만 쓰이고
+# 도메인 모델로 매핑된다(CLAUDE.md §3, POL-020).
+
+# 반경 내 진행 중 축제. 언어는 인자로 보내지 않고 Accept-Language 헤더로 전달된다
+# (다른 조회와 동일한 규약).
+#
+# 오퍼레이션 이름이 전역에서 유일해야 한다 — codegen이 모든 조각을 한 네임스페이스로
+# 병합하므로 다른 도메인의 쿼리 이름과 겹치면 생성 타입이 충돌한다.
+query OngoingFestivals(
+  $latitude: Float!
+  $longitude: Float!
+  $radiusMeters: Int
+  $first: Int
+  $after: String
+) {
+  ongoingFestivals(
+    latitude: $latitude
+    longitude: $longitude
+    radiusMeters: $radiusMeters
+    first: $first
+    after: $after
+  ) {
+    edges {
+      node {
+        id
+        title
+        address
+        thumbnailImageUrl
+        distanceMeters
+        attributionText
+        eventStartDate
+        eventEndDate
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

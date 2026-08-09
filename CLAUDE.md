@@ -263,13 +263,21 @@ authority: when it conflicts with the spec's acceptance criteria, the spec wins.
 요청 문서를 만든다:
 
 ```
-ieuri-recorder/problem/POLICY-<주제>.md
+ieuri-recorder/problem/SPEC-XXXX-POLICY-<주제>.md
 ```
+
+**스펙 id를 앞에 붙인다.** 정책 충돌은 언제나 어떤 스펙을 구현하다 발견되고, `problem/`에는
+서버·클라이언트가 같은 스펙에 대해 각각 문서를 남기기도 한다. id가 앞에 있어야 한 스펙의
+문서들이 목록에서 붙어 보이고, 나중에 스펙·이슈·PR과 같은 열쇠로 되짚을 수 있다.
 
 담을 것은 넷이다 — **무엇에 걸렸는지**(정책 번호와 문구), **실제로 부딪힌 상황**(어느 스펙의
 어느 요구에서), **왜 지금 정책으로는 안 되는지**, **제안**(대안과 그 대가). 결정은 recorder가
 한다. 작업 도중에 만들지 않는 이유는, 구현이 끝나 봐야 진짜 충돌인지 오해였는지 갈리기
 때문이다.
+
+**다른 하네스가 같은 스펙에 문서를 남겼는지 먼저 본다.** 서버가 이미 경위를 적어 두었으면
+내 추측을 새로 쓰는 대신 그것을 인용하고, 내 문서의 제안이 그보다 부정확하면 **철회한다** —
+같은 스펙에 서로 다른 제안이 둘 남으면 recorder가 어느 쪽을 승격할지 판단할 수 없다.
 
 ### Contract
 
@@ -457,10 +465,17 @@ git switch -c feature/SPEC-0007-home-screen --no-track origin/dev
   `git switch -c` / `git branch` are allowed so you can get onto a topic branch.
 - When a task starts on a protected branch, create the topic branch **before** the first edit.
   The hook wins over this text — if it blocks you, switch branches, don't work around it.
-- **커밋은 사용자가 한다.** `git commit`은 권한 정책에서 `deny`다 — 내가 실행할 수 없고,
-  우회할 방법을 찾지도 않는다. 작업이 끝나면 **변경만 남기고** 커밋 메시지를 제안한다.
-  `git add`와 `git push`는 여전히 내가 할 수 있으므로, 스테이징까지 해 두고 사용자가
-  커밋하면 된다.
+- **커밋은 내가 한다.** `git commit`은 권한 정책에서 `allow`다(2026-08-10 사용자 결정 —
+  그전에는 `deny`였고 메시지만 제안했다). 작업이 끝나면 스테이징하고 커밋까지 마친다.
+  - **커밋 단위는 작업 단위다.** 한 커밋에 관련 없는 변경을 섞지 않는다 — 나중에 되돌릴 때
+    같이 딸려 온다. 계층을 가로지르는 한 기능(model→view+테스트)은 한 커밋이 맞다.
+  - **설계 문서(`problem/SPEC-*.md`)를 같은 커밋에 담는다**(§10) — 코드와 근거가 갈라지지
+    않게.
+  - `dev`·`master`에 직접 커밋하지 않는다. 그건 브랜치 훅이 막지만, 막히기 전에 내가
+    지킨다.
+- **`git push`도 할 수 있지만 대상을 명시한다**(`git push -u origin feature/...`). 인자 없는
+  `git push`는 쓰지 않는다 — upstream이 잘못 걸려 있으면 보호 브랜치로 직행한다(§12).
+- **머지와 PR 머지는 여전히 사용자 몫이다.** 커밋 권한이 생겼다고 그것까지 넘어온 것은 아니다.
 - 브랜치 훅은 그와 별개인 독립 방어선이다.
 
 ---

@@ -81,13 +81,13 @@ void main() {
     await _pump(tester, container);
 
     // Home is the initial tab: its section headers are visible.
-    expect(find.text('Recommended for You'), findsOneWidget);
+    expect(find.text('Near You'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('bottom_nav_liked')));
     await tester.pumpAndSettle();
 
     expect(find.text('No liked spots yet.'), findsOneWidget);
-    expect(find.text('Recommended for You'), findsNothing);
+    expect(find.text('Near You'), findsNothing);
   });
 
   // SPEC-0008 AC-39: 탭 4는 커뮤니티로 간다. 행사 탭은 도달 경로가 사라진다.
@@ -105,7 +105,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Spot Talk'), findsOneWidget);
-    expect(find.text('Recommended for You'), findsNothing);
+    expect(find.text('Near You'), findsNothing);
   });
 
   // SPEC-0008 AC-40: 목적지만 교체되고 탭 수(5)는 그대로다. 라벨 문자열이 아니라

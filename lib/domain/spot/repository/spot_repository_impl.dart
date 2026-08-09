@@ -6,9 +6,9 @@ import '../../../common/network/graphql_debug_log.dart';
 import '../../../common/network/graphql_failure.dart';
 import '../../../common/pagination/offset_page.dart';
 import '../../../common/pagination/page.dart';
-import '../model/congestion_level.dart';
 import '../model/copyright_type.dart';
 import '../model/liked_spot.dart';
+import '../model/popular_spot.dart';
 import '../model/spot_category.dart';
 import '../model/spot_detail.dart';
 import '../model/spot_failure.dart';
@@ -16,6 +16,8 @@ import '../model/spot_image.dart';
 import '../model/spot_info_item.dart';
 import '../model/spot_intro.dart';
 import '../model/spot_reaction.dart';
+import '../model/spot_search_result.dart';
+import '../model/spot_suggestion.dart';
 import '../model/tour_api_text.dart';
 import '../model/tourist_spot.dart';
 import 'spot_operations.graphql.dart';
@@ -136,6 +138,146 @@ class SpotRepositoryImpl implements SpotRepository {
     );
   }
 
+  /// 반경 내 spot 검색(SPEC-0013 R1–R8).
+  ///
+  /// **입력 검증 실패는 최상위 `errors[]`가 아니라 payload의 `userErrors`로 온다**
+  /// (POL-015 — HTTP는 항상 200). 조회에 `userErrors`가 붙는 첫 사례라, 뮤테이션과
+  /// 같은 방식으로 코드만 로깅하고(메시지는 PII 가능) [SpotFailure]로 번역한다.
+  ///
+  /// 결과 0건은 오류가 아니다 — 빈 [SpotSearchResult]로 돌아가고 화면이 정상 상태로
+  /// 표현한다(AC-11.2). 정렬은 서버가 보장하므로 재정렬하지 않는다(POL-019).
+  @override
+  Future<SpotSearchResult> searchSpots({
+    required String query,
+    required double latitude,
+    required double longitude,
+    int? radiusMeters,
+    SpotCategory? category,
+    int? page,
+    int? size,
+  }) async {
+    final Map<String, dynamic> data = await _query(
+      documentNodeQuerySearchSpots,
+      Variables$Query$SearchSpots(
+        query: query,
+        latitude: latitude,
+        longitude: longitude,
+        radiusMeters: radiusMeters,
+        category: category == null ? null : _category(category),
+        page: page,
+        size: size,
+      ).toJson(),
+      'searchSpots',
+    );
+    final Query$SearchSpots$searchSpots payload = Query$SearchSpots.fromJson(
+      data,
+    ).searchSpots;
+
+    if (payload.userErrors.isNotEmpty) {
+      final List<({String code, String? field})> parsed = payload.userErrors
+          .map(
+            (Query$SearchSpots$searchSpots$userErrors e) =>
+                (code: e.code, field: e.field),
+          )
+          .toList();
+      // 질의 원문은 사용자 입력이라 로깅하지 않는다(POL-013) — 코드만 남긴다.
+      GraphqlDebugLog.userErrors('searchSpots', parsed);
+      throw SpotFailure(SpotFailureKind.userError, code: parsed.first.code);
+    }
+    if (!payload.success) throw SpotFailure.unknown;
+
+    final Query$SearchSpots$searchSpots$connection c = payload.connection;
+    return SpotSearchResult(
+      page: OffsetPage<TouristSpot>(
+        items: c.items
+            .map(
+              (Query$SearchSpots$searchSpots$connection$items i) =>
+                  _spotFromSearchNode(i),
+            )
+            .toList(growable: false),
+        page: c.page,
+        hasNext: c.hasNext,
+        totalCount: c.totalCount,
+      ),
+      totalCount: c.totalCount,
+    );
+  }
+
+  /// 반경 내 제목 접두 자동완성(SPEC-0013 R9).
+  ///
+  /// 빈 질의는 서버가 오류가 아니라 빈 목록으로 답한다(AC-9.4) — 클라이언트가
+  /// 미리 거르지 않고 그대로 보낸다.
+  @override
+  Future<List<SpotSuggestion>> spotSearchSuggestions({
+    required String query,
+    required double latitude,
+    required double longitude,
+    int? radiusMeters,
+    int? limit,
+  }) async {
+    final Map<String, dynamic> data = await _query(
+      documentNodeQuerySpotSearchSuggestions,
+      Variables$Query$SpotSearchSuggestions(
+        query: query,
+        latitude: latitude,
+        longitude: longitude,
+        radiusMeters: radiusMeters,
+        limit: limit,
+      ).toJson(),
+      'spotSearchSuggestions',
+    );
+    return Query$SpotSearchSuggestions.fromJson(data).spotSearchSuggestions
+        .map(
+          (Query$SpotSearchSuggestions$spotSearchSuggestions s) =>
+              SpotSuggestion(
+                id: s.id,
+                // TourAPI 원문이라 엔티티가 섞여 온다(다른 표면과 동일하게 정리).
+                title: sanitizeTourApiText(s.title) ?? s.title,
+                category: _categoryFromEnum(s.category),
+              ),
+        )
+        .toList(growable: false);
+  }
+
+  /// 반경 내 인기 spot(SPEC-0013 R18). 좋아요 총합 내림차순이며 서버가 정렬한다.
+  @override
+  Future<CursorPage<PopularSpot>> fetchPopularSpots({
+    required double latitude,
+    required double longitude,
+    int? radiusMeters,
+    SpotCategory? category,
+    int? first,
+    String? after,
+  }) async {
+    final Map<String, dynamic> data = await _query(
+      documentNodeQueryPopularSpots,
+      Variables$Query$PopularSpots(
+        latitude: latitude,
+        longitude: longitude,
+        radiusMeters: radiusMeters,
+        category: category == null ? null : _category(category),
+        first: first,
+        after: after,
+      ).toJson(),
+      'popularSpots',
+    );
+    final Query$PopularSpots$popularSpots result = Query$PopularSpots.fromJson(
+      data,
+    ).popularSpots;
+    return CursorPage<PopularSpot>(
+      items: result.edges
+          .map(
+            (Query$PopularSpots$popularSpots$edges e) => PopularSpot(
+              spot: _spotFromPopularNode(e.node),
+              likeCount: e.likeCount,
+            ),
+          )
+          .toList(growable: false),
+      hasNextPage: result.pageInfo.hasNextPage,
+      endCursor: result.pageInfo.endCursor,
+    );
+  }
+
   @override
   Future<void> reactToSpot(String spotId, SpotReaction reaction) async {
     final Map<String, dynamic> data = await _mutate(
@@ -153,65 +295,6 @@ class SpotRepositoryImpl implements SpotRepository {
     _check('reactToSpot', payload.success, payload.userErrors);
   }
 
-  // --- Home 섹션 (서버 API 부재 → 목) ----------------------------------------
-
-  @override
-  Future<List<TouristSpot>> fetchRecommendedSpots() async =>
-      const <TouristSpot>[
-        TouristSpot(
-          id: 'rec-gyeongbokgung',
-          name: 'Gyeongbokgung Palace',
-          imageRef: 'gyeongbokgung',
-          location: 'Seoul, Jongno-gu',
-          congestion: CongestionLevel.low,
-        ),
-        TouristSpot(
-          id: 'rec-seongsu',
-          name: 'Seongsu-dong Cafe Street',
-          imageRef: 'seongsu',
-          location: 'Seoul, Seongdong-gu',
-          congestion: CongestionLevel.moderate,
-        ),
-        TouristSpot(
-          id: 'rec-bukhansan',
-          name: 'Bukhansan National Park',
-          imageRef: 'bukhansan',
-          location: 'Seoul, Gangbuk-gu',
-          congestion: CongestionLevel.low,
-        ),
-      ];
-
-  @override
-  Future<List<TouristSpot>> fetchPopularSpots() async => const <TouristSpot>[
-    TouristSpot(
-      id: 'pop-nseoul-tower',
-      name: 'N Seoul Tower',
-      imageRef: 'nseoul-tower',
-      location: 'Seoul, Yongsan-gu',
-      congestion: CongestionLevel.high,
-      rating: 4.8,
-      distanceKm: 2.4,
-    ),
-    TouristSpot(
-      id: 'pop-bukchon',
-      name: 'Bukchon Hanok Village',
-      imageRef: 'bukchon',
-      location: 'Seoul, Jongno-gu',
-      congestion: CongestionLevel.low,
-      rating: 4.6,
-      distanceKm: 3.1,
-    ),
-    TouristSpot(
-      id: 'pop-hongdae',
-      name: 'Hongdae Street',
-      imageRef: 'hongdae',
-      location: 'Seoul, Mapo-gu',
-      congestion: CongestionLevel.moderate,
-      rating: 4.5,
-      distanceKm: 5.2,
-    ),
-  ];
-
   // --- 매핑 (생성 타입 → 도메인) ---------------------------------------------
 
   /// 서버 `Spot` 아이템을 도메인 [TouristSpot]으로 매핑한다. 스와이프 카드가 쓰는
@@ -224,13 +307,48 @@ class SpotRepositoryImpl implements SpotRepository {
     name: sanitizeTourApiText(item.title) ?? item.title,
     imageRef: item.thumbnailImageUrl,
     location: sanitizeTourApiText(item.address) ?? '',
-    congestion: CongestionLevel.low,
     thumbnailImageUrl: item.thumbnailImageUrl,
     address: sanitizeTourApiText(item.address),
     distanceMeters: item.distanceMeters.round(),
     copyright: _copyright(item.copyright),
     attributionText: item.attributionText,
     category: _categoryFromEnum(item.category),
+  );
+
+  /// 검색 결과 노드 → 도메인 [TouristSpot](SPEC-0013).
+  ///
+  /// `spots`와 같은 `Spot` 타입이지만 생성 타입이 오퍼레이션별로 갈리므로 매핑도
+  /// 따로 둔다 — 규칙은 [_spotFromItem]과 같다(엔티티 정리, 거리 미터 반올림).
+  TouristSpot _spotFromSearchNode(
+    Query$SearchSpots$searchSpots$connection$items n,
+  ) => TouristSpot(
+    id: n.id,
+    name: sanitizeTourApiText(n.title) ?? n.title,
+    imageRef: n.thumbnailImageUrl,
+    location: sanitizeTourApiText(n.address) ?? '',
+    thumbnailImageUrl: n.thumbnailImageUrl,
+    address: sanitizeTourApiText(n.address),
+    distanceMeters: n.distanceMeters.round(),
+    copyright: _copyright(n.copyright),
+    attributionText: n.attributionText,
+    category: _categoryFromEnum(n.category),
+  );
+
+  /// 인기 spot 노드 → 도메인 [TouristSpot]. 랭킹 근거(`likeCount`)는 edge에 있어
+  /// 호출부가 [PopularSpot]으로 감싼다.
+  TouristSpot _spotFromPopularNode(
+    Query$PopularSpots$popularSpots$edges$node n,
+  ) => TouristSpot(
+    id: n.id,
+    name: sanitizeTourApiText(n.title) ?? n.title,
+    imageRef: n.thumbnailImageUrl,
+    location: sanitizeTourApiText(n.address) ?? '',
+    thumbnailImageUrl: n.thumbnailImageUrl,
+    address: sanitizeTourApiText(n.address),
+    distanceMeters: n.distanceMeters.round(),
+    copyright: _copyright(n.copyright),
+    attributionText: n.attributionText,
+    category: _categoryFromEnum(n.category),
   );
 
   /// 좋아요 목록 노드 → 도메인 [LikedSpot](POL-020, §5.2).

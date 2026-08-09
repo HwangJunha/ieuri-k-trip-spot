@@ -104,54 +104,102 @@
   "@homeFavoritesTooltip": {
     "description": "홈 앱바 찜 아이콘 툴팁"
   },
-  "homeSectionRecommended": "추천 여행지",
-  "@homeSectionRecommended": {
-    "description": "홈 추천 섹션 제목"
-  },
   "homeSectionHappeningNow": "지금 열리는 행사",
+  "festivalPeriod": "{start} ~ {end}",
+  "@festivalPeriod": {
+    "description": "축제 기간(시작–종료)",
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
   "@homeSectionHappeningNow": {
     "description": "홈 행사 섹션 제목"
   },
   "homeSectionPopular": "인기 여행지",
+  "homeSectionNearYou": "내 주변",
+  "@homeSectionNearYou": {
+    "description": "홈 \"Near you\" 섹션 제목"
+  },
+  "homeNearYouEmpty": "검색 반경 안에 여행지가 없습니다. 설정에서 반경을 넓혀 보세요.",
+  "@homeNearYouEmpty": {
+    "description": "홈 Near you 빈 상태"
+  },
+  "homeHappeningNowEmpty": "주변에 진행 중인 축제가 없습니다.",
+  "@homeHappeningNowEmpty": {
+    "description": "홈 Happening Now 빈 상태"
+  },
+  "homePopularEmpty": "아직 주변에 인기 여행지가 없습니다.",
+  "popularLikeCount": "좋아요 {count}개",
+  "@popularLikeCount": {
+    "description": "Popular 카드 좋아요 수",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@homePopularEmpty": {
+    "description": "홈 Popular 빈 상태"
+  },
+  "homeSectionRetry": "다시 시도",
+  "@homeSectionRetry": {
+    "description": "홈 섹션 재시도 버튼"
+  },
+  "homeSectionError": "이 섹션을 불러오지 못했습니다.",
+  "@homeSectionError": {
+    "description": "홈 섹션 실패 문구"
+  },
+  "searchTitle": "검색",
+  "@searchTitle": {
+    "description": "검색 페이지 제목"
+  },
+  "searchHint": "여행지 이름이나 주소로 검색",
+  "@searchHint": {
+    "description": "검색 입력 힌트"
+  },
+  "searchRecentTitle": "최근 검색어",
+  "searchRecentOpen": "최근 검색어",
+  "@searchRecentOpen": {
+    "description": "최근 검색어를 여는 버튼"
+  },
+  "searchRecentClose": "닫기",
+  "@searchRecentClose": {
+    "description": "최근 검색어 패널 닫기"
+  },
+  "@searchRecentTitle": {
+    "description": "최근 검색어 섹션 제목"
+  },
+  "searchRecentClearAll": "전체 삭제",
+  "@searchRecentClearAll": {
+    "description": "최근 검색어 전체 삭제"
+  },
+  "searchRecentRemove": "삭제",
+  "@searchRecentRemove": {
+    "description": "최근 검색어 개별 삭제 툴팁"
+  },
+  "searchEmptyResult": "검색 결과가 없습니다.",
+  "@searchEmptyResult": {
+    "description": "검색 결과 0건"
+  },
+  "searchError": "검색에 실패했습니다.",
+  "@searchError": {
+    "description": "검색 실패"
+  },
+  "searchRetry": "다시 시도",
+  "@searchRetry": {
+    "description": "검색 재시도 버튼"
+  },
   "@homeSectionPopular": {
     "description": "홈 인기 여행지 섹션 제목"
   },
   "viewAll": "전체 보기",
   "@viewAll": {
     "description": "섹션 헤더 전체 보기 링크"
-  },
-  "congestionLow": "여유",
-  "@congestionLow": {
-    "description": "혼잡도 - 여유"
-  },
-  "congestionModerate": "보통",
-  "@congestionModerate": {
-    "description": "혼잡도 - 보통"
-  },
-  "congestionHigh": "혼잡",
-  "@congestionHigh": {
-    "description": "혼잡도 - 혼잡"
-  },
-  "eventCategoryFestival": "축제",
-  "@eventCategoryFestival": {
-    "description": "행사 카테고리 - 축제"
-  },
-  "eventCategoryLive": "공연",
-  "@eventCategoryLive": {
-    "description": "행사 카테고리 - 라이브 공연"
-  },
-  "eventCategoryArt": "예술",
-  "@eventCategoryArt": {
-    "description": "행사 카테고리 - 예술"
-  },
-  "distanceAway": "{distance}km 거리",
-  "@distanceAway": {
-    "description": "인기 여행지 카드 거리 표시",
-    "placeholders": {
-      "distance": {
-        "type": "String"
-      }
-    }
   },
   "navHome": "홈",
   "@navHome": {
@@ -979,9 +1027,12 @@
   },
   "communitySpotPostsTitle": "이 장소의 글",
   "communitySpotPickerTitle": "주변 장소",
-  "communitySpotPickerFilterHint": "결과 내 재검색",
   "communitySpotPickerSourceNearby": "주변",
   "communitySpotPickerSourceLiked": "좋아요한 장소",
+  "communitySpotPickerSearchHint": "장소 검색",
+  "@communitySpotPickerSearchHint": {
+    "description": "장소 선택 시트 검색창 힌트"
+  },
   "communitySpotPickerLikedEmpty": "아직 좋아요한 장소가 없어요.",
   "communitySpotPickerLikedFailed": "좋아요한 장소를 불러오지 못했어요.",
   "communitySpotPickerLikedNoMatch": "그 이름과 맞는 좋아요한 장소가 없어요.",
@@ -1300,15 +1351,6 @@
   },
   "@communitySpotPickerTitle": {
     "description": "컴포저 장소 선택 시트 제목"
-  },
-  "@communitySpotPickerFilterHint": {
-    "description": "장소 선택 시트의 결과 내 재검색 입력 힌트"
-  },
-  "@communitySpotPickerSourceNearby": {
-    "description": "장소 선택 시트의 출처 탭 — 주변 장소(기본)"
-  },
-  "@communitySpotPickerSourceLiked": {
-    "description": "장소 선택 시트의 출처 탭 — 내가 좋아요한 장소"
   },
   "@communitySpotPickerLikedEmpty": {
     "description": "좋아요한 장소가 하나도 없는 상태 — 오류가 아니다"

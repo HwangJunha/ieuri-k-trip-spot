@@ -290,6 +290,10 @@ extend type Query {
   post(id: ID!): Post
   blockedUsers(first: Int, after: String): BlockedUserConnection!
   communityChips: [CommunityChip!]!
+  # SPEC-0013 R14의 `searchSpots`는 여기서 **다시 선언하지 않는다** — spot 조각이
+  # 이미 `extend type Query`에 올렸고, codegen이 모든 조각을 하나로 병합하므로
+  # 같은 필드를 두 번 선언하면 충돌한다. 커뮤니티는 오퍼레이션 이름만 달리 두어
+  # (`CommunitySearchSpots`) 자기 생성 타입을 갖는다.
 }
 
 extend type Mutation {

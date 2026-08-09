@@ -17245,3 +17245,1325 @@ class _CopyWithStubImpl$Query$CommunityLikedSpots$likedSpots$pageInfo<TRes>
 
   call({bool? hasNextPage, String? endCursor}) => _res;
 }
+
+class Variables$Query$CommunitySearchSpots {
+  factory Variables$Query$CommunitySearchSpots({
+    required String query,
+    required double latitude,
+    required double longitude,
+    int? radiusMeters,
+    Enum$SpotCategory? category,
+    int? page,
+    int? size,
+  }) => Variables$Query$CommunitySearchSpots._({
+    r'query': query,
+    r'latitude': latitude,
+    r'longitude': longitude,
+    if (radiusMeters != null) r'radiusMeters': radiusMeters,
+    if (category != null) r'category': category,
+    if (page != null) r'page': page,
+    if (size != null) r'size': size,
+  });
+
+  Variables$Query$CommunitySearchSpots._(this._$data);
+
+  factory Variables$Query$CommunitySearchSpots.fromJson(
+    Map<String, dynamic> data,
+  ) {
+    final result$data = <String, dynamic>{};
+    final l$query = data['query'];
+    result$data['query'] = (l$query as String);
+    final l$latitude = data['latitude'];
+    result$data['latitude'] = (l$latitude as num).toDouble();
+    final l$longitude = data['longitude'];
+    result$data['longitude'] = (l$longitude as num).toDouble();
+    if (data.containsKey('radiusMeters')) {
+      final l$radiusMeters = data['radiusMeters'];
+      result$data['radiusMeters'] = (l$radiusMeters as int?);
+    }
+    if (data.containsKey('category')) {
+      final l$category = data['category'];
+      result$data['category'] = l$category == null
+          ? null
+          : fromJson$Enum$SpotCategory((l$category as String));
+    }
+    if (data.containsKey('page')) {
+      final l$page = data['page'];
+      result$data['page'] = (l$page as int?);
+    }
+    if (data.containsKey('size')) {
+      final l$size = data['size'];
+      result$data['size'] = (l$size as int?);
+    }
+    return Variables$Query$CommunitySearchSpots._(result$data);
+  }
+
+  Map<String, dynamic> _$data;
+
+  String get query => (_$data['query'] as String);
+
+  double get latitude => (_$data['latitude'] as double);
+
+  double get longitude => (_$data['longitude'] as double);
+
+  int? get radiusMeters => (_$data['radiusMeters'] as int?);
+
+  Enum$SpotCategory? get category => (_$data['category'] as Enum$SpotCategory?);
+
+  int? get page => (_$data['page'] as int?);
+
+  int? get size => (_$data['size'] as int?);
+
+  Map<String, dynamic> toJson() {
+    final result$data = <String, dynamic>{};
+    final l$query = query;
+    result$data['query'] = l$query;
+    final l$latitude = latitude;
+    result$data['latitude'] = l$latitude;
+    final l$longitude = longitude;
+    result$data['longitude'] = l$longitude;
+    if (_$data.containsKey('radiusMeters')) {
+      final l$radiusMeters = radiusMeters;
+      result$data['radiusMeters'] = l$radiusMeters;
+    }
+    if (_$data.containsKey('category')) {
+      final l$category = category;
+      result$data['category'] = l$category == null
+          ? null
+          : toJson$Enum$SpotCategory(l$category);
+    }
+    if (_$data.containsKey('page')) {
+      final l$page = page;
+      result$data['page'] = l$page;
+    }
+    if (_$data.containsKey('size')) {
+      final l$size = size;
+      result$data['size'] = l$size;
+    }
+    return result$data;
+  }
+
+  CopyWith$Variables$Query$CommunitySearchSpots<
+    Variables$Query$CommunitySearchSpots
+  >
+  get copyWith => CopyWith$Variables$Query$CommunitySearchSpots(this, (i) => i);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Variables$Query$CommunitySearchSpots ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$query = query;
+    final lOther$query = other.query;
+    if (l$query != lOther$query) {
+      return false;
+    }
+    final l$latitude = latitude;
+    final lOther$latitude = other.latitude;
+    if (l$latitude != lOther$latitude) {
+      return false;
+    }
+    final l$longitude = longitude;
+    final lOther$longitude = other.longitude;
+    if (l$longitude != lOther$longitude) {
+      return false;
+    }
+    final l$radiusMeters = radiusMeters;
+    final lOther$radiusMeters = other.radiusMeters;
+    if (_$data.containsKey('radiusMeters') !=
+        other._$data.containsKey('radiusMeters')) {
+      return false;
+    }
+    if (l$radiusMeters != lOther$radiusMeters) {
+      return false;
+    }
+    final l$category = category;
+    final lOther$category = other.category;
+    if (_$data.containsKey('category') !=
+        other._$data.containsKey('category')) {
+      return false;
+    }
+    if (l$category != lOther$category) {
+      return false;
+    }
+    final l$page = page;
+    final lOther$page = other.page;
+    if (_$data.containsKey('page') != other._$data.containsKey('page')) {
+      return false;
+    }
+    if (l$page != lOther$page) {
+      return false;
+    }
+    final l$size = size;
+    final lOther$size = other.size;
+    if (_$data.containsKey('size') != other._$data.containsKey('size')) {
+      return false;
+    }
+    if (l$size != lOther$size) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    final l$query = query;
+    final l$latitude = latitude;
+    final l$longitude = longitude;
+    final l$radiusMeters = radiusMeters;
+    final l$category = category;
+    final l$page = page;
+    final l$size = size;
+    return Object.hashAll([
+      l$query,
+      l$latitude,
+      l$longitude,
+      _$data.containsKey('radiusMeters') ? l$radiusMeters : const {},
+      _$data.containsKey('category') ? l$category : const {},
+      _$data.containsKey('page') ? l$page : const {},
+      _$data.containsKey('size') ? l$size : const {},
+    ]);
+  }
+}
+
+abstract class CopyWith$Variables$Query$CommunitySearchSpots<TRes> {
+  factory CopyWith$Variables$Query$CommunitySearchSpots(
+    Variables$Query$CommunitySearchSpots instance,
+    TRes Function(Variables$Query$CommunitySearchSpots) then,
+  ) = _CopyWithImpl$Variables$Query$CommunitySearchSpots;
+
+  factory CopyWith$Variables$Query$CommunitySearchSpots.stub(TRes res) =
+      _CopyWithStubImpl$Variables$Query$CommunitySearchSpots;
+
+  TRes call({
+    String? query,
+    double? latitude,
+    double? longitude,
+    int? radiusMeters,
+    Enum$SpotCategory? category,
+    int? page,
+    int? size,
+  });
+}
+
+class _CopyWithImpl$Variables$Query$CommunitySearchSpots<TRes>
+    implements CopyWith$Variables$Query$CommunitySearchSpots<TRes> {
+  _CopyWithImpl$Variables$Query$CommunitySearchSpots(
+    this._instance,
+    this._then,
+  );
+
+  final Variables$Query$CommunitySearchSpots _instance;
+
+  final TRes Function(Variables$Query$CommunitySearchSpots) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? query = _undefined,
+    Object? latitude = _undefined,
+    Object? longitude = _undefined,
+    Object? radiusMeters = _undefined,
+    Object? category = _undefined,
+    Object? page = _undefined,
+    Object? size = _undefined,
+  }) => _then(
+    Variables$Query$CommunitySearchSpots._({
+      ..._instance._$data,
+      if (query != _undefined && query != null) 'query': (query as String),
+      if (latitude != _undefined && latitude != null)
+        'latitude': (latitude as double),
+      if (longitude != _undefined && longitude != null)
+        'longitude': (longitude as double),
+      if (radiusMeters != _undefined) 'radiusMeters': (radiusMeters as int?),
+      if (category != _undefined) 'category': (category as Enum$SpotCategory?),
+      if (page != _undefined) 'page': (page as int?),
+      if (size != _undefined) 'size': (size as int?),
+    }),
+  );
+}
+
+class _CopyWithStubImpl$Variables$Query$CommunitySearchSpots<TRes>
+    implements CopyWith$Variables$Query$CommunitySearchSpots<TRes> {
+  _CopyWithStubImpl$Variables$Query$CommunitySearchSpots(this._res);
+
+  TRes _res;
+
+  call({
+    String? query,
+    double? latitude,
+    double? longitude,
+    int? radiusMeters,
+    Enum$SpotCategory? category,
+    int? page,
+    int? size,
+  }) => _res;
+}
+
+class Query$CommunitySearchSpots {
+  Query$CommunitySearchSpots({required this.searchSpots});
+
+  factory Query$CommunitySearchSpots.fromJson(Map<String, dynamic> json) {
+    final l$searchSpots = json['searchSpots'];
+    return Query$CommunitySearchSpots(
+      searchSpots: Query$CommunitySearchSpots$searchSpots.fromJson(
+        (l$searchSpots as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final Query$CommunitySearchSpots$searchSpots searchSpots;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$searchSpots = searchSpots;
+    _resultData['searchSpots'] = l$searchSpots.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$searchSpots = searchSpots;
+    return Object.hashAll([l$searchSpots]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$CommunitySearchSpots ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$searchSpots = searchSpots;
+    final lOther$searchSpots = other.searchSpots;
+    if (l$searchSpots != lOther$searchSpots) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$CommunitySearchSpots
+    on Query$CommunitySearchSpots {
+  CopyWith$Query$CommunitySearchSpots<Query$CommunitySearchSpots>
+  get copyWith => CopyWith$Query$CommunitySearchSpots(this, (i) => i);
+}
+
+abstract class CopyWith$Query$CommunitySearchSpots<TRes> {
+  factory CopyWith$Query$CommunitySearchSpots(
+    Query$CommunitySearchSpots instance,
+    TRes Function(Query$CommunitySearchSpots) then,
+  ) = _CopyWithImpl$Query$CommunitySearchSpots;
+
+  factory CopyWith$Query$CommunitySearchSpots.stub(TRes res) =
+      _CopyWithStubImpl$Query$CommunitySearchSpots;
+
+  TRes call({Query$CommunitySearchSpots$searchSpots? searchSpots});
+  CopyWith$Query$CommunitySearchSpots$searchSpots<TRes> get searchSpots;
+}
+
+class _CopyWithImpl$Query$CommunitySearchSpots<TRes>
+    implements CopyWith$Query$CommunitySearchSpots<TRes> {
+  _CopyWithImpl$Query$CommunitySearchSpots(this._instance, this._then);
+
+  final Query$CommunitySearchSpots _instance;
+
+  final TRes Function(Query$CommunitySearchSpots) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? searchSpots = _undefined}) => _then(
+    Query$CommunitySearchSpots(
+      searchSpots: searchSpots == _undefined || searchSpots == null
+          ? _instance.searchSpots
+          : (searchSpots as Query$CommunitySearchSpots$searchSpots),
+    ),
+  );
+
+  CopyWith$Query$CommunitySearchSpots$searchSpots<TRes> get searchSpots {
+    final local$searchSpots = _instance.searchSpots;
+    return CopyWith$Query$CommunitySearchSpots$searchSpots(
+      local$searchSpots,
+      (e) => call(searchSpots: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Query$CommunitySearchSpots<TRes>
+    implements CopyWith$Query$CommunitySearchSpots<TRes> {
+  _CopyWithStubImpl$Query$CommunitySearchSpots(this._res);
+
+  TRes _res;
+
+  call({Query$CommunitySearchSpots$searchSpots? searchSpots}) => _res;
+
+  CopyWith$Query$CommunitySearchSpots$searchSpots<TRes> get searchSpots =>
+      CopyWith$Query$CommunitySearchSpots$searchSpots.stub(_res);
+}
+
+const documentNodeQueryCommunitySearchSpots = DocumentNode(
+  definitions: [
+    OperationDefinitionNode(
+      type: OperationType.query,
+      name: NameNode(value: 'CommunitySearchSpots'),
+      variableDefinitions: [
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'query')),
+          type: NamedTypeNode(name: NameNode(value: 'String'), isNonNull: true),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'latitude')),
+          type: NamedTypeNode(name: NameNode(value: 'Float'), isNonNull: true),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'longitude')),
+          type: NamedTypeNode(name: NameNode(value: 'Float'), isNonNull: true),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'radiusMeters')),
+          type: NamedTypeNode(name: NameNode(value: 'Int'), isNonNull: false),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'category')),
+          type: NamedTypeNode(
+            name: NameNode(value: 'SpotCategory'),
+            isNonNull: false,
+          ),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'page')),
+          type: NamedTypeNode(name: NameNode(value: 'Int'), isNonNull: false),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'size')),
+          type: NamedTypeNode(name: NameNode(value: 'Int'), isNonNull: false),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+      ],
+      directives: [],
+      selectionSet: SelectionSetNode(
+        selections: [
+          FieldNode(
+            name: NameNode(value: 'searchSpots'),
+            alias: null,
+            arguments: [
+              ArgumentNode(
+                name: NameNode(value: 'query'),
+                value: VariableNode(name: NameNode(value: 'query')),
+              ),
+              ArgumentNode(
+                name: NameNode(value: 'latitude'),
+                value: VariableNode(name: NameNode(value: 'latitude')),
+              ),
+              ArgumentNode(
+                name: NameNode(value: 'longitude'),
+                value: VariableNode(name: NameNode(value: 'longitude')),
+              ),
+              ArgumentNode(
+                name: NameNode(value: 'radiusMeters'),
+                value: VariableNode(name: NameNode(value: 'radiusMeters')),
+              ),
+              ArgumentNode(
+                name: NameNode(value: 'category'),
+                value: VariableNode(name: NameNode(value: 'category')),
+              ),
+              ArgumentNode(
+                name: NameNode(value: 'page'),
+                value: VariableNode(name: NameNode(value: 'page')),
+              ),
+              ArgumentNode(
+                name: NameNode(value: 'size'),
+                value: VariableNode(name: NameNode(value: 'size')),
+              ),
+            ],
+            directives: [],
+            selectionSet: SelectionSetNode(
+              selections: [
+                FieldNode(
+                  name: NameNode(value: 'success'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'userErrors'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'code'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'field'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
+                FieldNode(
+                  name: NameNode(value: 'connection'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'items'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: SelectionSetNode(
+                          selections: [
+                            FieldNode(
+                              name: NameNode(value: 'id'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: null,
+                            ),
+                            FieldNode(
+                              name: NameNode(value: 'title'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: null,
+                            ),
+                            FieldNode(
+                              name: NameNode(value: 'address'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: null,
+                            ),
+                            FieldNode(
+                              name: NameNode(value: 'thumbnailImageUrl'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: null,
+                            ),
+                            FieldNode(
+                              name: NameNode(value: 'distanceMeters'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: null,
+                            ),
+                          ],
+                        ),
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'page'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'hasNext'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'totalCount'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+);
+
+class Query$CommunitySearchSpots$searchSpots {
+  Query$CommunitySearchSpots$searchSpots({
+    required this.success,
+    required this.userErrors,
+    required this.connection,
+  });
+
+  factory Query$CommunitySearchSpots$searchSpots.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$success = json['success'];
+    final l$userErrors = json['userErrors'];
+    final l$connection = json['connection'];
+    return Query$CommunitySearchSpots$searchSpots(
+      success: (l$success as bool),
+      userErrors: (l$userErrors as List<dynamic>)
+          .map(
+            (e) => Query$CommunitySearchSpots$searchSpots$userErrors.fromJson(
+              (e as Map<String, dynamic>),
+            ),
+          )
+          .toList(),
+      connection: Query$CommunitySearchSpots$searchSpots$connection.fromJson(
+        (l$connection as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final bool success;
+
+  final List<Query$CommunitySearchSpots$searchSpots$userErrors> userErrors;
+
+  final Query$CommunitySearchSpots$searchSpots$connection connection;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$success = success;
+    _resultData['success'] = l$success;
+    final l$userErrors = userErrors;
+    _resultData['userErrors'] = l$userErrors.map((e) => e.toJson()).toList();
+    final l$connection = connection;
+    _resultData['connection'] = l$connection.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$success = success;
+    final l$userErrors = userErrors;
+    final l$connection = connection;
+    return Object.hashAll([
+      l$success,
+      Object.hashAll(l$userErrors.map((v) => v)),
+      l$connection,
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$CommunitySearchSpots$searchSpots ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$success = success;
+    final lOther$success = other.success;
+    if (l$success != lOther$success) {
+      return false;
+    }
+    final l$userErrors = userErrors;
+    final lOther$userErrors = other.userErrors;
+    if (l$userErrors.length != lOther$userErrors.length) {
+      return false;
+    }
+    for (int i = 0; i < l$userErrors.length; i++) {
+      final l$userErrors$entry = l$userErrors[i];
+      final lOther$userErrors$entry = lOther$userErrors[i];
+      if (l$userErrors$entry != lOther$userErrors$entry) {
+        return false;
+      }
+    }
+    final l$connection = connection;
+    final lOther$connection = other.connection;
+    if (l$connection != lOther$connection) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$CommunitySearchSpots$searchSpots
+    on Query$CommunitySearchSpots$searchSpots {
+  CopyWith$Query$CommunitySearchSpots$searchSpots<
+    Query$CommunitySearchSpots$searchSpots
+  >
+  get copyWith =>
+      CopyWith$Query$CommunitySearchSpots$searchSpots(this, (i) => i);
+}
+
+abstract class CopyWith$Query$CommunitySearchSpots$searchSpots<TRes> {
+  factory CopyWith$Query$CommunitySearchSpots$searchSpots(
+    Query$CommunitySearchSpots$searchSpots instance,
+    TRes Function(Query$CommunitySearchSpots$searchSpots) then,
+  ) = _CopyWithImpl$Query$CommunitySearchSpots$searchSpots;
+
+  factory CopyWith$Query$CommunitySearchSpots$searchSpots.stub(TRes res) =
+      _CopyWithStubImpl$Query$CommunitySearchSpots$searchSpots;
+
+  TRes call({
+    bool? success,
+    List<Query$CommunitySearchSpots$searchSpots$userErrors>? userErrors,
+    Query$CommunitySearchSpots$searchSpots$connection? connection,
+  });
+  TRes userErrors(
+    Iterable<Query$CommunitySearchSpots$searchSpots$userErrors> Function(
+      Iterable<
+        CopyWith$Query$CommunitySearchSpots$searchSpots$userErrors<
+          Query$CommunitySearchSpots$searchSpots$userErrors
+        >
+      >,
+    )
+    _fn,
+  );
+  CopyWith$Query$CommunitySearchSpots$searchSpots$connection<TRes>
+  get connection;
+}
+
+class _CopyWithImpl$Query$CommunitySearchSpots$searchSpots<TRes>
+    implements CopyWith$Query$CommunitySearchSpots$searchSpots<TRes> {
+  _CopyWithImpl$Query$CommunitySearchSpots$searchSpots(
+    this._instance,
+    this._then,
+  );
+
+  final Query$CommunitySearchSpots$searchSpots _instance;
+
+  final TRes Function(Query$CommunitySearchSpots$searchSpots) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? success = _undefined,
+    Object? userErrors = _undefined,
+    Object? connection = _undefined,
+  }) => _then(
+    Query$CommunitySearchSpots$searchSpots(
+      success: success == _undefined || success == null
+          ? _instance.success
+          : (success as bool),
+      userErrors: userErrors == _undefined || userErrors == null
+          ? _instance.userErrors
+          : (userErrors
+                as List<Query$CommunitySearchSpots$searchSpots$userErrors>),
+      connection: connection == _undefined || connection == null
+          ? _instance.connection
+          : (connection as Query$CommunitySearchSpots$searchSpots$connection),
+    ),
+  );
+
+  TRes userErrors(
+    Iterable<Query$CommunitySearchSpots$searchSpots$userErrors> Function(
+      Iterable<
+        CopyWith$Query$CommunitySearchSpots$searchSpots$userErrors<
+          Query$CommunitySearchSpots$searchSpots$userErrors
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    userErrors: _fn(
+      _instance.userErrors.map(
+        (e) => CopyWith$Query$CommunitySearchSpots$searchSpots$userErrors(
+          e,
+          (i) => i,
+        ),
+      ),
+    ).toList(),
+  );
+
+  CopyWith$Query$CommunitySearchSpots$searchSpots$connection<TRes>
+  get connection {
+    final local$connection = _instance.connection;
+    return CopyWith$Query$CommunitySearchSpots$searchSpots$connection(
+      local$connection,
+      (e) => call(connection: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Query$CommunitySearchSpots$searchSpots<TRes>
+    implements CopyWith$Query$CommunitySearchSpots$searchSpots<TRes> {
+  _CopyWithStubImpl$Query$CommunitySearchSpots$searchSpots(this._res);
+
+  TRes _res;
+
+  call({
+    bool? success,
+    List<Query$CommunitySearchSpots$searchSpots$userErrors>? userErrors,
+    Query$CommunitySearchSpots$searchSpots$connection? connection,
+  }) => _res;
+
+  userErrors(_fn) => _res;
+
+  CopyWith$Query$CommunitySearchSpots$searchSpots$connection<TRes>
+  get connection =>
+      CopyWith$Query$CommunitySearchSpots$searchSpots$connection.stub(_res);
+}
+
+class Query$CommunitySearchSpots$searchSpots$userErrors {
+  Query$CommunitySearchSpots$searchSpots$userErrors({
+    required this.code,
+    this.field,
+  });
+
+  factory Query$CommunitySearchSpots$searchSpots$userErrors.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$code = json['code'];
+    final l$field = json['field'];
+    return Query$CommunitySearchSpots$searchSpots$userErrors(
+      code: (l$code as String),
+      field: (l$field as String?),
+    );
+  }
+
+  final String code;
+
+  final String? field;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$field = field;
+    _resultData['field'] = l$field;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$code = code;
+    final l$field = field;
+    return Object.hashAll([l$code, l$field]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$CommunitySearchSpots$searchSpots$userErrors ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$field = field;
+    final lOther$field = other.field;
+    if (l$field != lOther$field) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$CommunitySearchSpots$searchSpots$userErrors
+    on Query$CommunitySearchSpots$searchSpots$userErrors {
+  CopyWith$Query$CommunitySearchSpots$searchSpots$userErrors<
+    Query$CommunitySearchSpots$searchSpots$userErrors
+  >
+  get copyWith => CopyWith$Query$CommunitySearchSpots$searchSpots$userErrors(
+    this,
+    (i) => i,
+  );
+}
+
+abstract class CopyWith$Query$CommunitySearchSpots$searchSpots$userErrors<
+  TRes
+> {
+  factory CopyWith$Query$CommunitySearchSpots$searchSpots$userErrors(
+    Query$CommunitySearchSpots$searchSpots$userErrors instance,
+    TRes Function(Query$CommunitySearchSpots$searchSpots$userErrors) then,
+  ) = _CopyWithImpl$Query$CommunitySearchSpots$searchSpots$userErrors;
+
+  factory CopyWith$Query$CommunitySearchSpots$searchSpots$userErrors.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Query$CommunitySearchSpots$searchSpots$userErrors;
+
+  TRes call({String? code, String? field});
+}
+
+class _CopyWithImpl$Query$CommunitySearchSpots$searchSpots$userErrors<TRes>
+    implements
+        CopyWith$Query$CommunitySearchSpots$searchSpots$userErrors<TRes> {
+  _CopyWithImpl$Query$CommunitySearchSpots$searchSpots$userErrors(
+    this._instance,
+    this._then,
+  );
+
+  final Query$CommunitySearchSpots$searchSpots$userErrors _instance;
+
+  final TRes Function(Query$CommunitySearchSpots$searchSpots$userErrors) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? code = _undefined, Object? field = _undefined}) => _then(
+    Query$CommunitySearchSpots$searchSpots$userErrors(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      field: field == _undefined ? _instance.field : (field as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$CommunitySearchSpots$searchSpots$userErrors<TRes>
+    implements
+        CopyWith$Query$CommunitySearchSpots$searchSpots$userErrors<TRes> {
+  _CopyWithStubImpl$Query$CommunitySearchSpots$searchSpots$userErrors(
+    this._res,
+  );
+
+  TRes _res;
+
+  call({String? code, String? field}) => _res;
+}
+
+class Query$CommunitySearchSpots$searchSpots$connection {
+  Query$CommunitySearchSpots$searchSpots$connection({
+    required this.items,
+    required this.page,
+    required this.hasNext,
+    required this.totalCount,
+  });
+
+  factory Query$CommunitySearchSpots$searchSpots$connection.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$items = json['items'];
+    final l$page = json['page'];
+    final l$hasNext = json['hasNext'];
+    final l$totalCount = json['totalCount'];
+    return Query$CommunitySearchSpots$searchSpots$connection(
+      items: (l$items as List<dynamic>)
+          .map(
+            (e) =>
+                Query$CommunitySearchSpots$searchSpots$connection$items.fromJson(
+                  (e as Map<String, dynamic>),
+                ),
+          )
+          .toList(),
+      page: (l$page as int),
+      hasNext: (l$hasNext as bool),
+      totalCount: (l$totalCount as int),
+    );
+  }
+
+  final List<Query$CommunitySearchSpots$searchSpots$connection$items> items;
+
+  final int page;
+
+  final bool hasNext;
+
+  final int totalCount;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$items = items;
+    _resultData['items'] = l$items.map((e) => e.toJson()).toList();
+    final l$page = page;
+    _resultData['page'] = l$page;
+    final l$hasNext = hasNext;
+    _resultData['hasNext'] = l$hasNext;
+    final l$totalCount = totalCount;
+    _resultData['totalCount'] = l$totalCount;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$items = items;
+    final l$page = page;
+    final l$hasNext = hasNext;
+    final l$totalCount = totalCount;
+    return Object.hashAll([
+      Object.hashAll(l$items.map((v) => v)),
+      l$page,
+      l$hasNext,
+      l$totalCount,
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$CommunitySearchSpots$searchSpots$connection ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$items = items;
+    final lOther$items = other.items;
+    if (l$items.length != lOther$items.length) {
+      return false;
+    }
+    for (int i = 0; i < l$items.length; i++) {
+      final l$items$entry = l$items[i];
+      final lOther$items$entry = lOther$items[i];
+      if (l$items$entry != lOther$items$entry) {
+        return false;
+      }
+    }
+    final l$page = page;
+    final lOther$page = other.page;
+    if (l$page != lOther$page) {
+      return false;
+    }
+    final l$hasNext = hasNext;
+    final lOther$hasNext = other.hasNext;
+    if (l$hasNext != lOther$hasNext) {
+      return false;
+    }
+    final l$totalCount = totalCount;
+    final lOther$totalCount = other.totalCount;
+    if (l$totalCount != lOther$totalCount) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$CommunitySearchSpots$searchSpots$connection
+    on Query$CommunitySearchSpots$searchSpots$connection {
+  CopyWith$Query$CommunitySearchSpots$searchSpots$connection<
+    Query$CommunitySearchSpots$searchSpots$connection
+  >
+  get copyWith => CopyWith$Query$CommunitySearchSpots$searchSpots$connection(
+    this,
+    (i) => i,
+  );
+}
+
+abstract class CopyWith$Query$CommunitySearchSpots$searchSpots$connection<
+  TRes
+> {
+  factory CopyWith$Query$CommunitySearchSpots$searchSpots$connection(
+    Query$CommunitySearchSpots$searchSpots$connection instance,
+    TRes Function(Query$CommunitySearchSpots$searchSpots$connection) then,
+  ) = _CopyWithImpl$Query$CommunitySearchSpots$searchSpots$connection;
+
+  factory CopyWith$Query$CommunitySearchSpots$searchSpots$connection.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Query$CommunitySearchSpots$searchSpots$connection;
+
+  TRes call({
+    List<Query$CommunitySearchSpots$searchSpots$connection$items>? items,
+    int? page,
+    bool? hasNext,
+    int? totalCount,
+  });
+  TRes items(
+    Iterable<Query$CommunitySearchSpots$searchSpots$connection$items> Function(
+      Iterable<
+        CopyWith$Query$CommunitySearchSpots$searchSpots$connection$items<
+          Query$CommunitySearchSpots$searchSpots$connection$items
+        >
+      >,
+    )
+    _fn,
+  );
+}
+
+class _CopyWithImpl$Query$CommunitySearchSpots$searchSpots$connection<TRes>
+    implements
+        CopyWith$Query$CommunitySearchSpots$searchSpots$connection<TRes> {
+  _CopyWithImpl$Query$CommunitySearchSpots$searchSpots$connection(
+    this._instance,
+    this._then,
+  );
+
+  final Query$CommunitySearchSpots$searchSpots$connection _instance;
+
+  final TRes Function(Query$CommunitySearchSpots$searchSpots$connection) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? items = _undefined,
+    Object? page = _undefined,
+    Object? hasNext = _undefined,
+    Object? totalCount = _undefined,
+  }) => _then(
+    Query$CommunitySearchSpots$searchSpots$connection(
+      items: items == _undefined || items == null
+          ? _instance.items
+          : (items
+                as List<
+                  Query$CommunitySearchSpots$searchSpots$connection$items
+                >),
+      page: page == _undefined || page == null ? _instance.page : (page as int),
+      hasNext: hasNext == _undefined || hasNext == null
+          ? _instance.hasNext
+          : (hasNext as bool),
+      totalCount: totalCount == _undefined || totalCount == null
+          ? _instance.totalCount
+          : (totalCount as int),
+    ),
+  );
+
+  TRes items(
+    Iterable<Query$CommunitySearchSpots$searchSpots$connection$items> Function(
+      Iterable<
+        CopyWith$Query$CommunitySearchSpots$searchSpots$connection$items<
+          Query$CommunitySearchSpots$searchSpots$connection$items
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    items: _fn(
+      _instance.items.map(
+        (e) => CopyWith$Query$CommunitySearchSpots$searchSpots$connection$items(
+          e,
+          (i) => i,
+        ),
+      ),
+    ).toList(),
+  );
+}
+
+class _CopyWithStubImpl$Query$CommunitySearchSpots$searchSpots$connection<TRes>
+    implements
+        CopyWith$Query$CommunitySearchSpots$searchSpots$connection<TRes> {
+  _CopyWithStubImpl$Query$CommunitySearchSpots$searchSpots$connection(
+    this._res,
+  );
+
+  TRes _res;
+
+  call({
+    List<Query$CommunitySearchSpots$searchSpots$connection$items>? items,
+    int? page,
+    bool? hasNext,
+    int? totalCount,
+  }) => _res;
+
+  items(_fn) => _res;
+}
+
+class Query$CommunitySearchSpots$searchSpots$connection$items {
+  Query$CommunitySearchSpots$searchSpots$connection$items({
+    required this.id,
+    required this.title,
+    this.address,
+    required this.thumbnailImageUrl,
+    required this.distanceMeters,
+  });
+
+  factory Query$CommunitySearchSpots$searchSpots$connection$items.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$id = json['id'];
+    final l$title = json['title'];
+    final l$address = json['address'];
+    final l$thumbnailImageUrl = json['thumbnailImageUrl'];
+    final l$distanceMeters = json['distanceMeters'];
+    return Query$CommunitySearchSpots$searchSpots$connection$items(
+      id: (l$id as String),
+      title: (l$title as String),
+      address: (l$address as String?),
+      thumbnailImageUrl: (l$thumbnailImageUrl as String),
+      distanceMeters: (l$distanceMeters as num).toDouble(),
+    );
+  }
+
+  final String id;
+
+  final String title;
+
+  final String? address;
+
+  final String thumbnailImageUrl;
+
+  final double distanceMeters;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$id = id;
+    _resultData['id'] = l$id;
+    final l$title = title;
+    _resultData['title'] = l$title;
+    final l$address = address;
+    _resultData['address'] = l$address;
+    final l$thumbnailImageUrl = thumbnailImageUrl;
+    _resultData['thumbnailImageUrl'] = l$thumbnailImageUrl;
+    final l$distanceMeters = distanceMeters;
+    _resultData['distanceMeters'] = l$distanceMeters;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$id = id;
+    final l$title = title;
+    final l$address = address;
+    final l$thumbnailImageUrl = thumbnailImageUrl;
+    final l$distanceMeters = distanceMeters;
+    return Object.hashAll([
+      l$id,
+      l$title,
+      l$address,
+      l$thumbnailImageUrl,
+      l$distanceMeters,
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$CommunitySearchSpots$searchSpots$connection$items ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$id = id;
+    final lOther$id = other.id;
+    if (l$id != lOther$id) {
+      return false;
+    }
+    final l$title = title;
+    final lOther$title = other.title;
+    if (l$title != lOther$title) {
+      return false;
+    }
+    final l$address = address;
+    final lOther$address = other.address;
+    if (l$address != lOther$address) {
+      return false;
+    }
+    final l$thumbnailImageUrl = thumbnailImageUrl;
+    final lOther$thumbnailImageUrl = other.thumbnailImageUrl;
+    if (l$thumbnailImageUrl != lOther$thumbnailImageUrl) {
+      return false;
+    }
+    final l$distanceMeters = distanceMeters;
+    final lOther$distanceMeters = other.distanceMeters;
+    if (l$distanceMeters != lOther$distanceMeters) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$CommunitySearchSpots$searchSpots$connection$items
+    on Query$CommunitySearchSpots$searchSpots$connection$items {
+  CopyWith$Query$CommunitySearchSpots$searchSpots$connection$items<
+    Query$CommunitySearchSpots$searchSpots$connection$items
+  >
+  get copyWith =>
+      CopyWith$Query$CommunitySearchSpots$searchSpots$connection$items(
+        this,
+        (i) => i,
+      );
+}
+
+abstract class CopyWith$Query$CommunitySearchSpots$searchSpots$connection$items<
+  TRes
+> {
+  factory CopyWith$Query$CommunitySearchSpots$searchSpots$connection$items(
+    Query$CommunitySearchSpots$searchSpots$connection$items instance,
+    TRes Function(Query$CommunitySearchSpots$searchSpots$connection$items) then,
+  ) = _CopyWithImpl$Query$CommunitySearchSpots$searchSpots$connection$items;
+
+  factory CopyWith$Query$CommunitySearchSpots$searchSpots$connection$items.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Query$CommunitySearchSpots$searchSpots$connection$items;
+
+  TRes call({
+    String? id,
+    String? title,
+    String? address,
+    String? thumbnailImageUrl,
+    double? distanceMeters,
+  });
+}
+
+class _CopyWithImpl$Query$CommunitySearchSpots$searchSpots$connection$items<
+  TRes
+>
+    implements
+        CopyWith$Query$CommunitySearchSpots$searchSpots$connection$items<TRes> {
+  _CopyWithImpl$Query$CommunitySearchSpots$searchSpots$connection$items(
+    this._instance,
+    this._then,
+  );
+
+  final Query$CommunitySearchSpots$searchSpots$connection$items _instance;
+
+  final TRes Function(Query$CommunitySearchSpots$searchSpots$connection$items)
+  _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? id = _undefined,
+    Object? title = _undefined,
+    Object? address = _undefined,
+    Object? thumbnailImageUrl = _undefined,
+    Object? distanceMeters = _undefined,
+  }) => _then(
+    Query$CommunitySearchSpots$searchSpots$connection$items(
+      id: id == _undefined || id == null ? _instance.id : (id as String),
+      title: title == _undefined || title == null
+          ? _instance.title
+          : (title as String),
+      address: address == _undefined ? _instance.address : (address as String?),
+      thumbnailImageUrl:
+          thumbnailImageUrl == _undefined || thumbnailImageUrl == null
+          ? _instance.thumbnailImageUrl
+          : (thumbnailImageUrl as String),
+      distanceMeters: distanceMeters == _undefined || distanceMeters == null
+          ? _instance.distanceMeters
+          : (distanceMeters as double),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$CommunitySearchSpots$searchSpots$connection$items<
+  TRes
+>
+    implements
+        CopyWith$Query$CommunitySearchSpots$searchSpots$connection$items<TRes> {
+  _CopyWithStubImpl$Query$CommunitySearchSpots$searchSpots$connection$items(
+    this._res,
+  );
+
+  TRes _res;
+
+  call({
+    String? id,
+    String? title,
+    String? address,
+    String? thumbnailImageUrl,
+    double? distanceMeters,
+  }) => _res;
+}

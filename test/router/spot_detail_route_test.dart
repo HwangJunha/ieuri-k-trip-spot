@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ieuri_k_trip_spot/common/navigation/spot_detail_route.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/spot_providers.dart';
@@ -137,4 +138,14 @@ void main() {
 
     expect(find.byType(SlideTransition), findsWidgets);
   });
+  // SPEC-0013 — 축제 카드가 상세로 넘기는 카테고리 문자열이 실제 enum 이름과
+  // 같은지 고정한다.
+  //
+  // `domain/event`는 `SpotCategory`를 import할 수 없어(기능 간 의존) 문자열
+  // 상수를 쓴다. 그 값이 어긋나면 라우트가 기본값으로 폴백해 **조용히 다른
+  // 카테고리로 상세가 열린다** — 오류가 나지 않으므로 여기서 잡는다.
+  test('festivalEventCategoryName은 SpotCategory 이름과 일치한다', () {
+    expect(festivalEventCategoryName, SpotCategory.festivalEvent.name);
+  });
+
 }

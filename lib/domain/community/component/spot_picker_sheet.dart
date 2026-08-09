@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../common/location/location_service.dart';
 import '../../../common/pagination/pagination_list_view.dart';
+import '../../../common/widget/highlighted_text.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/nearby_spot.dart';
 import '../model/nearby_spot_category.dart';
@@ -29,26 +30,23 @@ class SpotPickerChosen extends SpotPickerResult {
 /// 컴포저의 장소 선택 시트.
 ///
 /// ```
-/// ├── 출처 탭 (주변 / 좋아요한 장소)     ← 주변이 기본이다
-/// ├── 카테고리 줄 (서버가 거른다 — 두 출처에 함께 걸린다)
-/// ├── (16dp)
-/// ├── 결과 내 재검색 (받아 둔 목록만 좁힌다 — 서버 검색이 아니다)
-/// └── 장소 목록
+/// ├── 검색창 (서버 장소 검색)
+/// └── 장소 목록 — 검색어가 없으면 주변, 있으면 검색 결과
 /// ```
 ///
-/// **출처가 둘이고 페이징도 다르다.** 주변은 `spots`(오프셋, 거리 있음), 좋아요한
-/// 장소는 `likedSpots`(커서, 거리 없음)다. 컨트롤러가 각자 자기 페이지 모델을 쓰므로
-/// 그 차이가 이 위젯까지 새지 않는다 — 여기서는 둘 다 같은 줄로 그린다.
+/// **말 그대로 장소를 검색하는 시트다.** 예전에는 출처 탭(주변/좋아요한 장소)과
+/// 카테고리 칩이 있었고 텍스트 칸은 그 결과를 다시 좁히는 필터였는데, 고르려는 것이
+/// "장소 하나"뿐인 화면에 필터가 셋이나 놓여 있었다. 홈의 검색과 같은 서버 검색
+/// 하나로 줄였다(사용자 결정).
 ///
-/// **카테고리 줄은 두 출처에 함께 걸린다.** 서버 `spots`와 `likedSpots`가 같은
-/// `SpotCategory` 인자를 받으므로 필터 하나로 족하다 — 탭마다 필터를 따로 두면
-/// 탭을 옮길 때 왜 결과가 달라졌는지 알기 어렵다.
+/// **검색어가 비면 주변 장소를 보여준다.** 글을 쓸 때는 보통 지금 있는 곳을 고르므로,
+/// 타이핑 없이 바로 고를 수 있는 편이 빠르다. 검색어가 들어오면 서버 `searchSpots`가
+/// 제목·주소를 대상으로 찾은 결과로 갈아 끼운다.
 ///
-/// **두 필터는 성격이 다르다.** 카테고리는 서버로 가는 진짜 필터이고, 텍스트 칸은
-/// **이름 검색 인자가 없어** 이미 받아 둔 것만 좁힌다.
+/// **자동완성과 최근 검색어는 두지 않았다.** 시트는 한 번 고르고 닫는 자리라
+/// 입력 보조까지 얹으면 화면이 다시 복잡해진다 — 그건 검색 페이지의 몫이다.
 ///
 /// 위치를 얻지 못하면 **빈 시트나 무한 스피너가 아니라** 사유와 재시도를 보여준다.
-/// 그 상태에서도 좋아요한 장소 탭은 그대로 돈다 — 좌표를 쓰지 않기 때문이다.
 Future<SpotPickerResult?> showSpotPickerSheet(BuildContext context) =>
     showModalBottomSheet<SpotPickerResult>(
       context: context,
@@ -98,35 +96,51 @@ class _SpotPickerSheetState extends ConsumerState<_SpotPickerSheet> {
                   style: theme.textTheme.titleMedium,
                 ),
               ),
-              // 출처를 먼저 고른다 — 아래 카테고리·이름 필터가 무엇에 걸리는지가
+              // 출처를 먼저 고른다 — 아래 카테고리·검색이 무엇에 걸리는지가
               // 이 선택으로 정해진다.
               const _SourceTabs(),
-              // 카테고리 줄이 텍스트 칸 **위**에 오는 이유: 이쪽이 서버가 거르는
-              // 진짜 필터라 먼저 범위를 정하고, 그 결과 안에서 다시 찾는 순서가
-              // 자연스럽다.
+              // 카테고리 줄이 검색 칸 **위**에 오는 이유: 이쪽이 범위를 정하는
+              // 필터라 먼저 좁히고, 그 안에서 찾는 순서가 자연스럽다.
               const _SpotCategoryRow(),
-              // 칩 줄과 검색 칸이 붙어 있으면 성격이 다른 두 필터가 한 덩어리로
-              // 읽힌다 — 사이를 띄워 갈라 둔다.
               const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: TextField(
                   controller: _filter,
+                  textInputAction: TextInputAction.search,
                   decoration: InputDecoration(
                     isDense: true,
                     prefixIcon: const Icon(Icons.search),
-                    hintText: l10n.communitySpotPickerFilterHint,
+                    hintText: l10n.communitySpotPickerSearchHint,
                     border: const OutlineInputBorder(),
                   ),
-                  onChanged: (String value) =>
+                  // **제출할 때 검색한다.** 예전에는 `onChanged`로 매 글자마다
+                  // 질의를 갱신했는데, 그때는 이미 받아 둔 목록을 거르는 것이라
+                  // 공짜였다. 지금은 서버 검색이라 한 글자마다 호출이 나간다 —
+                  // 엔터(또는 키보드의 검색)를 눌렀을 때만 보낸다.
+                  onSubmitted: (String value) =>
                       ref.read(nearbySpotQueryProvider.notifier).set(value),
+                  // 지우는 것은 즉시 반영한다 — 비우면 주변 목록으로 돌아오는
+                  // 것이라 서버를 부르지 않는다(AC-14.3).
+                  onChanged: (String value) {
+                    if (value.trim().isEmpty) {
+                      ref.read(nearbySpotQueryProvider.notifier).set('');
+                    }
+                  },
                 ),
               ),
               const SizedBox(height: 8),
               const Divider(height: 1),
               Expanded(
+                // 주변 탭은 검색어가 있으면 **서버 검색**으로 갈아 끼운다(R14).
+                // 지우면 좌표 기반 목록으로 돌아온다(AC-14.3).
+                //
+                // 좋아요 탭은 클라이언트 필터다 — `searchSpots`는 좌표 기반 반경
+                // 검색이라 "내가 좋아요한 것 중에서"를 표현할 수 없다.
                 child: switch (source) {
-                  SpotPickerSource.nearby => _NearbySpotList(query: query),
+                  SpotPickerSource.nearby when query.trim().isNotEmpty =>
+                    _SpotSearchResultList(query: query),
+                  SpotPickerSource.nearby => const _NearbySpotList(),
                   SpotPickerSource.liked => _LikedSpotList(query: query),
                 },
               ),
@@ -134,6 +148,90 @@ class _SpotPickerSheetState extends ConsumerState<_SpotPickerSheet> {
           ),
         ),
       ),
+    );
+  }
+}
+/// 주변 장소 목록. 로딩·위치 실패·조회 실패·빈 목록·필터 미일치가 **서로 다른
+/// 상태**다 — 사용자가 할 일이 각각 다르기 때문이다.
+/// 좌표 기반 주변 장소 목록. **질의가 없을 때만 그려진다** — 질의가 들어오면
+/// 시트가 [_SpotSearchResultList]로 갈아 끼운다(R14).
+class _NearbySpotList extends ConsumerWidget {
+  const _NearbySpotList();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final AsyncValue<NearbySpotsState> state = ref.watch(
+      nearbySpotsControllerProvider,
+    );
+
+    return state.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (Object error, _) => _SheetMessage(
+        // 위치 실패는 조회 실패와 사유가 다르다.
+        text: error is LocationUnavailable
+            ? l10n.communitySpotPickerLocationUnavailable
+            : l10n.communitySpotPickerFailed,
+        onRetry: () => ref.invalidate(nearbySpotsControllerProvider),
+      ),
+      data: (NearbySpotsState data) {
+        if (data.isEmpty) {
+          return _SheetMessage(text: l10n.communitySpotPickerEmpty);
+        }
+        return PaginationListView(
+          itemCount: data.items.length,
+          hasMore: data.hasMore,
+          isLoadingMore: data.isLoadingMore,
+          onLoadMore: () =>
+              ref.read(nearbySpotsControllerProvider.notifier).loadMore(),
+          itemBuilder: (BuildContext context, int index) =>
+              _SpotTile(spot: data.items[index]),
+        );
+      },
+    );
+  }
+}
+
+/// 서버 검색 결과 목록(SPEC-0013 R14).
+///
+/// **이미 받아 둔 목록을 거르지 않는다**(AC-14.1) — 질의를 서버로 보내고 그 결과를
+/// 그대로 그린다. 그래서 제목뿐 아니라 주소로도 찾히고, 질의가 있는 상태에서도
+/// 다음 페이지를 이어 받는다(AC-14.2).
+class _SpotSearchResultList extends ConsumerWidget {
+  const _SpotSearchResultList({required this.query});
+
+  final String query;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final AsyncValue<SpotSearchListState> state = ref.watch(
+      spotSearchListProvider(query),
+    );
+
+    return state.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (Object error, _) => _SheetMessage(
+        text: error is LocationUnavailable
+            ? l10n.communitySpotPickerLocationUnavailable
+            : l10n.communitySpotPickerFailed,
+        onRetry: () => ref.invalidate(spotSearchListProvider(query)),
+      ),
+      data: (SpotSearchListState data) {
+        // 결과 0건은 **정상 상태다** — 실패 문구가 아니라 "맞는 장소가 없다"를 쓴다.
+        if (data.items.isEmpty) {
+          return _SheetMessage(text: l10n.communitySpotPickerNoMatch);
+        }
+        return PaginationListView(
+          itemCount: data.items.length,
+          hasMore: data.hasMore,
+          isLoadingMore: data.isLoadingMore,
+          onLoadMore: () =>
+              ref.read(spotSearchListProvider(query).notifier).loadMore(),
+          itemBuilder: (BuildContext context, int index) =>
+              _SpotTile(spot: data.items[index], query: query),
+        );
+      },
     );
   }
 }
@@ -192,6 +290,7 @@ class _SpotCategoryRow extends ConsumerWidget {
   }
 }
 
+
 class _CategoryChip extends StatelessWidget {
   const _CategoryChip({
     required this.label,
@@ -213,6 +312,7 @@ class _CategoryChip extends StatelessWidget {
     ),
   );
 }
+
 
 /// 출처 탭 — 주변 / 좋아요한 장소.
 ///
@@ -250,52 +350,6 @@ class _SourceTabs extends ConsumerWidget {
   }
 }
 
-/// 주변 장소 목록. 로딩·위치 실패·조회 실패·빈 목록·필터 미일치가 **서로 다른
-/// 상태**다 — 사용자가 할 일이 각각 다르기 때문이다.
-class _NearbySpotList extends ConsumerWidget {
-  const _NearbySpotList({required this.query});
-
-  final String query;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final AppLocalizations l10n = AppLocalizations.of(context);
-    final AsyncValue<NearbySpotsState> state = ref.watch(
-      nearbySpotsControllerProvider,
-    );
-
-    return state.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (Object error, _) => _SheetMessage(
-        // 위치 실패는 조회 실패와 사유가 다르다.
-        text: error is LocationUnavailable
-            ? l10n.communitySpotPickerLocationUnavailable
-            : l10n.communitySpotPickerFailed,
-        onRetry: () => ref.invalidate(nearbySpotsControllerProvider),
-      ),
-      data: (NearbySpotsState data) {
-        if (data.isEmpty) {
-          return _SheetMessage(text: l10n.communitySpotPickerEmpty);
-        }
-        final List<NearbySpot> visible = data.filtered(query);
-        if (visible.isEmpty) {
-          return _SheetMessage(text: l10n.communitySpotPickerNoMatch);
-        }
-        return PaginationListView(
-          itemCount: visible.length,
-          // 필터로 좁힌 동안에는 더 받지 않는다 — 보이는 것이 몇 건이든 다음
-          // 페이지가 그 이름과 맞는다는 보장이 없어 무한히 당기게 된다.
-          hasMore: query.trim().isEmpty && data.hasMore,
-          isLoadingMore: data.isLoadingMore,
-          onLoadMore: () =>
-              ref.read(nearbySpotsControllerProvider.notifier).loadMore(),
-          itemBuilder: (BuildContext context, int index) =>
-              _SpotTile(spot: visible[index]),
-        );
-      },
-    );
-  }
-}
 
 /// 좋아요한 장소 목록.
 ///
@@ -354,16 +408,21 @@ class _LikedSpotList extends ConsumerWidget {
 /// (`distanceMeters == null`) 그 자리에 주소를 그린다. 둘 다 없으면 부제를 아예
 /// 그리지 않는다 — 빈 줄을 남기면 줄 높이가 들쭉날쭉해진다.
 class _SpotTile extends StatelessWidget {
-  const _SpotTile({required this.spot});
+  const _SpotTile({required this.spot, this.query = ''});
 
   final NearbySpot spot;
+
+  /// 강조에 쓸 검색어. 주변·좋아요 목록에서는 비어 있어 강조가 없다.
+  final String query;
 
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final String? subtitle = spot.distanceMeters != null
+    final ThemeData theme = Theme.of(context);
+    final String? address = spot.address;
+    final String? distance = spot.distanceMeters != null
         ? formatSpotDistance(l10n, spot.distanceMeters!)
-        : spot.address;
+        : null;
     return ListTile(
       leading: SizedBox(
         width: 44,
@@ -380,10 +439,34 @@ class _SpotTile extends StatelessWidget {
                 ),
               ),
       ),
-      title: Text(spot.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: subtitle == null
+      title: HighlightedText(text: spot.title, query: query, maxLines: 1),
+      // **주소와 거리를 함께, 두 줄로 보여준다.** 예전에는 거리가 있으면 주소를
+      // 감췄는데(둘 중 하나만), 어디에 있는 곳인지와 얼마나 먼지는 둘 다 고르는
+      // 데 필요한 정보다.
+      subtitle: address == null && distance == null
           ? null
-          : Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                if (address != null)
+                  HighlightedText(
+                    text: address,
+                    query: query,
+                    maxLines: 1,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                if (distance != null)
+                  Text(
+                    distance,
+                    maxLines: 1,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+              ],
+            ),
+      isThreeLine: address != null && distance != null,
       onTap: () => Navigator.pop(context, SpotPickerChosen(spot)),
     );
   }

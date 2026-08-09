@@ -19,10 +19,31 @@ const List<String> _requiredKeys = <String>[
   'navCommunity',
   'likedSpotsEmpty',
   'likedSpotsUnavailable',
+  // SPEC-0013 홈 섹션 — 세 섹션 모두 빈 상태 문구를 갖는다(설계 §2). 빈 섹션을
+  // 빈 공간으로 두지 않는 것이 요건이므로 문구 부재는 곧 요건 미충족이다.
+  'homeSectionNearYou',
+  'homeNearYouEmpty',
+  'homeHappeningNowEmpty',
+  'homePopularEmpty',
+  'homeSectionRetry',
+  'homeSectionError',
 ];
 
 /// 대체되어 더는 참조되지 않는 키.
-const List<String> _retiredKeys = <String>['navEvents', 'navChat'];
+///
+/// SPEC-0013이 별점·혼잡도를 **모델에서 제거**했다(R15, AC-15.2·AC-15.3). 화면에서
+/// 감추는 것으로는 부족해 문구까지 지웠고, 여기서 되살아나지 않는지 지킨다 —
+/// 키가 남아 있으면 다음 사람이 "쓰던 문구가 있네" 하고 다시 붙인다.
+const List<String> _retiredKeys = <String>[
+  'navEvents',
+  'navChat',
+  'congestionLow',
+  'congestionModerate',
+  'congestionHigh',
+  'distanceAway',
+  // "Recommended for You" → "Near You"(R16 — 거리순이지 취향 추론이 아니다).
+  'homeSectionRecommended',
+];
 
 Map<String, dynamic> _arb(String locale) =>
     jsonDecode(File('lib/l10n/app_$locale.arb').readAsStringSync())

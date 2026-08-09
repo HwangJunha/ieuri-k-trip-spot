@@ -1,24 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../common/navigation/spot_detail_route.dart';
+import '../../../common/widget/home_section.dart';
 import '../../../common/widget/settings_button.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../event/component/happening_now_section.dart';
 import '../component/home_search_bar.dart';
 import '../component/popular_spot_card.dart';
-import '../component/section_header.dart';
 import '../component/spot_card.dart';
+import '../model/popular_spot.dart';
 import '../model/tourist_spot.dart';
-import '../provider/spot_providers.dart';
+import '../provider/home_section_providers.dart';
+import 'search_screen.dart';
 
-/// The Home tab: app bar + inert search bar + three sections (Recommended,
-/// Happening Now, Popular). Reads section providers only; never touches the
-/// repository directly (CLAUDE.md §3).
+/// The Home tab: app bar + search bar + three sections (Near you, Happening
+/// Now, Popular). Reads section providers only; never touches the repository
+/// directly (CLAUDE.md §3).
 ///
 /// Home lives in the `spot` domain: it is primarily a spot surface. The
 /// "Happening Now" block is owned by the event domain and embedded here as a
 /// single [HappeningNowSection] widget — the one deliberate cross-domain
 /// composition point.
+///
+/// **세 섹션은 각각 자기 provider와 자기 상태를 갖는다**(R19). 한 섹션이 실패하거나
+/// 비어도 나머지는 그대로 그려지고, 세 중 둘이 비어도 화면이 성립한다(AC-19.3).
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -53,16 +60,20 @@ class HomeScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.only(top: 16, bottom: 96),
           children: <Widget>[
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: HomeSearchBar(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              // 검색바를 누르면 검색 페이지로 간다(AC-10.1). `push`라서 돌아오면
+              // 홈이 그대로 살아 있고 섹션 상태도 유지된다(AC-10.2).
+              child: HomeSearchBar(
+                onTap: () => context.pushNamed(SearchScreen.routeName),
+              ),
             ),
             const SizedBox(height: 24),
-            _RecommendedSection(l10n: l10n),
+            const _NearYouSection(),
             const SizedBox(height: 24),
             const HappeningNowSection(),
             const SizedBox(height: 24),
-            _PopularSection(l10n: l10n),
+            const _PopularSection(),
           ],
         ),
       ),
@@ -70,102 +81,80 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _RecommendedSection extends ConsumerWidget {
-  const _RecommendedSection({required this.l10n});
-
-  final AppLocalizations l10n;
+/// "Near you"(R16) — 반경 안의 spot을 거리순 가로 스크롤로 보여준다.
+class _NearYouSection extends ConsumerWidget {
+  const _NearYouSection();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     final AsyncValue<List<TouristSpot>> spots = ref.watch(
-      recommendedSpotsProvider,
+      nearbySpotsSectionProvider,
     );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        Padding(
+    return HomeSection<TouristSpot>(
+      title: l10n.homeSectionNearYou,
+      value: spots,
+      emptyMessage: l10n.homeNearYouEmpty,
+      // 이 섹션의 provider만 무효화한다 — 다른 두 섹션은 그대로다(AC-20.2).
+      onRetry: () => ref.invalidate(nearbySpotsSectionProvider),
+      builder: (List<TouristSpot> items) => SizedBox(
+        height: 236,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          // "View all" only on Recommended, per the design reference (§5 gap).
-          child: SectionHeader(
-            title: l10n.homeSectionRecommended,
-            onViewAll: () {},
-          ),
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          height: 236,
-          child: _AsyncSpotList(
-            value: spots,
-            builder: (List<TouristSpot> items) => ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: items.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 16),
-              itemBuilder: (_, int i) => SpotCard(spot: items[i]),
+          itemCount: items.length,
+          separatorBuilder: (_, _) => const SizedBox(width: 16),
+          itemBuilder: (_, int i) => SpotCard(
+            spot: items[i],
+            onTap: () => openSpotDetail(
+              context,
+              id: items[i].id,
+              category: items[i].category?.name,
+              thumbnailUrl: items[i].thumbnailImageUrl,
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 }
 
+/// "Popular"(R18) — 누적 좋아요 총합 기준. 랭킹 근거를 카드가 함께 보여준다.
 class _PopularSection extends ConsumerWidget {
-  const _PopularSection({required this.l10n});
-
-  final AppLocalizations l10n;
+  const _PopularSection();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final AsyncValue<List<TouristSpot>> spots = ref.watch(popularSpotsProvider);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          SectionHeader(title: l10n.homeSectionPopular),
-          const SizedBox(height: 8),
-          _AsyncSpotList(
-            value: spots,
-            builder: (List<TouristSpot> items) => Column(
-              children: <Widget>[
-                for (final TouristSpot s in items)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: PopularSpotCard(spot: s),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final AsyncValue<List<PopularSpot>> spots = ref.watch(
+      popularSpotsSectionProvider,
     );
-  }
-}
 
-/// Shared `AsyncValue` boundary for the spot sections: spinner while loading,
-/// the section content on data, an inline message on error.
-class _AsyncSpotList extends StatelessWidget {
-  const _AsyncSpotList({required this.value, required this.builder});
-
-  final AsyncValue<List<TouristSpot>> value;
-  final Widget Function(List<TouristSpot> items) builder;
-
-  @override
-  Widget build(BuildContext context) {
-    return value.when(
-      data: builder,
-      loading: () => const Center(
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: CircularProgressIndicator(),
+    return HomeSection<PopularSpot>(
+      title: l10n.homeSectionPopular,
+      value: spots,
+      emptyMessage: l10n.homePopularEmpty,
+      onRetry: () => ref.invalidate(popularSpotsSectionProvider),
+      builder: (List<PopularSpot> items) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          children: <Widget>[
+            for (final PopularSpot p in items)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: PopularSpotCard(
+                  popular: p,
+                  onTap: () => openSpotDetail(
+                    context,
+                    id: p.spot.id,
+                    category: p.spot.category?.name,
+                    thumbnailUrl: p.spot.thumbnailImageUrl,
+                  ),
+                ),
+              ),
+          ],
         ),
-      ),
-      error: (Object error, _) => Padding(
-        padding: const EdgeInsets.all(16),
-        child: Text(AppLocalizations.of(context).errorUnknown),
       ),
     );
   }

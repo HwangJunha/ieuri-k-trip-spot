@@ -5,10 +5,13 @@ import 'package:ieuri_k_trip_spot/common/pagination/offset_page.dart';
 import 'package:ieuri_k_trip_spot/common/pagination/page.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/liked_spot.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/popular_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_detail.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_reaction.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/spot_search_result.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/spot_suggestion.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/tourist_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/repository/spot_repository_impl.dart';
 
@@ -544,16 +547,161 @@ void main() {
     },
   );
 
-  test('Home mock sections stay populated (no server API yet)', () async {
-    final SpotRepositoryImpl repo = _repo(_FakeLink());
+  // --- SPEC-0013 검색 (R1~R8) -------------------------------------------------
 
-    expect(await repo.fetchRecommendedSpots(), isNotEmpty);
-    final List<TouristSpot> popular = await repo.fetchPopularSpots();
-    expect(popular, isNotEmpty);
-    for (final TouristSpot spot in popular) {
-      expect(spot.rating, isNotNull);
-      expect(spot.distanceKm, isNotNull);
-    }
+  // **오프셋 페이징이다** — 서버가 커서에서 전환했다(items/page/hasNext).
+  Map<String, dynamic> searchPayload({
+    List<Map<String, dynamic>> nodes = const <Map<String, dynamic>>[],
+    List<Map<String, dynamic>> userErrors = const <Map<String, dynamic>>[],
+    bool success = true,
+    int page = 0,
+    bool hasNext = false,
+    int? totalCount,
+  }) => <String, dynamic>{
+    'searchSpots': <String, dynamic>{
+      'success': success,
+      'userErrors': userErrors,
+      'connection': <String, dynamic>{
+        'items': nodes,
+        'page': page,
+        'hasNext': hasNext,
+        'totalCount': totalCount ?? nodes.length,
+      },
+    },
+  };
+
+  test('검색 결과를 도메인 모델로 매핑한다', () async {
+    final SpotRepositoryImpl repo = _repo(
+      _FakeLink(
+        data: searchPayload(
+          nodes: <Map<String, dynamic>>[_spotItem()],
+          hasNext: true,
+          totalCount: 42,
+        ),
+      ),
+    );
+
+    final SpotSearchResult result = await repo.searchSpots(
+      query: '경복궁',
+      latitude: 37.5,
+      longitude: 127.0,
+    );
+
+    expect(result.spots.single.id, 'spot-1');
+    expect(result.totalCount, 42);
+    // 다음 장은 `page + 1`로 요청한다(오프셋 페이징).
+    expect(result.hasNextPage, isTrue);
+    expect(result.pageNumber, 0);
+  });
+
+  test('AC-1.3 · 결과 0건은 오류가 아니라 빈 결과다', () async {
+    final SpotRepositoryImpl repo = _repo(_FakeLink(data: searchPayload()));
+
+    final SpotSearchResult result = await repo.searchSpots(
+      query: '없는장소',
+      latitude: 37.5,
+      longitude: 127.0,
+    );
+
+    expect(result.isEmpty, isTrue);
+    expect(result.totalCount, 0);
+  });
+
+  test('R8 · userErrors는 SpotFailure로 번역된다 (HTTP는 200)', () async {
+    // 입력 검증 실패는 최상위 errors[]가 아니라 payload로 온다(POL-015).
+    final SpotRepositoryImpl repo = _repo(
+      _FakeLink(
+        data: searchPayload(
+          success: false,
+          userErrors: <Map<String, dynamic>>[
+            <String, dynamic>{'code': 'EMPTY_QUERY', 'field': 'query'},
+          ],
+        ),
+      ),
+    );
+
+    await expectLater(
+      repo.searchSpots(query: '   ', latitude: 37.5, longitude: 127.0),
+      throwsA(
+        isA<SpotFailure>()
+            .having((SpotFailure f) => f.kind, 'kind', SpotFailureKind.userError)
+            .having((SpotFailure f) => f.code, 'code', 'EMPTY_QUERY'),
+      ),
+    );
+  });
+
+  test('검색 인자가 서버로 전달된다', () async {
+    final _FakeLink link = _FakeLink(data: searchPayload());
+
+    await _repo(link).searchSpots(
+      query: '경복궁',
+      latitude: 37.5,
+      longitude: 127.0,
+      radiusMeters: 30000,
+      page: 2,
+      size: 20,
+    );
+
+    expect(link.sentVariables?['query'], '경복궁');
+    expect(link.sentVariables?['radiusMeters'], 30000);
+    expect(link.sentVariables?['page'], 2);
+    expect(link.sentVariables?['size'], 20);
+  });
+
+  test('R9 · 자동완성은 제안 목록을 돌려준다', () async {
+    final SpotRepositoryImpl repo = _repo(
+      _FakeLink(
+        data: <String, dynamic>{
+          'spotSearchSuggestions': <Map<String, dynamic>>[
+            <String, dynamic>{
+              'id': 's1',
+              'title': '경복궁',
+              'category': 'TOURIST_SPOT',
+            },
+          ],
+        },
+      ),
+    );
+
+    final List<SpotSuggestion> suggestions = await repo.spotSearchSuggestions(
+      query: '경복',
+      latitude: 37.5,
+      longitude: 127.0,
+    );
+
+    expect(suggestions.single.title, '경복궁');
+    expect(suggestions.single.category, SpotCategory.touristSpot);
+  });
+
+  test('R18 · 인기 spot은 likeCount와 함께 매핑된다', () async {
+    final SpotRepositoryImpl repo = _repo(
+      _FakeLink(
+        data: <String, dynamic>{
+          'popularSpots': <String, dynamic>{
+            'edges': <Map<String, dynamic>>[
+              <String, dynamic>{
+                'node': _spotItem(),
+                'cursor': 'c1',
+                'likeCount': 37,
+              },
+            ],
+            'pageInfo': <String, dynamic>{
+              'hasNextPage': false,
+              'endCursor': null,
+            },
+          },
+        },
+      ),
+    );
+
+    final CursorPage<PopularSpot> page = await repo.fetchPopularSpots(
+      latitude: 37.5,
+      longitude: 127.0,
+    );
+
+    expect(page.items.single.spot.id, 'spot-1');
+    // 랭킹 근거는 노드가 아니라 edge에 실려 온다.
+    expect(page.items.single.likeCount, 37);
   });
 
   // --- 부분 실패 / 축약 (SPEC-0008 R-7 ~ R-11) --------------------------------

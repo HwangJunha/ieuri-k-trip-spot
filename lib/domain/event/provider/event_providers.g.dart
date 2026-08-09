@@ -10,16 +10,14 @@ part of 'event_providers.dart';
 // ignore_for_file: type=lint, type=warning
 /// Exposes the [EventRepository]. Widgets never construct it (CLAUDE.md §5); the
 /// section provider reads it from here, and tests override this one provider to
-/// inject a fake. Swapping the mock impl for a GraphQL one changes only this
-/// line.
+/// inject a fake.
 
 @ProviderFor(eventRepository)
 const eventRepositoryProvider = EventRepositoryProvider._();
 
 /// Exposes the [EventRepository]. Widgets never construct it (CLAUDE.md §5); the
 /// section provider reads it from here, and tests override this one provider to
-/// inject a fake. Swapping the mock impl for a GraphQL one changes only this
-/// line.
+/// inject a fake.
 
 final class EventRepositoryProvider
     extends
@@ -27,8 +25,7 @@ final class EventRepositoryProvider
     with $Provider<EventRepository> {
   /// Exposes the [EventRepository]. Widgets never construct it (CLAUDE.md §5); the
   /// section provider reads it from here, and tests override this one provider to
-  /// inject a fake. Swapping the mock impl for a GraphQL one changes only this
-  /// line.
+  /// inject a fake.
   const EventRepositoryProvider._()
     : super(
         from: null,
@@ -62,24 +59,42 @@ final class EventRepositoryProvider
   }
 }
 
-String _$eventRepositoryHash() => r'70b207c304539f9fc385e11308e3a069711f863c';
+String _$eventRepositoryHash() => r'963679aaa335109fd431749ca4350fbd6fb9e859';
 
-/// "Happening Now" events as an `AsyncValue` for the UI boundary.
+/// 홈 "Happening Now" 섹션(R17). 반경 안에서 오늘 진행 중인 축제만 온다.
+///
+/// 좌표와 반경을 `watch`하는 것은 Near you와 같은 이유다 — 설정에서 반경을 바꾸면
+/// 다음 조회에 반영되어야 한다(AC-16.2와 같은 성질).
+///
+/// **홈의 세 섹션은 각각 독립된 provider다**(R19). 이 provider의 실패나 빈 결과가
+/// 다른 섹션에 번지지 않고, 재시도도 이것 하나만 무효화한다(AC-20.2).
 
 @ProviderFor(happeningNowEvents)
 const happeningNowEventsProvider = HappeningNowEventsProvider._();
 
-/// "Happening Now" events as an `AsyncValue` for the UI boundary.
+/// 홈 "Happening Now" 섹션(R17). 반경 안에서 오늘 진행 중인 축제만 온다.
+///
+/// 좌표와 반경을 `watch`하는 것은 Near you와 같은 이유다 — 설정에서 반경을 바꾸면
+/// 다음 조회에 반영되어야 한다(AC-16.2와 같은 성질).
+///
+/// **홈의 세 섹션은 각각 독립된 provider다**(R19). 이 provider의 실패나 빈 결과가
+/// 다른 섹션에 번지지 않고, 재시도도 이것 하나만 무효화한다(AC-20.2).
 
 final class HappeningNowEventsProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<TourEvent>>,
-          List<TourEvent>,
-          FutureOr<List<TourEvent>>
+          AsyncValue<List<Festival>>,
+          List<Festival>,
+          FutureOr<List<Festival>>
         >
-    with $FutureModifier<List<TourEvent>>, $FutureProvider<List<TourEvent>> {
-  /// "Happening Now" events as an `AsyncValue` for the UI boundary.
+    with $FutureModifier<List<Festival>>, $FutureProvider<List<Festival>> {
+  /// 홈 "Happening Now" 섹션(R17). 반경 안에서 오늘 진행 중인 축제만 온다.
+  ///
+  /// 좌표와 반경을 `watch`하는 것은 Near you와 같은 이유다 — 설정에서 반경을 바꾸면
+  /// 다음 조회에 반영되어야 한다(AC-16.2와 같은 성질).
+  ///
+  /// **홈의 세 섹션은 각각 독립된 provider다**(R19). 이 provider의 실패나 빈 결과가
+  /// 다른 섹션에 번지지 않고, 재시도도 이것 하나만 무효화한다(AC-20.2).
   const HappeningNowEventsProvider._()
     : super(
         from: null,
@@ -96,15 +111,15 @@ final class HappeningNowEventsProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<TourEvent>> $createElement(
+  $FutureProviderElement<List<Festival>> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<List<TourEvent>> create(Ref ref) {
+  FutureOr<List<Festival>> create(Ref ref) {
     return happeningNowEvents(ref);
   }
 }
 
 String _$happeningNowEventsHash() =>
-    r'368f41f0608c74c245e8721a0ceb1def30c98937';
+    r'e50e9637443cf300d634356992798504bfd00f07';
