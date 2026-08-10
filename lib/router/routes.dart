@@ -25,11 +25,11 @@ import '../domain/settings/view/profile_edit_screen.dart';
 import '../domain/settings/view/required_terms_screen.dart';
 import '../domain/settings/view/settings_screen.dart';
 import '../domain/settings/view/terms_screen.dart';
+import '../domain/map/view/map_screen.dart';
 import '../domain/spot/model/spot_category.dart';
 import '../domain/spot/view/discover_screen.dart';
 import '../domain/spot/view/home_screen.dart';
 import '../domain/spot/view/liked_spots_screen.dart';
-import '../domain/spot/view/map_screen.dart';
 import '../domain/spot/view/search_screen.dart';
 import '../domain/spot/view/spot_detail_view.dart';
 

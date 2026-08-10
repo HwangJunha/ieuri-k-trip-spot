@@ -682,5 +682,24 @@
   "emailChangeVerifyFailed": "验证失败，请重试。",
   "emailChangeFailed": "发送失败，请重试。",
   "emailChangeEmailTaken": "该邮箱已被使用。",
-  "emailChangeSucceeded": "邮箱已更改。"
+  "emailChangeSucceeded": "邮箱已更改。",
+
+  "mapCongestionRelaxed": "空闲",
+  "mapCongestionNormal": "普通",
+  "mapCongestionSlightlyCrowded": "略微拥挤",
+  "mapCongestionCrowded": "拥挤",
+  "mapCommercialQuiet": "清闲时段",
+  "mapCommercialNormal": "普通时段",
+  "mapCommercialBusy": "繁忙时段",
+  "mapCommercialVeryBusy": "高峰时段",
+  "mapCommercialUnavailable": "暂无数据",
+  "mapCommercialEstimated": "该区域无实测数据",
+  "mapCommercialLabel": "商圈",
+  "mapObservedAt": "截至 {time}",
+  "mapPopulationRange": "{min} – {max}人",
+  "mapCongestionUnavailable": "无法获取拥挤度信息。",
+  "mapTruncatedNotice": "地点过多，放大后可查看全部。",
+  "mapAttribution": "来源：首尔特别市实时城市数据",
+  "mapKeyMissing": "缺少地图密钥，无法加载地图。请检查 KAKAO_NATIVE_APP_KEY 构建配置。",
+  "mapLoadFailed": "地图加载失败。"
 }
