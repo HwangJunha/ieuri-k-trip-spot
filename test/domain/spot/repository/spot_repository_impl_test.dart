@@ -68,6 +68,10 @@ Map<String, dynamic> _spotItem({
   'category': category,
   'copyright': copyright,
   'attributionText': 'KTO',
+  // 지도(SPEC-0014)가 검색 결과로 지도를 옮기는 데 쓴다. **mapX가 경도, mapY가
+  // 위도다** — 이름이 직관과 반대다.
+  'mapX': 127.0,
+  'mapY': 37.5,
 };
 
 void main() {
@@ -594,6 +598,26 @@ void main() {
     expect(result.pageNumber, 0);
   });
 
+  /// 지도(SPEC-0014)가 검색 결과로 지도를 옮기는 데 쓴다. `mapX`가 경도, `mapY`가
+  /// 위도라 **이름이 직관과 반대**이고, 뒤집어 넣으면 엉뚱한 곳으로 이동한다.
+  test('검색 결과의 좌표를 뒤집지 않고 매핑한다', () async {
+    final SpotRepositoryImpl repo = _repo(
+      _FakeLink(
+        data: searchPayload(nodes: <Map<String, dynamic>>[_spotItem()]),
+      ),
+    );
+
+    final SpotSearchResult result = await repo.searchSpots(
+      query: '경복궁',
+      latitude: 37.5,
+      longitude: 127.0,
+    );
+
+    // fixture는 mapX=127.0(경도), mapY=37.5(위도)다.
+    expect(result.spots.single.coordinates?.longitude, 127.0);
+    expect(result.spots.single.coordinates?.latitude, 37.5);
+  });
+
   test('AC-1.3 · 결과 0건은 오류가 아니라 빈 결과다', () async {
     final SpotRepositoryImpl repo = _repo(_FakeLink(data: searchPayload()));
 
@@ -624,7 +648,11 @@ void main() {
       repo.searchSpots(query: '   ', latitude: 37.5, longitude: 127.0),
       throwsA(
         isA<SpotFailure>()
-            .having((SpotFailure f) => f.kind, 'kind', SpotFailureKind.userError)
+            .having(
+              (SpotFailure f) => f.kind,
+              'kind',
+              SpotFailureKind.userError,
+            )
             .having((SpotFailure f) => f.code, 'code', 'EMPTY_QUERY'),
       ),
     );

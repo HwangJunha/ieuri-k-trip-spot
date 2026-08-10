@@ -35,3 +35,7 @@ targets:
           - lib/domain/settings/repository/profile_schema.graphql
           - lib/domain/settings/repository/email_change_operations.graphql
           - lib/domain/settings/repository/email_change_schema.graphql
+          # SPEC-0014 지도·혼잡도. MapSpot/SpotCluster가 SpotCategory를 참조하는데,
+          # codegen이 조각을 하나로 병합하므로 spot 쪽 정의를 그대로 쓴다.
+          - lib/domain/map/repository/map_operations.graphql
+          - lib/domain/map/repository/map_schema.graphql

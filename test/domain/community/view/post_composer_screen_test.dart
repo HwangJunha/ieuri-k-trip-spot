@@ -35,6 +35,14 @@ class _FakeLocationService implements LocationService {
     if (error != null) throw error!;
     return const Coordinates(latitude: 37.5665, longitude: 126.9780);
   }
+
+  /// 컴포저는 좌표를 한 번만 쓴다 — 실시간 스트림은 지도 화면 전용이라 여기서는
+  /// 같은 값을 한 번 흘리는 것으로 족하다.
+  @override
+  Stream<Coordinates> watchCoordinates() async* {
+    if (error != null) throw error!;
+    yield const Coordinates(latitude: 37.5665, longitude: 126.9780);
+  }
 }
 
 /// 커뮤니티 탭에서 진입한 컴포저 — 장소가 정해져 있지 않다(가이드 §5: 선택 항목).
@@ -201,7 +209,6 @@ Finder get _categoryStrip => find
       matching: find.byType(Scrollable),
     )
     .first;
-
 
 /// 시트 **안의** 카테고리 칩. 컴포저 화면 자체도 글 카테고리를 `ChoiceChip`으로
 /// 그리므로, 시트 밖의 칩과 섞이지 않도록 [BottomSheet] 아래로 범위를 좁힌다.
@@ -453,9 +460,7 @@ void main() {
       expect(find.text('서울갤러리'), findsNothing);
     });
 
-    testWidgets('AC-14.3 · 검색어를 지우면 주변 목록으로 돌아온다', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('AC-14.3 · 검색어를 지우면 주변 목록으로 돌아온다', (WidgetTester tester) async {
       final FakeCommunityRepository repo = FakeCommunityRepository()
         ..nearbySpots = <NearbySpot>[_spot(id: '1', title: '서울갤러리')]
         ..searchResults = <NearbySpot>[_spot(id: '2', title: '경복궁')];
@@ -1250,7 +1255,6 @@ void main() {
     });
   });
 
-
   group('장소 선택 시트의 카테고리 줄', () {
     // **구성은 서버가 정한다** — 언어마다 가용 카테고리가 달라(ko는 여행코스, en은
     // 교통) 클라이언트가 하드코딩하면 없는 카테고리를 보여주게 된다.
@@ -1341,9 +1345,7 @@ void main() {
     });
     // SPEC-0013 R14 이후 텍스트 칸은 **서버 검색**이다. 카테고리 칩은 여전히
     // 주변 목록의 필터이고, 둘은 함께 서버로 나간다.
-    testWidgets('텍스트 칸은 서버 검색으로 나가고 카테고리도 함께 실린다', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('텍스트 칸은 서버 검색으로 나가고 카테고리도 함께 실린다', (WidgetTester tester) async {
       final FakeCommunityRepository repo = FakeCommunityRepository()
         ..spotCategories = <NearbySpotCategory>[NearbySpotCategory.restaurant]
         ..nearbySpots = <NearbySpot>[_spot(id: '1', title: '경복궁')]
@@ -1367,5 +1369,4 @@ void main() {
       expect(find.text('참숯골'), findsOneWidget);
     });
   });
-
 }

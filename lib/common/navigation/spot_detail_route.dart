@@ -12,6 +12,13 @@ import 'package:go_router/go_router.dart';
 /// 돌려준다 — 진실의 출처는 하나다.
 const String spotDetailRouteName = 'spotDetail';
 
+/// 검색 화면 라우트 이름.
+///
+/// 상세와 같은 이유로 여기 둔다 — 홈과 지도가 각각 검색으로 보내는데, 이름을 쓰겠다고
+/// `domain/spot`의 화면을 import하면 기능 간 의존이 생긴다(CLAUDE.md §3·§4).
+/// 진실의 출처는 `SearchScreen.routeName`이고 이 상수가 그 값을 복사한다.
+const String searchRouteName = 'search';
+
 /// 축제의 상세 카테고리 인자 값(`SpotCategory.festivalEvent.name`).
 ///
 /// `domain/event`가 축제를 상세로 열 때 쓴다 — 그쪽은 `SpotCategory`를 import할 수

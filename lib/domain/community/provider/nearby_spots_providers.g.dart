@@ -401,8 +401,8 @@ abstract class _$NearbySpotsController
 /// 있으면 그 초기화를 손으로 해야 하고, 한 번 빠뜨리면 이전 질의의 다음 페이지를
 /// 새 질의 결과에 붙이게 된다.
 ///
-/// 디바운스도 여기서 처리한다 — 시트는 입력할 때마다 질의를 갱신하므로, 그대로
-/// 두면 키 입력마다 서버를 부른다.
+/// **디바운스가 없다.** 시트는 검색어를 *제출*할 때만 질의를 갱신하므로(엔터 또는
+/// 키보드의 검색), 한 글자마다 호출이 나가지 않는다 — 억제할 대상이 없다.
 
 @ProviderFor(SpotSearchList)
 const spotSearchListProvider = SpotSearchListFamily._();
@@ -414,8 +414,8 @@ const spotSearchListProvider = SpotSearchListFamily._();
 /// 있으면 그 초기화를 손으로 해야 하고, 한 번 빠뜨리면 이전 질의의 다음 페이지를
 /// 새 질의 결과에 붙이게 된다.
 ///
-/// 디바운스도 여기서 처리한다 — 시트는 입력할 때마다 질의를 갱신하므로, 그대로
-/// 두면 키 입력마다 서버를 부른다.
+/// **디바운스가 없다.** 시트는 검색어를 *제출*할 때만 질의를 갱신하므로(엔터 또는
+/// 키보드의 검색), 한 글자마다 호출이 나가지 않는다 — 억제할 대상이 없다.
 final class SpotSearchListProvider
     extends $AsyncNotifierProvider<SpotSearchList, SpotSearchListState> {
   /// 시트 검색 결과(SPEC-0013 R14, AC-14.1·14.2).
@@ -425,8 +425,8 @@ final class SpotSearchListProvider
   /// 있으면 그 초기화를 손으로 해야 하고, 한 번 빠뜨리면 이전 질의의 다음 페이지를
   /// 새 질의 결과에 붙이게 된다.
   ///
-  /// 디바운스도 여기서 처리한다 — 시트는 입력할 때마다 질의를 갱신하므로, 그대로
-  /// 두면 키 입력마다 서버를 부른다.
+  /// **디바운스가 없다.** 시트는 검색어를 *제출*할 때만 질의를 갱신하므로(엔터 또는
+  /// 키보드의 검색), 한 글자마다 호출이 나가지 않는다 — 억제할 대상이 없다.
   const SpotSearchListProvider._({
     required SpotSearchListFamily super.from,
     required String super.argument,
@@ -463,7 +463,7 @@ final class SpotSearchListProvider
   }
 }
 
-String _$spotSearchListHash() => r'7471feb95781379e3cc65036669961cd5f30cac6';
+String _$spotSearchListHash() => r'31190339e57dc4669098a1b2d5611fe6f0cad0e6';
 
 /// 시트 검색 결과(SPEC-0013 R14, AC-14.1·14.2).
 ///
@@ -472,8 +472,8 @@ String _$spotSearchListHash() => r'7471feb95781379e3cc65036669961cd5f30cac6';
 /// 있으면 그 초기화를 손으로 해야 하고, 한 번 빠뜨리면 이전 질의의 다음 페이지를
 /// 새 질의 결과에 붙이게 된다.
 ///
-/// 디바운스도 여기서 처리한다 — 시트는 입력할 때마다 질의를 갱신하므로, 그대로
-/// 두면 키 입력마다 서버를 부른다.
+/// **디바운스가 없다.** 시트는 검색어를 *제출*할 때만 질의를 갱신하므로(엔터 또는
+/// 키보드의 검색), 한 글자마다 호출이 나가지 않는다 — 억제할 대상이 없다.
 
 final class SpotSearchListFamily extends $Family
     with
@@ -500,8 +500,8 @@ final class SpotSearchListFamily extends $Family
   /// 있으면 그 초기화를 손으로 해야 하고, 한 번 빠뜨리면 이전 질의의 다음 페이지를
   /// 새 질의 결과에 붙이게 된다.
   ///
-  /// 디바운스도 여기서 처리한다 — 시트는 입력할 때마다 질의를 갱신하므로, 그대로
-  /// 두면 키 입력마다 서버를 부른다.
+  /// **디바운스가 없다.** 시트는 검색어를 *제출*할 때만 질의를 갱신하므로(엔터 또는
+  /// 키보드의 검색), 한 글자마다 호출이 나가지 않는다 — 억제할 대상이 없다.
 
   SpotSearchListProvider call(String query) =>
       SpotSearchListProvider._(argument: query, from: this);
@@ -517,8 +517,8 @@ final class SpotSearchListFamily extends $Family
 /// 있으면 그 초기화를 손으로 해야 하고, 한 번 빠뜨리면 이전 질의의 다음 페이지를
 /// 새 질의 결과에 붙이게 된다.
 ///
-/// 디바운스도 여기서 처리한다 — 시트는 입력할 때마다 질의를 갱신하므로, 그대로
-/// 두면 키 입력마다 서버를 부른다.
+/// **디바운스가 없다.** 시트는 검색어를 *제출*할 때만 질의를 갱신하므로(엔터 또는
+/// 키보드의 검색), 한 글자마다 호출이 나가지 않는다 — 억제할 대상이 없다.
 
 abstract class _$SpotSearchList extends $AsyncNotifier<SpotSearchListState> {
   late final _$args = ref.$arg as String;

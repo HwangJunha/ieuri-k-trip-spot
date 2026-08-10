@@ -4,6 +4,10 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- SPEC-0014: 지도 SDK가 타일을 내려받는 데 필요하다. 디버그 빌드는 Flutter가
+         자동 주입해 지금까지 없어도 돌았지만, 릴리스 매니페스트에는 들어가지 않아
+         지도가 빈 화면으로 뜬다. 위치 권한 2종은 위에 이미 있어 다시 넣지 않는다. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="ieuri_k_trip_spot"
         android:name="${applicationName}"

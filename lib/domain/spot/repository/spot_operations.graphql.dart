@@ -4662,6 +4662,20 @@ const documentNodeQuerySearchSpots = DocumentNode(
                               directives: [],
                               selectionSet: null,
                             ),
+                            FieldNode(
+                              name: NameNode(value: 'mapX'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: null,
+                            ),
+                            FieldNode(
+                              name: NameNode(value: 'mapY'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: null,
+                            ),
                           ],
                         ),
                       ),
@@ -5223,6 +5237,8 @@ class Query$SearchSpots$searchSpots$connection$items {
     required this.category,
     required this.copyright,
     required this.attributionText,
+    required this.mapX,
+    required this.mapY,
   });
 
   factory Query$SearchSpots$searchSpots$connection$items.fromJson(
@@ -5236,6 +5252,8 @@ class Query$SearchSpots$searchSpots$connection$items {
     final l$category = json['category'];
     final l$copyright = json['copyright'];
     final l$attributionText = json['attributionText'];
+    final l$mapX = json['mapX'];
+    final l$mapY = json['mapY'];
     return Query$SearchSpots$searchSpots$connection$items(
       id: (l$id as String),
       title: (l$title as String),
@@ -5245,6 +5263,8 @@ class Query$SearchSpots$searchSpots$connection$items {
       category: fromJson$Enum$SpotCategory((l$category as String)),
       copyright: fromJson$Enum$CopyrightType((l$copyright as String)),
       attributionText: (l$attributionText as String),
+      mapX: (l$mapX as num).toDouble(),
+      mapY: (l$mapY as num).toDouble(),
     );
   }
 
@@ -5264,6 +5284,10 @@ class Query$SearchSpots$searchSpots$connection$items {
 
   final String attributionText;
 
+  final double mapX;
+
+  final double mapY;
+
   Map<String, dynamic> toJson() {
     final _resultData = <String, dynamic>{};
     final l$id = id;
@@ -5282,6 +5306,10 @@ class Query$SearchSpots$searchSpots$connection$items {
     _resultData['copyright'] = toJson$Enum$CopyrightType(l$copyright);
     final l$attributionText = attributionText;
     _resultData['attributionText'] = l$attributionText;
+    final l$mapX = mapX;
+    _resultData['mapX'] = l$mapX;
+    final l$mapY = mapY;
+    _resultData['mapY'] = l$mapY;
     return _resultData;
   }
 
@@ -5295,6 +5323,8 @@ class Query$SearchSpots$searchSpots$connection$items {
     final l$category = category;
     final l$copyright = copyright;
     final l$attributionText = attributionText;
+    final l$mapX = mapX;
+    final l$mapY = mapY;
     return Object.hashAll([
       l$id,
       l$title,
@@ -5304,6 +5334,8 @@ class Query$SearchSpots$searchSpots$connection$items {
       l$category,
       l$copyright,
       l$attributionText,
+      l$mapX,
+      l$mapY,
     ]);
   }
 
@@ -5356,6 +5388,16 @@ class Query$SearchSpots$searchSpots$connection$items {
     if (l$attributionText != lOther$attributionText) {
       return false;
     }
+    final l$mapX = mapX;
+    final lOther$mapX = other.mapX;
+    if (l$mapX != lOther$mapX) {
+      return false;
+    }
+    final l$mapY = mapY;
+    final lOther$mapY = other.mapY;
+    if (l$mapY != lOther$mapY) {
+      return false;
+    }
     return true;
   }
 }
@@ -5388,6 +5430,8 @@ abstract class CopyWith$Query$SearchSpots$searchSpots$connection$items<TRes> {
     Enum$SpotCategory? category,
     Enum$CopyrightType? copyright,
     String? attributionText,
+    double? mapX,
+    double? mapY,
   });
 }
 
@@ -5413,6 +5457,8 @@ class _CopyWithImpl$Query$SearchSpots$searchSpots$connection$items<TRes>
     Object? category = _undefined,
     Object? copyright = _undefined,
     Object? attributionText = _undefined,
+    Object? mapX = _undefined,
+    Object? mapY = _undefined,
   }) => _then(
     Query$SearchSpots$searchSpots$connection$items(
       id: id == _undefined || id == null ? _instance.id : (id as String),
@@ -5436,6 +5482,12 @@ class _CopyWithImpl$Query$SearchSpots$searchSpots$connection$items<TRes>
       attributionText: attributionText == _undefined || attributionText == null
           ? _instance.attributionText
           : (attributionText as String),
+      mapX: mapX == _undefined || mapX == null
+          ? _instance.mapX
+          : (mapX as double),
+      mapY: mapY == _undefined || mapY == null
+          ? _instance.mapY
+          : (mapY as double),
     ),
   );
 }
@@ -5455,6 +5507,8 @@ class _CopyWithStubImpl$Query$SearchSpots$searchSpots$connection$items<TRes>
     Enum$SpotCategory? category,
     Enum$CopyrightType? copyright,
     String? attributionText,
+    double? mapX,
+    double? mapY,
   }) => _res;
 }
 

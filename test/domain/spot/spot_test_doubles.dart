@@ -366,4 +366,10 @@ class FakeLocationService implements LocationService {
 
   @override
   Future<Coordinates> currentCoordinates() async => coordinates;
+
+  /// 한 번 흘리고 닫는다 — 이 페이크를 쓰는 테스트는 지도 화면이 아니라 위치를
+  /// 입력으로 받는 조회들이라, 좌표가 계속 바뀔 필요가 없다.
+  @override
+  Stream<Coordinates> watchCoordinates() =>
+      Stream<Coordinates>.value(coordinates);
 }

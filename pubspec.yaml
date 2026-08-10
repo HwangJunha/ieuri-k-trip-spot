@@ -55,6 +55,7 @@ dependencies:
   # 준 바이트를 그대로 스토리지로 PUT한다 — 리사이즈·재인코딩을 하면 1단계에 선언한
   # contentLength와 어긋나 서명이 깨진다(가이드 §4).
   image_picker: ^1.2.3
+  kakao_map_sdk: ^1.2.6
 
 dev_dependencies:
   flutter_test:

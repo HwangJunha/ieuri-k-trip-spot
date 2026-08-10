@@ -21,3 +21,17 @@ LocationService locationService(Ref ref) => const GeolocatorLocationService();
 @riverpod
 Future<Coordinates> currentCoordinates(Ref ref) =>
     ref.watch(locationServiceProvider).currentCoordinates();
+
+/// 실시간 현재 위치. 지도의 "내 위치" 점이 이것을 따라 움직인다(카카오맵·네이버지도가
+/// 파란 점으로 보여 주는 그것).
+///
+/// **[currentCoordinates]와 별개로 둔다.** 그쪽은 조회 입력이라 세션 동안 고정되는
+/// 것이 의도이고(위 주석), 여기는 계속 흘러야 한다. 하나로 합치면 걸을 때마다 스와이프
+/// 피드와 홈 섹션이 다시 조회된다.
+///
+/// **keepAlive를 두지 않는다**(codegen 기본 autoDispose). 구독자가 없으면 GPS 스트림이
+/// 끊겨야 한다 — 지도 탭을 벗어난 뒤에도 위치를 계속 받으면 배터리만 먹는다. 지도
+/// 화면이 이 provider의 유일한 구독자다.
+@riverpod
+Stream<Coordinates> liveCoordinates(Ref ref) =>
+    ref.watch(locationServiceProvider).watchCoordinates();

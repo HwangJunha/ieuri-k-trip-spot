@@ -10,6 +10,7 @@ import 'common/permission/component/permission_boot_gate.dart';
 import 'common/storage/app_preferences.dart';
 import 'common/storage/secure_storage.dart';
 import 'common/theme/app_theme.dart';
+import 'common/config/map_sdk_initializer.dart';
 import 'domain/auth/repository/sns_initializer.dart';
 import 'l10n/gen/app_localizations.dart';
 import 'router/app_router.dart';
@@ -17,7 +18,13 @@ import 'router/app_router.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SnsInitializer.ensureInitialized();
-  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  // 지도 SDK 초기화와 환경설정 로딩은 서로 독립이라 함께 기다린다. 키가 없으면
+  // 초기화가 조용히 건너뛰어지고 지도 화면만 안내를 띄운다 — 앱 기동은 막지
+  // 않는다(설계 §10).
+  final (SharedPreferences prefs, _) = await (
+    SharedPreferences.getInstance(),
+    MapSdkInitializer.ensureInitialized(),
+  ).wait;
 
   runApp(
     ProviderScope(

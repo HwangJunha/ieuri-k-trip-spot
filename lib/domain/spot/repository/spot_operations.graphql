@@ -168,6 +168,10 @@ query SearchSpots(
         category
         copyright
         attributionText
+        # 지도(SPEC-0014)가 검색 결과로 지도를 옮기는 데 쓴다. mapX가 경도,
+        # mapY가 위도다 — 이름이 직관과 반대라 매핑에서 뒤집지 않도록 주의한다.
+        mapX
+        mapY
       }
       page
       hasNext
