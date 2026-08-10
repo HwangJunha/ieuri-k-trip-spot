@@ -3,7 +3,7 @@
 > 설계 문서: `problem/SPEC-0015-client.md` · 수용 기준: `Specs/SPEC-0015/spec.md` (R15·R20~R31)
 > Stitch 프로젝트: `projects/8651053354437738829` (K-Trip Spot Design System)
 > 디자인 시스템: `assets/073fee5b990e4b1eb2c918d7e9de2d8f`
-> **Stitch 화면: 없음 — 아래 "Stitch 생성 갭" 참조**
+> **Stitch 화면: `4b9e3cbb91ef49a4b99eb2747021e6c0` ("Recommended Regions", 780×1958)**
 
 이 문서는 **레이아웃·컴포넌트 분해 참조**다. 수용 기준과 어긋나면 스펙이 이긴다.
 색·폰트·간격 값은 여기 적힌 것을 복사하지 말고 `Theme.of(context)`에서 읽는다(DESIGN.md §12,
@@ -11,13 +11,15 @@ CLAUDE.md §9). 폰트는 Stitch가 이름한 Plus Jakarta Sans / Be Vietnam Pro
 **Noto Sans**(+CJK 폴백) — `lib/common/theme/app_theme.dart`가 그대로 유지한다. 이 문서는
 타입 *스케일*(제목/본문/라벨 크기 관계)만 참고한다.
 
-## Stitch 생성 갭 — 반드시 기록
+## Stitch 생성 경위 (2026-08-11 갱신)
 
-이번 세션에서 `generate_screen_from_text`를 1회 호출했으나 타임아웃으로 실패했고, 이후
-`list_screens`로 6회(약 30초 간격) 확인했지만 새 스크린이 생성되지 않았다 — SPEC-0014와
-동일한 Stitch 쪽 일시 장애로 판단된다. 안내에 따라 같은 프롬프트를 재시도하지 않았다.
+작성 당시에는 `generate_screen_from_text`가 타임아웃으로 실패해 목업 없이 이 문서를 썼다.
+**이후 화면이 생성돼 상단에 id를 채웠다**(`4b9e3cbb91ef49a4b99eb2747021e6c0`).
 
-**그래서 이 문서는 Stitch 목업 없이 작성됐다.** 대신 다음을 근거로 삼았다:
+구현은 목업이 나오기 전에 아래 근거로 이미 완료됐으므로, **이 문서의 레이아웃 기술과 실제
+목업이 어긋나는 부분이 있으면 목업을 보고 확인해야 한다** — 아직 대조하지 않았다.
+
+이 문서가 근거로 삼은 것:
 - `problem/SPEC-0015-client.md` (클라이언트 설계, §1~§8)
 - `Specs/SPEC-0015/spec.md` R15·R20~R31, §7.5(결측 항목 생략)·§7.6(거리는 필터가 아님)·
   §7.8(빈 결과 두 상태)
