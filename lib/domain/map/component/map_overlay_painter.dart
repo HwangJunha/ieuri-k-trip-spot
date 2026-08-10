@@ -148,6 +148,53 @@ class MapOverlayPainter {
     // 저줌에서 마커가 몰리는 문제는 격자 솎아내기가 맡는다.
   }
 
+  /// 실시간 내 위치 점. **마커 풀과 따로 둔다.**
+  ///
+  /// 같은 풀에 넣으면 조회 결과가 들어올 때마다 인덱스가 밀려 내 위치가 관광지
+  /// 아이콘으로 바뀌거나, 상한(10개)에 밀려 사라진다. 성격이 다른 오버레이라
+  /// 수명도 따로다 — 이것은 조회와 무관하게 GPS만 따라간다.
+  Poi? _myLocation;
+
+  /// 내 위치 점을 [coordinates]로 옮긴다. 없으면 만든다.
+  ///
+  /// **매번 새로 만들지 않는다.** 5m마다 좌표가 오는데 그때마다 `addPoi`를 하면
+  /// 네이티브에 점이 쌓여 지나온 길이 파란 점으로 그려진다(마커·폴리곤에서 이미
+  /// 겪은 문제 — `remove()`가 네이티브를 지우지 않는다).
+  Future<void> drawMyLocation(double latitude, double longitude) async {
+    try {
+      final Poi? existing = _myLocation;
+      if (existing != null) {
+        await existing.move(LatLng(latitude, longitude));
+        await existing.show();
+        return;
+      }
+
+      final KImage icon = await _icon(
+        'my-location',
+        MapMarkerIcons.myLocationDot,
+        MapMarkerIcons.myLocationSize,
+      );
+      _myLocation = await _markerLayer.addPoi(
+        LatLng(latitude, longitude),
+        style: PoiStyle(icon: icon),
+      );
+      // 위치 갱신 하나가 실패해도 지도는 계속 돌아야 한다 — 다음 좌표에서 다시
+      // 시도한다.
+    } on Object catch (error) {
+      if (kDebugMode) debugPrint('[Map] 내 위치 표시 실패: $error');
+    }
+  }
+
+  /// 내 위치 점을 감춘다. 권한이 끊기거나 위치가 꺼졌을 때 쓴다 — 마지막 좌표를
+  /// 그대로 두면 사용자가 그 자리에 있는 것으로 읽힌다.
+  Future<void> hideMyLocation() async {
+    try {
+      await _myLocation?.hide();
+    } on Object catch (error) {
+      if (kDebugMode) debugPrint('[Map] 내 위치 숨김 실패: $error');
+    }
+  }
+
   /// 혼잡도 폴리곤을 다시 그린다(R24·R26).
   ///
   /// 채색은 `CongestionPalette`가 정한다 — 여기서 색을 새로 고르지 않는다.
@@ -224,6 +271,15 @@ class MapOverlayPainter {
   Future<void> dispose() async {
     await _clearMarkers();
     await _clearPolygons();
+
+    // 내 위치는 풀 밖이라 따로 지운다.
+    try {
+      await _myLocation?.remove();
+    } on Object catch (error) {
+      if (kDebugMode) debugPrint('[Map] 내 위치 제거 실패: $error');
+    }
+    _myLocation = null;
+
     // 디코드된 이미지는 GC 대상이 아니라 명시적으로 놓아야 한다.
     for (final ui.Image photo in _photoCache.values) {
       photo.dispose();

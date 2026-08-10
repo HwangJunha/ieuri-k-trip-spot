@@ -661,6 +661,36 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     }
     final Coordinates origin = _origin!;
 
+    // **실시간 내 위치**(사용자 요청, 2026-08-11). 카카오맵·네이버지도처럼 걸으면
+    // 파란 점이 따라 움직인다.
+    //
+    // `watch`가 아니라 `listen`인 이유는, 이 값이 **위젯 트리에 아무것도 그리지
+    // 않기 때문**이다 — 점은 SDK가 지도 위에 직접 찍는다. watch로 두면 좌표가 올
+    // 때마다(5m마다) build가 통째로 다시 돌고, 그 build가 `_origin`을 다시 읽고
+    // 오버레이를 다시 배치한다. 이 화면에서 build를 위치에 묶었다가 조회가 멈추지
+    // 않는 순환을 만든 적이 있어(→[_origin] 주석) 같은 실수를 반복하지 않는다.
+    //
+    // 구독은 화면이 사라질 때 자동으로 끊기고, 유일한 구독자가 없어지면
+    // `liveCoordinatesProvider`(autoDispose)가 GPS 스트림을 닫는다.
+    ref.listen<AsyncValue<Coordinates>>(liveCoordinatesProvider, (
+      AsyncValue<Coordinates>? _,
+      AsyncValue<Coordinates> next,
+    ) {
+      next.when(
+        data: (Coordinates where) => unawaited(
+          _painter?.drawMyLocation(where.latitude, where.longitude) ??
+              Future<void>.value(),
+        ),
+        // 권한 거부·위치 꺼짐. **점을 감춘다** — 마지막 좌표를 남겨 두면 사용자가
+        // 아직 거기 있는 것으로 읽힌다. 안내는 띄우지 않는다: 위치 버튼을 눌렀을
+        // 때와 달리 사용자가 요청한 적이 없어, 지도를 볼 때마다 스낵바가 뜨면
+        // 방해가 된다.
+        error: (Object error, StackTrace stack) =>
+            unawaited(_painter?.hideMyLocation() ?? Future<void>.value()),
+        loading: () {},
+      );
+    });
+
     return Scaffold(
       body: Stack(
         children: <Widget>[
@@ -674,7 +704,24 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 _onTerrainTap(position),
             onMapReady: (KakaoMapController controller) {
               _controller = controller;
-              _painter = MapOverlayPainter(controller);
+              final MapOverlayPainter painter = MapOverlayPainter(controller);
+              _painter = painter;
+
+              // **지도가 준비되기 전에 온 좌표를 여기서 한 번 그린다.**
+              //
+              // 위치 스트림은 build에서 바로 구독되는데 `_painter`는 이 콜백에서야
+              // 생긴다. 그 사이에 도착한 좌표는 그릴 곳이 없어 버려지고, GPS가
+              // 조용하면(가만히 서 있으면 distanceFilter 5m에 걸려 다음 값이 한참
+              // 안 온다) 점이 영영 안 나타난다.
+              final Coordinates? known = ref
+                  .read(liveCoordinatesProvider)
+                  .value;
+              if (known != null) {
+                unawaited(
+                  painter.drawMyLocation(known.latitude, known.longitude),
+                );
+              }
+
               // 첫 진입도 유휴와 같은 경로를 타게 한다 — 분기를 하나로 둔다.
               _idleTimer?.cancel();
               _idleTimer = Timer(

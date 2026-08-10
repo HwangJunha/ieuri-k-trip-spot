@@ -70,4 +70,11 @@ abstract final class MapMarkerPalette {
   /// 혼잡도 팔레트의 `crowded`(0xFFB5283F)와 가깝지만 문제되지 않는다 — 그건 넓은
   /// 폴리곤 채우기이고 이건 마커 테두리라 크기와 맥락이 다르다.
   static const int highlight = 0xFFEA4A3F;
+
+  /// 실시간 내 위치 점. 지도 앱들이 공통으로 쓰는 파랑이다.
+  ///
+  /// **혼잡도 4색(초록·노랑·주황·빨강) 어디에도 없는 색상이다.** 그래야 폴리곤 위에
+  /// 올라가도 "여기가 여유롭다"는 신호로 오해되지 않는다 — 마커 남색([spot])과도
+  /// 채도가 뚜렷이 달라 관광지 마커와 섞이지 않는다.
+  static const int myLocation = 0xFF1A73E8;
 }

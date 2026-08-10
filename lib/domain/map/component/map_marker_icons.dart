@@ -144,6 +144,39 @@ abstract final class MapMarkerIcons {
     });
   }
 
+  /// "내 위치" 점 한 변.
+  ///
+  /// 관광지 마커(44pt)보다 작게 둔다 — 내 위치는 **기준점**이지 볼거리가 아니라,
+  /// 크면 주변 장소를 가린다.
+  static const int myLocationSize = 22;
+
+  /// 실시간 현재 위치를 가리키는 파란 점.
+  ///
+  /// **왜 이 모양인가.** 카카오맵·구글맵·네이버지도가 모두 같은 관용을 쓴다 —
+  /// 진한 파란 원 + 흰 테두리 + 옅은 후광. 사용자가 이미 "이건 나다"로 읽는 기호라
+  /// 새로 발명할 이유가 없다.
+  ///
+  /// 방향(heading)은 그리지 않는다. 나침반 값은 실내나 저속에서 크게 흔들려,
+  /// 부채꼴이 제자리에서 빙빙 도는 것이 위치가 틀린 것보다 더 불안해 보인다.
+  static Future<Uint8List> myLocationDot() =>
+      _draw(myLocationSize, myLocationSize, (Canvas canvas, Size size) {
+        final Offset center = Offset(size.width / 2, size.height / 2);
+        const Color blue = Color(MapMarkerPalette.myLocation);
+
+        // 옅은 후광 — 점이 지도 배경 위에서 떠 보이게 한다. 정확도 반경을 뜻하지
+        // 않는다(그건 실제 오차와 무관한 고정 크기라 거짓이 된다).
+        canvas
+          ..drawCircle(
+            center,
+            size.width / 2,
+            Paint()..color = blue.withValues(alpha: 0.18),
+          )
+          // 흰 테두리가 파란 점과 지도 사이를 갈라 준다 — 파란 계열 위(강·바다)에
+          // 올라가도 묻히지 않는다.
+          ..drawCircle(center, 7, Paint()..color = Colors.white)
+          ..drawCircle(center, 5.5, Paint()..color = blue);
+      });
+
   /// 클러스터 배지. 개수를 안에 적고, 개수가 클수록 원이 커진다(R2).
   ///
   /// 크기를 로그로 키우는 이유는, 선형으로 키우면 500개짜리가 화면을 덮기 때문이다.
