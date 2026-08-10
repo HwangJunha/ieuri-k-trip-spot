@@ -701,5 +701,9 @@
   "mapTruncatedNotice": "地点过多，放大后可查看全部。",
   "mapAttribution": "来源：首尔特别市实时城市数据",
   "mapKeyMissing": "缺少地图密钥，无法加载地图。请检查 KAKAO_NATIVE_APP_KEY 构建配置。",
-  "mapLoadFailed": "地图加载失败。"
+  "mapLoadFailed": "地图加载失败。",
+  "mapZoomIn": "放大",
+  "mapZoomOut": "缩小",
+  "mapMyLocation": "当前位置",
+  "mapLocationUnavailable": "定位已关闭，无法移动到当前位置。"
 }

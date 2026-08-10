@@ -1051,5 +1051,9 @@
   "mapTruncatedNotice": "Too many spots to show. Zoom in to see them all.",
   "mapAttribution": "Source: Seoul Real-time City Data",
   "mapKeyMissing": "The map key is missing, so the map can't load. Check the KAKAO_NATIVE_APP_KEY build setting.",
-  "mapLoadFailed": "Could not load the map."
+  "mapLoadFailed": "Could not load the map.",
+  "mapZoomIn": "Zoom in",
+  "mapZoomOut": "Zoom out",
+  "mapMyLocation": "My location",
+  "mapLocationUnavailable": "Location is off, so we can't center the map on you."
 }

@@ -1632,5 +1632,13 @@
   "mapKeyMissing": "지도 키가 없어 지도를 불러올 수 없습니다. KAKAO_NATIVE_APP_KEY 빌드 설정을 확인하세요.",
   "@mapKeyMissing": {},
   "mapLoadFailed": "지도를 불러오지 못했습니다.",
-  "@mapLoadFailed": {}
+  "@mapLoadFailed": {},
+  "mapZoomIn": "확대",
+  "@mapZoomIn": {},
+  "mapZoomOut": "축소",
+  "@mapZoomOut": {},
+  "mapMyLocation": "현재 위치",
+  "@mapMyLocation": {},
+  "mapLocationUnavailable": "위치가 꺼져 있어 현재 위치로 이동할 수 없습니다.",
+  "@mapLocationUnavailable": {}
 }

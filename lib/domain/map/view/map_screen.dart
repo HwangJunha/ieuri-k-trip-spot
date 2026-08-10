@@ -1,11 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kakao_map_sdk/kakao_map_sdk.dart';
 
 import '../../../common/config/map_sdk_initializer.dart';
+import '../../../common/location/coordinates.dart';
+import '../../../common/location/location_providers.dart';
+import '../../../common/widget/floating_bottom_nav_scaffold.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/congestion_attribution.dart';
+import '../component/map_zoom_controls.dart';
+import '../component/my_location_button.dart';
 import '../model/map_bounds.dart';
 import '../model/map_tuning.dart';
 
@@ -15,16 +21,16 @@ import '../model/map_tuning.dart';
 /// **현재는 지도 표시와 유휴 판정까지다.** 마커·폴리곤은 서버의 `mapViewport`·
 /// `seoulCongestion`이 라이브 스키마에 올라온 뒤에 붙인다(설계 §9.1) — 없는 스키마에
 /// 맞춰 repository를 쓰면 재작업이 난다.
-class MapScreen extends StatefulWidget {
+class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
 
   static String get routeName => 'map';
 
   @override
-  State<MapScreen> createState() => _MapScreenState();
+  ConsumerState<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class _MapScreenState extends ConsumerState<MapScreen> {
   KakaoMapController? _controller;
 
   /// 유휴 판정 타이머(R19). **dispose에서 반드시 취소한다** — 화면을 벗어난 뒤에도
@@ -34,10 +40,60 @@ class _MapScreenState extends State<MapScreen> {
   /// 직전에 조회한 영역(R20). 새 뷰포트가 이 안에 완전히 들어오면 재조회하지 않는다.
   MapBounds? _lastQueried;
 
+  /// 현재 위치를 얻는 중인가. 버튼이 진행 표시로 바뀌고 중복 요청을 막는다.
+  bool _isLocating = false;
+
   @override
   void dispose() {
     _idleTimer?.cancel();
     super.dispose();
+  }
+
+  /// 줌을 한 단계 조정한다.
+  ///
+  /// 조정 뒤 카메라가 멈추면 `onCameraMoveEnd`가 불려 **기존 유휴 판정 경로를 그대로
+  /// 탄다**(디자인 §1) — 버튼 전용 조회 분기를 따로 두지 않는다.
+  Future<void> _zoom({required bool zoomIn}) async {
+    final KakaoMapController? controller = _controller;
+    if (controller == null) return;
+    await controller.moveCamera(
+      zoomIn ? CameraUpdate.zoomIn() : CameraUpdate.zoomOut(),
+    );
+  }
+
+  /// 현재 위치로 지도를 옮긴다.
+  ///
+  /// `refresh`를 쓰는 이유는 이 버튼의 주 용도가 **이동한 뒤 다시 누르는 것**이기
+  /// 때문이다. 캐시된 좌표를 그대로 쓰면 두 번째 탭이 아무 데도 데려가지 않는다.
+  Future<void> _moveToCurrentLocation() async {
+    if (_isLocating) return;
+    setState(() => _isLocating = true);
+
+    try {
+      final Coordinates coordinates = await ref.refresh(
+        currentCoordinatesProvider.future,
+      );
+      final KakaoMapController? controller = _controller;
+      if (controller == null || !mounted) return;
+
+      await controller.moveCamera(
+        CameraUpdate.newCenterPosition(
+          LatLng(coordinates.latitude, coordinates.longitude),
+        ),
+        animation: const CameraAnimation(500),
+      );
+    } on Exception {
+      // 권한 거부·위치 서비스 꺼짐 모두 여기로 온다. 사용자가 할 수 있는 일은
+      // 설정을 켜는 것 하나뿐이라 유형을 나누지 않고 한 문구로 안내한다.
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).mapLocationUnavailable),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLocating = false);
+    }
   }
 
   /// 지도가 움직이기 시작하면 대기 중인 조회를 취소한다(R19).
@@ -135,11 +191,39 @@ class _MapScreenState extends State<MapScreen> {
             onCameraMoveStart: _onCameraMoveStart,
             onCameraMoveEnd: _onCameraMoveEnd,
           ),
+          // 줌·현재 위치 컨트롤(디자인 §1). 우측에 세로로 쌓되 둘을 떨어뜨린다 —
+          // 줌은 지도 조작이고 위치 이동은 별개 액션이라 하나의 그룹으로 읽히면
+          // 안 된다.
+          //
+          // 셸이 `extendBody: true`라 body가 하단 네비바 아래까지 그려진다. 그래서
+          // 화면이 직접 barExtent만큼 띄운다 — 안 그러면 버튼이 바에 가린다.
+          Positioned(
+            right: 12,
+            bottom: FloatingBottomNavScaffold.barExtent + 16,
+            child: SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  MapZoomControls(
+                    onZoomIn: () => _zoom(zoomIn: true),
+                    onZoomOut: () => _zoom(zoomIn: false),
+                  ),
+                  const SizedBox(height: 12),
+                  MyLocationButton(
+                    isLocating: _isLocating,
+                    onPressed: _moveToCurrentLocation,
+                  ),
+                ],
+              ),
+            ),
+          ),
           // 출처 표기(R30). 혼잡도 폴리곤을 그리기 시작하면 그때만 보이도록 조건을
           // 붙인다 — 지금은 레이어가 없어 상시 노출한다.
+          //
+          // 좌하단이라 우측 컨트롤과 겹치지 않지만, 네비바 위로는 함께 올린다.
           const Positioned(
             left: 8,
-            bottom: 8,
+            bottom: FloatingBottomNavScaffold.barExtent + 8,
             child: SafeArea(child: CongestionAttribution()),
           ),
         ],
