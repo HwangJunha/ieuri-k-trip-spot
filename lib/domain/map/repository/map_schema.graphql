@@ -1,0 +1,143 @@
+# SPEC-0014 지도·혼잡도 쿼리가 쓰는 서버 스키마 조각(committed codegen 입력).
+# `schema/schema.introspection.json` 스냅샷에서 손으로 추린 안정 빌드 입력이며,
+# gitignore된 스냅샷을 codegen이 직접 읽지 않는다(CLAUDE.md §13).
+#
+# `SpotCategory`는 여기서 정의하지 않는다 — spot_schema.graphql이 소유하고 codegen이
+# 조각을 하나로 병합하므로 중복 정의하면 충돌한다.
+
+# 뷰포트 사각형. **경계선에 걸친 대상을 포함한다**(R1).
+# minLat < maxLat, minLng < maxLng여야 하며 날짜변경선을 넘는 bbox는 지원하지 않는다.
+input MapBoundsInput {
+  minLat: Float!
+  minLng: Float!
+  maxLat: Float!
+  maxLng: Float!
+}
+
+# 지도 마커용 spot. 목록 화면의 `Spot`과 **다른 타입이다** — 지도는 좌표와 이름만
+# 있으면 되고, 거리·저작권 같은 목록 전용 필드를 실어 나를 이유가 없다.
+type MapSpot {
+  id: ID!
+  title: String!
+  thumbnailImageUrl: String!
+  category: SpotCategory!
+  # 업스트림 EVENT_X/Y와 달리 이름이 바로잡혀 있다(spec §7.7) — lng가 경도, lat이 위도다.
+  lng: Float!
+  lat: Float!
+}
+
+# 저줌에서 서버가 묶어 준 클러스터(R2). 클라이언트가 다시 클러스터링하지 않는다.
+type SpotCluster {
+  centerLng: Float!
+  centerLat: Float!
+  count: Int!
+  # 과반을 차지하는 카테고리가 없으면 부재다(R2) — 섞인 클러스터에 특정 아이콘을
+  # 붙이면 사실과 다른 인상을 준다.
+  dominantCategory: SpotCategory
+}
+
+# 문화행사 마커(R12). 썸네일·유료여부는 계약에서 제외됐다(spec §7.9).
+type CulturalEvent {
+  id: String!
+  title: String!
+  place: String!
+  # "2026-08-07~2026-08-10" 형태의 단일 문자열이다(spec §4.6).
+  period: String!
+  lng: Float!
+  lat: Float!
+  url: String
+}
+
+type MapViewportResult {
+  # 클러스터링 줌 미만에서는 빈 목록이다. clusters와 상호배타적이다(R2).
+  spots: [MapSpot!]!
+  clusters: [SpotCluster!]!
+  events: [CulturalEvent!]!
+  # 결과가 줌별 상한을 넘어 일부만 왔다는 뜻(R3). 상한 값 자체는 노출되지 않는다.
+  truncated: Boolean!
+}
+
+enum CongestionLevel {
+  RELAXED
+  NORMAL
+  SLIGHTLY_CROWDED
+  CROWDED
+}
+
+enum CommercialActivityLevel {
+  QUIET
+  NORMAL
+  BUSY
+  PEAK
+}
+
+type CongestionSnapshot {
+  level: CongestionLevel!
+  populationMin: Int!
+  populationMax: Int!
+  # 업스트림 PPLTN_TIME(ISO-8601). **약 30분 지연되어 도착한다**(spec §4.2) —
+  # "지금"으로 표기하지 않는다(R27).
+  observedAt: String!
+}
+
+type CongestionForecast {
+  forecastTime: String!
+  level: CongestionLevel!
+  populationMin: Int!
+  populationMax: Int!
+}
+
+type CommercialStatus {
+  level: CommercialActivityLevel!
+  # 참이면 실측 기준선이 없어 업스트림이 NORMAL로 고정 반환한 값이다(R28).
+  isDefaulted: Boolean!
+  # 인구 블록과 **다른 주기로** 갱신된다(spec §4.3) — 그래서 별도로 노출된다.
+  observedAt: String!
+}
+
+# 폴리곤 좌표를 담지 않는다 — seoulCongestionAreas와 id로 조인한다(spec §7.3).
+type CongestionArea {
+  id: String!
+  # 활성 언어로 표기한 구역명(R31). Accept-Language 헤더 기반이며 인자로 받지 않는다.
+  name: String!
+  congestion: CongestionSnapshot!
+  # FCST_YN이 N이면 부재다. **부재는 조회 실패가 아니다**(R9).
+  forecast: [CongestionForecast!]
+  # 121곳 중 82곳에만 값이 있다. 부재와 isDefaulted를 구분해야 한다(R10·R28).
+  commercial: CommercialStatus
+}
+
+type SeoulCongestionResult {
+  areas: [CongestionArea!]!
+  # 업스트림 장애를 **오류가 아니라 데이터로** 표현한다(R11, spec §7.6) — 오류로
+  # 던지면 지도 전체가 실패한 것처럼 다뤄지는데 실제로는 한 레이어만 없는 상태다.
+  degraded: Boolean!
+  # degraded일 때 마지막으로 성공한 시점(있으면).
+  staleSince: String
+}
+
+# 정적 폴리곤 경계(R17). 앱 시작 시 1회 조회해 캐시하는 것을 전제한다(R26).
+type CongestionAreaBoundary {
+  id: String!
+  name: String!
+  category: String!
+  # GeoJSON과 같은 순서 규약으로 [lng, lat] 쌍이며, 첫 점과 끝 점이 같아 닫혀 있다.
+  polygon: [[Float!]!]!
+}
+
+extend type Query {
+  mapViewport(
+    bbox: MapBoundsInput!
+    # 카카오맵 줌 레벨(1~14, 클수록 확대).
+    zoom: Int!
+    category: SpotCategory
+  ): MapViewportResult!
+
+  # areaIds 또는 bbox 중 하나는 필수다(R6). 둘 다 주면 areaIds가 우선한다.
+  seoulCongestion(
+    areaIds: [String!]
+    bbox: MapBoundsInput
+  ): SeoulCongestionResult!
+
+  seoulCongestionAreas: [CongestionAreaBoundary!]!
+}

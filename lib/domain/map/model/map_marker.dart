@@ -23,6 +23,8 @@ class MapMarker {
     required this.latitude,
     required this.longitude,
     required this.kind,
+    this.categoryName,
+    this.subtitle,
   });
 
   final String id;
@@ -30,6 +32,15 @@ class MapMarker {
   final double latitude;
   final double longitude;
   final MapMarkerKind kind;
+
+  /// spot의 카테고리 이름. 아이콘 선택에만 쓴다.
+  ///
+  /// enum이 아니라 문자열인 이유는 `SpotCategory`를 `domain/spot`이 소유하기
+  /// 때문이다 — 여기서 그 타입을 쓰면 교차 feature 의존이 생긴다(CLAUDE.md §3).
+  final String? categoryName;
+
+  /// 부가 정보 한 줄. 행사는 장소·기간이 들어가고 spot은 비어 있다.
+  final String? subtitle;
 
   @override
   bool operator ==(Object other) =>

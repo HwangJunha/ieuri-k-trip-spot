@@ -29,6 +29,69 @@ void main() {
     ],
   );
 
+  group('구역 선택 (R27)', () {
+    // 서울시청 부근의 정사각형. [lng, lat] 순서이며 닫혀 있다.
+    CongestionOverlay squareOverlay(String id) => CongestionOverlay(
+      area: areaOf(id),
+      boundary: CongestionAreaBoundary(
+        id: id,
+        name: '구역 $id',
+        category: '관광특구',
+        polygon: const <List<double>>[
+          <double>[126.97, 37.55],
+          <double>[126.99, 37.55],
+          <double>[126.99, 37.57],
+          <double>[126.97, 37.57],
+          <double>[126.97, 37.55],
+        ],
+      ),
+    );
+
+    test('폴리곤 안을 누르면 그 구역이 잡힌다', () {
+      final CongestionOverlay? hit = overlayAt(
+        latitude: 37.56,
+        longitude: 126.98,
+        overlays: <CongestionOverlay>[squareOverlay('POI014')],
+      );
+
+      expect(hit?.area.id, 'POI014');
+    });
+
+    test('폴리곤 밖을 누르면 아무것도 잡히지 않는다', () {
+      final CongestionOverlay? hit = overlayAt(
+        latitude: 37.60,
+        longitude: 127.05,
+        overlays: <CongestionOverlay>[squareOverlay('POI014')],
+      );
+
+      expect(hit, isNull);
+    });
+
+    test('겹치면 먼저 오는 구역을 고른다 — 같은 곳을 눌렀을 때 결과가 흔들리지 않는다', () {
+      final CongestionOverlay? hit = overlayAt(
+        latitude: 37.56,
+        longitude: 126.98,
+        overlays: <CongestionOverlay>[
+          squareOverlay('POI001'),
+          squareOverlay('POI002'),
+        ],
+      );
+
+      expect(hit?.area.id, 'POI001');
+    });
+
+    test('그릴 구역이 없으면 아무것도 잡히지 않는다', () {
+      expect(
+        overlayAt(
+          latitude: 37.56,
+          longitude: 126.98,
+          overlays: const <CongestionOverlay>[],
+        ),
+        isNull,
+      );
+    });
+  });
+
   group('줌 게이트 (R25)', () {
     test('임계값 미만에서는 표시하지 않는다', () {
       expect(shouldShowCongestion(MapTuning.polygonMinZoom - 1), isFalse);
