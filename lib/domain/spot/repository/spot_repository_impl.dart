@@ -2,6 +2,7 @@ import 'package:gql/ast.dart' show DocumentNode;
 import 'package:graphql_flutter/graphql_flutter.dart';
 
 import '../../../common/localization/app_language.dart';
+import '../../../common/location/coordinates.dart';
 import '../../../common/network/graphql_debug_log.dart';
 import '../../../common/network/graphql_failure.dart';
 import '../../../common/pagination/offset_page.dart';
@@ -332,6 +333,9 @@ class SpotRepositoryImpl implements SpotRepository {
     copyright: _copyright(n.copyright),
     attributionText: n.attributionText,
     category: _categoryFromEnum(n.category),
+    // **`mapX`가 경도, `mapY`가 위도다** — 이름이 직관과 반대라 뒤집기 쉽다.
+    // 지도(SPEC-0014)가 검색 결과로 지도를 옮기는 데 쓴다.
+    coordinates: Coordinates(latitude: n.mapY, longitude: n.mapX),
   );
 
   /// 인기 spot 노드 → 도메인 [TouristSpot]. 랭킹 근거(`likeCount`)는 edge에 있어

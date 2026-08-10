@@ -25,6 +25,8 @@ class MapMarker {
     required this.kind,
     this.categoryName,
     this.subtitle,
+    this.thumbnailUrl,
+    this.isHighlighted = false,
   });
 
   final String id;
@@ -41,6 +43,21 @@ class MapMarker {
 
   /// 부가 정보 한 줄. 행사는 장소·기간이 들어가고 spot은 비어 있다.
   final String? subtitle;
+
+  /// 마커에 그릴 썸네일 URL.
+  ///
+  /// **지도 위에서 우리 데이터임을 드러내는 수단이다.** 단색 점으로 그렸더니 카카오
+  /// 지도가 기본으로 찍는 POI와 구분되지 않아 "무엇이 우리 것인지 모르겠다"는 지적을
+  /// 받았다. 사진이 들어가면 한눈에 갈린다.
+  ///
+  /// 없을 수 있다 — 그때는 종류별 도형으로 떨어진다.
+  final String? thumbnailUrl;
+
+  /// 검색으로 찾아 강조할 마커인가.
+  ///
+  /// 참이면 테두리를 브랜드 빨강으로 그린다 — 지도에 마커가 여럿일 때 "내가 찾은
+  /// 그것"이 어느 것인지 한눈에 갈려야 한다.
+  final bool isHighlighted;
 
   @override
   bool operator ==(Object other) =>

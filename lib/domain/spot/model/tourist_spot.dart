@@ -1,3 +1,4 @@
+import '../../../common/location/coordinates.dart';
 import 'copyright_type.dart';
 import 'distance.dart';
 import 'spot_category.dart';
@@ -32,6 +33,7 @@ class TouristSpot {
     this.copyright,
     this.attributionText,
     this.category,
+    this.coordinates,
   });
 
   final String id;
@@ -40,6 +42,12 @@ class TouristSpot {
 
   /// Human-readable location label, e.g. "Seoul, Jongno-gu".
   final String location;
+
+  /// 실제 좌표. **[location]과 다르다** — 그쪽은 "서울 종로구" 같은 표시용 문자열이다.
+  ///
+  /// 지도(SPEC-0014)가 검색 결과로 지도를 옮기는 데 쓴다. 서버가 주지 않는 경로(홈
+  /// 카드 등)에서는 null이며, 그때는 지도 이동을 하지 않는다.
+  final Coordinates? coordinates;
 
   /// Swipe-card image reference (opaque; a non-URL value renders as a placeholder).
   final String? thumbnailImageUrl;

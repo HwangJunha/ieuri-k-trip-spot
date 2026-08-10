@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:gql/ast.dart' show DocumentNode;
 import 'package:graphql_flutter/graphql_flutter.dart';
 
@@ -53,6 +54,10 @@ class MapRepositoryImpl implements MapRepository {
             longitude: s.lng,
             kind: MapMarkerKind.spot,
             categoryName: s.category.name,
+            // 빈 문자열이 오면 없는 것으로 본다 — URL로 쓰면 로드가 실패한다.
+            thumbnailUrl: s.thumbnailImageUrl.isEmpty
+                ? null
+                : s.thumbnailImageUrl,
           ),
         for (final Query$MapViewport$mapViewport$events e in result.events)
           MapMarker(
@@ -65,16 +70,7 @@ class MapRepositoryImpl implements MapRepository {
             subtitle: '${e.place} · ${e.period}',
           ),
       ],
-      clusters: result.clusters
-          .map(
-            (Query$MapViewport$mapViewport$clusters c) => MapCluster(
-              centerLatitude: c.centerLat,
-              centerLongitude: c.centerLng,
-              count: c.count,
-              dominantCategoryName: c.dominantCategory?.name,
-            ),
-          )
-          .toList(growable: false),
+      // 서버가 클러스터를 없앴다(2026-08-10) — `map_schema.graphql` 주석 참조.
       truncated: result.truncated,
     );
   }
@@ -109,10 +105,22 @@ class MapRepositoryImpl implements MapRepository {
       'seoulCongestionAreas',
     );
 
-    return Query$SeoulCongestionAreas.fromJson(data).seoulCongestionAreas
+    final List<Query$SeoulCongestionAreas$seoulCongestionAreas> raw =
+        Query$SeoulCongestionAreas.fromJson(data).seoulCongestionAreas;
+    final List<CongestionAreaBoundary> mapped = raw
         .map(_boundaryFrom)
         .whereType<CongestionAreaBoundary>()
         .toList(growable: false);
+
+    // 121건이 와야 정상인데 매핑에서 걸러지면 폴리곤이 조용히 사라진다 — 실기기에서
+    // 혼잡도는 왔는데 폴리곤이 하나도 안 그려진 적이 있어 남긴다.
+    if (kDebugMode && mapped.length != raw.length) {
+      debugPrint(
+        '[Map] 경계 ${raw.length}건 중 ${raw.length - mapped.length}건이 '
+        '매핑에서 제외됐다(좌표 형식 불일치)',
+      );
+    }
+    return mapped;
   }
 
   /// 생성 타입 → 도메인 [CongestionArea].

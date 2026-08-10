@@ -363,44 +363,6 @@ const documentNodeQueryMapViewport = DocumentNode(
                   ),
                 ),
                 FieldNode(
-                  name: NameNode(value: 'clusters'),
-                  alias: null,
-                  arguments: [],
-                  directives: [],
-                  selectionSet: SelectionSetNode(
-                    selections: [
-                      FieldNode(
-                        name: NameNode(value: 'centerLng'),
-                        alias: null,
-                        arguments: [],
-                        directives: [],
-                        selectionSet: null,
-                      ),
-                      FieldNode(
-                        name: NameNode(value: 'centerLat'),
-                        alias: null,
-                        arguments: [],
-                        directives: [],
-                        selectionSet: null,
-                      ),
-                      FieldNode(
-                        name: NameNode(value: 'count'),
-                        alias: null,
-                        arguments: [],
-                        directives: [],
-                        selectionSet: null,
-                      ),
-                      FieldNode(
-                        name: NameNode(value: 'dominantCategory'),
-                        alias: null,
-                        arguments: [],
-                        directives: [],
-                        selectionSet: null,
-                      ),
-                    ],
-                  ),
-                ),
-                FieldNode(
                   name: NameNode(value: 'events'),
                   alias: null,
                   arguments: [],
@@ -478,27 +440,18 @@ const documentNodeQueryMapViewport = DocumentNode(
 class Query$MapViewport$mapViewport {
   Query$MapViewport$mapViewport({
     required this.spots,
-    required this.clusters,
     required this.events,
     required this.truncated,
   });
 
   factory Query$MapViewport$mapViewport.fromJson(Map<String, dynamic> json) {
     final l$spots = json['spots'];
-    final l$clusters = json['clusters'];
     final l$events = json['events'];
     final l$truncated = json['truncated'];
     return Query$MapViewport$mapViewport(
       spots: (l$spots as List<dynamic>)
           .map(
             (e) => Query$MapViewport$mapViewport$spots.fromJson(
-              (e as Map<String, dynamic>),
-            ),
-          )
-          .toList(),
-      clusters: (l$clusters as List<dynamic>)
-          .map(
-            (e) => Query$MapViewport$mapViewport$clusters.fromJson(
               (e as Map<String, dynamic>),
             ),
           )
@@ -516,8 +469,6 @@ class Query$MapViewport$mapViewport {
 
   final List<Query$MapViewport$mapViewport$spots> spots;
 
-  final List<Query$MapViewport$mapViewport$clusters> clusters;
-
   final List<Query$MapViewport$mapViewport$events> events;
 
   final bool truncated;
@@ -526,8 +477,6 @@ class Query$MapViewport$mapViewport {
     final _resultData = <String, dynamic>{};
     final l$spots = spots;
     _resultData['spots'] = l$spots.map((e) => e.toJson()).toList();
-    final l$clusters = clusters;
-    _resultData['clusters'] = l$clusters.map((e) => e.toJson()).toList();
     final l$events = events;
     _resultData['events'] = l$events.map((e) => e.toJson()).toList();
     final l$truncated = truncated;
@@ -538,12 +487,10 @@ class Query$MapViewport$mapViewport {
   @override
   int get hashCode {
     final l$spots = spots;
-    final l$clusters = clusters;
     final l$events = events;
     final l$truncated = truncated;
     return Object.hashAll([
       Object.hashAll(l$spots.map((v) => v)),
-      Object.hashAll(l$clusters.map((v) => v)),
       Object.hashAll(l$events.map((v) => v)),
       l$truncated,
     ]);
@@ -567,18 +514,6 @@ class Query$MapViewport$mapViewport {
       final l$spots$entry = l$spots[i];
       final lOther$spots$entry = lOther$spots[i];
       if (l$spots$entry != lOther$spots$entry) {
-        return false;
-      }
-    }
-    final l$clusters = clusters;
-    final lOther$clusters = other.clusters;
-    if (l$clusters.length != lOther$clusters.length) {
-      return false;
-    }
-    for (int i = 0; i < l$clusters.length; i++) {
-      final l$clusters$entry = l$clusters[i];
-      final lOther$clusters$entry = lOther$clusters[i];
-      if (l$clusters$entry != lOther$clusters$entry) {
         return false;
       }
     }
@@ -620,7 +555,6 @@ abstract class CopyWith$Query$MapViewport$mapViewport<TRes> {
 
   TRes call({
     List<Query$MapViewport$mapViewport$spots>? spots,
-    List<Query$MapViewport$mapViewport$clusters>? clusters,
     List<Query$MapViewport$mapViewport$events>? events,
     bool? truncated,
   });
@@ -629,16 +563,6 @@ abstract class CopyWith$Query$MapViewport$mapViewport<TRes> {
       Iterable<
         CopyWith$Query$MapViewport$mapViewport$spots<
           Query$MapViewport$mapViewport$spots
-        >
-      >,
-    )
-    _fn,
-  );
-  TRes clusters(
-    Iterable<Query$MapViewport$mapViewport$clusters> Function(
-      Iterable<
-        CopyWith$Query$MapViewport$mapViewport$clusters<
-          Query$MapViewport$mapViewport$clusters
         >
       >,
     )
@@ -668,7 +592,6 @@ class _CopyWithImpl$Query$MapViewport$mapViewport<TRes>
 
   TRes call({
     Object? spots = _undefined,
-    Object? clusters = _undefined,
     Object? events = _undefined,
     Object? truncated = _undefined,
   }) => _then(
@@ -676,9 +599,6 @@ class _CopyWithImpl$Query$MapViewport$mapViewport<TRes>
       spots: spots == _undefined || spots == null
           ? _instance.spots
           : (spots as List<Query$MapViewport$mapViewport$spots>),
-      clusters: clusters == _undefined || clusters == null
-          ? _instance.clusters
-          : (clusters as List<Query$MapViewport$mapViewport$clusters>),
       events: events == _undefined || events == null
           ? _instance.events
           : (events as List<Query$MapViewport$mapViewport$events>),
@@ -701,23 +621,6 @@ class _CopyWithImpl$Query$MapViewport$mapViewport<TRes>
     spots: _fn(
       _instance.spots.map(
         (e) => CopyWith$Query$MapViewport$mapViewport$spots(e, (i) => i),
-      ),
-    ).toList(),
-  );
-
-  TRes clusters(
-    Iterable<Query$MapViewport$mapViewport$clusters> Function(
-      Iterable<
-        CopyWith$Query$MapViewport$mapViewport$clusters<
-          Query$MapViewport$mapViewport$clusters
-        >
-      >,
-    )
-    _fn,
-  ) => call(
-    clusters: _fn(
-      _instance.clusters.map(
-        (e) => CopyWith$Query$MapViewport$mapViewport$clusters(e, (i) => i),
       ),
     ).toList(),
   );
@@ -748,14 +651,11 @@ class _CopyWithStubImpl$Query$MapViewport$mapViewport<TRes>
 
   call({
     List<Query$MapViewport$mapViewport$spots>? spots,
-    List<Query$MapViewport$mapViewport$clusters>? clusters,
     List<Query$MapViewport$mapViewport$events>? events,
     bool? truncated,
   }) => _res;
 
   spots(_fn) => _res;
-
-  clusters(_fn) => _res;
 
   events(_fn) => _res;
 }
@@ -955,177 +855,6 @@ class _CopyWithStubImpl$Query$MapViewport$mapViewport$spots<TRes>
     Enum$SpotCategory? category,
     double? lng,
     double? lat,
-  }) => _res;
-}
-
-class Query$MapViewport$mapViewport$clusters {
-  Query$MapViewport$mapViewport$clusters({
-    required this.centerLng,
-    required this.centerLat,
-    required this.count,
-    this.dominantCategory,
-  });
-
-  factory Query$MapViewport$mapViewport$clusters.fromJson(
-    Map<String, dynamic> json,
-  ) {
-    final l$centerLng = json['centerLng'];
-    final l$centerLat = json['centerLat'];
-    final l$count = json['count'];
-    final l$dominantCategory = json['dominantCategory'];
-    return Query$MapViewport$mapViewport$clusters(
-      centerLng: (l$centerLng as num).toDouble(),
-      centerLat: (l$centerLat as num).toDouble(),
-      count: (l$count as int),
-      dominantCategory: l$dominantCategory == null
-          ? null
-          : fromJson$Enum$SpotCategory((l$dominantCategory as String)),
-    );
-  }
-
-  final double centerLng;
-
-  final double centerLat;
-
-  final int count;
-
-  final Enum$SpotCategory? dominantCategory;
-
-  Map<String, dynamic> toJson() {
-    final _resultData = <String, dynamic>{};
-    final l$centerLng = centerLng;
-    _resultData['centerLng'] = l$centerLng;
-    final l$centerLat = centerLat;
-    _resultData['centerLat'] = l$centerLat;
-    final l$count = count;
-    _resultData['count'] = l$count;
-    final l$dominantCategory = dominantCategory;
-    _resultData['dominantCategory'] = l$dominantCategory == null
-        ? null
-        : toJson$Enum$SpotCategory(l$dominantCategory);
-    return _resultData;
-  }
-
-  @override
-  int get hashCode {
-    final l$centerLng = centerLng;
-    final l$centerLat = centerLat;
-    final l$count = count;
-    final l$dominantCategory = dominantCategory;
-    return Object.hashAll([
-      l$centerLng,
-      l$centerLat,
-      l$count,
-      l$dominantCategory,
-    ]);
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) {
-      return true;
-    }
-    if (other is! Query$MapViewport$mapViewport$clusters ||
-        runtimeType != other.runtimeType) {
-      return false;
-    }
-    final l$centerLng = centerLng;
-    final lOther$centerLng = other.centerLng;
-    if (l$centerLng != lOther$centerLng) {
-      return false;
-    }
-    final l$centerLat = centerLat;
-    final lOther$centerLat = other.centerLat;
-    if (l$centerLat != lOther$centerLat) {
-      return false;
-    }
-    final l$count = count;
-    final lOther$count = other.count;
-    if (l$count != lOther$count) {
-      return false;
-    }
-    final l$dominantCategory = dominantCategory;
-    final lOther$dominantCategory = other.dominantCategory;
-    if (l$dominantCategory != lOther$dominantCategory) {
-      return false;
-    }
-    return true;
-  }
-}
-
-extension UtilityExtension$Query$MapViewport$mapViewport$clusters
-    on Query$MapViewport$mapViewport$clusters {
-  CopyWith$Query$MapViewport$mapViewport$clusters<
-    Query$MapViewport$mapViewport$clusters
-  >
-  get copyWith =>
-      CopyWith$Query$MapViewport$mapViewport$clusters(this, (i) => i);
-}
-
-abstract class CopyWith$Query$MapViewport$mapViewport$clusters<TRes> {
-  factory CopyWith$Query$MapViewport$mapViewport$clusters(
-    Query$MapViewport$mapViewport$clusters instance,
-    TRes Function(Query$MapViewport$mapViewport$clusters) then,
-  ) = _CopyWithImpl$Query$MapViewport$mapViewport$clusters;
-
-  factory CopyWith$Query$MapViewport$mapViewport$clusters.stub(TRes res) =
-      _CopyWithStubImpl$Query$MapViewport$mapViewport$clusters;
-
-  TRes call({
-    double? centerLng,
-    double? centerLat,
-    int? count,
-    Enum$SpotCategory? dominantCategory,
-  });
-}
-
-class _CopyWithImpl$Query$MapViewport$mapViewport$clusters<TRes>
-    implements CopyWith$Query$MapViewport$mapViewport$clusters<TRes> {
-  _CopyWithImpl$Query$MapViewport$mapViewport$clusters(
-    this._instance,
-    this._then,
-  );
-
-  final Query$MapViewport$mapViewport$clusters _instance;
-
-  final TRes Function(Query$MapViewport$mapViewport$clusters) _then;
-
-  static const _undefined = <dynamic, dynamic>{};
-
-  TRes call({
-    Object? centerLng = _undefined,
-    Object? centerLat = _undefined,
-    Object? count = _undefined,
-    Object? dominantCategory = _undefined,
-  }) => _then(
-    Query$MapViewport$mapViewport$clusters(
-      centerLng: centerLng == _undefined || centerLng == null
-          ? _instance.centerLng
-          : (centerLng as double),
-      centerLat: centerLat == _undefined || centerLat == null
-          ? _instance.centerLat
-          : (centerLat as double),
-      count: count == _undefined || count == null
-          ? _instance.count
-          : (count as int),
-      dominantCategory: dominantCategory == _undefined
-          ? _instance.dominantCategory
-          : (dominantCategory as Enum$SpotCategory?),
-    ),
-  );
-}
-
-class _CopyWithStubImpl$Query$MapViewport$mapViewport$clusters<TRes>
-    implements CopyWith$Query$MapViewport$mapViewport$clusters<TRes> {
-  _CopyWithStubImpl$Query$MapViewport$mapViewport$clusters(this._res);
-
-  TRes _res;
-
-  call({
-    double? centerLng,
-    double? centerLat,
-    int? count,
-    Enum$SpotCategory? dominantCategory,
   }) => _res;
 }
 

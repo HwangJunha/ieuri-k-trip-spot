@@ -22,12 +22,6 @@ query MapViewport(
       lng
       lat
     }
-    clusters {
-      centerLng
-      centerLat
-      count
-      dominantCategory
-    }
     events {
       id
       title

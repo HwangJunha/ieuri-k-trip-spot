@@ -50,11 +50,27 @@ Future<SeoulCongestionResult> seoulCongestion(Ref ref, MapBounds bbox) =>
 ///
 /// 좌표만 공유하고 이름만 다시 받는 방식도 가능하지만, 121건 한 번의 왕복이라
 /// 복잡도를 더할 이득이 없다.
-@Riverpod(keepAlive: true)
+@riverpod
 Future<List<CongestionAreaBoundary>> congestionBoundaries(
   Ref ref,
   String languageTag,
-) => ref.watch(mapRepositoryProvider).fetchBoundaries();
+) async {
+  // **링크는 await 전에 잡는다.** await 뒤에 `ref.keepAlive()`를 부르면, 그 사이
+  // provider가 폐기됐을 때 죽은 Ref를 만져 "Cannot use the Ref … after it has been
+  // disposed"로 터진다.
+  final link = ref.keepAlive();
+  final MapRepository repository = ref.watch(mapRepositoryProvider);
+
+  try {
+    return await repository.fetchBoundaries();
+  } on Object {
+    // **실패한 결과는 붙들지 않는다.** 그대로 캐시되면 첫 조회가 한 번 실패했을 때
+    // 앱을 다시 켤 때까지 폴리곤이 영영 안 나오고, 재시도가 아예 일어나지 않아
+    // 로그에도 아무것도 남지 않는다(실기기에서 그 상태였다).
+    link.close();
+    rethrow;
+  }
+}
 
 /// 현재 활성 언어로 경계를 조회한다. 화면은 이 provider만 보면 된다 — 언어가 바뀌면
 /// 인자가 바뀌어 자동으로 새 캐시를 탄다.

@@ -133,12 +133,17 @@ List<RouteBase> buildRoutes() => <RouteBase>[
   // 인자를 받지 않는다 — 질의는 라우트가 아니라 검색 상태(keepAlive)가 쥔다.
   // 질의를 URL에 실으면 상세를 다녀올 때마다 라우트를 갈아 끼워야 하고, 그러면
   // 결과 목록이 다시 조회된다(AC-13.2가 유지를 요구한다).
+  // `pick=1`이면 결과를 골랐을 때 상세로 가는 대신 그 spot을 돌려주고 닫는다 —
+  // 지도(SPEC-0014)가 검색으로 위치를 찾을 때 쓴다. 홈에서 열면 없으므로 기존
+  // 동작 그대로다.
   GoRoute(
     path: '/search',
     name: SearchScreen.routeName,
-    pageBuilder: (_, GoRouterState state) => CustomTransitionPage<void>(
+    pageBuilder: (_, GoRouterState state) => CustomTransitionPage<Object?>(
       key: state.pageKey,
-      child: const SearchScreen(),
+      child: SearchScreen(
+        returnsPickedSpot: state.uri.queryParameters['pick'] == '1',
+      ),
       transitionDuration: const Duration(milliseconds: 300),
       reverseTransitionDuration: const Duration(milliseconds: 250),
       transitionsBuilder: _slideUpFromBottom,

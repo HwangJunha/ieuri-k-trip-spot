@@ -1055,5 +1055,8 @@
   "mapZoomIn": "Zoom in",
   "mapZoomOut": "Zoom out",
   "mapMyLocation": "My location",
-  "mapLocationUnavailable": "Location is off, so we can't center the map on you."
+  "mapLocationUnavailable": "Location is off, so we can't center the map on you.",
+  "mapLegendSpot": "Places",
+  "mapLegendEvent": "Events",
+  "mapSearchThisArea": "Search this area"
 }

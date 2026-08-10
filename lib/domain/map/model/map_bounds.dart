@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'map_tuning.dart';
 
 /// 지도가 보여주는 사각 영역을 위경도 네 값으로 표현한 것(spec §3 — bbox).
@@ -61,6 +63,32 @@ class MapBounds {
     );
   }
 
+  /// 중심을 유지한 채 최소 반경 [radiusKm]를 담도록 넓힌다.
+  ///
+  /// **화면이 좁아도 주변을 함께 받기 위한 것이다.** 확대해서 볼 때 화면 bbox만
+  /// 보내면 눈앞의 몇 곳만 오는데, 사용자는 "내 주변에 뭐가 있나"를 보고 싶어 한다.
+  /// 이미 넓은 화면이면 그대로 둔다 — 줄이지 않는다.
+  ///
+  /// 위도 1도는 약 111km로 고정이고, 경도 1도는 위도에 따라 좁아지므로 중심 위도의
+  /// 코사인으로 나눈다. 서울(위도 37.5)에서 경도 1도는 약 88km다.
+  MapBounds withMinRadius(double radiusKm) {
+    final double centerLat = (minLat + maxLat) / 2;
+    final double latDelta = radiusKm / 111.0;
+    final double lngDelta =
+        radiusKm / (111.0 * math.cos(centerLat * math.pi / 180).abs());
+
+    // 이미 그만큼 넓으면 손대지 않는다.
+    if (latSpan >= latDelta * 2 && lngSpan >= lngDelta * 2) return this;
+
+    final double centerLng = (minLng + maxLng) / 2;
+    return MapBounds(
+      minLat: (centerLat - latDelta).clamp(-90.0, 90.0),
+      minLng: (centerLng - lngDelta).clamp(-180.0, 180.0),
+      maxLat: (centerLat + latDelta).clamp(-90.0, 90.0),
+      maxLng: (centerLng + lngDelta).clamp(-180.0, 180.0),
+    );
+  }
+
   /// [other]가 이 영역 안에 완전히 들어오는지(R20).
   ///
   /// 새 뷰포트가 직전 조회 영역에 포함되면 **재조회하지 않는다** — 이미 받아 둔
@@ -68,11 +96,20 @@ class MapBounds {
   ///
   /// 경계가 정확히 겹치는 경우도 포함으로 본다. 확장 영역의 가장자리에 딱 맞춘
   /// 뷰포트는 이미 가진 데이터로 그릴 수 있다.
-  bool contains(MapBounds other) =>
-      other.minLat >= minLat &&
-      other.maxLat <= maxLat &&
-      other.minLng >= minLng &&
-      other.maxLng <= maxLng;
+  bool contains(MapBounds other) {
+    // **미세한 흔들림은 같은 영역으로 본다.**
+    //
+    // 지도가 멈춰 있어도 SDK가 주는 화면 좌표는 소수점 6~7번째 자리에서 계속
+    // 떨린다(실측: 37.32001698 → 37.32001761). 그걸 그대로 비교하면 "영역을
+    // 벗어났다"로 읽혀 조회가 끝없이 반복됐다.
+    //
+    // 1e-5도는 약 1m다 — 그만큼의 차이로 새로 받을 이유가 없다.
+    const double epsilon = 1e-5;
+    return other.minLat >= minLat - epsilon &&
+        other.maxLat <= maxLat + epsilon &&
+        other.minLng >= minLng - epsilon &&
+        other.maxLng <= maxLng + epsilon;
+  }
 
   @override
   bool operator ==(Object other) =>

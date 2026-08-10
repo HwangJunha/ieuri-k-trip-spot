@@ -705,5 +705,8 @@
   "mapZoomIn": "放大",
   "mapZoomOut": "缩小",
   "mapMyLocation": "当前位置",
-  "mapLocationUnavailable": "定位已关闭，无法移动到当前位置。"
+  "mapLocationUnavailable": "定位已关闭，无法移动到当前位置。",
+  "mapLegendSpot": "景点",
+  "mapLegendEvent": "活动",
+  "mapSearchThisArea": "在此区域重新搜索"
 }

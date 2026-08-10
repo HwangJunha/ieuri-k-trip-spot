@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../common/location/coordinates.dart';
+import '../../../common/navigation/picked_place.dart';
+import '../../../common/navigation/spot_detail_route.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/category_bar.dart';
 import '../component/recent_searches_list.dart';
@@ -22,14 +25,22 @@ import 'spot_detail_view.dart';
 /// 결과 없음 · 실패. **빈 결과와 실패를 같은 화면으로 뭉치지 않는다** — 전자는
 /// 정상이라 재시도 버튼을 두지 않고, 후자만 재시도를 준다(AC-11.2·AC-11.3).
 class SearchScreen extends ConsumerStatefulWidget {
-  const SearchScreen({super.key});
+  const SearchScreen({super.key, this.returnsPickedSpot = false});
+
+  /// 결과를 골랐을 때 **상세로 가는 대신 그 spot을 돌려주고 닫을 것인가**.
+  ///
+  /// 지도(SPEC-0014)가 검색을 열 때 참이다 — 거기서는 "이 장소를 찾아서 지도를
+  /// 그리로 옮기는 것"이 목적이라, 상세 화면으로 넘어가면 지도로 돌아와야 한다.
+  /// 홈에서 열면 거짓이라 기존대로 상세로 간다.
+  final bool returnsPickedSpot;
 
   /// **탭 셸 밖의 최상위 라우트**라 루트 내비게이터에 push되어 하단 탭을 덮는다
   /// (설계 §1) — 검색은 탭 전환이 아니라 홈에서 밀고 올라오는 흐름이다.
   ///
-  /// 이름을 `common/navigation/`으로 올리지 않은 것은 지금 검색으로 보내는 곳이
-  /// 홈 하나뿐이기 때문이다 — 둘 이상이 쓰게 되면 그때 올린다(CLAUDE.md §4).
-  static String get routeName => 'search';
+  /// 이름은 `common/navigation/`에 있다 — **지도(SPEC-0014)가 두 번째 진입점이
+  /// 되면서** 올렸다(CLAUDE.md §4, 이 주석이 예고한 그대로다). 화면은 여기 남고
+  /// 이름만 공용이며, 이 게터가 그 상수를 돌려준다.
+  static String get routeName => searchRouteName;
 
   @override
   ConsumerState<SearchScreen> createState() => _SearchScreenState();
@@ -92,19 +103,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
                 child: TextField(
-              controller: _controller,
-              autofocus: true,
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                hintText: l10n.searchHint,
-                prefixIcon: const Icon(Icons.search),
-                border: const OutlineInputBorder(),
-                isDense: true,
-              ),
-              // 검색은 제출로 실행한다 — 입력마다 부르면 호출량이 급증하고,
-              // 자동완성(별도 provider)이 입력 중 보조를 맡는다(설계 §2).
-                  onChanged: (String value) =>
-                      setState(() => _typed = value),
+                  controller: _controller,
+                  autofocus: true,
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    hintText: l10n.searchHint,
+                    prefixIcon: const Icon(Icons.search),
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  // 검색은 제출로 실행한다 — 입력마다 부르면 호출량이 급증하고,
+                  // 자동완성(별도 provider)이 입력 중 보조를 맡는다(설계 §2).
+                  onChanged: (String value) => setState(() => _typed = value),
                   onSubmitted: (String value) {
                     setState(() => _recentOpen = false);
                     ref.read(spotSearchProvider.notifier).search(value);
@@ -112,8 +122,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 ),
               ),
               _RecentSearchesButton(
-                onPressed: () =>
-                    setState(() => _recentOpen = !_recentOpen),
+                onPressed: () => setState(() => _recentOpen = !_recentOpen),
               ),
               // 카테고리 필터(R5). Discover·좋아요 목록과 같은 바를 쓰되 **선택은
               // 검색 전용 provider가 들고 있다** — 하나로 묶으면 Discover에서 고른
@@ -135,12 +144,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             switch (state) {
               // 초기 상태에서 타이핑 중이면 자동완성을, 비어 있으면 최근 검색어를
               // 보여준다(R9·R12). 둘 다 "아직 검색하지 않았다"에 속하는 화면이다.
-              SpotSearchIdle() => _typed.trim().isEmpty
-                  ? RecentSearchesList(onSelect: _searchFromRecent)
-                  : SearchSuggestionList(
-                      query: _typed,
-                      onSelect: _searchFromSuggestion,
-                    ),
+              SpotSearchIdle() =>
+                _typed.trim().isEmpty
+                    ? RecentSearchesList(onSelect: _searchFromRecent)
+                    : SearchSuggestionList(
+                        query: _typed,
+                        onSelect: _searchFromSuggestion,
+                      ),
               SpotSearchLoading() => const Center(
                 child: CircularProgressIndicator(),
               ),
@@ -207,6 +217,31 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   /// **`push`라서 돌아오면 이 화면이 그대로 살아 있다**(AC-13.2) — 검색 상태가
   /// keepAlive이므로 질의와 결과가 유지된다.
   void _openDetail(TouristSpot spot) {
+    // 지도에서 열었으면 고른 장소를 돌려주고 닫는다 — 지도가 그 좌표로 이동한다.
+    //
+    // **`TouristSpot`이 아니라 `PickedPlace`로 옮겨 준다.** 지도가 그 타입을
+    // import하면 교차 feature 의존이 생기고, 피하려고 `dynamic`을 쓰면 런타임에
+    // 깨진다(그 타입 주석 참조). 변환은 타입을 아는 이쪽이 맡는다.
+    if (widget.returnsPickedSpot) {
+      final Coordinates? coordinates = spot.coordinates;
+      // 좌표가 없으면 옮길 곳이 없다 — 그런 결과는 기존대로 상세로 보낸다.
+      if (coordinates != null) {
+        context.pop(
+          PickedPlace(
+            id: spot.id,
+            name: spot.name,
+            coordinates: coordinates,
+            categoryName: spot.category?.name,
+            // **검색 목록과 같은 폴백을 쓴다**(`search_result_list.dart`).
+            // `thumbnailImageUrl`이 비는 경우가 있어 그것만 보면 사진 없는 마커가
+            // 된다 — 목록에는 사진이 보이는데 지도에만 안 보이던 이유다.
+            thumbnailUrl: spot.thumbnailImageUrl ?? spot.imageRef,
+          ),
+        );
+        return;
+      }
+    }
+
     context.pushNamed(
       SpotDetailView.routeName,
       pathParameters: <String, String>{'id': spot.id},
@@ -326,7 +361,9 @@ class _RecentPanel extends StatelessWidget {
           GestureDetector(
             onTap: onClose,
             behavior: HitTestBehavior.opaque,
-            child: ColoredBox(color: theme.colorScheme.scrim.withValues(alpha: 0.32)),
+            child: ColoredBox(
+              color: theme.colorScheme.scrim.withValues(alpha: 0.32),
+            ),
           ),
           Align(
             alignment: Alignment.topCenter,

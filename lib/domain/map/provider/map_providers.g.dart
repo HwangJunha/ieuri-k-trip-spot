@@ -338,7 +338,7 @@ final class CongestionBoundariesProvider
   }) : super(
          retry: null,
          name: r'congestionBoundariesProvider',
-         isAutoDispose: false,
+         isAutoDispose: true,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
@@ -377,7 +377,7 @@ final class CongestionBoundariesProvider
 }
 
 String _$congestionBoundariesHash() =>
-    r'613bd5a236064608e750d0f3e1179d789009a2d1';
+    r'6f6a893f5a0c73a185b0abb93cec6a4a3c17577b';
 
 /// 121곳의 정적 폴리곤 경계(R17·R26).
 ///
@@ -404,7 +404,7 @@ final class CongestionBoundariesFamily extends $Family
         name: r'congestionBoundariesProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
-        isAutoDispose: false,
+        isAutoDispose: true,
       );
 
   /// 121곳의 정적 폴리곤 경계(R17·R26).

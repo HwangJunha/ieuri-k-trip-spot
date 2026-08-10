@@ -1640,5 +1640,11 @@
   "mapMyLocation": "현재 위치",
   "@mapMyLocation": {},
   "mapLocationUnavailable": "위치가 꺼져 있어 현재 위치로 이동할 수 없습니다.",
-  "@mapLocationUnavailable": {}
+  "@mapLocationUnavailable": {},
+  "mapLegendSpot": "관광지",
+  "@mapLegendSpot": {},
+  "mapLegendEvent": "행사",
+  "@mapLegendEvent": {},
+  "mapSearchThisArea": "이 지역 재검색",
+  "@mapSearchThisArea": {}
 }
