@@ -708,5 +708,23 @@
   "mapLocationUnavailable": "位置情報がオフのため、現在地に移動できません。",
   "mapLegendSpot": "観光地",
   "mapLegendEvent": "イベント",
-  "mapSearchThisArea": "このエリアで再検索"
+  "mapSearchThisArea": "このエリアで再検索",
+
+  "mapRegionRecommendationsTitle": "おすすめの地域",
+  "mapRegionRecommendationsAction": "おすすめの地域を見る",
+  "mapRegionRecommendationsSortedByScore": "総合スコア順",
+  "mapRegionRecommendationPartialData": "一部のデータに基づく",
+  "mapRegionRecommendationsDataBasis": "{time}時点のデータ",
+  "mapRegionRecommendationsGatheringTitle": "データを収集しています",
+  "mapRegionRecommendationsGathering": "おすすめに使うデータをまだ集めています。しばらくしてからご確認ください。",
+  "mapRegionRecommendationsNoMatchTitle": "条件に合う地域がありません",
+  "mapRegionRecommendationsNoMatch": "現在、おすすめの条件を満たす地域がありません。しばらくしてからご確認ください。",
+  "mapRegionRecommendationsError": "おすすめの地域を読み込めませんでした。",
+  "mapRegionRecommendationsRetry": "再試行",
+  "mapRegionRecommendationsRetryExhausted": "何度か試しましたが読み込めませんでした。しばらくしてからお試しください。",
+  "mapScoreFactorCongestion": "予想混雑度",
+  "mapScoreFactorVisitorVolume": "訪問者規模",
+  "mapScoreFactorStayIntensity": "滞在強度",
+  "mapScoreFactorSpendingIntensity": "消費強度",
+  "mapScoreFactorDistance": "距離"
 }

@@ -1,0 +1,111 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../common/location/coordinates.dart';
+import '../../../l10n/gen/app_localizations.dart';
+import '../component/region_card.dart';
+import '../component/region_recommendation_empty_state.dart';
+import '../component/region_recommendation_error_state.dart';
+import '../component/sort_indicator_chip.dart';
+import '../model/region_recommendation.dart';
+import '../provider/region_recommendation_provider.dart';
+
+/// 지역 추천 목록(SPEC-0015).
+///
+/// **지도 위 오버레이가 아니라 별도 라우트의 전체 화면이다**(디자인 §화면 구조).
+/// 카드가 여러 장 쌓이고 스크롤이 필요해 `AreaInfoCard`처럼 지도 하단에 얹는 형태로는
+/// 담기지 않는다.
+///
+/// 지역을 고르면 그 좌표를 **돌려주고 닫는다**. 여기서 직접 카메라를 움직이지 않는
+/// 이유는 지도 컨트롤러를 지도 화면이 소유하기 때문이다 — 검색 화면이 고른 장소를
+/// 돌려주는 것(`pick=1`)과 같은 규약이라 지도 쪽 이동 경로가 하나로 유지된다.
+class RegionRecommendationScreen extends ConsumerWidget {
+  const RegionRecommendationScreen({super.key});
+
+  static String get routeName => 'region-recommendations';
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final AsyncValue<RegionRecommendationResult> state = ref.watch(
+      regionRecommendationsProvider,
+    );
+
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.mapRegionRecommendationsTitle)),
+      body: SafeArea(
+        child: state.when(
+          // 앱의 다른 목록 화면(찜·커뮤니티·숨긴 글)과 같은 중앙 스피너를 쓴다.
+          // 이 화면만 스켈레톤을 두면 로딩 모양이 화면마다 달라진다(디자인 §6 갭).
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (_, _) => const _ErrorBody(),
+          data: (RegionRecommendationResult result) => result.isEmpty
+              // **빈 결과를 오류로 그리지 않는다**(R15 · §5.1). 재시도 버튼도 두지
+              // 않는다 — 데이터가 쌓이기 전에는 몇 번을 눌러도 같은 결과다.
+              ? RegionRecommendationEmptyState(result: result)
+              : _RegionList(result: result),
+        ),
+      ),
+    );
+  }
+}
+
+/// 추천 목록. 총점 내림차순 그대로 그린다 — 화면이 다시 정렬하지 않는다(R22).
+class _RegionList extends StatelessWidget {
+  const _RegionList({required this.result});
+
+  final RegionRecommendationResult result;
+
+  @override
+  Widget build(BuildContext context) => ListView.separated(
+    padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+    // 정렬 기준 안내가 첫 항목이다 — 스크롤하기 전에 반드시 보여야 목록을
+    // 거리순으로 오해하지 않는다(설계 §4.2).
+    itemCount: result.regions.length + 1,
+    separatorBuilder: (_, _) => const SizedBox(height: 12),
+    itemBuilder: (BuildContext context, int index) {
+      if (index == 0) {
+        return const Align(
+          alignment: Alignment.centerLeft,
+          child: SortIndicatorChip(),
+        );
+      }
+      final RegionRecommendation region = result.regions[index - 1];
+      return RegionCard(
+        region: region,
+        rank: index,
+        dataBasisAt: result.dataBasisAt,
+        onTap: () => Navigator.of(context).pop(
+          Coordinates(latitude: region.centerLat, longitude: region.centerLng),
+        ),
+      );
+    },
+  );
+}
+
+/// 오류 + 재시도. 상한을 센 뒤 조회를 다시 연다.
+///
+/// **횟수는 provider가 아니라 별도 카운터가 센다**(provider 주석 참조) — 조회
+/// provider의 생명주기에 횟수를 얹으면 "몇 번 조회됐나"가 구독 상태에 따라 달라진다.
+class _ErrorBody extends ConsumerWidget {
+  const _ErrorBody();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // **상태를 watch하고 notifier는 read한다.** 남은 횟수가 0이 되면 버튼이 사라져야
+    // 하므로 다시 그려질 계기가 필요하고, 그 계기는 notifier가 아니라 state다.
+    ref.watch(regionRecommendationRetryCountProvider);
+    final RegionRecommendationRetryCount counter = ref.read(
+      regionRecommendationRetryCountProvider.notifier,
+    );
+
+    return RegionRecommendationErrorState(
+      canRetry: counter.canRetry,
+      onRetry: () {
+        if (!counter.canRetry) return;
+        counter.record();
+        ref.invalidate(regionRecommendationsProvider);
+      },
+    );
+  }
+}

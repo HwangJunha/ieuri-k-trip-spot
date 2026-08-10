@@ -1058,5 +1058,23 @@
   "mapLocationUnavailable": "Location is off, so we can't center the map on you.",
   "mapLegendSpot": "Places",
   "mapLegendEvent": "Events",
-  "mapSearchThisArea": "Search this area"
+  "mapSearchThisArea": "Search this area",
+
+  "mapRegionRecommendationsTitle": "Recommended Regions",
+  "mapRegionRecommendationsAction": "Recommended regions",
+  "mapRegionRecommendationsSortedByScore": "Sorted by overall score",
+  "mapRegionRecommendationPartialData": "Based on partial data",
+  "mapRegionRecommendationsDataBasis": "Data as of {time}",
+  "mapRegionRecommendationsGatheringTitle": "We're still gathering data",
+  "mapRegionRecommendationsGathering": "We're still collecting the data behind these recommendations. Please check back soon.",
+  "mapRegionRecommendationsNoMatchTitle": "No regions match right now",
+  "mapRegionRecommendationsNoMatch": "No region meets the recommendation criteria at the moment. Please check back later.",
+  "mapRegionRecommendationsError": "Couldn't load recommended regions.",
+  "mapRegionRecommendationsRetry": "Retry",
+  "mapRegionRecommendationsRetryExhausted": "We tried several times and still couldn't load this. Please try again later.",
+  "mapScoreFactorCongestion": "Expected crowd",
+  "mapScoreFactorVisitorVolume": "Visitor volume",
+  "mapScoreFactorStayIntensity": "Stay intensity",
+  "mapScoreFactorSpendingIntensity": "Spending intensity",
+  "mapScoreFactorDistance": "Distance"
 }

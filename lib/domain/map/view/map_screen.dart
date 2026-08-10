@@ -20,6 +20,7 @@ import '../component/map_overlay_painter.dart';
 import '../component/map_search_bar.dart';
 import '../component/map_zoom_controls.dart';
 import '../component/my_location_button.dart';
+import '../component/region_recommendation_button.dart';
 import '../component/search_this_area_button.dart';
 import '../model/congestion_area.dart';
 import '../model/congestion_layer_state.dart';
@@ -31,6 +32,7 @@ import '../model/map_viewport_result.dart';
 import '../model/seoul_congestion_result.dart';
 import '../provider/map_marker_controller.dart';
 import '../provider/map_providers.dart';
+import 'region_recommendation_screen.dart';
 
 /// 지도 탭(R18). 관광지·문화행사를 지도 위에서 탐색하고 서울 실시간 혼잡도를
 /// 겹쳐 본다.
@@ -511,6 +513,41 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     );
   }
 
+  /// 추천 지역 목록을 열고, 고른 지역으로 카메라를 옮긴다(SPEC-0015 §3).
+  ///
+  /// **새 카메라 이동 로직을 만들지 않는다** — 검색 결과 이동과 같은
+  /// `CameraUpdate.newCenterPosition` 경로를 그대로 탄다. 옮긴 뒤의 spot 조회는
+  /// SPEC-0014의 유휴 판정이 알아서 실행하므로(§3.2) 여기서 따로 조회하지 않는다.
+  ///
+  /// 줌은 [MapTuning.searchResultZoom] 고정이다(§3.1). 시군구 면적 편차가 커서
+  /// 지역마다 맞추려면 서버가 bbox를 내려줘야 하는데 현재 계약은 대표 좌표만 준다 —
+  /// 실사용에서 편차가 문제되면 `[AMEND]`로 계약에 bbox를 요청한다.
+  Future<void> _onRecommendationsTap() async {
+    final Object? picked = await context.pushNamed<Object?>(
+      RegionRecommendationScreen.routeName,
+    );
+    if (!mounted) return;
+
+    // 고르지 않고 닫았으면(뒤로 가기) 지도는 그대로 둔다.
+    if (picked is! Coordinates) return;
+
+    final KakaoMapController? controller = _controller;
+    if (controller == null) return;
+
+    await controller.moveCamera(
+      CameraUpdate.newCenterPosition(
+        LatLng(picked.latitude, picked.longitude),
+        zoomLevel: MapTuning.searchResultZoom,
+      ),
+      animation: const CameraAnimation(500),
+    );
+    if (!mounted) return;
+
+    // 옮긴 자리를 "받아 두지 않은 곳"으로 표시해, 이어지는 유휴 조회가 그 지역의
+    // 장소를 채우게 한다 — 검색 이동과 같은 처리다.
+    _lastMarkerArea = null;
+  }
+
   /// 검색 화면이 돌려준 값을 지도 마커로 옮긴다. 좌표가 없는 장소이거나 취소했으면
   /// null이다.
   ///
@@ -762,6 +799,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   isLocating: _isLocating,
                   onPressed: _moveToCurrentLocation,
                 ),
+                // 추천 지역 진입(SPEC-0015). **여기에 두는 이유**: 이 화면에는 앱바가
+                // 없고, 상단은 검색창과 재검색 버튼이, 좌상단은 혼잡도 범례가 이미
+                // 쓰고 있다. 남는 자리는 이 컨트롤 열뿐이고, 셋 다 "지도를 어디로 볼
+                // 것인가"를 다루는 조작이라 한 그룹으로 읽혀도 어색하지 않다.
+                const SizedBox(height: 12),
+                RegionRecommendationButton(onPressed: _onRecommendationsTap),
               ],
             ),
           ),

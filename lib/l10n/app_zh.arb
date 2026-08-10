@@ -708,5 +708,23 @@
   "mapLocationUnavailable": "定位已关闭，无法移动到当前位置。",
   "mapLegendSpot": "景点",
   "mapLegendEvent": "活动",
-  "mapSearchThisArea": "在此区域重新搜索"
+  "mapSearchThisArea": "在此区域重新搜索",
+
+  "mapRegionRecommendationsTitle": "推荐地区",
+  "mapRegionRecommendationsAction": "查看推荐地区",
+  "mapRegionRecommendationsSortedByScore": "按综合评分排序",
+  "mapRegionRecommendationPartialData": "基于部分数据",
+  "mapRegionRecommendationsDataBasis": "数据截至 {time}",
+  "mapRegionRecommendationsGatheringTitle": "正在收集数据",
+  "mapRegionRecommendationsGathering": "我们仍在收集用于推荐的数据，请稍后再来查看。",
+  "mapRegionRecommendationsNoMatchTitle": "暂无符合条件的地区",
+  "mapRegionRecommendationsNoMatch": "目前没有地区满足推荐条件，请稍后再来查看。",
+  "mapRegionRecommendationsError": "无法加载推荐地区。",
+  "mapRegionRecommendationsRetry": "重试",
+  "mapRegionRecommendationsRetryExhausted": "多次尝试仍无法加载，请稍后再试。",
+  "mapScoreFactorCongestion": "预计拥挤度",
+  "mapScoreFactorVisitorVolume": "访客规模",
+  "mapScoreFactorStayIntensity": "停留强度",
+  "mapScoreFactorSpendingIntensity": "消费强度",
+  "mapScoreFactorDistance": "距离"
 }
