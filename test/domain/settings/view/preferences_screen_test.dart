@@ -68,7 +68,7 @@ void main() {
     expect(find.text('English'), findsOneWidget);
     expect(find.text('한국어'), findsOneWidget);
     expect(find.text('日本語'), findsOneWidget);
-    expect(find.text('简体中文'), findsOneWidget);
+    expect(find.text('繁體中文'), findsOneWidget);
   });
 
   testWidgets('언어를 고르면 앱 로케일이 바뀐다 (R14)', (WidgetTester tester) async {
