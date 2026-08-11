@@ -1060,7 +1060,6 @@
   "mapRegionRecommendationsAction": "Recommended regions",
   "mapRegionRecommendationsSortedByScore": "Sorted by overall score",
   "mapRegionRecommendationPartialData": "Based on partial data",
-  "mapRegionRecommendationsDataBasis": "Data as of {time}",
   "mapRegionRecommendationsGatheringTitle": "We're still gathering data",
   "mapRegionRecommendationsGathering": "We're still collecting the data behind these recommendations. Please check back soon.",
   "mapRegionRecommendationsNoMatchTitle": "No regions match right now",

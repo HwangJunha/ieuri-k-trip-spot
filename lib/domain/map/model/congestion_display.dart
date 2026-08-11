@@ -19,15 +19,6 @@ abstract final class CongestionDisplay {
   static String observedAtLabel(DateTime observedAt, String locale) =>
       DateFormat.jm(locale).format(observedAt);
 
-  /// 기준일을 **날짜만으로** 만든다(SPEC-0015 R24).
-  ///
-  /// **[observedAtLabel]과 나누는 이유는 데이터의 성질이 다르기 때문이다.** 혼잡도는
-  /// 약 30분 지연이라 시각이 뜻을 갖지만, 추천의 `basisAt`은 서버가 날짜만 준다
-  /// ("2026-06-01"). 여기에 시각을 붙이면 의미 없는 "오전 12:00"이 따라붙어 없는
-  /// 정밀도를 있는 것처럼 보이게 한다.
-  static String dataBasisLabel(DateTime basisAt, String locale) =>
-      DateFormat.yMMMd(locale).format(basisAt);
-
   /// 추정 인구 범위의 하한·상한을 각각 천 단위로 끊어 준다(R27).
   ///
   /// 하나의 문자열로 합치지 않고 둘로 돌려주는 이유는, 구분자(`–`)와 단위(`명`)가

@@ -710,7 +710,6 @@
   "mapRegionRecommendationsAction": "おすすめの地域を見る",
   "mapRegionRecommendationsSortedByScore": "総合スコア順",
   "mapRegionRecommendationPartialData": "一部のデータに基づく",
-  "mapRegionRecommendationsDataBasis": "{time}時点のデータ",
   "mapRegionRecommendationsGatheringTitle": "データを収集しています",
   "mapRegionRecommendationsGathering": "おすすめに使うデータをまだ集めています。しばらくしてからご確認ください。",
   "mapRegionRecommendationsNoMatchTitle": "条件に合う地域がありません",

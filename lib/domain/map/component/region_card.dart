@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../common/location/coordinates.dart';
 import '../../../common/model/distance_format.dart';
 import '../../../l10n/gen/app_localizations.dart';
-import '../model/congestion_display.dart';
 import '../model/region_recommendation.dart';
 import 'score_breakdown.dart';
 
@@ -53,7 +52,6 @@ class RegionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final ThemeData theme = Theme.of(context);
-    final String locale = Localizations.localeOf(context).toLanguageTag();
 
     return Card(
       color: theme.colorScheme.surfaceContainerLow,
@@ -120,25 +118,14 @@ class RegionCard extends StatelessWidget {
                   text: l10n.mapRegionRecommendationPartialData,
                 ),
               ],
-              // 기준 시점(R24 · POL-038). "지금·현재"가 아니라 "(시점) 기준"이다 —
-              // 이 값이 실시간이 아님을 드러내는 유일한 장치다.
+              // **기준일 줄을 두지 않는다**(사용자 결정, 2026-08-12).
               //
-              // 기준일(R24 · POL-038). **항목마다 다르므로 가장 오래된 것을 적는다**
-              // — 집중률은 오늘이고 월 지표는 해당 월 1일이라, 최신 날짜를 고르면
-              // 전체가 그만큼 새것처럼 읽힌다. 가장 오래된 값이 "이 카드가 최소한
-              // 얼마나 묵은 근거 위에 서 있는가"를 정직하게 말해 준다.
+              // 카드마다 같은 날짜가 반복돼 노이즈였다. R24("실시간으로 읽히게 하지
+              // 말 것")는 항목 라벨이 이미 지고 있다 — "예상 혼잡도"가 예측임을
+              // 말하고, 어디에도 "지금·현재·실시간"에 해당하는 표현이 없다.
               //
-              // 날짜까지 붙이는 이유는 배치 데이터라 며칠 전이 기준일 수 있어서다.
-              // 시각만 보이면 오늘로 읽혀 실시간이라는 오해를 키운다.
-              if (region.oldestBasisAt case final DateTime basis) ...<Widget>[
-                const SizedBox(height: 4),
-                _NoteRow(
-                  icon: Icons.schedule,
-                  text: l10n.mapRegionRecommendationsDataBasis(
-                    CongestionDisplay.dataBasisLabel(basis, locale),
-                  ),
-                ),
-              ],
+              // 값 자체는 [RegionRecommendation.oldestBasisAt]에 살아 있어, 필요해지면
+              // 목록 상단에 한 번만 적는 식으로 되살릴 수 있다.
             ],
           ),
         ),

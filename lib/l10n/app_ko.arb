@@ -1650,8 +1650,6 @@
   "@mapRegionRecommendationsSortedByScore": {},
   "mapRegionRecommendationPartialData": "일부 데이터 기준",
   "@mapRegionRecommendationPartialData": {},
-  "mapRegionRecommendationsDataBasis": "{time} 기준 데이터",
-  "@mapRegionRecommendationsDataBasis": {},
   "mapRegionRecommendationsGatheringTitle": "데이터를 모으는 중입니다",
   "@mapRegionRecommendationsGatheringTitle": {},
   "mapRegionRecommendationsGathering": "추천에 쓸 데이터를 아직 모으고 있습니다. 잠시 후 다시 확인해 주세요.",

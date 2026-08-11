@@ -710,7 +710,6 @@
   "mapRegionRecommendationsAction": "檢視推薦地區",
   "mapRegionRecommendationsSortedByScore": "按綜合評分排序",
   "mapRegionRecommendationPartialData": "基於部分資料",
-  "mapRegionRecommendationsDataBasis": "資料截至 {time}",
   "mapRegionRecommendationsGatheringTitle": "正在收集資料",
   "mapRegionRecommendationsGathering": "我們仍在收集用於推薦的資料，請稍後再來檢視。",
   "mapRegionRecommendationsNoMatchTitle": "暫無符合條件的地區",
