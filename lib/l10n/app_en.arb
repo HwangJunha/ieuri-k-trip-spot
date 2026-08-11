@@ -1046,8 +1046,6 @@
   "mapCommercialLabel": "Foot traffic",
   "mapObservedAt": "As of {time}",
   "mapPopulationRange": "{min} – {max} people",
-  "mapCongestionUnavailable": "Crowd levels are unavailable right now.",
-  "mapTruncatedNotice": "Too many spots to show. Zoom in to see them all.",
   "mapAttribution": "Source: Seoul Real-time City Data",
   "mapKeyMissing": "The map key is missing, so the map can't load. Check the KAKAO_NATIVE_APP_KEY build setting.",
   "mapLoadFailed": "Could not load the map.",

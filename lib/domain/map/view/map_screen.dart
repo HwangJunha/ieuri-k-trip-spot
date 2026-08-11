@@ -15,7 +15,6 @@ import '../../../common/widget/floating_bottom_nav_scaffold.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/area_info_card.dart';
 import '../component/congestion_legend.dart';
-import '../component/map_notice_banner.dart';
 import '../component/map_overlay_painter.dart';
 import '../component/map_search_bar.dart';
 import '../component/map_zoom_controls.dart';
@@ -827,11 +826,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                     padding: const EdgeInsets.only(top: 8),
                     child: MapSearchBar(onTap: _onSearchTap),
                   ),
-                  if (_congestionState is CongestionDegraded)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 8),
-                      child: CongestionDegradedNotice(),
-                    ),
+                  // **혼잡도 실패는 배너로 알리지 않는다**(사용자 결정, 2026-08-12).
+                  //
+                  // 부가 데이터라 없어도 지도는 제 역할을 다 하고, 사용자가 할 수
+                  // 있는 일도 없다 — 알려 봐야 검색창 아래 자리만 차지한다. 폴리곤과
+                  // 범례가 조용히 빠지는 것으로 충분하다(그 판정은 아래
+                  // `_showsCongestionLayer`가 쥔다).
                   // **범례를 검색창 바로 아래 고정한다.**
                   //
                   // 재검색 버튼과 같은 흐름에 두었더니 버튼이 뜰 때마다 범례가 아래로

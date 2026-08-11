@@ -696,8 +696,6 @@
   "mapCommercialLabel": "商圈",
   "mapObservedAt": "截至 {time}",
   "mapPopulationRange": "{min} – {max}人",
-  "mapCongestionUnavailable": "無法獲取擁擠度資訊。",
-  "mapTruncatedNotice": "地點過多，放大後可檢視全部。",
   "mapAttribution": "來源：首爾特別市即時城市資料",
   "mapKeyMissing": "缺少地圖金鑰，無法載入地圖。請檢查 KAKAO_NATIVE_APP_KEY 構建配置。",
   "mapLoadFailed": "地圖載入失敗。",
