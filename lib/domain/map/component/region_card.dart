@@ -4,6 +4,8 @@ import '../../../common/location/coordinates.dart';
 import '../../../common/model/distance_format.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/region_recommendation.dart';
+import '../model/region_score.dart';
+import 'region_strength_label.dart';
 import 'score_breakdown.dart';
 
 /// 추천된 시군구 한 곳(설계 §2.1).
@@ -102,10 +104,16 @@ class RegionCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  _TotalScoreBadge(score: region.totalScore),
                 ],
               ),
+              // 강점 한 줄. **총점 자리를 대신한다** — totalScore는 계약에서 빠졌다.
+              if (region.strongestScore case final RegionScore best) ...<Widget>[
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: RegionStrengthLabel(score: best),
+                ),
+              ],
               const SizedBox(height: 12),
               ScoreBreakdown(region: region),
               // 항목 수가 다섯보다 적으면 근거가 얕다는 뜻이다(R31 · §2.2).
@@ -159,36 +167,6 @@ class _RankBadge extends StatelessWidget {
         style: theme.textTheme.labelSmall?.copyWith(
           fontWeight: FontWeight.w700,
           color: theme.colorScheme.onSurfaceVariant,
-        ),
-      ),
-    );
-  }
-}
-
-/// 총점 배지.
-///
-/// **점수 구간별 색을 두지 않는다**(디자인 §1 갭). 스펙에 임계값 규칙이 없어 임의로
-/// 만들면 없는 기준을 화면이 지어내는 셈이 된다. 단일 `primary` 톤으로 둔다.
-class _TotalScoreBadge extends StatelessWidget {
-  const _TotalScoreBadge({required this.score});
-
-  final double score;
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        '${score.round()}',
-        style: theme.textTheme.titleMedium?.copyWith(
-          color: theme.colorScheme.onPrimary,
-          fontWeight: FontWeight.w700,
-          fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
         ),
       ),
     );

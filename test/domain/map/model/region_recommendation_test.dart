@@ -2,14 +2,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/region_recommendation.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/region_score.dart';
 
-/// SPEC-0015 지역 추천 도메인 모델. 여기서 지는 기준은 §7의 표다.
+/// SPEC-0015 지역 추천 도메인 모델.
 void main() {
   RegionRecommendation regionWith(List<RegionScore> scores) =>
       RegionRecommendation(
         code: '11110',
         name: 'Jongno-gu',
         provinceName: 'Seoul',
-        totalScore: 80,
         scores: scores,
         scoreFactorCount: scores.length,
         centerLat: 37.5735,
@@ -21,7 +20,11 @@ void main() {
       // 서버가 산출 불가 항목을 빼서 준다(§2.2). 0으로 채우면 서버가 피한 왜곡을
       // 클라이언트가 되살린다.
       final RegionRecommendation region = regionWith(const <RegionScore>[
-        RegionScore(factor: RegionScoreFactor.congestion, value: 90),
+        RegionScore(
+          factor: RegionScoreFactor.congestion,
+          value: 90,
+          rank: 2,
+        ),
       ]);
 
       expect(region.scores, hasLength(1));
@@ -29,9 +32,8 @@ void main() {
     });
 
     test('거리 항목이 없으면 위치 없이 받은 결과다', () {
-      // R27 — 위치 권한이 없으면 거리 항목이 부재로 표기된다.
       final RegionRecommendation region = regionWith(const <RegionScore>[
-        RegionScore(factor: RegionScoreFactor.congestion, value: 90),
+        RegionScore(factor: RegionScoreFactor.congestion, value: 90, rank: 1),
       ]);
 
       expect(region.lacksDistance, isTrue);
@@ -39,7 +41,7 @@ void main() {
 
     test('거리 항목이 있으면 위치를 반영한 결과다', () {
       final RegionRecommendation region = regionWith(const <RegionScore>[
-        RegionScore(factor: RegionScoreFactor.distance, value: 70),
+        RegionScore(factor: RegionScoreFactor.distance, value: 70, rank: 3),
       ]);
 
       expect(region.lacksDistance, isFalse);
@@ -51,6 +53,7 @@ void main() {
       const RegionScore score = RegionScore(
         factor: RegionScoreFactor.stayIntensity,
         value: 75,
+        rank: 4,
       );
 
       expect(score.fraction, closeTo(0.75, 1e-9));
@@ -60,10 +63,12 @@ void main() {
       const RegionScore over = RegionScore(
         factor: RegionScoreFactor.congestion,
         value: 140,
+        rank: 1,
       );
       const RegionScore under = RegionScore(
         factor: RegionScoreFactor.congestion,
         value: -20,
+        rank: 30,
       );
 
       expect(over.fraction, 1.0);
@@ -71,11 +76,65 @@ void main() {
     });
   });
 
+  group('강점 항목', () {
+    test('value가 가장 높은 항목을 고른다', () {
+      // **rank로 고르지 않는다** — 항목마다 모수가 달라 20곳 중 3위와 5곳 중 3위는
+      // 같은 뜻이 아니다. value는 같은 정규화 축 위에 있어 비교가 성립한다.
+      final RegionRecommendation region = regionWith(const <RegionScore>[
+        // rank는 더 좋지만(1위) value는 낮다.
+        RegionScore(
+          factor: RegionScoreFactor.congestion,
+          value: 20,
+          rank: 1,
+        ),
+        RegionScore(
+          factor: RegionScoreFactor.stayIntensity,
+          value: 95,
+          rank: 7,
+        ),
+      ]);
+
+      expect(region.strongestScore?.factor, RegionScoreFactor.stayIntensity);
+    });
+
+    test('값이 같으면 항목 선언 순서로 가른다', () {
+      // 서버가 준 배열 순서에 따라 같은 지역의 강점이 조회마다 달라 보이면 안 된다.
+      final RegionRecommendation region = regionWith(const <RegionScore>[
+        RegionScore(
+          factor: RegionScoreFactor.spendingIntensity,
+          value: 100,
+          rank: 1,
+        ),
+        RegionScore(
+          factor: RegionScoreFactor.stayIntensity,
+          value: 100,
+          rank: 1,
+        ),
+      ]);
+
+      // stayIntensity가 spendingIntensity보다 먼저 선언돼 있다.
+      expect(region.strongestScore?.factor, RegionScoreFactor.stayIntensity);
+    });
+
+    test('모르는 항목은 강점이 되지 않는다', () {
+      // 이름도 뜻도 모르는 항목을 강점이라 부를 수 없다.
+      final RegionRecommendation region = regionWith(const <RegionScore>[
+        RegionScore(factor: RegionScoreFactor.unknown, value: 100, rank: 1),
+        RegionScore(factor: RegionScoreFactor.distance, value: 40, rank: 9),
+      ]);
+
+      expect(region.strongestScore?.factor, RegionScoreFactor.distance);
+    });
+
+    test('항목이 없으면 강점도 없다', () {
+      expect(regionWith(const <RegionScore>[]).strongestScore, isNull);
+    });
+  });
+
   group('빈 결과(§5.1)', () {
     test('목록이 비면 빈 결과다', () {
-      // 서버가 빈 목록을 주는 사유는 여럿이지만(바다·해외 좌표, 시군구 3개 미만인
-      // 시도, 후보 없음) 어느 쪽인지는 클라이언트가 알 수 없다. 어느 경우에도
-      // 오류가 아니다.
+      // 바다·해외 좌표, 시군구 3개 미만인 시도(세종·제주), 후보 없음이 모두 이렇게
+      // 온다. 어느 경우에도 오류가 아니다.
       const RegionRecommendationResult result = RegionRecommendationResult(
         regions: <RegionRecommendation>[],
       );
@@ -89,49 +148,6 @@ void main() {
       );
 
       expect(result.isEmpty, isFalse);
-    });
-  });
-
-  group('기준일(R24)', () {
-    test('항목들의 기준일 중 가장 오래된 것을 고른다', () {
-      // 최신을 고르면 카드 전체가 그만큼 새것처럼 읽힌다 — 집중률은 오늘이고 월
-      // 지표는 해당 월 1일이라 근거의 나이가 크게 다르다.
-      final RegionRecommendation region = regionWith(<RegionScore>[
-        RegionScore(
-          factor: RegionScoreFactor.congestion,
-          value: 90,
-          basisAt: DateTime(2026, 8, 11),
-        ),
-        RegionScore(
-          factor: RegionScoreFactor.spendingIntensity,
-          value: 60,
-          basisAt: DateTime(2026, 6, 1),
-        ),
-      ]);
-
-      expect(region.oldestBasisAt, DateTime(2026, 6, 1));
-    });
-
-    test('기준일이 없는 항목은 셈에서 빠진다', () {
-      // DISTANCE는 적재 데이터가 아니라 요청 시점 계산이라 기준일이 없다.
-      final RegionRecommendation region = regionWith(<RegionScore>[
-        RegionScore(
-          factor: RegionScoreFactor.congestion,
-          value: 90,
-          basisAt: DateTime(2026, 8, 11),
-        ),
-        const RegionScore(factor: RegionScoreFactor.distance, value: 80),
-      ]);
-
-      expect(region.oldestBasisAt, DateTime(2026, 8, 11));
-    });
-
-    test('기준일이 하나도 없으면 null이다', () {
-      final RegionRecommendation region = regionWith(const <RegionScore>[
-        RegionScore(factor: RegionScoreFactor.distance, value: 80),
-      ]);
-
-      expect(region.oldestBasisAt, isNull);
     });
   });
 }

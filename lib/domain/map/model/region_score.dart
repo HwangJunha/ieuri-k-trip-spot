@@ -41,23 +41,29 @@ class RegionScore {
   const RegionScore({
     required this.factor,
     required this.value,
-    this.basisAt,
+    required this.rank,
   });
 
   final RegionScoreFactor factor;
 
-  /// 0~100으로 정규화된 값. 높을수록 추천에 유리하다.
+  /// 0~100으로 정규화된 값.
+  ///
+  /// **절대 점수가 아니라 후보 집합 안의 상대 위치다.** 막대 길이로는 쓰되 **숫자로
+  /// 노출하지 않는다** — "48점"처럼 보이면 절대 평가로 읽힌다. 지역의 강점을 고를
+  /// 때는 이 값이 기준이다(항목 간 비교라 rank로는 고를 수 없다 — 모수가 다르다).
   final double value;
 
-  /// 이 항목의 근거 데이터 기준일(R24 · POL-038).
+  /// 이 항목의 순위. **1이 가장 좋다.**
   ///
-  /// **항목마다 신선도가 다르다** — 집중률은 오늘, 방문자수는 수십 일 전, 월 지표는
-  /// 해당 월 1일이다. 그래서 서버는 응답 전체에 날짜 하나를 두지 않는다. 하나만 두면
-  /// 어떤 값을 고르든 나머지 항목에 대해서는 틀린 표기가 된다.
+  /// [RegionScoreFactor.congestion]은 값이 이미 뒤집혀 있어 1위가 가장 덜 붐비는
+  /// 곳이다.
   ///
-  /// **null은 기준일이라는 개념이 없다는 뜻이다** — [RegionScoreFactor.distance]가
-  /// 그렇다. 적재된 데이터가 아니라 요청 시점에 계산된다.
-  final DateTime? basisAt;
+  /// **반환된 목록이 아니라 시도 전체 후보 기준이다** — 10개만 받아도 rank가 15일 수
+  /// 있다. 화면이 "이 목록에서 몇 번째"로 읽히게 두면 안 된다.
+  ///
+  /// 동점은 표준 경쟁 순위(1, 2, 2, 4)이며 항목마다 모수가 다르다 — 그 항목을 산출할
+  /// 수 있는 지역만 센다.
+  final int rank;
 
   /// 막대 길이로 쓸 0.0~1.0 비율. 서버가 범위를 벗어난 값을 주더라도 화면이 넘치지
   /// 않도록 여기서 자른다.
@@ -69,8 +75,8 @@ class RegionScore {
       other is RegionScore &&
           other.factor == factor &&
           other.value == value &&
-          other.basisAt == basisAt;
+          other.rank == rank;
 
   @override
-  int get hashCode => Object.hash(factor, value, basisAt);
+  int get hashCode => Object.hash(factor, value, rank);
 }

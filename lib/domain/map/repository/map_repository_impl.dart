@@ -168,7 +168,6 @@ class MapRepositoryImpl implements MapRepository {
     code: r.code,
     name: r.name,
     provinceName: r.provinceName,
-    totalScore: r.totalScore,
     scores: r.scores.map(_scoreFrom).toList(growable: false),
     scoreFactorCount: r.scoreFactorCount,
     centerLat: r.center.lat,
@@ -180,7 +179,7 @@ class MapRepositoryImpl implements MapRepository {
   ) => RegionScore(
     factor: _factorFrom(s.factor),
     value: s.value,
-    basisAt: _parseDate(s.basisAt),
+    rank: s.rank,
   );
 
   /// 도메인 [RegionScoreFactor] 매핑.
@@ -200,13 +199,6 @@ class MapRepositoryImpl implements MapRepository {
         Enum$RegionScoreFactor.$unknown => RegionScoreFactor.unknown,
       };
 
-  /// 기준일(`2026-08-11`)을 파싱한다.
-  ///
-  /// **[_parseTime]과 달리 `toLocal()`을 쓰지 않는다.** 날짜만 오는 값이라 시간대를
-  /// 적용하면 자정 기준으로 하루가 밀려 "8월 11일 기준"이 "8월 10일 기준"으로
-  /// 표시될 수 있다.
-  DateTime? _parseDate(String? raw) =>
-      raw == null ? null : DateTime.tryParse(raw);
 
   /// 생성 타입 → 도메인 [CongestionArea].
   ///

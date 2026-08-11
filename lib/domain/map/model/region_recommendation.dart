@@ -10,7 +10,6 @@ class RegionRecommendation {
     required this.code,
     required this.name,
     required this.provinceName,
-    required this.totalScore,
     required this.scores,
     required this.scoreFactorCount,
     required this.centerLat,
@@ -29,16 +28,13 @@ class RegionRecommendation {
   /// (중구·남구·동구) 지역명만으로는 어디인지 알 수 없다.
   final String provinceName;
 
-  /// 가중합 총점(0~100). 목록 정렬 기준이다.
-  final double totalScore;
-
   /// 항목별 점수. **결측 항목은 빠진 채로 온다**(§2.2).
   final List<RegionScore> scores;
 
-  /// 총점 산출에 쓰인 항목 수.
+  /// 산출에 쓰인 항목 수(= [scores]의 길이).
   ///
-  /// 총점은 존재하는 항목의 가중치 합으로 나눈 값이라, 항목 3개로 나온 80점과 5개로
-  /// 나온 80점은 **근거의 두께가 다르다**. 이 값이 작을수록 근거가 얕다(R31 · §2.2).
+  /// **이 값이 작을수록 근거가 얕다**(R31 · §2.2) — 항목 3개로 매겨진 순위와 5개로
+  /// 매겨진 순위는 근거의 두께가 다르다. 신뢰도 표현에 쓴다.
   final int scoreFactorCount;
 
   /// 지도를 이 지역으로 옮길 때 쓰는 대표 좌표. 경계 폴리곤 내부의 점이 보장된다.
@@ -52,23 +48,26 @@ class RegionRecommendation {
   /// 위치 없이 받은 결과인지(R27). 거리 항목이 없으면 위치를 주지 않았다는 뜻이다.
   bool get lacksDistance => lacks(RegionScoreFactor.distance);
 
-  /// 항목들의 기준일 중 **가장 오래된 것**. 하나도 없으면 null이다.
+  /// 이 지역의 **강점 항목**. 항목이 하나도 없으면 null이다.
   ///
-  /// **최신이 아니라 가장 오래된 값을 고른다**(R24). 항목마다 신선도가 달라서
-  /// (집중률은 오늘, 월 지표는 해당 월 1일) 최신 날짜를 적으면 카드 전체가 그만큼
-  /// 새것처럼 읽힌다. 가장 오래된 값이 이 추천이 최소한 얼마나 묵은 근거 위에 서
-  /// 있는지를 정직하게 말해 준다.
+  /// **[RegionScore.value]가 가장 높은 항목을 고른다.** 항목마다 모수가 달라
+  /// [RegionScore.rank]로는 항목끼리 비교할 수 없다 — 20곳 중 3위와 5곳 중 3위는
+  /// 같은 뜻이 아니다. value는 같은 정규화 축 위에 있어 비교가 성립한다.
   ///
-  /// [RegionScoreFactor.distance]는 기준일이라는 개념이 없어(요청 시점 계산) 자연히
-  /// 빠진다.
-  DateTime? get oldestBasisAt {
-    DateTime? oldest;
+  /// 값이 같으면 [RegionScoreFactor] 선언 순서로 가른다 — 그러지 않으면 서버가 준
+  /// 배열 순서에 따라 같은 지역의 강점이 조회마다 달라 보인다.
+  RegionScore? get strongestScore {
+    RegionScore? best;
     for (final RegionScore score in scores) {
-      final DateTime? at = score.basisAt;
-      if (at == null) continue;
-      if (oldest == null || at.isBefore(oldest)) oldest = at;
+      if (score.factor == RegionScoreFactor.unknown) continue;
+      if (best == null ||
+          score.value > best.value ||
+          (score.value == best.value &&
+              score.factor.index < best.factor.index)) {
+        best = score;
+      }
     }
-    return oldest;
+    return best;
   }
 
   @override
@@ -78,7 +77,6 @@ class RegionRecommendation {
           other.code == code &&
           other.name == name &&
           other.provinceName == provinceName &&
-          other.totalScore == totalScore &&
           other.scoreFactorCount == scoreFactorCount &&
           other.centerLat == centerLat &&
           other.centerLng == centerLng &&
@@ -97,7 +95,6 @@ class RegionRecommendation {
     code,
     name,
     provinceName,
-    totalScore,
     scoreFactorCount,
     centerLat,
     centerLng,
@@ -114,7 +111,12 @@ class RegionRecommendation {
 class RegionRecommendationResult {
   const RegionRecommendationResult({required this.regions, this.origin});
 
-  /// 총점 내림차순(R22).
+  /// **배열 순서가 곧 추천 순위다**(R22) — `regions[0]`이 1위다. 서버가 정한 순서를
+  /// 그대로 두며 클라이언트가 다시 정렬하지 않는다.
+  ///
+  /// 총점(`totalScore`)은 계약에서 삭제됐다. 가중평균 구조상 총점은 늘 항목 점수들
+  /// 사이 값이라 1위가 60점으로 나왔고, 절대 점수를 보여주는 것 자체가 이 데이터에
+  /// 맞지 않는다.
   final List<RegionRecommendation> regions;
 
   /// **이번 조회에 실제로 쓰인 기준 좌표.**

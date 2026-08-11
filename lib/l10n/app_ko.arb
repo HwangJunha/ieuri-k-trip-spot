@@ -1705,5 +1705,90 @@
   },
   "@mapRegionRecommendationsAllowLocation": {
     "description": "위치 권한 요청/설정 이동 버튼"
+  },
+  "mapRegionStrengthCongestion": "한산할 것으로 예상",
+  "@mapRegionStrengthCongestion": {
+    "description": "강점 라벨 — 예상 혼잡도. **향후 30일 예측이라 미래 시제다**. \"지금 한산\"은 거짓이 된다."
+  },
+  "mapRegionStrengthVisitorVolume": "최근 방문이 많았던 곳",
+  "@mapRegionStrengthVisitorVolume": {
+    "description": "강점 라벨 — 방문자 규모. **약 30일 지연 공개라 과거형이어야 정직하다**."
+  },
+  "mapRegionStrengthStayIntensity": "오래 머무는 곳",
+  "@mapRegionStrengthStayIntensity": {
+    "description": "강점 라벨 — 체류 강도. 월 단위 지표이며 지역의 고유 성격이라 시제를 두지 않는다."
+  },
+  "mapRegionStrengthSpendingIntensity": "소비가 활발한 곳",
+  "@mapRegionStrengthSpendingIntensity": {
+    "description": "강점 라벨 — 소비 강도. 체류 강도와 같은 성격."
+  },
+  "mapRegionStrengthDistance": "가까운 곳",
+  "@mapRegionStrengthDistance": {
+    "description": "강점 라벨 — 거리. 요청 시점에 계산된다."
+  },
+  "mapRegionStrengthWithRank": "{strength} · 시·도 {rank}위",
+  "@mapRegionStrengthWithRank": {
+    "description": "강점 라벨과 항목 순위. 순위는 목록이 아니라 시·도 전체 후보 기준이다.",
+    "placeholders": {
+      "strength": {
+        "type": "String"
+      },
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "mapRegionRecommendationsAbout": "데이터 기준이 궁금해요",
+  "@mapRegionRecommendationsAbout": {
+    "description": "산출 근거 고지로 가는 진입점(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutTitle": "추천 지역은 이렇게 정해져요",
+  "@mapRegionAboutTitle": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutIntro": "내 위치가 속한 시·도 안에서, 지금 있는 지역을 뺀 나머지를 비교해 추천 순서를 정합니다. 아래 다섯 가지를 함께 봅니다.",
+  "@mapRegionAboutIntro": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutCongestion": "한국관광공사 관광지 집중률 예측입니다. 오늘 기준 예측값이며, 실시간으로 측정한 값이 아닙니다.",
+  "@mapRegionAboutCongestion": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutVisitorVolume": "한국관광공사 지역별 방문자 수입니다. 외지인·외국인 방문만 세며, 최근 7일 평균입니다. 원본 데이터가 약 한 달 늦게 공개되어 과거 기록으로 표시합니다.",
+  "@mapRegionAboutVisitorVolume": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutIntensityTitle": "체류 강도 · 소비 강도",
+  "@mapRegionAboutIntensityTitle": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutIntensity": "한국관광공사 관광수요 강도 지표입니다. 월 단위로 공개되어 한 달 동안 같은 값이 유지됩니다.",
+  "@mapRegionAboutIntensity": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutDistance": "내 위치에서 그 지역까지의 거리입니다. 가까울수록 유리하며, 요청할 때마다 새로 계산됩니다.",
+  "@mapRegionAboutDistance": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutRankNote": "항목별 순위는 시·도 전체 지역과 비교한 결과입니다. 목록에 보이는 지역끼리의 순위가 아닙니다.",
+  "@mapRegionAboutRankNote": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutMissingNote": "데이터가 없는 항목은 계산에서 빼며, 0점으로 채우지 않습니다. 항목이 너무 적은 지역은 근거가 얕아 추천에서 제외됩니다.",
+  "@mapRegionAboutMissingNote": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutExcludedNote": "관광지가 충분하지 않은 지역과, 시·군·구가 3개 미만인 시·도(세종·제주)는 추천 대상이 아닙니다.",
+  "@mapRegionAboutExcludedNote": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionFactorRank": "{rank}위",
+  "@mapRegionFactorRank": {
+    "description": "항목별 순위 표기. 1이 가장 좋으며 시·도 전체 후보 기준이다(목록 안 순위가 아니다).",
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
   }
 }

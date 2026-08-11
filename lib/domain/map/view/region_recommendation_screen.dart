@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../common/location/coordinates.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/region_card.dart';
+import '../component/region_recommendation_about_sheet.dart';
 import '../component/region_recommendation_empty_state.dart';
 import '../component/region_recommendation_error_state.dart';
 import '../component/region_recommendation_location_state.dart';
@@ -113,9 +114,23 @@ class _RegionList extends StatelessWidget {
     separatorBuilder: (_, _) => const SizedBox(height: 12),
     itemBuilder: (BuildContext context, int index) {
       if (index == 0) {
-        return const Align(
-          alignment: Alignment.centerLeft,
-          child: SortIndicatorChip(),
+        // 정렬 기준 안내와 산출 근거 진입점을 한 줄에 둔다 — 둘 다 "이 목록이
+        // 어떻게 만들어졌는가"를 말하고, 스크롤하기 전에 보여야 뜻이 산다.
+        return Row(
+          children: <Widget>[
+            const SortIndicatorChip(),
+            const Spacer(),
+            TextButton.icon(
+              onPressed: () => showRegionRecommendationAbout(context),
+              icon: const Icon(Icons.help_outline, size: 16),
+              label: Text(AppLocalizations.of(context)
+                  .mapRegionRecommendationsAbout),
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+              ),
+            ),
+          ],
         );
       }
       final RegionRecommendation region = result.regions[index - 1];

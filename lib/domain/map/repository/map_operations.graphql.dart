@@ -2840,13 +2840,6 @@ const documentNodeQueryRecommendedRegions = DocumentNode(
                         selectionSet: null,
                       ),
                       FieldNode(
-                        name: NameNode(value: 'totalScore'),
-                        alias: null,
-                        arguments: [],
-                        directives: [],
-                        selectionSet: null,
-                      ),
-                      FieldNode(
                         name: NameNode(value: 'scoreFactorCount'),
                         alias: null,
                         arguments: [],
@@ -2899,7 +2892,7 @@ const documentNodeQueryRecommendedRegions = DocumentNode(
                               selectionSet: null,
                             ),
                             FieldNode(
-                              name: NameNode(value: 'basisAt'),
+                              name: NameNode(value: 'rank'),
                               alias: null,
                               arguments: [],
                               directives: [],
@@ -3071,7 +3064,6 @@ class Query$RecommendedRegions$recommendedRegions$regions {
     required this.code,
     required this.name,
     required this.provinceName,
-    required this.totalScore,
     required this.scoreFactorCount,
     required this.center,
     required this.scores,
@@ -3083,7 +3075,6 @@ class Query$RecommendedRegions$recommendedRegions$regions {
     final l$code = json['code'];
     final l$name = json['name'];
     final l$provinceName = json['provinceName'];
-    final l$totalScore = json['totalScore'];
     final l$scoreFactorCount = json['scoreFactorCount'];
     final l$center = json['center'];
     final l$scores = json['scores'];
@@ -3091,7 +3082,6 @@ class Query$RecommendedRegions$recommendedRegions$regions {
       code: (l$code as String),
       name: (l$name as String),
       provinceName: (l$provinceName as String),
-      totalScore: (l$totalScore as num).toDouble(),
       scoreFactorCount: (l$scoreFactorCount as int),
       center:
           Query$RecommendedRegions$recommendedRegions$regions$center.fromJson(
@@ -3114,8 +3104,6 @@ class Query$RecommendedRegions$recommendedRegions$regions {
 
   final String provinceName;
 
-  final double totalScore;
-
   final int scoreFactorCount;
 
   final Query$RecommendedRegions$recommendedRegions$regions$center center;
@@ -3130,8 +3118,6 @@ class Query$RecommendedRegions$recommendedRegions$regions {
     _resultData['name'] = l$name;
     final l$provinceName = provinceName;
     _resultData['provinceName'] = l$provinceName;
-    final l$totalScore = totalScore;
-    _resultData['totalScore'] = l$totalScore;
     final l$scoreFactorCount = scoreFactorCount;
     _resultData['scoreFactorCount'] = l$scoreFactorCount;
     final l$center = center;
@@ -3146,7 +3132,6 @@ class Query$RecommendedRegions$recommendedRegions$regions {
     final l$code = code;
     final l$name = name;
     final l$provinceName = provinceName;
-    final l$totalScore = totalScore;
     final l$scoreFactorCount = scoreFactorCount;
     final l$center = center;
     final l$scores = scores;
@@ -3154,7 +3139,6 @@ class Query$RecommendedRegions$recommendedRegions$regions {
       l$code,
       l$name,
       l$provinceName,
-      l$totalScore,
       l$scoreFactorCount,
       l$center,
       Object.hashAll(l$scores.map((v) => v)),
@@ -3183,11 +3167,6 @@ class Query$RecommendedRegions$recommendedRegions$regions {
     final l$provinceName = provinceName;
     final lOther$provinceName = other.provinceName;
     if (l$provinceName != lOther$provinceName) {
-      return false;
-    }
-    final l$totalScore = totalScore;
-    final lOther$totalScore = other.totalScore;
-    if (l$totalScore != lOther$totalScore) {
       return false;
     }
     final l$scoreFactorCount = scoreFactorCount;
@@ -3243,7 +3222,6 @@ abstract class CopyWith$Query$RecommendedRegions$recommendedRegions$regions<
     String? code,
     String? name,
     String? provinceName,
-    double? totalScore,
     int? scoreFactorCount,
     Query$RecommendedRegions$recommendedRegions$regions$center? center,
     List<Query$RecommendedRegions$recommendedRegions$regions$scores>? scores,
@@ -3282,7 +3260,6 @@ class _CopyWithImpl$Query$RecommendedRegions$recommendedRegions$regions<TRes>
     Object? code = _undefined,
     Object? name = _undefined,
     Object? provinceName = _undefined,
-    Object? totalScore = _undefined,
     Object? scoreFactorCount = _undefined,
     Object? center = _undefined,
     Object? scores = _undefined,
@@ -3297,9 +3274,6 @@ class _CopyWithImpl$Query$RecommendedRegions$recommendedRegions$regions<TRes>
       provinceName: provinceName == _undefined || provinceName == null
           ? _instance.provinceName
           : (provinceName as String),
-      totalScore: totalScore == _undefined || totalScore == null
-          ? _instance.totalScore
-          : (totalScore as double),
       scoreFactorCount:
           scoreFactorCount == _undefined || scoreFactorCount == null
           ? _instance.scoreFactorCount
@@ -3364,7 +3338,6 @@ class _CopyWithStubImpl$Query$RecommendedRegions$recommendedRegions$regions<
     String? code,
     String? name,
     String? provinceName,
-    double? totalScore,
     int? scoreFactorCount,
     Query$RecommendedRegions$recommendedRegions$regions$center? center,
     List<Query$RecommendedRegions$recommendedRegions$regions$scores>? scores,
@@ -3516,7 +3489,7 @@ class Query$RecommendedRegions$recommendedRegions$regions$scores {
   Query$RecommendedRegions$recommendedRegions$regions$scores({
     required this.factor,
     required this.value,
-    this.basisAt,
+    required this.rank,
   });
 
   factory Query$RecommendedRegions$recommendedRegions$regions$scores.fromJson(
@@ -3524,11 +3497,11 @@ class Query$RecommendedRegions$recommendedRegions$regions$scores {
   ) {
     final l$factor = json['factor'];
     final l$value = json['value'];
-    final l$basisAt = json['basisAt'];
+    final l$rank = json['rank'];
     return Query$RecommendedRegions$recommendedRegions$regions$scores(
       factor: fromJson$Enum$RegionScoreFactor((l$factor as String)),
       value: (l$value as num).toDouble(),
-      basisAt: (l$basisAt as String?),
+      rank: (l$rank as int),
     );
   }
 
@@ -3536,7 +3509,7 @@ class Query$RecommendedRegions$recommendedRegions$regions$scores {
 
   final double value;
 
-  final String? basisAt;
+  final int rank;
 
   Map<String, dynamic> toJson() {
     final _resultData = <String, dynamic>{};
@@ -3544,8 +3517,8 @@ class Query$RecommendedRegions$recommendedRegions$regions$scores {
     _resultData['factor'] = toJson$Enum$RegionScoreFactor(l$factor);
     final l$value = value;
     _resultData['value'] = l$value;
-    final l$basisAt = basisAt;
-    _resultData['basisAt'] = l$basisAt;
+    final l$rank = rank;
+    _resultData['rank'] = l$rank;
     return _resultData;
   }
 
@@ -3553,8 +3526,8 @@ class Query$RecommendedRegions$recommendedRegions$regions$scores {
   int get hashCode {
     final l$factor = factor;
     final l$value = value;
-    final l$basisAt = basisAt;
-    return Object.hashAll([l$factor, l$value, l$basisAt]);
+    final l$rank = rank;
+    return Object.hashAll([l$factor, l$value, l$rank]);
   }
 
   @override
@@ -3576,9 +3549,9 @@ class Query$RecommendedRegions$recommendedRegions$regions$scores {
     if (l$value != lOther$value) {
       return false;
     }
-    final l$basisAt = basisAt;
-    final lOther$basisAt = other.basisAt;
-    if (l$basisAt != lOther$basisAt) {
+    final l$rank = rank;
+    final lOther$rank = other.rank;
+    if (l$rank != lOther$rank) {
       return false;
     }
     return true;
@@ -3610,7 +3583,7 @@ abstract class CopyWith$Query$RecommendedRegions$recommendedRegions$regions$scor
     TRes res,
   ) = _CopyWithStubImpl$Query$RecommendedRegions$recommendedRegions$regions$scores;
 
-  TRes call({Enum$RegionScoreFactor? factor, double? value, String? basisAt});
+  TRes call({Enum$RegionScoreFactor? factor, double? value, int? rank});
 }
 
 class _CopyWithImpl$Query$RecommendedRegions$recommendedRegions$regions$scores<
@@ -3637,7 +3610,7 @@ class _CopyWithImpl$Query$RecommendedRegions$recommendedRegions$regions$scores<
   TRes call({
     Object? factor = _undefined,
     Object? value = _undefined,
-    Object? basisAt = _undefined,
+    Object? rank = _undefined,
   }) => _then(
     Query$RecommendedRegions$recommendedRegions$regions$scores(
       factor: factor == _undefined || factor == null
@@ -3646,7 +3619,7 @@ class _CopyWithImpl$Query$RecommendedRegions$recommendedRegions$regions$scores<
       value: value == _undefined || value == null
           ? _instance.value
           : (value as double),
-      basisAt: basisAt == _undefined ? _instance.basisAt : (basisAt as String?),
+      rank: rank == _undefined || rank == null ? _instance.rank : (rank as int),
     ),
   );
 }
@@ -3664,6 +3637,5 @@ class _CopyWithStubImpl$Query$RecommendedRegions$recommendedRegions$regions$scor
 
   TRes _res;
 
-  call({Enum$RegionScoreFactor? factor, double? value, String? basisAt}) =>
-      _res;
+  call({Enum$RegionScoreFactor? factor, double? value, int? rank}) => _res;
 }

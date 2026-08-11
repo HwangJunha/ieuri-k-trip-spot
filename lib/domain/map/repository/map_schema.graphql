@@ -137,7 +137,7 @@ extend type Query {
 
   seoulCongestionAreas: [CongestionAreaBoundary!]!
 
-  # 추천 시군구 목록(SPEC-0015). 총점 내림차순.
+  # 추천 시군구 목록(SPEC-0015). 배열 순서가 곧 추천 순위다.
   #
   # **origin이 필수다.** 이 쿼리는 "지금 있는 곳 말고 근처의 다른 곳"을 답한다 —
   # origin이 속한 시도 안에서만 고르고 origin의 시군구 자신은 결과에서 빠지므로,
@@ -163,9 +163,7 @@ type Coordinates {
   lng: Float!
 }
 
-# **기준 시점을 응답 하나에 두지 않는다.** 항목마다 신선도가 달라(집중률은 오늘,
-# 방문자수는 수십 일 전, 월 지표는 해당 월 1일) 날짜를 하나만 두면 나머지 항목에
-# 대해서는 틀린 표기가 된다 — 그래서 RegionScore.basisAt에 항목별로 실린다.
+# **추천 순위는 배열 순서다** — regions[0]이 1위다. totalScore는 계약에서 삭제됐다.
 type RecommendedRegionResult {
   regions: [RecommendedRegion!]!
 }
@@ -176,10 +174,9 @@ type RecommendedRegion {
   name: String!
   # 같은 이름의 시군구를 구분하는 데 쓴다(중구·남구·동구).
   provinceName: String!
-  totalScore: Float!
   # 산출할 수 없는 항목은 이 목록에서 빠진다 — 0점으로 채우지 않는다.
   scores: [RegionScore!]!
-  # totalScore 산출에 쓰인 항목 수(= scores의 길이). 작을수록 근거가 얕다.
+  # 산출에 쓰인 항목 수(= scores의 길이). 작을수록 근거가 얕다.
   scoreFactorCount: Int!
   # **관광지가 실제로 모여 있는 지점**이며 지역의 기하학적 중심이 아니다.
   center: Coordinates!
@@ -188,11 +185,19 @@ type RecommendedRegion {
 type RegionScore {
   factor: RegionScoreFactor!
   # 0~100. 높을수록 추천에 유리하다.
-  value: Float!
-  # 이 항목의 근거 데이터 기준일(ISO-8601 날짜).
   #
-  # **null은 기준일이라는 개념이 없다는 뜻이다** — DISTANCE가 그렇다. 적재된
-  # 데이터가 아니라 요청 시점에 계산되기 때문이다.
+  # **절대 점수가 아니라 후보 집합 안의 상대 위치다.** 막대 길이로는 쓰되 숫자로
+  # 노출하지 않는다 — "48점"처럼 보이면 절대 평가로 읽힌다.
+  value: Float!
+  # 이 항목의 순위. **1이 가장 좋다.**
+  #
+  # CONGESTION은 값이 이미 뒤집혀 있어 1위가 가장 덜 붐비는 곳이다.
+  #
+  # **반환된 목록이 아니라 시도 전체 후보 기준이다** — limit=10으로 받아도 rank가
+  # 15일 수 있다. 동점은 표준 경쟁 순위(1, 2, 2, 4)이며, 항목마다 모수가 다르다
+  # (그 항목을 산출할 수 있는 지역만 센다).
+  rank: Int!
+  # **삭제 예정 필드다 — 쓰지 않는다.**
   basisAt: String
 }
 

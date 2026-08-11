@@ -50,35 +50,33 @@ Map<String, dynamic> _liveResponse() => <String, dynamic>{
         'code': '11680',
         'name': 'Gangnam-gu',
         'provinceName': 'Seoul',
-        'totalScore': 67.47525029413275,
         'scoreFactorCount': 5,
         'center': <String, dynamic>{'lat': 37.5238962764, 'lng': 127.0396358978},
         'scores': <dynamic>[
           <String, dynamic>{
             'factor': 'CONGESTION',
             'value': 15.017708782550542,
-            'basisAt': '2026-08-12',
+            'rank': 22,
           },
           <String, dynamic>{
             'factor': 'VISITOR_VOLUME',
             'value': 48.51563763748991,
-            'basisAt': '2026-07-12',
+            'rank': 1,
           },
           <String, dynamic>{
             'factor': 'STAY_INTENSITY',
             'value': 100.0,
-            'basisAt': '2026-06-01',
+            'rank': 1,
           },
           <String, dynamic>{
             'factor': 'SPENDING_INTENSITY',
             'value': 100.0,
-            'basisAt': '2026-06-01',
+            'rank': 1,
           },
-          // 거리는 요청 시점 계산이라 기준일이 없다.
           <String, dynamic>{
             'factor': 'DISTANCE',
             'value': 80.62547357523549,
-            'basisAt': null,
+            'rank': 9,
           },
         ],
       },
@@ -106,9 +104,9 @@ void main() {
       expect(region.centerLng, closeTo(127.0396358978, 1e-9));
     });
 
-    test('항목별 기준일을 그대로 싣는다', () async {
-      // R24 — 항목마다 신선도가 다르다. 하나로 뭉치면 나머지 항목에 대해 틀린
-      // 표기가 된다.
+    test('항목별 순위를 그대로 싣는다', () async {
+      // **목록이 아니라 시·도 전체 후보 기준이다** — CONGESTION의 22위처럼 반환된
+      // 지역 수보다 큰 값이 정상이다.
       final _FakeLink link = _FakeLink(data: _liveResponse());
 
       final RegionRecommendationResult result = await _repo(
@@ -118,15 +116,17 @@ void main() {
 
       expect(
         region.scores
-            .firstWhere((RegionScore s) => s.factor == RegionScoreFactor.congestion)
-            .basisAt,
-        DateTime(2026, 8, 12),
+            .firstWhere(
+              (RegionScore s) => s.factor == RegionScoreFactor.congestion,
+            )
+            .rank,
+        22,
       );
-      // 가장 오래된 것이 카드에 적히는 값이다.
-      expect(region.oldestBasisAt, DateTime(2026, 6, 1));
     });
 
-    test('거리 항목은 기준일이 없다', () async {
+    test('강점은 순위가 아니라 value로 고른다', () async {
+      // 실 응답에서 CONGESTION은 rank 22위지만 value가 15로 가장 낮고,
+      // STAY_INTENSITY가 value 100으로 가장 높다.
       final _FakeLink link = _FakeLink(data: _liveResponse());
 
       final RegionRecommendationResult result = await _repo(
@@ -134,10 +134,8 @@ void main() {
       ).fetchRecommendedRegions(origin: seoul);
 
       expect(
-        result.regions.single.scores
-            .firstWhere((RegionScore s) => s.factor == RegionScoreFactor.distance)
-            .basisAt,
-        isNull,
+        result.regions.single.strongestScore?.factor,
+        RegionScoreFactor.stayIntensity,
       );
     });
 

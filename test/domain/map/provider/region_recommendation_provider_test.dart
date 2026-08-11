@@ -82,25 +82,26 @@ final class FakeLocationService implements LocationService {
 void main() {
   final RegionRecommendationResult twoRegions = RegionRecommendationResult(
     regions: <RegionRecommendation>[
-      RegionRecommendation(
+      const RegionRecommendation(
         code: '11110',
         name: 'Jongno-gu',
         provinceName: 'Seoul',
-        totalScore: 88,
         scores: <RegionScore>[
-          // 기준일이 항목마다 다르다 — 집중률은 오늘, 소비는 해당 월 1일.
           RegionScore(
             factor: RegionScoreFactor.congestion,
             value: 90,
-            basisAt: DateTime(2026, 8, 11),
+            rank: 2,
           ),
           RegionScore(
             factor: RegionScoreFactor.spendingIntensity,
             value: 55,
-            basisAt: DateTime(2026, 6, 1),
+            rank: 8,
           ),
-          // DISTANCE는 기준일이 없다(요청 시점 계산).
-          const RegionScore(factor: RegionScoreFactor.distance, value: 60),
+          RegionScore(
+            factor: RegionScoreFactor.distance,
+            value: 60,
+            rank: 12,
+          ),
         ],
         scoreFactorCount: 3,
         centerLat: 37.5735,
@@ -110,9 +111,12 @@ void main() {
         code: '26110',
         name: 'Jung-gu',
         provinceName: 'Busan',
-        totalScore: 72,
         scores: <RegionScore>[
-          RegionScore(factor: RegionScoreFactor.congestion, value: 70),
+          RegionScore(
+            factor: RegionScoreFactor.congestion,
+            value: 70,
+            rank: 5,
+          ),
         ],
         scoreFactorCount: 1,
         centerLat: 35.1064,
@@ -137,8 +141,9 @@ void main() {
     return c;
   }
 
-  test('서버가 준 총점 내림차순을 그대로 유지한다', () async {
-    // R22 — 클라이언트가 다시 정렬하지 않는다.
+  test('서버가 준 배열 순서를 그대로 유지한다', () async {
+    // R22 — 배열 순서가 곧 추천 순위다(totalScore는 계약에서 삭제됐다).
+    // 클라이언트가 다시 정렬하지 않는다.
     final ProviderContainer c = containerWith(
       repository: FakeMapRepository(result: twoRegions),
       coordinates: const Coordinates(latitude: 37.5, longitude: 127.0),
@@ -149,8 +154,8 @@ void main() {
     );
 
     expect(
-      result.regions.map((RegionRecommendation r) => r.totalScore).toList(),
-      <double>[88, 72],
+      result.regions.map((RegionRecommendation r) => r.code).toList(),
+      <String>['11110', '26110'],
     );
   });
 
@@ -169,9 +174,9 @@ void main() {
     expect(result.regions.first.scoreFactorCount, 3);
   });
 
-  test('기준일이 항목마다 보존된다', () async {
-    // R24 — 항목마다 신선도가 달라 서버가 응답 하나에 날짜를 두지 않는다. 이 값이
-    // "실시간이 아님"을 드러내는 장치이므로 항목을 타고 화면까지 가야 한다.
+  test('항목별 순위가 보존된다', () async {
+    // 화면이 "시·도 n위"로 적는 값이다 — 목록 안 순위가 아니라 시도 전체 기준이라
+    // 그대로 실려 와야 한다.
     final ProviderContainer c = containerWith(
       repository: FakeMapRepository(result: twoRegions),
       coordinates: const Coordinates(latitude: 37.5, longitude: 127.0),
@@ -181,7 +186,7 @@ void main() {
       regionRecommendationsProvider(null).future,
     );
 
-    expect(result.regions.first.oldestBasisAt, DateTime(2026, 6, 1));
+    expect(result.regions.first.scores.first.rank, 2);
   });
 
   group('위치가 없을 때', () {

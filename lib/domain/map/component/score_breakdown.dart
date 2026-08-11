@@ -72,10 +72,8 @@ class _ScoreRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final String label = _factorLabel(
-      AppLocalizations.of(context),
-      score.factor,
-    );
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final String label = _factorLabel(l10n, score.factor);
 
     return Row(
       children: <Widget>[
@@ -101,18 +99,21 @@ class _ScoreRow extends StatelessWidget {
               // 값을 줘도 막대가 넘치지 않는다.
               value: score.fraction,
               minHeight: 6,
-              // 총점 배지의 primary와 색을 나눈다 — 총점과 항목별 점수는 다른
-              // 종류의 정보라 같은 색으로 묶이면 안 된다.
+              // 강점 라벨의 primary와 색을 나눈다 — 강점 한 줄과 항목별 막대는
+              // 다른 종류의 정보라 같은 색으로 묶이면 안 된다.
               color: theme.colorScheme.secondary,
               backgroundColor: theme.colorScheme.surfaceContainerHighest,
             ),
           ),
         ),
         const SizedBox(width: 8),
+        // **점수 숫자를 노출하지 않는다.** `value`는 절대 점수가 아니라 후보 집합
+        // 안의 상대 위치라, "48"처럼 적으면 절대 평가로 읽힌다. 대신 뜻이 분명한
+        // 순위를 적는다 — 1이 가장 좋고, 시·도 전체 후보 기준이다.
         SizedBox(
-          width: 26,
+          width: 34,
           child: Text(
-            '${score.value.round()}',
+            l10n.mapRegionFactorRank(score.rank),
             textAlign: TextAlign.end,
             style: theme.textTheme.labelMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
