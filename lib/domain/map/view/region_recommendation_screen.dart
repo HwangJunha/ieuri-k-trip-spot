@@ -53,7 +53,32 @@ class _RegionRecommendationScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.mapRegionRecommendationsTitle),
+        // 제목 오른쪽 위에 작은 물음표를 붙인다(사용자 결정, 2026-08-12) —
+        // 각주처럼 읽혀 "이 화면이 무엇인지"에 바로 이어진다.
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(l10n.mapRegionRecommendationsTitle),
+            const SizedBox(width: 2),
+            // 제목 글자 높이 안에서 위로 올려 붙인다.
+            Transform.translate(
+              offset: const Offset(0, -6),
+              child: InkResponse(
+                onTap: () => showRegionRecommendationAbout(context),
+                radius: 18,
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                    Icons.help_outline,
+                    size: 15,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
         actions: <Widget>[
           // 기준 위치 토글(사용자 요청 — 아이콘 하나로). **지도를 거쳐 들어왔을
           // 때만 띄운다** — 지도 중심을 모르면 고를 것이 하나뿐이다.
@@ -110,16 +135,9 @@ class _RegionList extends StatelessWidget {
     // **정렬 안내 칩을 두지 않는다**(사용자 결정, 2026-08-12). 목록이 순위대로
     // 번호가 매겨져 있어 "무엇 순인지"는 이미 드러나고, 자세한 기준은 앱바의 산출
     // 근거 고지가 설명한다.
-    //
-    // 마지막 항목은 산출 근거 고지 진입점이다(개인정보보호법 §37조의2). **목록
-    // 끝에 둔다**(사용자 결정) — 다 보고 난 뒤 "이건 어떻게 정해졌지?"가 자연스러운
-    // 흐름이고, 앱바에 두면 성격이 다른 위치 토글과 섞인다.
-    itemCount: result.regions.length + 1,
+    itemCount: result.regions.length,
     separatorBuilder: (_, _) => const SizedBox(height: 12),
     itemBuilder: (BuildContext context, int index) {
-      if (index == result.regions.length) {
-        return const _AboutLink();
-      }
       final RegionRecommendation region = result.regions[index];
       return RegionCard(
         region: region,
@@ -131,29 +149,6 @@ class _RegionList extends StatelessWidget {
       );
     },
   );
-}
-
-/// 목록 끝의 산출 근거 고지 진입점.
-///
-/// **자동화된 추천이라 근거를 밝혀야 한다**(개인정보보호법 §37조의2). 목록을 다 본
-/// 뒤에 놓여 "이건 어떻게 정해졌지?"라는 물음이 자연스럽게 이어진다.
-class _AboutLink extends StatelessWidget {
-  const _AboutLink();
-
-  @override
-  Widget build(BuildContext context) {
-    final AppLocalizations l10n = AppLocalizations.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(top: 4),
-      child: Center(
-        child: TextButton.icon(
-          onPressed: () => showRegionRecommendationAbout(context),
-          icon: const Icon(Icons.help_outline, size: 18),
-          label: Text(l10n.mapRegionRecommendationsAbout),
-        ),
-      ),
-    );
-  }
 }
 
 /// 오류 + 재시도. 상한을 센 뒤 조회를 다시 연다.
