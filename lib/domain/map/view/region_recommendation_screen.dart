@@ -66,6 +66,9 @@ class _RegionRecommendationScreenState
               onPressed: () => setState(() => _useMapCenter = !_useMapCenter),
               icon: Icon(
                 _useMapCenter ? Icons.map_outlined : Icons.my_location,
+                // 앱의 강조색(코랄)을 쓴다 — 지도 화면의 컨트롤 버튼들과 같은 색이라
+                // "지도를 어디로 볼 것인가"를 다루는 조작으로 함께 읽힌다.
+                color: Theme.of(context).colorScheme.primary,
               ),
               tooltip: _useMapCenter
                   ? l10n.mapRegionRecommendationsOriginMapCenter
@@ -88,7 +91,7 @@ class _RegionRecommendationScreenState
               // **빈 결과를 오류로 그리지 않는다**(R15 · §5.1). 재시도 버튼도 두지
               // 않는다 — 몇 번을 눌러도 같은 결과다.
               ? const RegionRecommendationEmptyState()
-              : _RegionList(result: result, origin: _origin),
+              : _RegionList(result: result),
         ),
       ),
     );
@@ -97,13 +100,9 @@ class _RegionRecommendationScreenState
 
 /// 추천 목록. 총점 내림차순 그대로 그린다 — 화면이 다시 정렬하지 않는다(R22).
 class _RegionList extends StatelessWidget {
-  const _RegionList({required this.result, required this.origin});
+  const _RegionList({required this.result});
 
   final RegionRecommendationResult result;
-
-  /// 이번 조회의 기준 좌표. null이면 내 위치이며, 그 값은 화면이 알지 못한다
-  /// (provider가 얻는다) — 그때는 거리를 적지 않는다.
-  final Coordinates? origin;
 
   @override
   Widget build(BuildContext context) => ListView.separated(
@@ -123,7 +122,7 @@ class _RegionList extends StatelessWidget {
       return RegionCard(
         region: region,
         rank: index,
-        origin: origin,
+        origin: result.origin,
         onTap: () => Navigator.of(context).pop(
           Coordinates(latitude: region.centerLat, longitude: region.centerLng),
         ),

@@ -1,3 +1,4 @@
+import '../../../common/location/coordinates.dart';
 import 'region_score.dart';
 
 /// 추천된 시군구 1건(SPEC-0015 §2.1).
@@ -111,10 +112,18 @@ class RegionRecommendation {
 /// 충분치 않아 후보에서 빠진 지역만 남은 시도. 어느 쪽도 오류가 아니며 재시도로
 /// 해결되지도 않는다.
 class RegionRecommendationResult {
-  const RegionRecommendationResult({required this.regions});
+  const RegionRecommendationResult({required this.regions, this.origin});
 
   /// 총점 내림차순(R22).
   final List<RegionRecommendation> regions;
+
+  /// **이번 조회에 실제로 쓰인 기준 좌표.**
+  ///
+  /// 화면이 거리를 그리려면 이 값이 필요한데, "내 위치" 기준일 때는 좌표를 provider가
+  /// 얻으므로 화면이 알 방법이 없다 — 결과에 실어 돌려준다. 화면이 위치 provider를
+  /// 따로 watch하면 둘이 각자 좌표를 얻어 어긋날 수 있다(조회에 쓴 좌표와 거리를 잰
+  /// 좌표가 다른 상태).
+  final Coordinates? origin;
 
   bool get isEmpty => regions.isEmpty;
 }

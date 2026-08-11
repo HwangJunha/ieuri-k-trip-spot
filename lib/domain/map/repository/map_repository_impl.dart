@@ -155,6 +155,9 @@ class MapRepositoryImpl implements MapRepository {
       regions: result.regions
           .map(_recommendationFrom)
           .toList(growable: false),
+      // 화면이 거리를 재려면 **조회에 실제로 쓴 좌표**가 필요하다. 내 위치 기준일
+      // 때는 provider가 좌표를 얻으므로 화면이 알 수 없어, 여기서 실어 보낸다.
+      origin: origin,
     );
   }
 

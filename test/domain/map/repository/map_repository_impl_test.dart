@@ -141,6 +141,19 @@ void main() {
       );
     });
 
+    test('조회에 쓴 좌표를 결과에 담아 돌려준다', () async {
+      // 화면이 거리를 재는 데 쓴다. 내 위치 기준일 때는 provider가 좌표를 얻으므로
+      // 화면이 알 방법이 없어, 결과에 실려 오지 않으면 거리가 통째로 사라진다
+      // (실기기에서 그 상태였다).
+      final _FakeLink link = _FakeLink(data: _liveResponse());
+
+      final RegionRecommendationResult result = await _repo(
+        link,
+      ).fetchRecommendedRegions(origin: seoul);
+
+      expect(result.origin, seoul);
+    });
+
     test('좌표와 limit을 요청에 싣는다', () async {
       final _FakeLink link = _FakeLink(data: _liveResponse());
 

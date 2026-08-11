@@ -34,7 +34,11 @@ final class FakeMapRepository implements MapRepository {
     calls++;
     lastOrigin = origin;
     if (failure != null) throw failure!;
-    return result!;
+    // 실제 구현과 같게 **쓴 좌표를 결과에 담는다** — 화면이 이 값으로 거리를 잰다.
+    return RegionRecommendationResult(
+      regions: result!.regions,
+      origin: origin,
+    );
   }
 
   @override
@@ -206,6 +210,27 @@ void main() {
       expect(sub.read().error, isA<RegionRecommendationNeedsLocation>());
       // 조회를 아예 걸지 않는다 — 실패할 요청을 서버에 보내지 않는다.
       expect(repository.calls, 0);
+    });
+
+    test('내 위치로 조회해도 그 좌표가 결과에 남는다', () async {
+      // 화면은 이 값으로 거리를 잰다. 내 위치는 provider가 얻으므로 결과에 실려
+      // 오지 않으면 화면이 알 방법이 없어 거리가 사라진다.
+      final FakeMapRepository repository = FakeMapRepository(
+        result: twoRegions,
+      );
+      final ProviderContainer c = containerWith(
+        repository: repository,
+        coordinates: const Coordinates(latitude: 37.5, longitude: 127.0),
+      );
+
+      final RegionRecommendationResult result = await c.read(
+        regionRecommendationsProvider(null).future,
+      );
+
+      expect(
+        result.origin,
+        const Coordinates(latitude: 37.5, longitude: 127.0),
+      );
     });
 
     test('위치가 있으면 좌표를 실어 보낸다', () async {
