@@ -6,6 +6,7 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../component/region_card.dart';
 import '../component/region_recommendation_empty_state.dart';
 import '../component/region_recommendation_error_state.dart';
+import '../component/region_recommendation_location_state.dart';
 import '../component/sort_indicator_chip.dart';
 import '../model/region_recommendation.dart';
 import '../provider/region_recommendation_provider.dart';
@@ -38,11 +39,16 @@ class RegionRecommendationScreen extends ConsumerWidget {
           // 앱의 다른 목록 화면(찜·커뮤니티·숨긴 글)과 같은 중앙 스피너를 쓴다.
           // 이 화면만 스켈레톤을 두면 로딩 모양이 화면마다 달라진다(디자인 §6 갭).
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, _) => const _ErrorBody(),
+          // **위치 부재를 일반 오류와 가른다**(설계 §9.3). 서버가 origin을 필수로
+          // 두어 좌표 없이는 조회 자체가 불가능한데, 이것을 실패로 그리면 사용자가
+          // 재시도만 반복한다 — 권한을 주는 것이 유일한 해결이다.
+          error: (Object error, _) => error is RegionRecommendationNeedsLocation
+              ? const RegionRecommendationLocationState()
+              : const _ErrorBody(),
           data: (RegionRecommendationResult result) => result.isEmpty
               // **빈 결과를 오류로 그리지 않는다**(R15 · §5.1). 재시도 버튼도 두지
-              // 않는다 — 데이터가 쌓이기 전에는 몇 번을 눌러도 같은 결과다.
-              ? RegionRecommendationEmptyState(result: result)
+              // 않는다 — 몇 번을 눌러도 같은 결과다.
+              ? const RegionRecommendationEmptyState()
               : _RegionList(result: result),
         ),
       ),
@@ -74,7 +80,6 @@ class _RegionList extends StatelessWidget {
       return RegionCard(
         region: region,
         rank: index,
-        dataBasisAt: result.dataBasisAt,
         onTap: () => Navigator.of(context).pop(
           Coordinates(latitude: region.centerLat, longitude: region.centerLng),
         ),

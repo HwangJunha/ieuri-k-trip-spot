@@ -136,4 +136,70 @@ extend type Query {
   ): SeoulCongestionResult!
 
   seoulCongestionAreas: [CongestionAreaBoundary!]!
+
+  # 추천 시군구 목록(SPEC-0015). 총점 내림차순.
+  #
+  # **origin이 필수다.** 이 쿼리는 "지금 있는 곳 말고 근처의 다른 곳"을 답한다 —
+  # origin이 속한 시도 안에서만 고르고 origin의 시군구 자신은 결과에서 빠지므로,
+  # 좌표가 없으면 질문 자체가 성립하지 않는다. 계약 초안은 선택이었으나 서버가
+  # 필수로 확정했다(2026-08-11 introspection).
+  #
+  # 빈 목록은 오류가 아니다 — 바다·해외 좌표, 시군구 3개 미만인 시도(세종·제주),
+  # 관광지가 충분치 않아 후보에서 빠진 지역만 남은 시도가 그렇다.
+  recommendedRegions(
+    origin: CoordinatesInput!
+    # 생략 시 10. 상한 50을 넘으면 잘리고, 0 이하는 INVALID_LIMIT으로 거절된다.
+    limit: Int
+  ): RecommendedRegionResult!
+}
+
+input CoordinatesInput {
+  lat: Float!
+  lng: Float!
+}
+
+type Coordinates {
+  lat: Float!
+  lng: Float!
+}
+
+# **기준 시점을 응답 하나에 두지 않는다.** 항목마다 신선도가 달라(집중률은 오늘,
+# 방문자수는 수십 일 전, 월 지표는 해당 월 1일) 날짜를 하나만 두면 나머지 항목에
+# 대해서는 틀린 표기가 된다 — 그래서 RegionScore.basisAt에 항목별로 실린다.
+type RecommendedRegionResult {
+  regions: [RecommendedRegion!]!
+}
+
+type RecommendedRegion {
+  # 시군구 행정표준코드 5자리(예: 11110).
+  code: String!
+  name: String!
+  # 같은 이름의 시군구를 구분하는 데 쓴다(중구·남구·동구).
+  provinceName: String!
+  totalScore: Float!
+  # 산출할 수 없는 항목은 이 목록에서 빠진다 — 0점으로 채우지 않는다.
+  scores: [RegionScore!]!
+  # totalScore 산출에 쓰인 항목 수(= scores의 길이). 작을수록 근거가 얕다.
+  scoreFactorCount: Int!
+  # **관광지가 실제로 모여 있는 지점**이며 지역의 기하학적 중심이 아니다.
+  center: Coordinates!
+}
+
+type RegionScore {
+  factor: RegionScoreFactor!
+  # 0~100. 높을수록 추천에 유리하다.
+  value: Float!
+  # 이 항목의 근거 데이터 기준일(ISO-8601 날짜).
+  #
+  # **null은 기준일이라는 개념이 없다는 뜻이다** — DISTANCE가 그렇다. 적재된
+  # 데이터가 아니라 요청 시점에 계산되기 때문이다.
+  basisAt: String
+}
+
+enum RegionScoreFactor {
+  CONGESTION
+  VISITOR_VOLUME
+  STAY_INTENSITY
+  SPENDING_INTENSITY
+  DISTANCE
 }

@@ -1033,7 +1033,6 @@
   "emailChangeFailed": "Could not send the code. Please try again.",
   "emailChangeEmailTaken": "This email is already in use.",
   "emailChangeSucceeded": "Your email has been changed.",
-
   "mapCongestionRelaxed": "Not busy",
   "mapCongestionNormal": "Normal",
   "mapCongestionSlightlyCrowded": "Getting busy",
@@ -1059,7 +1058,6 @@
   "mapLegendSpot": "Places",
   "mapLegendEvent": "Events",
   "mapSearchThisArea": "Search this area",
-
   "mapRegionRecommendationsTitle": "Recommended Regions",
   "mapRegionRecommendationsAction": "Recommended regions",
   "mapRegionRecommendationsSortedByScore": "Sorted by overall score",
@@ -1076,5 +1074,17 @@
   "mapScoreFactorVisitorVolume": "Visitor volume",
   "mapScoreFactorStayIntensity": "Stay intensity",
   "mapScoreFactorSpendingIntensity": "Spending intensity",
-  "mapScoreFactorDistance": "Distance"
+  "mapScoreFactorDistance": "Distance",
+  "mapRegionRecommendationsNeedsLocationTitle": "Location needed",
+  "@mapRegionRecommendationsNeedsLocationTitle": {
+    "description": "Title shown when region recommendations cannot run without location permission."
+  },
+  "mapRegionRecommendationsNeedsLocation": "Recommendations are based on regions near you, so we need your location to suggest places.",
+  "@mapRegionRecommendationsNeedsLocation": {
+    "description": "Body explaining why location is required for region recommendations."
+  },
+  "mapRegionRecommendationsAllowLocation": "Allow location",
+  "@mapRegionRecommendationsAllowLocation": {
+    "description": "Button that requests location permission or opens settings."
+  }
 }

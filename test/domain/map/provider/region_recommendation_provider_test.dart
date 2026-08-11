@@ -28,7 +28,8 @@ final class FakeMapRepository implements MapRepository {
 
   @override
   Future<RegionRecommendationResult> fetchRecommendedRegions({
-    Coordinates? origin,
+    required Coordinates origin,
+    int? limit,
   }) async {
     calls++;
     lastOrigin = origin;
@@ -77,16 +78,27 @@ final class FakeLocationService implements LocationService {
 void main() {
   final RegionRecommendationResult twoRegions = RegionRecommendationResult(
     regions: <RegionRecommendation>[
-      const RegionRecommendation(
+      RegionRecommendation(
         code: '11110',
         name: 'Jongno-gu',
         provinceName: 'Seoul',
         totalScore: 88,
         scores: <RegionScore>[
-          RegionScore(factor: RegionScoreFactor.congestion, value: 90),
-          RegionScore(factor: RegionScoreFactor.distance, value: 60),
+          // 기준일이 항목마다 다르다 — 집중률은 오늘, 소비는 해당 월 1일.
+          RegionScore(
+            factor: RegionScoreFactor.congestion,
+            value: 90,
+            basisAt: DateTime(2026, 8, 11),
+          ),
+          RegionScore(
+            factor: RegionScoreFactor.spendingIntensity,
+            value: 55,
+            basisAt: DateTime(2026, 6, 1),
+          ),
+          // DISTANCE는 기준일이 없다(요청 시점 계산).
+          const RegionScore(factor: RegionScoreFactor.distance, value: 60),
         ],
-        scoreFactorCount: 2,
+        scoreFactorCount: 3,
         centerLat: 37.5735,
         centerLng: 126.9790,
       ),
@@ -103,7 +115,6 @@ void main() {
         centerLng: 129.0324,
       ),
     ],
-    dataBasisAt: DateTime(2026, 8, 11, 4),
   );
 
   ProviderContainer containerWith({
@@ -150,12 +161,13 @@ void main() {
       regionRecommendationsProvider.future,
     );
 
-    expect(result.regions.first.scores, hasLength(2));
-    expect(result.regions.first.scoreFactorCount, 2);
+    expect(result.regions.first.scores, hasLength(3));
+    expect(result.regions.first.scoreFactorCount, 3);
   });
 
-  test('기준 시점이 결과에 포함된다', () async {
-    // R24 — 이 값이 "실시간이 아님"을 드러내는 유일한 장치다.
+  test('기준일이 항목마다 보존된다', () async {
+    // R24 — 항목마다 신선도가 달라 서버가 응답 하나에 날짜를 두지 않는다. 이 값이
+    // "실시간이 아님"을 드러내는 장치이므로 항목을 타고 화면까지 가야 한다.
     final ProviderContainer c = containerWith(
       repository: FakeMapRepository(result: twoRegions),
       coordinates: const Coordinates(latitude: 37.5, longitude: 127.0),
@@ -165,22 +177,34 @@ void main() {
       regionRecommendationsProvider.future,
     );
 
-    expect(result.dataBasisAt, DateTime(2026, 8, 11, 4));
+    expect(result.regions.first.oldestBasisAt, DateTime(2026, 6, 1));
   });
 
-  group('위치 권한이 없을 때(R27)', () {
-    test('위치 없이 조회하고 오류로 만들지 않는다', () async {
+  group('위치가 없을 때', () {
+    test('권한 안내로 구분되는 예외를 올린다', () async {
+      // 서버가 origin을 필수로 두어 좌표 없이는 조회 자체가 불가능하다. 일반
+      // 오류로 올리면 화면이 재시도 버튼을 그리는데, 재시도로는 권한이 생기지
+      // 않는다(설계 §9.3).
       final FakeMapRepository repository = FakeMapRepository(
         result: twoRegions,
       );
       final ProviderContainer c = containerWith(repository: repository);
 
-      final RegionRecommendationResult result = await c.read(
-        regionRecommendationsProvider.future,
-      );
+      // **`.future`가 아니라 `AsyncValue`로 본다.** autoDispose provider에 `.future`로
+      // 접근하면 로딩 중 폐기돼 원래 예외 대신 "disposed during loading state"가
+      // 올라온다. 화면이 실제로 보는 것도 `AsyncValue`다.
+      final ProviderSubscription<AsyncValue<RegionRecommendationResult>> sub = c
+          .listen(regionRecommendationsProvider, (_, _) {}, onError: (_, _) {});
+      addTearDown(sub.close);
 
-      expect(repository.lastOrigin, isNull);
-      expect(result.regions, isNotEmpty);
+      // 조회가 끝날 때까지 이벤트 루프를 돌린다.
+      for (int i = 0; i < 10 && sub.read().isLoading; i++) {
+        await Future<void>.delayed(Duration.zero);
+      }
+
+      expect(sub.read().error, isA<RegionRecommendationNeedsLocation>());
+      // 조회를 아예 걸지 않는다 — 실패할 요청을 서버에 보내지 않는다.
+      expect(repository.calls, 0);
     });
 
     test('위치가 있으면 좌표를 실어 보낸다', () async {

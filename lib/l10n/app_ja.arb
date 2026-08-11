@@ -683,7 +683,6 @@
   "emailChangeFailed": "リクエストできませんでした。もう一度お試しください。",
   "emailChangeEmailTaken": "このメールアドレスは既に使用されています。",
   "emailChangeSucceeded": "メールアドレスを変更しました。",
-
   "mapCongestionRelaxed": "空いている",
   "mapCongestionNormal": "普通",
   "mapCongestionSlightlyCrowded": "やや混雑",
@@ -709,7 +708,6 @@
   "mapLegendSpot": "観光地",
   "mapLegendEvent": "イベント",
   "mapSearchThisArea": "このエリアで再検索",
-
   "mapRegionRecommendationsTitle": "おすすめの地域",
   "mapRegionRecommendationsAction": "おすすめの地域を見る",
   "mapRegionRecommendationsSortedByScore": "総合スコア順",
@@ -726,5 +724,8 @@
   "mapScoreFactorVisitorVolume": "訪問者規模",
   "mapScoreFactorStayIntensity": "滞在強度",
   "mapScoreFactorSpendingIntensity": "消費強度",
-  "mapScoreFactorDistance": "距離"
+  "mapScoreFactorDistance": "距離",
+  "mapRegionRecommendationsNeedsLocationTitle": "位置情報が必要です",
+  "mapRegionRecommendationsNeedsLocation": "おすすめは現在地の周辺地域をもとに選ぶため、位置情報が必要です。",
+  "mapRegionRecommendationsAllowLocation": "位置情報を許可"
 }

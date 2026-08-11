@@ -51,6 +51,25 @@ class RegionRecommendation {
   /// 위치 없이 받은 결과인지(R27). 거리 항목이 없으면 위치를 주지 않았다는 뜻이다.
   bool get lacksDistance => lacks(RegionScoreFactor.distance);
 
+  /// 항목들의 기준일 중 **가장 오래된 것**. 하나도 없으면 null이다.
+  ///
+  /// **최신이 아니라 가장 오래된 값을 고른다**(R24). 항목마다 신선도가 달라서
+  /// (집중률은 오늘, 월 지표는 해당 월 1일) 최신 날짜를 적으면 카드 전체가 그만큼
+  /// 새것처럼 읽힌다. 가장 오래된 값이 이 추천이 최소한 얼마나 묵은 근거 위에 서
+  /// 있는지를 정직하게 말해 준다.
+  ///
+  /// [RegionScoreFactor.distance]는 기준일이라는 개념이 없어(요청 시점 계산) 자연히
+  /// 빠진다.
+  DateTime? get oldestBasisAt {
+    DateTime? oldest;
+    for (final RegionScore score in scores) {
+      final DateTime? at = score.basisAt;
+      if (at == null) continue;
+      if (oldest == null || at.isBefore(oldest)) oldest = at;
+    }
+    return oldest;
+  }
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -87,33 +106,15 @@ class RegionRecommendation {
 
 /// 추천 조회 1회의 결과(SPEC-0015 §5.1).
 ///
-/// **빈 목록은 오류가 아니다.** 배치가 데이터를 쌓기 전에는 추천이 성립하지 않으며,
-/// 오류 화면으로 그리면 사용자가 해결되지 않는 재시도를 반복한다.
+/// **빈 목록은 오류가 아니다.** 서버가 빈 목록을 주는 경우는 여럿이다 — 바다·해외처럼
+/// 어느 시군구에도 속하지 않는 좌표, 시군구가 3개 미만인 시도(세종·제주), 관광지가
+/// 충분치 않아 후보에서 빠진 지역만 남은 시도. 어느 쪽도 오류가 아니며 재시도로
+/// 해결되지도 않는다.
 class RegionRecommendationResult {
-  const RegionRecommendationResult({
-    required this.regions,
-    required this.dataBasisAt,
-  });
+  const RegionRecommendationResult({required this.regions});
 
   /// 총점 내림차순(R22).
   final List<RegionRecommendation> regions;
 
-  /// 점수 산출에 쓰인 데이터의 기준 시점.
-  ///
-  /// **null은 "적재된 데이터가 하나도 없다"는 뜻**이며 이때 [regions]도 비어 있다.
-  /// 화면에 반드시 표시한다(R24 · POL-038) — 이 값이 "실시간이 아님"을 드러내는
-  /// 유일한 장치다.
-  final DateTime? dataBasisAt;
-
   bool get isEmpty => regions.isEmpty;
-
-  /// 빈 결과의 두 상태를 가른다(§5.1).
-  ///
-  /// 기준 시점이 없으면 아직 모으는 중이고, 있으면 데이터는 있으나 조건을 만족한 지역이
-  /// 없는 것이다. 둘을 같은 문구로 뭉뚱그리면 사용자가 **기다려야 하는 상황인지 조건을
-  /// 바꿔야 하는 상황인지** 알 수 없다.
-  bool get isAwaitingData => regions.isEmpty && dataBasisAt == null;
-
-  /// 데이터는 쌓였으나 추천 조건을 만족한 지역이 없는 상태.
-  bool get hasNoMatch => regions.isEmpty && dataBasisAt != null;
 }

@@ -38,12 +38,26 @@ enum RegionScoreFactor {
 /// 주므로 여기에 0점으로 채워 넣지 않는다. 0으로 채우면 서버가 피한 왜곡을 클라이언트가
 /// 되살린다.
 class RegionScore {
-  const RegionScore({required this.factor, required this.value});
+  const RegionScore({
+    required this.factor,
+    required this.value,
+    this.basisAt,
+  });
 
   final RegionScoreFactor factor;
 
   /// 0~100으로 정규화된 값. 높을수록 추천에 유리하다.
   final double value;
+
+  /// 이 항목의 근거 데이터 기준일(R24 · POL-038).
+  ///
+  /// **항목마다 신선도가 다르다** — 집중률은 오늘, 방문자수는 수십 일 전, 월 지표는
+  /// 해당 월 1일이다. 그래서 서버는 응답 전체에 날짜 하나를 두지 않는다. 하나만 두면
+  /// 어떤 값을 고르든 나머지 항목에 대해서는 틀린 표기가 된다.
+  ///
+  /// **null은 기준일이라는 개념이 없다는 뜻이다** — [RegionScoreFactor.distance]가
+  /// 그렇다. 적재된 데이터가 아니라 요청 시점에 계산된다.
+  final DateTime? basisAt;
 
   /// 막대 길이로 쓸 0.0~1.0 비율. 서버가 범위를 벗어난 값을 주더라도 화면이 넘치지
   /// 않도록 여기서 자른다.
@@ -52,8 +66,11 @@ class RegionScore {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is RegionScore && other.factor == factor && other.value == value;
+      other is RegionScore &&
+          other.factor == factor &&
+          other.value == value &&
+          other.basisAt == basisAt;
 
   @override
-  int get hashCode => Object.hash(factor, value);
+  int get hashCode => Object.hash(factor, value, basisAt);
 }

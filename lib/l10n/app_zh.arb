@@ -724,5 +724,8 @@
   "mapScoreFactorVisitorVolume": "訪客規模",
   "mapScoreFactorStayIntensity": "停留強度",
   "mapScoreFactorSpendingIntensity": "消費強度",
-  "mapScoreFactorDistance": "距離"
+  "mapScoreFactorDistance": "距離",
+  "mapRegionRecommendationsNeedsLocationTitle": "需要位置資訊",
+  "mapRegionRecommendationsNeedsLocation": "推薦是以你目前位置周邊的地區為基準，因此需要位置資訊。",
+  "mapRegionRecommendationsAllowLocation": "允許位置存取"
 }

@@ -128,37 +128,82 @@ class MapRepositoryImpl implements MapRepository {
 
   @override
   Future<RegionRecommendationResult> fetchRecommendedRegions({
-    Coordinates? origin,
+    required Coordinates origin,
+    int? limit,
   }) async {
-    // TODO(SPEC-0015): 서버가 `recommendedRegions`를 배포하면 연결한다.
-    //
-    // **의도적으로 미구현으로 둔다.** 작성 시점에 GraphQL 서버가 떠 있지 않았고
-    // introspection 스냅샷에도 이 쿼리가 없었다 — 계약 초안
-    // (`Specs/SPEC-0015/contract.graphql`)만으로 연산을 짜면 서버가 소유한 실제
-    // 스키마와 어긋난다(CLAUDE.md §13). 과거 `signUp`/`login`을 지어냈다가 서버의
-    // `registerEmailMember`/`loginEmail`과 달랐던 것이 같은 실패다.
-    //
-    // 연결할 때 할 일은 세 가지뿐이다.
-    //   1. `map_operations.graphql`에 RecommendedRegions 쿼리 추가
-    //   2. `map_schema.graphql`에 실제 SDL 반영 후 build_runner
-    //   3. 여기서 `_query(...)` 호출 → `_recommendationFrom` 매핑
-    // 아래 매핑 헬퍼는 계약 초안 기준으로 이미 작성돼 있어 그대로 쓸 수 있다.
-    throw UnimplementedError('recommendedRegions는 서버 배포 후 연결한다 (SPEC-0015)');
+    // **origin은 필수다.** 서버가 origin이 속한 시도 안에서만 후보를 고르고 그
+    // 시군구 자신은 제외하므로, 좌표가 없으면 질문 자체가 성립하지 않는다 —
+    // GraphQL 검증 단계에서 거절된다. 위치 권한이 없으면 화면이 이 호출을 아예
+    // 하지 않고 권한 안내를 그린다(설계 §9.3).
+    final Map<String, dynamic> data = await _query(
+      documentNodeQueryRecommendedRegions,
+      Variables$Query$RecommendedRegions(
+        origin: Input$CoordinatesInput(
+          lat: origin.latitude,
+          lng: origin.longitude,
+        ),
+        limit: limit,
+      ).toJson(),
+      'recommendedRegions',
+    );
+
+    final Query$RecommendedRegions$recommendedRegions result =
+        Query$RecommendedRegions.fromJson(data).recommendedRegions;
+
+    return RegionRecommendationResult(
+      // 서버가 준 총점 내림차순을 그대로 둔다(R22) — 다시 정렬하지 않는다.
+      regions: result.regions
+          .map(_recommendationFrom)
+          .toList(growable: false),
+    );
   }
+
+  /// 생성 타입 → 도메인 [RegionRecommendation].
+  RegionRecommendation _recommendationFrom(
+    Query$RecommendedRegions$recommendedRegions$regions r,
+  ) => RegionRecommendation(
+    code: r.code,
+    name: r.name,
+    provinceName: r.provinceName,
+    totalScore: r.totalScore,
+    scores: r.scores.map(_scoreFrom).toList(growable: false),
+    scoreFactorCount: r.scoreFactorCount,
+    centerLat: r.center.lat,
+    centerLng: r.center.lng,
+  );
+
+  RegionScore _scoreFrom(
+    Query$RecommendedRegions$recommendedRegions$regions$scores s,
+  ) => RegionScore(
+    factor: _factorFrom(s.factor),
+    value: s.value,
+    basisAt: _parseDate(s.basisAt),
+  );
 
   /// 도메인 [RegionScoreFactor] 매핑.
   ///
   /// **모르는 값을 예외로 만들지 않는다** — 서버가 항목을 추가했을 때 목록 전체가
   /// 실패하는 대신 그 항목만 [RegionScoreFactor.unknown]이 되고 화면이 건너뛴다.
-  @visibleForTesting
-  static RegionScoreFactor factorFrom(String raw) => switch (raw) {
-    'CONGESTION' => RegionScoreFactor.congestion,
-    'VISITOR_VOLUME' => RegionScoreFactor.visitorVolume,
-    'STAY_INTENSITY' => RegionScoreFactor.stayIntensity,
-    'SPENDING_INTENSITY' => RegionScoreFactor.spendingIntensity,
-    'DISTANCE' => RegionScoreFactor.distance,
-    _ => RegionScoreFactor.unknown,
-  };
+  RegionScoreFactor _factorFrom(Enum$RegionScoreFactor factor) =>
+      switch (factor) {
+        Enum$RegionScoreFactor.CONGESTION => RegionScoreFactor.congestion,
+        Enum$RegionScoreFactor.VISITOR_VOLUME =>
+          RegionScoreFactor.visitorVolume,
+        Enum$RegionScoreFactor.STAY_INTENSITY =>
+          RegionScoreFactor.stayIntensity,
+        Enum$RegionScoreFactor.SPENDING_INTENSITY =>
+          RegionScoreFactor.spendingIntensity,
+        Enum$RegionScoreFactor.DISTANCE => RegionScoreFactor.distance,
+        Enum$RegionScoreFactor.$unknown => RegionScoreFactor.unknown,
+      };
+
+  /// 기준일(`2026-08-11`)을 파싱한다.
+  ///
+  /// **[_parseTime]과 달리 `toLocal()`을 쓰지 않는다.** 날짜만 오는 값이라 시간대를
+  /// 적용하면 자정 기준으로 하루가 밀려 "8월 11일 기준"이 "8월 10일 기준"으로
+  /// 표시될 수 있다.
+  DateTime? _parseDate(String? raw) =>
+      raw == null ? null : DateTime.tryParse(raw);
 
   /// 생성 타입 → 도메인 [CongestionArea].
   ///

@@ -1596,7 +1596,6 @@
   },
   "emailChangeSucceeded": "이메일을 변경했습니다.",
   "@emailChangeSucceeded": {},
-
   "mapCongestionRelaxed": "여유",
   "@mapCongestionRelaxed": {},
   "mapCongestionNormal": "보통",
@@ -1647,7 +1646,6 @@
   "@mapLegendEvent": {},
   "mapSearchThisArea": "이 지역 재검색",
   "@mapSearchThisArea": {},
-
   "mapRegionRecommendationsTitle": "추천 지역",
   "@mapRegionRecommendationsTitle": {},
   "mapRegionRecommendationsAction": "추천 지역 보기",
@@ -1681,5 +1679,8 @@
   "mapScoreFactorSpendingIntensity": "소비 강도",
   "@mapScoreFactorSpendingIntensity": {},
   "mapScoreFactorDistance": "거리",
-  "@mapScoreFactorDistance": {}
+  "@mapScoreFactorDistance": {},
+  "mapRegionRecommendationsNeedsLocationTitle": "위치가 필요합니다",
+  "mapRegionRecommendationsNeedsLocation": "추천은 현재 위치 주변 지역을 기준으로 하므로 위치 정보가 필요합니다.",
+  "mapRegionRecommendationsAllowLocation": "위치 허용"
 }

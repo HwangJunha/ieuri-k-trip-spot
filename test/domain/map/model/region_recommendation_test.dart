@@ -71,36 +71,67 @@ void main() {
     });
   });
 
-  group('빈 결과의 두 상태(§5.1)', () {
-    test('기준 시점이 없으면 아직 데이터를 모으는 중이다', () {
+  group('빈 결과(§5.1)', () {
+    test('목록이 비면 빈 결과다', () {
+      // 서버가 빈 목록을 주는 사유는 여럿이지만(바다·해외 좌표, 시군구 3개 미만인
+      // 시도, 후보 없음) 어느 쪽인지는 클라이언트가 알 수 없다. 어느 경우에도
+      // 오류가 아니다.
       const RegionRecommendationResult result = RegionRecommendationResult(
         regions: <RegionRecommendation>[],
-        dataBasisAt: null,
       );
 
-      expect(result.isAwaitingData, isTrue);
-      expect(result.hasNoMatch, isFalse);
+      expect(result.isEmpty, isTrue);
     });
 
-    test('기준 시점이 있는데 목록이 비면 조건에 맞는 지역이 없는 것이다', () {
-      final RegionRecommendationResult result = RegionRecommendationResult(
-        regions: const <RegionRecommendation>[],
-        dataBasisAt: DateTime(2026, 8, 11, 4),
-      );
-
-      expect(result.hasNoMatch, isTrue);
-      expect(result.isAwaitingData, isFalse);
-    });
-
-    test('목록이 차 있으면 어느 빈 상태도 아니다', () {
+    test('목록이 차 있으면 빈 결과가 아니다', () {
       final RegionRecommendationResult result = RegionRecommendationResult(
         regions: <RegionRecommendation>[regionWith(const <RegionScore>[])],
-        dataBasisAt: DateTime(2026, 8, 11, 4),
       );
 
       expect(result.isEmpty, isFalse);
-      expect(result.isAwaitingData, isFalse);
-      expect(result.hasNoMatch, isFalse);
+    });
+  });
+
+  group('기준일(R24)', () {
+    test('항목들의 기준일 중 가장 오래된 것을 고른다', () {
+      // 최신을 고르면 카드 전체가 그만큼 새것처럼 읽힌다 — 집중률은 오늘이고 월
+      // 지표는 해당 월 1일이라 근거의 나이가 크게 다르다.
+      final RegionRecommendation region = regionWith(<RegionScore>[
+        RegionScore(
+          factor: RegionScoreFactor.congestion,
+          value: 90,
+          basisAt: DateTime(2026, 8, 11),
+        ),
+        RegionScore(
+          factor: RegionScoreFactor.spendingIntensity,
+          value: 60,
+          basisAt: DateTime(2026, 6, 1),
+        ),
+      ]);
+
+      expect(region.oldestBasisAt, DateTime(2026, 6, 1));
+    });
+
+    test('기준일이 없는 항목은 셈에서 빠진다', () {
+      // DISTANCE는 적재 데이터가 아니라 요청 시점 계산이라 기준일이 없다.
+      final RegionRecommendation region = regionWith(<RegionScore>[
+        RegionScore(
+          factor: RegionScoreFactor.congestion,
+          value: 90,
+          basisAt: DateTime(2026, 8, 11),
+        ),
+        const RegionScore(factor: RegionScoreFactor.distance, value: 80),
+      ]);
+
+      expect(region.oldestBasisAt, DateTime(2026, 8, 11));
+    });
+
+    test('기준일이 하나도 없으면 null이다', () {
+      final RegionRecommendation region = regionWith(const <RegionScore>[
+        RegionScore(factor: RegionScoreFactor.distance, value: 80),
+      ]);
+
+      expect(region.oldestBasisAt, isNull);
     });
   });
 }

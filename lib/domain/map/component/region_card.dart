@@ -16,7 +16,6 @@ class RegionCard extends StatelessWidget {
   const RegionCard({
     required this.region,
     required this.rank,
-    required this.dataBasisAt,
     required this.onTap,
     super.key,
   });
@@ -26,13 +25,6 @@ class RegionCard extends StatelessWidget {
   /// 목록에서의 순위(1부터). **서버가 순위 필드를 주지 않으므로 화면이 목록 위치로
   /// 매긴다** — 목록은 총점 내림차순이 보장된다(R22).
   final int rank;
-
-  /// 점수 산출에 쓰인 데이터의 기준 시점(R24 · POL-038).
-  ///
-  /// **결과 전체가 하나의 값을 공유한다** — 지역마다 다르지 않다. 그래도 카드마다
-  /// 적는 이유는, 스크롤해 내려간 사용자가 화면 맨 위의 안내를 다시 보지 않기
-  /// 때문이다. "실시간이 아니다"는 점수 옆에 있어야 뜻이 산다.
-  final DateTime? dataBasisAt;
 
   final VoidCallback onTap;
 
@@ -101,11 +93,14 @@ class RegionCard extends StatelessWidget {
               // 기준 시점(R24 · POL-038). "지금·현재"가 아니라 "(시점) 기준"이다 —
               // 이 값이 실시간이 아님을 드러내는 유일한 장치다.
               //
-              // **날짜까지 붙인다**(`dataBasisLabel`). 추천은 배치가 쌓은 데이터라
-              // 며칠 전이 기준일 수 있어, 시각만 보이면 오늘로 읽혀 실시간이라는
-              // 오해를 키운다 — SPEC-0014의 혼잡도(30분 지연, 항상 같은 날)와 다른
-              // 점이다.
-              if (dataBasisAt case final DateTime basis) ...<Widget>[
+              // 기준일(R24 · POL-038). **항목마다 다르므로 가장 오래된 것을 적는다**
+              // — 집중률은 오늘이고 월 지표는 해당 월 1일이라, 최신 날짜를 고르면
+              // 전체가 그만큼 새것처럼 읽힌다. 가장 오래된 값이 "이 카드가 최소한
+              // 얼마나 묵은 근거 위에 서 있는가"를 정직하게 말해 준다.
+              //
+              // 날짜까지 붙이는 이유는 배치 데이터라 며칠 전이 기준일 수 있어서다.
+              // 시각만 보이면 오늘로 읽혀 실시간이라는 오해를 키운다.
+              if (region.oldestBasisAt case final DateTime basis) ...<Widget>[
                 const SizedBox(height: 4),
                 _NoteRow(
                   icon: Icons.schedule,

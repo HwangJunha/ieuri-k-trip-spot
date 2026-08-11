@@ -15,11 +15,26 @@ part 'region_recommendation_provider.g.dart';
 /// 했고 그것이 POL-040의 출처다.
 const int regionRecommendationRetryLimit = 3;
 
+/// 위치가 없어 추천을 요청조차 할 수 없는 상태(설계 §9.3).
+///
+/// **오류가 아니라 안내로 그려야 한다.** 화면은 이 예외를 만나면 실패 문구 대신 권한
+/// 요청·설정 이동을 안내한다 — 재시도 버튼을 눌러도 권한이 생기지 않으므로 일반
+/// 오류와 같은 취급을 하면 사용자가 해결되지 않는 재시도를 반복한다.
+class RegionRecommendationNeedsLocation implements Exception {
+  const RegionRecommendationNeedsLocation(this.reason);
+
+  final LocationUnavailableReason reason;
+
+  @override
+  String toString() => 'RegionRecommendationNeedsLocation($reason)';
+}
+
 /// 지역 추천 목록(SPEC-0015).
 ///
-/// **위치가 없어도 조회한다**(R27 · §4.1). 다섯 항목 중 넷은 위치와 무관하므로 위치
-/// 권한 부재가 추천 자체를 막지 않는다 — `origin` 없이 요청하면 서버가 거리 항목을
-/// 빼고 나머지로 산출해 준다(R21). 위치 실패를 오류로 올리면 R27을 어긴다.
+/// **위치가 필수다.** 설계 초안(R27)은 "위치 없이도 추천이 나온다"였으나 서버가
+/// `origin`을 필수로 확정했다 — 이 쿼리는 origin이 속한 시도 안에서만 후보를 고르고
+/// origin의 시군구 자신을 빼므로 좌표 없이는 질문이 성립하지 않는다. 그래서 위치를
+/// 얻지 못하면 [RegionRecommendationNeedsLocation]을 올려 화면이 권한 안내를 그린다.
 ///
 /// 목록 정렬은 **서버가 준 총점 내림차순을 그대로 유지한다**(R22) — 클라이언트가 다시
 /// 정렬하지 않는다.
@@ -30,21 +45,18 @@ const int regionRecommendationRetryLimit = 3;
 /// 사람이 세는 것이므로 화면이 [RegionRecommendationRetryCount]로 센다.
 @riverpod
 Future<RegionRecommendationResult> regionRecommendations(Ref ref) async {
-  final Coordinates? origin = await _resolveOrigin(ref);
+  final Coordinates origin = await _resolveOrigin(ref);
   return ref
       .read(mapRepositoryProvider)
       .fetchRecommendedRegions(origin: origin);
 }
 
-/// 위치를 얻되 **실패를 삼킨다**(§4.1).
-///
-/// 권한 거부·서비스 꺼짐은 이 화면에서 오류가 아니다. 좌표 없이 요청하면 거리 항목만
-/// 빠지고 추천은 그대로 나온다.
-Future<Coordinates?> _resolveOrigin(Ref ref) async {
+/// 위치를 얻는다. 실패하면 **일반 오류와 구분되는** 예외로 바꿔 올린다.
+Future<Coordinates> _resolveOrigin(Ref ref) async {
   try {
     return await ref.read(locationServiceProvider).currentCoordinates();
-  } on LocationUnavailable {
-    return null;
+  } on LocationUnavailable catch (e) {
+    throw RegionRecommendationNeedsLocation(e.reason);
   }
 }
 
