@@ -43,9 +43,17 @@ class RegionRecommendationNeedsLocation implements Exception {
 /// 횟수를 얹으면 "몇 번 조회됐나"가 구독 상태에 따라 달라진다 — 실제로 재시도 한 번에
 /// 요청이 두 번 나가거나, 상한을 넘겨 한 번 더 나가는 것을 측정했다. 횟수는 누른
 /// 사람이 세는 것이므로 화면이 [RegionRecommendationRetryCount]로 센다.
+/// **[mapCenter]가 있으면 그 좌표를, 없으면 내 위치를 기준으로 조회한다.**
+///
+/// 사용자가 화면에서 기준을 바꿀 수 있으므로 인자로 받아 family가 된다 — 기준이
+/// 바뀌면 새 인자가 되어 이전 조회는 자동으로 버려지고, 두 기준의 결과가 각각
+/// 캐시된다(왔다 갔다 해도 다시 받지 않는다).
 @riverpod
-Future<RegionRecommendationResult> regionRecommendations(Ref ref) async {
-  final Coordinates origin = await _resolveOrigin(ref);
+Future<RegionRecommendationResult> regionRecommendations(
+  Ref ref,
+  Coordinates? mapCenter,
+) async {
+  final Coordinates origin = mapCenter ?? await _resolveOrigin(ref);
   return ref
       .read(mapRepositoryProvider)
       .fetchRecommendedRegions(origin: origin);

@@ -6,6 +6,7 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../component/region_card.dart';
 import '../component/region_recommendation_empty_state.dart';
 import '../component/region_recommendation_error_state.dart';
+import '../component/region_origin_toggle.dart';
 import '../component/region_recommendation_location_state.dart';
 import '../component/sort_indicator_chip.dart';
 import '../model/region_recommendation.dart';
@@ -20,36 +21,74 @@ import '../provider/region_recommendation_provider.dart';
 /// 지역을 고르면 그 좌표를 **돌려주고 닫는다**. 여기서 직접 카메라를 움직이지 않는
 /// 이유는 지도 컨트롤러를 지도 화면이 소유하기 때문이다 — 검색 화면이 고른 장소를
 /// 돌려주는 것(`pick=1`)과 같은 규약이라 지도 쪽 이동 경로가 하나로 유지된다.
-class RegionRecommendationScreen extends ConsumerWidget {
-  const RegionRecommendationScreen({super.key});
+class RegionRecommendationScreen extends ConsumerStatefulWidget {
+  const RegionRecommendationScreen({this.mapCenter, super.key});
+
+  /// 지도가 보고 있던 중심 좌표. 지도를 거치지 않고 들어오면 null이다.
+  final Coordinates? mapCenter;
 
   static String get routeName => 'region-recommendations';
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RegionRecommendationScreen> createState() =>
+      _RegionRecommendationScreenState();
+}
+
+class _RegionRecommendationScreenState
+    extends ConsumerState<RegionRecommendationScreen> {
+  /// 지도 중심을 기준으로 볼 것인가. false면 내 위치다.
+  ///
+  /// **기본은 내 위치다.** 서버가 "지금 있는 곳 근처"를 답하도록 설계돼 있고, 지도를
+  /// 옮겨 둔 채 화면을 열었더라도 사용자가 먼저 기대하는 것은 자기 주변이다.
+  bool _useMapCenter = false;
+
+  /// 이번 조회의 기준 좌표. null이면 provider가 내 위치를 얻는다.
+  Coordinates? get _origin => _useMapCenter ? widget.mapCenter : null;
+
+  @override
+  Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final AsyncValue<RegionRecommendationResult> state = ref.watch(
-      regionRecommendationsProvider,
+      regionRecommendationsProvider(_origin),
     );
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.mapRegionRecommendationsTitle)),
       body: SafeArea(
-        child: state.when(
-          // 앱의 다른 목록 화면(찜·커뮤니티·숨긴 글)과 같은 중앙 스피너를 쓴다.
-          // 이 화면만 스켈레톤을 두면 로딩 모양이 화면마다 달라진다(디자인 §6 갭).
-          loading: () => const Center(child: CircularProgressIndicator()),
-          // **위치 부재를 일반 오류와 가른다**(설계 §9.3). 서버가 origin을 필수로
-          // 두어 좌표 없이는 조회 자체가 불가능한데, 이것을 실패로 그리면 사용자가
-          // 재시도만 반복한다 — 권한을 주는 것이 유일한 해결이다.
-          error: (Object error, _) => error is RegionRecommendationNeedsLocation
-              ? const RegionRecommendationLocationState()
-              : const _ErrorBody(),
-          data: (RegionRecommendationResult result) => result.isEmpty
-              // **빈 결과를 오류로 그리지 않는다**(R15 · §5.1). 재시도 버튼도 두지
-              // 않는다 — 몇 번을 눌러도 같은 결과다.
-              ? const RegionRecommendationEmptyState()
-              : _RegionList(result: result),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            // 기준 위치 토글. **지도를 거쳐 들어왔을 때만 띄운다** — 지도 중심을
+            // 모르면 고를 것이 하나뿐이라 토글이 선택지가 되지 못한다.
+            if (widget.mapCenter != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: RegionOriginToggle(
+                  useMapCenter: _useMapCenter,
+                  onChanged: (bool value) =>
+                      setState(() => _useMapCenter = value),
+                ),
+              ),
+            Expanded(
+              child: state.when(
+                // 앱의 다른 목록 화면(찜·커뮤니티·숨긴 글)과 같은 중앙 스피너를 쓴다.
+                // 이 화면만 스켈레톤을 두면 로딩 모양이 화면마다 달라진다(디자인 §6).
+                loading: () => const Center(child: CircularProgressIndicator()),
+                // **위치 부재를 일반 오류와 가른다**(설계 §9.3). 서버가 origin을
+                // 필수로 두어 좌표 없이는 조회 자체가 불가능한데, 이것을 실패로
+                // 그리면 사용자가 재시도만 반복한다 — 권한이 유일한 해결이다.
+                error: (Object error, _) =>
+                    error is RegionRecommendationNeedsLocation
+                    ? const RegionRecommendationLocationState()
+                    : _ErrorBody(origin: _origin),
+                data: (RegionRecommendationResult result) => result.isEmpty
+                    // **빈 결과를 오류로 그리지 않는다**(R15 · §5.1). 재시도 버튼도
+                    // 두지 않는다 — 몇 번을 눌러도 같은 결과다.
+                    ? const RegionRecommendationEmptyState()
+                    : _RegionList(result: result, origin: _origin),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -58,9 +97,13 @@ class RegionRecommendationScreen extends ConsumerWidget {
 
 /// 추천 목록. 총점 내림차순 그대로 그린다 — 화면이 다시 정렬하지 않는다(R22).
 class _RegionList extends StatelessWidget {
-  const _RegionList({required this.result});
+  const _RegionList({required this.result, required this.origin});
 
   final RegionRecommendationResult result;
+
+  /// 이번 조회의 기준 좌표. null이면 내 위치이며, 그 값은 화면이 알지 못한다
+  /// (provider가 얻는다) — 그때는 거리를 적지 않는다.
+  final Coordinates? origin;
 
   @override
   Widget build(BuildContext context) => ListView.separated(
@@ -80,6 +123,7 @@ class _RegionList extends StatelessWidget {
       return RegionCard(
         region: region,
         rank: index,
+        origin: origin,
         onTap: () => Navigator.of(context).pop(
           Coordinates(latitude: region.centerLat, longitude: region.centerLng),
         ),
@@ -93,7 +137,9 @@ class _RegionList extends StatelessWidget {
 /// **횟수는 provider가 아니라 별도 카운터가 센다**(provider 주석 참조) — 조회
 /// provider의 생명주기에 횟수를 얹으면 "몇 번 조회됐나"가 구독 상태에 따라 달라진다.
 class _ErrorBody extends ConsumerWidget {
-  const _ErrorBody();
+  const _ErrorBody({required this.origin});
+
+  final Coordinates? origin;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -109,7 +155,7 @@ class _ErrorBody extends ConsumerWidget {
       onRetry: () {
         if (!counter.canRetry) return;
         counter.record();
-        ref.invalidate(regionRecommendationsProvider);
+        ref.invalidate(regionRecommendationsProvider(origin));
       },
     );
   }

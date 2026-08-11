@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../common/location/coordinates.dart';
+import '../../../common/model/distance_format.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/congestion_display.dart';
 import '../model/region_recommendation.dart';
@@ -17,6 +19,7 @@ class RegionCard extends StatelessWidget {
     required this.region,
     required this.rank,
     required this.onTap,
+    this.origin,
     super.key,
   });
 
@@ -26,7 +29,25 @@ class RegionCard extends StatelessWidget {
   /// 매긴다** — 목록은 총점 내림차순이 보장된다(R22).
   final int rank;
 
+  /// 거리를 재는 기준 좌표. null이면 거리를 적지 않는다.
+  ///
+  /// **서버는 실제 거리를 주지 않는다** — 거리 점수(0~100)는 정규화된 값이라 km로
+  /// 되돌릴 수 없다. 대신 기준 좌표와 지역 대표 좌표가 둘 다 있어 직접 계산한다.
+  final Coordinates? origin;
+
   final VoidCallback onTap;
+
+  /// 기준점에서 이 지역까지의 거리. 기준을 모르면 null이다.
+  double? get _distanceMeters {
+    final Coordinates? from = origin;
+    if (from == null) return null;
+    return distanceMetersBetween(
+      lat1: from.latitude,
+      lng1: from.longitude,
+      lat2: region.centerLat,
+      lng2: region.centerLng,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,8 +86,17 @@ class RegionCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 2),
+                        // 시도명과 거리를 한 줄에 둔다 — "어디인지"와 "얼마나
+                        // 먼지"는 함께 읽혀야 판단이 된다. 거리 점수 막대는
+                        // 정규화된 값이라 실제 거리감을 주지 못한다.
                         Text(
-                          region.provinceName,
+                          switch (_distanceMeters) {
+                            final double meters => l10n.mapRegionProvinceAndDistance(
+                              region.provinceName,
+                              formatDistance(l10n, meters),
+                            ),
+                            null => region.provinceName,
+                          },
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),

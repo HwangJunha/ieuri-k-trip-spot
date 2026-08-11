@@ -725,5 +725,8 @@
   "mapScoreFactorDistance": "距離",
   "mapRegionRecommendationsNeedsLocationTitle": "位置情報が必要です",
   "mapRegionRecommendationsNeedsLocation": "おすすめは現在地の周辺地域をもとに選ぶため、位置情報が必要です。",
-  "mapRegionRecommendationsAllowLocation": "位置情報を許可"
+  "mapRegionRecommendationsAllowLocation": "位置情報を許可",
+  "mapRegionRecommendationsOriginMyLocation": "現在地",
+  "mapRegionRecommendationsOriginMapCenter": "地図の中心",
+  "mapRegionProvinceAndDistance": "{province} · {distance}"
 }

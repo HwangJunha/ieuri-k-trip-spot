@@ -141,7 +141,7 @@ void main() {
     );
 
     final RegionRecommendationResult result = await c.read(
-      regionRecommendationsProvider.future,
+      regionRecommendationsProvider(null).future,
     );
 
     expect(
@@ -158,7 +158,7 @@ void main() {
     );
 
     final RegionRecommendationResult result = await c.read(
-      regionRecommendationsProvider.future,
+      regionRecommendationsProvider(null).future,
     );
 
     expect(result.regions.first.scores, hasLength(3));
@@ -174,7 +174,7 @@ void main() {
     );
 
     final RegionRecommendationResult result = await c.read(
-      regionRecommendationsProvider.future,
+      regionRecommendationsProvider(null).future,
     );
 
     expect(result.regions.first.oldestBasisAt, DateTime(2026, 6, 1));
@@ -194,7 +194,8 @@ void main() {
       // 접근하면 로딩 중 폐기돼 원래 예외 대신 "disposed during loading state"가
       // 올라온다. 화면이 실제로 보는 것도 `AsyncValue`다.
       final ProviderSubscription<AsyncValue<RegionRecommendationResult>> sub = c
-          .listen(regionRecommendationsProvider, (_, _) {}, onError: (_, _) {});
+          .listen(regionRecommendationsProvider(null), (_, _) {},
+              onError: (_, _) {});
       addTearDown(sub.close);
 
       // 조회가 끝날 때까지 이벤트 루프를 돌린다.
@@ -216,7 +217,7 @@ void main() {
         coordinates: const Coordinates(latitude: 37.5, longitude: 127.0),
       );
 
-      await c.read(regionRecommendationsProvider.future);
+      await c.read(regionRecommendationsProvider(null).future);
 
       expect(repository.lastOrigin?.latitude, 37.5);
       expect(repository.lastOrigin?.longitude, 127.0);

@@ -1678,5 +1678,34 @@
   "@mapScoreFactorDistance": {},
   "mapRegionRecommendationsNeedsLocationTitle": "위치가 필요합니다",
   "mapRegionRecommendationsNeedsLocation": "추천은 현재 위치 주변 지역을 기준으로 하므로 위치 정보가 필요합니다.",
-  "mapRegionRecommendationsAllowLocation": "위치 허용"
+  "mapRegionRecommendationsAllowLocation": "위치 허용",
+  "mapRegionRecommendationsOriginMyLocation": "내 위치",
+  "mapRegionRecommendationsOriginMapCenter": "지도 중심",
+  "mapRegionProvinceAndDistance": "{province} · {distance}",
+  "@mapRegionRecommendationsOriginMyLocation": {
+    "description": "기준 위치 토글 — 사용자의 현재 위치"
+  },
+  "@mapRegionRecommendationsOriginMapCenter": {
+    "description": "기준 위치 토글 — 지도가 보고 있던 중심"
+  },
+  "@mapRegionProvinceAndDistance": {
+    "description": "시도명과 기준점으로부터의 거리",
+    "placeholders": {
+      "province": {
+        "type": "String"
+      },
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "@mapRegionRecommendationsNeedsLocationTitle": {
+    "description": "위치 권한이 없어 추천을 받을 수 없을 때의 제목"
+  },
+  "@mapRegionRecommendationsNeedsLocation": {
+    "description": "위치가 필요한 이유 안내"
+  },
+  "@mapRegionRecommendationsAllowLocation": {
+    "description": "위치 권한 요청/설정 이동 버튼"
+  }
 }

@@ -522,8 +522,20 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   /// 지역마다 맞추려면 서버가 bbox를 내려줘야 하는데 현재 계약은 대표 좌표만 준다 —
   /// 실사용에서 편차가 문제되면 `[AMEND]`로 계약에 bbox를 요청한다.
   Future<void> _onRecommendationsTap() async {
+    // **지금 보고 있는 중심을 함께 넘긴다.** 추천 화면이 "내 위치 / 지도 중심"을
+    // 토글하는데, 지도를 떠난 뒤에는 컨트롤러를 물어볼 수 없어 여기서 미리 읽는다.
+    final KakaoMapController? mapController = _controller;
+    final CameraPosition? camera = await mapController?.getCameraPosition();
+    if (!mounted) return;
+
     final Object? picked = await context.pushNamed<Object?>(
       RegionRecommendationScreen.routeName,
+      extra: camera == null
+          ? null
+          : Coordinates(
+              latitude: camera.position.latitude,
+              longitude: camera.position.longitude,
+            ),
     );
     if (!mounted) return;
 

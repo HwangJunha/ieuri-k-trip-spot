@@ -1074,15 +1074,9 @@
   "mapScoreFactorSpendingIntensity": "Spending intensity",
   "mapScoreFactorDistance": "Distance",
   "mapRegionRecommendationsNeedsLocationTitle": "Location needed",
-  "@mapRegionRecommendationsNeedsLocationTitle": {
-    "description": "Title shown when region recommendations cannot run without location permission."
-  },
   "mapRegionRecommendationsNeedsLocation": "Recommendations are based on regions near you, so we need your location to suggest places.",
-  "@mapRegionRecommendationsNeedsLocation": {
-    "description": "Body explaining why location is required for region recommendations."
-  },
   "mapRegionRecommendationsAllowLocation": "Allow location",
-  "@mapRegionRecommendationsAllowLocation": {
-    "description": "Button that requests location permission or opens settings."
-  }
+  "mapRegionRecommendationsOriginMyLocation": "My location",
+  "mapRegionRecommendationsOriginMapCenter": "Map center",
+  "mapRegionProvinceAndDistance": "{province} · {distance}"
 }

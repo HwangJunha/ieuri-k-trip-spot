@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../common/location/location_service.dart';
 import '../../../common/pagination/pagination_list_view.dart';
 import '../../../common/widget/highlighted_text.dart';
+import '../../../common/model/distance_format.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/nearby_spot.dart';
 import '../model/nearby_spot_category.dart';
@@ -472,11 +473,10 @@ class _SpotTile extends StatelessWidget {
   }
 }
 
-/// 거리 표시. 1km 미만은 미터로, 그 이상은 소수 한 자리 킬로미터로 — 그 경계에서
-/// 사람이 읽는 단위가 바뀐다.
-String formatSpotDistance(AppLocalizations l10n, double meters) => meters < 1000
-    ? l10n.communitySpotDistanceMeters(meters.round())
-    : l10n.communitySpotDistanceKilometers(meters / 1000);
+/// 거리 표시. 규칙은 `common/model/distance_format.dart`가 쥔다 — map의 지역 추천도
+/// 같은 규칙을 쓰므로 한 곳에 둔다(CLAUDE.md §4).
+String formatSpotDistance(AppLocalizations l10n, double meters) =>
+    formatDistance(l10n, meters);
 
 /// 시트 안의 안내 자리. **빈 화면으로 두지 않는다** — 사유를 밝히고, 재시도가
 /// 의미 있는 상태면 버튼도 함께 준다.
