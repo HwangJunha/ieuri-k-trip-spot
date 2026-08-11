@@ -2535,3 +2535,1107 @@ class _CopyWithStubImpl$Query$SeoulCongestionAreas$seoulCongestionAreas<TRes>
     List<List<double>>? polygon,
   }) => _res;
 }
+
+class Variables$Query$RecommendedRegions {
+  factory Variables$Query$RecommendedRegions({
+    required Input$CoordinatesInput origin,
+    int? limit,
+  }) => Variables$Query$RecommendedRegions._({
+    r'origin': origin,
+    if (limit != null) r'limit': limit,
+  });
+
+  Variables$Query$RecommendedRegions._(this._$data);
+
+  factory Variables$Query$RecommendedRegions.fromJson(
+    Map<String, dynamic> data,
+  ) {
+    final result$data = <String, dynamic>{};
+    final l$origin = data['origin'];
+    result$data['origin'] = Input$CoordinatesInput.fromJson(
+      (l$origin as Map<String, dynamic>),
+    );
+    if (data.containsKey('limit')) {
+      final l$limit = data['limit'];
+      result$data['limit'] = (l$limit as int?);
+    }
+    return Variables$Query$RecommendedRegions._(result$data);
+  }
+
+  Map<String, dynamic> _$data;
+
+  Input$CoordinatesInput get origin =>
+      (_$data['origin'] as Input$CoordinatesInput);
+
+  int? get limit => (_$data['limit'] as int?);
+
+  Map<String, dynamic> toJson() {
+    final result$data = <String, dynamic>{};
+    final l$origin = origin;
+    result$data['origin'] = l$origin.toJson();
+    if (_$data.containsKey('limit')) {
+      final l$limit = limit;
+      result$data['limit'] = l$limit;
+    }
+    return result$data;
+  }
+
+  CopyWith$Variables$Query$RecommendedRegions<
+    Variables$Query$RecommendedRegions
+  >
+  get copyWith => CopyWith$Variables$Query$RecommendedRegions(this, (i) => i);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Variables$Query$RecommendedRegions ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$origin = origin;
+    final lOther$origin = other.origin;
+    if (l$origin != lOther$origin) {
+      return false;
+    }
+    final l$limit = limit;
+    final lOther$limit = other.limit;
+    if (_$data.containsKey('limit') != other._$data.containsKey('limit')) {
+      return false;
+    }
+    if (l$limit != lOther$limit) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    final l$origin = origin;
+    final l$limit = limit;
+    return Object.hashAll([
+      l$origin,
+      _$data.containsKey('limit') ? l$limit : const {},
+    ]);
+  }
+}
+
+abstract class CopyWith$Variables$Query$RecommendedRegions<TRes> {
+  factory CopyWith$Variables$Query$RecommendedRegions(
+    Variables$Query$RecommendedRegions instance,
+    TRes Function(Variables$Query$RecommendedRegions) then,
+  ) = _CopyWithImpl$Variables$Query$RecommendedRegions;
+
+  factory CopyWith$Variables$Query$RecommendedRegions.stub(TRes res) =
+      _CopyWithStubImpl$Variables$Query$RecommendedRegions;
+
+  TRes call({Input$CoordinatesInput? origin, int? limit});
+}
+
+class _CopyWithImpl$Variables$Query$RecommendedRegions<TRes>
+    implements CopyWith$Variables$Query$RecommendedRegions<TRes> {
+  _CopyWithImpl$Variables$Query$RecommendedRegions(this._instance, this._then);
+
+  final Variables$Query$RecommendedRegions _instance;
+
+  final TRes Function(Variables$Query$RecommendedRegions) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? origin = _undefined, Object? limit = _undefined}) => _then(
+    Variables$Query$RecommendedRegions._({
+      ..._instance._$data,
+      if (origin != _undefined && origin != null)
+        'origin': (origin as Input$CoordinatesInput),
+      if (limit != _undefined) 'limit': (limit as int?),
+    }),
+  );
+}
+
+class _CopyWithStubImpl$Variables$Query$RecommendedRegions<TRes>
+    implements CopyWith$Variables$Query$RecommendedRegions<TRes> {
+  _CopyWithStubImpl$Variables$Query$RecommendedRegions(this._res);
+
+  TRes _res;
+
+  call({Input$CoordinatesInput? origin, int? limit}) => _res;
+}
+
+class Query$RecommendedRegions {
+  Query$RecommendedRegions({required this.recommendedRegions});
+
+  factory Query$RecommendedRegions.fromJson(Map<String, dynamic> json) {
+    final l$recommendedRegions = json['recommendedRegions'];
+    return Query$RecommendedRegions(
+      recommendedRegions: Query$RecommendedRegions$recommendedRegions.fromJson(
+        (l$recommendedRegions as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final Query$RecommendedRegions$recommendedRegions recommendedRegions;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$recommendedRegions = recommendedRegions;
+    _resultData['recommendedRegions'] = l$recommendedRegions.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$recommendedRegions = recommendedRegions;
+    return Object.hashAll([l$recommendedRegions]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$RecommendedRegions ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$recommendedRegions = recommendedRegions;
+    final lOther$recommendedRegions = other.recommendedRegions;
+    if (l$recommendedRegions != lOther$recommendedRegions) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$RecommendedRegions
+    on Query$RecommendedRegions {
+  CopyWith$Query$RecommendedRegions<Query$RecommendedRegions> get copyWith =>
+      CopyWith$Query$RecommendedRegions(this, (i) => i);
+}
+
+abstract class CopyWith$Query$RecommendedRegions<TRes> {
+  factory CopyWith$Query$RecommendedRegions(
+    Query$RecommendedRegions instance,
+    TRes Function(Query$RecommendedRegions) then,
+  ) = _CopyWithImpl$Query$RecommendedRegions;
+
+  factory CopyWith$Query$RecommendedRegions.stub(TRes res) =
+      _CopyWithStubImpl$Query$RecommendedRegions;
+
+  TRes call({Query$RecommendedRegions$recommendedRegions? recommendedRegions});
+  CopyWith$Query$RecommendedRegions$recommendedRegions<TRes>
+  get recommendedRegions;
+}
+
+class _CopyWithImpl$Query$RecommendedRegions<TRes>
+    implements CopyWith$Query$RecommendedRegions<TRes> {
+  _CopyWithImpl$Query$RecommendedRegions(this._instance, this._then);
+
+  final Query$RecommendedRegions _instance;
+
+  final TRes Function(Query$RecommendedRegions) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? recommendedRegions = _undefined}) => _then(
+    Query$RecommendedRegions(
+      recommendedRegions:
+          recommendedRegions == _undefined || recommendedRegions == null
+          ? _instance.recommendedRegions
+          : (recommendedRegions as Query$RecommendedRegions$recommendedRegions),
+    ),
+  );
+
+  CopyWith$Query$RecommendedRegions$recommendedRegions<TRes>
+  get recommendedRegions {
+    final local$recommendedRegions = _instance.recommendedRegions;
+    return CopyWith$Query$RecommendedRegions$recommendedRegions(
+      local$recommendedRegions,
+      (e) => call(recommendedRegions: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Query$RecommendedRegions<TRes>
+    implements CopyWith$Query$RecommendedRegions<TRes> {
+  _CopyWithStubImpl$Query$RecommendedRegions(this._res);
+
+  TRes _res;
+
+  call({Query$RecommendedRegions$recommendedRegions? recommendedRegions}) =>
+      _res;
+
+  CopyWith$Query$RecommendedRegions$recommendedRegions<TRes>
+  get recommendedRegions =>
+      CopyWith$Query$RecommendedRegions$recommendedRegions.stub(_res);
+}
+
+const documentNodeQueryRecommendedRegions = DocumentNode(
+  definitions: [
+    OperationDefinitionNode(
+      type: OperationType.query,
+      name: NameNode(value: 'RecommendedRegions'),
+      variableDefinitions: [
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'origin')),
+          type: NamedTypeNode(
+            name: NameNode(value: 'CoordinatesInput'),
+            isNonNull: true,
+          ),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'limit')),
+          type: NamedTypeNode(name: NameNode(value: 'Int'), isNonNull: false),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+      ],
+      directives: [],
+      selectionSet: SelectionSetNode(
+        selections: [
+          FieldNode(
+            name: NameNode(value: 'recommendedRegions'),
+            alias: null,
+            arguments: [
+              ArgumentNode(
+                name: NameNode(value: 'origin'),
+                value: VariableNode(name: NameNode(value: 'origin')),
+              ),
+              ArgumentNode(
+                name: NameNode(value: 'limit'),
+                value: VariableNode(name: NameNode(value: 'limit')),
+              ),
+            ],
+            directives: [],
+            selectionSet: SelectionSetNode(
+              selections: [
+                FieldNode(
+                  name: NameNode(value: 'regions'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'code'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'name'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'provinceName'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'scoreFactorCount'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'center'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: SelectionSetNode(
+                          selections: [
+                            FieldNode(
+                              name: NameNode(value: 'lat'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: null,
+                            ),
+                            FieldNode(
+                              name: NameNode(value: 'lng'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: null,
+                            ),
+                          ],
+                        ),
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'scores'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: SelectionSetNode(
+                          selections: [
+                            FieldNode(
+                              name: NameNode(value: 'factor'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: null,
+                            ),
+                            FieldNode(
+                              name: NameNode(value: 'value'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: null,
+                            ),
+                            FieldNode(
+                              name: NameNode(value: 'rank'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: null,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+);
+
+class Query$RecommendedRegions$recommendedRegions {
+  Query$RecommendedRegions$recommendedRegions({required this.regions});
+
+  factory Query$RecommendedRegions$recommendedRegions.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$regions = json['regions'];
+    return Query$RecommendedRegions$recommendedRegions(
+      regions: (l$regions as List<dynamic>)
+          .map(
+            (e) => Query$RecommendedRegions$recommendedRegions$regions.fromJson(
+              (e as Map<String, dynamic>),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  final List<Query$RecommendedRegions$recommendedRegions$regions> regions;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$regions = regions;
+    _resultData['regions'] = l$regions.map((e) => e.toJson()).toList();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$regions = regions;
+    return Object.hashAll([Object.hashAll(l$regions.map((v) => v))]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$RecommendedRegions$recommendedRegions ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$regions = regions;
+    final lOther$regions = other.regions;
+    if (l$regions.length != lOther$regions.length) {
+      return false;
+    }
+    for (int i = 0; i < l$regions.length; i++) {
+      final l$regions$entry = l$regions[i];
+      final lOther$regions$entry = lOther$regions[i];
+      if (l$regions$entry != lOther$regions$entry) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$RecommendedRegions$recommendedRegions
+    on Query$RecommendedRegions$recommendedRegions {
+  CopyWith$Query$RecommendedRegions$recommendedRegions<
+    Query$RecommendedRegions$recommendedRegions
+  >
+  get copyWith =>
+      CopyWith$Query$RecommendedRegions$recommendedRegions(this, (i) => i);
+}
+
+abstract class CopyWith$Query$RecommendedRegions$recommendedRegions<TRes> {
+  factory CopyWith$Query$RecommendedRegions$recommendedRegions(
+    Query$RecommendedRegions$recommendedRegions instance,
+    TRes Function(Query$RecommendedRegions$recommendedRegions) then,
+  ) = _CopyWithImpl$Query$RecommendedRegions$recommendedRegions;
+
+  factory CopyWith$Query$RecommendedRegions$recommendedRegions.stub(TRes res) =
+      _CopyWithStubImpl$Query$RecommendedRegions$recommendedRegions;
+
+  TRes call({
+    List<Query$RecommendedRegions$recommendedRegions$regions>? regions,
+  });
+  TRes regions(
+    Iterable<Query$RecommendedRegions$recommendedRegions$regions> Function(
+      Iterable<
+        CopyWith$Query$RecommendedRegions$recommendedRegions$regions<
+          Query$RecommendedRegions$recommendedRegions$regions
+        >
+      >,
+    )
+    _fn,
+  );
+}
+
+class _CopyWithImpl$Query$RecommendedRegions$recommendedRegions<TRes>
+    implements CopyWith$Query$RecommendedRegions$recommendedRegions<TRes> {
+  _CopyWithImpl$Query$RecommendedRegions$recommendedRegions(
+    this._instance,
+    this._then,
+  );
+
+  final Query$RecommendedRegions$recommendedRegions _instance;
+
+  final TRes Function(Query$RecommendedRegions$recommendedRegions) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? regions = _undefined}) => _then(
+    Query$RecommendedRegions$recommendedRegions(
+      regions: regions == _undefined || regions == null
+          ? _instance.regions
+          : (regions
+                as List<Query$RecommendedRegions$recommendedRegions$regions>),
+    ),
+  );
+
+  TRes regions(
+    Iterable<Query$RecommendedRegions$recommendedRegions$regions> Function(
+      Iterable<
+        CopyWith$Query$RecommendedRegions$recommendedRegions$regions<
+          Query$RecommendedRegions$recommendedRegions$regions
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    regions: _fn(
+      _instance.regions.map(
+        (e) => CopyWith$Query$RecommendedRegions$recommendedRegions$regions(
+          e,
+          (i) => i,
+        ),
+      ),
+    ).toList(),
+  );
+}
+
+class _CopyWithStubImpl$Query$RecommendedRegions$recommendedRegions<TRes>
+    implements CopyWith$Query$RecommendedRegions$recommendedRegions<TRes> {
+  _CopyWithStubImpl$Query$RecommendedRegions$recommendedRegions(this._res);
+
+  TRes _res;
+
+  call({List<Query$RecommendedRegions$recommendedRegions$regions>? regions}) =>
+      _res;
+
+  regions(_fn) => _res;
+}
+
+class Query$RecommendedRegions$recommendedRegions$regions {
+  Query$RecommendedRegions$recommendedRegions$regions({
+    required this.code,
+    required this.name,
+    required this.provinceName,
+    required this.scoreFactorCount,
+    required this.center,
+    required this.scores,
+  });
+
+  factory Query$RecommendedRegions$recommendedRegions$regions.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$code = json['code'];
+    final l$name = json['name'];
+    final l$provinceName = json['provinceName'];
+    final l$scoreFactorCount = json['scoreFactorCount'];
+    final l$center = json['center'];
+    final l$scores = json['scores'];
+    return Query$RecommendedRegions$recommendedRegions$regions(
+      code: (l$code as String),
+      name: (l$name as String),
+      provinceName: (l$provinceName as String),
+      scoreFactorCount: (l$scoreFactorCount as int),
+      center:
+          Query$RecommendedRegions$recommendedRegions$regions$center.fromJson(
+            (l$center as Map<String, dynamic>),
+          ),
+      scores: (l$scores as List<dynamic>)
+          .map(
+            (e) =>
+                Query$RecommendedRegions$recommendedRegions$regions$scores.fromJson(
+                  (e as Map<String, dynamic>),
+                ),
+          )
+          .toList(),
+    );
+  }
+
+  final String code;
+
+  final String name;
+
+  final String provinceName;
+
+  final int scoreFactorCount;
+
+  final Query$RecommendedRegions$recommendedRegions$regions$center center;
+
+  final List<Query$RecommendedRegions$recommendedRegions$regions$scores> scores;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$name = name;
+    _resultData['name'] = l$name;
+    final l$provinceName = provinceName;
+    _resultData['provinceName'] = l$provinceName;
+    final l$scoreFactorCount = scoreFactorCount;
+    _resultData['scoreFactorCount'] = l$scoreFactorCount;
+    final l$center = center;
+    _resultData['center'] = l$center.toJson();
+    final l$scores = scores;
+    _resultData['scores'] = l$scores.map((e) => e.toJson()).toList();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$code = code;
+    final l$name = name;
+    final l$provinceName = provinceName;
+    final l$scoreFactorCount = scoreFactorCount;
+    final l$center = center;
+    final l$scores = scores;
+    return Object.hashAll([
+      l$code,
+      l$name,
+      l$provinceName,
+      l$scoreFactorCount,
+      l$center,
+      Object.hashAll(l$scores.map((v) => v)),
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$RecommendedRegions$recommendedRegions$regions ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$name = name;
+    final lOther$name = other.name;
+    if (l$name != lOther$name) {
+      return false;
+    }
+    final l$provinceName = provinceName;
+    final lOther$provinceName = other.provinceName;
+    if (l$provinceName != lOther$provinceName) {
+      return false;
+    }
+    final l$scoreFactorCount = scoreFactorCount;
+    final lOther$scoreFactorCount = other.scoreFactorCount;
+    if (l$scoreFactorCount != lOther$scoreFactorCount) {
+      return false;
+    }
+    final l$center = center;
+    final lOther$center = other.center;
+    if (l$center != lOther$center) {
+      return false;
+    }
+    final l$scores = scores;
+    final lOther$scores = other.scores;
+    if (l$scores.length != lOther$scores.length) {
+      return false;
+    }
+    for (int i = 0; i < l$scores.length; i++) {
+      final l$scores$entry = l$scores[i];
+      final lOther$scores$entry = lOther$scores[i];
+      if (l$scores$entry != lOther$scores$entry) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$RecommendedRegions$recommendedRegions$regions
+    on Query$RecommendedRegions$recommendedRegions$regions {
+  CopyWith$Query$RecommendedRegions$recommendedRegions$regions<
+    Query$RecommendedRegions$recommendedRegions$regions
+  >
+  get copyWith => CopyWith$Query$RecommendedRegions$recommendedRegions$regions(
+    this,
+    (i) => i,
+  );
+}
+
+abstract class CopyWith$Query$RecommendedRegions$recommendedRegions$regions<
+  TRes
+> {
+  factory CopyWith$Query$RecommendedRegions$recommendedRegions$regions(
+    Query$RecommendedRegions$recommendedRegions$regions instance,
+    TRes Function(Query$RecommendedRegions$recommendedRegions$regions) then,
+  ) = _CopyWithImpl$Query$RecommendedRegions$recommendedRegions$regions;
+
+  factory CopyWith$Query$RecommendedRegions$recommendedRegions$regions.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Query$RecommendedRegions$recommendedRegions$regions;
+
+  TRes call({
+    String? code,
+    String? name,
+    String? provinceName,
+    int? scoreFactorCount,
+    Query$RecommendedRegions$recommendedRegions$regions$center? center,
+    List<Query$RecommendedRegions$recommendedRegions$regions$scores>? scores,
+  });
+  CopyWith$Query$RecommendedRegions$recommendedRegions$regions$center<TRes>
+  get center;
+  TRes scores(
+    Iterable<Query$RecommendedRegions$recommendedRegions$regions$scores>
+    Function(
+      Iterable<
+        CopyWith$Query$RecommendedRegions$recommendedRegions$regions$scores<
+          Query$RecommendedRegions$recommendedRegions$regions$scores
+        >
+      >,
+    )
+    _fn,
+  );
+}
+
+class _CopyWithImpl$Query$RecommendedRegions$recommendedRegions$regions<TRes>
+    implements
+        CopyWith$Query$RecommendedRegions$recommendedRegions$regions<TRes> {
+  _CopyWithImpl$Query$RecommendedRegions$recommendedRegions$regions(
+    this._instance,
+    this._then,
+  );
+
+  final Query$RecommendedRegions$recommendedRegions$regions _instance;
+
+  final TRes Function(Query$RecommendedRegions$recommendedRegions$regions)
+  _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? code = _undefined,
+    Object? name = _undefined,
+    Object? provinceName = _undefined,
+    Object? scoreFactorCount = _undefined,
+    Object? center = _undefined,
+    Object? scores = _undefined,
+  }) => _then(
+    Query$RecommendedRegions$recommendedRegions$regions(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      name: name == _undefined || name == null
+          ? _instance.name
+          : (name as String),
+      provinceName: provinceName == _undefined || provinceName == null
+          ? _instance.provinceName
+          : (provinceName as String),
+      scoreFactorCount:
+          scoreFactorCount == _undefined || scoreFactorCount == null
+          ? _instance.scoreFactorCount
+          : (scoreFactorCount as int),
+      center: center == _undefined || center == null
+          ? _instance.center
+          : (center
+                as Query$RecommendedRegions$recommendedRegions$regions$center),
+      scores: scores == _undefined || scores == null
+          ? _instance.scores
+          : (scores
+                as List<
+                  Query$RecommendedRegions$recommendedRegions$regions$scores
+                >),
+    ),
+  );
+
+  CopyWith$Query$RecommendedRegions$recommendedRegions$regions$center<TRes>
+  get center {
+    final local$center = _instance.center;
+    return CopyWith$Query$RecommendedRegions$recommendedRegions$regions$center(
+      local$center,
+      (e) => call(center: e),
+    );
+  }
+
+  TRes scores(
+    Iterable<Query$RecommendedRegions$recommendedRegions$regions$scores>
+    Function(
+      Iterable<
+        CopyWith$Query$RecommendedRegions$recommendedRegions$regions$scores<
+          Query$RecommendedRegions$recommendedRegions$regions$scores
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    scores: _fn(
+      _instance.scores.map(
+        (e) =>
+            CopyWith$Query$RecommendedRegions$recommendedRegions$regions$scores(
+              e,
+              (i) => i,
+            ),
+      ),
+    ).toList(),
+  );
+}
+
+class _CopyWithStubImpl$Query$RecommendedRegions$recommendedRegions$regions<
+  TRes
+>
+    implements
+        CopyWith$Query$RecommendedRegions$recommendedRegions$regions<TRes> {
+  _CopyWithStubImpl$Query$RecommendedRegions$recommendedRegions$regions(
+    this._res,
+  );
+
+  TRes _res;
+
+  call({
+    String? code,
+    String? name,
+    String? provinceName,
+    int? scoreFactorCount,
+    Query$RecommendedRegions$recommendedRegions$regions$center? center,
+    List<Query$RecommendedRegions$recommendedRegions$regions$scores>? scores,
+  }) => _res;
+
+  CopyWith$Query$RecommendedRegions$recommendedRegions$regions$center<TRes>
+  get center =>
+      CopyWith$Query$RecommendedRegions$recommendedRegions$regions$center.stub(
+        _res,
+      );
+
+  scores(_fn) => _res;
+}
+
+class Query$RecommendedRegions$recommendedRegions$regions$center {
+  Query$RecommendedRegions$recommendedRegions$regions$center({
+    required this.lat,
+    required this.lng,
+  });
+
+  factory Query$RecommendedRegions$recommendedRegions$regions$center.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$lat = json['lat'];
+    final l$lng = json['lng'];
+    return Query$RecommendedRegions$recommendedRegions$regions$center(
+      lat: (l$lat as num).toDouble(),
+      lng: (l$lng as num).toDouble(),
+    );
+  }
+
+  final double lat;
+
+  final double lng;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$lat = lat;
+    _resultData['lat'] = l$lat;
+    final l$lng = lng;
+    _resultData['lng'] = l$lng;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$lat = lat;
+    final l$lng = lng;
+    return Object.hashAll([l$lat, l$lng]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$RecommendedRegions$recommendedRegions$regions$center ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$lat = lat;
+    final lOther$lat = other.lat;
+    if (l$lat != lOther$lat) {
+      return false;
+    }
+    final l$lng = lng;
+    final lOther$lng = other.lng;
+    if (l$lng != lOther$lng) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$RecommendedRegions$recommendedRegions$regions$center
+    on Query$RecommendedRegions$recommendedRegions$regions$center {
+  CopyWith$Query$RecommendedRegions$recommendedRegions$regions$center<
+    Query$RecommendedRegions$recommendedRegions$regions$center
+  >
+  get copyWith =>
+      CopyWith$Query$RecommendedRegions$recommendedRegions$regions$center(
+        this,
+        (i) => i,
+      );
+}
+
+abstract class CopyWith$Query$RecommendedRegions$recommendedRegions$regions$center<
+  TRes
+> {
+  factory CopyWith$Query$RecommendedRegions$recommendedRegions$regions$center(
+    Query$RecommendedRegions$recommendedRegions$regions$center instance,
+    TRes Function(Query$RecommendedRegions$recommendedRegions$regions$center)
+    then,
+  ) = _CopyWithImpl$Query$RecommendedRegions$recommendedRegions$regions$center;
+
+  factory CopyWith$Query$RecommendedRegions$recommendedRegions$regions$center.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Query$RecommendedRegions$recommendedRegions$regions$center;
+
+  TRes call({double? lat, double? lng});
+}
+
+class _CopyWithImpl$Query$RecommendedRegions$recommendedRegions$regions$center<
+  TRes
+>
+    implements
+        CopyWith$Query$RecommendedRegions$recommendedRegions$regions$center<
+          TRes
+        > {
+  _CopyWithImpl$Query$RecommendedRegions$recommendedRegions$regions$center(
+    this._instance,
+    this._then,
+  );
+
+  final Query$RecommendedRegions$recommendedRegions$regions$center _instance;
+
+  final TRes Function(
+    Query$RecommendedRegions$recommendedRegions$regions$center,
+  )
+  _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? lat = _undefined, Object? lng = _undefined}) => _then(
+    Query$RecommendedRegions$recommendedRegions$regions$center(
+      lat: lat == _undefined || lat == null ? _instance.lat : (lat as double),
+      lng: lng == _undefined || lng == null ? _instance.lng : (lng as double),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$RecommendedRegions$recommendedRegions$regions$center<
+  TRes
+>
+    implements
+        CopyWith$Query$RecommendedRegions$recommendedRegions$regions$center<
+          TRes
+        > {
+  _CopyWithStubImpl$Query$RecommendedRegions$recommendedRegions$regions$center(
+    this._res,
+  );
+
+  TRes _res;
+
+  call({double? lat, double? lng}) => _res;
+}
+
+class Query$RecommendedRegions$recommendedRegions$regions$scores {
+  Query$RecommendedRegions$recommendedRegions$regions$scores({
+    required this.factor,
+    required this.value,
+    required this.rank,
+  });
+
+  factory Query$RecommendedRegions$recommendedRegions$regions$scores.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$factor = json['factor'];
+    final l$value = json['value'];
+    final l$rank = json['rank'];
+    return Query$RecommendedRegions$recommendedRegions$regions$scores(
+      factor: fromJson$Enum$RegionScoreFactor((l$factor as String)),
+      value: (l$value as num).toDouble(),
+      rank: (l$rank as int),
+    );
+  }
+
+  final Enum$RegionScoreFactor factor;
+
+  final double value;
+
+  final int rank;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$factor = factor;
+    _resultData['factor'] = toJson$Enum$RegionScoreFactor(l$factor);
+    final l$value = value;
+    _resultData['value'] = l$value;
+    final l$rank = rank;
+    _resultData['rank'] = l$rank;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$factor = factor;
+    final l$value = value;
+    final l$rank = rank;
+    return Object.hashAll([l$factor, l$value, l$rank]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$RecommendedRegions$recommendedRegions$regions$scores ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$factor = factor;
+    final lOther$factor = other.factor;
+    if (l$factor != lOther$factor) {
+      return false;
+    }
+    final l$value = value;
+    final lOther$value = other.value;
+    if (l$value != lOther$value) {
+      return false;
+    }
+    final l$rank = rank;
+    final lOther$rank = other.rank;
+    if (l$rank != lOther$rank) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$RecommendedRegions$recommendedRegions$regions$scores
+    on Query$RecommendedRegions$recommendedRegions$regions$scores {
+  CopyWith$Query$RecommendedRegions$recommendedRegions$regions$scores<
+    Query$RecommendedRegions$recommendedRegions$regions$scores
+  >
+  get copyWith =>
+      CopyWith$Query$RecommendedRegions$recommendedRegions$regions$scores(
+        this,
+        (i) => i,
+      );
+}
+
+abstract class CopyWith$Query$RecommendedRegions$recommendedRegions$regions$scores<
+  TRes
+> {
+  factory CopyWith$Query$RecommendedRegions$recommendedRegions$regions$scores(
+    Query$RecommendedRegions$recommendedRegions$regions$scores instance,
+    TRes Function(Query$RecommendedRegions$recommendedRegions$regions$scores)
+    then,
+  ) = _CopyWithImpl$Query$RecommendedRegions$recommendedRegions$regions$scores;
+
+  factory CopyWith$Query$RecommendedRegions$recommendedRegions$regions$scores.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Query$RecommendedRegions$recommendedRegions$regions$scores;
+
+  TRes call({Enum$RegionScoreFactor? factor, double? value, int? rank});
+}
+
+class _CopyWithImpl$Query$RecommendedRegions$recommendedRegions$regions$scores<
+  TRes
+>
+    implements
+        CopyWith$Query$RecommendedRegions$recommendedRegions$regions$scores<
+          TRes
+        > {
+  _CopyWithImpl$Query$RecommendedRegions$recommendedRegions$regions$scores(
+    this._instance,
+    this._then,
+  );
+
+  final Query$RecommendedRegions$recommendedRegions$regions$scores _instance;
+
+  final TRes Function(
+    Query$RecommendedRegions$recommendedRegions$regions$scores,
+  )
+  _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? factor = _undefined,
+    Object? value = _undefined,
+    Object? rank = _undefined,
+  }) => _then(
+    Query$RecommendedRegions$recommendedRegions$regions$scores(
+      factor: factor == _undefined || factor == null
+          ? _instance.factor
+          : (factor as Enum$RegionScoreFactor),
+      value: value == _undefined || value == null
+          ? _instance.value
+          : (value as double),
+      rank: rank == _undefined || rank == null ? _instance.rank : (rank as int),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$RecommendedRegions$recommendedRegions$regions$scores<
+  TRes
+>
+    implements
+        CopyWith$Query$RecommendedRegions$recommendedRegions$regions$scores<
+          TRes
+        > {
+  _CopyWithStubImpl$Query$RecommendedRegions$recommendedRegions$regions$scores(
+    this._res,
+  );
+
+  TRes _res;
+
+  call({Enum$RegionScoreFactor? factor, double? value, int? rank}) => _res;
+}

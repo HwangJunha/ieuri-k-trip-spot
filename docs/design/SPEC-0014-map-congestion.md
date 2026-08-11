@@ -45,7 +45,7 @@ Scaffold (map_screen.dart, 이미 구현됨)
    ├─ MapZoomControls                    우측, 세로 중앙쯤 — 줌 +/−
    ├─ MyLocationButton                   MapZoomControls 아래, 별도 원형 버튼
    ├─ AreaInfoCard                       하단, 플로팅 네비바 위 — R27 (구역 선택 시만)
-   ├─ CongestionDegradedNotice           상단 배너 (혼잡도 실패 시만, TruncatedNotice와 배타적 위치 아님 — 동시 노출 가능하나 우선순위는 실패 안내가 위)
+   ├─ (제거됨) CongestionDegradedNotice  혼잡도 실패 배너 — 2026-08-12 사용자 결정으로 삭제
    └─ CongestionAttribution (구현됨)      좌하단 — R30, 항상 SafeArea 보장
 FloatingBottomNavScaffold (셸 레벨, common/widget/)
    Map 탭 활성(2번째, index 1)
@@ -237,7 +237,7 @@ FloatingBottomNavScaffold (셸 레벨, common/widget/)
 | 초기 진입(서버 연동 전, 현재 구현) | 지도만 표시, 유휴 판정 동작, 마커/폴리곤 없음 |
 | 정상(마커+혼잡도 있음) | 본 문서의 주 레이아웃 |
 | 잘림(`truncated=true`) | §5 배너 + 마커는 그대로 |
-| 혼잡도 실패(`degraded=true`) | §6 배너 + 폴리곤/범례 숨김, 마커·지도 조작 정상 |
+| 혼잡도 실패(`degraded=true`) | 폴리곤·범례·출처가 조용히 빠진다. 마커·지도 조작 정상. **배너를 띄우지 않는다**(2026-08-12 사용자 결정) — 부가 데이터라 실패를 알려도 사용자가 할 일이 없고, 배너는 검색창 아래 자리만 차지했다 |
 | 구역 선택 | §3 카드 노출 |
 | 지도 키 없음(구현됨) | 전체 화면 안내 텍스트로 대체(`mapKeyMissing`) — `map_screen.dart` 기존 분기 |
 | 지도 로드 실패 | `mapLoadFailed` 문구 — 트리거 조건은 slice-builder가 SDK 콜백에서 확정 |

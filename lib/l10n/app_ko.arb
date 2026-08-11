@@ -1596,7 +1596,6 @@
   },
   "emailChangeSucceeded": "이메일을 변경했습니다.",
   "@emailChangeSucceeded": {},
-
   "mapCongestionRelaxed": "여유",
   "@mapCongestionRelaxed": {},
   "mapCongestionNormal": "보통",
@@ -1623,10 +1622,6 @@
   "@mapObservedAt": {},
   "mapPopulationRange": "{min} – {max}명",
   "@mapPopulationRange": {},
-  "mapCongestionUnavailable": "혼잡도 정보를 불러오지 못했습니다.",
-  "@mapCongestionUnavailable": {},
-  "mapTruncatedNotice": "표시할 장소가 많습니다. 확대하면 모두 볼 수 있습니다.",
-  "@mapTruncatedNotice": {},
   "mapAttribution": "출처: 서울특별시 실시간 도시데이터",
   "@mapAttribution": {},
   "mapKeyMissing": "지도 키가 없어 지도를 불러올 수 없습니다. KAKAO_NATIVE_APP_KEY 빌드 설정을 확인하세요.",
@@ -1646,5 +1641,139 @@
   "mapLegendEvent": "행사",
   "@mapLegendEvent": {},
   "mapSearchThisArea": "이 지역 재검색",
-  "@mapSearchThisArea": {}
+  "@mapSearchThisArea": {},
+  "mapRegionRecommendationsTitle": "추천 지역",
+  "@mapRegionRecommendationsTitle": {},
+  "mapRegionRecommendationsAction": "추천 지역 보기",
+  "@mapRegionRecommendationsAction": {},
+  "mapRegionRecommendationPartialData": "일부 데이터 기준",
+  "@mapRegionRecommendationPartialData": {},
+  "mapRegionRecommendationsGatheringTitle": "데이터를 모으는 중입니다",
+  "@mapRegionRecommendationsGatheringTitle": {},
+  "mapRegionRecommendationsGathering": "추천에 쓸 데이터를 아직 모으고 있습니다. 잠시 후 다시 확인해 주세요.",
+  "@mapRegionRecommendationsGathering": {},
+  "mapRegionRecommendationsNoMatchTitle": "조건에 맞는 지역이 없습니다",
+  "@mapRegionRecommendationsNoMatchTitle": {},
+  "mapRegionRecommendationsNoMatch": "지금은 추천 조건을 만족한 지역이 없습니다. 나중에 다시 확인해 주세요.",
+  "@mapRegionRecommendationsNoMatch": {},
+  "mapRegionRecommendationsError": "추천 지역을 불러오지 못했습니다.",
+  "@mapRegionRecommendationsError": {},
+  "mapRegionRecommendationsRetry": "다시 시도",
+  "@mapRegionRecommendationsRetry": {},
+  "mapRegionRecommendationsRetryExhausted": "여러 번 시도했지만 불러오지 못했습니다. 나중에 다시 시도해 주세요.",
+  "@mapRegionRecommendationsRetryExhausted": {},
+  "mapScoreFactorCongestion": "예상 혼잡도",
+  "@mapScoreFactorCongestion": {},
+  "mapScoreFactorVisitorVolume": "방문자 규모",
+  "@mapScoreFactorVisitorVolume": {},
+  "mapScoreFactorStayIntensity": "체류 강도",
+  "@mapScoreFactorStayIntensity": {},
+  "mapScoreFactorSpendingIntensity": "소비 강도",
+  "@mapScoreFactorSpendingIntensity": {},
+  "mapScoreFactorDistance": "거리",
+  "@mapScoreFactorDistance": {},
+  "mapRegionRecommendationsNeedsLocationTitle": "위치가 필요합니다",
+  "mapRegionRecommendationsNeedsLocation": "추천은 현재 위치 주변 지역을 기준으로 하므로 위치 정보가 필요합니다.",
+  "mapRegionRecommendationsAllowLocation": "위치 허용",
+  "mapRegionRecommendationsOriginMyLocation": "내 위치",
+  "mapRegionRecommendationsOriginMapCenter": "지도 중심",
+  "mapRegionProvinceAndDistance": "{province} · {distance}",
+  "@mapRegionRecommendationsOriginMyLocation": {
+    "description": "기준 위치 토글 — 사용자의 현재 위치"
+  },
+  "@mapRegionRecommendationsOriginMapCenter": {
+    "description": "기준 위치 토글 — 지도가 보고 있던 중심"
+  },
+  "@mapRegionProvinceAndDistance": {
+    "description": "시도명과 기준점으로부터의 거리",
+    "placeholders": {
+      "province": {
+        "type": "String"
+      },
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "@mapRegionRecommendationsNeedsLocationTitle": {
+    "description": "위치 권한이 없어 추천을 받을 수 없을 때의 제목"
+  },
+  "@mapRegionRecommendationsNeedsLocation": {
+    "description": "위치가 필요한 이유 안내"
+  },
+  "@mapRegionRecommendationsAllowLocation": {
+    "description": "위치 권한 요청/설정 이동 버튼"
+  },
+  "mapRegionStrengthCongestion": "한산할 것으로 예상",
+  "@mapRegionStrengthCongestion": {
+    "description": "강점 라벨 — 예상 혼잡도. **향후 30일 예측이라 미래 시제다**. \"지금 한산\"은 거짓이 된다."
+  },
+  "mapRegionStrengthVisitorVolume": "최근 방문이 많았던 곳",
+  "@mapRegionStrengthVisitorVolume": {
+    "description": "강점 라벨 — 방문자 규모. **약 30일 지연 공개라 과거형이어야 정직하다**."
+  },
+  "mapRegionStrengthStayIntensity": "오래 머무는 곳",
+  "@mapRegionStrengthStayIntensity": {
+    "description": "강점 라벨 — 체류 강도. 월 단위 지표이며 지역의 고유 성격이라 시제를 두지 않는다."
+  },
+  "mapRegionStrengthSpendingIntensity": "소비가 활발한 곳",
+  "@mapRegionStrengthSpendingIntensity": {
+    "description": "강점 라벨 — 소비 강도. 체류 강도와 같은 성격."
+  },
+  "mapRegionStrengthDistance": "가까운 곳",
+  "@mapRegionStrengthDistance": {
+    "description": "강점 라벨 — 거리. 요청 시점에 계산된다."
+  },
+  "mapRegionRecommendationsAbout": "데이터 기준이 궁금해요",
+  "@mapRegionRecommendationsAbout": {
+    "description": "산출 근거 고지로 가는 진입점(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutTitle": "추천 지역은 이렇게 정해져요",
+  "@mapRegionAboutTitle": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutIntro": "기준 위치가 속한 시·도 안에서, 기준 위치의 지역을 뺀 나머지를 비교해 추천 순서를 정합니다. 아래 항목을 함께 봅니다.",
+  "@mapRegionAboutIntro": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutCongestion": "한국관광공사 관광지 집중률 예측입니다. 오늘 날짜의 예측값만 쓰며, 관광지 단위로 오는 값을 시·군·구 평균으로 묶습니다.\n값이 뒤집혀 있어 덜 붐빌수록 높은 점수입니다.",
+  "@mapRegionAboutCongestion": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutVisitorVolume": "한국관광공사 지역별 방문자 수입니다. 외지인과 외국인만 합산하며, 현지인은 주민의 일상 이동이라 제외합니다.\n최근 7일 평균을 씁니다.",
+  "@mapRegionAboutVisitorVolume": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutIntensityTitle": "체류 강도 · 소비 강도",
+  "@mapRegionAboutIntensityTitle": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutIntensity": "한국관광공사 관광수요 강도 지표입니다. 해당 시·군·구의 최신 월 값을 쓰며, 월 1회 갱신이라 한 달 동안 같은 값이 유지됩니다. 둘 다 높을수록 좋은 점수입니다.\n소비 강도는 외지인 소비 기준입니다.",
+  "@mapRegionAboutIntensity": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutDistance": "기준 위치에서 그 지역까지의 거리입니다. 가까울수록 높은 점수입니다.",
+  "@mapRegionAboutDistance": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutScoringTitle": "공통 규칙",
+  "@mapRegionAboutScoringTitle": {
+    "description": "추천 산출 근거 고지 — 점수 산정 방식(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutScoringNormalize": "정규화 — 각 항목을 그 시·도 후보들의 최솟값~최댓값에 맞춰 0~100으로 폅니다. 그래서 다른 시·도의 같은 숫자와는 뜻이 다릅니다.",
+  "@mapRegionAboutScoringNormalize": {
+    "description": "추천 산출 근거 고지 — 점수 산정 방식(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutScoringCongestion": "순위 — 반환된 목록이 아니라 시·도 전체 후보 기준입니다.",
+  "@mapRegionAboutScoringCongestion": {
+    "description": "추천 산출 근거 고지 — 점수 산정 방식(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutScoringDistance": "결측 처리 — 데이터가 없는 항목은 계산에서 뺍니다.",
+  "@mapRegionAboutScoringDistance": {
+    "description": "추천 산출 근거 고지 — 점수 산정 방식(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutScoringTotal": "후보 제한 — 기준 위치가 속한 시·도 안에서만 고르고 기준 위치의 지역은 뺍니다. 관광지가 충분하지 않은 지역은 제외합니다.",
+  "@mapRegionAboutScoringTotal": {
+    "description": "추천 산출 근거 고지 — 점수 산정 방식(개인정보보호법 §37조의2)."
+  }
 }

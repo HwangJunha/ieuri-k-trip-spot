@@ -1,6 +1,8 @@
+import '../../../common/location/coordinates.dart';
 import '../model/congestion_area.dart';
 import '../model/map_bounds.dart';
 import '../model/map_viewport_result.dart';
+import '../model/region_recommendation.dart';
 import '../model/seoul_congestion_result.dart';
 
 /// 지도 데이터 접근 경계(SPEC-0014). 생성된 `*.graphql.dart` 타입은 구현체 안에만
@@ -32,4 +34,25 @@ abstract interface class MapRepository {
   ///
   /// 활성 언어로 된 구역명이 함께 온다(R31) — 캐시할 때 언어를 키에 포함해야 한다.
   Future<List<CongestionAreaBoundary>> fetchBoundaries();
+
+  /// 추천 시군구 목록을 총점 내림차순으로 조회한다(SPEC-0015).
+  ///
+  /// **[origin]은 필수다.** 설계 초안에서는 선택이었으나(R27) 서버가 필수로 확정했다
+  /// — 이 쿼리는 "지금 있는 곳 말고 근처의 다른 곳"을 답하므로, origin이 속한 시도
+  /// 안에서만 고르고 origin의 시군구 자신은 결과에서 빠진다. 좌표가 없으면 질문이
+  /// 성립하지 않아 GraphQL 검증 단계에서 거절된다. 위치 권한이 없을 때는 이 호출을
+  /// 하지 않고 화면이 권한 안내를 그린다(설계 §9.3).
+  ///
+  /// [limit]을 생략하면 서버 기본값 10이다. 상한 50을 넘으면 잘리지만 0 이하는
+  /// `INVALID_LIMIT`으로 거절된다.
+  ///
+  /// 빈 목록은 오류가 아니다(R15) — 바다·해외 좌표, 시군구 3개 미만인 시도, 후보가
+  /// 없는 시도가 모두 빈 목록으로 온다.
+  ///
+  /// 여기서도 **새 repository를 만들지 않는다**(§1) — 같은 GraphQL 엔드포인트에 대해
+  /// 두 개가 생기기 때문이다.
+  Future<RegionRecommendationResult> fetchRecommendedRegions({
+    required Coordinates origin,
+    int? limit,
+  });
 }

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:gql/ast.dart' show DocumentNode;
 import 'package:graphql_flutter/graphql_flutter.dart';
 
+import '../../../common/location/coordinates.dart';
 import '../../../common/network/graphql_debug_log.dart';
 import '../../../common/network/graphql_failure.dart';
 import '../model/commercial_activity_level.dart';
@@ -12,6 +13,8 @@ import '../model/map_bounds.dart';
 import '../model/map_failure.dart';
 import '../model/map_marker.dart';
 import '../model/map_viewport_result.dart';
+import '../model/region_recommendation.dart';
+import '../model/region_score.dart';
 import '../model/seoul_congestion_result.dart';
 import 'map_operations.graphql.dart';
 import 'map_repository.dart';
@@ -122,6 +125,80 @@ class MapRepositoryImpl implements MapRepository {
     }
     return mapped;
   }
+
+  @override
+  Future<RegionRecommendationResult> fetchRecommendedRegions({
+    required Coordinates origin,
+    int? limit,
+  }) async {
+    // **origin은 필수다.** 서버가 origin이 속한 시도 안에서만 후보를 고르고 그
+    // 시군구 자신은 제외하므로, 좌표가 없으면 질문 자체가 성립하지 않는다 —
+    // GraphQL 검증 단계에서 거절된다. 위치 권한이 없으면 화면이 이 호출을 아예
+    // 하지 않고 권한 안내를 그린다(설계 §9.3).
+    final Map<String, dynamic> data = await _query(
+      documentNodeQueryRecommendedRegions,
+      Variables$Query$RecommendedRegions(
+        origin: Input$CoordinatesInput(
+          lat: origin.latitude,
+          lng: origin.longitude,
+        ),
+        limit: limit,
+      ).toJson(),
+      'recommendedRegions',
+    );
+
+    final Query$RecommendedRegions$recommendedRegions result =
+        Query$RecommendedRegions.fromJson(data).recommendedRegions;
+
+    return RegionRecommendationResult(
+      // 서버가 준 총점 내림차순을 그대로 둔다(R22) — 다시 정렬하지 않는다.
+      regions: result.regions
+          .map(_recommendationFrom)
+          .toList(growable: false),
+      // 화면이 거리를 재려면 **조회에 실제로 쓴 좌표**가 필요하다. 내 위치 기준일
+      // 때는 provider가 좌표를 얻으므로 화면이 알 수 없어, 여기서 실어 보낸다.
+      origin: origin,
+    );
+  }
+
+  /// 생성 타입 → 도메인 [RegionRecommendation].
+  RegionRecommendation _recommendationFrom(
+    Query$RecommendedRegions$recommendedRegions$regions r,
+  ) => RegionRecommendation(
+    code: r.code,
+    name: r.name,
+    provinceName: r.provinceName,
+    scores: r.scores.map(_scoreFrom).toList(growable: false),
+    scoreFactorCount: r.scoreFactorCount,
+    centerLat: r.center.lat,
+    centerLng: r.center.lng,
+  );
+
+  RegionScore _scoreFrom(
+    Query$RecommendedRegions$recommendedRegions$regions$scores s,
+  ) => RegionScore(
+    factor: _factorFrom(s.factor),
+    value: s.value,
+    rank: s.rank,
+  );
+
+  /// 도메인 [RegionScoreFactor] 매핑.
+  ///
+  /// **모르는 값을 예외로 만들지 않는다** — 서버가 항목을 추가했을 때 목록 전체가
+  /// 실패하는 대신 그 항목만 [RegionScoreFactor.unknown]이 되고 화면이 건너뛴다.
+  RegionScoreFactor _factorFrom(Enum$RegionScoreFactor factor) =>
+      switch (factor) {
+        Enum$RegionScoreFactor.CONGESTION => RegionScoreFactor.congestion,
+        Enum$RegionScoreFactor.VISITOR_VOLUME =>
+          RegionScoreFactor.visitorVolume,
+        Enum$RegionScoreFactor.STAY_INTENSITY =>
+          RegionScoreFactor.stayIntensity,
+        Enum$RegionScoreFactor.SPENDING_INTENSITY =>
+          RegionScoreFactor.spendingIntensity,
+        Enum$RegionScoreFactor.DISTANCE => RegionScoreFactor.distance,
+        Enum$RegionScoreFactor.$unknown => RegionScoreFactor.unknown,
+      };
+
 
   /// 생성 타입 → 도메인 [CongestionArea].
   ///

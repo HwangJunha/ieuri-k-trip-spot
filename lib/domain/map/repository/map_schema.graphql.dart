@@ -143,6 +143,108 @@ class _CopyWithStubImpl$Input$MapBoundsInput<TRes>
       _res;
 }
 
+class Input$CoordinatesInput {
+  factory Input$CoordinatesInput({required double lat, required double lng}) =>
+      Input$CoordinatesInput._({r'lat': lat, r'lng': lng});
+
+  Input$CoordinatesInput._(this._$data);
+
+  factory Input$CoordinatesInput.fromJson(Map<String, dynamic> data) {
+    final result$data = <String, dynamic>{};
+    final l$lat = data['lat'];
+    result$data['lat'] = (l$lat as num).toDouble();
+    final l$lng = data['lng'];
+    result$data['lng'] = (l$lng as num).toDouble();
+    return Input$CoordinatesInput._(result$data);
+  }
+
+  Map<String, dynamic> _$data;
+
+  double get lat => (_$data['lat'] as double);
+
+  double get lng => (_$data['lng'] as double);
+
+  Map<String, dynamic> toJson() {
+    final result$data = <String, dynamic>{};
+    final l$lat = lat;
+    result$data['lat'] = l$lat;
+    final l$lng = lng;
+    result$data['lng'] = l$lng;
+    return result$data;
+  }
+
+  CopyWith$Input$CoordinatesInput<Input$CoordinatesInput> get copyWith =>
+      CopyWith$Input$CoordinatesInput(this, (i) => i);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Input$CoordinatesInput || runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$lat = lat;
+    final lOther$lat = other.lat;
+    if (l$lat != lOther$lat) {
+      return false;
+    }
+    final l$lng = lng;
+    final lOther$lng = other.lng;
+    if (l$lng != lOther$lng) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    final l$lat = lat;
+    final l$lng = lng;
+    return Object.hashAll([l$lat, l$lng]);
+  }
+}
+
+abstract class CopyWith$Input$CoordinatesInput<TRes> {
+  factory CopyWith$Input$CoordinatesInput(
+    Input$CoordinatesInput instance,
+    TRes Function(Input$CoordinatesInput) then,
+  ) = _CopyWithImpl$Input$CoordinatesInput;
+
+  factory CopyWith$Input$CoordinatesInput.stub(TRes res) =
+      _CopyWithStubImpl$Input$CoordinatesInput;
+
+  TRes call({double? lat, double? lng});
+}
+
+class _CopyWithImpl$Input$CoordinatesInput<TRes>
+    implements CopyWith$Input$CoordinatesInput<TRes> {
+  _CopyWithImpl$Input$CoordinatesInput(this._instance, this._then);
+
+  final Input$CoordinatesInput _instance;
+
+  final TRes Function(Input$CoordinatesInput) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? lat = _undefined, Object? lng = _undefined}) => _then(
+    Input$CoordinatesInput._({
+      ..._instance._$data,
+      if (lat != _undefined && lat != null) 'lat': (lat as double),
+      if (lng != _undefined && lng != null) 'lng': (lng as double),
+    }),
+  );
+}
+
+class _CopyWithStubImpl$Input$CoordinatesInput<TRes>
+    implements CopyWith$Input$CoordinatesInput<TRes> {
+  _CopyWithStubImpl$Input$CoordinatesInput(this._res);
+
+  TRes _res;
+
+  call({double? lat, double? lng}) => _res;
+}
+
 enum Enum$CongestionLevel {
   RELAXED,
   NORMAL,
@@ -228,5 +330,53 @@ Enum$CommercialActivityLevel fromJson$Enum$CommercialActivityLevel(
       return Enum$CommercialActivityLevel.PEAK;
     default:
       return Enum$CommercialActivityLevel.$unknown;
+  }
+}
+
+enum Enum$RegionScoreFactor {
+  CONGESTION,
+  VISITOR_VOLUME,
+  STAY_INTENSITY,
+  SPENDING_INTENSITY,
+  DISTANCE,
+  $unknown;
+
+  factory Enum$RegionScoreFactor.fromJson(String value) =>
+      fromJson$Enum$RegionScoreFactor(value);
+
+  String toJson() => toJson$Enum$RegionScoreFactor(this);
+}
+
+String toJson$Enum$RegionScoreFactor(Enum$RegionScoreFactor e) {
+  switch (e) {
+    case Enum$RegionScoreFactor.CONGESTION:
+      return r'CONGESTION';
+    case Enum$RegionScoreFactor.VISITOR_VOLUME:
+      return r'VISITOR_VOLUME';
+    case Enum$RegionScoreFactor.STAY_INTENSITY:
+      return r'STAY_INTENSITY';
+    case Enum$RegionScoreFactor.SPENDING_INTENSITY:
+      return r'SPENDING_INTENSITY';
+    case Enum$RegionScoreFactor.DISTANCE:
+      return r'DISTANCE';
+    case Enum$RegionScoreFactor.$unknown:
+      return r'$unknown';
+  }
+}
+
+Enum$RegionScoreFactor fromJson$Enum$RegionScoreFactor(String value) {
+  switch (value) {
+    case r'CONGESTION':
+      return Enum$RegionScoreFactor.CONGESTION;
+    case r'VISITOR_VOLUME':
+      return Enum$RegionScoreFactor.VISITOR_VOLUME;
+    case r'STAY_INTENSITY':
+      return Enum$RegionScoreFactor.STAY_INTENSITY;
+    case r'SPENDING_INTENSITY':
+      return Enum$RegionScoreFactor.SPENDING_INTENSITY;
+    case r'DISTANCE':
+      return Enum$RegionScoreFactor.DISTANCE;
+    default:
+      return Enum$RegionScoreFactor.$unknown;
   }
 }

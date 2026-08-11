@@ -47,7 +47,12 @@ class CongestionShown extends CongestionLayerState {
 ///
 /// **오류 화면으로 덮지 않는다.** 서버가 이것을 GraphQL 오류가 아니라 `degraded`
 /// 표식으로 내려주는 이유가 여기 있다(spec §7.6) — 한 레이어만 없는 상태이며 지도는
-/// 정상 사용 가능하다. 혼잡도 자리에만 안내를 띄운다.
+/// 정상 사용 가능하다.
+///
+/// **안내도 띄우지 않는다**(사용자 결정, 2026-08-12). 혼잡도는 부가 데이터라 없어도
+/// 지도가 제 역할을 다 하고, 실패를 알려도 사용자가 할 수 있는 일이 없다 — 배너는
+/// 검색창 아래 자리만 차지했다. 폴리곤·범례·출처가 함께 빠지는 것으로 충분하다
+/// ([showsAttribution]이 false라 셋이 한 판정을 공유한다).
 class CongestionDegraded extends CongestionLayerState {
   const CongestionDegraded();
 }

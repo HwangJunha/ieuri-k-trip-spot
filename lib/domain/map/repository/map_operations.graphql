@@ -76,3 +76,37 @@ query SeoulCongestionAreas {
     polygon
   }
 }
+
+# 추천 시군구 목록(SPEC-0015).
+#
+# **origin은 필수다.** 서버가 "지금 있는 곳 말고 근처의 다른 곳"을 답하므로, 좌표가
+# 없으면 GraphQL 검증 단계에서 거절된다 — 위치 권한이 없으면 이 쿼리를 아예 부르지
+# 않고 화면이 권한 안내를 그린다(설계 §9.3).
+#
+# **`totalScore`를 받지 않는다**(계약에서 삭제). 가중평균 구조상 총점은 늘 항목 점수들
+# 사이 값이라 1위가 60점으로 나왔고, 절대 점수를 보여주는 것 자체가 이 데이터에 맞지
+# 않는다. 추천 순위는 배열 순서다 — regions[0]이 1위다.
+#
+# **`basisAt`도 받지 않는다** — 삭제 예정 필드다.
+#
+# `rank`는 항목별 순위다(1이 가장 좋음). 시도 전체 후보 기준이라 목록에 없는 지역까지
+# 셈에 들어간다.
+query RecommendedRegions($origin: CoordinatesInput!, $limit: Int) {
+  recommendedRegions(origin: $origin, limit: $limit) {
+    regions {
+      code
+      name
+      provinceName
+      scoreFactorCount
+      center {
+        lat
+        lng
+      }
+      scores {
+        factor
+        value
+        rank
+      }
+    }
+  }
+}

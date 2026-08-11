@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../common/location/coordinates.dart';
 import '../common/onboarding/view/language_selection_screen.dart';
 import '../common/onboarding/view/splash_screen.dart';
 import '../common/widget/floating_bottom_nav_scaffold.dart';
@@ -26,6 +27,7 @@ import '../domain/settings/view/required_terms_screen.dart';
 import '../domain/settings/view/settings_screen.dart';
 import '../domain/settings/view/terms_screen.dart';
 import '../domain/map/view/map_screen.dart';
+import '../domain/map/view/region_recommendation_screen.dart';
 import '../domain/spot/model/spot_category.dart';
 import '../domain/spot/view/discover_screen.dart';
 import '../domain/spot/view/home_screen.dart';
@@ -148,6 +150,22 @@ List<RouteBase> buildRoutes() => <RouteBase>[
       reverseTransitionDuration: const Duration(milliseconds: 250),
       transitionsBuilder: _slideUpFromBottom,
     ),
+  ),
+  // 지역 추천 목록(SPEC-0015). **셸 밖의 최상위 라우트**라 루트 내비게이터에 push되어
+  // 하단 탭을 덮는다 — 검색 화면과 같은 성격이다.
+  //
+  // 인자를 받지 않고 **고른 지역의 좌표를 돌려주고 닫힌다**(`Coordinates`). 지도
+  // 컨트롤러는 지도 화면이 소유하므로 카메라 이동은 그쪽에서 한다 — 검색이 고른
+  // 장소를 돌려주는 규약(`pick=1`)과 같다.
+  // 지역 추천(SPEC-0015). `extra`로 **지도가 보고 있던 중심 좌표**를 받는다 —
+  // 화면이 "내 위치 / 지도 중심"을 토글하는데, 지도를 떠난 뒤에는 그 값을 물어볼
+  // 곳이 없어서다. 딥링크처럼 지도를 거치지 않고 들어오면 null이고, 그때는 내
+  // 위치만 쓸 수 있다.
+  GoRoute(
+    path: '/region-recommendations',
+    name: RegionRecommendationScreen.routeName,
+    builder: (_, GoRouterState state) =>
+        RegionRecommendationScreen(mapCenter: state.extra as Coordinates?),
   ),
   // 커뮤니티 글 상세(SPEC-0010 R13). 셸 밖의 최상위 라우트라 루트 내비게이터에
   // push되어 하단 탭을 덮는다 — 관광지 상세와 같은 성격이다.
