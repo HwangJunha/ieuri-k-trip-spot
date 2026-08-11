@@ -32,7 +32,7 @@ class RegionRecommendationButton extends StatelessWidget {
             width: 44,
             height: 44,
             child: Icon(
-              Icons.recommend_outlined,
+              Icons.auto_awesome,
               size: 22,
               color: theme.colorScheme.primary,
             ),

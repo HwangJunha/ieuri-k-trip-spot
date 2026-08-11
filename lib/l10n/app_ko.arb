@@ -1646,8 +1646,6 @@
   "@mapRegionRecommendationsTitle": {},
   "mapRegionRecommendationsAction": "추천 지역 보기",
   "@mapRegionRecommendationsAction": {},
-  "mapRegionRecommendationsSortedByScore": "종합 점수 순",
-  "@mapRegionRecommendationsSortedByScore": {},
   "mapRegionRecommendationPartialData": "일부 데이터 기준",
   "@mapRegionRecommendationPartialData": {},
   "mapRegionRecommendationsGatheringTitle": "데이터를 모으는 중입니다",
@@ -1726,18 +1724,6 @@
   "@mapRegionStrengthDistance": {
     "description": "강점 라벨 — 거리. 요청 시점에 계산된다."
   },
-  "mapRegionStrengthWithRank": "{strength} · 시·도 {rank}위",
-  "@mapRegionStrengthWithRank": {
-    "description": "강점 라벨과 항목 순위. 순위는 목록이 아니라 시·도 전체 후보 기준이다.",
-    "placeholders": {
-      "strength": {
-        "type": "String"
-      },
-      "rank": {
-        "type": "int"
-      }
-    }
-  },
   "mapRegionRecommendationsAbout": "데이터 기준이 궁금해요",
   "@mapRegionRecommendationsAbout": {
     "description": "산출 근거 고지로 가는 진입점(개인정보보호법 §37조의2)."
@@ -1781,14 +1767,5 @@
   "mapRegionAboutExcludedNote": "관광지가 충분하지 않은 지역과, 시·군·구가 3개 미만인 시·도(세종·제주)는 추천 대상이 아닙니다.",
   "@mapRegionAboutExcludedNote": {
     "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
-  },
-  "mapRegionFactorRank": "{rank}위",
-  "@mapRegionFactorRank": {
-    "description": "항목별 순위 표기. 1이 가장 좋으며 시·도 전체 후보 기준이다(목록 안 순위가 아니다).",
-    "placeholders": {
-      "rank": {
-        "type": "int"
-      }
-    }
   }
 }

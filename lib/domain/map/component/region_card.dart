@@ -4,9 +4,7 @@ import '../../../common/location/coordinates.dart';
 import '../../../common/model/distance_format.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/region_recommendation.dart';
-import '../model/region_score.dart';
 import 'region_strength_label.dart';
-import 'score_breakdown.dart';
 
 /// 추천된 시군구 한 곳(설계 §2.1).
 ///
@@ -106,16 +104,16 @@ class RegionCard extends StatelessWidget {
                   ),
                 ],
               ),
-              // 강점 한 줄. **총점 자리를 대신한다** — totalScore는 계약에서 빠졌다.
-              if (region.strongestScore case final RegionScore best) ...<Widget>[
+              // 강점 라벨. **시·도 3위 안에 든 항목만 붙는다** — 없으면 아무것도
+              // 그리지 않는다(위젯이 스스로 판단한다).
+              //
+              // **항목별 막대는 두지 않는다**(사용자 결정, 2026-08-12). 다섯 줄이
+              // 카드를 채워 목록을 훑기 어려웠고, 순위 숫자는 라벨이 이미 "무엇이
+              // 좋은가"를 말해 준다. 자세한 기준은 산출 근거 고지가 설명한다.
+              if (region.topRankedScores.isNotEmpty) ...<Widget>[
                 const SizedBox(height: 10),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: RegionStrengthLabel(score: best),
-                ),
+                RegionStrengthLabels(region: region),
               ],
-              const SizedBox(height: 12),
-              ScoreBreakdown(region: region),
               // 항목 수가 다섯보다 적으면 근거가 얕다는 뜻이다(R31 · §2.2).
               // **숫자를 그대로 노출하지 않는다** — 스펙이 그렇게 요구했고, 필요한
               // 것은 "이 점수는 다른 카드와 근거의 두께가 다르다"는 인지뿐이다.

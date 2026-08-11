@@ -124,9 +124,9 @@ void main() {
       );
     });
 
-    test('강점은 순위가 아니라 value로 고른다', () async {
-      // 실 응답에서 CONGESTION은 rank 22위지만 value가 15로 가장 낮고,
-      // STAY_INTENSITY가 value 100으로 가장 높다.
+    test('강점 라벨은 3위 이내 항목만 뽑는다', () async {
+      // 실 응답의 강남구: VISITOR_VOLUME·STAY_INTENSITY·SPENDING_INTENSITY가 1위,
+      // DISTANCE는 9위, CONGESTION은 22위다.
       final _FakeLink link = _FakeLink(data: _liveResponse());
 
       final RegionRecommendationResult result = await _repo(
@@ -134,8 +134,14 @@ void main() {
       ).fetchRecommendedRegions(origin: seoul);
 
       expect(
-        result.regions.single.strongestScore?.factor,
-        RegionScoreFactor.stayIntensity,
+        result.regions.single.topRankedScores
+            .map((RegionScore s) => s.factor)
+            .toList(),
+        <RegionScoreFactor>[
+          RegionScoreFactor.visitorVolume,
+          RegionScoreFactor.stayIntensity,
+          RegionScoreFactor.spendingIntensity,
+        ],
       );
     });
 

@@ -76,29 +76,57 @@ void main() {
     });
   });
 
-  group('강점 항목', () {
-    test('value가 가장 높은 항목을 고른다', () {
-      // **rank로 고르지 않는다** — 항목마다 모수가 달라 20곳 중 3위와 5곳 중 3위는
-      // 같은 뜻이 아니다. value는 같은 정규화 축 위에 있어 비교가 성립한다.
+  group('강점 라벨 (시·도 3위 이내)', () {
+    test('3위 안에 든 항목만 고른다', () {
       final RegionRecommendation region = regionWith(const <RegionScore>[
-        // rank는 더 좋지만(1위) value는 낮다.
-        RegionScore(
-          factor: RegionScoreFactor.congestion,
-          value: 20,
-          rank: 1,
-        ),
-        RegionScore(
-          factor: RegionScoreFactor.stayIntensity,
-          value: 95,
-          rank: 7,
-        ),
+        RegionScore(factor: RegionScoreFactor.distance, value: 90, rank: 1),
+        RegionScore(factor: RegionScoreFactor.congestion, value: 80, rank: 3),
+        // 4위는 라벨을 붙이지 않는다.
+        RegionScore(factor: RegionScoreFactor.stayIntensity, value: 70, rank: 4),
       ]);
 
-      expect(region.strongestScore?.factor, RegionScoreFactor.stayIntensity);
+      expect(
+        region.topRankedScores.map((RegionScore s) => s.factor).toList(),
+        <RegionScoreFactor>[
+          RegionScoreFactor.distance,
+          RegionScoreFactor.congestion,
+        ],
+      );
     });
 
-    test('값이 같으면 항목 선언 순서로 가른다', () {
-      // 서버가 준 배열 순서에 따라 같은 지역의 강점이 조회마다 달라 보이면 안 된다.
+    test('순위가 좋은 것부터 나온다', () {
+      final RegionRecommendation region = regionWith(const <RegionScore>[
+        RegionScore(factor: RegionScoreFactor.congestion, value: 50, rank: 3),
+        RegionScore(factor: RegionScoreFactor.distance, value: 40, rank: 1),
+      ]);
+
+      expect(region.topRankedScores.first.factor, RegionScoreFactor.distance);
+    });
+
+    test('3위 안에 든 항목이 없으면 라벨도 없다', () {
+      // 실측상 10곳 중 2곳이 이렇다. 없는 강점을 지어내지 않는다.
+      final RegionRecommendation region = regionWith(const <RegionScore>[
+        RegionScore(factor: RegionScoreFactor.congestion, value: 90, rank: 4),
+        RegionScore(factor: RegionScoreFactor.distance, value: 80, rank: 12),
+      ]);
+
+      expect(region.topRankedScores, isEmpty);
+    });
+
+    test('모르는 항목은 라벨이 되지 않는다', () {
+      final RegionRecommendation region = regionWith(const <RegionScore>[
+        RegionScore(factor: RegionScoreFactor.unknown, value: 100, rank: 1),
+        RegionScore(factor: RegionScoreFactor.distance, value: 40, rank: 2),
+      ]);
+
+      expect(
+        region.topRankedScores.map((RegionScore s) => s.factor).toList(),
+        <RegionScoreFactor>[RegionScoreFactor.distance],
+      );
+    });
+
+    test('동순위는 항목 선언 순서로 가른다', () {
+      // 서버가 준 배열 순서에 따라 라벨 순서가 흔들리면 안 된다.
       final RegionRecommendation region = regionWith(const <RegionScore>[
         RegionScore(
           factor: RegionScoreFactor.spendingIntensity,
@@ -112,22 +140,10 @@ void main() {
         ),
       ]);
 
-      // stayIntensity가 spendingIntensity보다 먼저 선언돼 있다.
-      expect(region.strongestScore?.factor, RegionScoreFactor.stayIntensity);
-    });
-
-    test('모르는 항목은 강점이 되지 않는다', () {
-      // 이름도 뜻도 모르는 항목을 강점이라 부를 수 없다.
-      final RegionRecommendation region = regionWith(const <RegionScore>[
-        RegionScore(factor: RegionScoreFactor.unknown, value: 100, rank: 1),
-        RegionScore(factor: RegionScoreFactor.distance, value: 40, rank: 9),
-      ]);
-
-      expect(region.strongestScore?.factor, RegionScoreFactor.distance);
-    });
-
-    test('항목이 없으면 강점도 없다', () {
-      expect(regionWith(const <RegionScore>[]).strongestScore, isNull);
+      expect(
+        region.topRankedScores.first.factor,
+        RegionScoreFactor.stayIntensity,
+      );
     });
   });
 

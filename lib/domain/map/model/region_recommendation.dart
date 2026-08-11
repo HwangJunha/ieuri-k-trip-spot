@@ -1,6 +1,9 @@
 import '../../../common/location/coordinates.dart';
 import 'region_score.dart';
 
+/// 강점 라벨을 붙이는 순위 기준. 시·도 안에서 이 순위 이내면 라벨이 붙는다.
+const int topRankThreshold = 3;
+
 /// 추천된 시군구 1건(SPEC-0015 §2.1).
 ///
 /// 카메라 이동의 목적지이자 카드 하나의 내용이다. 생성 타입은 repository 밖으로 나오지
@@ -48,26 +51,32 @@ class RegionRecommendation {
   /// 위치 없이 받은 결과인지(R27). 거리 항목이 없으면 위치를 주지 않았다는 뜻이다.
   bool get lacksDistance => lacks(RegionScoreFactor.distance);
 
-  /// 이 지역의 **강점 항목**. 항목이 하나도 없으면 null이다.
+  /// 시·도 안에서 **3위 안에 든 항목들**. 순위가 좋은 순으로 정렬된다.
   ///
-  /// **[RegionScore.value]가 가장 높은 항목을 고른다.** 항목마다 모수가 달라
-  /// [RegionScore.rank]로는 항목끼리 비교할 수 없다 — 20곳 중 3위와 5곳 중 3위는
-  /// 같은 뜻이 아니다. value는 같은 정규화 축 위에 있어 비교가 성립한다.
+  /// 화면은 이것으로 강점 라벨을 붙인다 — "가까운 곳", "오래 머무는 곳"처럼 항목마다
+  /// 하나씩이며 여러 개일 수 있다.
   ///
-  /// 값이 같으면 [RegionScoreFactor] 선언 순서로 가른다 — 그러지 않으면 서버가 준
-  /// 배열 순서에 따라 같은 지역의 강점이 조회마다 달라 보인다.
-  RegionScore? get strongestScore {
-    RegionScore? best;
-    for (final RegionScore score in scores) {
-      if (score.factor == RegionScoreFactor.unknown) continue;
-      if (best == null ||
-          score.value > best.value ||
-          (score.value == best.value &&
-              score.factor.index < best.factor.index)) {
-        best = score;
-      }
-    }
-    return best;
+  /// **상위권만 라벨을 붙이는 이유**는, 모든 지역에 무언가를 붙이면 라벨이 변별력을
+  /// 잃기 때문이다. 실제로 3위 안에 드는 항목이 하나도 없는 지역이 나오며(실측: 10곳
+  /// 중 2곳) 그때는 라벨 없이 둔다 — 없는 강점을 지어내지 않는다.
+  ///
+  /// [RegionScoreFactor.unknown]은 제외한다 — 이름도 뜻도 모르는 항목을 강점이라
+  /// 부를 수 없다.
+  List<RegionScore> get topRankedScores {
+    final List<RegionScore> top = scores
+        .where(
+          (RegionScore s) =>
+              s.factor != RegionScoreFactor.unknown &&
+              s.rank <= topRankThreshold,
+        )
+        .toList();
+    // 순위가 좋은 것부터. 동순위는 항목 선언 순서로 갈라 조회마다 순서가 흔들리지
+    // 않게 한다.
+    top.sort((RegionScore a, RegionScore b) {
+      final int byRank = a.rank.compareTo(b.rank);
+      return byRank != 0 ? byRank : a.factor.index.compareTo(b.factor.index);
+    });
+    return top;
   }
 
   @override

@@ -8,7 +8,6 @@ import '../component/region_recommendation_about_sheet.dart';
 import '../component/region_recommendation_empty_state.dart';
 import '../component/region_recommendation_error_state.dart';
 import '../component/region_recommendation_location_state.dart';
-import '../component/sort_indicator_chip.dart';
 import '../model/region_recommendation.dart';
 import '../provider/region_recommendation_provider.dart';
 
@@ -75,6 +74,14 @@ class _RegionRecommendationScreenState
                   ? l10n.mapRegionRecommendationsOriginMapCenter
                   : l10n.mapRegionRecommendationsOriginMyLocation,
             ),
+          // 산출 근거 고지(개인정보보호법 §37조의2). **문구 없이 아이콘만 둔다**
+          // (사용자 결정) — 목록 위 텍스트 버튼이 자리를 크게 차지했다. 뜻은
+          // 툴팁이 말한다.
+          IconButton(
+            onPressed: () => showRegionRecommendationAbout(context),
+            icon: const Icon(Icons.help_outline),
+            tooltip: l10n.mapRegionRecommendationsAbout,
+          ),
         ],
       ),
       body: SafeArea(
@@ -108,35 +115,16 @@ class _RegionList extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ListView.separated(
     padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-    // 정렬 기준 안내가 첫 항목이다 — 스크롤하기 전에 반드시 보여야 목록을
-    // 거리순으로 오해하지 않는다(설계 §4.2).
-    itemCount: result.regions.length + 1,
+    // **정렬 안내 칩을 두지 않는다**(사용자 결정, 2026-08-12). 목록이 순위대로
+    // 번호가 매겨져 있어 "무엇 순인지"는 이미 드러나고, 자세한 기준은 앱바의 산출
+    // 근거 고지가 설명한다.
+    itemCount: result.regions.length,
     separatorBuilder: (_, _) => const SizedBox(height: 12),
     itemBuilder: (BuildContext context, int index) {
-      if (index == 0) {
-        // 정렬 기준 안내와 산출 근거 진입점을 한 줄에 둔다 — 둘 다 "이 목록이
-        // 어떻게 만들어졌는가"를 말하고, 스크롤하기 전에 보여야 뜻이 산다.
-        return Row(
-          children: <Widget>[
-            const SortIndicatorChip(),
-            const Spacer(),
-            TextButton.icon(
-              onPressed: () => showRegionRecommendationAbout(context),
-              icon: const Icon(Icons.help_outline, size: 16),
-              label: Text(AppLocalizations.of(context)
-                  .mapRegionRecommendationsAbout),
-              style: TextButton.styleFrom(
-                visualDensity: VisualDensity.compact,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-              ),
-            ),
-          ],
-        );
-      }
-      final RegionRecommendation region = result.regions[index - 1];
+      final RegionRecommendation region = result.regions[index];
       return RegionCard(
         region: region,
-        rank: index,
+        rank: index + 1,
         origin: result.origin,
         onTap: () => Navigator.of(context).pop(
           Coordinates(latitude: region.centerLat, longitude: region.centerLng),

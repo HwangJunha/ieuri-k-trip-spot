@@ -708,7 +708,6 @@
   "mapSearchThisArea": "在此區域重新搜尋",
   "mapRegionRecommendationsTitle": "推薦地區",
   "mapRegionRecommendationsAction": "檢視推薦地區",
-  "mapRegionRecommendationsSortedByScore": "按綜合評分排序",
   "mapRegionRecommendationPartialData": "基於部分資料",
   "mapRegionRecommendationsGatheringTitle": "正在收集資料",
   "mapRegionRecommendationsGathering": "我們仍在收集用於推薦的資料，請稍後再來檢視。",
@@ -733,7 +732,6 @@
   "mapRegionStrengthStayIntensity": "停留時間較長的地區",
   "mapRegionStrengthSpendingIntensity": "消費活絡的地區",
   "mapRegionStrengthDistance": "距離較近的地區",
-  "mapRegionStrengthWithRank": "{strength} · 全道第 {rank} 名",
   "mapRegionRecommendationsAbout": "推薦依據說明",
   "mapRegionAboutTitle": "推薦地區是這樣決定的",
   "mapRegionAboutIntro": "在你所在的道（省）之中，扣除目前所在的地區後比較其餘地區，決定推薦順序。會一併參考以下五項。",
@@ -744,6 +742,5 @@
   "mapRegionAboutDistance": "從你的位置到該地區的距離。越近越有利，每次請求都會重新計算。",
   "mapRegionAboutRankNote": "各項目的排名是與該道（省）所有地區比較的結果，並非清單中所列地區之間的排名。",
   "mapRegionAboutMissingNote": "沒有資料的項目會從計算中排除，不會以 0 分填補。項目過少的地區因依據過於薄弱，將排除於推薦之外。",
-  "mapRegionAboutExcludedNote": "觀光地不足的地區，以及市郡區少於 3 個的道（世宗、濟州）不在推薦範圍內。",
-  "mapRegionFactorRank": "第{rank}名"
+  "mapRegionAboutExcludedNote": "觀光地不足的地區，以及市郡區少於 3 個的道（世宗、濟州）不在推薦範圍內。"
 }
