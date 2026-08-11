@@ -68,8 +68,29 @@ class _AboutSheet extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               const Divider(),
+              const SizedBox(height: 16),
+              // 점수 산정 방식(사용자 요청, 2026-08-12).
+              //
+              // **정규화가 상대값이라는 점을 반드시 밝힌다.** 카드에 "48" 같은 숫자를
+              // 적기로 했는데(사용자 결정), 그 값은 같은 시·도 후보 안에서 최저=0,
+              // 최고=100으로 늘린 값이라 다른 시·도의 같은 숫자와 뜻이 다르다 —
+              // 서버도 이 점 때문에 값 노출을 권하지 않았다. 숫자를 보여주는 이상
+              // 그 뜻을 여기서 설명해야 오해가 남지 않는다.
+              Text(
+                l10n.mapRegionAboutScoringTitle,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _Note(text: l10n.mapRegionAboutScoringNormalize),
+              _Note(text: l10n.mapRegionAboutScoringCongestion),
+              _Note(text: l10n.mapRegionAboutScoringDistance),
+              _Note(text: l10n.mapRegionAboutScoringDecay),
+              _Note(text: l10n.mapRegionAboutScoringTotal),
+              const SizedBox(height: 4),
+              const Divider(),
               const SizedBox(height: 12),
-              // 순위가 목록 안 순위로 읽히면 곤란하다 — 시·도 전체 기준이다.
               _Note(text: l10n.mapRegionAboutRankNote),
               _Note(text: l10n.mapRegionAboutMissingNote),
               _Note(text: l10n.mapRegionAboutExcludedNote),

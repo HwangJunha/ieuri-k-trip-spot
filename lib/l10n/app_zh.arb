@@ -736,11 +736,17 @@
   "mapRegionAboutTitle": "推薦地區是這樣決定的",
   "mapRegionAboutIntro": "在你所在的道（省）之中，扣除目前所在的地區後比較其餘地區，決定推薦順序。會一併參考以下五項。",
   "mapRegionAboutCongestion": "韓國觀光公社的觀光地集中率預測。這是以今天為基準的預測值，並非即時測得的數值。",
-  "mapRegionAboutVisitorVolume": "韓國觀光公社的各地區造訪人數。僅計算外地與外國造訪，為最近 7 天的平均。原始資料約延遲一個月公開，因此以過往紀錄呈現。",
+  "mapRegionAboutVisitorVolume": "韓國觀光公社的各地區造訪人數。僅計算外地與外國造訪，為最近 7 天的平均。",
   "mapRegionAboutIntensityTitle": "停留強度 · 消費強度",
   "mapRegionAboutIntensity": "韓國觀光公社的觀光需求強度指標。以月為單位公開，因此一個月內維持相同數值。",
   "mapRegionAboutDistance": "從你的位置到該地區的距離。越近越有利，每次請求都會重新計算。",
-  "mapRegionAboutRankNote": "各項目的排名是與該道（省）所有地區比較的結果，並非清單中所列地區之間的排名。",
-  "mapRegionAboutMissingNote": "沒有資料的項目會從計算中排除，不會以 0 分填補。項目過少的地區因依據過於薄弱，將排除於推薦之外。",
-  "mapRegionAboutExcludedNote": "觀光地不足的地區，以及市郡區少於 3 個的道（世宗、濟州）不在推薦範圍內。"
+  "mapRegionAboutRankNote": "各項目的排名是與該道（省）所有地區比較的結果。",
+  "mapRegionAboutMissingNote": "項目過少的地區因依據過於薄弱，將排除於推薦之外。",
+  "mapRegionAboutExcludedNote": "觀光地不足的地區，以及市郡區少於 3 個的道（世宗、濟州）不在推薦範圍內。",
+  "mapRegionAboutScoringTitle": "分數是這樣計算的",
+  "mapRegionAboutScoringNormalize": "各項目的分數（0~100）是在同一個道（省）內比較的相對值。該道中最低的地區為 0 分，最高的地區為 100 分。因此與其他道的相同數字意義並不相同。",
+  "mapRegionAboutScoringCongestion": "預計擁擠度會將數值反轉計算。預期越不擁擠的地區分數越高。",
+  "mapRegionAboutScoringDistance": "距離越近，分數越高。",
+  "mapRegionAboutScoringDecay": "造訪規模會隨原始資料變舊而降低分數。前 7 天維持不變，之後每 23 天減半。這是為了避免舊紀錄與最新紀錄享有相同的權重。",
+  "mapRegionAboutScoringTotal": "推薦順序由五個項目的分數加權平均決定。沒有資料的項目會從計算中排除，只以其餘項目的權重相除。"
 }

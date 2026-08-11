@@ -4,6 +4,7 @@ import '../../../common/location/coordinates.dart';
 import '../../../common/model/distance_format.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/region_recommendation.dart';
+import 'score_breakdown.dart';
 import 'region_strength_label.dart';
 
 /// 추천된 시군구 한 곳(설계 §2.1).
@@ -114,6 +115,8 @@ class RegionCard extends StatelessWidget {
                 const SizedBox(height: 10),
                 RegionStrengthLabels(region: region),
               ],
+              const SizedBox(height: 12),
+              ScoreBreakdown(region: region),
               // 항목 수가 다섯보다 적으면 근거가 얕다는 뜻이다(R31 · §2.2).
               // **숫자를 그대로 노출하지 않는다** — 스펙이 그렇게 요구했고, 필요한
               // 것은 "이 점수는 다른 카드와 근거의 두께가 다르다"는 인지뿐이다.

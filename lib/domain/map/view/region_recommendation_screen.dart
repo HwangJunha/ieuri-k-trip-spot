@@ -74,14 +74,6 @@ class _RegionRecommendationScreenState
                   ? l10n.mapRegionRecommendationsOriginMapCenter
                   : l10n.mapRegionRecommendationsOriginMyLocation,
             ),
-          // 산출 근거 고지(개인정보보호법 §37조의2). **문구 없이 아이콘만 둔다**
-          // (사용자 결정) — 목록 위 텍스트 버튼이 자리를 크게 차지했다. 뜻은
-          // 툴팁이 말한다.
-          IconButton(
-            onPressed: () => showRegionRecommendationAbout(context),
-            icon: const Icon(Icons.help_outline),
-            tooltip: l10n.mapRegionRecommendationsAbout,
-          ),
         ],
       ),
       body: SafeArea(
@@ -118,9 +110,16 @@ class _RegionList extends StatelessWidget {
     // **정렬 안내 칩을 두지 않는다**(사용자 결정, 2026-08-12). 목록이 순위대로
     // 번호가 매겨져 있어 "무엇 순인지"는 이미 드러나고, 자세한 기준은 앱바의 산출
     // 근거 고지가 설명한다.
-    itemCount: result.regions.length,
+    //
+    // 마지막 항목은 산출 근거 고지 진입점이다(개인정보보호법 §37조의2). **목록
+    // 끝에 둔다**(사용자 결정) — 다 보고 난 뒤 "이건 어떻게 정해졌지?"가 자연스러운
+    // 흐름이고, 앱바에 두면 성격이 다른 위치 토글과 섞인다.
+    itemCount: result.regions.length + 1,
     separatorBuilder: (_, _) => const SizedBox(height: 12),
     itemBuilder: (BuildContext context, int index) {
+      if (index == result.regions.length) {
+        return const _AboutLink();
+      }
       final RegionRecommendation region = result.regions[index];
       return RegionCard(
         region: region,
@@ -132,6 +131,29 @@ class _RegionList extends StatelessWidget {
       );
     },
   );
+}
+
+/// 목록 끝의 산출 근거 고지 진입점.
+///
+/// **자동화된 추천이라 근거를 밝혀야 한다**(개인정보보호법 §37조의2). 목록을 다 본
+/// 뒤에 놓여 "이건 어떻게 정해졌지?"라는 물음이 자연스럽게 이어진다.
+class _AboutLink extends StatelessWidget {
+  const _AboutLink();
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Center(
+        child: TextButton.icon(
+          onPressed: () => showRegionRecommendationAbout(context),
+          icon: const Icon(Icons.help_outline, size: 18),
+          label: Text(l10n.mapRegionRecommendationsAbout),
+        ),
+      ),
+    );
+  }
 }
 
 /// 오류 + 재시도. 상한을 센 뒤 조회를 다시 연다.

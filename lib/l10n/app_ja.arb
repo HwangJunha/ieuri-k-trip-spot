@@ -736,11 +736,17 @@
   "mapRegionAboutTitle": "おすすめ地域の選び方",
   "mapRegionAboutIntro": "現在地が属する道府県の中で、今いる地域を除いた残りを比較しておすすめ順を決めます。次の5つを合わせて見ます。",
   "mapRegionAboutCongestion": "韓国観光公社の観光地集中率予測です。本日時点の予測値であり、リアルタイムに測定した値ではありません。",
-  "mapRegionAboutVisitorVolume": "韓国観光公社の地域別訪問者数です。域外・外国からの訪問のみを数え、直近7日間の平均です。元データの公開が約1か月遅れるため、過去の記録として表示します。",
+  "mapRegionAboutVisitorVolume": "韓国観光公社の地域別訪問者数です。域外・外国からの訪問のみを数え、直近7日間の平均です。",
   "mapRegionAboutIntensityTitle": "滞在強度 · 消費強度",
   "mapRegionAboutIntensity": "韓国観光公社の観光需要強度指標です。月単位で公開されるため、1か月間は同じ値が維持されます。",
   "mapRegionAboutDistance": "現在地からその地域までの距離です。近いほど有利で、リクエストのたびに再計算されます。",
-  "mapRegionAboutRankNote": "項目別の順位は道府県全体の地域と比較した結果です。一覧に表示されている地域同士の順位ではありません。",
-  "mapRegionAboutMissingNote": "データのない項目は計算から除き、0点で埋めません。項目が少なすぎる地域は根拠が浅いため、おすすめから除外されます。",
-  "mapRegionAboutExcludedNote": "観光地が十分でない地域と、市・郡・区が3つ未満の道府県（世宗・済州）はおすすめの対象外です。"
+  "mapRegionAboutRankNote": "項目別の順位は道府県全体の地域と比較した結果です。",
+  "mapRegionAboutMissingNote": "項目が少なすぎる地域は根拠が浅いため、おすすめから除外されます。",
+  "mapRegionAboutExcludedNote": "観光地が十分でない地域と、市・郡・区が3つ未満の道府県（世宗・済州）はおすすめの対象外です。",
+  "mapRegionAboutScoringTitle": "スコアの付け方",
+  "mapRegionAboutScoringNormalize": "各項目のスコア（0〜100）は同じ道府県内で比較した相対値です。その道府県で最も低い地域が0点、最も高い地域が100点になるよう調整します。そのため他の道府県の同じ数値とは意味が異なります。",
+  "mapRegionAboutScoringCongestion": "予想混雑度は値を反転して付けます。空いていると予想される地域ほどスコアが高くなります。",
+  "mapRegionAboutScoringDistance": "距離は近いほどスコアが高くなります。",
+  "mapRegionAboutScoringDecay": "訪問者規模は元データが古くなるほどスコアが下がります。7日まではそのままで、その後は23日ごとに半分になります。古い記録が最新の記録と同じ重みで推薦されないようにするためです。",
+  "mapRegionAboutScoringTotal": "おすすめの順序は5項目のスコアの加重平均で決まります。データのない項目は計算から除き、残りの重みだけで割ります。"
 }
