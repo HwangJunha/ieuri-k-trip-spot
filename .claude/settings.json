@@ -42,7 +42,8 @@
       "Bash(pkill -f build_runner:*)"
     ],
     "ask": [
-      "Bash(dart pub upgrade:*)"
+      "Bash(dart pub upgrade:*)",
+      "Bash(curl -sL -o:*)"
     ],
     "deny": [
       "Read(./**/*.graphql.dart)",
@@ -66,7 +67,6 @@
       "Edit(./**/GoogleService-Info.plist)",
       "Bash(rm -rf:*)",
       "Bash(sudo:*)",
-      "Bash(curl:*)",
       "Bash(wget:*)",
       "Bash(dart pub publish:*)"
     ]

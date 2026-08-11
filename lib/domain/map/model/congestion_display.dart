@@ -19,6 +19,15 @@ abstract final class CongestionDisplay {
   static String observedAtLabel(DateTime observedAt, String locale) =>
       DateFormat.jm(locale).format(observedAt);
 
+  /// 기준 시점을 **날짜와 함께** 만든다(SPEC-0015 R24).
+  ///
+  /// **[observedAtLabel]과 나누는 이유는 데이터의 성질이 다르기 때문이다.** 혼잡도는
+  /// 약 30분 지연이라 항상 같은 날이지만, 지역 추천은 배치가 쌓은 데이터를 쓰므로
+  /// 며칠 전이 기준일 수 있다. 시각만 보여주면 "오늘 오후 2시 30분"으로 읽혀 오히려
+  /// 실시간이라는 오해를 키운다 — R24가 막으려는 바로 그 지점이다.
+  static String dataBasisLabel(DateTime basisAt, String locale) =>
+      DateFormat.yMMMd(locale).add_jm().format(basisAt);
+
   /// 추정 인구 범위의 하한·상한을 각각 천 단위로 끊어 준다(R27).
   ///
   /// 하나의 문자열로 합치지 않고 둘로 돌려주는 이유는, 구분자(`–`)와 단위(`명`)가

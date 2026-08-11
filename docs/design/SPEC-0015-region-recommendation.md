@@ -16,8 +16,19 @@ CLAUDE.md §9). 폰트는 Stitch가 이름한 Plus Jakarta Sans / Be Vietnam Pro
 작성 당시에는 `generate_screen_from_text`가 타임아웃으로 실패해 목업 없이 이 문서를 썼다.
 **이후 화면이 생성돼 상단에 id를 채웠다**(`4b9e3cbb91ef49a4b99eb2747021e6c0`).
 
-구현은 목업이 나오기 전에 아래 근거로 이미 완료됐으므로, **이 문서의 레이아웃 기술과 실제
-목업이 어긋나는 부분이 있으면 목업을 보고 확인해야 한다** — 아직 대조하지 않았다.
+구현은 목업이 나오기 전에 아래 근거로 완료됐고, **이후 목업과 대조했다(2026-08-11).**
+
+구조는 일치한다 — 순위 배지·지역명·시도명·총점·5개 항목·부분 데이터 칩·카드마다 붙는 기준
+시점, 그리고 항목 라벨(Expected Crowd / Visitor Volume / Stay Intensity / Spending
+Intensity / Distance)까지 같다.
+
+의도적으로 목업과 다르게 둔 것이 하나 있다. 정렬 안내 칩이 목업은 "Sorted by score",
+구현은 **"Sorted by overall score"**다. 이 칩의 존재 이유가 "거리순이 아니라 종합 점수
+순"임을 드러내는 것인데(설계 §4.2), "by score"만으로는 어떤 점수인지 모호해 거리순 오해를
+막지 못한다. 이 문서 §3도 "Sorted by overall score"로 적고 있다 — 목업과 스펙이 어긋나면
+스펙이 이긴다(문서 상단).
+
+아이콘은 목업이 `sort`, 구현이 `leaderboard_outlined`인데 §3이 둘 다 허용한다.
 
 이 문서가 근거로 삼은 것:
 - `problem/SPEC-0015-client.md` (클라이언트 설계, §1~§8)

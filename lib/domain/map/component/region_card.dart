@@ -101,14 +101,16 @@ class RegionCard extends StatelessWidget {
               // 기준 시점(R24 · POL-038). "지금·현재"가 아니라 "(시점) 기준"이다 —
               // 이 값이 실시간이 아님을 드러내는 유일한 장치다.
               //
-              // 포맷은 `CongestionDisplay.observedAtLabel`을 재사용한다. SPEC-0014가
-              // 이미 로케일별 시각 표기를 구현해 뒀으므로 새 포맷터를 만들지 않는다.
+              // **날짜까지 붙인다**(`dataBasisLabel`). 추천은 배치가 쌓은 데이터라
+              // 며칠 전이 기준일 수 있어, 시각만 보이면 오늘로 읽혀 실시간이라는
+              // 오해를 키운다 — SPEC-0014의 혼잡도(30분 지연, 항상 같은 날)와 다른
+              // 점이다.
               if (dataBasisAt case final DateTime basis) ...<Widget>[
                 const SizedBox(height: 4),
                 _NoteRow(
                   icon: Icons.schedule,
                   text: l10n.mapRegionRecommendationsDataBasis(
-                    CongestionDisplay.observedAtLabel(basis, locale),
+                    CongestionDisplay.dataBasisLabel(basis, locale),
                   ),
                 ),
               ],
