@@ -3,7 +3,8 @@
 > 설계 문서: `problem/SPEC-0017-client.md` · 수용 기준: `Specs/SPEC-0017/spec.md` (R1~R18)
 > Stitch 프로젝트: `projects/8651053354437738829` (K-Trip Spot Design System)
 > 디자인 시스템: `assets/073fee5b990e4b1eb2c918d7e9de2d8f`
-> **Stitch 목업: 이번 스펙 화면은 생성되지 않음(§0 참조) — SPEC-0015 선례를 따라 목업 없이 작성**
+> **피드 화면은 Stitch로 생성됨 · DM 화면은 생성 실패 → 직접 그린 목업으로 대체(§0 참조)**
+> DM 목업: [`spec-0017-dm-mockups.html`](./spec-0017-dm-mockups.html)
 
 이 문서는 **레이아웃·컴포넌트 분해 참조**다. 수용 기준과 어긋나면 스펙이 이긴다.
 색·폰트·간격 값은 여기 적힌 것을 복사하지 말고 `Theme.of(context)`에서 읽는다(DESIGN.md §12,
@@ -13,14 +14,29 @@ CLAUDE.md §9). 폰트는 Stitch가 이름한 Plus Jakarta Sans / Be Vietnam Pro
 
 ---
 
-## 0. Stitch 생성 갭
+## 0. Stitch 생성 현황
 
-`generate_screen_from_text`를 이 스펙의 다섯 화면(피드 헤더, 피드 스크롤, 피드 컴포저, 대화
-목록, 대화 화면)에 대해 시도했으나 **매 호출이 타임아웃**했고 재시도 후에도 프로젝트에
-새 화면이 생성되지 않았다(`list_screens`로 확인 — 기존 화면 목록에 변화 없음). 지침에 따라
-반복 재시도 대신, SPEC-0015가 같은 상황에서 취한 방식을 따른다: **목업 없이 스펙·기존 구현
-패턴 근거로 이 문서를 작성**하고, Stitch 서비스가 복구되면 화면을 생성해 이 문서와 대조 후
-상단에 스크린 id를 채운다.
+**피드 쪽은 생성됐고, DM 쪽은 끝내 생성되지 않았다.**
+
+| 화면 | Stitch | 비고 |
+|---|---|---|
+| 피드 스크롤 (`Discover Feed`) | ✅ `fd6c666908c94da388f967966b7b66a9` | 헤더 토글("For You │ Feed")·작성자 DM 아이콘·스팟 칩 포함 |
+| 피드 스크롤 (대안) | ✅ `3f51c367a49543c5ba5c9d85598f93e3` | 같은 화면의 두 번째 안 |
+| 피드 컴포저 | ⚠️ `Post Composer`(`b51fa99f…`)로 대용 | 커뮤니티 컴포저 목업을 참조 — 피드 전용 목업은 없음 |
+| **대화 목록 · 대화 화면 · 선택 모드** | ❌ **생성 실패** | 아래 참조 |
+
+DM 화면은 `generate_screen_from_text`를 **네 번**(긴 프롬프트, 짧은 프롬프트, `GEMINI_3_FLASH`,
+`deviceType` 생략) 시도했으나 모두 타임아웃했고, 매번 `list_screens`로 확인해도 프로젝트에
+화면이 생기지 않았다. 프롬프트 길이·모델·디바이스 타입 어느 쪽도 원인이 아니었다. 지침이
+"타임아웃 시 재시도하지 말라"고 하므로 더 시도하지 않는다.
+
+**대신 앱의 디자인 시스템 토큰으로 DM 화면 목업을 직접 그렸다** —
+[`spec-0017-dm-mockups.html`](./spec-0017-dm-mockups.html) (대화 목록·빈 상태·대화 화면·타이핑
+표시·전송 실패·다중 선택 신고·선택 0건). 색·타입·간격은 전부 DESIGN.md 토큰에서 가져왔으므로
+구현 시 `Theme.of(context)`로 그대로 옮겨진다.
+
+**slice-builder에게**: DM 목업은 위 HTML이 기준이고, 세부 규칙은 이 문서의 §4~§6이 기준이다.
+둘이 어긋나면 이 문서가 이긴다(HTML은 배치 참조).
 
 이 문서가 근거로 삼은 것:
 - `problem/SPEC-0017-client.md`(클라이언트 설계 §1~§9), `Specs/SPEC-0017/spec.md` R1~R18
@@ -53,6 +69,7 @@ CLAUDE.md §9). 폰트는 Stitch가 이름한 Plus Jakarta Sans / Be Vietnam Pro
 DiscoverTabScreen (신규, lib/domain/feed/view/discover_tab_screen.dart)
 └─ Scaffold
    ├─ AppBar (기존 DiscoverScreen의 AppBar를 대체 — title: "Discover")
+   │   ├─ actions: MessagesEntryButton  ← DM 재진입점(§1.5)
    │   └─ 바로 아래(AppBar 영역 내 또는 AppBar 바로 아래 별도 줄):
    │       DiscoverModeToggle — "For You" | "Feed" 세그먼트
    └─ body: 선택된 모드에 따라 분기
@@ -86,6 +103,53 @@ DiscoverTabScreen (신규, lib/domain/feed/view/discover_tab_screen.dart)
 ```dart
 enum DiscoverMode { forYou, feed }
 ```
+
+---
+
+## 1.5 DM 재진입점 (`MessagesEntryButton`)
+
+**대화는 다시 들어갈 수 있어야 한다.** 피드 항목의 DM 아이콘(§2)은 *새 대화를 시작하는* 입구일
+뿐이라, 그것만 있으면 이미 나눈 대화로 **돌아갈 길이 없다** — 대화를 시작한 피드가 스크롤로
+지나가거나 삭제되면(그때도 대화 자체는 남는다) 접근 자체가 끊긴다.
+
+**둘러보기 탭 AppBar 우측에 메시지 아이콘을 둔다.** 누르면 대화 목록(§4)으로 간다.
+
+```
+┌──────────────────────────────────────────────┐
+│  Discover                          [✉ ③]     │  ← AppBar actions
+│         ( For You │ ▓Feed▓ )                 │  ← DiscoverModeToggle
+└──────────────────────────────────────────────┘
+```
+
+- **위치**: `AppBar.actions`. 토글과 **같은 헤더 영역**이므로 §1의 핵심 제약(제스처 표면 위에
+  겹치지 않는다)을 그대로 지킨다 — 아이콘이 카드 드래그·세로 스크롤과 경합하지 않는다.
+- **아이콘**: `Icons.mail_outline`(또는 `Icons.chat_bubble_outline`). DESIGN.md §6에 따라
+  Material 기본 아이콘만 쓴다.
+- **읽지 않음 배지**: 아이콘 우상단에 `Badge`. **전체 대화의 `unreadCount` 합계**이며 0이면
+  배지를 아예 그리지 않는다. 두 자리를 넘으면 접는다(§4의 `ConversationTile` 배지와 같은 규칙).
+- **왜 하단 탭이 아닌가**: 현재 5탭(홈·지도·둘러보기·좋아요·커뮤니티)이 이미 꽉 차 있어 DM을
+  넣으려면 기존 탭 하나를 빼야 한다. **DM은 피드에서만 생기는 기능이므로**(R7, 설계 §6)
+  피드가 있는 탭의 헤더가 맥락상 맞는 자리다. 탭 구조를 바꾸는 것은 이 스펙의 범위를 넘는다.
+  - 참고: Stitch 목업(그리고 DESIGN.md §8의 원안)에는 `Events`·`Chat` 탭이 그려져 있으나
+    **실제 구현된 탭은 좋아요·커뮤니티다.** 목업의 탭 구성을 따라가지 않는다 — 구현이 기준이다.
+- **커뮤니티 탭에는 두지 않는다.** 커뮤니티 글 작성자에게 DM을 보낼 수 없으므로(설계 §6)
+  그쪽에 진입점이 있으면 없는 기능을 암시하게 된다.
+- **미인증 상태**: 로그인하지 않았으면 아이콘을 그리지 않는다 — 눌러도 갈 곳이 없다.
+
+### 진입 경로 요약
+
+```
+[새 대화]  피드 항목의 DM 아이콘 ──startConversation──▶ ConversationScreen (§5)
+[재진입]   AppBar 메시지 아이콘 ──▶ ConversationListScreen (§4) ──탭──▶ ConversationScreen (§5)
+```
+
+두 경로 모두 같은 `ConversationScreen`에 도착한다. 라우트는 `conversationId`만 넘긴다
+(CLAUDE.md §6 — 모델 객체를 라우트로 넘기지 않는다).
+
+**갭으로 기록**: 전체 미읽음 합계를 주는 서버 필드가 계약에 없다(`Conversation.unreadCount`는
+대화별이다). 첫 페이지 합계로 근사하거나, 배지를 숫자 없는 점(dot)으로 두는 선택지가 있다 —
+**이 문서는 점(dot)을 권장한다.** 첫 페이지 합계는 20건을 넘는 순간 조용히 틀린 값이 되고,
+서버가 주지 않는 값을 추정하지 않는다는 설계 §2의 원칙과도 어긋난다.
 
 ---
 
@@ -422,6 +486,7 @@ ConversationScreen — 선택 모드 전환
 | 컴포넌트 | 역할 | 관련 절 |
 |---|---|---|
 | `discover_mode_toggle.dart` | 추천 ↔ 피드 세그먼트 토글, 헤더 전용(제스처 표면과 분리) | §1 |
+| `messages_entry_button.dart` | 헤더의 DM 재진입 아이콘 + 미읽음 점 배지 | §1.5 |
 | `feed_photo_pager.dart` | 1~5장 사진 가로 페이저 + 조건부 점 인디케이터 | §2 |
 | `feed_author_bar.dart` | 아바타·닉네임·상대시각·DM 아이콘(피드 전용) | §2 |
 | `feed_spot_chip.dart` | 연결된 스팟 — 탭 시 스팟 상세 이동 | §2 |
