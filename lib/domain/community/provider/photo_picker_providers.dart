@@ -1,7 +1,7 @@
 import 'package:image_picker/image_picker.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../model/composer_photo.dart';
+import '../../../common/model/composer_photo.dart';
 
 part 'photo_picker_providers.g.dart';
 

@@ -1,5 +1,5 @@
 import '../../../common/model/list_equality.dart';
-import 'composer_photo.dart';
+import '../../../common/model/composer_photo.dart';
 import '../../../common/model/target_category.dart';
 
 /// 제목 최대 길이(코드포인트).

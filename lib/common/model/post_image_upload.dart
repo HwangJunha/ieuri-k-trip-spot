@@ -1,6 +1,9 @@
 /// 사진 업로드에 쓰이는 값들(가이드 §4). **서버는 이미지 바이트를 받지 않는다** —
 /// 앱이 오브젝트 스토리지로 직접 PUT하고, 그 PUT만 GraphQL이 아니다.
 ///
+/// 커뮤니티 글과 피드가 같은 업로드 프로토콜을 쓰므로 `common/`에 둔다
+/// (CLAUDE.md §4, POL-042) — 피드 전용 업로드 경로를 새로 만들지 않는다.
+///
 /// 전체 흐름은 넷이다:
 /// 1. `createPostImageUploadUrls` → [PostImageUploadUrl]
 /// 2. 각 `uploadUrl`로 HTTP PUT (GraphQL 아님)

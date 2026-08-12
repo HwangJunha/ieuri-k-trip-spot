@@ -23,7 +23,7 @@ import '../model/nearby_spot.dart';
 import '../model/nearby_spot_category.dart';
 import '../../../common/model/post.dart';
 import '../../../common/model/post_author.dart';
-import '../model/post_image_upload.dart';
+import '../../../common/model/post_image_upload.dart';
 import '../model/post_sort_order.dart';
 import '../../../common/model/post_spot.dart';
 import '../model/report_reason.dart';

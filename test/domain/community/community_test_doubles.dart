@@ -8,7 +8,7 @@ import 'package:ieuri_k_trip_spot/domain/community/model/community_chip.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot_category.dart';
 import 'package:ieuri_k_trip_spot/common/model/post.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/post_image_upload.dart';
+import 'package:ieuri_k_trip_spot/common/model/post_image_upload.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_sort_order.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/report_reason.dart';
 import 'package:ieuri_k_trip_spot/common/model/target_category.dart';

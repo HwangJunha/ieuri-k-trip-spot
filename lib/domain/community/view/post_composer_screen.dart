@@ -11,7 +11,7 @@ import '../component/community_labels.dart';
 import '../component/post_photo.dart';
 import '../component/spot_picker_sheet.dart';
 import '../model/community_chip.dart';
-import '../model/composer_photo.dart';
+import '../../../common/model/composer_photo.dart';
 import '../model/nearby_spot.dart';
 import '../../../common/model/post.dart';
 import '../model/post_draft.dart';
