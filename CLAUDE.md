@@ -271,6 +271,15 @@ down" from four timeouts and hand-drew the mockups; all four had in fact succeed
 - Give the prompt the app's **real** structure, not DESIGN.md's original plan — the 5 tabs are
   Home/Map/Discover/Liked/Community, and the `Events`/`Chat` tabs in older mockups were never built.
 
+`edit_screens` behaves differently from generation and is the right tool for a one-element tweak —
+never regenerate a whole screen to add an icon.
+
+- **Keep the edit prompt to the one thing you are changing.** A long prompt that re-describes every
+  element to keep timed out; a two-sentence one succeeded instantly and returned the applied markup.
+- After a successful edit, `get_screen` keeps returning the **previous** `htmlCode`/`screenshot` ids
+  for a while — the render lags the DOM change. A stale id is not a failed edit; re-editing here
+  just duplicates the change.
+
 ---
 
 ## 12. Branches & commits (hook-enforced)
