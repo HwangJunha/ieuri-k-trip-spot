@@ -253,6 +253,26 @@ output, not elapsed time — no progress lines at all means it never started.
 
 ---
 
+### 11.6 Stitch times out but keeps working
+
+`mcp__stitch__generate_screen_from_text` routinely returns **"The operation timed out"** while the
+screen is still being generated. **A timeout is not a failure**, and neither is an empty
+`list_screens` right after one — generation lands minutes later. SPEC-0017 concluded "Stitch is
+down" from four timeouts and hand-drew the mockups; all four had in fact succeeded.
+
+- **Never retry on timeout.** Each retry queues *another* screen. The four SPEC-0017 calls produced
+  four near-duplicate screens the user had to delete by hand.
+- **Wait, then poll `list_screens`** (or `get_screen` if you captured the id). Minutes, not seconds
+  — checking once at ~60s and again later is enough. Polling is free; regenerating is not.
+- Report it as **pending, not failed.** If the session ends first, say the screens are still
+  generating and name the project id so the next session can collect them — do not record
+  "생성 실패" in a design doc, and do not substitute hand-authored mockups for a design that is
+  merely late.
+- Give the prompt the app's **real** structure, not DESIGN.md's original plan — the 5 tabs are
+  Home/Map/Discover/Liked/Community, and the `Events`/`Chat` tabs in older mockups were never built.
+
+---
+
 ## 12. Branches & commits (hook-enforced)
 
 **Every task runs in its own worktree.** Tasks run concurrently against one checkout, so

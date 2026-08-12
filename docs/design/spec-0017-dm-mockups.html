@@ -246,9 +246,14 @@
     <p class="eyebrow">SPEC-0017 · 디자인 참조</p>
     <h1>다이렉트 메시지 화면과 재진입 경로</h1>
     <p class="lede">
-      Stitch가 이 스펙의 DM 화면을 끝내 생성하지 못해(피드 화면은 생성됨), 앱의 디자인 시스템
-      토큰을 그대로 써서 직접 그린 목업이다. 색·타입·간격 값은 모두 DESIGN.md에서 가져왔다 —
-      구현할 때는 이 페이지의 값이 아니라 <code>Theme.of(context)</code>에서 읽는다.
+      앱의 디자인 시스템 토큰을 그대로 써서 그린 DM 화면 목업이다. 색·타입·간격 값은 모두
+      DESIGN.md에서 가져왔다 — 구현할 때는 이 페이지의 값이 아니라
+      <code>Theme.of(context)</code>에서 읽는다.
+    </p>
+    <p class="lede" style="margin-top:10px">
+      <strong>대화 목록은 Stitch 화면(<code>927d8a7e…</code>)이 기준이다</strong> — 아래 대화 목록
+      패널은 그 전에 그린 것으로 배치가 거의 같으니 참고용으로만 본다. 나머지 화면(대화·타이핑
+      표시·전송 실패·다중 선택 신고)은 Stitch 목업이 없어 이 페이지가 유일한 시각 참조다.
     </p>
   </header>
 
@@ -365,7 +370,7 @@
         </div>
       </div>
       <figcaption>
-        <b>대화 목록</b>
+        <b>대화 목록</b> <em>(Stitch <code>927d8a7e…</code>가 정본 — 이건 참고용)</em>
         최근 활동순. 대화별 <code>unreadCount</code> 배지는 0이면 그리지 않고, 읽지 않은 행만
         이름을 굵게 둔다. 읽음 확인(✓✓)은 범위 밖이라 넣지 않는다.
         <span class="ac">AC8-1</span>
