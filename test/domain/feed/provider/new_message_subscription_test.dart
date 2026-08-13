@@ -89,11 +89,16 @@ void main() {
       final Future<void> sending = container
           .read(conversationControllerProvider(_cid).notifier)
           .send(body: '경합', me: author('me'));
-      repo.newMessages.add(message('server-9', body: '경합', ownedByViewer: true));
+      repo.newMessages.add(
+        message('server-9', body: '경합', ownedByViewer: true),
+      );
       await Future<void>.delayed(Duration.zero);
       await sending;
 
-      expect(_messages(container).where((Message m) => m.body == '경합').length, 1);
+      expect(
+        _messages(container).where((Message m) => m.body == '경합').length,
+        1,
+      );
       expect(_messages(container).single.id, 'server-9');
     });
   });
@@ -109,7 +114,9 @@ void main() {
         );
       final ProviderContainer container = _container(repo);
 
-      await container.read(conversationControllerProvider(_cid).notifier).sync();
+      await container
+          .read(conversationControllerProvider(_cid).notifier)
+          .sync();
 
       expect(repo.markReadCalls, isEmpty);
     });

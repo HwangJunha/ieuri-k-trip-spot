@@ -16,4 +16,3 @@ class PasswordPolicy {
       _digit.hasMatch(password) &&
       _special.hasMatch(password);
 }
-

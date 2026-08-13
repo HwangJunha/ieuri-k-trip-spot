@@ -36,10 +36,11 @@ void main() {
       expect(result.succeeded, isTrue);
       // 3번이 아니라 한 번 접수됐다.
       expect(repo.reportedMessageIds.length, 1);
-      expect(
-        repo.reportedMessageIds.single..sort(),
-        <String>['m1', 'm2', 'm3'],
-      );
+      expect(repo.reportedMessageIds.single..sort(), <String>[
+        'm1',
+        'm2',
+        'm3',
+      ]);
     });
 
     test('0건이면 요청 자체가 나가지 않는다 (AC15-3)', () async {

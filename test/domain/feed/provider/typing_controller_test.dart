@@ -65,11 +65,16 @@ void main() {
         TypingIndicator(sender: author('other'), emittedAt: clock.now),
       );
       await Future<void>.delayed(Duration.zero);
-      expect(container.read(typingIndicatorControllerProvider(_cid)), isNotNull);
+      expect(
+        container.read(typingIndicatorControllerProvider(_cid)),
+        isNotNull,
+      );
 
       // 후속 이벤트 없이 시간만 흘렀다 — 서버의 "멈췄다" 이벤트를 기다리지 않는다.
       clock.advance(typingIndicatorTimeout + const Duration(seconds: 1));
-      container.read(typingIndicatorControllerProvider(_cid).notifier).refresh();
+      container
+          .read(typingIndicatorControllerProvider(_cid).notifier)
+          .refresh();
 
       expect(container.read(typingIndicatorControllerProvider(_cid)), isNull);
     });

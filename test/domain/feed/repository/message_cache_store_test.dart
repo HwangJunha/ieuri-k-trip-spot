@@ -9,15 +9,16 @@ void main() {
     test('서버에 없는 과거 메시지가 로컬에 남아 있으면 그대로 유지된다 (AC18-3)', () {
       // 서버는 6개월이 지나 지웠지만 기기의 기록은 지우지 않는다.
       final List<Message> merged = mergeCachedMessages(
-        cached: <Message>[
-          message('old', createdAt: DateTime.utc(2026, 1, 1)),
-        ],
+        cached: <Message>[message('old', createdAt: DateTime.utc(2026, 1, 1))],
         fromServer: <Message>[
           message('new', createdAt: DateTime.utc(2026, 8, 12)),
         ],
       );
 
-      expect(merged.map((Message m) => m.id), containsAll(<String>['old', 'new']));
+      expect(
+        merged.map((Message m) => m.id),
+        containsAll(<String>['old', 'new']),
+      );
     });
 
     test('같은 id는 서버 값이 이긴다', () {
@@ -31,9 +32,7 @@ void main() {
 
     test('최신순으로 정렬된다', () {
       final List<Message> merged = mergeCachedMessages(
-        cached: <Message>[
-          message('a', createdAt: DateTime.utc(2026, 1, 1)),
-        ],
+        cached: <Message>[message('a', createdAt: DateTime.utc(2026, 1, 1))],
         fromServer: <Message>[
           message('c', createdAt: DateTime.utc(2026, 8, 12)),
           message('b', createdAt: DateTime.utc(2026, 5, 1)),
@@ -70,7 +69,11 @@ void main() {
       final FakeMessageCacheStore store = FakeMessageCacheStore();
       await store.write('c1', <Message>[
         message('sent'),
-        message('pending', status: MessageDeliveryStatus.sending, localId: true),
+        message(
+          'pending',
+          status: MessageDeliveryStatus.sending,
+          localId: true,
+        ),
         message('failed', status: MessageDeliveryStatus.failed, localId: true),
       ]);
 

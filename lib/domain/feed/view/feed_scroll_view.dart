@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../common/widget/failure_notice.dart';
+import '../../../common/widget/floating_bottom_nav_scaffold.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../community/component/post_moderation_sheet.dart';
 import '../../spot/view/spot_detail_view.dart';
@@ -12,6 +13,7 @@ import '../provider/conversation_start_providers.dart';
 import '../provider/feed_list_providers.dart';
 import '../provider/viewer_providers.dart';
 import 'conversation_screen.dart';
+import 'feed_composer_screen.dart';
 
 /// 피드 전면 스크롤(R4).
 ///
@@ -53,7 +55,7 @@ class _FeedScrollViewState extends ConsumerState<FeedScrollView> {
       feedListControllerProvider,
     );
 
-    return state.when(
+    final Widget body = state.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (Object error, _) => FailureNotice.retryable(
         title: l10n.feedUnavailableTitle,
@@ -61,9 +63,44 @@ class _FeedScrollViewState extends ConsumerState<FeedScrollView> {
         actionLabel: l10n.feedRetry,
         onAction: () => ref.invalidate(feedListControllerProvider),
       ),
-      data: (FeedListState data) =>
-          data.isEmpty ? const _FeedEmpty() : _buildPages(data),
+      data: (FeedListState data) => data.isEmpty
+          ? _FeedEmpty(onCompose: _openComposer)
+          : _buildPages(data),
     );
+
+    // **작성 버튼은 상태와 무관하게 떠 있다.** 빈 상태에서 특히 필요하다 — 글이
+    // 하나도 없을 때가 바로 첫 글을 쓸 때인데, 목록 안에만 버튼을 두면 그 순간
+    // 진입점이 사라진다. 로그인하지 않았으면 그리지 않는다(갈 곳이 없다).
+    final bool signedIn = ref.watch(viewerAuthorProvider) != null;
+
+    return Stack(
+      children: <Widget>[
+        Positioned.fill(child: body),
+        if (signedIn)
+          Positioned(
+            right: 16,
+            // 떠 있는 내비 바 위로 올린다 — 셸이 `extendBody: true`라 보정하지
+            // 않으면 버튼이 바 뒤로 숨어 눌리지 않는다.
+            bottom: FloatingBottomNavScaffold.barExtent + 16,
+            child: FloatingActionButton(
+              heroTag: 'feed-composer-fab',
+              tooltip: l10n.feedComposeAction,
+              onPressed: _openComposer,
+              child: const Icon(Icons.edit_outlined),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// 작성 화면을 연다. 돌아오면서 true를 주면 새 글이 올라간 것이라 피드를 새로
+  /// 받는다 — 방금 쓴 글이 목록에 없으면 올라갔는지 알 수 없다.
+  Future<void> _openComposer() async {
+    final Object? posted = await context.pushNamed<Object?>(
+      FeedComposerScreen.routeName,
+    );
+    if (!mounted || posted != true) return;
+    ref.invalidate(feedListControllerProvider);
   }
 
   Widget _buildPages(FeedListState data) {
@@ -142,8 +179,14 @@ class _FeedScrollViewState extends ConsumerState<FeedScrollView> {
 }
 
 /// 글이 하나도 없을 때. **오류가 아니다** — 재시도 버튼을 두지 않는다.
+///
+/// 대신 **첫 글을 쓰는 길을 준다.** 빈 피드에서 사용자가 할 수 있는 유일한 일이
+/// 글을 쓰는 것이고, 문구가 "첫 번째 글을 남겨보세요"라고 권하면서 그 수단이
+/// 화면 구석의 버튼뿐이면 권유가 막다른 길이 된다.
 class _FeedEmpty extends StatelessWidget {
-  const _FeedEmpty();
+  const _FeedEmpty({required this.onCompose});
+
+  final VoidCallback onCompose;
 
   @override
   Widget build(BuildContext context) {
@@ -173,6 +216,12 @@ class _FeedEmpty extends StatelessWidget {
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
+            ),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: onCompose,
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              label: Text(l10n.feedComposeAction),
             ),
           ],
         ),

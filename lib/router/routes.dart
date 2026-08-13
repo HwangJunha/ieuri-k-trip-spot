@@ -20,6 +20,7 @@ import '../domain/community/view/post_detail_screen.dart';
 import '../domain/feed/view/conversation_list_screen.dart';
 import '../domain/feed/view/conversation_screen.dart';
 import '../domain/feed/view/discover_tab_screen.dart';
+import '../domain/feed/view/feed_composer_screen.dart';
 import '../domain/onboarding/view/onboarding_screen.dart';
 import '../domain/settings/view/account_deletion_screen.dart';
 import '../domain/settings/view/email_change_screen.dart';
@@ -206,6 +207,17 @@ List<RouteBase> buildRoutes() => <RouteBase>[
       ),
       editPostId: state.uri.queryParameters['editPostId'],
     ),
+  ),
+  // 피드 작성(SPEC-0017 R1·R2). 셸 밖의 최상위 라우트라 하단 탭을 덮는다 —
+  // 커뮤니티 컴포저와 같은 성격이다.
+  //
+  // **인자를 받지 않는다.** 초안은 `feedComposerProvider`가 쥐고, 장소는 화면 안에서
+  // 시트로 고른다 — 피드는 장소가 필수 1곳이라 "미리 정해진 장소로 진입"하는 경로가
+  // 아직 없다(있다면 그때 쿼리 파라미터를 더한다).
+  GoRoute(
+    path: '/feed-composer',
+    name: FeedComposerScreen.routeName,
+    builder: (_, _) => const FeedComposerScreen(),
   ),
   // 대화 목록·대화(SPEC-0017 R8). 셸 밖의 최상위 라우트라 하단 탭을 덮는다 —
   // 대화는 탭 전환이 아니라 둘러보기 헤더에서 밀고 올라오는 전체 화면 흐름이다.

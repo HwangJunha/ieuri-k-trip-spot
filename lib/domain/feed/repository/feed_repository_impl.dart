@@ -119,7 +119,9 @@ class FeedRepositoryImpl implements FeedRepository {
           final payload = Mutation$LikeFeedItem.fromJson(data).likeFeedItem;
           return (
             success: payload.success,
-            codes: payload.userErrors.map((e) => e.code).toList(growable: false),
+            codes: payload.userErrors
+                .map((e) => e.code)
+                .toList(growable: false),
             value: payload.likeCount,
           );
         },
@@ -135,7 +137,9 @@ class FeedRepositoryImpl implements FeedRepository {
           final payload = Mutation$UnlikeFeedItem.fromJson(data).unlikeFeedItem;
           return (
             success: payload.success,
-            codes: payload.userErrors.map((e) => e.code).toList(growable: false),
+            codes: payload.userErrors
+                .map((e) => e.code)
+                .toList(growable: false),
             value: payload.likeCount,
           );
         },
@@ -238,7 +242,9 @@ class FeedRepositoryImpl implements FeedRepository {
     return PostImageConfirmation(
       confirmed: payload.confirmed,
       failed: payload.failed
-          .map((e) => PostImageUploadFailure(objectKey: e.objectKey, code: e.code))
+          .map(
+            (e) => PostImageUploadFailure(objectKey: e.objectKey, code: e.code),
+          )
           .toList(growable: false),
     );
   }
@@ -249,9 +255,7 @@ class FeedRepositoryImpl implements FeedRepository {
   Future<FeedMutationResult<String>> startConversation(String feedItemId) =>
       _mutateResult(
         documentNodeMutationStartConversation,
-        Variables$Mutation$StartConversation(
-          feedItemId: feedItemId,
-        ).toJson(),
+        Variables$Mutation$StartConversation(feedItemId: feedItemId).toJson(),
         'startConversation',
         (Map<String, dynamic> data) {
           final payload = Mutation$StartConversation.fromJson(
@@ -259,7 +263,9 @@ class FeedRepositoryImpl implements FeedRepository {
           ).startConversation;
           return (
             success: payload.success,
-            codes: payload.userErrors.map((e) => e.code).toList(growable: false),
+            codes: payload.userErrors
+                .map((e) => e.code)
+                .toList(growable: false),
             value: payload.conversationId,
           );
         },
@@ -343,9 +349,7 @@ class FeedRepositoryImpl implements FeedRepository {
     // 유실 허용 기능을 살리려고 큐를 두지 않는다(POL-048).
     await _mutateResult(
       documentNodeMutationNotifyTyping,
-      Variables$Mutation$NotifyTyping(
-        conversationId: conversationId,
-      ).toJson(),
+      Variables$Mutation$NotifyTyping(conversationId: conversationId).toJson(),
       'notifyTyping',
       (Map<String, dynamic> data) {
         final payload = Mutation$NotifyTyping.fromJson(data).notifyTyping;
@@ -427,14 +431,17 @@ class FeedRepositoryImpl implements FeedRepository {
       });
 
   @override
-  Stream<Message> newMessage(String conversationId) => _subscribe(
-    documentNodeSubscriptionNewMessage,
-    Variables$Subscription$NewMessage(conversationId: conversationId).toJson(),
-    'newMessage',
-  ).map(
-    (Map<String, dynamic> data) =>
-        _message(Subscription$NewMessage.fromJson(data).newMessage),
-  );
+  Stream<Message> newMessage(String conversationId) =>
+      _subscribe(
+        documentNodeSubscriptionNewMessage,
+        Variables$Subscription$NewMessage(
+          conversationId: conversationId,
+        ).toJson(),
+        'newMessage',
+      ).map(
+        (Map<String, dynamic> data) =>
+            _message(Subscription$NewMessage.fromJson(data).newMessage),
+      );
 
   /// 구독을 열고 payload만 흘린다.
   ///
@@ -498,8 +505,11 @@ class FeedRepositoryImpl implements FeedRepository {
     updatedAt: _parseTime(node.updatedAt),
   );
 
-  PostAuthor _author(Fragment$FeedAuthorParts a) =>
-      PostAuthor(id: a.id, nickname: a.nickname, profileImageUrl: a.profileImageUrl);
+  PostAuthor _author(Fragment$FeedAuthorParts a) => PostAuthor(
+    id: a.id,
+    nickname: a.nickname,
+    profileImageUrl: a.profileImageUrl,
+  );
 
   PostSpot _spot(Fragment$FeedSpotParts s) => PostSpot(
     id: s.id,
@@ -535,7 +545,8 @@ class FeedRepositoryImpl implements FeedRepository {
   /// ISO-8601 문자열 → UTC [DateTime]. 파싱에 실패하면 epoch로 접는다 — 시각 하나
   /// 때문에 목록 전체가 실패하지 않게 한다.
   DateTime _parseTime(String raw) =>
-      DateTime.tryParse(raw)?.toUtc() ?? DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+      DateTime.tryParse(raw)?.toUtc() ??
+      DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
 
   // ---------------------------------------------------------------- 실행
 

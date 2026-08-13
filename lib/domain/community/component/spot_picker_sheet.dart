@@ -152,6 +152,7 @@ class _SpotPickerSheetState extends ConsumerState<_SpotPickerSheet> {
     );
   }
 }
+
 /// 주변 장소 목록. 로딩·위치 실패·조회 실패·빈 목록·필터 미일치가 **서로 다른
 /// 상태**다 — 사용자가 할 일이 각각 다르기 때문이다.
 /// 좌표 기반 주변 장소 목록. **질의가 없을 때만 그려진다** — 질의가 들어오면
@@ -291,7 +292,6 @@ class _SpotCategoryRow extends ConsumerWidget {
   }
 }
 
-
 class _CategoryChip extends StatelessWidget {
   const _CategoryChip({
     required this.label,
@@ -313,7 +313,6 @@ class _CategoryChip extends StatelessWidget {
     ),
   );
 }
-
 
 /// 출처 탭 — 주변 / 좋아요한 장소.
 ///
@@ -350,7 +349,6 @@ class _SourceTabs extends ConsumerWidget {
     );
   }
 }
-
 
 /// 좋아요한 장소 목록.
 ///

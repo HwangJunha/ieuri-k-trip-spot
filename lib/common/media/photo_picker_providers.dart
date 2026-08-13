@@ -1,7 +1,7 @@
 import 'package:image_picker/image_picker.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../common/model/composer_photo.dart';
+import '../model/composer_photo.dart';
 
 part 'photo_picker_providers.g.dart';
 
@@ -9,6 +9,10 @@ part 'photo_picker_providers.g.dart';
 ///
 /// provider로 둔 이유는 **테스트가 갤러리를 열지 않게 하기 위해서다** — 위젯 테스트는
 /// 이 provider를 고정된 목록으로 override하고, 실제 화면만 갤러리를 띄운다.
+///
+/// **`common/`에 있는 이유**: 커뮤니티 컴포저와 피드 컴포저가 같은 수단을 쓴다.
+/// 기능이 둘 이상 공유하면 `common/`이 자리다(CLAUDE.md §4) — 피드가 커뮤니티
+/// 것을 직접 import하면 기능 간 의존이 생긴다(§3).
 ///
 /// null을 돌려주면 사용자가 취소한 것이고, 빈 목록이면 고른 것이 없는 것이다.
 typedef PhotoPicker = Future<List<LocalPhoto>?> Function({required int limit});

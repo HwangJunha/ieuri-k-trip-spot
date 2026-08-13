@@ -332,7 +332,9 @@ class ConversationController extends _$ConversationController {
   /// 남으며, 사용자가 지우거나 새로 쓰는 것이 다음 수단이다.
   Future<void> retry(String messageId) async {
     final ConversationState current = state;
-    final int at = current.messages.indexWhere((Message m) => m.id == messageId);
+    final int at = current.messages.indexWhere(
+      (Message m) => m.id == messageId,
+    );
     if (at < 0) return;
 
     final Message failed = current.messages[at];

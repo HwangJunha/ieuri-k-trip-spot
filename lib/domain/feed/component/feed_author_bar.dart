@@ -5,6 +5,19 @@ import '../../../common/network/media_cdn.dart';
 import '../../../common/widget/post_labels.dart';
 import '../../../l10n/gen/app_localizations.dart';
 
+/// 사진 위에 얹히는 글자에 붙이는 그림자.
+///
+/// **스크림만으로는 부족하다.** 그라데이션은 사진 전체를 고르게 어둡게 할 뿐이라,
+/// 글자 바로 뒤에 흰 구름·모래처럼 밝은 덩어리가 오면 흰 글자가 그대로 묻힌다.
+/// 글자에 붙어 다니는 그림자는 그 국소적인 대비를 메운다 — Stitch 디자인
+/// (`fd6c6669…`)이 스크림과 `drop-shadow`를 함께 쓰는 이유가 이것이다.
+///
+/// 색을 테마에서 읽지 않는 이유: 이것은 표면색이 아니라 **사진 위 가독성 보정**이라
+/// 라이트/다크와 무관하게 항상 어두워야 한다.
+const List<Shadow> overlayTextShadow = <Shadow>[
+  Shadow(color: Color(0x99000000), blurRadius: 6, offset: Offset(0, 1)),
+];
+
 /// 피드 한 장의 상단 오버레이 — 아바타·닉네임·상대시각·DM 아이콘.
 ///
 /// **DM 아이콘은 피드에만 존재한다**(설계 §6, R7). 커뮤니티 `PostCard`에는 없고
@@ -47,11 +60,17 @@ class FeedAuthorBar extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
+        // **밝은 사진에서 흰 글자가 사라지던 자리다.** 0.45에서 0으로 곧장 떨어지면
+        // 스크림이 닿는 구간이 짧아 닉네임 줄이 사진의 밝은 부분에 그대로 얹혔다.
+        // 시작을 더 진하게 잡고 중간 정지점을 둬 글자가 있는 구간까지 어둠이
+        // 이어지게 한다(디자인 §2 — Stitch도 스크림 + drop-shadow를 함께 쓴다).
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
+          stops: const <double>[0, 0.55, 1],
           colors: <Color>[
-            theme.colorScheme.scrim.withValues(alpha: 0.45),
+            theme.colorScheme.scrim.withValues(alpha: 0.7),
+            theme.colorScheme.scrim.withValues(alpha: 0.3),
             theme.colorScheme.scrim.withValues(alpha: 0),
           ],
         ),
@@ -76,12 +95,16 @@ class FeedAuthorBar extends StatelessWidget {
                       style: theme.textTheme.labelLarge?.copyWith(
                         color: foreground,
                         fontWeight: FontWeight.w700,
+                        shadows: overlayTextShadow,
                       ),
                     ),
                     Text(
                       relativePostTime(l10n, createdAt, now),
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: foreground.withValues(alpha: 0.8),
+                        // 0.8까지 흐리면 밝은 사진에서 시각이 먼저 사라진다 —
+                        // 스크림이 있어도 작은 글씨는 대비를 더 필요로 한다.
+                        color: foreground.withValues(alpha: 0.92),
+                        shadows: overlayTextShadow,
                       ),
                     ),
                   ],
@@ -92,7 +115,12 @@ class FeedAuthorBar extends StatelessWidget {
                   tooltip: l10n.feedMessageAuthorAction,
                   color: foreground,
                   onPressed: onMessage,
-                  icon: const Icon(Icons.mail_outline),
+                  // **헤더의 대화함 아이콘과 반드시 달라야 한다.** 둘 다
+                  // `Icons.mail_outline`이던 때는 같은 아이콘이 나란히 두 개 떠
+                  // "새 대화 걸기"와 "대화함 열기"가 구분되지 않았다. 보내기 계열
+                  // 아이콘은 이 버튼이 **행동(전송)**이라는 것을 드러내고,
+                  // 봉투는 **장소(받은 대화함)**로 남는다.
+                  icon: const Icon(Icons.send_outlined),
                 ),
               if (onOptions != null)
                 IconButton(

@@ -45,10 +45,7 @@ class _AboutSheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              Text(
-                l10n.mapRegionAboutIntro,
-                style: theme.textTheme.bodyMedium,
-              ),
+              Text(l10n.mapRegionAboutIntro, style: theme.textTheme.bodyMedium),
               const SizedBox(height: 20),
               _Section(
                 title: l10n.mapScoreFactorCongestion,

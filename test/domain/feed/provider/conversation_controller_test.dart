@@ -45,7 +45,9 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       expect(
-        container.read(conversationControllerProvider(_cid)).messages
+        container
+            .read(conversationControllerProvider(_cid))
+            .messages
             .map((Message m) => m.id),
         contains('cached'),
       );
@@ -54,9 +56,7 @@ void main() {
     test('서버에서 사라진 메시지도 로컬에 있으면 계속 보인다 (AC18-3)', () async {
       final FakeMessageCacheStore cache = FakeMessageCacheStore(
         <String, List<Message>>{
-          _cid: <Message>[
-            message('old', createdAt: DateTime.utc(2026, 1, 1)),
-          ],
+          _cid: <Message>[message('old', createdAt: DateTime.utc(2026, 1, 1))],
         },
       );
       final FakeFeedRepository repo = FakeFeedRepository()
@@ -70,7 +70,9 @@ void main() {
         );
       final ProviderContainer container = _container(repo, cache: cache);
 
-      await container.read(conversationControllerProvider(_cid).notifier).sync();
+      await container
+          .read(conversationControllerProvider(_cid).notifier)
+          .sync();
       final ConversationState state = container.read(
         conversationControllerProvider(_cid),
       );
@@ -91,7 +93,9 @@ void main() {
         );
       final ProviderContainer container = _container(repo);
 
-      await container.read(conversationControllerProvider(_cid).notifier).sync();
+      await container
+          .read(conversationControllerProvider(_cid).notifier)
+          .sync();
       final ConversationState state = container.read(
         conversationControllerProvider(_cid),
       );
@@ -110,7 +114,9 @@ void main() {
         );
       final ProviderContainer container = _container(repo, cache: cache);
 
-      await container.read(conversationControllerProvider(_cid).notifier).sync();
+      await container
+          .read(conversationControllerProvider(_cid).notifier)
+          .sync();
 
       expect(cache.read(_cid).single.id, 'm1');
     });
@@ -122,7 +128,9 @@ void main() {
       FakeMessageCacheStore? cache,
     }) async {
       final ProviderContainer container = _container(repo, cache: cache);
-      await container.read(conversationControllerProvider(_cid).notifier).sync();
+      await container
+          .read(conversationControllerProvider(_cid).notifier)
+          .sync();
       return container;
     }
 
@@ -207,11 +215,11 @@ void main() {
   });
 
   group('재시도 횟수 상한 (POL-040)', () {
-    Future<ProviderContainer> withFailedMessage(
-      FakeFeedRepository repo,
-    ) async {
+    Future<ProviderContainer> withFailedMessage(FakeFeedRepository repo) async {
       final ProviderContainer container = _container(repo);
-      await container.read(conversationControllerProvider(_cid).notifier).sync();
+      await container
+          .read(conversationControllerProvider(_cid).notifier)
+          .sync();
       repo.sendMessageThrows = StateError('network');
       await container
           .read(conversationControllerProvider(_cid).notifier)
@@ -275,7 +283,9 @@ void main() {
       final FakeFeedRepository repo = FakeFeedRepository()
         ..sentMessageIds.add('server-1');
       final ProviderContainer container = _container(repo);
-      await container.read(conversationControllerProvider(_cid).notifier).sync();
+      await container
+          .read(conversationControllerProvider(_cid).notifier)
+          .sync();
       await container
           .read(conversationControllerProvider(_cid).notifier)
           .send(body: '본문', me: author('me'));
@@ -308,14 +318,17 @@ void main() {
           ),
         ]);
       final ProviderContainer container = _container(repo);
-      await container.read(conversationControllerProvider(_cid).notifier).sync();
+      await container
+          .read(conversationControllerProvider(_cid).notifier)
+          .sync();
 
       await container
           .read(conversationControllerProvider(_cid).notifier)
           .loadMore();
 
-      final ConversationState state = container
-          .read(conversationControllerProvider(_cid));
+      final ConversationState state = container.read(
+        conversationControllerProvider(_cid),
+      );
       expect(state.messages.map((Message m) => m.id), <String>['m2', 'm1']);
       expect(repo.messageAfterCursors, <String?>[null, 'c1']);
     });

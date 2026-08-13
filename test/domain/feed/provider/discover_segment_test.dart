@@ -34,7 +34,10 @@ void main() {
       );
 
       notifier.select(DiscoverSegment.feed);
-      expect(container.read(selectedDiscoverSegmentProvider), DiscoverSegment.feed);
+      expect(
+        container.read(selectedDiscoverSegmentProvider),
+        DiscoverSegment.feed,
+      );
 
       notifier.select(DiscoverSegment.recommendation);
       expect(
@@ -55,10 +58,12 @@ void main() {
       await container.read(feedListControllerProvider.future);
 
       container
-        ..read(selectedDiscoverSegmentProvider.notifier)
-            .select(DiscoverSegment.recommendation)
-        ..read(selectedDiscoverSegmentProvider.notifier)
-            .select(DiscoverSegment.feed);
+        ..read(
+          selectedDiscoverSegmentProvider.notifier,
+        ).select(DiscoverSegment.recommendation)
+        ..read(
+          selectedDiscoverSegmentProvider.notifier,
+        ).select(DiscoverSegment.feed);
 
       // 다시 조회하지 않았고, 목록도 그대로다 — 토글은 어느 쪽을 그릴지만 정한다.
       expect(repo.feedAfterCursors.length, 1);

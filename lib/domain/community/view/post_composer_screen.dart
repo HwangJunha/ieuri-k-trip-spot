@@ -18,7 +18,7 @@ import '../model/post_draft.dart';
 import '../../../common/model/target_category.dart';
 import '../provider/community_providers.dart';
 import '../provider/moderation_providers.dart';
-import '../provider/photo_picker_providers.dart';
+import '../../../common/media/photo_picker_providers.dart';
 import '../provider/post_composer_providers.dart';
 import '../provider/post_detail_providers.dart';
 

@@ -41,9 +41,10 @@ void main() {
 
     test('사진은 상한을 넘겨 담기지 않는다 (AC2-4)', () {
       final ProviderContainer container = _container(FakeFeedRepository());
-      final FeedComposer notifier = container.read(feedComposerProvider.notifier)
-        ..setBody('본문')
-        ..setSpot(spot('1'));
+      final FeedComposer notifier =
+          container.read(feedComposerProvider.notifier)
+            ..setBody('본문')
+            ..setSpot(spot('1'));
 
       notifier.addPhotos(<LocalPhoto>[
         for (int i = 0; i < FeedDraft.maxPhotos + 3; i++) _photo('p$i.jpg'),
@@ -57,7 +58,9 @@ void main() {
 
     test('사진을 지우면 제출할 수 없게 된다', () {
       final ProviderContainer container = _container(FakeFeedRepository());
-      final FeedComposer notifier = container.read(feedComposerProvider.notifier);
+      final FeedComposer notifier = container.read(
+        feedComposerProvider.notifier,
+      );
       _fill(notifier);
 
       notifier.removePhoto('a.jpg');
@@ -112,10 +115,9 @@ void main() {
           .submit();
 
       expect(result, isA<FeedComposerPhotosFailed>());
-      expect(
-        (result as FeedComposerPhotosFailed).failedPhotoNames,
-        <String>['a.jpg'],
-      );
+      expect((result as FeedComposerPhotosFailed).failedPhotoNames, <String>[
+        'a.jpg',
+      ]);
       // 사진 없는 피드는 만들지 않는다.
       expect(repo.createdPhotoKeys, isEmpty);
     });
@@ -131,10 +133,9 @@ void main() {
           .submit();
 
       expect(result, isA<FeedComposerPhotosFailed>());
-      expect(
-        (result as FeedComposerPhotosFailed).failedPhotoNames,
-        <String>['a.jpg'],
-      );
+      expect((result as FeedComposerPhotosFailed).failedPhotoNames, <String>[
+        'a.jpg',
+      ]);
     });
 
     test('서버가 거부하면 사유 코드를 돌려준다', () async {

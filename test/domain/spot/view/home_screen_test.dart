@@ -232,5 +232,4 @@ void main() {
     // 축제는 항상 축제 카테고리로 연다 — 문자열이 enum 이름과 맞아야 한다.
     expect(find.text('detail:f1:festivalEvent'), findsOneWidget);
   });
-
 }

@@ -85,7 +85,8 @@ class Message {
   bool get hasBody => body.isNotEmpty;
 
   /// 보낼 내용이 하나라도 있는지. **셋 다 비면 서버가 거부한다.**
-  bool get hasContent => body.isNotEmpty || photoKey != null || feedItem != null;
+  bool get hasContent =>
+      body.isNotEmpty || photoKey != null || feedItem != null;
 
   Message copyWith({
     String? id,

@@ -20,11 +20,7 @@ void main() {
       // 서버가 산출 불가 항목을 빼서 준다(§2.2). 0으로 채우면 서버가 피한 왜곡을
       // 클라이언트가 되살린다.
       final RegionRecommendation region = regionWith(const <RegionScore>[
-        RegionScore(
-          factor: RegionScoreFactor.congestion,
-          value: 90,
-          rank: 2,
-        ),
+        RegionScore(factor: RegionScoreFactor.congestion, value: 90, rank: 2),
       ]);
 
       expect(region.scores, hasLength(1));
@@ -82,7 +78,11 @@ void main() {
         RegionScore(factor: RegionScoreFactor.distance, value: 90, rank: 1),
         RegionScore(factor: RegionScoreFactor.congestion, value: 80, rank: 3),
         // 4위는 라벨을 붙이지 않는다.
-        RegionScore(factor: RegionScoreFactor.stayIntensity, value: 70, rank: 4),
+        RegionScore(
+          factor: RegionScoreFactor.stayIntensity,
+          value: 70,
+          rank: 4,
+        ),
       ]);
 
       expect(

@@ -107,7 +107,9 @@ class _Segment extends StatelessWidget {
               // 위면 흰 글자, 밝은 표면 위면 기본 전경색이다.
               color: selected
                   ? theme.colorScheme.onPrimary
-                  : (onPhoto ? Colors.white : theme.colorScheme.onSurfaceVariant),
+                  : (onPhoto
+                        ? Colors.white
+                        : theme.colorScheme.onSurfaceVariant),
               fontWeight: FontWeight.w600,
             ),
           ),

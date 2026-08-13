@@ -104,12 +104,11 @@ class FeedComposer extends _$FeedComposer {
         return FeedComposerPhotosFailed(uploaded.failedNames);
       }
 
-      final FeedMutationResult<String> result = await repository
-          .createFeedItem(
-            body: draft.trimmedBody,
-            spotId: spot.id,
-            photoKeys: keys,
-          );
+      final FeedMutationResult<String> result = await repository.createFeedItem(
+        body: draft.trimmedBody,
+        spotId: spot.id,
+        photoKeys: keys,
+      );
       if (!result.succeeded) return FeedComposerRejected(result.errorCode);
       return FeedComposerSucceeded(
         result.value,

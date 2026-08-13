@@ -34,11 +34,14 @@ void main() {
 
     test('아직 서버에 없는 메시지는 골라지지 않는다', () {
       // 전송 중인 메시지는 서버가 id로 지목할 수 없다.
-      final MessageReportSelection selection = const MessageReportSelection(
-        active: true,
-      ).toggle(
-        message('local-1', status: MessageDeliveryStatus.sending, localId: true),
-      );
+      final MessageReportSelection selection =
+          const MessageReportSelection(active: true).toggle(
+            message(
+              'local-1',
+              status: MessageDeliveryStatus.sending,
+              localId: true,
+            ),
+          );
 
       expect(selection.selectedCount, 0);
     });

@@ -306,7 +306,9 @@ class FakeMessageCacheStore implements MessageCacheStore {
   Future<void> write(String conversationId, List<Message> messages) async {
     // 실제 구현과 같은 규칙 — 확정된 메시지만 남긴다.
     _byConversation[conversationId] = messages
-        .where((Message m) => m.status == MessageDeliveryStatus.sent && !m.localId)
+        .where(
+          (Message m) => m.status == MessageDeliveryStatus.sent && !m.localId,
+        )
         .toList();
   }
 }

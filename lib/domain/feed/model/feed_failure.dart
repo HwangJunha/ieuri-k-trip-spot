@@ -61,13 +61,8 @@ class FeedFailure implements Exception {
   int get hashCode => Object.hash(kind, code);
 
   @override
-  String toString() => 'FeedFailure(${kind.name}${code == null ? '' : ', $code'})';
+  String toString() =>
+      'FeedFailure(${kind.name}${code == null ? '' : ', $code'})';
 }
 
-enum FeedFailureKind {
-  network,
-  unknown,
-  unauthenticated,
-  forbidden,
-  userError,
-}
+enum FeedFailureKind { network, unknown, unauthenticated, forbidden, userError }
