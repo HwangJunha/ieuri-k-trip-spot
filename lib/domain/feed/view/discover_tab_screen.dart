@@ -122,12 +122,18 @@ class _DiscoverHeader extends ConsumerWidget {
       decoration: BoxDecoration(
         // 사진 위에서는 위가 어두운 스크림을 깔아야 흰 글자가 어떤 사진에서도
         // 읽힌다 — 밝은 하늘 사진에서 흰 글자만 얹으면 사라진다.
+        //
+        // **다만 진하면 사진이 상한다.** 0.5로 깔았더니 상단 1/5가 잿빛으로 죽어
+        // "위쪽만 색이 다른" 어색한 띠가 됐다(측정: y=0 부근 하늘이 rgb(128,124,128)).
+        // 글자 뒤에만 옅게 깔고 아래로 빠르게 사라지게 한다.
         gradient: overPhoto
             ? LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
+                stops: const <double>[0, 0.55, 1],
                 colors: <Color>[
-                  Colors.black.withValues(alpha: 0.5),
+                  Colors.black.withValues(alpha: 0.32),
+                  Colors.black.withValues(alpha: 0.12),
                   Colors.black.withValues(alpha: 0),
                 ],
               )

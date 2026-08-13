@@ -60,17 +60,17 @@ class FeedAuthorBar extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        // **밝은 사진에서 흰 글자가 사라지던 자리다.** 0.45에서 0으로 곧장 떨어지면
-        // 스크림이 닿는 구간이 짧아 닉네임 줄이 사진의 밝은 부분에 그대로 얹혔다.
-        // 시작을 더 진하게 잡고 중간 정지점을 둬 글자가 있는 구간까지 어둠이
-        // 이어지게 한다(디자인 §2 — Stitch도 스크림 + drop-shadow를 함께 쓴다).
+        // **헤더 스크림 위에 겹쳐 깔린다.** 둘 다 진하게 잡았더니 상단 1/5가
+        // 잿빛으로 죽어 "위쪽만 색이 다른" 띠가 됐다 — 헤더가 이미 어둠을 깔아
+        // 두므로 여기서는 글자 바로 뒤만 살짝 눌러 준다. 가독성은 글자 그림자가
+        // 함께 책임진다(디자인 §2 — Stitch도 스크림 + drop-shadow를 같이 쓴다).
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          stops: const <double>[0, 0.55, 1],
+          stops: const <double>[0, 0.6, 1],
           colors: <Color>[
-            theme.colorScheme.scrim.withValues(alpha: 0.7),
-            theme.colorScheme.scrim.withValues(alpha: 0.3),
+            theme.colorScheme.scrim.withValues(alpha: 0.28),
+            theme.colorScheme.scrim.withValues(alpha: 0.12),
             theme.colorScheme.scrim.withValues(alpha: 0),
           ],
         ),
