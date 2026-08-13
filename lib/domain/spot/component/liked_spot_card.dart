@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../common/widget/card_metrics.dart';
+import '../../../common/widget/spot_thumbnail.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/liked_spot.dart';
 import 'spot_display.dart';
@@ -29,14 +31,17 @@ class LikedSpotCard extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(CardMetrics.radius),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: CardMetrics.contentPadding,
+        ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             _Thumbnail(spot: spot),
-            const SizedBox(width: 12),
+            const SizedBox(width: CardMetrics.thumbnailGap),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -47,7 +52,7 @@ class LikedSpotCard extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: CardMetrics.titleGap),
                   Text(
                     spotCategoryLabel(l10n, spot.category),
                     style: theme.textTheme.labelMedium?.copyWith(
@@ -56,7 +61,7 @@ class LikedSpotCard extends StatelessWidget {
                   ),
                   // 주소는 값이 있을 때만 — 빈 라벨을 그리지 않는다.
                   if (spot.address != null) ...<Widget>[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: CardMetrics.titleGap),
                     Text(
                       spot.address!,
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -76,32 +81,25 @@ class LikedSpotCard extends StatelessWidget {
   }
 }
 
-/// 카드 썸네일. 이미지 위에 최소 출처 배지를 얹는다.
+/// 카드 썸네일.
+///
+/// **공통 [SpotThumbnail]을 경유한다**(SPEC-0020 AC9.1·AC9.2). 예전에는 여기서
+/// `Image.network`를 직접 부르고 실패하면 빈 색블록으로 떨어졌다 — 로딩 중에는
+/// `loadingBuilder`가 없어 흰 칸이 번쩍였고, 실패 표현도 다른 카드와 달랐다.
+/// 로딩·실패 표현은 공통 위젯 한 곳에서 정의한다.
 class _Thumbnail extends StatelessWidget {
   const _Thumbnail({required this.spot});
 
   final LikedSpot spot;
 
-  bool get _isUrl => spot.thumbnailImageUrl.startsWith('http');
-
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(CardMetrics.thumbnailRadius),
       child: SizedBox(
-        width: 104,
-        height: 104,
-        child: _isUrl
-            ? Image.network(
-                spot.thumbnailImageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => ColoredBox(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                ),
-              )
-            : ColoredBox(color: theme.colorScheme.surfaceContainerHighest),
+        width: CardMetrics.thumbnailSize,
+        height: CardMetrics.thumbnailSize,
+        child: SpotThumbnail(imageRef: spot.thumbnailImageUrl),
       ),
     );
   }

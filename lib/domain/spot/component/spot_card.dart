@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../common/widget/card_metrics.dart';
 import '../../../common/widget/spot_thumbnail.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/distance.dart';
@@ -33,20 +34,22 @@ class SpotCard extends StatelessWidget {
       child: Card(
         clipBehavior: Clip.antiAlias,
         color: theme.colorScheme.surfaceContainerLow,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(CardMetrics.radius),
+        ),
         child: InkWell(
           onTap: onTap,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               SizedBox(
-                height: 120,
+                height: CardMetrics.coverHeight,
                 child: SpotThumbnail(
                   imageRef: spot.thumbnailImageUrl ?? spot.imageRef,
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(CardMetrics.contentPadding),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
@@ -56,7 +59,7 @@ class SpotCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: CardMetrics.titleGap),
                     Row(
                       children: <Widget>[
                         Icon(
@@ -80,7 +83,7 @@ class SpotCard extends StatelessWidget {
                     // 거리는 서버가 계산해 준 값이라 없을 수 있다 — 없으면 줄 자체를
                     // 렌더하지 않는다(빈 자리를 남기지 않는다).
                     if (distance != null) ...<Widget>[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: CardMetrics.sectionGap),
                       Text(
                         distanceLabel(l10n, distance),
                         style: theme.textTheme.labelLarge?.copyWith(
