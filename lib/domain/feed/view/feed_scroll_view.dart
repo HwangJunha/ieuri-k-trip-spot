@@ -81,7 +81,14 @@ class _FeedScrollViewState extends ConsumerState<FeedScrollView> {
             right: 16,
             // 떠 있는 내비 바 위로 올린다 — 셸이 `extendBody: true`라 보정하지
             // 않으면 버튼이 바 뒤로 숨어 눌리지 않는다.
-            bottom: FloatingBottomNavScaffold.barExtent + 16,
+            //
+            // **`barExtent`에 안전영역이 포함돼 있지 않다.** 노치 기기에서는 바가
+            // 홈 인디케이터만큼 더 올라와 있어, 그만큼 더하지 않으면 버튼이 바에
+            // 걸친다(실제로 걸쳤다).
+            bottom:
+                FloatingBottomNavScaffold.barExtent +
+                MediaQuery.paddingOf(context).bottom +
+                20,
             child: FloatingActionButton(
               heroTag: 'feed-composer-fab',
               tooltip: l10n.feedComposeAction,

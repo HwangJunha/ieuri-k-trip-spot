@@ -4,9 +4,11 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/model/list_equality.dart';
 import '../../../common/pagination/page.dart';
+import '../../../common/model/post_author.dart';
 import '../model/feed_item.dart';
 import '../repository/feed_repository.dart';
 import 'feed_providers.dart';
+import 'viewer_providers.dart';
 
 part 'feed_list_providers.g.dart';
 
@@ -71,13 +73,29 @@ class FeedListState {
 class FeedListController extends _$FeedListController {
   FeedRepository get _repository => ref.read(feedRepositoryProvider);
 
+  /// 내 글을 빼고 남긴다.
+  ///
+  /// **서버의 `ownedByViewer`를 믿을 수 없다.** 내가 쓴 피드에도 `false`로 내려온다
+  /// (확인: `me.id`와 `author.id`가 같은데 플래그는 false). 발견 피드는 남의 글을
+  /// 보는 곳이므로 내 id와 작성자 id를 직접 비교해 거른다.
+  ///
+  /// 서버가 플래그를 고치면 이 필터는 아무것도 걸러내지 않게 되고, 그때 지우면 된다 —
+  /// 지금 지우면 내 글이 다시 섞인다.
+  List<FeedItem> _withoutMine(List<FeedItem> items) {
+    final PostAuthor? me = ref.read(viewerAuthorProvider);
+    if (me == null) return items;
+    return items
+        .where((FeedItem f) => f.author.id != me.id && !f.ownedByViewer)
+        .toList(growable: false);
+  }
+
   @override
   Future<FeedListState> build() async {
     final CursorPage<FeedItem> page = await ref
         .watch(feedRepositoryProvider)
         .fetchFeed(first: _pageSize);
     return FeedListState(
-      items: page.items,
+      items: _withoutMine(page.items),
       hasMore: page.hasNextPage,
       endCursor: page.endCursor,
     );
@@ -100,7 +118,7 @@ class FeedListController extends _$FeedListController {
       );
       state = AsyncData<FeedListState>(
         current.copyWith(
-          items: <FeedItem>[...current.items, ...page.items],
+          items: <FeedItem>[...current.items, ..._withoutMine(page.items)],
           hasMore: page.hasNextPage,
           endCursor: page.endCursor,
           isLoadingMore: false,

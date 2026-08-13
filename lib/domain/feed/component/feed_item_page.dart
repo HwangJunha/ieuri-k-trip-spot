@@ -57,11 +57,14 @@ class _FeedItemPageState extends State<FeedItemPage> {
 
   /// 좋아요 버튼을 하단 스크림 텍스트 위로 얼마나 띄울지.
   ///
-  /// 스크림 안의 스팟 칩·본문과 겹치지 않을 만큼만 올린다. 아래로는 떠 있는
+  /// 스크림 안의 스팟 칩·본문과 겹치지 않을 만큼 올린다. 아래로는 떠 있는
   /// 내비게이션 바가 지나가므로([FloatingBottomNavScaffold.barExtent]) 그 높이도
   /// 함께 피한다 — 셸이 `extendBody: true`라 이 화면의 body가 바 **아래까지**
   /// 그려지고, 보정하지 않으면 버튼이 바 뒤로 숨어 눌리지 않는다.
-  static const double _likeButtonLift = 96;
+  ///
+  /// **작성 버튼(FAB)보다 위에 온다.** 둘 다 우측 하단이라 이만큼 띄우지 않으면
+  /// 서로 겹친다 — FAB(56) + 여백을 더한 값이다.
+  static const double _likeButtonLift = 152;
 
   @override
   Widget build(BuildContext context) {
@@ -204,8 +207,11 @@ class _FeedItemPageState extends State<FeedItemPage> {
         // 전부 스크림에 삼켜졌다 — 버튼이 "동작하지 않는" 것처럼 보이던 원인이
         // provider가 아니라 이 순서였다.
         Positioned(
-          right: 4,
-          bottom: FloatingBottomNavScaffold.barExtent + _likeButtonLift,
+          right: 8,
+          bottom:
+              FloatingBottomNavScaffold.barExtent +
+              MediaQuery.paddingOf(context).bottom +
+              _likeButtonLift,
           child: FeedLikeButton(
             liked: item.likedByViewer,
             likeCount: item.likeCount,
