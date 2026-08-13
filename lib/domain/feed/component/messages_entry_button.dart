@@ -18,9 +18,16 @@ import '../provider/viewer_providers.dart';
 ///
 /// **로그인하지 않았으면 아무것도 그리지 않는다** — 눌러도 갈 곳이 없다.
 class MessagesEntryButton extends ConsumerWidget {
-  const MessagesEntryButton({super.key, required this.onPressed});
+  const MessagesEntryButton({
+    super.key,
+    required this.onPressed,
+    this.foregroundColor,
+  });
 
   final VoidCallback onPressed;
+
+  /// 아이콘 색. 사진 위에 뜰 때는 흰색, 표면 위에서는 기본 전경색이다.
+  final Color? foregroundColor;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -29,17 +36,12 @@ class MessagesEntryButton extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
-    // 미읽음 유무만 본다. 목록 조회가 실패하거나 아직 오지 않았으면 점을 그리지
-    // 않는다 — 배지는 알림이지 오류 표시가 아니다.
-    final bool hasUnread =
-        ref.watch(
-          conversationListControllerProvider.select(
-            (AsyncValue<ConversationListState> s) => s.value?.hasUnread,
-          ),
-        ) ??
-        false;
+    // **점 하나 그리자고 대화 목록을 불러오지 않는다** — 목록 provider를 구독하면
+    // 둘러보기 탭에 들어서는 것만으로 20건 조회가 나간다. 목록을 실제로 연 화면이
+    // 갱신해 둔 플래그만 읽는다.
+    final bool hasUnread = ref.watch(unreadConversationsFlagProvider);
 
-    final Widget icon = const Icon(Icons.mail_outline);
+    final Widget icon = Icon(Icons.mail_outline, color: foregroundColor);
     return IconButton(
       tooltip: l10n.dmMessagesAction,
       onPressed: onPressed,
