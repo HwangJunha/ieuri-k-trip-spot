@@ -136,7 +136,11 @@ class _Dot extends StatelessWidget {
         final double lift = t < 0.4
             ? Curves.easeOut.transform(1 - (t / 0.4 - 0.5).abs() * 2)
             : 0;
-        return _circle(size, color.withValues(alpha: 0.45 + lift * 0.55), -lift * 3);
+        return _circle(
+          size,
+          color.withValues(alpha: 0.45 + lift * 0.55),
+          -lift * 3,
+        );
       },
     );
   }

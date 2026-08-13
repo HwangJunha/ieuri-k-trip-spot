@@ -46,7 +46,7 @@ final class FeedListControllerProvider
 }
 
 String _$feedListControllerHash() =>
-    r'27e73558c2689a0c5674168ff83ce4578ed218f1';
+    r'670fcf2e453c543506e3b068a4b8425f0f80f26c';
 
 /// 피드 목록(R4). 최신순 고정이라 정렬 인자가 없다.
 ///

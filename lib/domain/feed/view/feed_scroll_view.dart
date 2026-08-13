@@ -90,7 +90,7 @@ class _FeedScrollViewState extends ConsumerState<FeedScrollView> {
                 FloatingBottomNavScaffold.barExtent +
                 MediaQuery.paddingOf(context).bottom +
                 feedActionRailLift,
-            child: FloatingActionButton(
+            child: FloatingActionButton.small(
               heroTag: 'feed-composer-fab',
               tooltip: l10n.feedComposeAction,
               onPressed: _openComposer,

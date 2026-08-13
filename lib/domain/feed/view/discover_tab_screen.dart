@@ -78,6 +78,10 @@ class _DiscoverTabScreenState extends ConsumerState<DiscoverTabScreen> {
     );
 
     return Scaffold(
+      // **피드일 때는 배경을 비운다.** Scaffold의 기본 배경색이 깔려 있으면 사진이
+      // 화면 끝까지 차도 그 위를 표면색이 덮어, 헤더 아래에 흰 띠가 남는다 —
+      // 실제로 그 띠가 보였다.
+      backgroundColor: overPhoto ? Colors.transparent : null,
       body: overPhoto
           ? Stack(
               children: <Widget>[

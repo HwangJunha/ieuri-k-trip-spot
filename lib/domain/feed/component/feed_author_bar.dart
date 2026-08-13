@@ -75,62 +75,61 @@ class FeedAuthorBar extends StatelessWidget {
           ],
         ),
       ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 4, 24),
-          child: Row(
-            children: <Widget>[
-              _AuthorAvatar(author: author, foreground: foreground),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Text(
-                      author.nickname,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: foreground,
-                        fontWeight: FontWeight.w700,
-                        shadows: overlayTextShadow,
-                      ),
+      // **`SafeArea`를 쓰지 않는다.** 헤더 아래에 배치되므로 상태바를 다시 피하면
+      // 두 번 밀린다 — 위치는 이 위젯을 놓는 쪽이 정한다.
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 4, 20),
+        child: Row(
+          children: <Widget>[
+            _AuthorAvatar(author: author, foreground: foreground),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(
+                    author.nickname,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: foreground,
+                      fontWeight: FontWeight.w700,
+                      shadows: overlayTextShadow,
                     ),
-                    Text(
-                      relativePostTime(l10n, createdAt, now),
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        // 0.8까지 흐리면 밝은 사진에서 시각이 먼저 사라진다 —
-                        // 스크림이 있어도 작은 글씨는 대비를 더 필요로 한다.
-                        color: foreground.withValues(alpha: 0.92),
-                        shadows: overlayTextShadow,
-                      ),
+                  ),
+                  Text(
+                    relativePostTime(l10n, createdAt, now),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      // 0.8까지 흐리면 밝은 사진에서 시각이 먼저 사라진다 —
+                      // 스크림이 있어도 작은 글씨는 대비를 더 필요로 한다.
+                      color: foreground.withValues(alpha: 0.92),
+                      shadows: overlayTextShadow,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              if (onMessage != null)
-                IconButton(
-                  tooltip: l10n.feedMessageAuthorAction,
-                  color: foreground,
-                  onPressed: onMessage,
-                  // **헤더의 대화함 아이콘과 반드시 달라야 한다.** 둘 다
-                  // `Icons.mail_outline`이던 때는 같은 아이콘이 나란히 두 개 떠
-                  // "새 대화 걸기"와 "대화함 열기"가 구분되지 않았다. 보내기 계열
-                  // 아이콘은 이 버튼이 **행동(전송)**이라는 것을 드러내고,
-                  // 봉투는 **장소(받은 대화함)**로 남는다.
-                  icon: const Icon(Icons.send_outlined),
-                ),
-              if (onOptions != null)
-                IconButton(
-                  tooltip: l10n.feedOptionsAction,
-                  color: foreground,
-                  onPressed: onOptions,
-                  icon: const Icon(Icons.more_vert),
-                ),
-            ],
-          ),
+            ),
+            if (onMessage != null)
+              IconButton(
+                tooltip: l10n.feedMessageAuthorAction,
+                color: foreground,
+                onPressed: onMessage,
+                // **헤더의 대화함 아이콘과 반드시 달라야 한다.** 둘 다
+                // `Icons.mail_outline`이던 때는 같은 아이콘이 나란히 두 개 떠
+                // "새 대화 걸기"와 "대화함 열기"가 구분되지 않았다. 보내기 계열
+                // 아이콘은 이 버튼이 **행동(전송)**이라는 것을 드러내고,
+                // 봉투는 **장소(받은 대화함)**로 남는다.
+                icon: const Icon(Icons.send_outlined),
+              ),
+            if (onOptions != null)
+              IconButton(
+                tooltip: l10n.feedOptionsAction,
+                color: foreground,
+                onPressed: onOptions,
+                icon: const Icon(Icons.more_vert),
+              ),
+          ],
         ),
       ),
     );

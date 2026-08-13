@@ -68,7 +68,7 @@ class _FeedItemPageState extends State<FeedItemPage> {
   ///
   /// 값이 [feedActionRailLift]에 있는 이유는 작성 버튼이 다른 파일에 있어서다 —
   /// 두 곳이 각자 숫자를 들면 한쪽만 고쳐질 때 조용히 겹친다.
-  static const double _likeButtonLift = feedActionRailLift + 68;
+  static const double _likeButtonLift = feedActionRailLift + 56;
 
   @override
   Widget build(BuildContext context) {
@@ -93,8 +93,12 @@ class _FeedItemPageState extends State<FeedItemPage> {
           spotThumbnailUrl: item.spot.thumbnailImageUrl,
         ),
         // 상단 오버레이 — 작성자·시각·DM·오버플로.
+        //
+        // **헤더(타이틀+토글) 아래에서 시작한다.** 헤더가 이 항목 위에 겹쳐
+        // 그려지므로 맨 위에 두면 헤더가 DM 아이콘 탭을 가져간다 — "화살표가 안
+        // 눌린다"의 원인이 이 겹침이었다.
         Positioned(
-          top: 0,
+          top: MediaQuery.paddingOf(context).top + discoverHeaderExtent,
           left: 0,
           right: 0,
           child: FeedAuthorBar(
@@ -131,14 +135,19 @@ class _FeedItemPageState extends State<FeedItemPage> {
             // 피하는데 안전영역 인셋까지 더해지면 두 번 밀려, 본문과 스팟 칩이
             // 사진 한가운데까지 떠올랐다(실제로 그랬다).
             child: Padding(
-              // 우측 여백(72)은 세로로 선 좋아요 버튼 자리다.
-              // 하단은 떠 있는 내비 바 **바로 위**에 붙인다 — 바를 피하기만 하면
-              // 되고 그보다 더 띄우면 사진을 가린 채 빈 공간만 남는다.
-              padding: const EdgeInsets.fromLTRB(
+              // 우측 여백(72)은 세로로 선 좋아요 버튼 자리다. 하단은 떠 있는
+              // 내비 바 + 안전영역을 **정확히** 피한다 — 덜 주면 본문이 바 뒤로
+              // 들어가고(실제로 그랬다), 더 주면 사진 가운데까지 떠오른다.
+              padding: EdgeInsets.fromLTRB(
                 16,
-                40,
-                72,
-                FloatingBottomNavScaffold.barExtent - 8,
+                28,
+                // 우측은 좋아요·작성 버튼 줄(rail)을 피한다. 버튼이 48~56이라
+                // 그보다 넉넉히 비워야 본문 마지막 글자가 버튼에 닿지 않는다.
+                84,
+                // 떠 있는 내비 바 **바로 위**에 붙인다. 바는 좌우 여백을 두고
+                // 떠 있으므로 그 높이만 피하면 되고, 안전영역까지 더하면 글자가
+                // 그만큼 위로 떠올라 아래에 빈 사진만 남는다 — 실제로 그랬다.
+                FloatingBottomNavScaffold.barExtent - 4,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
