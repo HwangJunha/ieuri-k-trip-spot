@@ -144,10 +144,12 @@ class _FeedItemPageState extends State<FeedItemPage> {
                 // 우측은 좋아요·작성 버튼 줄(rail)을 피한다. 버튼이 48~56이라
                 // 그보다 넉넉히 비워야 본문 마지막 글자가 버튼에 닿지 않는다.
                 84,
-                // 떠 있는 내비 바 **바로 위**에 붙인다. 바는 좌우 여백을 두고
-                // 떠 있으므로 그 높이만 피하면 되고, 안전영역까지 더하면 글자가
-                // 그만큼 위로 떠올라 아래에 빈 사진만 남는다 — 실제로 그랬다.
-                FloatingBottomNavScaffold.barExtent - 4,
+                // **`barExtent`는 안전영역을 제외한 값이다**(셸이 바를 `SafeArea`로
+                // 감싼다). 둘 다 더해야 바를 정확히 피한다 — 안전영역을 빼 봤더니
+                // 본문 마지막 줄이 바 뒤로 들어가 안 보였다.
+                FloatingBottomNavScaffold.barExtent +
+                    MediaQuery.paddingOf(context).bottom +
+                    8,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
