@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../common/widget/floating_bottom_nav_scaffold.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/feed_item.dart';
+import 'feed_action_rail.dart';
 import 'feed_author_bar.dart';
 import 'feed_like_button.dart';
 import 'feed_photo_pager.dart';
@@ -64,7 +65,10 @@ class _FeedItemPageState extends State<FeedItemPage> {
   ///
   /// **작성 버튼(FAB)보다 위에 온다.** 둘 다 우측 하단이라 이만큼 띄우지 않으면
   /// 서로 겹친다 — FAB(56) + 여백을 더한 값이다.
-  static const double _likeButtonLift = 152;
+  ///
+  /// 값이 [feedActionRailLift]에 있는 이유는 작성 버튼이 다른 파일에 있어서다 —
+  /// 두 곳이 각자 숫자를 들면 한쪽만 고쳐질 때 조용히 겹친다.
+  static const double _likeButtonLift = feedActionRailLift + 68;
 
   @override
   Widget build(BuildContext context) {

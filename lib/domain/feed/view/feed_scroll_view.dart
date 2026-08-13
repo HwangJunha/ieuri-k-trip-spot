@@ -7,6 +7,7 @@ import '../../../common/widget/floating_bottom_nav_scaffold.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../community/component/post_moderation_sheet.dart';
 import '../../spot/view/spot_detail_view.dart';
+import '../component/feed_action_rail.dart';
 import '../component/feed_item_page.dart';
 import '../model/feed_item.dart';
 import '../provider/conversation_start_providers.dart';
@@ -88,7 +89,7 @@ class _FeedScrollViewState extends ConsumerState<FeedScrollView> {
             bottom:
                 FloatingBottomNavScaffold.barExtent +
                 MediaQuery.paddingOf(context).bottom +
-                20,
+                feedActionRailLift,
             child: FloatingActionButton(
               heroTag: 'feed-composer-fab',
               tooltip: l10n.feedComposeAction,

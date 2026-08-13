@@ -38,19 +38,31 @@ class _MessageInputBarState extends State<MessageInputBar> {
   int _length = 0;
 
   @override
+  void initState() {
+    super.initState();
+    // **컨트롤러를 직접 듣는다.** `onChanged`만으로는 한글 조합 중(IME composing)
+    // 변화를 놓쳐 글자를 넣었는데도 전송 버튼이 꺼진 채로 남았다 — 실제로 그랬다.
+    _controller.addListener(_syncFromController);
+  }
+
+  @override
   void dispose() {
-    _controller.dispose();
+    _controller
+      ..removeListener(_syncFromController)
+      ..dispose();
     super.dispose();
+  }
+
+  void _syncFromController() {
+    // 글자 수는 **코드포인트 단위로** 센다 — 이모지가 두 글자로 세어지면 사용자가
+    // 보는 것과 카운터가 어긋난다.
+    final int next = _controller.text.characters.length;
+    if (next != _length) setState(() => _length = next);
   }
 
   bool get _canSend => _controller.text.trim().isNotEmpty;
 
-  void _handleChanged(String value) {
-    // 글자 수는 **코드포인트 단위로** 센다 — 이모지가 두 글자로 세어지면 사용자가
-    // 보는 것과 카운터가 어긋난다.
-    setState(() => _length = value.characters.length);
-    widget.onChanged();
-  }
+  void _handleChanged(String value) => widget.onChanged();
 
   void _send() {
     final String body = _controller.text.trim();
