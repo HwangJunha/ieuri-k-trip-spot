@@ -4,11 +4,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/model/list_equality.dart';
 import '../../../common/pagination/page.dart';
-import '../../../common/model/post_author.dart';
 import '../model/feed_item.dart';
 import '../repository/feed_repository.dart';
 import 'feed_providers.dart';
-import 'viewer_providers.dart';
 
 part 'feed_list_providers.g.dart';
 
@@ -73,21 +71,14 @@ class FeedListState {
 class FeedListController extends _$FeedListController {
   FeedRepository get _repository => ref.read(feedRepositoryProvider);
 
-  /// 내 글을 빼고 남긴다.
+  /// 내 글을 빼고 남긴다 — 발견 피드는 **남의 여행을 보는 곳**이다.
   ///
-  /// **서버의 `ownedByViewer`를 믿을 수 없다.** 내가 쓴 피드에도 `false`로 내려온다
-  /// (확인: `me.id`와 `author.id`가 같은데 플래그는 false). 발견 피드는 남의 글을
-  /// 보는 곳이므로 내 id와 작성자 id를 직접 비교해 거른다.
-  ///
-  /// 서버가 플래그를 고치면 이 필터는 아무것도 걸러내지 않게 되고, 그때 지우면 된다 —
-  /// 지금 지우면 내 글이 다시 섞인다.
-  List<FeedItem> _withoutMine(List<FeedItem> items) {
-    final PostAuthor? me = ref.read(viewerAuthorProvider);
-    if (me == null) return items;
-    return items
-        .where((FeedItem f) => f.author.id != me.id && !f.ownedByViewer)
-        .toList(growable: false);
-  }
+  /// 판정은 서버가 준 [FeedItem.ownedByViewer]를 그대로 믿는다. 한때 이 값을
+  /// 의심해 `author.id`와 내 id를 직접 비교했는데, 서버는 정상이었고 클라이언트가
+  /// 미인증 상태로 조회하던 로그를 잘못 읽은 것이었다 — 인증 없이 물으면 "누가
+  /// 보는가"가 없으니 플래그가 참일 수 없다.
+  List<FeedItem> _withoutMine(List<FeedItem> items) =>
+      items.where((FeedItem f) => !f.ownedByViewer).toList(growable: false);
 
   @override
   Future<FeedListState> build() async {
