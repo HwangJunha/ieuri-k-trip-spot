@@ -1,5 +1,5 @@
 import '../../../common/model/list_equality.dart';
-import 'composer_photo.dart';
+import '../../../common/model/composer_photo.dart';
 import '../../../common/model/target_category.dart';
 
 /// 제목 최대 길이(코드포인트).
@@ -22,7 +22,9 @@ const int maxPostPhotos = 5;
 /// 사진 한 장의 크기 상한(10 MiB). 넘기면 서버가 `UNSUPPORTED_CONTENT_TYPE`으로
 /// 거부하는데, **1단계 발급은 하나만 어긋나도 전부 거부한다**(부분 발급이 없다).
 /// 그래서 고른 직후 여기서 걸러야 큰 장 하나가 나머지를 같이 죽이지 않는다(가이드 §4).
-const int maxPostPhotoBytes = 10 * 1024 * 1024;
+///
+/// 값 자체는 피드 컴포저와 공유하므로 `common/`이 쥔다 — 여기서는 이름만 남긴다.
+const int maxPostPhotoBytes = maxComposerPhotoBytes;
 
 /// 컴포저가 편집 중인 글 한 건(SPEC-0010). 순수 도메인 — 위젯·GraphQL·Riverpod
 /// 의존 없음.

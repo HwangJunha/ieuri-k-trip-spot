@@ -11,14 +11,14 @@ import '../component/community_labels.dart';
 import '../component/post_photo.dart';
 import '../component/spot_picker_sheet.dart';
 import '../model/community_chip.dart';
-import '../model/composer_photo.dart';
+import '../../../common/model/composer_photo.dart';
 import '../model/nearby_spot.dart';
 import '../../../common/model/post.dart';
 import '../model/post_draft.dart';
 import '../../../common/model/target_category.dart';
 import '../provider/community_providers.dart';
 import '../provider/moderation_providers.dart';
-import '../provider/photo_picker_providers.dart';
+import '../../../common/media/photo_picker_providers.dart';
 import '../provider/post_composer_providers.dart';
 import '../provider/post_detail_providers.dart';
 

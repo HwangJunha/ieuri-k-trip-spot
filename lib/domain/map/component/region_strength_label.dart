@@ -23,16 +23,18 @@ class RegionStrengthLabels extends StatelessWidget {
   final RegionRecommendation region;
 
   /// factor에 맞는 강점 문구. **[RegionScoreFactor.unknown]은 문구가 없다.**
-  static String? strengthText(AppLocalizations l10n, RegionScoreFactor factor) =>
-      switch (factor) {
-        RegionScoreFactor.congestion => l10n.mapRegionStrengthCongestion,
-        RegionScoreFactor.visitorVolume => l10n.mapRegionStrengthVisitorVolume,
-        RegionScoreFactor.stayIntensity => l10n.mapRegionStrengthStayIntensity,
-        RegionScoreFactor.spendingIntensity =>
-          l10n.mapRegionStrengthSpendingIntensity,
-        RegionScoreFactor.distance => l10n.mapRegionStrengthDistance,
-        RegionScoreFactor.unknown => null,
-      };
+  static String? strengthText(
+    AppLocalizations l10n,
+    RegionScoreFactor factor,
+  ) => switch (factor) {
+    RegionScoreFactor.congestion => l10n.mapRegionStrengthCongestion,
+    RegionScoreFactor.visitorVolume => l10n.mapRegionStrengthVisitorVolume,
+    RegionScoreFactor.stayIntensity => l10n.mapRegionStrengthStayIntensity,
+    RegionScoreFactor.spendingIntensity =>
+      l10n.mapRegionStrengthSpendingIntensity,
+    RegionScoreFactor.distance => l10n.mapRegionStrengthDistance,
+    RegionScoreFactor.unknown => null,
+  };
 
   @override
   Widget build(BuildContext context) {

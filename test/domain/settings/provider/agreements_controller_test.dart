@@ -104,8 +104,9 @@ void main() {
         .read(agreementsControllerProvider.notifier)
         .toggle(TermsCode.service, false);
 
-    final List<AgreementStatus> result =
-        container.read(agreementsControllerProvider).value!;
+    final List<AgreementStatus> result = container
+        .read(agreementsControllerProvider)
+        .value!;
     expect(_agreed(result, TermsCode.service), isFalse);
   });
 
@@ -114,16 +115,18 @@ void main() {
   test('필수 항목을 끄면 필수 충족이 깨진다', () async {
     final FakeSettingsRepository repo = FakeSettingsRepository();
     final ProviderContainer container = await _container(repo);
-    final List<AgreementStatus> before =
-        await container.read(agreementsControllerProvider.future);
+    final List<AgreementStatus> before = await container.read(
+      agreementsControllerProvider.future,
+    );
     expect(before.requiredSatisfied, isTrue);
 
     await container
         .read(agreementsControllerProvider.notifier)
         .toggle(TermsCode.privacy, false);
 
-    final List<AgreementStatus> after =
-        container.read(agreementsControllerProvider).value!;
+    final List<AgreementStatus> after = container
+        .read(agreementsControllerProvider)
+        .value!;
     expect(after.requiredSatisfied, isFalse, reason: '게이트가 닫혀야 한다');
   });
 
@@ -140,9 +143,14 @@ void main() {
       throwsA(anything),
     );
 
-    final List<AgreementStatus> result =
-        container.read(agreementsControllerProvider).value!;
-    expect(_agreed(result, TermsCode.service), isTrue, reason: '서버가 거부하면 켜진 채다');
+    final List<AgreementStatus> result = container
+        .read(agreementsControllerProvider)
+        .value!;
+    expect(
+      _agreed(result, TermsCode.service),
+      isTrue,
+      reason: '서버가 거부하면 켜진 채다',
+    );
   });
 
   test('일괄 동의가 미동의 필수 항목만 보낸다', () async {
@@ -231,9 +239,14 @@ void main() {
     repo.gates[TermsCode.location]!.complete();
     await location;
 
-    final List<AgreementStatus> result =
-        container.read(agreementsControllerProvider).value!;
-    expect(_agreed(result, TermsCode.location), isFalse, reason: '실패한 쪽은 되돌아간다');
+    final List<AgreementStatus> result = container
+        .read(agreementsControllerProvider)
+        .value!;
+    expect(
+      _agreed(result, TermsCode.location),
+      isFalse,
+      reason: '실패한 쪽은 되돌아간다',
+    );
     expect(_agreed(result, TermsCode.marketing), isTrue, reason: '성공한 쪽은 그대로다');
   });
 }

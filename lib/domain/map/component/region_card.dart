@@ -90,10 +90,11 @@ class RegionCard extends StatelessWidget {
                         // 정규화된 값이라 실제 거리감을 주지 못한다.
                         Text(
                           switch (_distanceMeters) {
-                            final double meters => l10n.mapRegionProvinceAndDistance(
-                              region.provinceName,
-                              formatDistance(l10n, meters),
-                            ),
+                            final double meters =>
+                              l10n.mapRegionProvinceAndDistance(
+                                region.provinceName,
+                                formatDistance(l10n, meters),
+                              ),
                             null => region.provinceName,
                           },
                           style: theme.textTheme.bodySmall?.copyWith(

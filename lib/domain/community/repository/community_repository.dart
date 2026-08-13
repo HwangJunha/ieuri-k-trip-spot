@@ -8,7 +8,7 @@ import '../model/community_chip.dart';
 import '../model/nearby_spot.dart';
 import '../model/nearby_spot_category.dart';
 import '../../../common/model/post.dart';
-import '../model/post_image_upload.dart';
+import '../../../common/model/post_image_upload.dart';
 import '../model/post_sort_order.dart';
 import '../model/report_reason.dart';
 import '../../../common/model/target_category.dart';

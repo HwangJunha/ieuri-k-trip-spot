@@ -29,4 +29,16 @@ class GraphqlEndpoint {
     if (_override.isNotEmpty) return _override;
     return Platform.isAndroid ? _androidHost : _defaultHost;
   }
+
+  /// 구독용 WebSocket 주소(SPEC-0017).
+  ///
+  /// **HTTP와 같은 `/graphql` 경로이고 스킴만 바뀐다** — `/subscriptions` 같은 별도
+  /// 경로가 아니다. 그래서 별도 dart-define을 두지 않고 [resolve]에서 파생한다:
+  /// 엔드포인트를 실기기용으로 바꿀 때 한 곳만 고치면 둘 다 따라온다.
+  static String resolveWebSocket() {
+    final Uri http = Uri.parse(resolve());
+    return http
+        .replace(scheme: http.scheme == 'https' ? 'wss' : 'ws')
+        .toString();
+  }
 }

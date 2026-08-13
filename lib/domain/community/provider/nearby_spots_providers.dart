@@ -67,7 +67,6 @@ enum SpotPickerSource {
   liked,
 }
 
-
 /// 시트에서 지금 고른 출처(탭). 시트가 열려 있는 동안의 상태라 autoDispose다.
 @riverpod
 class SpotPickerSourceTab extends _$SpotPickerSourceTab {
@@ -214,6 +213,7 @@ class NearbySpotsController extends _$NearbySpotsController {
     }
   }
 }
+
 /// 시트 검색이 누적한 결과(SPEC-0013 R14).
 ///
 /// **주변 목록과 같은 오프셋 페이징이다** — 초안은 커서였으나 서버가 커서 방식에서
@@ -269,10 +269,7 @@ class SpotSearchList extends _$SpotSearchList {
     final String trimmed = query.trim();
     // 빈 질의면 조회하지 않는다 — 시트가 주변/좋아요 목록으로 되돌아간다(AC-14.3).
     if (trimmed.isEmpty) {
-      return const SpotSearchListState(
-        items: <NearbySpot>[],
-        hasMore: false,
-      );
+      return const SpotSearchListState(items: <NearbySpot>[], hasMore: false);
     }
 
     // 카테고리 칩을 **watch 한다** — 칩을 바꾸면 이 provider가 다시 빌드되어
@@ -397,7 +394,6 @@ class LikedSpotsState {
     isLoadingMore: isLoadingMore ?? this.isLoadingMore,
   );
 }
-
 
 /// 장소 선택 시트의 "좋아요한 장소" 탭.
 ///

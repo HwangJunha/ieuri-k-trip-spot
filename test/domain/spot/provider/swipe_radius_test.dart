@@ -19,9 +19,9 @@ Future<ProviderContainer> _container(
   double? radiusKm,
 }) async {
   SharedPreferences.setMockInitialValues(
-    radiusKm == null ? <String, Object>{} : <String, Object>{
-      'search_radius_km': radiusKm,
-    },
+    radiusKm == null
+        ? <String, Object>{}
+        : <String, Object>{'search_radius_km': radiusKm},
   );
   final SharedPreferences prefs = await SharedPreferences.getInstance();
   final ProviderContainer container = ProviderContainer(
@@ -36,8 +36,11 @@ Future<ProviderContainer> _container(
 }
 
 Future<void> _load(ProviderContainer container) async {
-  container.listen(swipeControllerProvider(null), (_, _) {},
-      fireImmediately: true);
+  container.listen(
+    swipeControllerProvider(null),
+    (_, _) {},
+    fireImmediately: true,
+  );
   await container.read(swipeControllerProvider(null).future);
 }
 
@@ -84,11 +87,10 @@ void main() {
     await container.read(searchRadiusControllerProvider.notifier).select(1);
     await container.read(swipeControllerProvider(null).future);
 
-    expect(
-      repo.requestedRadiiMeters,
-      <int?>[50000, 1000],
-      reason: '새 반경으로 다시 조회해야 한다',
-    );
+    expect(repo.requestedRadiiMeters, <int?>[
+      50000,
+      1000,
+    ], reason: '새 반경으로 다시 조회해야 한다');
   });
 
   test('반경 단위 변환은 km→m다', () {

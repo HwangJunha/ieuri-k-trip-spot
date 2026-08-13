@@ -152,9 +152,7 @@ class MapRepositoryImpl implements MapRepository {
 
     return RegionRecommendationResult(
       // 서버가 준 총점 내림차순을 그대로 둔다(R22) — 다시 정렬하지 않는다.
-      regions: result.regions
-          .map(_recommendationFrom)
-          .toList(growable: false),
+      regions: result.regions.map(_recommendationFrom).toList(growable: false),
       // 화면이 거리를 재려면 **조회에 실제로 쓴 좌표**가 필요하다. 내 위치 기준일
       // 때는 provider가 좌표를 얻으므로 화면이 알 수 없어, 여기서 실어 보낸다.
       origin: origin,
@@ -176,29 +174,23 @@ class MapRepositoryImpl implements MapRepository {
 
   RegionScore _scoreFrom(
     Query$RecommendedRegions$recommendedRegions$regions$scores s,
-  ) => RegionScore(
-    factor: _factorFrom(s.factor),
-    value: s.value,
-    rank: s.rank,
-  );
+  ) => RegionScore(factor: _factorFrom(s.factor), value: s.value, rank: s.rank);
 
   /// 도메인 [RegionScoreFactor] 매핑.
   ///
   /// **모르는 값을 예외로 만들지 않는다** — 서버가 항목을 추가했을 때 목록 전체가
   /// 실패하는 대신 그 항목만 [RegionScoreFactor.unknown]이 되고 화면이 건너뛴다.
-  RegionScoreFactor _factorFrom(Enum$RegionScoreFactor factor) =>
-      switch (factor) {
-        Enum$RegionScoreFactor.CONGESTION => RegionScoreFactor.congestion,
-        Enum$RegionScoreFactor.VISITOR_VOLUME =>
-          RegionScoreFactor.visitorVolume,
-        Enum$RegionScoreFactor.STAY_INTENSITY =>
-          RegionScoreFactor.stayIntensity,
-        Enum$RegionScoreFactor.SPENDING_INTENSITY =>
-          RegionScoreFactor.spendingIntensity,
-        Enum$RegionScoreFactor.DISTANCE => RegionScoreFactor.distance,
-        Enum$RegionScoreFactor.$unknown => RegionScoreFactor.unknown,
-      };
-
+  RegionScoreFactor _factorFrom(
+    Enum$RegionScoreFactor factor,
+  ) => switch (factor) {
+    Enum$RegionScoreFactor.CONGESTION => RegionScoreFactor.congestion,
+    Enum$RegionScoreFactor.VISITOR_VOLUME => RegionScoreFactor.visitorVolume,
+    Enum$RegionScoreFactor.STAY_INTENSITY => RegionScoreFactor.stayIntensity,
+    Enum$RegionScoreFactor.SPENDING_INTENSITY =>
+      RegionScoreFactor.spendingIntensity,
+    Enum$RegionScoreFactor.DISTANCE => RegionScoreFactor.distance,
+    Enum$RegionScoreFactor.$unknown => RegionScoreFactor.unknown,
+  };
 
   /// 생성 타입 → 도메인 [CongestionArea].
   ///

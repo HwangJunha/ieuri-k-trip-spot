@@ -147,5 +147,4 @@ void main() {
   test('festivalEventCategoryName은 SpotCategory 이름과 일치한다', () {
     expect(festivalEventCategoryName, SpotCategory.festivalEvent.name);
   });
-
 }

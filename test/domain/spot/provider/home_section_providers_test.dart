@@ -126,10 +126,7 @@ void main() {
     test('AC-18.4 · 조건을 만족하는 spot이 없으면 빈 상태다', () async {
       final container = makeContainer(spotRepository: FakeSpotRepository());
 
-      expect(
-        await container.read(popularSpotsSectionProvider.future),
-        isEmpty,
-      );
+      expect(await container.read(popularSpotsSectionProvider.future), isEmpty);
     });
 
     test('설정된 반경을 인자로 조회한다', () async {

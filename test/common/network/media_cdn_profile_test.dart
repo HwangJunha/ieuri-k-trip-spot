@@ -19,7 +19,11 @@ void main() {
     final String? url = MediaCdn.profileImage('profile/7/avatar.jpg');
 
     expect(url, isNotNull);
-    expect(Uri.parse(url!).hasScheme, isTrue, reason: '스킴이 없으면 NetworkImage가 던진다');
+    expect(
+      Uri.parse(url!).hasScheme,
+      isTrue,
+      reason: '스킴이 없으면 NetworkImage가 던진다',
+    );
     expect(url, endsWith('profile/7/avatar.jpg'));
   });
 

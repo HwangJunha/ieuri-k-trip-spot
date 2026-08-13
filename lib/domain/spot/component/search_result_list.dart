@@ -84,11 +84,7 @@ class _ResultTile extends StatelessWidget {
           ),
         ),
       ),
-      title: HighlightedText(
-        text: spot.name,
-        query: query,
-        maxLines: 1,
-      ),
+      title: HighlightedText(text: spot.name, query: query, maxLines: 1),
       // **주소와 거리를 두 줄로 나눈다.** 한 줄에 이어 붙이면 주소가 긴 곳에서
       // 거리가 잘려 나가 정작 필요한 값이 안 보인다(실제로 그랬다).
       subtitle: Column(

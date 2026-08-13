@@ -361,5 +361,4 @@ void main() {
       expect(container.read(spotSearchProvider), isA<SpotSearchIdle>());
     });
   });
-
 }

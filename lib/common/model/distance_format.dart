@@ -13,9 +13,7 @@ import '../../l10n/gen/app_localizations.dart';
 /// 뿐 뜻이 없고, 지역 대표 좌표까지의 직선 거리라 애초에 그만한 정밀도가 없다.
 String formatDistance(AppLocalizations l10n, double meters) => meters < 1000
     ? l10n.communitySpotDistanceMeters(meters.round())
-    : l10n.communitySpotDistanceKilometers(
-        (meters / 100).round() / 10,
-      );
+    : l10n.communitySpotDistanceKilometers((meters / 100).round() / 10);
 
 /// 두 좌표 사이의 대권 거리(미터).
 ///

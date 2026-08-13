@@ -118,9 +118,7 @@ void main() {
 
       repo.searchResults = <NearbySpot>[_spot('2', '경복궁 야간개장')];
       repo.searchHasNextPage = false;
-      await container
-          .read(spotSearchListProvider('경복').notifier)
-          .loadMore();
+      await container.read(spotSearchListProvider('경복').notifier).loadMore();
 
       final SpotSearchListState state = container
           .read(spotSearchListProvider('경복'))

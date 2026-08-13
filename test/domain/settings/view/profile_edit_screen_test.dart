@@ -70,9 +70,7 @@ void main() {
     expect(find.text('This nickname is already taken.'), findsOneWidget);
   });
 
-  testWidgets('이메일은 읽기 전용이되 변경 진입점이 있다 (R7·R8)', (
-    WidgetTester tester,
-  ) async {
+  testWidgets('이메일은 읽기 전용이되 변경 진입점이 있다 (R7·R8)', (WidgetTester tester) async {
     await _pump(tester, FakeProfileRepository());
 
     // 이 자리에서 직접 고치지 않는다 — 검증을 거쳐야 바뀌므로 별도 화면으로 간다.

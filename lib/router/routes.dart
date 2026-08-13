@@ -17,6 +17,10 @@ import '../domain/community/view/community_screen.dart';
 import '../domain/community/view/hidden_posts_screen.dart';
 import '../domain/community/view/post_composer_screen.dart';
 import '../domain/community/view/post_detail_screen.dart';
+import '../domain/feed/view/conversation_list_screen.dart';
+import '../domain/feed/view/conversation_screen.dart';
+import '../domain/feed/view/discover_tab_screen.dart';
+import '../domain/feed/view/feed_composer_screen.dart';
 import '../domain/onboarding/view/onboarding_screen.dart';
 import '../domain/settings/view/account_deletion_screen.dart';
 import '../domain/settings/view/email_change_screen.dart';
@@ -29,7 +33,6 @@ import '../domain/settings/view/terms_screen.dart';
 import '../domain/map/view/map_screen.dart';
 import '../domain/map/view/region_recommendation_screen.dart';
 import '../domain/spot/model/spot_category.dart';
-import '../domain/spot/view/discover_screen.dart';
 import '../domain/spot/view/home_screen.dart';
 import '../domain/spot/view/liked_spots_screen.dart';
 import '../domain/spot/view/search_screen.dart';
@@ -205,6 +208,36 @@ List<RouteBase> buildRoutes() => <RouteBase>[
       editPostId: state.uri.queryParameters['editPostId'],
     ),
   ),
+  // 피드 작성(SPEC-0017 R1·R2). 셸 밖의 최상위 라우트라 하단 탭을 덮는다 —
+  // 커뮤니티 컴포저와 같은 성격이다.
+  //
+  // **인자를 받지 않는다.** 초안은 `feedComposerProvider`가 쥐고, 장소는 화면 안에서
+  // 시트로 고른다 — 피드는 장소가 필수 1곳이라 "미리 정해진 장소로 진입"하는 경로가
+  // 아직 없다(있다면 그때 쿼리 파라미터를 더한다).
+  GoRoute(
+    path: '/feed-composer',
+    name: FeedComposerScreen.routeName,
+    builder: (_, _) => const FeedComposerScreen(),
+  ),
+  // 대화 목록·대화(SPEC-0017 R8). 셸 밖의 최상위 라우트라 하단 탭을 덮는다 —
+  // 대화는 탭 전환이 아니라 둘러보기 헤더에서 밀고 올라오는 전체 화면 흐름이다.
+  //
+  // 대화 라우트는 **conversationId만 받는다**(CLAUDE.md §6). 두 진입 경로(피드의 DM
+  // 아이콘으로 새로 열기, 목록에서 재진입)가 같은 화면에 도착하며, 상대 정보는
+  // 화면이 메시지에서 되짚는다 — 모델 객체를 라우트로 넘기지 않는다.
+  GoRoute(
+    path: '/conversations',
+    name: ConversationListScreen.routeName,
+    builder: (_, _) => const ConversationListScreen(),
+    routes: <RouteBase>[
+      GoRoute(
+        path: ':id',
+        name: ConversationScreen.routeName,
+        builder: (_, GoRouterState state) =>
+            ConversationScreen(conversationId: state.pathParameters['id']!),
+      ),
+    ],
+  ),
   // 차단한 사용자 목록(가이드 §6). 커뮤니티 앱바에서 진입하며 셸 밖이라 탭을 덮는다.
   GoRoute(
     path: '/blocked-users',
@@ -286,7 +319,14 @@ List<RouteBase> buildRoutes() => <RouteBase>[
     branches: <StatefulShellBranch>[
       _branch('/home', HomeScreen.routeName, const HomeScreen()),
       _branch('/map', MapScreen.routeName, const MapScreen()),
-      _branch('/discover', DiscoverScreen.routeName, const DiscoverScreen()),
+      // SPEC-0017 R5: 둘러보기 탭이 **추천 + 피드**로 갈린다. 라우트 이름과 탭
+      // 위치는 그대로고 가리키는 위젯만 `DiscoverTabScreen`으로 바뀐다 —
+      // `DiscoverSwipeView`는 토글의 한쪽으로 그대로 남는다(AC5-2).
+      _branch(
+        '/discover',
+        DiscoverTabScreen.routeName,
+        const DiscoverTabScreen(),
+      ),
       // SPEC-0008 R-12·R-13: 탭 3·4의 목적지만 교체한다. 탭 수(5)와 Discover의
       // 가운데 강조는 그대로다(AC-40) — 셸 구조는 건드리지 않는다.
       _branch('/liked', LikedSpotsScreen.routeName, const LikedSpotsScreen()),

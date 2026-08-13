@@ -173,6 +173,9 @@ enum ReportTargetType {
   POST
   COMMENT
   MEMBER
+  # SPEC-0017에서 서버가 추가했다(가산적 변경). 피드 신고가 이 값을 쓴다 —
+  # DM 신고는 다건이라 이 열거형이 아니라 `reportMessages` 뮤테이션을 쓴다.
+  FEED_ITEM
 }
 
 input BlockUserInput {

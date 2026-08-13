@@ -51,7 +51,10 @@ Map<String, dynamic> _liveResponse() => <String, dynamic>{
         'name': 'Gangnam-gu',
         'provinceName': 'Seoul',
         'scoreFactorCount': 5,
-        'center': <String, dynamic>{'lat': 37.5238962764, 'lng': 127.0396358978},
+        'center': <String, dynamic>{
+          'lat': 37.5238962764,
+          'lng': 127.0396358978,
+        },
         'scores': <dynamic>[
           <String, dynamic>{
             'factor': 'CONGESTION',
@@ -188,9 +191,7 @@ void main() {
     test('errors 배열이 차 있으면 실패로 올린다', () async {
       // GraphQL은 실패해도 HTTP 200이라 errors를 봐야 한다(CLAUDE.md §4).
       final _FakeLink link = _FakeLink(
-        errors: const <GraphQLError>[
-          GraphQLError(message: '좌표가 올바르지 않습니다.'),
-        ],
+        errors: const <GraphQLError>[GraphQLError(message: '좌표가 올바르지 않습니다.')],
       );
 
       expect(

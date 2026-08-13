@@ -150,5 +150,4 @@ void main() {
     // 거리는 별도 줄이라 주소 길이에 잘리지 않는다.
     expect(find.textContaining('1.2'), findsOneWidget);
   });
-
 }

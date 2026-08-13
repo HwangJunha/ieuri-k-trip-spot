@@ -117,8 +117,7 @@ void main() {
                 GoRoute(
                   path: '/liked',
                   name: likedSpotsRouteName,
-                  builder: (_, _) =>
-                      const Scaffold(body: Text('liked-landed')),
+                  builder: (_, _) => const Scaffold(body: Text('liked-landed')),
                 ),
               ],
             ),

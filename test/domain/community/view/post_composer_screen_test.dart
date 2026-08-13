@@ -10,14 +10,14 @@ import 'package:ieuri_k_trip_spot/common/location/location_service.dart';
 import 'package:ieuri_k_trip_spot/domain/community/component/post_photo.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_chip.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_failure.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/composer_photo.dart';
+import 'package:ieuri_k_trip_spot/common/model/composer_photo.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_draft.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/post_image_upload.dart';
+import 'package:ieuri_k_trip_spot/common/model/post_image_upload.dart';
 import 'package:ieuri_k_trip_spot/common/model/target_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.dart';
-import 'package:ieuri_k_trip_spot/domain/community/provider/photo_picker_providers.dart';
+import 'package:ieuri_k_trip_spot/common/media/photo_picker_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/community/view/post_composer_screen.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
 

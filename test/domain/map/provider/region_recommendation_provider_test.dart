@@ -35,10 +35,7 @@ final class FakeMapRepository implements MapRepository {
     lastOrigin = origin;
     if (failure != null) throw failure!;
     // 실제 구현과 같게 **쓴 좌표를 결과에 담는다** — 화면이 이 값으로 거리를 잰다.
-    return RegionRecommendationResult(
-      regions: result!.regions,
-      origin: origin,
-    );
+    return RegionRecommendationResult(regions: result!.regions, origin: origin);
   }
 
   @override
@@ -87,21 +84,13 @@ void main() {
         name: 'Jongno-gu',
         provinceName: 'Seoul',
         scores: <RegionScore>[
-          RegionScore(
-            factor: RegionScoreFactor.congestion,
-            value: 90,
-            rank: 2,
-          ),
+          RegionScore(factor: RegionScoreFactor.congestion, value: 90, rank: 2),
           RegionScore(
             factor: RegionScoreFactor.spendingIntensity,
             value: 55,
             rank: 8,
           ),
-          RegionScore(
-            factor: RegionScoreFactor.distance,
-            value: 60,
-            rank: 12,
-          ),
+          RegionScore(factor: RegionScoreFactor.distance, value: 60, rank: 12),
         ],
         scoreFactorCount: 3,
         centerLat: 37.5735,
@@ -112,11 +101,7 @@ void main() {
         name: 'Jung-gu',
         provinceName: 'Busan',
         scores: <RegionScore>[
-          RegionScore(
-            factor: RegionScoreFactor.congestion,
-            value: 70,
-            rank: 5,
-          ),
+          RegionScore(factor: RegionScoreFactor.congestion, value: 70, rank: 5),
         ],
         scoreFactorCount: 1,
         centerLat: 35.1064,
@@ -203,8 +188,11 @@ void main() {
       // 접근하면 로딩 중 폐기돼 원래 예외 대신 "disposed during loading state"가
       // 올라온다. 화면이 실제로 보는 것도 `AsyncValue`다.
       final ProviderSubscription<AsyncValue<RegionRecommendationResult>> sub = c
-          .listen(regionRecommendationsProvider(null), (_, _) {},
-              onError: (_, _) {});
+          .listen(
+            regionRecommendationsProvider(null),
+            (_, _) {},
+            onError: (_, _) {},
+          );
       addTearDown(sub.close);
 
       // 조회가 끝날 때까지 이벤트 루프를 돌린다.
@@ -253,5 +241,4 @@ void main() {
       expect(repository.lastOrigin?.longitude, 127.0);
     });
   });
-
 }
