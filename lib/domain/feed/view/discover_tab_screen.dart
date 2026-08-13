@@ -6,6 +6,7 @@ import '../../../common/navigation/discover_route.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../spot/view/discover_swipe_view.dart';
 import '../component/discover_mode_toggle.dart';
+import '../component/feed_action_rail.dart';
 import '../component/messages_entry_button.dart';
 import '../model/discover_segment.dart';
 import '../provider/feed_providers.dart';
@@ -86,6 +87,20 @@ class _DiscoverTabScreenState extends ConsumerState<DiscoverTabScreen> {
           ? Stack(
               children: <Widget>[
                 Positioned.fill(child: stack),
+                // **어둠은 여기 한 겹뿐이다.** 헤더와 작성자 줄이 각자 그라데이션을
+                // 깔던 때는 두 블록의 경계에서 알파가 갑자기 튀어, 화면을 가로지르는
+                // 선이 보였다(측정: y=472 rgb(228,231,239) → y=476 rgb(70,71,74)).
+                // 두 줄을 모두 덮는 하나의 그라데이션으로 이어서 깐다.
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height:
+                      MediaQuery.paddingOf(context).top +
+                      discoverHeaderExtent +
+                      _authorRowExtent,
+                  child: const IgnorePointer(child: _TopScrim()),
+                ),
                 // 헤더는 배치를 모른다 — 어디에 놓을지는 이 화면이 정한다.
                 Positioned(top: 0, left: 0, right: 0, child: header),
               ],
@@ -120,24 +135,8 @@ class _DiscoverHeader extends ConsumerWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        // 사진 위에서는 위가 어두운 스크림을 깔아야 흰 글자가 어떤 사진에서도
-        // 읽힌다 — 밝은 하늘 사진에서 흰 글자만 얹으면 사라진다.
-        //
-        // **다만 진하면 사진이 상한다.** 0.5로 깔았더니 상단 1/5가 잿빛으로 죽어
-        // "위쪽만 색이 다른" 어색한 띠가 됐다(측정: y=0 부근 하늘이 rgb(128,124,128)).
-        // 글자 뒤에만 옅게 깔고 아래로 빠르게 사라지게 한다.
-        gradient: overPhoto
-            ? LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: const <double>[0, 0.55, 1],
-                colors: <Color>[
-                  Colors.black.withValues(alpha: 0.32),
-                  Colors.black.withValues(alpha: 0.12),
-                  Colors.black.withValues(alpha: 0),
-                ],
-              )
-            : null,
+        // **사진 위에서는 여기서 어둠을 깔지 않는다.** 화면 전체를 덮는 `_TopScrim`
+        // 하나가 맡는다 — 블록마다 그라데이션을 깔면 경계에서 알파가 튀어 선이 보인다.
         color: overPhoto ? null : theme.colorScheme.surface,
       ),
       child: SafeArea(
@@ -193,3 +192,32 @@ class _DiscoverHeader extends ConsumerWidget {
 const List<Shadow> _titleShadow = <Shadow>[
   Shadow(color: Color(0x66000000), blurRadius: 8, offset: Offset(0, 1)),
 ];
+
+/// 작성자 줄이 차지하는 높이(대략). 상단 스크림이 그 줄까지 덮게 하는 데 쓴다.
+const double _authorRowExtent = 76;
+
+/// 화면 상단을 한 겹으로 덮는 어둠.
+///
+/// **블록마다 그라데이션을 깔지 않는 이유가 여기 있다.** 헤더와 작성자 줄이 각각
+/// 자기 스크림을 최대 알파로 시작하면 두 블록이 만나는 지점에서 알파가 갑자기 튀고,
+/// 그 경계가 화면을 가로지르는 선으로 보인다 — 실제로 보였다.
+class _TopScrim extends StatelessWidget {
+  const _TopScrim();
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        // 위는 글자가 얹히므로 눌러 주고, 아래로는 완전히 사라져 사진을 살린다.
+        stops: const <double>[0, 0.45, 1],
+        colors: <Color>[
+          Colors.black.withValues(alpha: 0.5),
+          Colors.black.withValues(alpha: 0.28),
+          Colors.black.withValues(alpha: 0),
+        ],
+      ),
+    ),
+  );
+}
