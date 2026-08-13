@@ -1775,5 +1775,184 @@
   "mapRegionAboutScoringTotal": "후보 제한 — 기준 위치가 속한 시·도 안에서만 고르고 기준 위치의 지역은 뺍니다. 관광지가 충분하지 않은 지역은 제외합니다.",
   "@mapRegionAboutScoringTotal": {
     "description": "추천 산출 근거 고지 — 점수 산정 방식(개인정보보호법 §37조의2)."
+  },
+  "feedSegmentForYou": "추천",
+  "@feedSegmentForYou": {
+    "description": "둘러보기 세그먼트 토글 — 스와이프 추천 쪽"
+  },
+  "feedSegmentFeed": "피드",
+  "@feedSegmentFeed": {
+    "description": "둘러보기 세그먼트 토글 — 세로 전면 스크롤 피드 쪽"
+  },
+  "dmMessagesAction": "메시지",
+  "@dmMessagesAction": {
+    "description": "둘러보기 헤더의 DM 재진입 아이콘 툴팁"
+  },
+  "dmUnreadBadgeLabel": "읽지 않은 메시지 있음",
+  "@dmUnreadBadgeLabel": {
+    "description": "DM 아이콘의 점 배지 — 스크린리더용. 서버가 전체 합계를 주지 않아 숫자가 없다"
+  },
+  "feedEmptyTitle": "아직 글이 없어요",
+  "@feedEmptyTitle": {
+    "description": "피드가 비었을 때 — 오류가 아니므로 재시도 버튼을 두지 않는다"
+  },
+  "feedEmptyBody": "첫 번째 글을 남겨보세요.",
+  "@feedEmptyBody": {
+    "description": "피드 빈 상태 보조 문구"
+  },
+  "feedUnavailableTitle": "피드를 불러오지 못했어요",
+  "@feedUnavailableTitle": {
+    "description": "피드 조회 실패 제목 — 추천 쪽은 막지 않는다(AC5-3)"
+  },
+  "feedUnavailableBody": "잠시 후 다시 시도해 주세요.",
+  "@feedUnavailableBody": {
+    "description": "피드 조회 실패 보조 문구"
+  },
+  "feedRetry": "다시 시도",
+  "@feedRetry": {
+    "description": "피드·DM 공통 재시도 버튼"
+  },
+  "feedLikeAction": "좋아요",
+  "@feedLikeAction": {
+    "description": "피드 좋아요 버튼 툴팁"
+  },
+  "feedOptionsAction": "더보기",
+  "@feedOptionsAction": {
+    "description": "피드 항목 우상단 오버플로 버튼 툴팁"
+  },
+  "feedReportAction": "이 글 신고하기",
+  "@feedReportAction": {
+    "description": "피드 오버플로 시트의 신고 항목"
+  },
+  "feedReportSubmitted": "신고가 접수되었어요.",
+  "@feedReportSubmitted": {
+    "description": "피드·DM 신고 접수 완료 스낵바"
+  },
+  "feedReportFailed": "신고를 접수하지 못했어요.",
+  "@feedReportFailed": {
+    "description": "피드·DM 신고 실패 스낵바"
+  },
+  "feedMessageAuthorAction": "메시지 보내기",
+  "@feedMessageAuthorAction": {
+    "description": "피드 작성자에게 DM을 여는 아이콘 툴팁 — 내 글에는 그리지 않는다(R7)"
+  },
+  "feedShowMore": "더보기",
+  "@feedShowMore": {
+    "description": "긴 본문을 펼치는 링크"
+  },
+  "feedConversationStartFailed": "대화를 시작하지 못했어요.",
+  "@feedConversationStartFailed": {
+    "description": "startConversation 실패 스낵바"
+  },
+  "feedPhotoIndicatorLabel": "{total}장 중 {current}장",
+  "@feedPhotoIndicatorLabel": {
+    "description": "사진 페이저 점 인디케이터의 스크린리더 라벨 — 화면에는 점만 보인다",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "dmConversationsTitle": "메시지",
+  "@dmConversationsTitle": {
+    "description": "대화 목록 화면 제목"
+  },
+  "dmConversationsEmptyTitle": "아직 대화가 없어요",
+  "@dmConversationsEmptyTitle": {
+    "description": "대화 목록 빈 상태 — 오류가 아니다"
+  },
+  "dmConversationsEmptyBody": "마음에 드는 피드 글에서 대화를 시작해 보세요.",
+  "@dmConversationsEmptyBody": {
+    "description": "대화 목록 빈 상태 보조 문구 — 어디서 시작하는지 알려주는 것이 이 화면의 일이다"
+  },
+  "dmConversationsUnavailable": "대화 목록을 불러오지 못했어요",
+  "@dmConversationsUnavailable": {
+    "description": "대화 목록 조회 실패 제목"
+  },
+  "dmPhotoMessagePreview": "사진",
+  "@dmPhotoMessagePreview": {
+    "description": "본문 없는 메시지의 목록 미리보기 — 사진·인용만 있는 메시지다"
+  },
+  "dmUnreadCountLabel": "읽지 않은 메시지 {count}건",
+  "@dmUnreadCountLabel": {
+    "description": "대화 목록 미읽음 배지의 스크린리더 라벨",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dmUnreadCountOverflow": "9+",
+  "@dmUnreadCountOverflow": {
+    "description": "미읽음이 두 자리를 넘을 때의 배지 문구 — 관례이며 스펙에 상한 규정은 없다"
+  },
+  "dmMessageInputHint": "메시지 입력",
+  "@dmMessageInputHint": {
+    "description": "대화 입력창 힌트"
+  },
+  "dmSendAction": "보내기",
+  "@dmSendAction": {
+    "description": "메시지 전송 버튼 툴팁"
+  },
+  "dmSendFailed": "전송하지 못했어요",
+  "@dmSendFailed": {
+    "description": "전송 실패한 말풍선에 붙는 문구 — 말풍선은 사라지지 않는다"
+  },
+  "dmRetryAction": "다시 보내기",
+  "@dmRetryAction": {
+    "description": "전송 실패한 메시지의 재시도 버튼"
+  },
+  "dmRetryExhausted": "여러 번 시도했지만 보내지 못했어요",
+  "@dmRetryExhausted": {
+    "description": "재시도 상한(POL-040)에 도달한 메시지 — 자동 재시도가 끝났음을 알린다"
+  },
+  "dmSendingLabel": "보내는 중",
+  "@dmSendingLabel": {
+    "description": "전송 중인 말풍선의 상태 문구"
+  },
+  "dmTypingIndicator": "{nickname}님이 입력 중이에요…",
+  "@dmTypingIndicator": {
+    "description": "상대가 입력 중임을 알리는 문구 — 타임아웃으로 스스로 사라진다(AC10-4)",
+    "placeholders": {
+      "nickname": {
+        "type": "String"
+      }
+    }
+  },
+  "dmSyncFailedBanner": "새 메시지를 불러오지 못했어요",
+  "@dmSyncFailedBanner": {
+    "description": "서버 동기화 실패 배너 — 캐시된 대화는 그대로 남는다(AC18-4)"
+  },
+  "dmConversationEmpty": "첫 메시지를 보내보세요.",
+  "@dmConversationEmpty": {
+    "description": "메시지가 하나도 없는 대화 — 대화 시작과 첫 전송이 별개 호출이라 생길 수 있다"
+  },
+  "dmDeletedFeedQuote": "삭제된 글",
+  "@dmDeletedFeedQuote": {
+    "description": "인용된 피드가 삭제됐을 때 — 말풍선 자체는 남는다"
+  },
+  "dmSelectMessagesAction": "메시지 선택",
+  "@dmSelectMessagesAction": {
+    "description": "대화 앱바 메뉴 — 다중 선택 신고 모드로 들어간다(R15)"
+  },
+  "dmSelectionCount": "{count}건 선택됨",
+  "@dmSelectionCount": {
+    "description": "선택 모드 앱바 제목",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dmSelectionCancel": "선택 취소",
+  "@dmSelectionCancel": {
+    "description": "선택 모드를 끄는 버튼 툴팁"
+  },
+  "dmReportSelectedAction": "신고",
+  "@dmReportSelectedAction": {
+    "description": "선택한 메시지를 신고하는 버튼 — 0건이면 비활성이다(AC15-3)"
   }
 }
