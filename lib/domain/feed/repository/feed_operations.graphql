@@ -1,0 +1,239 @@
+# SPEC-0017 피드·DM 오퍼레이션. 생성 타입은 이 repository 밖으로 나가지 않는다(POL-020).
+
+fragment FeedAuthorParts on PostAuthor {
+  id
+  nickname
+  profileImageUrl
+}
+
+fragment FeedSpotParts on PostSpot {
+  id
+  title
+  thumbnailImageUrl
+  category
+}
+
+fragment FeedItemParts on FeedItem {
+  id
+  body
+  spot {
+    ...FeedSpotParts
+  }
+  photoKeys
+  author {
+    ...FeedAuthorParts
+  }
+  likeCount
+  likedByViewer
+  ownedByViewer
+  createdAt
+}
+
+# 인용된 피드까지 한 번에 받는다. 말풍선마다 인용을 그리므로 별도 조회를 만들지 않는다.
+fragment MessageParts on Message {
+  id
+  body
+  photoKey
+  feedItem {
+    ...FeedItemParts
+  }
+  sender {
+    ...FeedAuthorParts
+  }
+  ownedByViewer
+  createdAt
+}
+
+fragment ConversationParts on Conversation {
+  id
+  counterpart {
+    ...FeedAuthorParts
+  }
+  lastMessage {
+    ...MessageParts
+  }
+  unreadCount
+  updatedAt
+}
+
+# 피드 — 최신순 고정이라 정렬 인자가 없다. 총 개수가 없으므로 hasNextPage로만 판정한다.
+query Feed($first: Int, $after: String) {
+  feed(first: $first, after: $after) {
+    edges {
+      cursor
+      node {
+        ...FeedItemParts
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+# 삭제되었거나 차단 관계면 오류가 아니라 null이다.
+query FeedItemDetail($id: ID!) {
+  feedItem(id: $id) {
+    ...FeedItemParts
+  }
+}
+
+query Conversations($first: Int, $after: String) {
+  conversations(first: $first, after: $after) {
+    edges {
+      cursor
+      node {
+        ...ConversationParts
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+# 최신순(내림차순)이며 after로 과거를 이어읽는다.
+query ConversationMessages($conversationId: ID!, $first: Int, $after: String) {
+  conversationMessages(
+    conversationId: $conversationId
+    first: $first
+    after: $after
+  ) {
+    edges {
+      cursor
+      node {
+        ...MessageParts
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+mutation CreateFeedItem($body: String!, $spotId: ID!, $photoKeys: [String!]!) {
+  createFeedItem(input: { body: $body, spotId: $spotId, photoKeys: $photoKeys }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    feedItemId
+  }
+}
+
+mutation LikeFeedItem($feedItemId: ID!) {
+  likeFeedItem(input: { feedItemId: $feedItemId }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    likeCount
+  }
+}
+
+mutation UnlikeFeedItem($feedItemId: ID!) {
+  unlikeFeedItem(input: { feedItemId: $feedItemId }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    likeCount
+  }
+}
+
+mutation StartConversation($feedItemId: ID!) {
+  startConversation(input: { feedItemId: $feedItemId }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    conversationId
+  }
+}
+
+mutation SendMessage($conversationId: ID!, $body: String!, $feedItemId: ID, $photoKey: String) {
+  sendMessage(
+    input: {
+      conversationId: $conversationId
+      body: $body
+      feedItemId: $feedItemId
+      photoKey: $photoKey
+    }
+  ) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    messageId
+  }
+}
+
+mutation NotifyTyping($conversationId: ID!) {
+  notifyTyping(input: { conversationId: $conversationId }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+# 처리 후 잔여 수를 돌려주므로 재조회가 필요 없다.
+mutation MarkConversationRead($conversationId: ID!, $upToMessageId: ID) {
+  markConversationRead(
+    input: { conversationId: $conversationId, upToMessageId: $upToMessageId }
+  ) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    unreadCount
+  }
+}
+
+mutation ReportMessages($messageIds: [ID!]!, $reason: ReportReason!, $detail: String) {
+  reportMessages(
+    input: { messageIds: $messageIds, reason: $reason, detail: $detail }
+  ) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+# 유실 허용 — 재전송이 없으므로 클라이언트가 emittedAt 기준 타임아웃으로 표시를 내린다.
+subscription TypingIndicator($conversationId: ID!) {
+  typingIndicator(conversationId: $conversationId) {
+    sender {
+      ...FeedAuthorParts
+    }
+    emittedAt
+  }
+}
+
+# 유실 불가 — 재연결 시 ConversationMessages로 공백을 메운다. 자기 메시지도 에코되므로
+# 낙관적으로 그린 말풍선과 id로 dedupe해야 한다.
+subscription NewMessage($conversationId: ID!) {
+  newMessage(conversationId: $conversationId) {
+    ...MessageParts
+  }
+}

@@ -11,9 +11,8 @@ part of 'feed_providers.dart';
 /// 피드 repository 하나의 출처(CLAUDE.md §5 — 위젯이 repository를 직접 만들지
 /// 않는다). 테스트는 이 provider 하나만 오버라이드해 페이크를 주입한다.
 ///
-/// **구현체가 아직 없다.** 서버의 SPEC-0017이 배포되지 않아 GraphQL 오퍼레이션을
-/// 생성할 수 없다(CLAUDE.md §13). 서버가 준비되면 여기서 `FeedRepositoryImpl`을
-/// 돌려주도록 바꾸는 것으로 끝나고, 위 계층은 손대지 않는다.
+/// **클라이언트를 둘 받는다.** 쿼리·뮤테이션은 HTTP, 구독만 WebSocket이다
+/// (SPEC-0017 — 이 앱 최초의 Subscription).
 
 @ProviderFor(feedRepository)
 const feedRepositoryProvider = FeedRepositoryProvider._();
@@ -21,9 +20,8 @@ const feedRepositoryProvider = FeedRepositoryProvider._();
 /// 피드 repository 하나의 출처(CLAUDE.md §5 — 위젯이 repository를 직접 만들지
 /// 않는다). 테스트는 이 provider 하나만 오버라이드해 페이크를 주입한다.
 ///
-/// **구현체가 아직 없다.** 서버의 SPEC-0017이 배포되지 않아 GraphQL 오퍼레이션을
-/// 생성할 수 없다(CLAUDE.md §13). 서버가 준비되면 여기서 `FeedRepositoryImpl`을
-/// 돌려주도록 바꾸는 것으로 끝나고, 위 계층은 손대지 않는다.
+/// **클라이언트를 둘 받는다.** 쿼리·뮤테이션은 HTTP, 구독만 WebSocket이다
+/// (SPEC-0017 — 이 앱 최초의 Subscription).
 
 final class FeedRepositoryProvider
     extends $FunctionalProvider<FeedRepository, FeedRepository, FeedRepository>
@@ -31,9 +29,8 @@ final class FeedRepositoryProvider
   /// 피드 repository 하나의 출처(CLAUDE.md §5 — 위젯이 repository를 직접 만들지
   /// 않는다). 테스트는 이 provider 하나만 오버라이드해 페이크를 주입한다.
   ///
-  /// **구현체가 아직 없다.** 서버의 SPEC-0017이 배포되지 않아 GraphQL 오퍼레이션을
-  /// 생성할 수 없다(CLAUDE.md §13). 서버가 준비되면 여기서 `FeedRepositoryImpl`을
-  /// 돌려주도록 바꾸는 것으로 끝나고, 위 계층은 손대지 않는다.
+  /// **클라이언트를 둘 받는다.** 쿼리·뮤테이션은 HTTP, 구독만 WebSocket이다
+  /// (SPEC-0017 — 이 앱 최초의 Subscription).
   const FeedRepositoryProvider._()
     : super(
         from: null,
@@ -67,7 +64,7 @@ final class FeedRepositoryProvider
   }
 }
 
-String _$feedRepositoryHash() => r'e0d9cb4968354d95effaeb2b099b0273860c29a4';
+String _$feedRepositoryHash() => r'958a9abf2f259adbf919f7be7ae3b840efc0818b';
 
 /// 둘러보기 탭에서 지금 보고 있는 화면(R5).
 ///

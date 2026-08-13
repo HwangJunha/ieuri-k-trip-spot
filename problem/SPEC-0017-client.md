@@ -149,6 +149,50 @@ WebSocket 연결·실제 구독 수신·이미지 업로드 전송은 테스트�
 
 ## 구현 기록
 
+### 서버 계약 확정으로 추가된 것 (2026-08-13)
+
+서버 구현이 끝나 라이브 스키마로 대조했다. **이 문서의 기존 내용에 틀린 것은 없었고**,
+서버가 구현 중 확정한 넷이 빠져 있어 아래를 더한다.
+
+**1. 피드 인용은 대화가 아니라 메시지에 붙는다.** `Conversation.originFeedItem`은 **없다** —
+인용은 `Message.feedItem`이다. 같은 상대와의 방은 하나인데 인용할 피드는 여러 개라, 방 상단에
+고정하면 틀린 맥락이 뜬다. **말풍선마다** 그린다(인스타그램 스토리 답장과 같은 형태).
+피드가 삭제되면 `feedItem`이 null이 되지만 **말풍선 자체는 보여야 한다** — 숨기면 대화 기록이
+사라진다. 모델에서 `Conversation.originFeedItem`을 제거했다.
+
+**2. DM 사진 전송이 있다.** `sendMessage(conversationId, body, feedItemId, photoKey)`.
+업로드 경로는 **피드와 완전히 같다**(`createPostImageUploadUrls` → PUT → `confirmPostImageUploads`)
+— DM 전용 업로드 뮤테이션은 없어서, repository가 커뮤니티 오퍼레이션을 그대로 재사용한다.
+
+  **`body`가 `String!`이라 사진만 보낼 때도 빈 문자열을 넘긴다.** 생략하면 GraphQL 검증에서
+  실패한다. 셋(`body`·`feedItemId`·`photoKey`)이 다 비면 서버가 거부하므로 그 조합만 클라이언트가
+  먼저 막는다. 반대로 **빈 `body`를 "본문 없음"으로 보고 말풍선을 접으면 안 된다** — 첨부만
+  보낸 메시지가 화면에서 사라진다.
+
+**3. `newMessage` 구독이 있다 — 폴링을 만들지 않는다.** 대화 화면은 구독을 **둘** 연다
+(`typingIndicator`·`newMessage`). 셋을 지킨다:
+  - **전달 보장이 아니라 신호다.** 끊긴 동안의 메시지는 오지 않으므로 재연결 때마다
+    `conversationMessages`로 공백을 메운다. 타이핑은 버려도 되지만 메시지는 안 된다
+  - **자기 메시지도 에코된다**(다른 기기에서 보낸 경우). `Message.id`로 dedupe하지 않으면 내
+    메시지가 두 번 뜬다. 에코가 전송 응답보다 **먼저** 올 수 있어, 그때는 낙관적 말풍선을
+    걷어내고 에코를 남긴다
+  - **구독 실패는 `errors[]`로 온다.** `FORBIDDEN`에는 재연결하지 않는다 — 재시도로 풀리지
+    않고 상한까지 헛돈다
+
+**4. `unreadCount`가 실제로 동작하고 읽음 처리 뮤테이션이 생겼다.**
+`markConversationRead(conversationId, upToMessageId)`. **조회만으로는 읽음이 되지 않는다** —
+목록 미리보기나 알림에서 스쳐 본 것이 읽음이 되면 사용자가 메시지를 놓치기 때문이다.
+
+  호출 시점은 서버가 클라이언트에 위임했다. **이 앱은 대화 화면에 진입할 때 한 번 부르고,
+  `upToMessageId`를 생략해 "모두 읽음"으로 보낸다** — 마지막 메시지 id를 몰라도 부를 수 있고,
+  화면에 들어온 이상 그 대화는 읽은 것으로 보는 편이 사용자의 기대와 맞다. 멱등이라 중복
+  호출이 안전하고, 페이로드가 잔여 수를 주므로 재조회하지 않는다.
+
+**그 밖의 확정 사항:** 메시지 페이지 기본값은 **30**(피드·대화는 20), 상한 초과는 오류가 아니라
+절삭, `ReportTargetType`에 `FEED_ITEM`이 추가됨(DM 신고는 이 열거형이 아니라 `reportMessages`),
+WebSocket은 HTTP와 **같은 `/graphql` 경로**에 `graphql-transport-ws` 프로토콜이며 인증은
+`connection_init` 페이로드의 `Authorization: Bearer <token>`(접두어 필수).
+
 ### 서버 미배포로 인한 단계 분리 (2026-08-12)
 
 **서버의 SPEC-0017이 아직 배포되지 않았다.** 라이브 스키마에 `feed`·`feedItem`·`conversations`·
@@ -160,9 +204,11 @@ WebSocket 연결·실제 구독 수신·이미지 업로드 전송은 테스트�
 `feedRepositoryProvider`가 `UnimplementedError`를 던진다 — 서버가 배포되면 구현체를 채우는
 것으로 끝나고 provider·화면은 손대지 않는다. 테스트는 이 provider를 오버라이드한다.
 
-**남은 일:** `.graphql` 오퍼레이션 + `feed_schema.graphql` 작성, `FeedRepositoryImpl`,
-WebSocket 구독 전송(현재 앱에 `WebSocketLink`가 전혀 없어 신설해야 한다), `view/`·`component/`,
-ARB 4개 언어 문구.
+**이 단계는 끝났다**(2026-08-13). 서버 배포 후 `.graphql` 오퍼레이션 + `feed_schema.graphql`,
+`FeedRepositoryImpl`, WebSocket 전송을 모두 채웠고 `feedRepositoryProvider`가 실제 구현을
+돌려준다. 예상대로 provider·모델은 거의 손대지 않았다 — 경계를 인터페이스로 끊어 둔 값이다.
+
+**남은 일:** `view/`·`component/`(화면), ARB 4개 언어 문구.
 
 ### 결정 기록
 

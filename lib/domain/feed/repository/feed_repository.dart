@@ -79,11 +79,43 @@ abstract interface class FeedRepository {
     String? after,
   });
 
-  /// 메시지 전송(R9). 본문은 앞뒤 공백 제거 후 1~1000자여야 한다.
+  /// 메시지 전송(R9).
+  ///
+  /// **[body]는 non-null이라 사진만 보낼 때도 빈 문자열을 넘긴다** — 생략하면
+  /// GraphQL 검증에서 실패한다. 다만 [body]·[feedItemId]·[photoKey]가 **셋 다**
+  /// 비면 서버가 거부한다.
+  ///
+  /// [photoKey]는 `confirmImageUploads`가 확정한 키다 — DM 전용 업로드 경로는 없다.
   Future<FeedMutationResult<String>> sendMessage({
     required String conversationId,
     required String body,
+    String? feedItemId,
+    String? photoKey,
   });
+
+  /// 대화를 읽음 처리한다.
+  ///
+  /// **메시지를 조회하는 것만으로는 읽음이 되지 않는다** — 목록 미리보기나 알림에서
+  /// 스쳐 본 것이 읽음이 되면 사용자가 메시지를 놓치기 때문이다. 화면이 시점을 정해
+  /// 명시적으로 부른다.
+  ///
+  /// [upToMessageId]를 생략하면 **모두 읽음**이다. 읽음 지점은 뒤로 가지 않으므로
+  /// 멱등이며 중복 호출·재시도가 안전하다. 반환값이 처리 후 잔여 수라 재조회가
+  /// 필요 없다.
+  Future<FeedMutationResult<int>> markConversationRead({
+    required String conversationId,
+    String? upToMessageId,
+  });
+
+  /// 새 메시지 구독(R9).
+  ///
+  /// **전달 보장이 아니라 신호다** — 끊긴 동안의 메시지는 오지 않으므로 재연결 시
+  /// [fetchMessages]로 공백을 메운다. 원본은 언제나 서버다. 타이핑과 결정적으로
+  /// 다른 점이며, 타이핑은 버려도 되지만 메시지는 안 된다.
+  ///
+  /// **자기 메시지도 에코된다**(다른 기기에서 보낸 경우가 있어서다). 낙관적으로 그린
+  /// 말풍선과 `Message.id`로 dedupe하지 않으면 내 메시지가 두 번 뜬다.
+  Stream<Message> newMessage(String conversationId);
 
   /// 타이핑 알림(R10). **상대가 구독 중이 아니어도 성공한다** — 받을 사람이 없는
   /// 것은 실패가 아니다(AC10-2). 실패해도 재시도하지 않는 것이 정상이다.

@@ -99,6 +99,12 @@ class SharedPreferencesMessageCacheStore implements MessageCacheStore {
     return _prefs.setStringList(_keyFor(conversationId), durable);
   }
 
+  /// **인용된 피드는 캐시하지 않는다.** 피드는 좋아요 수·차단 여부가 바뀌는 살아 있는
+  /// 데이터라 사본을 들고 있으면 낡은 값을 보여주게 된다. 캐시에서 되살린 메시지는
+  /// 인용 없이 그리고, 서버 조회가 얹히면 인용이 복원된다(캐시는 최적화이지 동작의
+  /// 전제가 아니다 — AC18-4).
+  ///
+  /// [photoKey]는 불변이라 그대로 캐시한다.
   static String _encode(Message m) => jsonEncode(<String, Object?>{
     'id': m.id,
     'body': m.body,
@@ -107,6 +113,7 @@ class SharedPreferencesMessageCacheStore implements MessageCacheStore {
     'senderProfileImageUrl': m.sender.profileImageUrl,
     'createdAt': m.createdAt.toIso8601String(),
     'ownedByViewer': m.ownedByViewer,
+    'photoKey': m.photoKey,
   });
 
   static Message? _decode(String line) {
@@ -132,6 +139,7 @@ class SharedPreferencesMessageCacheStore implements MessageCacheStore {
         ),
         createdAt: createdAt,
         ownedByViewer: json['ownedByViewer'] == true,
+        photoKey: json['photoKey'] as String?,
       );
     } on FormatException {
       return null;

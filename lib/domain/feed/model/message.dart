@@ -1,4 +1,5 @@
 import '../../../common/model/post_author.dart';
+import 'feed_item.dart';
 
 /// 메시지 한 건의 전송 상태.
 ///
@@ -29,6 +30,8 @@ class Message {
     required this.sender,
     required this.createdAt,
     required this.ownedByViewer,
+    this.feedItem,
+    this.photoKey,
     this.status = MessageDeliveryStatus.sent,
     this.localId = false,
     this.retryCount = 0,
@@ -36,8 +39,23 @@ class Message {
 
   final String id;
 
-  /// 본문(1~1000자). 앞뒤 공백은 제거된 뒤 판정된다.
+  /// 본문. **non-null이지만 빈 문자열일 수 있다** — 사진이나 피드 인용만 보낸
+  /// 메시지가 그렇다. 빈 문자열을 "본문 없음"으로 보고 말풍선을 접거나 숨기면
+  /// 첨부만 보낸 메시지가 화면에서 사라진다.
   final String body;
+
+  /// 인용된 피드. **대화가 아니라 메시지에 붙는다** — 같은 상대와의 방은 하나인데
+  /// 인용할 피드는 여러 개라, 방 상단에 고정하면 틀린 맥락이 뜬다. 말풍선마다
+  /// 그린다(인스타그램 스토리 답장과 같은 형태).
+  ///
+  /// **피드가 삭제되면 null이 되고 메시지는 남는다.** 그때도 말풍선 자체는 보여야
+  /// 한다 — 숨기면 대화 기록이 사라진다.
+  final FeedItem? feedItem;
+
+  /// 첨부 사진의 확정 키(URL 아님). 커뮤니티·피드와 **같은 업로드 경로**를 쓴다
+  /// (`createPostImageUploadUrls` → PUT → `confirmPostImageUploads`) — DM 전용
+  /// 업로드 뮤테이션은 없다. 표시 계층이 CDN 베이스와 조합한다.
+  final String? photoKey;
 
   final PostAuthor sender;
 
@@ -63,6 +81,12 @@ class Message {
   /// 메시지도 제외한다 — 서버가 id로 지목할 수 없기 때문이다.
   bool get reportable => !ownedByViewer && !localId;
 
+  /// 본문 글자가 있는지. 없으면 첨부(사진·인용)만 그린다.
+  bool get hasBody => body.isNotEmpty;
+
+  /// 보낼 내용이 하나라도 있는지. **셋 다 비면 서버가 거부한다.**
+  bool get hasContent => body.isNotEmpty || photoKey != null || feedItem != null;
+
   Message copyWith({
     String? id,
     DateTime? createdAt,
@@ -75,6 +99,8 @@ class Message {
     sender: sender,
     createdAt: createdAt ?? this.createdAt,
     ownedByViewer: ownedByViewer,
+    feedItem: feedItem,
+    photoKey: photoKey,
     status: status ?? this.status,
     localId: localId ?? this.localId,
     retryCount: retryCount ?? this.retryCount,
@@ -88,6 +114,8 @@ class Message {
       other.sender == sender &&
       other.createdAt == createdAt &&
       other.ownedByViewer == ownedByViewer &&
+      other.feedItem == feedItem &&
+      other.photoKey == photoKey &&
       other.status == status &&
       other.localId == localId &&
       other.retryCount == retryCount;
@@ -99,6 +127,8 @@ class Message {
     sender,
     createdAt,
     ownedByViewer,
+    feedItem,
+    photoKey,
     status,
     localId,
     retryCount,

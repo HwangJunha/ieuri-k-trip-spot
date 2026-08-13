@@ -1,0 +1,210 @@
+# SPEC-0017 피드·DM 슬라이스가 쓰는 서버 스키마 조각(committed codegen 입력).
+# `schema/schema.introspection.json` 스냅샷에서 손으로 추린 안정 빌드 입력이며,
+# gitignore된 스냅샷을 codegen이 직접 읽지 않는다(CLAUDE.md §13).
+#
+# `PostAuthor`·`PostSpot`·`TargetCategory`·`PageInfo`·`UserError`는 이미
+# `common/network/shared_schema.graphql`과 auth 조각이 선언한다. codegen이 모든 조각을
+# 한 네임스페이스로 합치므로 **여기서 다시 선언하면 중복이다** — 참조만 한다.
+
+# 피드 항목. **`Post`와 별개 타입이다** — 피드는 spot 정확히 1곳과 사진 1장 이상을
+# 요구하는데 `Post`는 둘 다 선택이라, 같은 타입에 얹으면 기존 글이 깨진다.
+type FeedItem {
+  id: ID!
+  body: String!
+  # `Post.spot`과 달리 non-null. 피드는 항상 정확히 1곳을 가진다.
+  spot: PostSpot!
+  # 1~5개이며 비어 있을 수 없다. 배열 순서가 표시 순서다.
+  photoKeys: [String!]!
+  author: PostAuthor!
+  likeCount: Int!
+  likedByViewer: Boolean!
+  ownedByViewer: Boolean!
+  createdAt: String!
+}
+
+type FeedItemEdge {
+  cursor: String!
+  node: FeedItem!
+}
+
+# 최신순 고정이라 정렬 인자가 없다. 총 개수는 제공하지 않으며 `hasNextPage`로만
+# 소진을 판정한다.
+type FeedConnection {
+  edges: [FeedItemEdge!]!
+  pageInfo: PageInfo!
+}
+
+# 1:1 대화. **인용된 피드를 담는 필드가 없다** — 인용은 `Message.feedItem`이다.
+# 방 하나에 여러 피드가 인용될 수 있어 방에 고정하면 틀린 맥락이 뜬다.
+type Conversation {
+  id: ID!
+  counterpart: PostAuthor!
+  # 대화 시작과 첫 전송이 별개 호출이라 빈 대화가 존재할 수 있어 nullable이다.
+  lastMessage: Message
+  # 실제로 센다. `markConversationRead`를 불러야 줄어든다.
+  unreadCount: Int!
+  updatedAt: String!
+}
+
+type ConversationEdge {
+  cursor: String!
+  node: Conversation!
+}
+
+type ConversationConnection {
+  edges: [ConversationEdge!]!
+  pageInfo: PageInfo!
+}
+
+type Message {
+  id: ID!
+  # non-null이지만 **빈 문자열일 수 있다** — 첨부만 보낸 메시지가 그렇다.
+  body: String!
+  # 인용된 피드. 피드가 삭제되면 null이고 메시지는 남는다.
+  feedItem: FeedItem
+  # 첨부 사진의 확정 키. 피드와 같은 업로드 경로를 쓴다.
+  photoKey: String
+  sender: PostAuthor!
+  ownedByViewer: Boolean!
+  createdAt: String!
+}
+
+type MessageEdge {
+  cursor: String!
+  node: Message!
+}
+
+# 최신순(내림차순)이다 — 채팅 화면은 뒤집어 그리고 `after`로 과거를 이어읽는다.
+type MessageConnection {
+  edges: [MessageEdge!]!
+  pageInfo: PageInfo!
+}
+
+# 타이핑 이벤트. 영속화되지 않으므로 이후 조회로 다시 볼 방법이 없다.
+type TypingEvent {
+  sender: PostAuthor!
+  # 발생 시각. 클라이언트가 타임아웃으로 표시를 내리는 판단에 쓴다.
+  emittedAt: String!
+}
+
+input CreateFeedItemInput {
+  body: String!
+  spotId: ID!
+  photoKeys: [String!]!
+}
+
+type CreateFeedItemPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  feedItemId: ID
+}
+
+input LikeFeedItemInput {
+  feedItemId: ID!
+}
+
+type LikeFeedItemPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  likeCount: Int
+}
+
+input UnlikeFeedItemInput {
+  feedItemId: ID!
+}
+
+type UnlikeFeedItemPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  likeCount: Int
+}
+
+input StartConversationInput {
+  feedItemId: ID!
+}
+
+type StartConversationPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  conversationId: ID
+}
+
+# `body`는 non-null이라 **사진만 보낼 때도 빈 문자열을 넘긴다.** 셋 다 비면 거부된다.
+input SendMessageInput {
+  conversationId: ID!
+  body: String!
+  feedItemId: ID
+  photoKey: String
+}
+
+type SendMessagePayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  messageId: ID
+}
+
+input NotifyTypingInput {
+  conversationId: ID!
+}
+
+type NotifyTypingPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+# `upToMessageId` 생략이 "모두 읽음"이다. 읽음 지점은 뒤로 가지 않아 멱등이다.
+input MarkConversationReadInput {
+  conversationId: ID!
+  upToMessageId: ID
+}
+
+# 처리 후 잔여 수를 돌려주므로 재조회가 필요 없다.
+type MarkConversationReadPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  unreadCount: Int!
+}
+
+# DM 신고는 `ReportTargetType`을 쓰지 않는다 — 다건이라 별도 뮤테이션이다.
+input ReportMessagesInput {
+  messageIds: [ID!]!
+  reason: ReportReason!
+  detail: String
+}
+
+type ReportMessagesPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+extend type Query {
+  feed(first: Int, after: String): FeedConnection!
+  feedItem(id: ID!): FeedItem
+  conversations(first: Int, after: String): ConversationConnection!
+  conversationMessages(
+    conversationId: ID!
+    first: Int
+    after: String
+  ): MessageConnection!
+}
+
+extend type Mutation {
+  createFeedItem(input: CreateFeedItemInput!): CreateFeedItemPayload!
+  likeFeedItem(input: LikeFeedItemInput!): LikeFeedItemPayload!
+  unlikeFeedItem(input: UnlikeFeedItemInput!): UnlikeFeedItemPayload!
+  startConversation(input: StartConversationInput!): StartConversationPayload!
+  sendMessage(input: SendMessageInput!): SendMessagePayload!
+  notifyTyping(input: NotifyTypingInput!): NotifyTypingPayload!
+  markConversationRead(
+    input: MarkConversationReadInput!
+  ): MarkConversationReadPayload!
+  reportMessages(input: ReportMessagesInput!): ReportMessagesPayload!
+}
+
+# `Subscription` 루트는 이 플랫폼 최초라 여기서 선언한다(다른 조각에 없다).
+type Subscription {
+  # 유실 허용. 재전송 없으며 클라이언트가 타임아웃으로 표시를 내린다.
+  typingIndicator(conversationId: ID!): TypingEvent!
+  # 유실 불가 → 재연결 시 `conversationMessages`로 공백을 메운다.
+  newMessage(conversationId: ID!): Message!
+}

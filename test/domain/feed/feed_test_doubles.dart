@@ -87,10 +87,24 @@ class FakeFeedRepository implements FeedRepository {
   final StreamController<TypingIndicator> typingEvents =
       StreamController<TypingIndicator>.broadcast();
 
+  /// 새 메시지 이벤트를 밀어넣는 통로. **자기 메시지도 에코된다**(다른 기기에서
+  /// 보낸 경우가 있어서다).
+  final StreamController<Message> newMessages =
+      StreamController<Message>.broadcast();
+
+  /// `markConversationRead`가 돌려줄 잔여 미읽음 수.
+  int markReadResult = 0;
+
+  /// 읽음 처리 호출 기록 — (대화, upToMessageId).
+  final List<({String conversationId, String? upTo})> markReadCalls =
+      <({String conversationId, String? upTo})>[];
+
   // 호출 기록.
   final List<String?> feedAfterCursors = <String?>[];
   final List<String?> messageAfterCursors = <String?>[];
   final List<String> sentBodies = <String>[];
+  final List<String?> sentFeedItemIds = <String?>[];
+  final List<String?> sentPhotoKeys = <String?>[];
   final List<List<String>> reportedMessageIds = <List<String>>[];
   int notifyTypingCalls = 0;
   int likeCalls = 0;
@@ -226,8 +240,12 @@ class FakeFeedRepository implements FeedRepository {
   Future<FeedMutationResult<String>> sendMessage({
     required String conversationId,
     required String body,
+    String? feedItemId,
+    String? photoKey,
   }) async {
     sentBodies.add(body);
+    sentFeedItemIds.add(feedItemId);
+    sentPhotoKeys.add(photoKey);
     final Object? error = sendMessageThrows;
     if (error != null) throw error;
     final String? code = sendErrorCode;
@@ -246,6 +264,18 @@ class FakeFeedRepository implements FeedRepository {
   @override
   Stream<TypingIndicator> typingIndicator(String conversationId) =>
       typingEvents.stream;
+
+  @override
+  Stream<Message> newMessage(String conversationId) => newMessages.stream;
+
+  @override
+  Future<FeedMutationResult<int>> markConversationRead({
+    required String conversationId,
+    String? upToMessageId,
+  }) async {
+    markReadCalls.add((conversationId: conversationId, upTo: upToMessageId));
+    return FeedMutationResult<int>.success(markReadResult);
+  }
 
   @override
   Future<FeedMutationResult<void>> reportMessages({

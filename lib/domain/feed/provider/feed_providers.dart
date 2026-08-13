@@ -1,20 +1,23 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/network/graphql_client.dart';
+import '../../../common/network/graphql_socket_client.dart';
 import '../model/discover_segment.dart';
+import '../model/feed_failure.dart';
 import '../repository/feed_repository.dart';
+import '../repository/feed_repository_impl.dart';
 
 part 'feed_providers.g.dart';
 
 /// 피드 repository 하나의 출처(CLAUDE.md §5 — 위젯이 repository를 직접 만들지
 /// 않는다). 테스트는 이 provider 하나만 오버라이드해 페이크를 주입한다.
 ///
-/// **구현체가 아직 없다.** 서버의 SPEC-0017이 배포되지 않아 GraphQL 오퍼레이션을
-/// 생성할 수 없다(CLAUDE.md §13). 서버가 준비되면 여기서 `FeedRepositoryImpl`을
-/// 돌려주도록 바꾸는 것으로 끝나고, 위 계층은 손대지 않는다.
+/// **클라이언트를 둘 받는다.** 쿼리·뮤테이션은 HTTP, 구독만 WebSocket이다
+/// (SPEC-0017 — 이 앱 최초의 Subscription).
 @riverpod
-FeedRepository feedRepository(Ref ref) => throw UnimplementedError(
-  'FeedRepository 구현은 서버 SPEC-0017 배포 후에 채운다. '
-  '테스트는 이 provider를 오버라이드한다.',
+FeedRepository feedRepository(Ref ref) => FeedRepositoryImpl(
+  ref.watch(graphqlClientProvider),
+  socketClient: ref.watch(graphqlSocketClientProvider),
 );
 
 /// 자동 재시도 1회 뒤 멈추는 재시도 정책(커뮤니티·spot과 같은 이유).
@@ -23,6 +26,9 @@ FeedRepository feedRepository(Ref ref) => throw UnimplementedError(
 /// 재시도로 풀리지 않는 실패에서는 그 폭주가 그대로 낭비이고, 사용자에게는 오류
 /// 화면이 뜨기까지의 지연으로만 보인다(POL-040 — 재시도는 횟수로 제한한다).
 Duration? feedRetryPolicy(int retryCount, Object error) {
+  // **권한·인증 실패는 아예 재시도하지 않는다** — `FORBIDDEN`은 재시도로 풀리지
+  // 않고 상한까지 헛돌기만 한다. 인증은 SPEC-0005의 갱신 경로가 소관이다.
+  if (error is FeedFailure && error.permanent) return null;
   if (retryCount >= 1) return null;
   return const Duration(milliseconds: 400);
 }
