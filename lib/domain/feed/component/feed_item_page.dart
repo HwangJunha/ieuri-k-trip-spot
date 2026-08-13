@@ -127,81 +127,78 @@ class _FeedItemPageState extends State<FeedItemPage> {
                 ],
               ),
             ),
-            child: SafeArea(
-              top: false,
-              child: Padding(
-                // 우측 여백(72)은 세로로 선 좋아요 버튼 자리다.
-                // 하단 여백은 떠 있는 내비 바를 피한다 — 없으면 본문 마지막 줄이
-                // 바 뒤로 들어간다.
-                padding: const EdgeInsets.fromLTRB(
-                  16,
-                  48,
-                  72,
-                  FloatingBottomNavScaffold.barExtent,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: FeedSpotChip(
-                        spot: item.spot,
-                        onTap: widget.onSpotTap,
-                      ),
+            // **`SafeArea`를 쓰지 않는다.** 아래에서 이미 `barExtent`로 내비 바를
+            // 피하는데 안전영역 인셋까지 더해지면 두 번 밀려, 본문과 스팟 칩이
+            // 사진 한가운데까지 떠올랐다(실제로 그랬다).
+            child: Padding(
+              // 우측 여백(72)은 세로로 선 좋아요 버튼 자리다.
+              // 하단은 떠 있는 내비 바 **바로 위**에 붙인다 — 바를 피하기만 하면
+              // 되고 그보다 더 띄우면 사진을 가린 채 빈 공간만 남는다.
+              padding: const EdgeInsets.fromLTRB(
+                16,
+                40,
+                72,
+                FloatingBottomNavScaffold.barExtent - 8,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: FeedSpotChip(
+                      spot: item.spot,
+                      onTap: widget.onSpotTap,
                     ),
-                    const SizedBox(height: 10),
-                    // **본문이 실제로 넘칠 때만 더보기를 그린다.** 예전에는 접혀
-                    // 있기만 하면 항상 그려서, 한 줄짜리 글에도 눌러도 아무 일이
-                    // 없는 "더보기"가 떴다. 폭을 알아야 줄 수를 셀 수 있으므로
-                    // LayoutBuilder 안에서 TextPainter로 실측한다.
-                    LayoutBuilder(
-                      builder: (BuildContext context, BoxConstraints c) {
-                        final bool overflows = _exceedsCollapsedLines(
-                          text: item.body,
-                          style: bodyStyle,
-                          maxWidth: c.maxWidth,
-                          textScaler: MediaQuery.textScalerOf(context),
-                          direction: Directionality.of(context),
-                        );
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            Text(
-                              item.body,
-                              maxLines: _expanded ? null : _collapsedLines,
-                              overflow: _expanded
-                                  ? null
-                                  : TextOverflow.ellipsis,
-                              style: bodyStyle,
-                            ),
-                            // 넘치지 않는 글에는 아예 그리지 않는다. 넘치는
-                            // 글에서는 펼친 뒤 **접기로 되돌아갈 수 있다** —
-                            // 한 번 펼치면 못 접던 것도 고친다.
-                            if (overflows)
-                              TextButton(
-                                onPressed: () =>
-                                    setState(() => _expanded = !_expanded),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: theme.colorScheme.onPrimary,
-                                  padding: EdgeInsets.zero,
-                                  minimumSize: const Size(0, 32),
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                ),
-                                child: Text(
-                                  _expanded
-                                      ? l10n.feedShowLess
-                                      : l10n.feedShowMore,
-                                ),
+                  ),
+                  const SizedBox(height: 10),
+                  // **본문이 실제로 넘칠 때만 더보기를 그린다.** 예전에는 접혀
+                  // 있기만 하면 항상 그려서, 한 줄짜리 글에도 눌러도 아무 일이
+                  // 없는 "더보기"가 떴다. 폭을 알아야 줄 수를 셀 수 있으므로
+                  // LayoutBuilder 안에서 TextPainter로 실측한다.
+                  LayoutBuilder(
+                    builder: (BuildContext context, BoxConstraints c) {
+                      final bool overflows = _exceedsCollapsedLines(
+                        text: item.body,
+                        style: bodyStyle,
+                        maxWidth: c.maxWidth,
+                        textScaler: MediaQuery.textScalerOf(context),
+                        direction: Directionality.of(context),
+                      );
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Text(
+                            item.body,
+                            maxLines: _expanded ? null : _collapsedLines,
+                            overflow: _expanded ? null : TextOverflow.ellipsis,
+                            style: bodyStyle,
+                          ),
+                          // 넘치지 않는 글에는 아예 그리지 않는다. 넘치는
+                          // 글에서는 펼친 뒤 **접기로 되돌아갈 수 있다** —
+                          // 한 번 펼치면 못 접던 것도 고친다.
+                          if (overflows)
+                            TextButton(
+                              onPressed: () =>
+                                  setState(() => _expanded = !_expanded),
+                              style: TextButton.styleFrom(
+                                foregroundColor: theme.colorScheme.onPrimary,
+                                padding: EdgeInsets.zero,
+                                minimumSize: const Size(0, 32),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
-                          ],
-                        );
-                      },
-                    ),
-                  ],
-                ),
+                              child: Text(
+                                _expanded
+                                    ? l10n.feedShowLess
+                                    : l10n.feedShowMore,
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ),
