@@ -107,7 +107,7 @@ Future<QueryResult<Object?>> _reactMutation(GraphQLClient client) =>
     client.mutate(
       MutationOptions<Object?>(
         document: gql(
-          'mutation { reactToSpot(input: {spotId: "s1", reaction: LIKE}) '
+          'mutation { reactToSpot(input: {catalogId: "s1", reaction: LIKE}) '
           '{ success userErrors { code } } }',
         ),
       ),

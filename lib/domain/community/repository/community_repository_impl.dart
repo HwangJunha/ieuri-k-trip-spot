@@ -62,7 +62,7 @@ class CommunityRepositoryImpl implements CommunityRepository {
 
   @override
   Future<CursorPage<Post>> fetchPosts({
-    String? spotId,
+    String? catalogId,
     double? latitude,
     double? longitude,
     int? radiusMeters,
@@ -80,7 +80,7 @@ class CommunityRepositoryImpl implements CommunityRepository {
     final Map<String, dynamic> data = await _query(
       documentNodeQueryPosts,
       Variables$Query$Posts(
-        spotId: spotId,
+        catalogId: catalogId,
         latitude: hasCoords ? latitude : null,
         longitude: hasCoords ? longitude : null,
         radiusMeters: hasCoords ? radiusMeters : null,
@@ -411,7 +411,7 @@ class CommunityRepositoryImpl implements CommunityRepository {
     required TargetCategory category,
     required String title,
     required String body,
-    String? spotId,
+    String? catalogId,
     List<String> tags = const <String>[],
     List<String> photoKeys = const <String>[],
   }) async {
@@ -419,7 +419,7 @@ class CommunityRepositoryImpl implements CommunityRepository {
       documentNodeMutationCreatePost,
       Variables$Mutation$CreatePost(
         category: _categoryInput(category),
-        spotId: spotId,
+        catalogId: catalogId,
         tags: tags,
         title: title,
         body: body,
@@ -453,7 +453,7 @@ class CommunityRepositoryImpl implements CommunityRepository {
     List<String>? photoKeys,
     TargetCategory? category,
     bool changeSpot = false,
-    String? spotId,
+    String? catalogId,
     List<String>? tags,
   }) async {
     final Map<String, dynamic> data = await _mutate(
@@ -466,10 +466,10 @@ class CommunityRepositoryImpl implements CommunityRepository {
         // 사진이 전부 떨어진다 — 둘은 다른 뜻이다(가이드 §5). [tags]도 같다.
         photoKeys: photoKeys,
         category: category == null ? null : _categoryInput(category),
-        // **장소를 건드리지 않을 때는 spotId를 아예 싣지 않는다.** changeSpot이
-        // false면 서버가 spotId를 무시하지만, 보내지 않는 편이 의도가 분명하다.
+        // **장소를 건드리지 않을 때는 catalogId를 아예 싣지 않는다.** changeSpot이
+        // false면 서버가 catalogId를 무시하지만, 보내지 않는 편이 의도가 분명하다.
         changeSpot: changeSpot,
-        spotId: changeSpot ? spotId : null,
+        catalogId: changeSpot ? catalogId : null,
         tags: tags,
       ).toJson(),
       'editPost',

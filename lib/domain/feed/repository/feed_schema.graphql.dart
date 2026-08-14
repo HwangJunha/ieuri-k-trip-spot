@@ -5,11 +5,11 @@ import '../../community/repository/community_schema.graphql.dart';
 class Input$CreateFeedItemInput {
   factory Input$CreateFeedItemInput({
     required String body,
-    required String spotId,
+    required String catalogId,
     required List<String> photoKeys,
   }) => Input$CreateFeedItemInput._({
     r'body': body,
-    r'spotId': spotId,
+    r'catalogId': catalogId,
     r'photoKeys': photoKeys,
   });
 
@@ -19,8 +19,8 @@ class Input$CreateFeedItemInput {
     final result$data = <String, dynamic>{};
     final l$body = data['body'];
     result$data['body'] = (l$body as String);
-    final l$spotId = data['spotId'];
-    result$data['spotId'] = (l$spotId as String);
+    final l$catalogId = data['catalogId'];
+    result$data['catalogId'] = (l$catalogId as String);
     final l$photoKeys = data['photoKeys'];
     result$data['photoKeys'] = (l$photoKeys as List<dynamic>)
         .map((e) => (e as String))
@@ -32,7 +32,7 @@ class Input$CreateFeedItemInput {
 
   String get body => (_$data['body'] as String);
 
-  String get spotId => (_$data['spotId'] as String);
+  String get catalogId => (_$data['catalogId'] as String);
 
   List<String> get photoKeys => (_$data['photoKeys'] as List<String>);
 
@@ -40,8 +40,8 @@ class Input$CreateFeedItemInput {
     final result$data = <String, dynamic>{};
     final l$body = body;
     result$data['body'] = l$body;
-    final l$spotId = spotId;
-    result$data['spotId'] = l$spotId;
+    final l$catalogId = catalogId;
+    result$data['catalogId'] = l$catalogId;
     final l$photoKeys = photoKeys;
     result$data['photoKeys'] = l$photoKeys.map((e) => e).toList();
     return result$data;
@@ -64,9 +64,9 @@ class Input$CreateFeedItemInput {
     if (l$body != lOther$body) {
       return false;
     }
-    final l$spotId = spotId;
-    final lOther$spotId = other.spotId;
-    if (l$spotId != lOther$spotId) {
+    final l$catalogId = catalogId;
+    final lOther$catalogId = other.catalogId;
+    if (l$catalogId != lOther$catalogId) {
       return false;
     }
     final l$photoKeys = photoKeys;
@@ -87,11 +87,11 @@ class Input$CreateFeedItemInput {
   @override
   int get hashCode {
     final l$body = body;
-    final l$spotId = spotId;
+    final l$catalogId = catalogId;
     final l$photoKeys = photoKeys;
     return Object.hashAll([
       l$body,
-      l$spotId,
+      l$catalogId,
       Object.hashAll(l$photoKeys.map((v) => v)),
     ]);
   }
@@ -106,7 +106,7 @@ abstract class CopyWith$Input$CreateFeedItemInput<TRes> {
   factory CopyWith$Input$CreateFeedItemInput.stub(TRes res) =
       _CopyWithStubImpl$Input$CreateFeedItemInput;
 
-  TRes call({String? body, String? spotId, List<String>? photoKeys});
+  TRes call({String? body, String? catalogId, List<String>? photoKeys});
 }
 
 class _CopyWithImpl$Input$CreateFeedItemInput<TRes>
@@ -121,13 +121,14 @@ class _CopyWithImpl$Input$CreateFeedItemInput<TRes>
 
   TRes call({
     Object? body = _undefined,
-    Object? spotId = _undefined,
+    Object? catalogId = _undefined,
     Object? photoKeys = _undefined,
   }) => _then(
     Input$CreateFeedItemInput._({
       ..._instance._$data,
       if (body != _undefined && body != null) 'body': (body as String),
-      if (spotId != _undefined && spotId != null) 'spotId': (spotId as String),
+      if (catalogId != _undefined && catalogId != null)
+        'catalogId': (catalogId as String),
       if (photoKeys != _undefined && photoKeys != null)
         'photoKeys': (photoKeys as List<String>),
     }),
@@ -140,7 +141,7 @@ class _CopyWithStubImpl$Input$CreateFeedItemInput<TRes>
 
   TRes _res;
 
-  call({String? body, String? spotId, List<String>? photoKeys}) => _res;
+  call({String? body, String? catalogId, List<String>? photoKeys}) => _res;
 }
 
 class Input$LikeFeedItemInput {

@@ -243,7 +243,7 @@ void main() {
       await tester.tap(_submit);
       await tester.pumpAndSettle();
 
-      expect(repo.lastCreatePost?.spotId, isNull);
+      expect(repo.lastCreatePost?.catalogId, isNull);
       expect(repo.lastCreatePost?.title, '경복궁 야간개장');
     });
 
@@ -262,7 +262,7 @@ void main() {
       await tester.tap(_submit);
       await tester.pumpAndSettle();
 
-      expect(repo.lastCreatePost?.spotId, isNull);
+      expect(repo.lastCreatePost?.catalogId, isNull);
       expect(repo.lastCreatePost?.body, '한복 입고 가면 무료예요');
     });
 
@@ -436,7 +436,7 @@ void main() {
       expect(find.text('경복궁'), findsOneWidget);
       await tester.tap(_submit);
       await tester.pumpAndSettle();
-      expect(repo.lastCreatePost?.spotId, '11094');
+      expect(repo.lastCreatePost?.catalogId, '11094');
     });
 
     // SPEC-0013 R14 — 검색어를 넣으면 서버가 찾은 결과로 갈아 끼운다.
@@ -518,7 +518,7 @@ void main() {
 
       await tester.tap(_submit);
       await tester.pumpAndSettle();
-      expect(repo.lastCreatePost?.spotId, isNull);
+      expect(repo.lastCreatePost?.catalogId, isNull);
     });
 
     // 붙은 장소가 없으면 지울 것도 없다 — 버튼이 늘 떠 있으면 무엇을 지우는지
@@ -953,7 +953,7 @@ void main() {
 
       expect(repo.lastEditPost?.changeSpot, isFalse);
       // false면 서버가 무시하는 값이라 아예 싣지 않는다.
-      expect(repo.lastEditPost?.spotId, isNull);
+      expect(repo.lastEditPost?.catalogId, isNull);
     });
 
     testWidgets('다른 장소를 고르면 changeSpot: true와 새 spotId가 나간다', (
@@ -970,7 +970,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(repo.lastEditPost?.changeSpot, isTrue);
-      expect(repo.lastEditPost?.spotId, '11915');
+      expect(repo.lastEditPost?.catalogId, '11915');
     });
 
     testWidgets('장소를 떼면 changeSpot: true와 spotId: null이 나간다', (
@@ -987,7 +987,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(repo.lastEditPost?.changeSpot, isTrue);
-      expect(repo.lastEditPost?.spotId, isNull);
+      expect(repo.lastEditPost?.catalogId, isNull);
     });
 
     // 원래 장소 없던 글에 장소를 붙이는 것도 "바꾼 것"이다.
@@ -1005,7 +1005,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(repo.lastEditPost?.changeSpot, isTrue);
-      expect(repo.lastEditPost?.spotId, '11915');
+      expect(repo.lastEditPost?.catalogId, '11915');
     });
 
     // 장소 없던 글을 그대로 저장하는 것은 "떼기"가 아니다 — 그 둘을 섞으면
@@ -1020,7 +1020,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(repo.lastEditPost?.changeSpot, isFalse);
-      expect(repo.lastEditPost?.spotId, isNull);
+      expect(repo.lastEditPost?.catalogId, isNull);
     });
   });
 
@@ -1182,7 +1182,7 @@ void main() {
       await tester.tap(_submit);
       await tester.pumpAndSettle();
 
-      expect(repo.lastCreatePost?.spotId, '5092');
+      expect(repo.lastCreatePost?.catalogId, '5092');
     });
 
     // 좋아요한 장소가 없는 계정이 정상 상태다 — 오류로 처리하면 안 된다.

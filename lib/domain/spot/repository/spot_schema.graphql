@@ -177,7 +177,7 @@ type PopularSpotEdge {
 }
 
 input ReactToSpotInput {
-  spotId: ID!
+  catalogId: ID!
   reaction: SpotReaction!
 }
 

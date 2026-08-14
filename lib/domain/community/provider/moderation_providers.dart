@@ -102,8 +102,8 @@ class ModerationController extends _$ModerationController {
   /// 내 글을 수정한다. 제목·본문·사진에 더해 **카테고리·장소·태그도 바뀐다** —
   /// 서버가 뒤늦게 받기 시작했다(1차 가이드 §5의 서술은 낡았다).
   ///
-  /// [changeSpot]은 장소를 실제로 바꿨을 때만 true다. false면 [spotId]를 무시하고
-  /// 서버가 붙어 있던 장소를 그대로 둔다 — `spotId: null` 하나로는 "그대로"와
+  /// [changeSpot]은 장소를 실제로 바꿨을 때만 true다. false면 [catalogId]를 무시하고
+  /// 서버가 붙어 있던 장소를 그대로 둔다 — `catalogId: null` 하나로는 "그대로"와
   /// "떼기"가 구분되지 않기 때문이다.
   ///
   /// 숨겨진 글은 `POST_NOT_EDITABLE`로 거부되며 [ModerationOutcome.notEditable]로
@@ -115,7 +115,7 @@ class ModerationController extends _$ModerationController {
     List<String>? photoKeys,
     TargetCategory? category,
     bool changeSpot = false,
-    String? spotId,
+    String? catalogId,
     List<String>? tags,
   }) => _run(
     () => _repository.editPost(
@@ -125,7 +125,7 @@ class ModerationController extends _$ModerationController {
       photoKeys: photoKeys,
       category: category,
       changeSpot: changeSpot,
-      spotId: spotId,
+      catalogId: catalogId,
       tags: tags,
     ),
   );

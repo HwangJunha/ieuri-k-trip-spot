@@ -110,9 +110,10 @@ class SwipeController extends _$SwipeController {
 
   @override
   Future<SwipeQueue> build(SpotCategory? category) async {
-    // 언어가 바뀌면 세션을 통째로 다시 만든다(SPEC-0007 §4.5·R-14). 쌓아둔 카드의
-    // id는 전부 이전 언어의 spot.id라, 그대로 두면 상세·반응이 SPOT_NOT_FOUND로
-    // 거부된다. **값은 쓰지 않고 재빌드 트리거로만 구독한다** — 지우면 R-14가 깨진다.
+    // 언어가 바뀌면 세션을 통째로 다시 만든다(SPEC-0007 §4.5·R-14). **이제 id 때문이
+    // 아니다** — SPEC-0019에서 id가 언어 무관해져 옛 카드로도 상세·반응이 통한다.
+    // 다시 받는 이유는 카드에 박힌 제목·주소가 이전 언어의 문장이기 때문이다.
+    // **값은 쓰지 않고 재빌드 트리거로만 구독한다** — 지우면 R-14가 깨진다.
     ref.watch(localeControllerProvider);
 
     // 좌표는 watch 한다 — 위치가 바뀌면 피드를 다시 받아야 하기 때문이다. 그 재빌드가

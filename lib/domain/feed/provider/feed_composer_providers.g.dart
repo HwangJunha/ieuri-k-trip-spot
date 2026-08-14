@@ -62,7 +62,7 @@ final class FeedComposerProvider
   }
 }
 
-String _$feedComposerHash() => r'538dc39f57c011324a679f6a52ffd2a9ec86d357';
+String _$feedComposerHash() => r'2a8acff3b6f30301833055b5e6ff6b33db74791f';
 
 /// 피드 작성 폼(R1·R2).
 ///

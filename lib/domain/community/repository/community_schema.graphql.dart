@@ -5,14 +5,14 @@ import '../../../common/network/shared_schema.graphql.dart';
 class Input$CreatePostInput {
   factory Input$CreatePostInput({
     required Enum$TargetCategory category,
-    String? spotId,
+    String? catalogId,
     required List<String> tags,
     required String title,
     required String body,
     required List<String> photoKeys,
   }) => Input$CreatePostInput._({
     r'category': category,
-    if (spotId != null) r'spotId': spotId,
+    if (catalogId != null) r'catalogId': catalogId,
     r'tags': tags,
     r'title': title,
     r'body': body,
@@ -27,9 +27,9 @@ class Input$CreatePostInput {
     result$data['category'] = fromJson$Enum$TargetCategory(
       (l$category as String),
     );
-    if (data.containsKey('spotId')) {
-      final l$spotId = data['spotId'];
-      result$data['spotId'] = (l$spotId as String?);
+    if (data.containsKey('catalogId')) {
+      final l$catalogId = data['catalogId'];
+      result$data['catalogId'] = (l$catalogId as String?);
     }
     final l$tags = data['tags'];
     result$data['tags'] = (l$tags as List<dynamic>)
@@ -51,7 +51,7 @@ class Input$CreatePostInput {
   Enum$TargetCategory get category =>
       (_$data['category'] as Enum$TargetCategory);
 
-  String? get spotId => (_$data['spotId'] as String?);
+  String? get catalogId => (_$data['catalogId'] as String?);
 
   List<String> get tags => (_$data['tags'] as List<String>);
 
@@ -65,9 +65,9 @@ class Input$CreatePostInput {
     final result$data = <String, dynamic>{};
     final l$category = category;
     result$data['category'] = toJson$Enum$TargetCategory(l$category);
-    if (_$data.containsKey('spotId')) {
-      final l$spotId = spotId;
-      result$data['spotId'] = l$spotId;
+    if (_$data.containsKey('catalogId')) {
+      final l$catalogId = catalogId;
+      result$data['catalogId'] = l$catalogId;
     }
     final l$tags = tags;
     result$data['tags'] = l$tags.map((e) => e).toList();
@@ -96,12 +96,13 @@ class Input$CreatePostInput {
     if (l$category != lOther$category) {
       return false;
     }
-    final l$spotId = spotId;
-    final lOther$spotId = other.spotId;
-    if (_$data.containsKey('spotId') != other._$data.containsKey('spotId')) {
+    final l$catalogId = catalogId;
+    final lOther$catalogId = other.catalogId;
+    if (_$data.containsKey('catalogId') !=
+        other._$data.containsKey('catalogId')) {
       return false;
     }
-    if (l$spotId != lOther$spotId) {
+    if (l$catalogId != lOther$catalogId) {
       return false;
     }
     final l$tags = tags;
@@ -144,14 +145,14 @@ class Input$CreatePostInput {
   @override
   int get hashCode {
     final l$category = category;
-    final l$spotId = spotId;
+    final l$catalogId = catalogId;
     final l$tags = tags;
     final l$title = title;
     final l$body = body;
     final l$photoKeys = photoKeys;
     return Object.hashAll([
       l$category,
-      _$data.containsKey('spotId') ? l$spotId : const {},
+      _$data.containsKey('catalogId') ? l$catalogId : const {},
       Object.hashAll(l$tags.map((v) => v)),
       l$title,
       l$body,
@@ -171,7 +172,7 @@ abstract class CopyWith$Input$CreatePostInput<TRes> {
 
   TRes call({
     Enum$TargetCategory? category,
-    String? spotId,
+    String? catalogId,
     List<String>? tags,
     String? title,
     String? body,
@@ -191,7 +192,7 @@ class _CopyWithImpl$Input$CreatePostInput<TRes>
 
   TRes call({
     Object? category = _undefined,
-    Object? spotId = _undefined,
+    Object? catalogId = _undefined,
     Object? tags = _undefined,
     Object? title = _undefined,
     Object? body = _undefined,
@@ -201,7 +202,7 @@ class _CopyWithImpl$Input$CreatePostInput<TRes>
       ..._instance._$data,
       if (category != _undefined && category != null)
         'category': (category as Enum$TargetCategory),
-      if (spotId != _undefined) 'spotId': (spotId as String?),
+      if (catalogId != _undefined) 'catalogId': (catalogId as String?),
       if (tags != _undefined && tags != null) 'tags': (tags as List<String>),
       if (title != _undefined && title != null) 'title': (title as String),
       if (body != _undefined && body != null) 'body': (body as String),
@@ -219,7 +220,7 @@ class _CopyWithStubImpl$Input$CreatePostInput<TRes>
 
   call({
     Enum$TargetCategory? category,
-    String? spotId,
+    String? catalogId,
     List<String>? tags,
     String? title,
     String? body,
@@ -235,7 +236,7 @@ class Input$EditPostInput {
     List<String>? photoKeys,
     Enum$TargetCategory? category,
     bool? changeSpot,
-    String? spotId,
+    String? catalogId,
     List<String>? tags,
   }) => Input$EditPostInput._({
     r'postId': postId,
@@ -244,7 +245,7 @@ class Input$EditPostInput {
     if (photoKeys != null) r'photoKeys': photoKeys,
     if (category != null) r'category': category,
     if (changeSpot != null) r'changeSpot': changeSpot,
-    if (spotId != null) r'spotId': spotId,
+    if (catalogId != null) r'catalogId': catalogId,
     if (tags != null) r'tags': tags,
   });
 
@@ -274,9 +275,9 @@ class Input$EditPostInput {
       final l$changeSpot = data['changeSpot'];
       result$data['changeSpot'] = (l$changeSpot as bool?);
     }
-    if (data.containsKey('spotId')) {
-      final l$spotId = data['spotId'];
-      result$data['spotId'] = (l$spotId as String?);
+    if (data.containsKey('catalogId')) {
+      final l$catalogId = data['catalogId'];
+      result$data['catalogId'] = (l$catalogId as String?);
     }
     if (data.containsKey('tags')) {
       final l$tags = data['tags'];
@@ -302,7 +303,7 @@ class Input$EditPostInput {
 
   bool? get changeSpot => (_$data['changeSpot'] as bool?);
 
-  String? get spotId => (_$data['spotId'] as String?);
+  String? get catalogId => (_$data['catalogId'] as String?);
 
   List<String>? get tags => (_$data['tags'] as List<String>?);
 
@@ -328,9 +329,9 @@ class Input$EditPostInput {
       final l$changeSpot = changeSpot;
       result$data['changeSpot'] = l$changeSpot;
     }
-    if (_$data.containsKey('spotId')) {
-      final l$spotId = spotId;
-      result$data['spotId'] = l$spotId;
+    if (_$data.containsKey('catalogId')) {
+      final l$catalogId = catalogId;
+      result$data['catalogId'] = l$catalogId;
     }
     if (_$data.containsKey('tags')) {
       final l$tags = tags;
@@ -403,12 +404,13 @@ class Input$EditPostInput {
     if (l$changeSpot != lOther$changeSpot) {
       return false;
     }
-    final l$spotId = spotId;
-    final lOther$spotId = other.spotId;
-    if (_$data.containsKey('spotId') != other._$data.containsKey('spotId')) {
+    final l$catalogId = catalogId;
+    final lOther$catalogId = other.catalogId;
+    if (_$data.containsKey('catalogId') !=
+        other._$data.containsKey('catalogId')) {
       return false;
     }
-    if (l$spotId != lOther$spotId) {
+    if (l$catalogId != lOther$catalogId) {
       return false;
     }
     final l$tags = tags;
@@ -441,7 +443,7 @@ class Input$EditPostInput {
     final l$photoKeys = photoKeys;
     final l$category = category;
     final l$changeSpot = changeSpot;
-    final l$spotId = spotId;
+    final l$catalogId = catalogId;
     final l$tags = tags;
     return Object.hashAll([
       l$postId,
@@ -454,7 +456,7 @@ class Input$EditPostInput {
           : const {},
       _$data.containsKey('category') ? l$category : const {},
       _$data.containsKey('changeSpot') ? l$changeSpot : const {},
-      _$data.containsKey('spotId') ? l$spotId : const {},
+      _$data.containsKey('catalogId') ? l$catalogId : const {},
       _$data.containsKey('tags')
           ? l$tags == null
                 ? null
@@ -480,7 +482,7 @@ abstract class CopyWith$Input$EditPostInput<TRes> {
     List<String>? photoKeys,
     Enum$TargetCategory? category,
     bool? changeSpot,
-    String? spotId,
+    String? catalogId,
     List<String>? tags,
   });
 }
@@ -502,7 +504,7 @@ class _CopyWithImpl$Input$EditPostInput<TRes>
     Object? photoKeys = _undefined,
     Object? category = _undefined,
     Object? changeSpot = _undefined,
-    Object? spotId = _undefined,
+    Object? catalogId = _undefined,
     Object? tags = _undefined,
   }) => _then(
     Input$EditPostInput._({
@@ -514,7 +516,7 @@ class _CopyWithImpl$Input$EditPostInput<TRes>
       if (category != _undefined)
         'category': (category as Enum$TargetCategory?),
       if (changeSpot != _undefined) 'changeSpot': (changeSpot as bool?),
-      if (spotId != _undefined) 'spotId': (spotId as String?),
+      if (catalogId != _undefined) 'catalogId': (catalogId as String?),
       if (tags != _undefined) 'tags': (tags as List<String>?),
     }),
   );
@@ -533,7 +535,7 @@ class _CopyWithStubImpl$Input$EditPostInput<TRes>
     List<String>? photoKeys,
     Enum$TargetCategory? category,
     bool? changeSpot,
-    String? spotId,
+    String? catalogId,
     List<String>? tags,
   }) => _res;
 }

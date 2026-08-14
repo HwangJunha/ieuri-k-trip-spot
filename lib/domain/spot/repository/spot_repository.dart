@@ -52,10 +52,10 @@ abstract interface class SpotRepository {
   /// what this returns and hardcodes nothing.
   Future<List<SpotCategory>> fetchAvailableCategories(AppLanguage language);
 
-  /// Records a swipe [reaction] for spot [spotId] (spec §4, optimistic). Resolves
-  /// on success; a failure surfaces as a thrown error the caller can log and
-  /// ignore (like-failure is non-critical).
-  Future<void> reactToSpot(String spotId, SpotReaction reaction);
+  /// Records a swipe [reaction] for spot [catalogId] (spec §4, optimistic).
+  /// Resolves on success; a failure surfaces as a thrown error the caller can
+  /// log and ignore (like-failure is non-critical).
+  Future<void> reactToSpot(String catalogId, SpotReaction reaction);
 
   /// 반경 안의 spot을 제목·주소 대상으로 검색한다(SPEC-0013 R1–R8, R14).
   ///

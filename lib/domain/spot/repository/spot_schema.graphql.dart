@@ -2,16 +2,19 @@
 // ignore_for_file: type=lint, unused_import, unused_element
 class Input$ReactToSpotInput {
   factory Input$ReactToSpotInput({
-    required String spotId,
+    required String catalogId,
     required Enum$SpotReaction reaction,
-  }) => Input$ReactToSpotInput._({r'spotId': spotId, r'reaction': reaction});
+  }) => Input$ReactToSpotInput._({
+    r'catalogId': catalogId,
+    r'reaction': reaction,
+  });
 
   Input$ReactToSpotInput._(this._$data);
 
   factory Input$ReactToSpotInput.fromJson(Map<String, dynamic> data) {
     final result$data = <String, dynamic>{};
-    final l$spotId = data['spotId'];
-    result$data['spotId'] = (l$spotId as String);
+    final l$catalogId = data['catalogId'];
+    result$data['catalogId'] = (l$catalogId as String);
     final l$reaction = data['reaction'];
     result$data['reaction'] = fromJson$Enum$SpotReaction(
       (l$reaction as String),
@@ -21,14 +24,14 @@ class Input$ReactToSpotInput {
 
   Map<String, dynamic> _$data;
 
-  String get spotId => (_$data['spotId'] as String);
+  String get catalogId => (_$data['catalogId'] as String);
 
   Enum$SpotReaction get reaction => (_$data['reaction'] as Enum$SpotReaction);
 
   Map<String, dynamic> toJson() {
     final result$data = <String, dynamic>{};
-    final l$spotId = spotId;
-    result$data['spotId'] = l$spotId;
+    final l$catalogId = catalogId;
+    result$data['catalogId'] = l$catalogId;
     final l$reaction = reaction;
     result$data['reaction'] = toJson$Enum$SpotReaction(l$reaction);
     return result$data;
@@ -45,9 +48,9 @@ class Input$ReactToSpotInput {
     if (other is! Input$ReactToSpotInput || runtimeType != other.runtimeType) {
       return false;
     }
-    final l$spotId = spotId;
-    final lOther$spotId = other.spotId;
-    if (l$spotId != lOther$spotId) {
+    final l$catalogId = catalogId;
+    final lOther$catalogId = other.catalogId;
+    if (l$catalogId != lOther$catalogId) {
       return false;
     }
     final l$reaction = reaction;
@@ -60,9 +63,9 @@ class Input$ReactToSpotInput {
 
   @override
   int get hashCode {
-    final l$spotId = spotId;
+    final l$catalogId = catalogId;
     final l$reaction = reaction;
-    return Object.hashAll([l$spotId, l$reaction]);
+    return Object.hashAll([l$catalogId, l$reaction]);
   }
 }
 
@@ -75,7 +78,7 @@ abstract class CopyWith$Input$ReactToSpotInput<TRes> {
   factory CopyWith$Input$ReactToSpotInput.stub(TRes res) =
       _CopyWithStubImpl$Input$ReactToSpotInput;
 
-  TRes call({String? spotId, Enum$SpotReaction? reaction});
+  TRes call({String? catalogId, Enum$SpotReaction? reaction});
 }
 
 class _CopyWithImpl$Input$ReactToSpotInput<TRes>
@@ -88,12 +91,12 @@ class _CopyWithImpl$Input$ReactToSpotInput<TRes>
 
   static const _undefined = <dynamic, dynamic>{};
 
-  TRes call({Object? spotId = _undefined, Object? reaction = _undefined}) =>
+  TRes call({Object? catalogId = _undefined, Object? reaction = _undefined}) =>
       _then(
         Input$ReactToSpotInput._({
           ..._instance._$data,
-          if (spotId != _undefined && spotId != null)
-            'spotId': (spotId as String),
+          if (catalogId != _undefined && catalogId != null)
+            'catalogId': (catalogId as String),
           if (reaction != _undefined && reaction != null)
             'reaction': (reaction as Enum$SpotReaction),
         }),
@@ -106,7 +109,7 @@ class _CopyWithStubImpl$Input$ReactToSpotInput<TRes>
 
   TRes _res;
 
-  call({String? spotId, Enum$SpotReaction? reaction}) => _res;
+  call({String? catalogId, Enum$SpotReaction? reaction}) => _res;
 }
 
 enum Enum$SpotCategory {

@@ -280,12 +280,12 @@ class SpotRepositoryImpl implements SpotRepository {
   }
 
   @override
-  Future<void> reactToSpot(String spotId, SpotReaction reaction) async {
+  Future<void> reactToSpot(String catalogId, SpotReaction reaction) async {
     final Map<String, dynamic> data = await _mutate(
       documentNodeMutationReactToSpot,
       Variables$Mutation$ReactToSpot(
         input: Input$ReactToSpotInput(
-          spotId: spotId,
+          catalogId: catalogId,
           reaction: _reaction(reaction),
         ),
       ).toJson(),
