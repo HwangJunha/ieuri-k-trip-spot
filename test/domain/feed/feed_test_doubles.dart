@@ -129,7 +129,7 @@ class FakeFeedRepository implements FeedRepository {
   @override
   Future<FeedMutationResult<String>> createFeedItem({
     required String body,
-    required String spotId,
+    required String catalogId,
     required List<String> photoKeys,
   }) async {
     createdPhotoKeys = photoKeys;

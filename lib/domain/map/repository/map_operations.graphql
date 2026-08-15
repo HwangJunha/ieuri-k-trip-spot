@@ -12,8 +12,14 @@ query MapViewport(
   $bbox: MapBoundsInput!
   $zoom: Int!
   $category: SpotCategory
+  $hasOrigin: Boolean
 ) {
-  mapViewport(bbox: $bbox, zoom: $zoom, category: $category) {
+  mapViewport(
+    bbox: $bbox
+    zoom: $zoom
+    category: $category
+    hasOrigin: $hasOrigin
+  ) {
     spots {
       id
       title

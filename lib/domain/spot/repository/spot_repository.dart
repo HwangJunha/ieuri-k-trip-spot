@@ -25,11 +25,15 @@ abstract interface class SpotRepository {
   /// page length. [latitude]/[longitude] are the user's location (server-required),
   /// [radiusMeters] bounds the search, and [category] filters when set. Returns an
   /// [OffsetPage] carrying items + `page` + `hasNext` (spec §4).
+  /// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). true면 요청 언어로 **쓰인** 장소만,
+  /// false면 **번역된** 장소만, null이면 둘 다 온다. 두 집합은 서로 겹치지 않아
+  /// 원문을 먼저 채우고 모자란 만큼 번역본으로 보충하는 2단계 조회가 가능하다.
   Future<OffsetPage<TouristSpot>> fetchSpotPage({
     required double latitude,
     required double longitude,
     int? radiusMeters,
     SpotCategory? category,
+    bool? hasOrigin,
     required int page,
     required int size,
   });
@@ -52,10 +56,10 @@ abstract interface class SpotRepository {
   /// what this returns and hardcodes nothing.
   Future<List<SpotCategory>> fetchAvailableCategories(AppLanguage language);
 
-  /// Records a swipe [reaction] for spot [spotId] (spec §4, optimistic). Resolves
-  /// on success; a failure surfaces as a thrown error the caller can log and
-  /// ignore (like-failure is non-critical).
-  Future<void> reactToSpot(String spotId, SpotReaction reaction);
+  /// Records a swipe [reaction] for spot [catalogId] (spec §4, optimistic).
+  /// Resolves on success; a failure surfaces as a thrown error the caller can
+  /// log and ignore (like-failure is non-critical).
+  Future<void> reactToSpot(String catalogId, SpotReaction reaction);
 
   /// 반경 안의 spot을 제목·주소 대상으로 검색한다(SPEC-0013 R1–R8, R14).
   ///
@@ -94,11 +98,13 @@ abstract interface class SpotRepository {
   /// 좋아요 총합 내림차순이며 **서버가 정렬한다**(POL-019). 좋아요 10개 미만인
   /// spot은 서버가 제외하므로 클라이언트가 거르지 않는다(AC-18.2). 조건을 만족하는
   /// spot이 0건인 것은 정상 상태다(AC-18.4).
+  /// [hasOrigin]의 뜻은 [fetchSpotPage]와 같다(SPEC-0019).
   Future<CursorPage<PopularSpot>> fetchPopularSpots({
     required double latitude,
     required double longitude,
     int? radiusMeters,
     SpotCategory? category,
+    bool? hasOrigin,
     int? first,
     String? after,
   });

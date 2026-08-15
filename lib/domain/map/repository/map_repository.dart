@@ -19,9 +19,12 @@ abstract interface class MapRepository {
   ///
   /// **카테고리 필터를 받지 않는다.** 서버 쿼리에는 인자가 있지만 R21이 토글 필터를
   /// 두지 말라고 하므로 이 화면에는 거를 기준이 없다. 필요해지면 그때 넓힌다.
+  /// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). true면 요청 언어로 **쓰인** 장소만,
+  /// false면 **번역된** 장소만, null이면 둘 다 온다.
   Future<MapViewportResult> fetchViewport({
     required MapBounds bbox,
     required int zoom,
+    bool? hasOrigin,
   });
 
   /// 뷰포트에 걸치는 구역의 실시간 혼잡도를 조회한다(R6~R11).

@@ -7,12 +7,14 @@ class Variables$Query$OngoingFestivals {
     required double latitude,
     required double longitude,
     int? radiusMeters,
+    bool? hasOrigin,
     int? first,
     String? after,
   }) => Variables$Query$OngoingFestivals._({
     r'latitude': latitude,
     r'longitude': longitude,
     if (radiusMeters != null) r'radiusMeters': radiusMeters,
+    if (hasOrigin != null) r'hasOrigin': hasOrigin,
     if (first != null) r'first': first,
     if (after != null) r'after': after,
   });
@@ -28,6 +30,10 @@ class Variables$Query$OngoingFestivals {
     if (data.containsKey('radiusMeters')) {
       final l$radiusMeters = data['radiusMeters'];
       result$data['radiusMeters'] = (l$radiusMeters as int?);
+    }
+    if (data.containsKey('hasOrigin')) {
+      final l$hasOrigin = data['hasOrigin'];
+      result$data['hasOrigin'] = (l$hasOrigin as bool?);
     }
     if (data.containsKey('first')) {
       final l$first = data['first'];
@@ -48,6 +54,8 @@ class Variables$Query$OngoingFestivals {
 
   int? get radiusMeters => (_$data['radiusMeters'] as int?);
 
+  bool? get hasOrigin => (_$data['hasOrigin'] as bool?);
+
   int? get first => (_$data['first'] as int?);
 
   String? get after => (_$data['after'] as String?);
@@ -61,6 +69,10 @@ class Variables$Query$OngoingFestivals {
     if (_$data.containsKey('radiusMeters')) {
       final l$radiusMeters = radiusMeters;
       result$data['radiusMeters'] = l$radiusMeters;
+    }
+    if (_$data.containsKey('hasOrigin')) {
+      final l$hasOrigin = hasOrigin;
+      result$data['hasOrigin'] = l$hasOrigin;
     }
     if (_$data.containsKey('first')) {
       final l$first = first;
@@ -104,6 +116,15 @@ class Variables$Query$OngoingFestivals {
     if (l$radiusMeters != lOther$radiusMeters) {
       return false;
     }
+    final l$hasOrigin = hasOrigin;
+    final lOther$hasOrigin = other.hasOrigin;
+    if (_$data.containsKey('hasOrigin') !=
+        other._$data.containsKey('hasOrigin')) {
+      return false;
+    }
+    if (l$hasOrigin != lOther$hasOrigin) {
+      return false;
+    }
     final l$first = first;
     final lOther$first = other.first;
     if (_$data.containsKey('first') != other._$data.containsKey('first')) {
@@ -128,12 +149,14 @@ class Variables$Query$OngoingFestivals {
     final l$latitude = latitude;
     final l$longitude = longitude;
     final l$radiusMeters = radiusMeters;
+    final l$hasOrigin = hasOrigin;
     final l$first = first;
     final l$after = after;
     return Object.hashAll([
       l$latitude,
       l$longitude,
       _$data.containsKey('radiusMeters') ? l$radiusMeters : const {},
+      _$data.containsKey('hasOrigin') ? l$hasOrigin : const {},
       _$data.containsKey('first') ? l$first : const {},
       _$data.containsKey('after') ? l$after : const {},
     ]);
@@ -153,6 +176,7 @@ abstract class CopyWith$Variables$Query$OngoingFestivals<TRes> {
     double? latitude,
     double? longitude,
     int? radiusMeters,
+    bool? hasOrigin,
     int? first,
     String? after,
   });
@@ -172,6 +196,7 @@ class _CopyWithImpl$Variables$Query$OngoingFestivals<TRes>
     Object? latitude = _undefined,
     Object? longitude = _undefined,
     Object? radiusMeters = _undefined,
+    Object? hasOrigin = _undefined,
     Object? first = _undefined,
     Object? after = _undefined,
   }) => _then(
@@ -182,6 +207,7 @@ class _CopyWithImpl$Variables$Query$OngoingFestivals<TRes>
       if (longitude != _undefined && longitude != null)
         'longitude': (longitude as double),
       if (radiusMeters != _undefined) 'radiusMeters': (radiusMeters as int?),
+      if (hasOrigin != _undefined) 'hasOrigin': (hasOrigin as bool?),
       if (first != _undefined) 'first': (first as int?),
       if (after != _undefined) 'after': (after as String?),
     }),
@@ -198,6 +224,7 @@ class _CopyWithStubImpl$Variables$Query$OngoingFestivals<TRes>
     double? latitude,
     double? longitude,
     int? radiusMeters,
+    bool? hasOrigin,
     int? first,
     String? after,
   }) => _res;
@@ -330,6 +357,15 @@ const documentNodeQueryOngoingFestivals = DocumentNode(
           directives: [],
         ),
         VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'hasOrigin')),
+          type: NamedTypeNode(
+            name: NameNode(value: 'Boolean'),
+            isNonNull: false,
+          ),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
           variable: VariableNode(name: NameNode(value: 'first')),
           type: NamedTypeNode(name: NameNode(value: 'Int'), isNonNull: false),
           defaultValue: DefaultValueNode(value: null),
@@ -363,6 +399,10 @@ const documentNodeQueryOngoingFestivals = DocumentNode(
               ArgumentNode(
                 name: NameNode(value: 'radiusMeters'),
                 value: VariableNode(name: NameNode(value: 'radiusMeters')),
+              ),
+              ArgumentNode(
+                name: NameNode(value: 'hasOrigin'),
+                value: VariableNode(name: NameNode(value: 'hasOrigin')),
               ),
               ArgumentNode(
                 name: NameNode(value: 'first'),

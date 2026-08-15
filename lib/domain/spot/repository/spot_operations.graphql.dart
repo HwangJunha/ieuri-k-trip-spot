@@ -9,6 +9,7 @@ class Variables$Query$Spots {
     required double longitude,
     int? radiusMeters,
     Enum$SpotCategory? category,
+    bool? hasOrigin,
     int? page,
     int? size,
   }) => Variables$Query$Spots._({
@@ -16,6 +17,7 @@ class Variables$Query$Spots {
     r'longitude': longitude,
     if (radiusMeters != null) r'radiusMeters': radiusMeters,
     if (category != null) r'category': category,
+    if (hasOrigin != null) r'hasOrigin': hasOrigin,
     if (page != null) r'page': page,
     if (size != null) r'size': size,
   });
@@ -38,6 +40,10 @@ class Variables$Query$Spots {
           ? null
           : fromJson$Enum$SpotCategory((l$category as String));
     }
+    if (data.containsKey('hasOrigin')) {
+      final l$hasOrigin = data['hasOrigin'];
+      result$data['hasOrigin'] = (l$hasOrigin as bool?);
+    }
     if (data.containsKey('page')) {
       final l$page = data['page'];
       result$data['page'] = (l$page as int?);
@@ -59,6 +65,8 @@ class Variables$Query$Spots {
 
   Enum$SpotCategory? get category => (_$data['category'] as Enum$SpotCategory?);
 
+  bool? get hasOrigin => (_$data['hasOrigin'] as bool?);
+
   int? get page => (_$data['page'] as int?);
 
   int? get size => (_$data['size'] as int?);
@@ -78,6 +86,10 @@ class Variables$Query$Spots {
       result$data['category'] = l$category == null
           ? null
           : toJson$Enum$SpotCategory(l$category);
+    }
+    if (_$data.containsKey('hasOrigin')) {
+      final l$hasOrigin = hasOrigin;
+      result$data['hasOrigin'] = l$hasOrigin;
     }
     if (_$data.containsKey('page')) {
       final l$page = page;
@@ -129,6 +141,15 @@ class Variables$Query$Spots {
     if (l$category != lOther$category) {
       return false;
     }
+    final l$hasOrigin = hasOrigin;
+    final lOther$hasOrigin = other.hasOrigin;
+    if (_$data.containsKey('hasOrigin') !=
+        other._$data.containsKey('hasOrigin')) {
+      return false;
+    }
+    if (l$hasOrigin != lOther$hasOrigin) {
+      return false;
+    }
     final l$page = page;
     final lOther$page = other.page;
     if (_$data.containsKey('page') != other._$data.containsKey('page')) {
@@ -154,6 +175,7 @@ class Variables$Query$Spots {
     final l$longitude = longitude;
     final l$radiusMeters = radiusMeters;
     final l$category = category;
+    final l$hasOrigin = hasOrigin;
     final l$page = page;
     final l$size = size;
     return Object.hashAll([
@@ -161,6 +183,7 @@ class Variables$Query$Spots {
       l$longitude,
       _$data.containsKey('radiusMeters') ? l$radiusMeters : const {},
       _$data.containsKey('category') ? l$category : const {},
+      _$data.containsKey('hasOrigin') ? l$hasOrigin : const {},
       _$data.containsKey('page') ? l$page : const {},
       _$data.containsKey('size') ? l$size : const {},
     ]);
@@ -181,6 +204,7 @@ abstract class CopyWith$Variables$Query$Spots<TRes> {
     double? longitude,
     int? radiusMeters,
     Enum$SpotCategory? category,
+    bool? hasOrigin,
     int? page,
     int? size,
   });
@@ -201,6 +225,7 @@ class _CopyWithImpl$Variables$Query$Spots<TRes>
     Object? longitude = _undefined,
     Object? radiusMeters = _undefined,
     Object? category = _undefined,
+    Object? hasOrigin = _undefined,
     Object? page = _undefined,
     Object? size = _undefined,
   }) => _then(
@@ -212,6 +237,7 @@ class _CopyWithImpl$Variables$Query$Spots<TRes>
         'longitude': (longitude as double),
       if (radiusMeters != _undefined) 'radiusMeters': (radiusMeters as int?),
       if (category != _undefined) 'category': (category as Enum$SpotCategory?),
+      if (hasOrigin != _undefined) 'hasOrigin': (hasOrigin as bool?),
       if (page != _undefined) 'page': (page as int?),
       if (size != _undefined) 'size': (size as int?),
     }),
@@ -229,6 +255,7 @@ class _CopyWithStubImpl$Variables$Query$Spots<TRes>
     double? longitude,
     int? radiusMeters,
     Enum$SpotCategory? category,
+    bool? hasOrigin,
     int? page,
     int? size,
   }) => _res;
@@ -362,6 +389,15 @@ const documentNodeQuerySpots = DocumentNode(
           directives: [],
         ),
         VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'hasOrigin')),
+          type: NamedTypeNode(
+            name: NameNode(value: 'Boolean'),
+            isNonNull: false,
+          ),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
           variable: VariableNode(name: NameNode(value: 'page')),
           type: NamedTypeNode(name: NameNode(value: 'Int'), isNonNull: false),
           defaultValue: DefaultValueNode(value: null),
@@ -396,6 +432,10 @@ const documentNodeQuerySpots = DocumentNode(
               ArgumentNode(
                 name: NameNode(value: 'category'),
                 value: VariableNode(name: NameNode(value: 'category')),
+              ),
+              ArgumentNode(
+                name: NameNode(value: 'hasOrigin'),
+                value: VariableNode(name: NameNode(value: 'hasOrigin')),
               ),
               ArgumentNode(
                 name: NameNode(value: 'page'),
@@ -6108,6 +6148,7 @@ class Variables$Query$PopularSpots {
     required double longitude,
     int? radiusMeters,
     Enum$SpotCategory? category,
+    bool? hasOrigin,
     int? first,
     String? after,
   }) => Variables$Query$PopularSpots._({
@@ -6115,6 +6156,7 @@ class Variables$Query$PopularSpots {
     r'longitude': longitude,
     if (radiusMeters != null) r'radiusMeters': radiusMeters,
     if (category != null) r'category': category,
+    if (hasOrigin != null) r'hasOrigin': hasOrigin,
     if (first != null) r'first': first,
     if (after != null) r'after': after,
   });
@@ -6137,6 +6179,10 @@ class Variables$Query$PopularSpots {
           ? null
           : fromJson$Enum$SpotCategory((l$category as String));
     }
+    if (data.containsKey('hasOrigin')) {
+      final l$hasOrigin = data['hasOrigin'];
+      result$data['hasOrigin'] = (l$hasOrigin as bool?);
+    }
     if (data.containsKey('first')) {
       final l$first = data['first'];
       result$data['first'] = (l$first as int?);
@@ -6158,6 +6204,8 @@ class Variables$Query$PopularSpots {
 
   Enum$SpotCategory? get category => (_$data['category'] as Enum$SpotCategory?);
 
+  bool? get hasOrigin => (_$data['hasOrigin'] as bool?);
+
   int? get first => (_$data['first'] as int?);
 
   String? get after => (_$data['after'] as String?);
@@ -6177,6 +6225,10 @@ class Variables$Query$PopularSpots {
       result$data['category'] = l$category == null
           ? null
           : toJson$Enum$SpotCategory(l$category);
+    }
+    if (_$data.containsKey('hasOrigin')) {
+      final l$hasOrigin = hasOrigin;
+      result$data['hasOrigin'] = l$hasOrigin;
     }
     if (_$data.containsKey('first')) {
       final l$first = first;
@@ -6229,6 +6281,15 @@ class Variables$Query$PopularSpots {
     if (l$category != lOther$category) {
       return false;
     }
+    final l$hasOrigin = hasOrigin;
+    final lOther$hasOrigin = other.hasOrigin;
+    if (_$data.containsKey('hasOrigin') !=
+        other._$data.containsKey('hasOrigin')) {
+      return false;
+    }
+    if (l$hasOrigin != lOther$hasOrigin) {
+      return false;
+    }
     final l$first = first;
     final lOther$first = other.first;
     if (_$data.containsKey('first') != other._$data.containsKey('first')) {
@@ -6254,6 +6315,7 @@ class Variables$Query$PopularSpots {
     final l$longitude = longitude;
     final l$radiusMeters = radiusMeters;
     final l$category = category;
+    final l$hasOrigin = hasOrigin;
     final l$first = first;
     final l$after = after;
     return Object.hashAll([
@@ -6261,6 +6323,7 @@ class Variables$Query$PopularSpots {
       l$longitude,
       _$data.containsKey('radiusMeters') ? l$radiusMeters : const {},
       _$data.containsKey('category') ? l$category : const {},
+      _$data.containsKey('hasOrigin') ? l$hasOrigin : const {},
       _$data.containsKey('first') ? l$first : const {},
       _$data.containsKey('after') ? l$after : const {},
     ]);
@@ -6281,6 +6344,7 @@ abstract class CopyWith$Variables$Query$PopularSpots<TRes> {
     double? longitude,
     int? radiusMeters,
     Enum$SpotCategory? category,
+    bool? hasOrigin,
     int? first,
     String? after,
   });
@@ -6301,6 +6365,7 @@ class _CopyWithImpl$Variables$Query$PopularSpots<TRes>
     Object? longitude = _undefined,
     Object? radiusMeters = _undefined,
     Object? category = _undefined,
+    Object? hasOrigin = _undefined,
     Object? first = _undefined,
     Object? after = _undefined,
   }) => _then(
@@ -6312,6 +6377,7 @@ class _CopyWithImpl$Variables$Query$PopularSpots<TRes>
         'longitude': (longitude as double),
       if (radiusMeters != _undefined) 'radiusMeters': (radiusMeters as int?),
       if (category != _undefined) 'category': (category as Enum$SpotCategory?),
+      if (hasOrigin != _undefined) 'hasOrigin': (hasOrigin as bool?),
       if (first != _undefined) 'first': (first as int?),
       if (after != _undefined) 'after': (after as String?),
     }),
@@ -6329,6 +6395,7 @@ class _CopyWithStubImpl$Variables$Query$PopularSpots<TRes>
     double? longitude,
     int? radiusMeters,
     Enum$SpotCategory? category,
+    bool? hasOrigin,
     int? first,
     String? after,
   }) => _res;
@@ -6469,6 +6536,15 @@ const documentNodeQueryPopularSpots = DocumentNode(
           directives: [],
         ),
         VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'hasOrigin')),
+          type: NamedTypeNode(
+            name: NameNode(value: 'Boolean'),
+            isNonNull: false,
+          ),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
           variable: VariableNode(name: NameNode(value: 'first')),
           type: NamedTypeNode(name: NameNode(value: 'Int'), isNonNull: false),
           defaultValue: DefaultValueNode(value: null),
@@ -6506,6 +6582,10 @@ const documentNodeQueryPopularSpots = DocumentNode(
               ArgumentNode(
                 name: NameNode(value: 'category'),
                 value: VariableNode(name: NameNode(value: 'category')),
+              ),
+              ArgumentNode(
+                name: NameNode(value: 'hasOrigin'),
+                value: VariableNode(name: NameNode(value: 'hasOrigin')),
               ),
               ArgumentNode(
                 name: NameNode(value: 'first'),

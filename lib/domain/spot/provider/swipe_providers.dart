@@ -110,9 +110,10 @@ class SwipeController extends _$SwipeController {
 
   @override
   Future<SwipeQueue> build(SpotCategory? category) async {
-    // 언어가 바뀌면 세션을 통째로 다시 만든다(SPEC-0007 §4.5·R-14). 쌓아둔 카드의
-    // id는 전부 이전 언어의 spot.id라, 그대로 두면 상세·반응이 SPOT_NOT_FOUND로
-    // 거부된다. **값은 쓰지 않고 재빌드 트리거로만 구독한다** — 지우면 R-14가 깨진다.
+    // 언어가 바뀌면 세션을 통째로 다시 만든다(SPEC-0007 §4.5·R-14). **이제 id 때문이
+    // 아니다** — SPEC-0019에서 id가 언어 무관해져 옛 카드로도 상세·반응이 통한다.
+    // 다시 받는 이유는 카드에 박힌 제목·주소가 이전 언어의 문장이기 때문이다.
+    // **값은 쓰지 않고 재빌드 트리거로만 구독한다** — 지우면 R-14가 깨진다.
     ref.watch(localeControllerProvider);
 
     // 좌표는 watch 한다 — 위치가 바뀌면 피드를 다시 받아야 하기 때문이다. 그 재빌드가
@@ -146,18 +147,46 @@ class SwipeController extends _$SwipeController {
     double radiusKm,
   ) async {
     try {
+      // **원문부터 받는다**(SPEC-0019). 요청 언어로 쓰인 장소를 먼저 다 보여주고,
+      // 소진하면 _maybePrefetch가 번역본 구간으로 넘어간다.
       final OffsetPage<TouristSpot> page = await _repository.fetchSpotPage(
         latitude: coords.latitude,
         longitude: coords.longitude,
         radiusMeters: radiusMetersOf(radiusKm),
         category: category,
+        hasOrigin: true,
         page: 0,
         size: _pageSize,
       );
+      if (page.hasNext) {
+        return SwipeQueue(
+          cards: _shuffled(page.items),
+          loadedPage: page.page,
+          hasNextPage: true,
+        );
+      }
+
+      // **원문이 첫 페이지에서 끝났으면 번역본을 그 자리에서 이어 받는다.**
+      // 선제 조회에 맡기면 원문이 0건인 지역에서 첫 화면이 빈 채로 남는다 —
+      // 큐가 비어도 `isExhausted`는 아직 false라 빈 상태 문구도 뜨지 않는다.
+      final OffsetPage<TouristSpot> translated = await _repository
+          .fetchSpotPage(
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+            radiusMeters: radiusMetersOf(radiusKm),
+            category: category,
+            hasOrigin: false,
+            page: 0,
+            size: _pageSize,
+          );
       return SwipeQueue(
-        cards: _shuffled(page.items),
-        loadedPage: page.page,
-        hasNextPage: page.hasNext,
+        cards: <TouristSpot>[
+          ..._shuffled(page.items),
+          ..._shuffled(translated.items),
+        ],
+        loadedPage: translated.page,
+        hasNextPage: translated.hasNext,
+        originExhausted: true,
       );
     } catch (error) {
       if (!countsTowardRetryBudget(error)) rethrow;
@@ -260,10 +289,14 @@ class SwipeController extends _$SwipeController {
       final Coordinates coords = await ref.read(
         currentCoordinatesProvider.future,
       );
+      // 원문 구간이 끝났으면 번역본으로 넘어간다(SPEC-0019). 두 집합은 겹치지 않고
+      // 각자 페이지를 0부터 세므로, 전환 시점의 `nextPage`는 0이다.
+      final bool hasOrigin = queue.nextHasOrigin;
       final OffsetPage<TouristSpot> next = await _repository.fetchSpotPage(
         latitude: coords.latitude,
         longitude: coords.longitude,
         category: category,
+        hasOrigin: hasOrigin,
         page: nextPage,
         size: _pageSize,
       );
@@ -274,6 +307,9 @@ class SwipeController extends _$SwipeController {
           cards: <TouristSpot>[...current.cards, ..._shuffled(next.items)],
           loadedPage: next.page,
           hasNextPage: next.hasNext,
+          // 번역본을 받기 시작했으면 원문 구간은 끝난 것이다. 이 값이 서야
+          // `isExhausted`가 "정말 다 봤다"를 뜻한다.
+          originExhausted: !hasOrigin,
         ),
       );
     } catch (error, stack) {

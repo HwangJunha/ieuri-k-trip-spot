@@ -58,6 +58,8 @@ String _$mapRepositoryHash() => r'ebd1feef5797a36458540e43a75a28142ac397fa';
 /// bbox와 zoom을 인자로 받아 family가 된다. 뷰포트가 바뀌면 새 인자가 되므로 이전
 /// 조회는 자동으로 버려진다 — 늦게 도착한 응답이 현재 뷰포트를 덮어쓰지 않는다
 /// (설계 §3.3).
+/// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). 화면은 원문으로 마커를 채우고 자리가
+/// 남으면 번역본으로 한 번 더 채운다 — 두 값이 서로 다른 family 인스턴스가 된다.
 
 @ProviderFor(mapViewport)
 const mapViewportProvider = MapViewportFamily._();
@@ -70,6 +72,8 @@ const mapViewportProvider = MapViewportFamily._();
 /// bbox와 zoom을 인자로 받아 family가 된다. 뷰포트가 바뀌면 새 인자가 되므로 이전
 /// 조회는 자동으로 버려진다 — 늦게 도착한 응답이 현재 뷰포트를 덮어쓰지 않는다
 /// (설계 §3.3).
+/// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). 화면은 원문으로 마커를 채우고 자리가
+/// 남으면 번역본으로 한 번 더 채운다 — 두 값이 서로 다른 family 인스턴스가 된다.
 
 final class MapViewportProvider
     extends
@@ -89,9 +93,11 @@ final class MapViewportProvider
   /// bbox와 zoom을 인자로 받아 family가 된다. 뷰포트가 바뀌면 새 인자가 되므로 이전
   /// 조회는 자동으로 버려진다 — 늦게 도착한 응답이 현재 뷰포트를 덮어쓰지 않는다
   /// (설계 §3.3).
+  /// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). 화면은 원문으로 마커를 채우고 자리가
+  /// 남으면 번역본으로 한 번 더 채운다 — 두 값이 서로 다른 family 인스턴스가 된다.
   const MapViewportProvider._({
     required MapViewportFamily super.from,
-    required (MapBounds, int) super.argument,
+    required (MapBounds, int, {bool? hasOrigin}) super.argument,
   }) : super(
          retry: null,
          name: r'mapViewportProvider',
@@ -118,8 +124,13 @@ final class MapViewportProvider
 
   @override
   FutureOr<MapViewportResult> create(Ref ref) {
-    final argument = this.argument as (MapBounds, int);
-    return mapViewport(ref, argument.$1, argument.$2);
+    final argument = this.argument as (MapBounds, int, {bool? hasOrigin});
+    return mapViewport(
+      ref,
+      argument.$1,
+      argument.$2,
+      hasOrigin: argument.hasOrigin,
+    );
   }
 
   @override
@@ -133,7 +144,7 @@ final class MapViewportProvider
   }
 }
 
-String _$mapViewportHash() => r'54e2f986c1108113bccfba89f7931245253b228c';
+String _$mapViewportHash() => r'cd68ff20f411cccd64c4c450e18efde70074ba5f';
 
 /// 뷰포트 안의 마커·클러스터(R1·R2·R3·R12).
 ///
@@ -143,12 +154,14 @@ String _$mapViewportHash() => r'54e2f986c1108113bccfba89f7931245253b228c';
 /// bbox와 zoom을 인자로 받아 family가 된다. 뷰포트가 바뀌면 새 인자가 되므로 이전
 /// 조회는 자동으로 버려진다 — 늦게 도착한 응답이 현재 뷰포트를 덮어쓰지 않는다
 /// (설계 §3.3).
+/// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). 화면은 원문으로 마커를 채우고 자리가
+/// 남으면 번역본으로 한 번 더 채운다 — 두 값이 서로 다른 family 인스턴스가 된다.
 
 final class MapViewportFamily extends $Family
     with
         $FunctionalFamilyOverride<
           FutureOr<MapViewportResult>,
-          (MapBounds, int)
+          (MapBounds, int, {bool? hasOrigin})
         > {
   const MapViewportFamily._()
     : super(
@@ -167,9 +180,14 @@ final class MapViewportFamily extends $Family
   /// bbox와 zoom을 인자로 받아 family가 된다. 뷰포트가 바뀌면 새 인자가 되므로 이전
   /// 조회는 자동으로 버려진다 — 늦게 도착한 응답이 현재 뷰포트를 덮어쓰지 않는다
   /// (설계 §3.3).
+  /// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). 화면은 원문으로 마커를 채우고 자리가
+  /// 남으면 번역본으로 한 번 더 채운다 — 두 값이 서로 다른 family 인스턴스가 된다.
 
-  MapViewportProvider call(MapBounds bbox, int zoom) =>
-      MapViewportProvider._(argument: (bbox, zoom), from: this);
+  MapViewportProvider call(MapBounds bbox, int zoom, {bool? hasOrigin}) =>
+      MapViewportProvider._(
+        argument: (bbox, zoom, hasOrigin: hasOrigin),
+        from: this,
+      );
 
   @override
   String toString() => r'mapViewportProvider';

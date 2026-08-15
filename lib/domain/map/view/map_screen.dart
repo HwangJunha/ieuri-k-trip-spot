@@ -328,8 +328,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       // **서버가 받는 줌으로 접어서 보낸다.** SDK 줌은 21까지 가지만 계약은 1~14라,
       // 그대로 보내면 확대할수록 `INVALID_ZOOM`으로 거절되어 마커가 하나도 안 온다.
       // 화면 판정(마커 게이트)은 접지 않은 실제 줌을 쓴다.
+      final int serverZoom = MapTuning.clampForServer(zoomLevel);
+      // **원문부터 받는다**(SPEC-0019). 요청 언어로 쓰인 장소를 우선 그린다.
       final MapViewportResult result = await ref.read(
-        mapViewportProvider(bbox, MapTuning.clampForServer(zoomLevel)).future,
+        mapViewportProvider(bbox, serverZoom, hasOrigin: true).future,
       );
       if (!mounted || generation != _markerGeneration) return;
 
@@ -341,6 +343,22 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       ref
           .read(mapMarkerControllerProvider.notifier)
           .absorb(result, visible, replaceShown: replaceShown);
+
+      // 원문만으로 상한을 못 채웠으면 번역본으로 마저 채운다(SPEC-0019). 원문이 5건인
+      // 지역에서 나머지 5칸을 비워 둘 이유가 없다. **자리가 찼으면 조회하지 않는다** —
+      // 대부분의 지역이 이 경로라 추가 왕복이 생기지 않는다.
+      //
+      // 두 번째 흡수는 `replaceShown: false`다. 재검색이 방금 그린 원문 마커를 다시
+      // 비우면 원문 우선이 무의미해진다.
+      if (ref.read(mapMarkerControllerProvider.notifier).hasRoomIn(visible)) {
+        final MapViewportResult translated = await ref.read(
+          mapViewportProvider(bbox, serverZoom, hasOrigin: false).future,
+        );
+        if (!mounted || generation != _markerGeneration) return;
+        ref
+            .read(mapMarkerControllerProvider.notifier)
+            .absorb(translated, visible);
+      }
       // 여기까지 왔을 때만 "받아 뒀다"로 기록한다 — 실패했는데 기록하면 재조회가
       // 영영 막힌다.
       _lastMarkerArea = bbox;

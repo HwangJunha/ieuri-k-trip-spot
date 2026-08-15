@@ -25,6 +25,25 @@ class MapMarkerController extends _$MapMarkerController {
   @override
   List<MapMarker> build() => const <MapMarker>[];
 
+  /// [visible] 안에 마커 자리가 남았는지(SPEC-0019).
+  ///
+  /// 원문만으로 상한을 못 채웠으면 번역본으로 마저 채우기 위해 화면이 이 값을 본다 —
+  /// 원문이 5건뿐인 지역에서 나머지 5칸을 비워 둘 이유가 없다. 판정 기준은 [absorb]의
+  /// `room` 계산과 같아야 하므로 **같은 조건을 쓴다**(화면 안 + 고정 마커 제외).
+  bool hasRoomIn(MapBounds visible) {
+    final int shown = state
+        .where(
+          (MapMarker m) =>
+              m.latitude >= visible.minLat &&
+              m.latitude <= visible.maxLat &&
+              m.longitude >= visible.minLng &&
+              m.longitude <= visible.maxLng &&
+              _keyOf(m) != _pinnedKey,
+        )
+        .length;
+    return shown < MapTuning.maxDrawnMarkers;
+  }
+
   /// 새 조회 결과를 기존 마커에 **더한다**.
   ///
   /// [visible]은 **화면에 실제로 보이는 영역**이다. 조회는 그보다 넓게 하지만(작은

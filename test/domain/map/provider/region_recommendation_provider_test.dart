@@ -50,6 +50,7 @@ final class FakeMapRepository implements MapRepository {
   Future<MapViewportResult> fetchViewport({
     required MapBounds bbox,
     required int zoom,
+    bool? hasOrigin,
   }) => throw UnimplementedError();
 }
 

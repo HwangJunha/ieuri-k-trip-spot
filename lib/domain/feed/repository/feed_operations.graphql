@@ -114,8 +114,10 @@ query ConversationMessages($conversationId: ID!, $first: Int, $after: String) {
   }
 }
 
-mutation CreateFeedItem($body: String!, $spotId: ID!, $photoKeys: [String!]!) {
-  createFeedItem(input: { body: $body, spotId: $spotId, photoKeys: $photoKeys }) {
+mutation CreateFeedItem($body: String!, $catalogId: ID!, $photoKeys: [String!]!) {
+  createFeedItem(
+    input: { body: $body, catalogId: $catalogId, photoKeys: $photoKeys }
+  ) {
     success
     userErrors {
       code

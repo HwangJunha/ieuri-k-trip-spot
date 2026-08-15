@@ -9,10 +9,12 @@ class Variables$Query$MapViewport {
     required Input$MapBoundsInput bbox,
     required int zoom,
     Enum$SpotCategory? category,
+    bool? hasOrigin,
   }) => Variables$Query$MapViewport._({
     r'bbox': bbox,
     r'zoom': zoom,
     if (category != null) r'category': category,
+    if (hasOrigin != null) r'hasOrigin': hasOrigin,
   });
 
   Variables$Query$MapViewport._(this._$data);
@@ -31,6 +33,10 @@ class Variables$Query$MapViewport {
           ? null
           : fromJson$Enum$SpotCategory((l$category as String));
     }
+    if (data.containsKey('hasOrigin')) {
+      final l$hasOrigin = data['hasOrigin'];
+      result$data['hasOrigin'] = (l$hasOrigin as bool?);
+    }
     return Variables$Query$MapViewport._(result$data);
   }
 
@@ -41,6 +47,8 @@ class Variables$Query$MapViewport {
   int get zoom => (_$data['zoom'] as int);
 
   Enum$SpotCategory? get category => (_$data['category'] as Enum$SpotCategory?);
+
+  bool? get hasOrigin => (_$data['hasOrigin'] as bool?);
 
   Map<String, dynamic> toJson() {
     final result$data = <String, dynamic>{};
@@ -53,6 +61,10 @@ class Variables$Query$MapViewport {
       result$data['category'] = l$category == null
           ? null
           : toJson$Enum$SpotCategory(l$category);
+    }
+    if (_$data.containsKey('hasOrigin')) {
+      final l$hasOrigin = hasOrigin;
+      result$data['hasOrigin'] = l$hasOrigin;
     }
     return result$data;
   }
@@ -88,6 +100,15 @@ class Variables$Query$MapViewport {
     if (l$category != lOther$category) {
       return false;
     }
+    final l$hasOrigin = hasOrigin;
+    final lOther$hasOrigin = other.hasOrigin;
+    if (_$data.containsKey('hasOrigin') !=
+        other._$data.containsKey('hasOrigin')) {
+      return false;
+    }
+    if (l$hasOrigin != lOther$hasOrigin) {
+      return false;
+    }
     return true;
   }
 
@@ -96,10 +117,12 @@ class Variables$Query$MapViewport {
     final l$bbox = bbox;
     final l$zoom = zoom;
     final l$category = category;
+    final l$hasOrigin = hasOrigin;
     return Object.hashAll([
       l$bbox,
       l$zoom,
       _$data.containsKey('category') ? l$category : const {},
+      _$data.containsKey('hasOrigin') ? l$hasOrigin : const {},
     ]);
   }
 }
@@ -117,6 +140,7 @@ abstract class CopyWith$Variables$Query$MapViewport<TRes> {
     Input$MapBoundsInput? bbox,
     int? zoom,
     Enum$SpotCategory? category,
+    bool? hasOrigin,
   });
 }
 
@@ -134,6 +158,7 @@ class _CopyWithImpl$Variables$Query$MapViewport<TRes>
     Object? bbox = _undefined,
     Object? zoom = _undefined,
     Object? category = _undefined,
+    Object? hasOrigin = _undefined,
   }) => _then(
     Variables$Query$MapViewport._({
       ..._instance._$data,
@@ -141,6 +166,7 @@ class _CopyWithImpl$Variables$Query$MapViewport<TRes>
         'bbox': (bbox as Input$MapBoundsInput),
       if (zoom != _undefined && zoom != null) 'zoom': (zoom as int),
       if (category != _undefined) 'category': (category as Enum$SpotCategory?),
+      if (hasOrigin != _undefined) 'hasOrigin': (hasOrigin as bool?),
     }),
   );
 }
@@ -151,8 +177,12 @@ class _CopyWithStubImpl$Variables$Query$MapViewport<TRes>
 
   TRes _res;
 
-  call({Input$MapBoundsInput? bbox, int? zoom, Enum$SpotCategory? category}) =>
-      _res;
+  call({
+    Input$MapBoundsInput? bbox,
+    int? zoom,
+    Enum$SpotCategory? category,
+    bool? hasOrigin,
+  }) => _res;
 }
 
 class Query$MapViewport {
@@ -286,6 +316,15 @@ const documentNodeQueryMapViewport = DocumentNode(
           defaultValue: DefaultValueNode(value: null),
           directives: [],
         ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'hasOrigin')),
+          type: NamedTypeNode(
+            name: NameNode(value: 'Boolean'),
+            isNonNull: false,
+          ),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
       ],
       directives: [],
       selectionSet: SelectionSetNode(
@@ -305,6 +344,10 @@ const documentNodeQueryMapViewport = DocumentNode(
               ArgumentNode(
                 name: NameNode(value: 'category'),
                 value: VariableNode(name: NameNode(value: 'category')),
+              ),
+              ArgumentNode(
+                name: NameNode(value: 'hasOrigin'),
+                value: VariableNode(name: NameNode(value: 'hasOrigin')),
               ),
             ],
             directives: [],

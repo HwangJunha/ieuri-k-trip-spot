@@ -127,7 +127,7 @@ final class SelectedDiscoverSegmentProvider
 }
 
 String _$selectedDiscoverSegmentHash() =>
-    r'5de6f7b3487f7b7326bbad804c77e37175154b4c';
+    r'fce01c3585ea23bca9542200da5dce22541d7771';
 
 /// 둘러보기 탭에서 지금 보고 있는 화면(R5).
 ///

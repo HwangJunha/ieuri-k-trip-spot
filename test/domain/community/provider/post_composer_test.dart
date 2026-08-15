@@ -145,7 +145,7 @@ void main() {
       expect(repo.lastCreatePost?.body, '한복 입고 가면 무료');
       expect(repo.lastCreatePost?.tags, <String>['야간개장']);
       // 가이드 §5 — 장소는 선택이라 없어도 등록된다.
-      expect(repo.lastCreatePost?.spotId, isNull);
+      expect(repo.lastCreatePost?.catalogId, isNull);
     });
 
     test('조건이 갖춰지지 않으면 서버로 나가지 않는다', () async {

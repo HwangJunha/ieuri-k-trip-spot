@@ -177,7 +177,7 @@ type PopularSpotEdge {
 }
 
 input ReactToSpotInput {
-  spotId: ID!
+  catalogId: ID!
   reaction: SpotReaction!
 }
 
@@ -194,6 +194,8 @@ extend type Query {
     longitude: Float!
     radiusMeters: Int
     category: SpotCategory
+    # true면 요청 언어로 쓰인 원문만, false면 번역본만, 생략하면 둘 다(SPEC-0019).
+    hasOrigin: Boolean
     page: Int
     size: Int
   ): SpotPage!
@@ -241,6 +243,7 @@ extend type Query {
     longitude: Float!
     radiusMeters: Int
     category: SpotCategory
+    hasOrigin: Boolean
     first: Int
     after: String
   ): PopularSpotConnection!
