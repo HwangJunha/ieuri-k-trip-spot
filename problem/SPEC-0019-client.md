@@ -50,6 +50,45 @@ id였고, 일본어로 누른 좋아요가 영어로 바꾸면 사라졌다. 이
 받은 id를 쓴다. **따라서 마이그레이션 코드를 넣지 않았다** — 지울 것이 없는데 코드를
 넣으면 다음 사람이 있지도 않은 캐시를 찾게 된다.
 
+## 3-A. 별건: 홈·좋아요가 언어를 바꿔도 한국어로 남던 버그
+
+사용자가 "영어로 들어갔는데 왜 한국어 데이터가 나오는가"를 지적해 확인했다.
+**SPEC-0019와 무관한 기존 결함이다.** `catalogId` 교체가 만든 것이 아니다.
+
+### 원인
+
+`Accept-Language` 헤더는 정상이다(링크 체인 end-to-end로 확인했고, 라이브 서버도
+`en`/`ko`에 각각 영어·한국어 제목을 정확히 돌려준다 — **id는 양쪽 동일**해 SPEC-0019
+서버 작업도 의도대로 동작한다).
+
+문제는 **쿼리가 다시 나가지 않는 것**이었다. 홈·좋아요 탭은
+`StatefulShellRoute.indexedStack`의 브랜치라 설정 화면에 가 있어도 계속 mount된다.
+구독이 끊기지 않으니 `autoDispose`가 돌지 않고, 좌표·반경도 그대로라 provider를 다시
+부를 계기가 하나도 없다. 화면에 남아 있던 것은 **한국어 세션에서 받은 응답 본문**이다.
+
+Discover(스와이프)만 `ref.watch(localeControllerProvider)`가 있어 정상 동작했다 —
+그래서 화면마다 증상이 갈렸다.
+
+### 고친 것
+
+네 provider에 `ref.watch(localeControllerProvider)`를 넣었다(값은 쓰지 않고 재빌드
+트리거로만 구독 — swipe_providers와 같은 규약):
+
+| provider | 화면 |
+|---|---|
+| `nearbySpotsSection` | 홈 Near you |
+| `popularSpotsSection` | 홈 Popular |
+| `happeningNowEvents` | 홈 Happening Now |
+| `likedSpotsController` | 좋아요 탭 |
+
+**넣지 않은 곳:** 상세(`spotDetail`)는 라우트 push라 pop하면 사라지고, 검색은 질의별
+family라 자연히 다시 조회된다. 커뮤니티 글은 사용자가 쓴 글이라 서버 번역 대상이 아니다.
+
+회귀 테스트 두 개를 추가했고, **fix를 되돌리면 실제로 실패하는 것까지 확인했다**
+(`git stash`로 검증). CLAUDE.md §8이 경고한 대로 locale watch가 기존 테스트에
+`sharedPreferencesProvider` 오버라이드를 요구해서, 깨진 `liked_spots_controller_test`도
+함께 고쳤다.
+
 ## 3. 언어 전환 — 재조회는 유지한다
 
 `swipeControllerProvider`가 `localeControllerProvider`를 watch 해 언어가 바뀌면 세션을
@@ -85,7 +124,9 @@ id 때문에 다시 받을 필요는 없어졌으나 화면 글자 때문에 여
 
 - `dart run build_runner build` — 연산이 갱신된 SDL에 대해 통과(codegen이 검증한다)
 - `flutter analyze` — 이슈 없음
-- `flutter test` — 1170개 전부 통과
+- `flutter test` — 1172개 전부 통과(언어 전환 회귀 테스트 2개 추가)
+- `reactToSpot`의 전송 JSON을 직접 찍어 확인했다:
+  `{input: {catalogId: "C123", reaction: LIKE}}` — 입력 객체라 grep에 안 잡혀 따로 봤다
 
 기존 테스트가 깨진 곳은 고쳤다(CLAUDE.md §8의 "내가 깨뜨린 것 치우기"). 그중
 `sentVariables['spotId']`를 보던 repository 테스트는 **전송 변수 이름을 직접 검사하던

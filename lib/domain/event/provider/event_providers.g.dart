@@ -122,4 +122,4 @@ final class HappeningNowEventsProvider
 }
 
 String _$happeningNowEventsHash() =>
-    r'e50e9637443cf300d634356992798504bfd00f07';
+    r'ce8cef8ccb2e89477838653000bf7fe8e6550c8e';

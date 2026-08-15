@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/localization/locale_controller.dart';
 import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
 import '../../../common/pagination/offset_page.dart';
@@ -29,6 +30,13 @@ const int homeSectionSize = 10;
 /// 무효화하므로 다른 섹션은 건드리지 않는다(AC-20.2).
 @riverpod
 Future<List<TouristSpot>> nearbySpotsSection(Ref ref) async {
+  // 언어를 바꾸면 다시 받는다. 제목·주소는 **서버가 Accept-Language로 번역해** 주는
+  // 문장이라, 다시 받지 않으면 영어로 바꿔도 한국어 이름이 그대로 남는다.
+  // 홈은 StatefulShellRoute.indexedStack의 브랜치라 설정 화면에 가 있어도 계속
+  // mount된 상태다 — autoDispose가 돌지 않으니 이 구독이 유일한 갱신 계기다.
+  // **값은 쓰지 않고 재빌드 트리거로만 구독한다**(swipe_providers와 같은 규약).
+  ref.watch(localeControllerProvider);
+
   final Coordinates coords = await ref.watch(currentCoordinatesProvider.future);
   final double radiusKm = ref.watch(searchRadiusControllerProvider);
 
@@ -59,6 +67,9 @@ Future<List<TouristSpot>> nearbySpotsSection(Ref ref) async {
 /// 이 섹션만 다시 조회된다(R19·R20).
 @riverpod
 Future<List<PopularSpot>> popularSpotsSection(Ref ref) async {
+  // Near you와 같은 이유로 언어도 watch 한다 — 장소 이름이 서버 번역이다.
+  ref.watch(localeControllerProvider);
+
   final Coordinates coords = await ref.watch(currentCoordinatesProvider.future);
   final double radiusKm = ref.watch(searchRadiusControllerProvider);
 

@@ -187,7 +187,7 @@ final class LikedSpotsControllerProvider
 }
 
 String _$likedSpotsControllerHash() =>
-    r'f9cb13033b14ebaec1c9b146f86944957118160f';
+    r'2c13f26e4473cb537727426b13e2a138535eabdd';
 
 /// 좋아요 목록 컨트롤러(SPEC-0008 R-18). [category]별 패밀리 — 카테고리를 바꾸면
 /// 다른 인스턴스가 로딩되고, 필터링은 서버가 한다(클라이언트가 받은 목록을 거르지

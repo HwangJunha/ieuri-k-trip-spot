@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ieuri_k_trip_spot/common/localization/app_language.dart';
+import 'package:ieuri_k_trip_spot/common/localization/locale_controller.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
 import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
 import 'package:ieuri_k_trip_spot/common/storage/search_radius_controller.dart';
@@ -237,6 +239,30 @@ void main() {
 
       expect(spots.single.id, 'a');
       // Near you만 두 번 조회됐다 — 재시도가 다른 섹션을 건드리지 않았다.
+      expect(repository.spotPageCallCount, 2);
+    });
+  });
+
+  // 홈은 셸 브랜치라 설정 화면에 가 있어도 계속 mount된다 — autoDispose가 돌지 않으니
+  // locale을 watch하지 않으면 영어로 바꿔도 한국어 이름이 그대로 남는다. 제목·주소는
+  // 서버가 Accept-Language로 번역해 주는 문장이라 다시 받는 수밖에 없다.
+  group('언어 전환', () {
+    test('언어를 바꾸면 Near you를 다시 받는다', () async {
+      final repository = FakeSpotRepository(
+        feed: <TouristSpot>[homeSpot('a')],
+        pageSize: 10,
+      );
+      final ProviderContainer container = makeContainer(
+        spotRepository: repository,
+      );
+      await container.read(nearbySpotsSectionProvider.future);
+      expect(repository.spotPageCallCount, 1);
+
+      await container
+          .read(localeControllerProvider.notifier)
+          .select(AppLanguage.korean);
+      await container.read(nearbySpotsSectionProvider.future);
+
       expect(repository.spotPageCallCount, 2);
     });
   });

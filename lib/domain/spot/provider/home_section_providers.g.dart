@@ -86,7 +86,7 @@ final class NearbySpotsSectionProvider
 }
 
 String _$nearbySpotsSectionHash() =>
-    r'7f7915a8028058f205dea88fa8c5586d331ab689';
+    r'cce03065da4674e7125dab9e2b244d66945d1516';
 
 /// 홈 "Popular" 섹션(R18). 반경 안의 spot을 누적 좋아요 총합 내림차순으로 준다.
 ///
@@ -163,4 +163,4 @@ final class PopularSpotsSectionProvider
 }
 
 String _$popularSpotsSectionHash() =>
-    r'e937135f3053ca37b40f8be32a022d164f7cbd84';
+    r'0d2779eee7975d9b199130e5d32e458c87981c46';
