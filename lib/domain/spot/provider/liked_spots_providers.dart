@@ -5,11 +5,11 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../common/localization/locale_controller.dart';
 import '../../../common/pagination/page.dart';
 import '../model/liked_spot.dart';
-import '../model/spot_category.dart';
-import '../model/spot_category_selection.dart';
+import '../../../common/category/spot_category.dart';
+import '../../../common/category/spot_category_selection.dart';
 import '../repository/spot_repository.dart';
 import 'retry_counting.dart';
-import 'spot_category_toggle.dart';
+import '../../../common/category/spot_category_toggle.dart';
 import 'spot_providers.dart';
 
 part 'liked_spots_providers.g.dart';

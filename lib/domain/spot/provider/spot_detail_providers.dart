@@ -4,7 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../model/retry_budget.dart';
 import '../model/retry_exhausted.dart';
-import '../model/spot_category_selection.dart';
+import '../../../common/category/spot_category_selection.dart';
 import '../model/spot_detail.dart';
 import '../model/spot_failure.dart';
 import '../model/spot_reaction.dart';

@@ -7,7 +7,7 @@ import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
 import 'package:ieuri_k_trip_spot/common/storage/search_radius_controller.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/component/drag_feedback_overlay.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/component/swipe_card.dart';
-import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
+import 'package:ieuri_k_trip_spot/common/category/spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/tourist_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/spot_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/view/discover_swipe_view.dart';

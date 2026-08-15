@@ -6,14 +6,15 @@ import '../../../common/location/coordinates.dart';
 import '../../../common/navigation/picked_place.dart';
 import '../../../common/navigation/spot_detail_route.dart';
 import '../../../l10n/gen/app_localizations.dart';
-import '../component/category_bar.dart';
+import '../../../common/category/category_bar.dart';
 import '../component/recent_searches_list.dart';
 // 결과 목록의 페이징은 이 컴포넌트 안에서 공용 PaginationListView가 맡는다 —
 // 기능이 자기 페이지네이션을 만들지 않는다(CLAUDE.md §4).
 import '../component/search_result_list.dart';
 import '../component/search_suggestion_list.dart';
-import '../component/spot_category_seed.dart';
-import '../model/spot_category.dart';
+import '../provider/spot_category_seed.dart';
+import '../provider/swipe_providers.dart';
+import '../../../common/category/spot_category.dart';
 import '../model/spot_search_state.dart';
 import '../model/tourist_spot.dart';
 import '../provider/recent_searches_providers.dart';
@@ -135,6 +136,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               // 검색 전용 provider가 들고 있다** — 하나로 묶으면 Discover에서 고른
               // 필터가 검색 결과까지 갈아치운다.
               CategoryBar(
+                available:
+                    ref.watch(availableSpotCategoriesProvider).value ??
+                    const <SpotCategory>[],
                 selected: ref.watch(spotSearchCategoryProvider),
                 onToggle: _toggleCategory,
               ),

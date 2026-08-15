@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/liked_spot.dart';
-import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
+import 'package:ieuri_k_trip_spot/common/category/spot_category.dart';
 
 /// SPEC-0020 이후 카테고리는 enum이 아니라 값 객체다. 동등성은 `code`만 보므로
 /// 라벨이 달라도 같은 카테고리다.

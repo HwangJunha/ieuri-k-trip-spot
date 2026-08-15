@@ -5,7 +5,7 @@ import 'package:ieuri_k_trip_spot/common/localization/locale_controller.dart';
 import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/liked_spot.dart';
-import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
+import 'package:ieuri_k_trip_spot/common/category/spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/liked_spots_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/spot_providers.dart';

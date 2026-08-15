@@ -4,8 +4,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/localization/locale_controller.dart';
 import '../../../common/network/graphql_client.dart';
-import '../../spot/model/spot_category.dart';
-import '../../spot/provider/spot_category_toggle.dart';
+import '../../../common/category/spot_category.dart';
+import '../../../common/category/spot_category_toggle.dart';
 import '../model/congestion_area.dart';
 import '../model/map_bounds.dart';
 import '../model/map_viewport_result.dart';

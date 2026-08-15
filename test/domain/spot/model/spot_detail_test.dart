@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
-import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
+import 'package:ieuri_k_trip_spot/common/category/spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_detail.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_image.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_info_item.dart';

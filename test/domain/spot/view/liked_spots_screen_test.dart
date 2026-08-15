@@ -5,7 +5,7 @@ import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/component/copyright_badge.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/liked_spot.dart';
-import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
+import 'package:ieuri_k_trip_spot/common/category/spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/spot_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/view/liked_spots_screen.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';

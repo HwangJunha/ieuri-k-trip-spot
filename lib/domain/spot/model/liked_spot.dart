@@ -1,5 +1,5 @@
 import 'copyright_type.dart';
-import 'spot_category.dart';
+import '../../../common/category/spot_category.dart';
 
 /// 좋아요 목록의 항목 하나(SPEC-0008 R-18).
 ///

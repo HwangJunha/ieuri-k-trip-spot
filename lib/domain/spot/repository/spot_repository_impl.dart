@@ -10,7 +10,7 @@ import '../../../common/pagination/page.dart';
 import '../model/copyright_type.dart';
 import '../model/liked_spot.dart';
 import '../model/popular_spot.dart';
-import '../model/spot_category.dart';
+import '../../../common/category/spot_category.dart';
 import '../model/spot_detail.dart';
 import '../model/spot_failure.dart';
 import '../model/spot_image.dart';

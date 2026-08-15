@@ -6,7 +6,7 @@ import 'package:ieuri_k_trip_spot/common/pagination/page.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/liked_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/popular_spot.dart';
-import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
+import 'package:ieuri_k_trip_spot/common/category/spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_detail.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_reaction.dart';

@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../model/spot_category.dart';
-import '../provider/spot_category_toggle.dart';
-import '../provider/swipe_providers.dart';
+import '../../../common/category/spot_category.dart';
+import '../../../common/category/spot_category_toggle.dart';
+import 'swipe_providers.dart';
 
 /// 화면이 진입할 때 카테고리 선택의 기본값을 심는다(SPEC-0020 R4).
 ///
-/// **세 화면이 같은 일을 한다**(Discover·좋아요·검색). R12가 선택 provider를 화면별로
-/// 나누라고 하므로 provider는 셋이지만, "목록이 오면 기본값을 심는다"는 규칙은 하나라
+/// **네 화면이 같은 일을 한다**(Discover·좋아요·검색·지도). R12가 선택 provider를
+/// 화면별로 나누라고 하므로 provider는 넷이지만, "목록이 오면 기본값을 심는다"는 규칙은 하나라
 /// 여기 한 번만 적는다.
 ///
 /// **`ref.listen`인 이유.** 가용 목록은 서버에서 비동기로 오는데, `build` 안에서

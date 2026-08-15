@@ -1,5 +1,5 @@
-import '../model/spot_category.dart';
-import '../model/spot_category_selection.dart';
+import 'spot_category.dart';
+import 'spot_category_selection.dart';
 
 /// 카테고리 다중 선택 토글(SPEC-0020 R2·R3·R4).
 ///

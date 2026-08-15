@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../model/spot_category.dart';
-import '../provider/swipe_providers.dart';
+import 'spot_category.dart';
 import 'spot_category_icon.dart';
 
-/// 상단 카테고리 바(spec §5). `availableSpotCategories` 결과만 렌더한다 — 서버가
+/// 상단 카테고리 바(spec §5). 서버가 준 [available] 목록만 렌더한다 — 서버가
 /// 가용성의 단일 출처라 클라이언트는 없는 카테고리를 하드코딩하지 않는다.
+///
+/// **목록을 provider에서 직접 읽지 않고 인자로 받는다.** 이 위젯은 spot과 지도가
+/// 함께 쓰므로 `common/`에 있는데(CLAUDE.md §4), 여기서 `availableSpotCategories`를
+/// watch하면 common이 도메인 provider(→ `SpotRepository`)에 의존하게 되어 의존
+/// 방향이 뒤집힌다. 목록을 읽는 일은 화면이 맡고, 이 위젯은 그리기만 한다.
 ///
 /// **다중 선택이다**(R1·R2). 여러 칩을 동시에 켤 수 있고, 켜진 칩을 다시 누르면
 /// 꺼진다. "전체 보기" 칩은 제거됐다 — 선택 집합이 비어 있을 수 없게 되어(R2)
@@ -23,12 +26,17 @@ import 'spot_category_icon.dart';
 /// **선택 상태는 화면이 준다**([selected]·[onToggle]). Discover 스와이프·좋아요
 /// 목록·검색·지도가 같은 바를 쓰지만 선택은 서로 독립이어야 하기 때문이다(R12) —
 /// 하나의 provider에 묶으면 좋아요 목록에서 고른 필터가 스와이프 스택까지 갈아치운다.
-class CategoryBar extends ConsumerWidget {
+class CategoryBar extends StatelessWidget {
   const CategoryBar({
     super.key,
+    required this.available,
     required this.selected,
     required this.onToggle,
   });
+
+  /// 서버가 준 가용 카테고리. 비어 있으면 바 자체를 그리지 않는다 — 목록이 아직
+  /// 오지 않았거나 조회에 실패한 상태이며, 그때 빈 바를 그리면 자리만 차지한다.
+  final List<SpotCategory> available;
 
   /// 현재 선택된 카테고리 집합. 비어 있지 않다(목록이 오기 전 첫 프레임 제외).
   final Set<SpotCategory> selected;
@@ -37,13 +45,8 @@ class CategoryBar extends ConsumerWidget {
   final ValueChanged<SpotCategory> onToggle;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final AsyncValue<List<SpotCategory>> categories = ref.watch(
-      availableSpotCategoriesProvider,
-    );
-
+  Widget build(BuildContext context) {
     // 카테고리 목록 자체가 로딩/실패면 바를 접는다(카드 흐름을 막지 않음).
-    final List<SpotCategory> available = categories.value ?? const [];
     if (available.isEmpty) return const SizedBox.shrink();
 
     return SizedBox(

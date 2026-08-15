@@ -3,7 +3,7 @@ import '../../../common/pagination/offset_page.dart';
 import '../../../common/pagination/page.dart';
 import '../model/liked_spot.dart';
 import '../model/popular_spot.dart';
-import '../model/spot_category.dart';
+import '../../../common/category/spot_category.dart';
 import '../model/spot_detail.dart';
 import '../model/spot_reaction.dart';
 import '../model/spot_search_result.dart';

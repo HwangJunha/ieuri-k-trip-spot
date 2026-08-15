@@ -5,12 +5,13 @@ import 'package:go_router/go_router.dart';
 import '../../../common/navigation/settings_routes.dart';
 import '../../../common/pagination/pagination_list_view.dart';
 import '../../../l10n/gen/app_localizations.dart';
-import '../component/category_bar.dart';
+import '../../../common/category/category_bar.dart';
 import '../component/liked_spot_card.dart';
-import '../component/spot_category_seed.dart';
+import '../provider/spot_category_seed.dart';
+import '../provider/swipe_providers.dart';
 import '../model/liked_spot.dart';
-import '../model/spot_category.dart';
-import '../model/spot_category_selection.dart';
+import '../../../common/category/spot_category.dart';
+import '../../../common/category/spot_category_selection.dart';
 import '../provider/liked_spots_providers.dart';
 import 'spot_detail_view.dart';
 
@@ -54,6 +55,9 @@ class LikedSpotsScreen extends ConsumerWidget {
             // Discover와 같은 바를 쓰되 선택 상태는 이 화면 것이다 — 여기서 고른
             // 필터가 스와이프 스택을 갈아치우면 안 된다.
             CategoryBar(
+              available:
+                  ref.watch(availableSpotCategoriesProvider).value ??
+                  const <SpotCategory>[],
               selected: selected,
               onToggle: (SpotCategory next) =>
                   ref.read(selectedLikedCategoryProvider.notifier).toggle(next),

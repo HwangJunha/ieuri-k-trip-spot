@@ -11,11 +11,17 @@ import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
 import '../../../common/navigation/picked_place.dart';
 import '../../../common/navigation/spot_detail_route.dart';
+import '../../../common/category/category_bar.dart';
+import '../../../common/category/spot_category.dart';
 import '../../../common/widget/floating_bottom_nav_scaffold.dart';
 import '../../../l10n/gen/app_localizations.dart';
-import '../../spot/component/category_bar.dart';
-import '../../spot/component/spot_category_seed.dart';
-import '../../spot/model/spot_category.dart';
+// **spot 기능을 참조한다**(CLAUDE.md §3의 예외). 카테고리 *목록*은 서버 리소스이고
+// 그 접근 경로가 `SpotRepository`이므로, 지도는 그 소비자로서 spot의 provider를
+// 읽는다. common으로 올리면 `common/`이 도메인 데이터 접근(GraphQL 오퍼레이션 포함)을
+// 갖게 되어 더 나쁜 위반이 된다 — 공유 가능한 부분(모델·토글·위젯·아이콘)은 이미
+// `common/category/`로 올렸고, 여기 남은 둘은 그 목록 하나로 귀결된다.
+import '../../spot/provider/spot_category_seed.dart';
+import '../../spot/provider/swipe_providers.dart';
 import '../component/area_info_card.dart';
 import '../component/congestion_legend.dart';
 import '../component/map_overlay_painter.dart';
@@ -935,6 +941,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                       child: SizedBox(
                         width: MediaQuery.sizeOf(context).width,
                         child: CategoryBar(
+                          available:
+                              ref
+                                  .watch(availableSpotCategoriesProvider)
+                                  .value ??
+                              const <SpotCategory>[],
                           selected: ref.watch(mapSelectedCategoryProvider),
                           onToggle: (SpotCategory next) {
                             ref

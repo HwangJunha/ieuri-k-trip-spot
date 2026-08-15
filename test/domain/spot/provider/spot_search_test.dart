@@ -3,7 +3,7 @@ import 'package:ieuri_k_trip_spot/common/pagination/offset_page.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
 import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
-import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
+import 'package:ieuri_k_trip_spot/common/category/spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_search_result.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_search_state.dart';

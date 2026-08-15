@@ -5,13 +5,13 @@ import '../../../common/location/location_providers.dart';
 // 페이지 모델은 공용 OffsetPage다 — 기능이 자기 페이지네이션을 만들지 않는다(§4).
 import '../../../common/pagination/offset_page.dart';
 import '../../../common/storage/search_radius_controller.dart';
-import '../model/spot_category.dart';
-import '../model/spot_category_selection.dart';
+import '../../../common/category/spot_category.dart';
+import '../../../common/category/spot_category_selection.dart';
 import '../model/spot_search_result.dart';
 import '../model/spot_search_state.dart';
 import '../model/spot_suggestion.dart';
 import 'recent_searches_providers.dart';
-import 'spot_category_toggle.dart';
+import '../../../common/category/spot_category_toggle.dart';
 import 'spot_providers.dart';
 
 part 'spot_search_providers.g.dart';

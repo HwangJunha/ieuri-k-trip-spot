@@ -13,7 +13,7 @@ import '../component/spot_info_item_list.dart';
 import '../component/spot_intro_rows.dart';
 import '../model/retry_exhausted.dart';
 import '../../../common/navigation/spot_detail_route.dart';
-import '../model/spot_category_selection.dart';
+import '../../../common/category/spot_category_selection.dart';
 import '../model/spot_detail.dart';
 import '../model/spot_failure.dart';
 import '../model/spot_image.dart';

@@ -42,6 +42,24 @@
 5. **`availableSpotCategories`는 `code` 알파벳순입니다.** `TOURIST_SPOT`이 목록의 7번째이며 첫 값이 아닙니다 — AC4.2의 "목록 첫 값 폴백"이 실제로 다른 값이 되는 상황이 흔합니다.
 6. **커뮤니티 오퍼레이션도 손대야 했습니다.** 범위 밖이지만 같은 `spots`·`likedSpots`·`searchSpots`를 참조해, 인자를 바꾸지 않으면 codegen이 통과하지 않습니다. `NearbySpotCategory`·`TargetCategory` 타입 자체는 건드리지 않았습니다.
 
+### 카테고리 코드의 위치 (2026-08-15 결정)
+
+지도가 카테고리 필터를 갖게 되면서 **spot 전용이던 카테고리를 두 기능이 공유**하게 됐습니다. CLAUDE.md §4("두 기능 이상이 쓰면 `common/`")에 따라 공유 가능한 것을 `lib/common/category/`로 올렸습니다.
+
+| 파일 | 이동 | 근거 |
+|---|---|---|
+| `spot_category.dart` | → `common/category/` | 순수 값 객체, import 0개 |
+| `spot_category_selection.dart` | → `common/category/` | 위 하나만 참조 |
+| `spot_category_toggle.dart` | → `common/category/` | 토글 규칙, 위 둘만 참조 |
+| `spot_category_icon.dart` | → `common/category/` | `code` → Material 아이콘 |
+| `category_bar.dart` | → `common/category/` | 네 화면이 공유하는 위젯 |
+
+`CategoryBar`는 이동하면서 **가용 목록을 provider에서 직접 읽지 않고 인자로 받도록** 바꿨습니다(`ConsumerWidget` → `StatelessWidget`). 그대로 두면 `common/`이 도메인 provider를 watch하게 되어 의존 방향이 뒤집힙니다.
+
+**`availableSpotCategoriesProvider`와 `spot_category_seed.dart`는 spot에 남깁니다.** 전자가 `SpotRepository`(GraphQL 오퍼레이션 포함)에 묶여 있어, common으로 올리면 `common/`이 도메인 데이터 접근을 갖게 됩니다 — 교차 기능 import보다 나쁜 위반입니다. 카테고리 *목록*은 서버 리소스이고 그 접근 경로를 spot이 소유하며, 지도는 소비자입니다.
+
+결과적으로 map→spot 참조는 **5건에서 2건**으로 줄었고, 남은 둘은 그 목록 하나로 귀결됩니다. `common/category/`는 도메인을 전혀 참조하지 않습니다.
+
 ### 함께 고친 기존 버그
 
 - **지도 마커 탭이 늘 `touristSpot`으로 열렸습니다.** `map_repository_impl.dart`가 생성 enum의 `.name`(`TOURIST_SPOT`)을 실었는데 라우터는 Dart enum 이름(`touristSpot`)과 비교해 매칭이 영영 실패했습니다. 표기가 `code` 하나로 통일되며 사라졌습니다.

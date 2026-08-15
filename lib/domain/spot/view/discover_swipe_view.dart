@@ -9,13 +9,13 @@ import '../../../common/permission/provider/permission_providers.dart';
 import '../../../common/storage/search_radius_controller.dart';
 import '../../../common/widget/failure_notice.dart';
 import '../../../l10n/gen/app_localizations.dart';
-import '../component/category_bar.dart';
+import '../../../common/category/category_bar.dart';
 import '../component/drag_feedback_overlay.dart';
-import '../component/spot_category_seed.dart';
+import '../provider/spot_category_seed.dart';
 import '../component/swipe_card.dart';
 import '../model/retry_exhausted.dart';
-import '../model/spot_category.dart';
-import '../model/spot_category_selection.dart';
+import '../../../common/category/spot_category.dart';
+import '../../../common/category/spot_category_selection.dart';
 import '../model/spot_reaction.dart';
 import '../model/swipe_queue.dart';
 import '../model/tourist_spot.dart';
@@ -58,6 +58,9 @@ class DiscoverSwipeView extends ConsumerWidget {
         // 스와이프의 선택 상태는 세션에 속하는 keepAlive provider다(탭을
         // 옮겼다 와도 유지된다, AC12.3).
         CategoryBar(
+          available:
+              ref.watch(availableSpotCategoriesProvider).value ??
+              const <SpotCategory>[],
           selected: selected,
           onToggle: (SpotCategory next) =>
               ref.read(selectedSpotCategoryProvider.notifier).toggle(next),
