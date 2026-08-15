@@ -44,6 +44,8 @@ extend type Query {
     latitude: Float!
     longitude: Float!
     radiusMeters: Int
+    # true면 요청 언어로 쓰인 원문만, false면 번역본만, 생략하면 둘 다(SPEC-0019).
+    hasOrigin: Boolean
     first: Int
     after: String
   ): FestivalConnection!

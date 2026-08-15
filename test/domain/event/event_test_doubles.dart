@@ -16,6 +16,13 @@ class FakeEventRepository implements EventRepository {
   /// 마지막 조회에 실린 반경(검증용). null은 인자를 보내지 않은 것.
   int? lastRadiusMeters;
 
+  /// 호출마다 실린 `hasOrigin`(원문 우선 조회가 실제로 나가는지 확인용, SPEC-0019).
+  final List<bool?> requestedHasOrigin = <bool?>[];
+
+  /// `hasOrigin: false`(번역본)로 조회했을 때 돌려줄 축제(SPEC-0019). 비워 두면
+  /// 기존 테스트와 동작이 같다.
+  List<Festival> translatedFestivals = const <Festival>[];
+
   int callCount = 0;
 
   @override
@@ -23,13 +30,23 @@ class FakeEventRepository implements EventRepository {
     required double latitude,
     required double longitude,
     int? radiusMeters,
+    bool? hasOrigin,
     int? first,
     String? after,
   }) async {
     callCount++;
     lastRadiusMeters = radiusMeters;
+    requestedHasOrigin.add(hasOrigin);
     if (failure != null) throw failure!;
-    return CursorPage<Festival>(items: festivals, hasNextPage: false);
+    final List<Festival> pool = switch (hasOrigin) {
+      true => festivals,
+      false => translatedFestivals,
+      null => <Festival>[...festivals, ...translatedFestivals],
+    };
+    return CursorPage<Festival>(
+      items: first == null ? pool : pool.take(first).toList(growable: false),
+      hasNextPage: false,
+    );
   }
 }
 

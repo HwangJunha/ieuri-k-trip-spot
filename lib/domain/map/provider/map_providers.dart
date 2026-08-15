@@ -25,9 +25,17 @@ MapRepository mapRepository(Ref ref) =>
 /// bbox와 zoom을 인자로 받아 family가 된다. 뷰포트가 바뀌면 새 인자가 되므로 이전
 /// 조회는 자동으로 버려진다 — 늦게 도착한 응답이 현재 뷰포트를 덮어쓰지 않는다
 /// (설계 §3.3).
+/// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). 화면은 원문으로 마커를 채우고 자리가
+/// 남으면 번역본으로 한 번 더 채운다 — 두 값이 서로 다른 family 인스턴스가 된다.
 @riverpod
-Future<MapViewportResult> mapViewport(Ref ref, MapBounds bbox, int zoom) =>
-    ref.watch(mapRepositoryProvider).fetchViewport(bbox: bbox, zoom: zoom);
+Future<MapViewportResult> mapViewport(
+  Ref ref,
+  MapBounds bbox,
+  int zoom, {
+  bool? hasOrigin,
+}) => ref
+    .watch(mapRepositoryProvider)
+    .fetchViewport(bbox: bbox, zoom: zoom, hasOrigin: hasOrigin);
 
 /// 뷰포트에 걸치는 구역의 실시간 혼잡도(R6~R11).
 ///

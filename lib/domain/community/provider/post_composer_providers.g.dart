@@ -82,7 +82,7 @@ final class PostComposerProvider
   }
 }
 
-String _$postComposerHash() => r'ad7b50d92c72d743db982f68bbc9faaa575dc338';
+String _$postComposerHash() => r'60e96312b92fefbd349020f5518e7edca20d7496';
 
 /// 컴포저가 편집 중인 초안. 화면 하나에 속한 상태라 autoDispose(codegen 기본)로
 /// 둔다 — 컴포저를 닫으면 초안이 사라지는 것이 맞다.

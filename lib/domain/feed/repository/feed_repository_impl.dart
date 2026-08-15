@@ -89,13 +89,13 @@ class FeedRepositoryImpl implements FeedRepository {
   @override
   Future<FeedMutationResult<String>> createFeedItem({
     required String body,
-    required String spotId,
+    required String catalogId,
     required List<String> photoKeys,
   }) => _mutateResult(
     documentNodeMutationCreateFeedItem,
     Variables$Mutation$CreateFeedItem(
       body: body,
-      spotId: spotId,
+      catalogId: catalogId,
       photoKeys: photoKeys,
     ).toJson(),
     'createFeedItem',

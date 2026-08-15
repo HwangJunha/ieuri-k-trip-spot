@@ -914,7 +914,7 @@ class _CopyWithStubImpl$Fragment$PostCardFields$author<TRes>
 
 class Variables$Query$Posts {
   factory Variables$Query$Posts({
-    String? spotId,
+    String? catalogId,
     double? latitude,
     double? longitude,
     int? radiusMeters,
@@ -925,7 +925,7 @@ class Variables$Query$Posts {
     int? first,
     String? after,
   }) => Variables$Query$Posts._({
-    if (spotId != null) r'spotId': spotId,
+    if (catalogId != null) r'catalogId': catalogId,
     if (latitude != null) r'latitude': latitude,
     if (longitude != null) r'longitude': longitude,
     if (radiusMeters != null) r'radiusMeters': radiusMeters,
@@ -941,9 +941,9 @@ class Variables$Query$Posts {
 
   factory Variables$Query$Posts.fromJson(Map<String, dynamic> data) {
     final result$data = <String, dynamic>{};
-    if (data.containsKey('spotId')) {
-      final l$spotId = data['spotId'];
-      result$data['spotId'] = (l$spotId as String?);
+    if (data.containsKey('catalogId')) {
+      final l$catalogId = data['catalogId'];
+      result$data['catalogId'] = (l$catalogId as String?);
     }
     if (data.containsKey('latitude')) {
       final l$latitude = data['latitude'];
@@ -990,7 +990,7 @@ class Variables$Query$Posts {
 
   Map<String, dynamic> _$data;
 
-  String? get spotId => (_$data['spotId'] as String?);
+  String? get catalogId => (_$data['catalogId'] as String?);
 
   double? get latitude => (_$data['latitude'] as double?);
 
@@ -1013,9 +1013,9 @@ class Variables$Query$Posts {
 
   Map<String, dynamic> toJson() {
     final result$data = <String, dynamic>{};
-    if (_$data.containsKey('spotId')) {
-      final l$spotId = spotId;
-      result$data['spotId'] = l$spotId;
+    if (_$data.containsKey('catalogId')) {
+      final l$catalogId = catalogId;
+      result$data['catalogId'] = l$catalogId;
     }
     if (_$data.containsKey('latitude')) {
       final l$latitude = latitude;
@@ -1071,12 +1071,13 @@ class Variables$Query$Posts {
     if (other is! Variables$Query$Posts || runtimeType != other.runtimeType) {
       return false;
     }
-    final l$spotId = spotId;
-    final lOther$spotId = other.spotId;
-    if (_$data.containsKey('spotId') != other._$data.containsKey('spotId')) {
+    final l$catalogId = catalogId;
+    final lOther$catalogId = other.catalogId;
+    if (_$data.containsKey('catalogId') !=
+        other._$data.containsKey('catalogId')) {
       return false;
     }
-    if (l$spotId != lOther$spotId) {
+    if (l$catalogId != lOther$catalogId) {
       return false;
     }
     final l$latitude = latitude;
@@ -1161,7 +1162,7 @@ class Variables$Query$Posts {
 
   @override
   int get hashCode {
-    final l$spotId = spotId;
+    final l$catalogId = catalogId;
     final l$latitude = latitude;
     final l$longitude = longitude;
     final l$radiusMeters = radiusMeters;
@@ -1172,7 +1173,7 @@ class Variables$Query$Posts {
     final l$first = first;
     final l$after = after;
     return Object.hashAll([
-      _$data.containsKey('spotId') ? l$spotId : const {},
+      _$data.containsKey('catalogId') ? l$catalogId : const {},
       _$data.containsKey('latitude') ? l$latitude : const {},
       _$data.containsKey('longitude') ? l$longitude : const {},
       _$data.containsKey('radiusMeters') ? l$radiusMeters : const {},
@@ -1196,7 +1197,7 @@ abstract class CopyWith$Variables$Query$Posts<TRes> {
       _CopyWithStubImpl$Variables$Query$Posts;
 
   TRes call({
-    String? spotId,
+    String? catalogId,
     double? latitude,
     double? longitude,
     int? radiusMeters,
@@ -1220,7 +1221,7 @@ class _CopyWithImpl$Variables$Query$Posts<TRes>
   static const _undefined = <dynamic, dynamic>{};
 
   TRes call({
-    Object? spotId = _undefined,
+    Object? catalogId = _undefined,
     Object? latitude = _undefined,
     Object? longitude = _undefined,
     Object? radiusMeters = _undefined,
@@ -1233,7 +1234,7 @@ class _CopyWithImpl$Variables$Query$Posts<TRes>
   }) => _then(
     Variables$Query$Posts._({
       ..._instance._$data,
-      if (spotId != _undefined) 'spotId': (spotId as String?),
+      if (catalogId != _undefined) 'catalogId': (catalogId as String?),
       if (latitude != _undefined) 'latitude': (latitude as double?),
       if (longitude != _undefined) 'longitude': (longitude as double?),
       if (radiusMeters != _undefined) 'radiusMeters': (radiusMeters as int?),
@@ -1256,7 +1257,7 @@ class _CopyWithStubImpl$Variables$Query$Posts<TRes>
   TRes _res;
 
   call({
-    String? spotId,
+    String? catalogId,
     double? latitude,
     double? longitude,
     int? radiusMeters,
@@ -1370,7 +1371,7 @@ const documentNodeQueryPosts = DocumentNode(
       name: NameNode(value: 'Posts'),
       variableDefinitions: [
         VariableDefinitionNode(
-          variable: VariableNode(name: NameNode(value: 'spotId')),
+          variable: VariableNode(name: NameNode(value: 'catalogId')),
           type: NamedTypeNode(name: NameNode(value: 'ID'), isNonNull: false),
           defaultValue: DefaultValueNode(value: null),
           directives: [],
@@ -1453,8 +1454,8 @@ const documentNodeQueryPosts = DocumentNode(
             alias: null,
             arguments: [
               ArgumentNode(
-                name: NameNode(value: 'spotId'),
-                value: VariableNode(name: NameNode(value: 'spotId')),
+                name: NameNode(value: 'catalogId'),
+                value: VariableNode(name: NameNode(value: 'catalogId')),
               ),
               ArgumentNode(
                 name: NameNode(value: 'latitude'),
@@ -6281,14 +6282,14 @@ class _CopyWithStubImpl$Mutation$UnlikePost$unlikePost$userErrors<TRes>
 class Variables$Mutation$CreatePost {
   factory Variables$Mutation$CreatePost({
     required Enum$TargetCategory category,
-    String? spotId,
+    String? catalogId,
     required List<String> tags,
     required String title,
     required String body,
     required List<String> photoKeys,
   }) => Variables$Mutation$CreatePost._({
     r'category': category,
-    if (spotId != null) r'spotId': spotId,
+    if (catalogId != null) r'catalogId': catalogId,
     r'tags': tags,
     r'title': title,
     r'body': body,
@@ -6303,9 +6304,9 @@ class Variables$Mutation$CreatePost {
     result$data['category'] = fromJson$Enum$TargetCategory(
       (l$category as String),
     );
-    if (data.containsKey('spotId')) {
-      final l$spotId = data['spotId'];
-      result$data['spotId'] = (l$spotId as String?);
+    if (data.containsKey('catalogId')) {
+      final l$catalogId = data['catalogId'];
+      result$data['catalogId'] = (l$catalogId as String?);
     }
     final l$tags = data['tags'];
     result$data['tags'] = (l$tags as List<dynamic>)
@@ -6327,7 +6328,7 @@ class Variables$Mutation$CreatePost {
   Enum$TargetCategory get category =>
       (_$data['category'] as Enum$TargetCategory);
 
-  String? get spotId => (_$data['spotId'] as String?);
+  String? get catalogId => (_$data['catalogId'] as String?);
 
   List<String> get tags => (_$data['tags'] as List<String>);
 
@@ -6341,9 +6342,9 @@ class Variables$Mutation$CreatePost {
     final result$data = <String, dynamic>{};
     final l$category = category;
     result$data['category'] = toJson$Enum$TargetCategory(l$category);
-    if (_$data.containsKey('spotId')) {
-      final l$spotId = spotId;
-      result$data['spotId'] = l$spotId;
+    if (_$data.containsKey('catalogId')) {
+      final l$catalogId = catalogId;
+      result$data['catalogId'] = l$catalogId;
     }
     final l$tags = tags;
     result$data['tags'] = l$tags.map((e) => e).toList();
@@ -6373,12 +6374,13 @@ class Variables$Mutation$CreatePost {
     if (l$category != lOther$category) {
       return false;
     }
-    final l$spotId = spotId;
-    final lOther$spotId = other.spotId;
-    if (_$data.containsKey('spotId') != other._$data.containsKey('spotId')) {
+    final l$catalogId = catalogId;
+    final lOther$catalogId = other.catalogId;
+    if (_$data.containsKey('catalogId') !=
+        other._$data.containsKey('catalogId')) {
       return false;
     }
-    if (l$spotId != lOther$spotId) {
+    if (l$catalogId != lOther$catalogId) {
       return false;
     }
     final l$tags = tags;
@@ -6421,14 +6423,14 @@ class Variables$Mutation$CreatePost {
   @override
   int get hashCode {
     final l$category = category;
-    final l$spotId = spotId;
+    final l$catalogId = catalogId;
     final l$tags = tags;
     final l$title = title;
     final l$body = body;
     final l$photoKeys = photoKeys;
     return Object.hashAll([
       l$category,
-      _$data.containsKey('spotId') ? l$spotId : const {},
+      _$data.containsKey('catalogId') ? l$catalogId : const {},
       Object.hashAll(l$tags.map((v) => v)),
       l$title,
       l$body,
@@ -6448,7 +6450,7 @@ abstract class CopyWith$Variables$Mutation$CreatePost<TRes> {
 
   TRes call({
     Enum$TargetCategory? category,
-    String? spotId,
+    String? catalogId,
     List<String>? tags,
     String? title,
     String? body,
@@ -6468,7 +6470,7 @@ class _CopyWithImpl$Variables$Mutation$CreatePost<TRes>
 
   TRes call({
     Object? category = _undefined,
-    Object? spotId = _undefined,
+    Object? catalogId = _undefined,
     Object? tags = _undefined,
     Object? title = _undefined,
     Object? body = _undefined,
@@ -6478,7 +6480,7 @@ class _CopyWithImpl$Variables$Mutation$CreatePost<TRes>
       ..._instance._$data,
       if (category != _undefined && category != null)
         'category': (category as Enum$TargetCategory),
-      if (spotId != _undefined) 'spotId': (spotId as String?),
+      if (catalogId != _undefined) 'catalogId': (catalogId as String?),
       if (tags != _undefined && tags != null) 'tags': (tags as List<String>),
       if (title != _undefined && title != null) 'title': (title as String),
       if (body != _undefined && body != null) 'body': (body as String),
@@ -6496,7 +6498,7 @@ class _CopyWithStubImpl$Variables$Mutation$CreatePost<TRes>
 
   call({
     Enum$TargetCategory? category,
-    String? spotId,
+    String? catalogId,
     List<String>? tags,
     String? title,
     String? body,
@@ -6621,7 +6623,7 @@ const documentNodeMutationCreatePost = DocumentNode(
           directives: [],
         ),
         VariableDefinitionNode(
-          variable: VariableNode(name: NameNode(value: 'spotId')),
+          variable: VariableNode(name: NameNode(value: 'catalogId')),
           type: NamedTypeNode(name: NameNode(value: 'ID'), isNonNull: false),
           defaultValue: DefaultValueNode(value: null),
           directives: [],
@@ -6679,8 +6681,8 @@ const documentNodeMutationCreatePost = DocumentNode(
                       value: VariableNode(name: NameNode(value: 'category')),
                     ),
                     ObjectFieldNode(
-                      name: NameNode(value: 'spotId'),
-                      value: VariableNode(name: NameNode(value: 'spotId')),
+                      name: NameNode(value: 'catalogId'),
+                      value: VariableNode(name: NameNode(value: 'catalogId')),
                     ),
                     ObjectFieldNode(
                       name: NameNode(value: 'tags'),
@@ -7079,7 +7081,7 @@ class Variables$Mutation$EditPost {
     List<String>? photoKeys,
     Enum$TargetCategory? category,
     bool? changeSpot,
-    String? spotId,
+    String? catalogId,
     List<String>? tags,
   }) => Variables$Mutation$EditPost._({
     r'postId': postId,
@@ -7088,7 +7090,7 @@ class Variables$Mutation$EditPost {
     if (photoKeys != null) r'photoKeys': photoKeys,
     if (category != null) r'category': category,
     if (changeSpot != null) r'changeSpot': changeSpot,
-    if (spotId != null) r'spotId': spotId,
+    if (catalogId != null) r'catalogId': catalogId,
     if (tags != null) r'tags': tags,
   });
 
@@ -7118,9 +7120,9 @@ class Variables$Mutation$EditPost {
       final l$changeSpot = data['changeSpot'];
       result$data['changeSpot'] = (l$changeSpot as bool?);
     }
-    if (data.containsKey('spotId')) {
-      final l$spotId = data['spotId'];
-      result$data['spotId'] = (l$spotId as String?);
+    if (data.containsKey('catalogId')) {
+      final l$catalogId = data['catalogId'];
+      result$data['catalogId'] = (l$catalogId as String?);
     }
     if (data.containsKey('tags')) {
       final l$tags = data['tags'];
@@ -7146,7 +7148,7 @@ class Variables$Mutation$EditPost {
 
   bool? get changeSpot => (_$data['changeSpot'] as bool?);
 
-  String? get spotId => (_$data['spotId'] as String?);
+  String? get catalogId => (_$data['catalogId'] as String?);
 
   List<String>? get tags => (_$data['tags'] as List<String>?);
 
@@ -7172,9 +7174,9 @@ class Variables$Mutation$EditPost {
       final l$changeSpot = changeSpot;
       result$data['changeSpot'] = l$changeSpot;
     }
-    if (_$data.containsKey('spotId')) {
-      final l$spotId = spotId;
-      result$data['spotId'] = l$spotId;
+    if (_$data.containsKey('catalogId')) {
+      final l$catalogId = catalogId;
+      result$data['catalogId'] = l$catalogId;
     }
     if (_$data.containsKey('tags')) {
       final l$tags = tags;
@@ -7248,12 +7250,13 @@ class Variables$Mutation$EditPost {
     if (l$changeSpot != lOther$changeSpot) {
       return false;
     }
-    final l$spotId = spotId;
-    final lOther$spotId = other.spotId;
-    if (_$data.containsKey('spotId') != other._$data.containsKey('spotId')) {
+    final l$catalogId = catalogId;
+    final lOther$catalogId = other.catalogId;
+    if (_$data.containsKey('catalogId') !=
+        other._$data.containsKey('catalogId')) {
       return false;
     }
-    if (l$spotId != lOther$spotId) {
+    if (l$catalogId != lOther$catalogId) {
       return false;
     }
     final l$tags = tags;
@@ -7286,7 +7289,7 @@ class Variables$Mutation$EditPost {
     final l$photoKeys = photoKeys;
     final l$category = category;
     final l$changeSpot = changeSpot;
-    final l$spotId = spotId;
+    final l$catalogId = catalogId;
     final l$tags = tags;
     return Object.hashAll([
       l$postId,
@@ -7299,7 +7302,7 @@ class Variables$Mutation$EditPost {
           : const {},
       _$data.containsKey('category') ? l$category : const {},
       _$data.containsKey('changeSpot') ? l$changeSpot : const {},
-      _$data.containsKey('spotId') ? l$spotId : const {},
+      _$data.containsKey('catalogId') ? l$catalogId : const {},
       _$data.containsKey('tags')
           ? l$tags == null
                 ? null
@@ -7325,7 +7328,7 @@ abstract class CopyWith$Variables$Mutation$EditPost<TRes> {
     List<String>? photoKeys,
     Enum$TargetCategory? category,
     bool? changeSpot,
-    String? spotId,
+    String? catalogId,
     List<String>? tags,
   });
 }
@@ -7347,7 +7350,7 @@ class _CopyWithImpl$Variables$Mutation$EditPost<TRes>
     Object? photoKeys = _undefined,
     Object? category = _undefined,
     Object? changeSpot = _undefined,
-    Object? spotId = _undefined,
+    Object? catalogId = _undefined,
     Object? tags = _undefined,
   }) => _then(
     Variables$Mutation$EditPost._({
@@ -7359,7 +7362,7 @@ class _CopyWithImpl$Variables$Mutation$EditPost<TRes>
       if (category != _undefined)
         'category': (category as Enum$TargetCategory?),
       if (changeSpot != _undefined) 'changeSpot': (changeSpot as bool?),
-      if (spotId != _undefined) 'spotId': (spotId as String?),
+      if (catalogId != _undefined) 'catalogId': (catalogId as String?),
       if (tags != _undefined) 'tags': (tags as List<String>?),
     }),
   );
@@ -7378,7 +7381,7 @@ class _CopyWithStubImpl$Variables$Mutation$EditPost<TRes>
     List<String>? photoKeys,
     Enum$TargetCategory? category,
     bool? changeSpot,
-    String? spotId,
+    String? catalogId,
     List<String>? tags,
   }) => _res;
 }
@@ -7539,7 +7542,7 @@ const documentNodeMutationEditPost = DocumentNode(
           directives: [],
         ),
         VariableDefinitionNode(
-          variable: VariableNode(name: NameNode(value: 'spotId')),
+          variable: VariableNode(name: NameNode(value: 'catalogId')),
           type: NamedTypeNode(name: NameNode(value: 'ID'), isNonNull: false),
           defaultValue: DefaultValueNode(value: null),
           directives: [],
@@ -7593,8 +7596,8 @@ const documentNodeMutationEditPost = DocumentNode(
                       value: VariableNode(name: NameNode(value: 'changeSpot')),
                     ),
                     ObjectFieldNode(
-                      name: NameNode(value: 'spotId'),
-                      value: VariableNode(name: NameNode(value: 'spotId')),
+                      name: NameNode(value: 'catalogId'),
+                      value: VariableNode(name: NameNode(value: 'catalogId')),
                     ),
                     ObjectFieldNode(
                       name: NameNode(value: 'tags'),

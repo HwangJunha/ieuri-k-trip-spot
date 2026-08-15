@@ -3897,11 +3897,11 @@ class _CopyWithStubImpl$Query$ConversationMessages$conversationMessages$pageInfo
 class Variables$Mutation$CreateFeedItem {
   factory Variables$Mutation$CreateFeedItem({
     required String body,
-    required String spotId,
+    required String catalogId,
     required List<String> photoKeys,
   }) => Variables$Mutation$CreateFeedItem._({
     r'body': body,
-    r'spotId': spotId,
+    r'catalogId': catalogId,
     r'photoKeys': photoKeys,
   });
 
@@ -3913,8 +3913,8 @@ class Variables$Mutation$CreateFeedItem {
     final result$data = <String, dynamic>{};
     final l$body = data['body'];
     result$data['body'] = (l$body as String);
-    final l$spotId = data['spotId'];
-    result$data['spotId'] = (l$spotId as String);
+    final l$catalogId = data['catalogId'];
+    result$data['catalogId'] = (l$catalogId as String);
     final l$photoKeys = data['photoKeys'];
     result$data['photoKeys'] = (l$photoKeys as List<dynamic>)
         .map((e) => (e as String))
@@ -3926,7 +3926,7 @@ class Variables$Mutation$CreateFeedItem {
 
   String get body => (_$data['body'] as String);
 
-  String get spotId => (_$data['spotId'] as String);
+  String get catalogId => (_$data['catalogId'] as String);
 
   List<String> get photoKeys => (_$data['photoKeys'] as List<String>);
 
@@ -3934,8 +3934,8 @@ class Variables$Mutation$CreateFeedItem {
     final result$data = <String, dynamic>{};
     final l$body = body;
     result$data['body'] = l$body;
-    final l$spotId = spotId;
-    result$data['spotId'] = l$spotId;
+    final l$catalogId = catalogId;
+    result$data['catalogId'] = l$catalogId;
     final l$photoKeys = photoKeys;
     result$data['photoKeys'] = l$photoKeys.map((e) => e).toList();
     return result$data;
@@ -3958,9 +3958,9 @@ class Variables$Mutation$CreateFeedItem {
     if (l$body != lOther$body) {
       return false;
     }
-    final l$spotId = spotId;
-    final lOther$spotId = other.spotId;
-    if (l$spotId != lOther$spotId) {
+    final l$catalogId = catalogId;
+    final lOther$catalogId = other.catalogId;
+    if (l$catalogId != lOther$catalogId) {
       return false;
     }
     final l$photoKeys = photoKeys;
@@ -3981,11 +3981,11 @@ class Variables$Mutation$CreateFeedItem {
   @override
   int get hashCode {
     final l$body = body;
-    final l$spotId = spotId;
+    final l$catalogId = catalogId;
     final l$photoKeys = photoKeys;
     return Object.hashAll([
       l$body,
-      l$spotId,
+      l$catalogId,
       Object.hashAll(l$photoKeys.map((v) => v)),
     ]);
   }
@@ -4000,7 +4000,7 @@ abstract class CopyWith$Variables$Mutation$CreateFeedItem<TRes> {
   factory CopyWith$Variables$Mutation$CreateFeedItem.stub(TRes res) =
       _CopyWithStubImpl$Variables$Mutation$CreateFeedItem;
 
-  TRes call({String? body, String? spotId, List<String>? photoKeys});
+  TRes call({String? body, String? catalogId, List<String>? photoKeys});
 }
 
 class _CopyWithImpl$Variables$Mutation$CreateFeedItem<TRes>
@@ -4015,13 +4015,14 @@ class _CopyWithImpl$Variables$Mutation$CreateFeedItem<TRes>
 
   TRes call({
     Object? body = _undefined,
-    Object? spotId = _undefined,
+    Object? catalogId = _undefined,
     Object? photoKeys = _undefined,
   }) => _then(
     Variables$Mutation$CreateFeedItem._({
       ..._instance._$data,
       if (body != _undefined && body != null) 'body': (body as String),
-      if (spotId != _undefined && spotId != null) 'spotId': (spotId as String),
+      if (catalogId != _undefined && catalogId != null)
+        'catalogId': (catalogId as String),
       if (photoKeys != _undefined && photoKeys != null)
         'photoKeys': (photoKeys as List<String>),
     }),
@@ -4034,7 +4035,7 @@ class _CopyWithStubImpl$Variables$Mutation$CreateFeedItem<TRes>
 
   TRes _res;
 
-  call({String? body, String? spotId, List<String>? photoKeys}) => _res;
+  call({String? body, String? catalogId, List<String>? photoKeys}) => _res;
 }
 
 class Mutation$CreateFeedItem {
@@ -4151,7 +4152,7 @@ const documentNodeMutationCreateFeedItem = DocumentNode(
           directives: [],
         ),
         VariableDefinitionNode(
-          variable: VariableNode(name: NameNode(value: 'spotId')),
+          variable: VariableNode(name: NameNode(value: 'catalogId')),
           type: NamedTypeNode(name: NameNode(value: 'ID'), isNonNull: true),
           defaultValue: DefaultValueNode(value: null),
           directives: [],
@@ -4185,8 +4186,8 @@ const documentNodeMutationCreateFeedItem = DocumentNode(
                       value: VariableNode(name: NameNode(value: 'body')),
                     ),
                     ObjectFieldNode(
-                      name: NameNode(value: 'spotId'),
-                      value: VariableNode(name: NameNode(value: 'spotId')),
+                      name: NameNode(value: 'catalogId'),
+                      value: VariableNode(name: NameNode(value: 'catalogId')),
                     ),
                     ObjectFieldNode(
                       name: NameNode(value: 'photoKeys'),

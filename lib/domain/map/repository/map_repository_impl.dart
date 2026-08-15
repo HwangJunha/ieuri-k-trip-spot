@@ -31,6 +31,7 @@ class MapRepositoryImpl implements MapRepository {
   Future<MapViewportResult> fetchViewport({
     required MapBounds bbox,
     required int zoom,
+    bool? hasOrigin,
   }) async {
     // 카테고리 인자를 넘기지 않는다 — R21이 토글 필터를 두지 말라고 하므로 이
     // 화면에는 거를 기준이 없다. 서버 인자는 남아 있으니 필요해지면 그때 연결한다.
@@ -39,6 +40,8 @@ class MapRepositoryImpl implements MapRepository {
       Variables$Query$MapViewport(
         bbox: _boundsInput(bbox),
         zoom: zoom,
+        // null이면 변수를 보내지 않아 서버가 원문·번역을 모두 준다(SPEC-0019).
+        hasOrigin: hasOrigin,
       ).toJson(),
       'mapViewport',
     );

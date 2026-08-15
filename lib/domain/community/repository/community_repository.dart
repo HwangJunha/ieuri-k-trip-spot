@@ -29,7 +29,7 @@ abstract interface class CommunityRepository {
   ///
   /// | 하고 싶은 것 | 인자 |
   /// |---|---|
-  /// | 장소 상세의 글 | `spotId` |
+  /// | 장소 상세의 글 | `catalogId` |
   /// | 커뮤니티 탭(내 주변) | `latitude`+`longitude`(+`radiusMeters`) |
   /// | 상단 칩 | `category` |
   /// | 태그 | `tag` |
@@ -37,7 +37,7 @@ abstract interface class CommunityRepository {
   ///
   /// 규칙:
   /// - [latitude]·[longitude]는 **함께** 줘야 한다. 하나만 주면 둘 다 무시된다
-  /// - [spotId]와 좌표를 둘 다 주면 **[spotId]가 이긴다**
+  /// - [catalogId]와 좌표를 둘 다 주면 **[catalogId]가 이긴다**
   /// - [radiusMeters]는 좌표를 줄 때만 의미가 있다(기본 20000 / 상한 100000이며
   ///   초과해도 오류가 아니라 잘린다)
   /// - **[category]·[tag]는 범위와 독립**이라 단독으로도 걸린다
@@ -55,7 +55,7 @@ abstract interface class CommunityRepository {
   /// 밖의 모든 조회에서 빠지므로 해제 화면이 이 인자를 쓴다. 이때도 [category]·[tag]
   /// 필터와 [sort]가 그대로 걸린다 — 별도 쿼리를 두지 않은 이유가 그것이다.
   Future<CursorPage<Post>> fetchPosts({
-    String? spotId,
+    String? catalogId,
     double? latitude,
     double? longitude,
     int? radiusMeters,
@@ -185,14 +185,14 @@ abstract interface class CommunityRepository {
   /// 지연 필드 때문에 생성 응답에서 조립할 수 없다. 작성 직후 상세로 가려면 그 id로
   /// `post(id:)`를 다시 조회하고, 피드로 돌아간다면 목록을 새로 고친다.
   ///
-  /// [category]는 필수이고 [spotId]는 선택이다. [photoKeys]는 3단계 확인이 준
+  /// [category]는 필수이고 [catalogId]는 선택이다. [photoKeys]는 3단계 확인이 준
   /// **최종 키**(`images/...`)여야 하며, 1단계의 `pending/...`을 넘기면 서버가
   /// `PHOTO_NOT_UPLOADED`로 거부한다.
   Future<String?> createPost({
     required TargetCategory category,
     required String title,
     required String body,
-    String? spotId,
+    String? catalogId,
     List<String> tags,
     List<String> photoKeys,
   });
@@ -204,11 +204,11 @@ abstract interface class CommunityRepository {
   /// [photoKeys]·[tags]를 주면 **전체 목록으로 교체**하고, null이면 건드리지 않는다.
   ///
   /// **장소는 [changeSpot]이 가른다.** 이 인자는 스키마에만 있고 문서에 없다:
-  /// - false(기본) → 장소를 건드리지 않는다. [spotId]는 무시된다
-  /// - true + [spotId] → 그 장소로 바꾼다
+  /// - false(기본) → 장소를 건드리지 않는다. [catalogId]는 무시된다
+  /// - true + [catalogId] → 그 장소로 바꾼다
   /// - true + null → 장소를 뗀다(장소 없는 글이 된다)
   ///
-  /// 사용자가 장소를 만지지 않았다면 false를 넘긴다 — `spotId: null` 하나로는
+  /// 사용자가 장소를 만지지 않았다면 false를 넘긴다 — `catalogId: null` 하나로는
   /// "그대로 두기"와 "떼기"가 구분되지 않기 때문이다.
   ///
   /// 숨겨진 글은 수정할 수 없어 `POST_NOT_EDITABLE`이 온다.
@@ -219,7 +219,7 @@ abstract interface class CommunityRepository {
     List<String>? photoKeys,
     TargetCategory? category,
     bool changeSpot,
-    String? spotId,
+    String? catalogId,
     List<String>? tags,
   });
 

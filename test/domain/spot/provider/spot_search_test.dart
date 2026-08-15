@@ -360,5 +360,35 @@ void main() {
       expect(repository.searchCallCount, 0);
       expect(container.read(spotSearchProvider), isA<SpotSearchIdle>());
     });
+
+    // 선택한 카테고리가 **서버 조회 인자로 실려야** 한다. 클라이언트가 받은 목록을
+    // 다시 거르지 않으므로(POL-019), 이 인자가 빠지면 필터가 아무 일도 하지 않는다.
+    //
+    // 참고: 서버 `searchSpots`가 이 인자를 현재 무시한다(2026-08-15 확인). 그것은
+    // 서버 결함이고, 이 테스트는 **클라이언트가 제 몫을 한다**는 것을 고정한다 —
+    // 서버가 고쳐질 때 클라이언트를 의심하지 않도록.
+    test('선택한 카테고리가 검색 조회에 실린다', () async {
+      final repository = FakeSpotRepository()
+        ..searchResult = resultWith(<String>['a']);
+      final container = makeContainer(repository);
+
+      container
+          .read(spotSearchCategoryProvider.notifier)
+          .select(SpotCategory.culturalFacility);
+      await container.read(spotSearchProvider.notifier).search('올리브');
+
+      expect(repository.lastSearchCategory, SpotCategory.culturalFacility);
+    });
+
+    test('전체(null)를 고르면 카테고리 인자를 보내지 않는다', () async {
+      final repository = FakeSpotRepository()
+        ..searchResult = resultWith(<String>['a']);
+      final container = makeContainer(repository);
+
+      container.read(spotSearchCategoryProvider.notifier).select(null);
+      await container.read(spotSearchProvider.notifier).search('올리브');
+
+      expect(repository.lastSearchCategory, isNull);
+    });
   });
 }

@@ -85,8 +85,8 @@ void main() {
       expect(repo.lastFetchPosts?.category, TargetCategory.lodging);
       expect(repo.lastFetchPosts?.latitude, isNotNull);
       expect(repo.lastFetchPosts?.longitude, isNotNull);
-      // 커뮤니티 탭은 좌표 피드라 spotId를 주지 않는다 — 주면 좌표가 무시된다.
-      expect(repo.lastFetchPosts?.spotId, isNull);
+      // 커뮤니티 탭은 좌표 피드라 catalogId를 주지 않는다 — 주면 좌표가 무시된다.
+      expect(repo.lastFetchPosts?.catalogId, isNull);
     });
 
     test('loadMore가 다음 페이지를 이어 붙인다', () async {
@@ -326,9 +326,9 @@ void main() {
   });
 
   group('spotPosts', () {
-    // 가이드 §2 — spotId를 주면 좌표는 무시되므로 아예 넘기지 않는다. 위치 권한이
+    // 가이드 §2 — catalogId를 주면 좌표는 무시되므로 아예 넘기지 않는다. 위치 권한이
     // 없어도 도는 것이 이 피드의 성질이다.
-    test('spotId만 넘기고 좌표는 넘기지 않는다', () async {
+    test('catalogId만 넘기고 좌표는 넘기지 않는다', () async {
       final FakeCommunityRepository repo = FakeCommunityRepository(
         posts: <Post>[fakePost()],
       );
@@ -336,7 +336,7 @@ void main() {
 
       await container.read(spotPostsProvider('11094').future);
 
-      expect(repo.lastFetchPosts?.spotId, '11094');
+      expect(repo.lastFetchPosts?.catalogId, '11094');
       expect(repo.lastFetchPosts?.latitude, isNull);
     });
   });

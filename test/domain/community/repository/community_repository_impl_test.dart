@@ -227,12 +227,12 @@ void main() {
       expect(page.items.single.edited, isTrue);
     });
 
-    test('spotId를 주면 그대로 서버에 넘긴다', () async {
+    test('catalogId를 주면 그대로 서버에 넘긴다', () async {
       final _FakeLink link = _FakeLink(data: _postsData());
 
-      await _repo(link).fetchPosts(spotId: '11094');
+      await _repo(link).fetchPosts(catalogId: '11094');
 
-      expect(link.sentVariables?['spotId'], '11094');
+      expect(link.sentVariables?['catalogId'], '11094');
     });
 
     // 가이드 §2 — 좌표는 둘 다 줘야 의미가 있다. 하나만 주면 서버가 둘 다 무시하므로
@@ -541,14 +541,14 @@ void main() {
         category: TargetCategory.restaurant,
         title: '경복궁 야간개장 후기',
         body: '한복 입고 가면 무료예요',
-        spotId: '11094',
+        catalogId: '11094',
         tags: <String>['야간개장'],
         photoKeys: <String>['images/20/abc'],
       );
 
       expect(postId, '42');
       expect(link.sentVariables?['category'], 'RESTAURANT');
-      expect(link.sentVariables?['spotId'], '11094');
+      expect(link.sentVariables?['catalogId'], '11094');
       expect(link.sentVariables?['tags'], <String>['야간개장']);
       expect(link.sentVariables?['photoKeys'], <String>['images/20/abc']);
     });
@@ -571,7 +571,7 @@ void main() {
         body: '가볍게 싸세요',
       );
 
-      expect(link.sentVariables?.containsKey('spotId'), isFalse);
+      expect(link.sentVariables?.containsKey('catalogId'), isFalse);
     });
 
     test('제목 길이 위반은 코드를 담은 실패가 된다', () async {
@@ -651,9 +651,9 @@ void main() {
       expect(link.sentVariables?['tags'], <String>['야간개장']);
     });
 
-    // `changeSpot`은 스키마에만 있는 인자다 — false면 서버가 spotId를 무시하므로
+    // `changeSpot`은 스키마에만 있는 인자다 — false면 서버가 catalogId를 무시하므로
     // 아예 싣지 않는다.
-    test('장소를 바꾸지 않으면 changeSpot: false로 나가고 spotId를 싣지 않는다', () async {
+    test('장소를 바꾸지 않으면 changeSpot: false로 나가고 catalogId를 싣지 않는다', () async {
       final _FakeLink link = _FakeLink(
         data: <String, dynamic>{
           'editPost': <String, dynamic>{
@@ -668,14 +668,14 @@ void main() {
         title: 't',
         body: 'b',
         // 호출자가 실수로 실어 보내도 changeSpot이 false면 버린다.
-        spotId: '11094',
+        catalogId: '11094',
       );
 
       expect(link.sentVariables?['changeSpot'], isFalse);
-      expect(link.sentVariables?.containsKey('spotId'), isFalse);
+      expect(link.sentVariables?.containsKey('catalogId'), isFalse);
     });
 
-    test('장소를 바꾸면 changeSpot: true와 새 spotId가 나간다', () async {
+    test('장소를 바꾸면 changeSpot: true와 새 catalogId가 나간다', () async {
       final _FakeLink link = _FakeLink(
         data: <String, dynamic>{
           'editPost': <String, dynamic>{
@@ -690,16 +690,16 @@ void main() {
         title: 't',
         body: 'b',
         changeSpot: true,
-        spotId: '11094',
+        catalogId: '11094',
       );
 
       expect(link.sentVariables?['changeSpot'], isTrue);
-      expect(link.sentVariables?['spotId'], '11094');
+      expect(link.sentVariables?['catalogId'], '11094');
     });
 
-    // 떼기는 **true + spotId 없음**이다. 생략된 nullable 입력은 서버에서 null로
+    // 떼기는 **true + catalogId 없음**이다. 생략된 nullable 입력은 서버에서 null로
     // 읽히고, changeSpot이 true라 "비우라"는 뜻이 된다.
-    test('장소를 떼면 changeSpot: true만 나가고 spotId는 빠진다', () async {
+    test('장소를 떼면 changeSpot: true만 나가고 catalogId는 빠진다', () async {
       final _FakeLink link = _FakeLink(
         data: <String, dynamic>{
           'editPost': <String, dynamic>{
@@ -714,7 +714,7 @@ void main() {
       ).editPost(postId: '42', title: 't', body: 'b', changeSpot: true);
 
       expect(link.sentVariables?['changeSpot'], isTrue);
-      expect(link.sentVariables?.containsKey('spotId'), isFalse);
+      expect(link.sentVariables?.containsKey('catalogId'), isFalse);
     });
 
     test('숨겨진 글 수정은 POST_NOT_EDITABLE 실패가 된다', () async {

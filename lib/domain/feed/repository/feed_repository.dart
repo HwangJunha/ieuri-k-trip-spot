@@ -32,7 +32,7 @@ abstract interface class FeedRepository {
   /// 피드 작성(R1·R2). [photoKeys]는 [confirmImageUploads]가 확정한 키여야 한다.
   Future<FeedMutationResult<String>> createFeedItem({
     required String body,
-    required String spotId,
+    required String catalogId,
     required List<String> photoKeys,
   });
 

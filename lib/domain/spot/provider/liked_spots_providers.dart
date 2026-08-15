@@ -2,6 +2,7 @@ import 'dart:developer' as developer;
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/localization/locale_controller.dart';
 import '../../../common/pagination/page.dart';
 import '../model/liked_spot.dart';
 import '../model/spot_category.dart';
@@ -98,6 +99,12 @@ class LikedSpotsController extends _$LikedSpotsController {
 
   @override
   Future<LikedSpotsState> build(SpotCategory? category) async {
+    // 언어를 바꾸면 목록을 다시 받는다. 좋아요 **자체는** SPEC-0019 이후 언어를 넘어
+    // 유지되지만, 쌓아둔 항목의 제목·주소는 이전 언어로 받아온 문장이다. 좋아요 탭도
+    // 셸 브랜치라 계속 mount되어 autoDispose가 돌지 않으므로, 이 구독이 없으면
+    // 영어로 바꿔도 한국어 이름이 그대로 남는다.
+    ref.watch(localeControllerProvider);
+
     final CursorPage<LikedSpot> page = await _repository.fetchLikedSpots(
       category: category,
       first: _pageSize,

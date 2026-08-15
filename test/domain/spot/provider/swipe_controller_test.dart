@@ -424,6 +424,43 @@ void main() {
       expect(container.read(swipeControllerProvider(null)).value, before);
     });
   });
+
+  // SPEC-0019 — 원문을 먼저 다 보여주고, 소진하면 번역본으로 이어간다. 두 집합은
+  // 겹치지 않고 각자 페이지를 0부터 세므로 전환 시 페이지가 되감긴다.
+  group('원문 → 번역본 전환', () {
+    test('첫 조회는 원문만 요청한다', () async {
+      // 원문이 넉넉해 첫 페이지에서 끝나지 않는 상황.
+      final repo = FakeSpotRepository(feed: _spots(10), pageSize: 5);
+      await _load(repo);
+
+      expect(repo.requestedHasOrigin, <bool?>[true]);
+    });
+
+    test('원문이 첫 페이지에서 끝나면 번역본을 이어 받는다', () async {
+      final repo = FakeSpotRepository(
+        feed: <TouristSpot>[swipeSpot('o1')],
+        translatedFeed: <TouristSpot>[swipeSpot('t1'), swipeSpot('t2')],
+        pageSize: 5,
+      );
+
+      final (_, queue) = await _load(repo);
+
+      // 원문 1건 + 번역본 2건이 한 큐에 담긴다 — 첫 화면이 비지 않는다.
+      expect(queue.cards.map((TouristSpot s) => s.id), hasLength(3));
+      expect(repo.requestedHasOrigin, <bool?>[true, false]);
+      expect(queue.originExhausted, isTrue);
+    });
+
+    test('원문도 번역본도 없으면 소진 상태다', () async {
+      final repo = FakeSpotRepository(feed: const <TouristSpot>[], pageSize: 5);
+
+      final (_, queue) = await _load(repo);
+
+      // 빈 상태 문구가 뜨려면 isExhausted가 서야 한다 — 원문만 비어서는 안 된다.
+      expect(queue.isExhausted, isTrue);
+      expect(repo.requestedHasOrigin, <bool?>[true, false]);
+    });
+  });
 }
 
 /// 첫 `reactToSpot`은 인증 실패로 끝나고 재시도에서 성공하는 저장소.

@@ -221,10 +221,13 @@ class FeedController extends _$FeedController {
 
 /// 한 장소에 달린 글 피드(장소 상세에 끼워 넣는 섹션용).
 ///
-/// 좌표 피드와 **같은 쿼리를 인자만 달리해** 부른다 — `spotId`를 주면 좌표는
+/// 좌표 피드와 **같은 쿼리를 인자만 달리해** 부른다 — `catalogId`를 주면 좌표는
 /// 무시되므로(가이드 §2) 좌표를 아예 넘기지 않는다. 위치 권한이 없어도 도는 것이
 /// 이 피드의 성질이다.
+///
+/// [catalogId]는 `Spot.id`를 그대로 넘기면 된다 — SPEC-0019에서 언어 무관
+/// 식별자로 바뀌었고 두 값은 호환된다.
 @Riverpod(retry: communityRetryPolicy)
-Future<CursorPage<Post>> spotPosts(Ref ref, String spotId) => ref
+Future<CursorPage<Post>> spotPosts(Ref ref, String catalogId) => ref
     .watch(communityRepositoryProvider)
-    .fetchPosts(spotId: spotId, first: _pageSize);
+    .fetchPosts(catalogId: catalogId, first: _pageSize);

@@ -156,12 +156,16 @@ void main() {
     );
     await _pump(tester, repo: repo, radiusKm: 20);
     await tester.pumpAndSettle();
-    expect(repo.requestedRadiiMeters, <int?>[20000]);
+    // 원문이 비어 번역본 조회가 뒤따르므로 조회 수는 하나가 아니다(SPEC-0019).
+    // 요지는 **어느 반경이 실렸는가**다.
+    expect(repo.requestedRadiiMeters, everyElement(20000));
 
     await tester.tap(find.text('Widen radius'));
     await tester.pumpAndSettle();
 
-    expect(repo.requestedRadiiMeters, <int?>[20000, 30000]);
+    // 넓힌 뒤의 조회는 전부 새 반경으로 나간다.
+    expect(repo.requestedRadiiMeters, contains(30000));
+    expect(repo.requestedRadiiMeters.last, 30000);
   });
 
   testWidgets('이미 상한이면 더 넓힐 수 없다고 알린다', (tester) async {

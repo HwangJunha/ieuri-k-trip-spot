@@ -1,11 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ieuri_k_trip_spot/common/localization/app_language.dart';
+import 'package:ieuri_k_trip_spot/common/localization/locale_controller.dart';
+import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/liked_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/liked_spots_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/spot_providers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../spot_test_doubles.dart';
 
@@ -22,15 +26,29 @@ LikedSpot _liked(
   attributionText: 'KTO',
 );
 
+/// 컨트롤러가 언어 전환 시 목록을 다시 받으려고 locale을 watch하므로, 그 뒤에 있는
+/// 저장소도 덮어써야 한다(swipe_controller_test와 같은 규약).
+late SharedPreferences _prefs;
+
 ProviderContainer _container(FakeSpotRepository repo) {
   final ProviderContainer container = ProviderContainer(
-    overrides: [spotRepositoryProvider.overrideWithValue(repo)],
+    overrides: [
+      spotRepositoryProvider.overrideWithValue(repo),
+      sharedPreferencesProvider.overrideWithValue(_prefs),
+    ],
   );
   addTearDown(container.dispose);
   return container;
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    _prefs = await SharedPreferences.getInstance();
+  });
+
   test('첫 빌드가 첫 페이지를 싣고 다음 페이지 유무를 알린다', () async {
     // 3건 · 페이지 크기 2 → 첫 장은 2건이고 다음이 있다.
     final FakeSpotRepository repo = FakeSpotRepository(
@@ -187,5 +205,24 @@ void main() {
     expect(state.items.map((LikedSpot s) => s.id), <String>['a', 'b']);
     // 인디케이터는 걷힌다 — 다시 스크롤하면 재시도된다.
     expect(state.isLoadingMore, isFalse);
+  });
+
+  // 좋아요 자체는 SPEC-0019 이후 언어를 넘어 유지되지만, 쌓아둔 항목의 제목·주소는
+  // 이전 언어로 받아온 문장이다. 좋아요 탭은 셸 브랜치라 계속 mount되어 autoDispose가
+  // 돌지 않으므로, locale을 watch하지 않으면 한국어 이름이 그대로 남는다.
+  test('언어를 바꾸면 목록을 다시 받는다', () async {
+    final FakeSpotRepository repo = FakeSpotRepository(
+      liked: <LikedSpot>[_liked('a')],
+    );
+    final ProviderContainer container = _container(repo);
+    await container.read(likedSpotsControllerProvider(null).future);
+    expect(repo.likedSpotsCallCount, 1);
+
+    await container
+        .read(localeControllerProvider.notifier)
+        .select(AppLanguage.korean);
+    await container.read(likedSpotsControllerProvider(null).future);
+
+    expect(repo.likedSpotsCallCount, 2);
   });
 }

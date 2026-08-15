@@ -335,7 +335,7 @@ class PostComposer extends _$PostComposer {
         title: draft.title.trim(),
         body: draft.body.trim(),
         // **선택 항목이다** — null이면 장소 없는 글로 등록된다(가이드 §5).
-        spotId: draft.spotId,
+        catalogId: draft.spotId,
         tags: draft.tags,
         // 확정된 키만 넘긴다. 못 올린 장은 빠진 채로 등록된다.
         photoKeys: draft.remoteKeys,

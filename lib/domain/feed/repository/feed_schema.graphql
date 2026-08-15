@@ -89,7 +89,7 @@ type TypingEvent {
 
 input CreateFeedItemInput {
   body: String!
-  spotId: ID!
+  catalogId: ID!
   photoKeys: [String!]!
 }
 

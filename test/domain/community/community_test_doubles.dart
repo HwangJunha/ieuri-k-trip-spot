@@ -61,7 +61,7 @@ class FakeCommunityRepository implements CommunityRepository {
 
   /// 마지막 피드 조회에 넘어간 인자 — 범위·필터·정렬이 서버로 전달되는지 확인한다.
   ({
-    String? spotId,
+    String? catalogId,
     double? latitude,
     double? longitude,
     TargetCategory? category,
@@ -98,7 +98,7 @@ class FakeCommunityRepository implements CommunityRepository {
 
   @override
   Future<CursorPage<Post>> fetchPosts({
-    String? spotId,
+    String? catalogId,
     double? latitude,
     double? longitude,
     int? radiusMeters,
@@ -111,7 +111,7 @@ class FakeCommunityRepository implements CommunityRepository {
   }) async {
     if (feedError != null) throw feedError!;
     lastFetchPosts = (
-      spotId: spotId,
+      catalogId: catalogId,
       latitude: latitude,
       longitude: longitude,
       category: category,
@@ -362,7 +362,7 @@ class FakeCommunityRepository implements CommunityRepository {
     TargetCategory category,
     String title,
     String body,
-    String? spotId,
+    String? catalogId,
     List<String> tags,
     List<String> photoKeys,
   })?
@@ -374,7 +374,7 @@ class FakeCommunityRepository implements CommunityRepository {
     List<String>? photoKeys,
     TargetCategory? category,
     bool changeSpot,
-    String? spotId,
+    String? catalogId,
     List<String>? tags,
   })?
   lastEditPost;
@@ -433,7 +433,7 @@ class FakeCommunityRepository implements CommunityRepository {
     required TargetCategory category,
     required String title,
     required String body,
-    String? spotId,
+    String? catalogId,
     List<String> tags = const <String>[],
     List<String> photoKeys = const <String>[],
   }) async {
@@ -441,7 +441,7 @@ class FakeCommunityRepository implements CommunityRepository {
       category: category,
       title: title,
       body: body,
-      spotId: spotId,
+      catalogId: catalogId,
       tags: tags,
       photoKeys: photoKeys,
     );
@@ -457,7 +457,7 @@ class FakeCommunityRepository implements CommunityRepository {
     List<String>? photoKeys,
     TargetCategory? category,
     bool changeSpot = false,
-    String? spotId,
+    String? catalogId,
     List<String>? tags,
   }) async {
     lastEditPost = (
@@ -467,7 +467,7 @@ class FakeCommunityRepository implements CommunityRepository {
       photoKeys: photoKeys,
       category: category,
       changeSpot: changeSpot,
-      spotId: spotId,
+      catalogId: catalogId,
       tags: tags,
     );
     if (mutationError != null) throw mutationError!;

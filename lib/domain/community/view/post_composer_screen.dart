@@ -439,9 +439,9 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
           category: draft.category,
           tags: draft.tags,
           // **바꾸지 않았으면 false다** — 그때 서버는 붙어 있던 장소를 유지한다.
-          // true일 때만 `spotId`가 반영되고, true + null이 "장소 떼기"다.
+          // true일 때만 `catalogId`가 반영되고, true + null이 "장소 떼기"다.
           changeSpot: spotChanged,
-          spotId: spotChanged ? draft.spotId : null,
+          catalogId: spotChanged ? draft.spotId : null,
         );
     if (!mounted) return;
 

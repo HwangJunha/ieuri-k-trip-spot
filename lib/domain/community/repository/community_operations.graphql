@@ -37,12 +37,12 @@ fragment PostCardFields on Post {
 
 # 피드는 이 쿼리 하나뿐이고 **인자 조합이 범위를 정한다**(가이드 §2):
 #   - 커뮤니티 탭   → latitude·longitude(+radiusMeters)
-#   - 장소 상세     → spotId
+#   - 장소 상세     → catalogId
 #   - 상단 칩       → category
 #   - 태그          → tag
 #
-# 규칙: 좌표는 **둘 다** 줘야 하고(하나만 주면 둘 다 무시), `spotId`와 좌표를 같이
-# 주면 `spotId`가 이긴다. `category`·`tag`는 범위와 독립이라 단독으로도 걸린다.
+# 규칙: 좌표는 **둘 다** 줘야 하고(하나만 주면 둘 다 무시), `catalogId`와 좌표를 같이
+# 주면 `catalogId`가 이긴다. `category`·`tag`는 범위와 독립이라 단독으로도 걸린다.
 #
 # `hasPreviousPage`는 요청하지 않는다 — 앞으로만 가는 피드라 믿을 수 없는 값이다
 # (가이드 §2).
@@ -55,7 +55,7 @@ fragment PostCardFields on Post {
 # `hiddenByViewer`는 기본 false다. true면 **내가 숨긴 글만** 오며 해제 화면이 쓴다
 # (2차 가이드 §2). 이때도 카테고리·태그·정렬이 그대로 걸린다.
 query Posts(
-  $spotId: ID
+  $catalogId: ID
   $latitude: Float
   $longitude: Float
   $radiusMeters: Int
@@ -67,7 +67,7 @@ query Posts(
   $after: String
 ) {
   posts(
-    spotId: $spotId
+    catalogId: $catalogId
     latitude: $latitude
     longitude: $longitude
     radiusMeters: $radiusMeters
@@ -210,11 +210,11 @@ mutation UnlikePost($postId: ID!) {
 # 글 작성. **postId만 온다**(가이드 §5). 작성 직후 상세로 가려면 post(id:)를 한 번
 # 더 조회하고, 피드로 돌아간다면 목록을 새로 고친다.
 #
-# `category`는 필수이고 `spotId`는 선택이다 — 장소 없는 글이 허용된다. 다만 그 글은
+# `category`는 필수이고 `catalogId`는 선택이다 — 장소 없는 글이 허용된다. 다만 그 글은
 # 좌표 반경 조회에 잡히지 않는다(가이드 §10).
 mutation CreatePost(
   $category: TargetCategory!
-  $spotId: ID
+  $catalogId: ID
   $tags: [String!]!
   $title: String!
   $body: String!
@@ -223,7 +223,7 @@ mutation CreatePost(
   createPost(
     input: {
       category: $category
-      spotId: $spotId
+      catalogId: $catalogId
       tags: $tags
       title: $title
       body: $body
@@ -246,7 +246,7 @@ mutation CreatePost(
 # `photoKeys`·`tags`를 주면 **전체 목록으로 교체**하고, 생략하면 건드리지 않는다.
 #
 # **장소는 `changeSpot`이 가른다**(스키마에만 있고 문서에 없는 인자다). 기본 false라
-# 보내지 않으면 장소가 그대로 남고, true일 때만 `spotId`가 반영된다 —
+# 보내지 않으면 장소가 그대로 남고, true일 때만 `catalogId`가 반영된다 —
 # true + null이 "장소 떼기"다. 사용자가 장소를 만지지 않았으면 false를 보내
 # 서버가 붙어 있던 장소를 유지하게 한다.
 #
@@ -258,7 +258,7 @@ mutation EditPost(
   $photoKeys: [String!]
   $category: TargetCategory
   $changeSpot: Boolean
-  $spotId: ID
+  $catalogId: ID
   $tags: [String!]
 ) {
   editPost(
@@ -269,7 +269,7 @@ mutation EditPost(
       photoKeys: $photoKeys
       category: $category
       changeSpot: $changeSpot
-      spotId: $spotId
+      catalogId: $catalogId
       tags: $tags
     }
   ) {

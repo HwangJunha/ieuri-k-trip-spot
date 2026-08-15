@@ -287,7 +287,7 @@ void main() {
               <String, dynamic>{
                 'code': 'SPOT_NOT_FOUND',
                 'message': 'x',
-                'field': 'spotId',
+                'field': 'catalogId',
               },
             ],
           },
