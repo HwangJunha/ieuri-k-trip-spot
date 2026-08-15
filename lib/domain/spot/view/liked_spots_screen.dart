@@ -55,7 +55,7 @@ class LikedSpotsScreen extends ConsumerWidget {
             // 필터가 스와이프 스택을 갈아치우면 안 된다.
             CategoryBar(
               selected: selected,
-              onSelected: (SpotCategory next) =>
+              onToggle: (SpotCategory next) =>
                   ref.read(selectedLikedCategoryProvider.notifier).toggle(next),
             ),
             const SizedBox(height: 8),

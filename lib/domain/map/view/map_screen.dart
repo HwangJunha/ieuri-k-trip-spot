@@ -13,6 +13,9 @@ import '../../../common/navigation/picked_place.dart';
 import '../../../common/navigation/spot_detail_route.dart';
 import '../../../common/widget/floating_bottom_nav_scaffold.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../spot/component/category_bar.dart';
+import '../../spot/component/spot_category_seed.dart';
+import '../../spot/model/spot_category.dart';
 import '../component/area_info_card.dart';
 import '../component/congestion_legend.dart';
 import '../component/map_overlay_painter.dart';
@@ -42,6 +45,14 @@ import 'region_recommendation_screen.dart';
 /// **마커와 혼잡도는 서로 기다리지 않는다**(설계 §6.3). 별개 최상위 필드라 한쪽이
 /// 느리거나 실패해도 다른 쪽은 그려져야 한다 — 혼잡도가 죽어도 마커와 지도 조작은
 /// 그대로다(R29).
+/// "이 지역 재검색" 버튼을 상단 오버레이 아래로 내리는 거리.
+///
+/// 상단 Column의 구성과 묶인 값이다 — 검색창(위 여백 8 + 높이 약 46)에 카테고리
+/// 바(위 여백 8 + 높이 48)를 더한 값. 둘 중 하나의 높이나 여백이 바뀌면 여기도
+/// 함께 움직여야 한다. 상수로 뺀 이유는 그 사실을 이름으로 남기기 위해서다 —
+/// 예전에는 62라는 숫자만 있어 카테고리 바를 끼우자 버튼이 바 위에 겹쳤다.
+const double _searchThisAreaTop = 8 + 46 + 8 + 48;
+
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
 
@@ -331,7 +342,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       final int serverZoom = MapTuning.clampForServer(zoomLevel);
       // **원문부터 받는다**(SPEC-0019). 요청 언어로 쓰인 장소를 우선 그린다.
       final MapViewportResult result = await ref.read(
-        mapViewportProvider(bbox, serverZoom, hasOrigin: true).future,
+        mapViewportProvider(
+          bbox,
+          serverZoom,
+          hasOrigin: true,
+          categoryKey: _categoryKey(),
+        ).future,
       );
       if (!mounted || generation != _markerGeneration) return;
 
@@ -352,7 +368,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       // 비우면 원문 우선이 무의미해진다.
       if (ref.read(mapMarkerControllerProvider.notifier).hasRoomIn(visible)) {
         final MapViewportResult translated = await ref.read(
-          mapViewportProvider(bbox, serverZoom, hasOrigin: false).future,
+          mapViewportProvider(
+            bbox,
+            serverZoom,
+            hasOrigin: false,
+            categoryKey: _categoryKey(),
+          ).future,
         );
         if (!mounted || generation != _markerGeneration) return;
         ref
@@ -423,6 +444,39 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
   /// 클러스터 탭(R22)은 없다 — 서버가 클러스터 필드를 제거했다(2026-08-10).
   ///
+  /// 지금 선택된 카테고리를 조회 변수로 쓸 안정 키로 접는다(SPEC-0020 R7).
+  ///
+  /// 빈 문자열은 "필터 없음"이다 — 목록이 아직 오지 않은 첫 프레임에만 나타나며,
+  /// 빈 배열을 보내면 서버가 거절하므로 그때는 인자를 생략한다(AC5.1).
+  String _categoryKey() =>
+      ref.read(mapSelectedCategoryProvider.notifier).selection.codes.join(',');
+
+  /// 카테고리 필터가 바뀌면 **뷰포트 이동과 같은 디바운스 경로로** 다시 조회한다
+  /// (R8, POL-037).
+  ///
+  /// 같은 [_idleTimer]를 쓰는 것이 핵심이다 — 칩을 연달아 토글해도 조회는 멈춘 뒤
+  /// 1회이고(AC7.3), 토글하는 사이 지도를 움직여도 두 계기가 서로를 취소해 마지막
+  /// 상태로 한 번만 나간다. 타이머를 따로 두면 그 합류가 깨져 두 번 나간다.
+  ///
+  /// **결과는 통째로 갈아 끼운다**(`replaceShown: true`). 필터를 좁혔는데 이전
+  /// 카테고리의 마커가 남아 있으면 필터가 듣지 않는 것으로 보인다 — 뷰포트 이동
+  /// (보태는 방식)과 다른 점이다.
+  void _onCategoryFilterChanged() {
+    _idleTimer?.cancel();
+    _idleTimer = Timer(MapTuning.idleDebounce, () async {
+      if (!mounted) return;
+      final MapBounds? visible = await _visibleBounds();
+      if (visible == null || !mounted) return;
+      // 줌은 마지막으로 마커를 받은 값을 쓴다 — 필터 변경은 지도를 움직이지 않으므로
+      // 그때의 줌이 지금의 줌이다. 아직 한 번도 안 받았으면 초기 줌으로 시작한다.
+      await _searchMarkersHere(
+        visible,
+        _lastMarkerZoom ?? MapTuning.initialZoom,
+        replaceShown: true,
+      );
+    });
+  }
+
   /// 현재 뷰포트를 산출해 조회한다.
   ///
   /// **경계는 SDK가 주지 않는다**(설계 §2.1). `CameraPosition`은 중심과 정수 줌만
@@ -696,6 +750,13 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
 
+    // 카테고리 기본값을 심는다(R4). 다른 화면과 같은 규칙을 쓴다 — 목록이 도착하면
+    // TOURIST_SPOT을, 없으면 목록의 첫 값을 고른다.
+    seedSpotCategoryDefault(
+      ref,
+      () => ref.read(mapSelectedCategoryProvider.notifier),
+    );
+
     // 키가 없거나 SDK 인증에 실패하면 지도를 띄울 수 없다. 앱을 죽이지 않고 이
     // 화면만 안내로 대체한다(설계 §10).
     if (!MapSdkInitializer.isReady) {
@@ -860,6 +921,31 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                     padding: const EdgeInsets.only(top: 8),
                     child: MapSearchBar(onTap: _onSearchTap),
                   ),
+                  // 카테고리 필터(SPEC-0020 R7). 검색창 바로 아래에 둔다 — 다른
+                  // 화면(Discover·좋아요·검색)이 모두 같은 자리에 같은 바를 두므로
+                  // 사용자가 새로 배울 것이 없다.
+                  //
+                  // **좌우 여백을 상쇄한다.** 이 Column은 `left/right: 12`에 놓여
+                  // 있는데 바가 그 안에 갇히면 칩이 화면 가장자리 전에 잘린다 —
+                  // 가로 스크롤은 화면 끝까지 이어져야 더 있다는 것이 보인다.
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Transform.translate(
+                      offset: const Offset(-12, 0),
+                      child: SizedBox(
+                        width: MediaQuery.sizeOf(context).width,
+                        child: CategoryBar(
+                          selected: ref.watch(mapSelectedCategoryProvider),
+                          onToggle: (SpotCategory next) {
+                            ref
+                                .read(mapSelectedCategoryProvider.notifier)
+                                .toggle(next);
+                            _onCategoryFilterChanged();
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
                   // **혼잡도 실패는 배너로 알리지 않는다**(사용자 결정, 2026-08-12).
                   //
                   // 부가 데이터라 없어도 지도는 제 역할을 다 하고, 사용자가 할 수
@@ -899,8 +985,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               top: 0,
               child: SafeArea(
                 child: Padding(
-                  // 검색창(높이 약 46 + 위 여백 8) 아래로 내린다.
-                  padding: const EdgeInsets.only(top: 62),
+                  // 검색창(높이 약 46 + 위 여백 8)과 **카테고리 바**(높이 48 + 위
+                  // 여백 8) 아래로 내린다. 값이 상단 Column의 구성과 묶여 있으므로
+                  // 둘 중 하나를 바꾸면 여기도 함께 봐야 한다(SPEC-0020 R7).
+                  padding: const EdgeInsets.only(top: _searchThisAreaTop),
                   child: SearchThisAreaButton(
                     isSearching: _isSearchingArea,
                     onPressed: _onSearchThisArea,

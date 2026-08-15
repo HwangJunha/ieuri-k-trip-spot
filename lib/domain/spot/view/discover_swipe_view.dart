@@ -59,7 +59,7 @@ class DiscoverSwipeView extends ConsumerWidget {
         // 옮겼다 와도 유지된다, AC12.3).
         CategoryBar(
           selected: selected,
-          onSelected: (SpotCategory next) =>
+          onToggle: (SpotCategory next) =>
               ref.read(selectedSpotCategoryProvider.notifier).toggle(next),
         ),
         const SizedBox(height: 8),

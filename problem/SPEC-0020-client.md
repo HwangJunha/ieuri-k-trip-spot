@@ -15,17 +15,37 @@
 
 다만 **카테고리 체계 자체가 바뀌었습니다.** `SpotCategory`가 enum이 아니라 객체이며, 클라이언트가 알던 전제 대부분이 무효입니다.
 
-| 단계 | 작업 | 대응 |
-|---|---|---|
-| 0 | `X-App-Key: k-trip-spot` 헤더 추가 (독립·선행 가능) | R13 |
-| 1 | 카테고리 모델 교체 — enum → `code`/`label`/`iconUrl` 객체 + 아이콘 매핑 | R11 |
-| 2 | `CategoryBar` 다중 선택 전환, "전체 보기" 칩 제거, 라벨을 `label`로 | R1·R2·R3·R11 |
-| 3 | 세 provider를 단일 값 → 집합으로, 기본값 `{TOURIST_SPOT}`·폴백·빈 목록 | R2·R4·R12 |
-| 4 | 집합 → `categories: [String!]` 매핑, 5개 연산 배선 | R5 |
-| 5 | 지도 카테고리 필터 신설 + 디바운스 | R7·R8 |
-| — | 카드 썸네일·간격 (완료) · 서브 컬러 (`#B4501E` 적용 대기) | R9·R10 |
+| 단계 | 작업 | 대응 | 상태 |
+|---|---|---|---|
+| 0 | `X-App-Key: k-trip-spot` 헤더 추가 (독립·선행 가능) | R13 | ✅ |
+| 1 | 카테고리 모델 교체 — enum → `code`/`label`/`iconUrl` 객체 + 아이콘 매핑 | R11 | ✅ |
+| 2 | `CategoryBar` 다중 선택 전환, "전체 보기" 칩 제거, 라벨을 `label`로 | R1·R2·R3·R11 | ✅ |
+| 3 | 세 provider를 단일 값 → 집합으로, 기본값 `{TOURIST_SPOT}`·폴백·빈 목록 | R2·R4·R12 | ✅ |
+| 4 | 집합 → `categories: [String!]` 매핑, 5개 연산 배선 | R5 | ✅ |
+| 5 | 지도 카테고리 필터 신설 + 디바운스 | R7·R8 | ✅ |
+| — | 카드 썸네일·간격 · 서브 컬러 `#B4501E` | R9·R10 | ✅ |
+
+**전 단계 구현 완료(2026-08-15).** `flutter analyze` 무결점, 테스트 1180개 통과.
+남은 것은 스펙의 "테스트 대상 단위" 표에 있는 provider 단위 테스트 작성이며, CLAUDE.md
+§8에 따라 사용자가 "작업 완료"를 선언한 뒤에 씁니다.
 
 **1단계가 선행 조건입니다** — 로컬 `SpotCategory` enum과 `spotCategoryLabel()` l10n 매핑을 걷어내지 않으면 나머지가 전부 옛 타입에 묶입니다.
+
+### 구현 중 확인된 서버 계약 차이 (2026-08-15, 라이브)
+
+문서가 적지 않았거나 다르게 적은 것들입니다.
+
+1. **`spotDetail(id:)`에서 `category` 인자가 사라졌습니다.** `SpotDetail.intro`·`infoItems`도 인자를 잃었습니다 — 서버가 spot 자신의 카테고리로 해석합니다. 문서 §1단계 상세는 "`fetchSpotDetail(id, category)`는 `category`가 필수 인자"라고 적고 있으나 무효입니다. 이에 따라 **상세 라우트의 `category` 쿼리 파라미터를 통째로 제거**했습니다.
+2. **단수 `category` 인자는 병행이 아니라 제거됐습니다.** 과도기 없이 교체라, 클라이언트가 전환하지 않으면 조회가 전부 실패합니다.
+3. **빈 배열 오류는 `EMPTY_CATEGORY_SET` 코드가 아닙니다.** `errorType: INTERNAL`에 Java 예외 클래스명(`EmptyCategorySetException`)이 그대로 실려 옵니다. 클라이언트는 빈 집합을 만들지 않으므로(마지막 1개 해제 불가) 실사용 경로는 아니지만, 코드로 분기할 수는 없습니다.
+4. **모르는 코드는 오류가 아닙니다.** `categories: ["NOPE"]`는 조용히 빈 결과입니다 — 오타가 0건으로 나타나므로 디버깅 시 유의해야 합니다.
+5. **`availableSpotCategories`는 `code` 알파벳순입니다.** `TOURIST_SPOT`이 목록의 7번째이며 첫 값이 아닙니다 — AC4.2의 "목록 첫 값 폴백"이 실제로 다른 값이 되는 상황이 흔합니다.
+6. **커뮤니티 오퍼레이션도 손대야 했습니다.** 범위 밖이지만 같은 `spots`·`likedSpots`·`searchSpots`를 참조해, 인자를 바꾸지 않으면 codegen이 통과하지 않습니다. `NearbySpotCategory`·`TargetCategory` 타입 자체는 건드리지 않았습니다.
+
+### 함께 고친 기존 버그
+
+- **지도 마커 탭이 늘 `touristSpot`으로 열렸습니다.** `map_repository_impl.dart`가 생성 enum의 `.name`(`TOURIST_SPOT`)을 실었는데 라우터는 Dart enum 이름(`touristSpot`)과 비교해 매칭이 영영 실패했습니다. 표기가 `code` 하나로 통일되며 사라졌습니다.
+- **좋아요 목록 `loadMore()`에 카테고리 인자가 빠져 있었습니다** — 2페이지부터 필터가 풀렸습니다.
 
 ### 1단계 상세 — 카테고리 모델 전환
 
@@ -230,23 +250,8 @@ final HttpLink httpLink = HttpLink(
 
 **다크 스킴은 시드 교체만으로 반영되지 않습니다(2026-08-14 구현 중 정정).** `copyWith(secondary:)`는 `secondary` 하나만 덮고 `onSecondary`·`secondaryContainer`·`onSecondaryContainer`는 시드(primary) 기준으로 남습니다. 파생 톤을 함께 덮도록 고쳤습니다. 또 어두운 배경에서는 `#A56200`이 텍스트 기준 4.5:1을 넘지 못해(3.55:1) 다크 `secondary`는 밝은 `#F0B968`을 씁니다.
 
-### 적용값과 실측 대비비 (2026-08-14)
-
-| 역할 | 라이트 | 다크 |
-|---|---|---|
-| `secondary` | `#A56200` | `#F0B968` |
-| `onSecondary` | `#FFFFFF` | `#452800` |
-| `secondaryContainer` | `#FFDDB3` | `#663C00` |
-| `onSecondaryContainer` | `#663C00` | `#FFDDB3` |
-
-| 검증 | 라이트 | 다크 | 기준 |
-|---|---|---|---|
-| onSecondary on secondary | 4.83:1 | 7.61:1 | AC10.2 ≥4.5 |
-| secondary on surface | 4.61:1 | 9.68:1 | AC10.2 ≥4.5 |
-| onSecondaryContainer on container | 7.35:1 | 7.35:1 | AC10.2 ≥4.5 |
-| 진행 막대 fill vs 트랙 | 3.73:1 | — | AC10.3 ≥3 |
-
-teal 잔존 0건(AC10.4). `*Fixed` 4종도 함께 교체했습니다.
+> 아래 `#A56200` 기준 측정표는 **2026-08-14 중간 상태**이며 지금은 무효입니다.
+> 최종 적용값은 이 절 끝의 "최종 적용값"을 보십시오.
 
 ### 서브 컬러 이동: `#A56200` → `#B4501E` (적용 필요)
 
@@ -273,6 +278,42 @@ teal 잔존 0건(AC10.4). `*Fixed` 4종도 함께 교체했습니다.
 | 다크 `secondary` 계열 | 구현 시 산출 | 같은 hue 대역의 밝은 톤. 다크 surface 대비 4.5:1 이상 |
 
 검증 기준은 spec **AC10.5**(모든 대응 톤 쌍 ΔE ≥ 10) · **AC10.6**(다크 대비)입니다.
+
+### 최종 적용값과 실측 (2026-08-15, 적용 완료)
+
+| 역할 | 라이트 | 다크 |
+|---|---|---|
+| `secondary` | `#B4501E` | `#FFB59B` |
+| `onSecondary` | `#FFFFFF` | `#5A2100` |
+| `secondaryContainer` | `#FFDBCC` | `#7A3210` |
+| `onSecondaryContainer` | `#7A3210` | `#FFDBCC` |
+| `secondaryFixed` / `Dim` | `#FFDBCC` / `#E5A183` | (라이트와 공유) |
+| `onSecondaryFixed` / `Variant` | `#33150A` / `#7A3210` | (라이트와 공유) |
+
+**AC10.5 — ΔE ≥ 10** (CIE Lab, tertiary 계열과의 분리)
+
+| 쌍 | ΔE |
+|---|---|
+| `secondary` / `tertiary` | 25.5 |
+| `secondaryContainer` / `tertiaryContainer` | 60.6 |
+| `secondaryContainer` / `tertiaryFixed` | 13.2 |
+| `secondaryFixed` / `tertiaryFixed` | 13.2 |
+| `secondaryFixedDim` / `tertiaryFixedDim` | 34.9 |
+
+**AC10.2 (≥4.5) · AC10.3 (≥3) · AC10.6 (다크)**
+
+| 검증 | 라이트 | 다크 |
+|---|---|---|
+| onSecondary on secondary | 5.11 | 7.47 |
+| secondary on surface | 4.88 | 10.08 |
+| onSecondaryContainer on container | 7.10 | 7.10 |
+| onSecondaryFixed on secondaryFixed | 12.98 | — |
+| onSecondaryFixedVariant on secondaryFixed | 7.10 | — |
+| 진행 막대 fill vs 트랙 (AC10.3) | 3.95 | — |
+
+teal 잔존 0건(AC10.4). `*Fixed` 4종 포함 secondary 계열 전체를 교체했습니다.
+
+**초기 진단 정정**: `#A56200`이 `tertiary`와 충돌한다고 본 근거는 상호 대비비 1.39:1이었는데, 대비비는 명도만 재므로 색 구분의 척도가 아닙니다. ΔE로 다시 재니 본체는 14.5로 구분되고 있었고, 실제 충돌은 `secondaryContainer`(`#FFDDB3`)와 `tertiaryFixed`(`#FFDDB4`)가 ΔE 0.5로 **사실상 같은 색**이었던 데 있었습니다.
 
 ### 라벨
 

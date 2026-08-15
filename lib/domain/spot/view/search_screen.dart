@@ -136,7 +136,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               // 필터가 검색 결과까지 갈아치운다.
               CategoryBar(
                 selected: ref.watch(spotSearchCategoryProvider),
-                onSelected: _toggleCategory,
+                onToggle: _toggleCategory,
               ),
             ],
           ),

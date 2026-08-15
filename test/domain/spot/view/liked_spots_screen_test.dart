@@ -61,7 +61,7 @@ void main() {
     // 서버가 준 `label`이다(클라이언트가 번역하지 않는다, R11).
     //
     // 카드에도 카테고리 라벨이 있으므로 칩으로 한정해 센다.
-    final Finder chips = find.byType(ChoiceChip);
+    final Finder chips = find.byType(FilterChip);
     expect(
       find.descendant(of: chips, matching: find.text('View all')),
       findsNothing,
@@ -89,10 +89,10 @@ void main() {
     // 최초 진입 기본값은 TOURIST_SPOT이다(R4·AC4.1) — 예전의 "전체"(null)가 아니다.
     expect(repo.lastLikedCategoryCodes, <String>[catTouristSpot.code]);
 
-    // 카드에도 같은 카테고리 라벨이 있으므로 칩(ChoiceChip)으로 한정해 누른다.
+    // 카드에도 같은 카테고리 라벨이 있으므로 칩(FilterChip)으로 한정해 누른다.
     await tester.tap(
       find.descendant(
-        of: find.byType(ChoiceChip),
+        of: find.byType(FilterChip),
         matching: find.text('Restaurants'),
       ),
     );

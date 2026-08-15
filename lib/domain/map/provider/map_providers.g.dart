@@ -60,6 +60,10 @@ String _$mapRepositoryHash() => r'ebd1feef5797a36458540e43a75a28142ac397fa';
 /// (설계 §3.3).
 /// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). 화면은 원문으로 마커를 채우고 자리가
 /// 남으면 번역본으로 한 번 더 채운다 — 두 값이 서로 다른 family 인스턴스가 된다.
+/// [categoryCodes]는 정렬된 코드 목록이며 그대로 조회 변수가 된다(SPEC-0020 R7).
+/// **`Set`이 아니라 정렬된 `List`를 받는 이유**는 family 키 때문이다 — Dart의 `Set`과
+/// `List`는 값 동등성이 없어, 화면이 `SpotCategorySelection.codes`(정규화된 목록)를
+/// 그대로 넘기고 여기서는 문자열 하나로 접어 키를 만든다.
 
 @ProviderFor(mapViewport)
 const mapViewportProvider = MapViewportFamily._();
@@ -74,6 +78,10 @@ const mapViewportProvider = MapViewportFamily._();
 /// (설계 §3.3).
 /// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). 화면은 원문으로 마커를 채우고 자리가
 /// 남으면 번역본으로 한 번 더 채운다 — 두 값이 서로 다른 family 인스턴스가 된다.
+/// [categoryCodes]는 정렬된 코드 목록이며 그대로 조회 변수가 된다(SPEC-0020 R7).
+/// **`Set`이 아니라 정렬된 `List`를 받는 이유**는 family 키 때문이다 — Dart의 `Set`과
+/// `List`는 값 동등성이 없어, 화면이 `SpotCategorySelection.codes`(정규화된 목록)를
+/// 그대로 넘기고 여기서는 문자열 하나로 접어 키를 만든다.
 
 final class MapViewportProvider
     extends
@@ -95,9 +103,14 @@ final class MapViewportProvider
   /// (설계 §3.3).
   /// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). 화면은 원문으로 마커를 채우고 자리가
   /// 남으면 번역본으로 한 번 더 채운다 — 두 값이 서로 다른 family 인스턴스가 된다.
+  /// [categoryCodes]는 정렬된 코드 목록이며 그대로 조회 변수가 된다(SPEC-0020 R7).
+  /// **`Set`이 아니라 정렬된 `List`를 받는 이유**는 family 키 때문이다 — Dart의 `Set`과
+  /// `List`는 값 동등성이 없어, 화면이 `SpotCategorySelection.codes`(정규화된 목록)를
+  /// 그대로 넘기고 여기서는 문자열 하나로 접어 키를 만든다.
   const MapViewportProvider._({
     required MapViewportFamily super.from,
-    required (MapBounds, int, {bool? hasOrigin}) super.argument,
+    required (MapBounds, int, {bool? hasOrigin, String categoryKey})
+    super.argument,
   }) : super(
          retry: null,
          name: r'mapViewportProvider',
@@ -124,12 +137,15 @@ final class MapViewportProvider
 
   @override
   FutureOr<MapViewportResult> create(Ref ref) {
-    final argument = this.argument as (MapBounds, int, {bool? hasOrigin});
+    final argument =
+        this.argument
+            as (MapBounds, int, {bool? hasOrigin, String categoryKey});
     return mapViewport(
       ref,
       argument.$1,
       argument.$2,
       hasOrigin: argument.hasOrigin,
+      categoryKey: argument.categoryKey,
     );
   }
 
@@ -144,7 +160,7 @@ final class MapViewportProvider
   }
 }
 
-String _$mapViewportHash() => r'cd68ff20f411cccd64c4c450e18efde70074ba5f';
+String _$mapViewportHash() => r'827915e36ac03aa85865cd1d1111e4bef267e8fb';
 
 /// 뷰포트 안의 마커·클러스터(R1·R2·R3·R12).
 ///
@@ -156,12 +172,16 @@ String _$mapViewportHash() => r'cd68ff20f411cccd64c4c450e18efde70074ba5f';
 /// (설계 §3.3).
 /// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). 화면은 원문으로 마커를 채우고 자리가
 /// 남으면 번역본으로 한 번 더 채운다 — 두 값이 서로 다른 family 인스턴스가 된다.
+/// [categoryCodes]는 정렬된 코드 목록이며 그대로 조회 변수가 된다(SPEC-0020 R7).
+/// **`Set`이 아니라 정렬된 `List`를 받는 이유**는 family 키 때문이다 — Dart의 `Set`과
+/// `List`는 값 동등성이 없어, 화면이 `SpotCategorySelection.codes`(정규화된 목록)를
+/// 그대로 넘기고 여기서는 문자열 하나로 접어 키를 만든다.
 
 final class MapViewportFamily extends $Family
     with
         $FunctionalFamilyOverride<
           FutureOr<MapViewportResult>,
-          (MapBounds, int, {bool? hasOrigin})
+          (MapBounds, int, {bool? hasOrigin, String categoryKey})
         > {
   const MapViewportFamily._()
     : super(
@@ -182,15 +202,115 @@ final class MapViewportFamily extends $Family
   /// (설계 §3.3).
   /// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). 화면은 원문으로 마커를 채우고 자리가
   /// 남으면 번역본으로 한 번 더 채운다 — 두 값이 서로 다른 family 인스턴스가 된다.
+  /// [categoryCodes]는 정렬된 코드 목록이며 그대로 조회 변수가 된다(SPEC-0020 R7).
+  /// **`Set`이 아니라 정렬된 `List`를 받는 이유**는 family 키 때문이다 — Dart의 `Set`과
+  /// `List`는 값 동등성이 없어, 화면이 `SpotCategorySelection.codes`(정규화된 목록)를
+  /// 그대로 넘기고 여기서는 문자열 하나로 접어 키를 만든다.
 
-  MapViewportProvider call(MapBounds bbox, int zoom, {bool? hasOrigin}) =>
-      MapViewportProvider._(
-        argument: (bbox, zoom, hasOrigin: hasOrigin),
-        from: this,
-      );
+  MapViewportProvider call(
+    MapBounds bbox,
+    int zoom, {
+    bool? hasOrigin,
+    String categoryKey = '',
+  }) => MapViewportProvider._(
+    argument: (bbox, zoom, hasOrigin: hasOrigin, categoryKey: categoryKey),
+    from: this,
+  );
 
   @override
   String toString() => r'mapViewportProvider';
+}
+
+/// 지도 화면의 카테고리 선택(SPEC-0020 R7·R12).
+///
+/// **다른 화면과 독립이다.** Discover·좋아요·검색이 각자 provider를 갖는 것과 같은
+/// 이유로 지도도 자기 것을 갖는다 — 지도에서 고른 필터가 스와이프 스택을 갈아치우면
+/// 안 된다. 공용 하나로 묶는 것은 나중에도 할 수 있지만, 잘못 전파되는 상태를
+/// 걷어내기는 어렵다.
+///
+/// 다른 선택 provider와 같은 이유로 `keepAlive`다(AC12.3) — 상세에 다녀오는 것만으로
+/// 필터가 풀리면 지도로 돌아왔을 때 결과와 어긋난다.
+
+@ProviderFor(MapSelectedCategory)
+const mapSelectedCategoryProvider = MapSelectedCategoryProvider._();
+
+/// 지도 화면의 카테고리 선택(SPEC-0020 R7·R12).
+///
+/// **다른 화면과 독립이다.** Discover·좋아요·검색이 각자 provider를 갖는 것과 같은
+/// 이유로 지도도 자기 것을 갖는다 — 지도에서 고른 필터가 스와이프 스택을 갈아치우면
+/// 안 된다. 공용 하나로 묶는 것은 나중에도 할 수 있지만, 잘못 전파되는 상태를
+/// 걷어내기는 어렵다.
+///
+/// 다른 선택 provider와 같은 이유로 `keepAlive`다(AC12.3) — 상세에 다녀오는 것만으로
+/// 필터가 풀리면 지도로 돌아왔을 때 결과와 어긋난다.
+final class MapSelectedCategoryProvider
+    extends $NotifierProvider<MapSelectedCategory, Set<SpotCategory>> {
+  /// 지도 화면의 카테고리 선택(SPEC-0020 R7·R12).
+  ///
+  /// **다른 화면과 독립이다.** Discover·좋아요·검색이 각자 provider를 갖는 것과 같은
+  /// 이유로 지도도 자기 것을 갖는다 — 지도에서 고른 필터가 스와이프 스택을 갈아치우면
+  /// 안 된다. 공용 하나로 묶는 것은 나중에도 할 수 있지만, 잘못 전파되는 상태를
+  /// 걷어내기는 어렵다.
+  ///
+  /// 다른 선택 provider와 같은 이유로 `keepAlive`다(AC12.3) — 상세에 다녀오는 것만으로
+  /// 필터가 풀리면 지도로 돌아왔을 때 결과와 어긋난다.
+  const MapSelectedCategoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'mapSelectedCategoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$mapSelectedCategoryHash();
+
+  @$internal
+  @override
+  MapSelectedCategory create() => MapSelectedCategory();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Set<SpotCategory> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Set<SpotCategory>>(value),
+    );
+  }
+}
+
+String _$mapSelectedCategoryHash() =>
+    r'9b63d761d9d1036a6eac618020d73958670635e1';
+
+/// 지도 화면의 카테고리 선택(SPEC-0020 R7·R12).
+///
+/// **다른 화면과 독립이다.** Discover·좋아요·검색이 각자 provider를 갖는 것과 같은
+/// 이유로 지도도 자기 것을 갖는다 — 지도에서 고른 필터가 스와이프 스택을 갈아치우면
+/// 안 된다. 공용 하나로 묶는 것은 나중에도 할 수 있지만, 잘못 전파되는 상태를
+/// 걷어내기는 어렵다.
+///
+/// 다른 선택 provider와 같은 이유로 `keepAlive`다(AC12.3) — 상세에 다녀오는 것만으로
+/// 필터가 풀리면 지도로 돌아왔을 때 결과와 어긋난다.
+
+abstract class _$MapSelectedCategory extends $Notifier<Set<SpotCategory>> {
+  Set<SpotCategory> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref = this.ref as $Ref<Set<SpotCategory>, Set<SpotCategory>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<Set<SpotCategory>, Set<SpotCategory>>,
+              Set<SpotCategory>,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
 }
 
 /// 뷰포트에 걸치는 구역의 실시간 혼잡도(R6~R11).
