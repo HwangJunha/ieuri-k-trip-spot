@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../common/category/category_bar.dart';
+import '../../../common/category/category_chip_data.dart';
+import '../../../common/category/spot_category_icon.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/community_chip.dart';
 import '../../../common/model/target_category.dart';
@@ -7,16 +10,22 @@ import 'community_labels.dart';
 
 /// 상단 카테고리 줄(당근 동네생활의 상단 진입 줄을 따른다).
 ///
+/// **모양은 공용 [CategoryBar]가 그린다**(사용자 결정, 2026-08-15). 원래 이 위젯의
+/// 디자인이 앱 전체의 기준이 되면서, spot 쪽 바가 여기 모양으로 맞춰졌고 이쪽은
+/// 그 공용 위젯을 다시 쓴다 — 같은 모양이 두 벌 남으면 한쪽만 고쳐 갈라진다.
+///
 /// **항목 구성은 서버가 정한다** — `communityChips`가 카테고리와 순서를 내려주고
-/// (이미 `position` 오름차순으로 정렬돼 있다) 앱은 표시 문구만 매핑한다(가이드 §2).
-/// 언어마다 가용 카테고리가 다르므로 클라이언트가 전체 목록을 하드코딩하면 안 된다.
+/// 앱은 표시 문구만 매핑한다(가이드 §2). 다만 **표시 순서는 앱이 고정한다**
+/// (`kCategoryDisplayOrder`): 사용자가 자리로 기억하는 줄이라 spot 쪽 바와 같은
+/// 순서여야 하고, 서버 `position`을 따르면 두 화면의 순서가 갈린다.
 ///
 /// **[chips]가 비어도 정상이다.** 구성이 없는 앱이면 서버가 빈 목록을 준다 — 그때는
-/// "전체" 하나만 남는 것이 아니라 **줄 자체를 그리지 않는다**: 고를 것이 하나뿐인
-/// 필터 줄은 자리만 차지한다.
+/// "전체" 하나만 남는 것이 아니라 **줄 자체를 그리지 않는다**([CategoryBar]가 빈
+/// 목록을 그렇게 접는다): 고를 것이 하나뿐인 필터 줄은 자리만 차지한다.
 ///
-/// 단일 선택이다. 선택된 항목을 다시 누르면 전체([selected]가 null)로 돌아간다.
-/// 언어별 길이 차이에 대비해 고정 폭을 두지 않는다(폭 상한 + ellipsis).
+/// **단일 선택이다.** spot 쪽 바는 다중 선택이지만 커뮤니티 피드는 카테고리 하나만
+/// 받는다 — 서버 계약이 그렇고, 이 통일은 모양에 관한 것이지 동작에 관한 것이 아니다.
+/// 선택된 항목을 다시 누르면 "전체"([selected]가 null)로 돌아간다.
 class CategoryChipRow extends StatelessWidget {
   const CategoryChipRow({
     super.key,
@@ -34,115 +43,52 @@ class CategoryChipRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (chips.isEmpty) return const SizedBox.shrink();
-
     final AppLocalizations l10n = AppLocalizations.of(context);
-    return SizedBox(
-      height: 88,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        children: <Widget>[
-          _Entry(
-            icon: Icons.grid_view_rounded,
-            label: l10n.communityCategoryAll,
-            selected: selected == null,
-            onTap: () => onSelected(null),
+    return CategoryBar(
+      available: <CategoryChipData>[
+        for (final CommunityChip chip in chips)
+          CategoryChipData(
+            id: _codeOf(chip.category),
+            label: targetCategoryLabel(l10n, chip.category),
+            // 아이콘은 코드 기준 공용 매핑을 쓴다 — 예전에는 이 파일이 같은 모양의
+            // switch를 따로 들고 있었고, 두 벌이 갈리면 같은 카테고리가 화면마다
+            // 다른 아이콘으로 보인다.
+            icon: spotCategoryIcon(_codeOf(chip.category)),
           ),
-          for (final CommunityChip chip in chips)
-            _Entry(
-              icon: _iconFor(chip.category),
-              label: targetCategoryLabel(l10n, chip.category),
-              selected: selected == chip.category,
-              // 같은 항목을 다시 누르면 해제 — 전체로 돌아간다.
-              onTap: () =>
-                  onSelected(selected == chip.category ? null : chip.category),
-            ),
-        ],
-      ),
+      ],
+      selectedIds: selected == null
+          ? const <String>{}
+          : <String>{_codeOf(selected!)},
+      // **커뮤니티 자기 키를 쓴다.** 공용 `categoryAll`과 문구가 같더라도, 이 키는
+      // 커뮤니티가 소유하고 다른 화면에서도 쓰이고 있다.
+      allLabel: l10n.communityCategoryAll,
+      // 단일 선택이라 누른 것 하나만 남기고, 같은 것을 다시 누르면 해제한다.
+      onToggle: (String code) {
+        final TargetCategory next = _categoryOf(code);
+        onSelected(selected == next ? null : next);
+      },
+      onSelectAll: () => onSelected(null),
     );
   }
 
-  /// 카테고리별 아이콘. 라벨이 번역돼도 모양은 그대로라 언어를 바꿔도 같은 자리를
-  /// 찾을 수 있다.
-  IconData _iconFor(TargetCategory category) => switch (category) {
-    TargetCategory.touristSpot => Icons.photo_camera_outlined,
-    TargetCategory.culturalFacility => Icons.museum_outlined,
-    TargetCategory.festivalEvent => Icons.celebration_outlined,
-    TargetCategory.travelCourse => Icons.route_outlined,
-    TargetCategory.leisureSports => Icons.hiking_outlined,
-    TargetCategory.lodging => Icons.hotel_outlined,
-    TargetCategory.shopping => Icons.shopping_bag_outlined,
-    TargetCategory.restaurant => Icons.restaurant_outlined,
-    TargetCategory.transport => Icons.directions_subway_outlined,
+  /// [TargetCategory] → 서버 코드. [CategoryChipData.id]와 표시 순서가 이 값을 쓴다.
+  ///
+  /// spot의 `SpotCategory.code`와 같은 문자열이다 — 서버가 두 도메인에 같은 코드
+  /// 체계를 쓰기 때문이며, 그래서 아이콘 매핑과 표시 순서를 함께 쓸 수 있다.
+  /// 타입을 합치지는 않는다(두 도메인의 계약이 다르다, `target_category.dart`).
+  static String _codeOf(TargetCategory category) => switch (category) {
+    TargetCategory.touristSpot => 'TOURIST_SPOT',
+    TargetCategory.culturalFacility => 'CULTURAL_FACILITY',
+    TargetCategory.festivalEvent => 'FESTIVAL_EVENT',
+    TargetCategory.travelCourse => 'TRAVEL_COURSE',
+    TargetCategory.leisureSports => 'LEISURE_SPORTS',
+    TargetCategory.lodging => 'LODGING',
+    TargetCategory.shopping => 'SHOPPING',
+    TargetCategory.restaurant => 'RESTAURANT',
+    TargetCategory.transport => 'TRANSPORT',
   };
-}
 
-/// 항목 하나 — 원형 아이콘 + 그 아래 라벨.
-///
-/// 선택 상태는 원의 채움색과 라벨 굵기로만 나타낸다. 테두리를 두르면 당근의
-/// 납작한 느낌이 사라진다.
-class _Entry extends StatelessWidget {
-  const _Entry({
-    required this.icon,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final Color background = selected
-        ? theme.colorScheme.primaryContainer
-        : theme.colorScheme.surfaceContainerHighest;
-    final Color foreground = selected
-        ? theme.colorScheme.onPrimaryContainer
-        : theme.colorScheme.onSurfaceVariant;
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-        child: SizedBox(
-          // 라벨이 길어도 항목 폭이 흔들리지 않도록 상한만 둔다. 고정 폭이 아니라
-          // 상한이라 짧은 언어에서는 좁게 붙는다.
-          width: 64,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: background,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, size: 22, color: foreground),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: selected
-                      ? theme.colorScheme.onSurface
-                      : theme.colorScheme.onSurfaceVariant,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  /// [_codeOf]의 역방향. 바가 돌려주는 id는 늘 위에서 실어 보낸 값이라 대응이 있다.
+  static TargetCategory _categoryOf(String code) => TargetCategory.values
+      .firstWhere((TargetCategory c) => _codeOf(c) == code);
 }

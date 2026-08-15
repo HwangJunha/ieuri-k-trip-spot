@@ -176,9 +176,11 @@ final HttpLink httpLink = HttpLink(
 
 현재 `CategoryBar`(`lib/domain/spot/component/category_bar.dart`)는 `selected == null`을 "전체"로 쓰는 단일 값 모델입니다. 이 표현은 다중 선택으로 확장되지 않습니다 — `null`이 "전체"와 "미선택" 두 의미를 겸하기 때문입니다.
 
-선택 상태를 **비어 있을 수 없는 집합**으로 모델링하고 provider가 소유합니다. 위젯은 상태를 갖지 않습니다.
+선택 상태를 집합으로 모델링하고 provider가 소유합니다. 위젯은 상태를 갖지 않습니다.
 
-- 토글 로직(추가·해제·마지막 1개 해제 불가)은 provider에 있습니다. 위젯이 아니라 provider에 있어야 테스트가 위젯 없이 성립합니다(spec 테스트 범위).
+> **2026-08-15 정정**: 아래 "비어 있을 수 없는 집합" 전제는 무효입니다. "전체" 칩이 돌아오면서 **빈 집합이 "전체"라는 정상 상태**가 됐습니다(위 §실기기 확인 후 변경 3건). 빈 집합은 서버로 `categories` 인자를 보내지 않는 것으로 표현되며, 빈 배열은 여전히 전송되지 않습니다.
+
+- 토글 로직(추가·해제)은 provider에 있습니다. 위젯이 아니라 provider에 있어야 테스트가 위젯 없이 성립합니다(spec 테스트 범위).
 - `selected == null` 표현은 제거합니다. "필터 없음"은 UI에 더 이상 존재하지 않습니다.
 - 서버 전송 시 집합 → `categories` 리스트로 매핑합니다. 집합이 비는 경우는 provider가 만들지 않으므로 `[]`는 전송되지 않습니다(계약상 `EMPTY_CATEGORY_SET`).
 
@@ -208,6 +210,52 @@ final HttpLink httpLink = HttpLink(
 > `availableSpotCategories`(칩 목록)는 이상 없습니다. 언어별 차이도 설계대로
 > 동작합니다(KO=`TRAVEL_COURSE` 포함·`TRANSPORT` 없음, EN=반대). 막힌 것은 목록을
 > 읽는 쪽이 아니라 고른 값을 보내는 쪽입니다.
+
+### 실기기 확인 후 변경 3건 (2026-08-15, 사용자 결정)
+
+구현을 실기기에서 본 뒤 사용자가 세 가지를 바꿨습니다. **아래 결정이 AC3.1·AC4.1·AC4.2보다 우선합니다** — 스펙의 그 기준들은 "전체" 상태가 없다는 전제 위에 서 있었고, 그 전제가 사라졌습니다.
+
+**1. 칩 디자인을 커뮤니티 줄로 통일했습니다.** M3 `FilterChip`(높이 48) → 원형 아이콘 44×44 + 아래 라벨(줄 높이 88). 커뮤니티 `CategoryChipRow`의 모양이 앱의 기준선이 되었습니다.
+
+`FilterChip`이 체크 표시로 알리던 선택 상태가 이 디자인에는 없어 **색·굵기만 남습니다.** 색만으로 상태를 알리면 색각 이상에서 구분되지 않으므로 `Semantics(selected:)`를 얹어 접근성 트리에 선택 여부를 명시했습니다.
+
+**2. "전체" 칩이 모드 토글로 돌아왔습니다.** 맨 앞에 놓입니다.
+
+- "전체"를 누르면 개별 선택이 전부 풀리고, 서버에는 `categories` 인자를 **보내지 않습니다**(빈 배열은 `EmptyCategorySetException`으로 거절됩니다 — 위 계약 차이 3번).
+- 개별 칩을 누르면 "전체"가 꺼지고 그 칩이 켜집니다. 개별 칩끼리는 여전히 다중 선택입니다.
+- 마지막 개별 칩을 끄면 선택이 비고 "전체"가 저절로 켜집니다.
+
+따라서 **AC3.1("마지막 1개 해제 불가")과 AC3.2를 폐기했습니다.** 그 규칙의 근거는 "빈 집합은 사용자가 되돌릴 방법이 없는 막다른 상태"였는데, "전체"가 그 상태를 이름 있는 정상 상태로 만들었습니다. `SpotCategoryToggle.toggle()`의 length==1 가드와 `replace()`의 빈 집합 무시를 걷어내고 `selectAll()`을 더했습니다.
+
+**AC4.1·AC4.2(기본값 `TOURIST_SPOT`·목록 첫 값 폴백)도 함께 폐기했습니다.** 진입 기본값과 "전체"를 둘 다 두면 앱을 켤 때마다 관광지만 걸린 화면이 뜨고 사용자가 매번 "전체"를 눌러야 합니다 — "전체"가 있는 이상 자연스러운 시작 상태는 그쪽입니다. 이에 따라 `spot_category_seed.dart`(그리고 그 회귀 테스트)와 `kDefaultSpotCategoryCode`가 사라졌습니다. 언어별 가용 목록 차이(KO `TRAVEL_COURSE` / 비KO `TRANSPORT`)에 대한 폴백 로직도 함께 불필요해졌습니다 — 심을 값이 없으면 폴백할 것도 없습니다.
+
+부수 효과로 `map_screen.dart`의 spot 참조가 2건에서 **1건**(`availableSpotCategoriesProvider`)으로 줄었고, 빌드 중 provider 수정 위험(seed 경로)이 원천적으로 사라졌습니다.
+
+Discover 빈 상태의 "카테고리 바꾸기" 버튼도 기본 카테고리가 아니라 "전체"로 되돌립니다 — "결과가 없으니 필터를 풀어 보라"는 이 버튼의 뜻에 맞습니다.
+
+**3. 표시 순서를 고정했습니다.** 전체 → 관광지 → 문화시설 → 축제·공연 → 맛집 → 쇼핑 → 여행코스 → 레포츠 → 숙박(코드 목록은 `kCategoryDisplayOrder`). `TRANSPORT`는 사용자가 지정한 순서에 없어(비KO 언어에만 나옵니다) 아는 것 중 맨 뒤입니다.
+
+**목록에 없는 코드도 버리지 않고 뒤에 붙입니다**(AC1.3) — 서버가 앱 업데이트 없이 카테고리를 늘릴 수 있어야 하므로 이 목록은 유효성 검사가 아니라 정렬 규칙입니다. `List.sort`가 아니라 훑어 담기로 구현한 이유는 Dart의 `sort`가 안정 정렬이 아니라서, 모르는 코드끼리의 순서가 다시 그릴 때 흔들릴 수 있기 때문입니다.
+
+### 커뮤니티도 같은 위젯을 씁니다 (2026-08-15, 사용자 결정)
+
+원래 스펙 §범위 밖은 커뮤니티 `CategoryChipRow`를 대상에서 제외했으나, 그 위젯의 **디자인이 기준선이 되면서** 방향이 뒤집혔습니다. 같은 모양이 두 벌 남으면 한쪽만 고쳐 갈라집니다.
+
+`common/`이 `SpotCategory`도 `TargetCategory`도 알지 않도록 **표시 모델을 하나 두었습니다.**
+
+| 파일 | 역할 |
+|---|---|
+| `common/category/category_chip_data.dart` | `CategoryChipData {id, label, icon}` + `kCategoryDisplayOrder` + `orderedCategoryChips()` |
+| `common/category/category_bar.dart` | 도메인 타입을 모르는 바 본체 + 공개 `CategoryBarEntry` |
+| `common/category/spot_category_bar.dart` | `SpotCategory` ↔ `CategoryChipData` 어댑터(네 화면이 같은 변환을 반복하지 않게) |
+
+- spot은 라벨을 **서버**(`SpotCategory.label`)에서, 커뮤니티는 **l10n**(`targetCategoryLabel`)에서 가져옵니다. 바는 어느 쪽인지 모릅니다.
+- 커뮤니티는 **단일 선택 그대로**입니다. 서버 계약이 카테고리 하나만 받으므로 이 통일은 모양에 관한 것이지 동작에 관한 것이 아닙니다. 재탭 해제("전체"로 복귀)도 그대로입니다. `TargetCategory`·`NearbySpotCategory`·provider·서버 계약은 건드리지 않았습니다.
+- 커뮤니티는 서버 `position` 대신 `kCategoryDisplayOrder`를 따릅니다 — 사용자가 자리로 기억하는 줄이라 두 화면의 순서가 갈리면 안 됩니다.
+- 커뮤니티의 아이콘 switch(`TargetCategory` 기준)를 걷어내고 공용 `spotCategoryIcon(code)`로 모았습니다. 같은 매핑 두 벌이 갈리면 같은 카테고리가 화면마다 다른 아이콘으로 보입니다.
+- `TargetCategory` → 서버 코드 변환(`TOURIST_SPOT` 등)은 커뮤니티 위젯 안의 private switch입니다. 두 도메인이 같은 코드 문자열을 쓰는 것은 서버가 같은 코드 체계를 쓰기 때문이며, **타입을 합치지는 않습니다**(§3, `target_category.dart` 주석).
+
+**"전체" 문구**: 새 공용 키 `categoryAll`("전체"/"All"/"すべて"/"全部")을 4개 arb에 추가했습니다. 커뮤니티는 자기 `communityCategoryAll`을 계속 씁니다 — 커뮤니티가 소유한 키를 공용 위젯이 빌리면 커뮤니티 문구 변경이 spot 화면까지 끌고 갑니다. 기존 `viewAll`("전체 보기"/"View all")은 섹션 헤더의 **링크** 문구라 필터 모드 이름으로 읽히지 않아 재사용하지 않았습니다.
 
 ### 화면별 독립 (R12)
 
@@ -344,16 +392,19 @@ teal 잔존 0건(AC10.4). `*Fixed` 4종 포함 secondary 계열 전체를 교체
 | 단위 | 검증 내용 | 대응 AC |
 |---|---|---|
 | 카테고리 선택 provider | 추가·해제 토글 | AC2.1, AC2.2 |
-| 카테고리 선택 provider | 마지막 1개 해제 불가 | AC3.1 |
-| 카테고리 선택 provider | 9개 전부 선택 → 8회 해제 → 크기 1, 9번째 해제는 무변화 | AC3.2 |
+| ~~카테고리 선택 provider~~ | ~~마지막 1개 해제 불가~~ — **폐기**(2026-08-15 "전체" 도입) | ~~AC3.1~~ |
+| ~~카테고리 선택 provider~~ | ~~9개 전부 선택 → 8회 해제 → 크기 1~~ — **폐기** | ~~AC3.2~~ |
+| 카테고리 선택 provider | 마지막 1개를 꺼도 막지 않고 빈 집합("전체")이 된다 | 위 결정 |
+| 카테고리 선택 provider | `selectAll()`이 선택을 비운다 | 위 결정 |
+| 칩 표시 순서 | `kCategoryDisplayOrder`대로 정렬 · 모르는 코드는 뒤에 유지 | AC1.3 |
 | 테마 값 검증 | secondary 계열 대비비(텍스트 4.5:1 / 비텍스트 3:1), teal 계열 잔존 없음 | AC10.1~10.4 |
 | 아이콘 해석 | `iconUrl` 우선 · null이면 `code` 매핑 · 모르는 `code`는 중립 기본값 | AC11.2·11.4·11.5 |
 | 카테고리 모델 매핑 | 생성 타입 → 도메인 값 객체, 동등성은 `code` 기준 | AC5.2 |
 | GraphQL 링크 | `X-App-Key`가 실리고 `Accept-Language`와 공존 | AC13.1·13.2 |
 | 카테고리 선택 provider | 화면별 인스턴스 독립 — 한 화면 변경이 다른 화면에 전파되지 않음 | AC12.1 |
 | 카테고리 선택 provider | 재시작 시 기본값 초기화(영속 저장 없음) | AC12.2 |
-| 카테고리 선택 provider | 최초 기본값 `TOURIST_SPOT` | AC4.1 |
-| 카테고리 선택 provider | `TOURIST_SPOT` 부재 시 목록 첫 값 폴백 | AC4.2 |
+| ~~카테고리 선택 provider~~ | ~~최초 기본값 `TOURIST_SPOT`~~ — **폐기**, 최초는 "전체"(빈 집합) | ~~AC4.1~~ |
+| ~~카테고리 선택 provider~~ | ~~`TOURIST_SPOT` 부재 시 목록 첫 값 폴백~~ — **폐기**(심는 값이 없으면 폴백도 없다) | ~~AC4.2~~ |
 | 선택 집합 → 쿼리 변수 매핑 | `categories` 리스트 생성, 빈 배열 미전송 | AC5.1 |
 | 지도 조회 트리거 | 필터 변경 시 디바운스 후 1회 조회 | AC7.3 |
 
@@ -361,5 +412,5 @@ teal 잔존 0건(AC10.4). `*Fixed` 4종 포함 secondary 계열 전체를 교체
 
 - 정보 위계 재설계·시각적 리듬 — R9 범위 밖입니다(spec §결정 사항). 실제 화면을 보며 조정할 사항이며, 필요 시 후속 스펙으로 분리합니다.
 - `category` 인자 제거 — 별도 스펙입니다.
-- 커뮤니티 `CategoryChipRow`(`lib/domain/community/component/category_chip_row.dart`) — 다른 enum(`CommunityChip`)을 쓰는 별도 위젯으로 이 스펙의 대상이 아닙니다.
+- ~~커뮤니티 `CategoryChipRow`~~ — **범위에 들어왔습니다**(2026-08-15 사용자 결정, 위 §커뮤니티도 같은 위젯을 씁니다). 그 위젯의 디자인이 앱 기준선이 되면서 공용 `CategoryBar`로 흡수했습니다. 단일 선택 동작과 서버 계약은 그대로입니다.
 - 위젯 렌더링 검증 — 테스트 범위 밖입니다.

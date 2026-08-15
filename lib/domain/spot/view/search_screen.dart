@@ -6,13 +6,12 @@ import '../../../common/location/coordinates.dart';
 import '../../../common/navigation/picked_place.dart';
 import '../../../common/navigation/spot_detail_route.dart';
 import '../../../l10n/gen/app_localizations.dart';
-import '../../../common/category/category_bar.dart';
+import '../../../common/category/spot_category_bar.dart';
 import '../component/recent_searches_list.dart';
 // 결과 목록의 페이징은 이 컴포넌트 안에서 공용 PaginationListView가 맡는다 —
 // 기능이 자기 페이지네이션을 만들지 않는다(CLAUDE.md §4).
 import '../component/search_result_list.dart';
 import '../component/search_suggestion_list.dart';
-import '../provider/spot_category_seed.dart';
 import '../provider/swipe_providers.dart';
 import '../../../common/category/spot_category.dart';
 import '../model/spot_search_state.dart';
@@ -93,18 +92,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final SpotSearchState state = ref.watch(spotSearchProvider);
 
-    // 목록이 오면 기본 선택을 심는다(R4) — Discover·좋아요와 같은 규칙이다.
-    seedSpotCategoryDefault(
-      ref,
-      () => ref.read(spotSearchCategoryProvider.notifier),
-    );
-
+    // 최초 상태는 "전체"다(사용자 결정, 2026-08-15) — 심는 것이 없다.
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.searchTitle),
         bottom: PreferredSize(
-          // 검색 필드 + 최근 검색어 버튼 줄 + 카테고리 바.
-          preferredSize: const Size.fromHeight(160),
+          // 검색 필드 + 최근 검색어 버튼 줄 + 카테고리 바(88 — 원형 아이콘 디자인으로
+          // 바뀌며 48에서 늘었다).
+          preferredSize: const Size.fromHeight(200),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
@@ -135,12 +130,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               // 카테고리 필터(R5). Discover·좋아요 목록과 같은 바를 쓰되 **선택은
               // 검색 전용 provider가 들고 있다** — 하나로 묶으면 Discover에서 고른
               // 필터가 검색 결과까지 갈아치운다.
-              CategoryBar(
+              SpotCategoryBar(
                 available:
                     ref.watch(availableSpotCategoriesProvider).value ??
                     const <SpotCategory>[],
                 selected: ref.watch(spotSearchCategoryProvider),
                 onToggle: _toggleCategory,
+                onSelectAll: _selectAllCategories,
               ),
             ],
           ),
@@ -214,6 +210,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   /// 아직 검색 전이면 선택만 기억한다 — 다음 검색에 그 필터가 실린다.
   void _toggleCategory(SpotCategory category) {
     ref.read(spotSearchCategoryProvider.notifier).toggle(category);
+    _afterCategoryChange();
+  }
+
+  /// "전체"를 누르면 필터를 풀고 같은 질의로 다시 조회한다.
+  void _selectAllCategories() {
+    ref.read(spotSearchCategoryProvider.notifier).selectAll();
+    _afterCategoryChange();
+  }
+
+  void _afterCategoryChange() {
     setState(() => _recentOpen = false);
     ref.read(spotSearchProvider.notifier).reapplyCategory();
   }

@@ -46,9 +46,5 @@ class SpotCategory {
   String toString() => 'SpotCategory($code)';
 }
 
-/// 기본 선택 카테고리의 코드(R4). 목록에 이 코드가 없으면 목록의 첫 값으로
-/// 떨어진다(AC4.2) — 언어에 따라 가용 목록이 다르기 때문이다.
-const String kDefaultSpotCategoryCode = 'TOURIST_SPOT';
-
 /// 축제 카테고리 코드. `domain/event`가 축제를 상세로 열 때 쓴다.
 const String kFestivalEventCategoryCode = 'FESTIVAL_EVENT';

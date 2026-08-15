@@ -47,6 +47,7 @@
   "searchError": "Couldn't run the search.",
   "searchRetry": "Retry",
   "viewAll": "View all",
+  "categoryAll": "All",
   "navHome": "Home",
   "navMap": "Map",
   "navDiscover": "Discover",

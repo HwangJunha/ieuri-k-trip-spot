@@ -1,128 +1,164 @@
 import 'package:flutter/material.dart';
 
-import 'spot_category.dart';
-import 'spot_category_icon.dart';
+import 'category_chip_data.dart';
 
-/// 상단 카테고리 바(spec §5). 서버가 준 [available] 목록만 렌더한다 — 서버가
-/// 가용성의 단일 출처라 클라이언트는 없는 카테고리를 하드코딩하지 않는다.
+/// 상단 카테고리 바(spec §5). 호출부가 준 [available] 목록만 렌더한다 — 가용성의
+/// 단일 출처는 서버이고, 클라이언트는 없는 카테고리를 하드코딩하지 않는다.
 ///
-/// **목록을 provider에서 직접 읽지 않고 인자로 받는다.** 이 위젯은 spot과 지도가
-/// 함께 쓰므로 `common/`에 있는데(CLAUDE.md §4), 여기서 `availableSpotCategories`를
-/// watch하면 common이 도메인 provider(→ `SpotRepository`)에 의존하게 되어 의존
-/// 방향이 뒤집힌다. 목록을 읽는 일은 화면이 맡고, 이 위젯은 그리기만 한다.
+/// **목록을 provider에서 직접 읽지 않고 인자로 받는다.** 이 위젯은 spot·지도·
+/// 커뮤니티가 함께 쓰므로 `common/`에 있는데(CLAUDE.md §4), 여기서 도메인 provider를
+/// watch하면 common이 도메인 데이터 접근에 의존하게 되어 방향이 뒤집힌다. 목록을
+/// 읽는 일은 화면이 맡고, 이 위젯은 그리기만 한다. 같은 이유로 [SpotCategory]나
+/// `TargetCategory` 같은 도메인 타입도 알지 않는다 — 호출부가 [CategoryChipData]로
+/// 옮겨 넘긴다.
 ///
-/// **다중 선택이다**(R1·R2). 여러 칩을 동시에 켤 수 있고, 켜진 칩을 다시 누르면
-/// 꺼진다. "전체 보기" 칩은 제거됐다 — 선택 집합이 비어 있을 수 없게 되어(R2)
-/// `null`이 뜻할 것이 없다.
+/// **모양은 커뮤니티 줄을 따른다**(사용자 결정, 2026-08-15). 원형 아이콘 + 그 아래
+/// 라벨. M3 `FilterChip`을 쓰던 시절보다 언어별 길이 차이에 강하고(칩 폭이 라벨을
+/// 따라 늘지 않는다) 아이콘이 커서 자리로 기억하기 쉽다.
 ///
-/// **마지막 하나는 꺼지지 않는다**(AC3.1). 그 규칙은 위젯이 아니라 provider의
-/// `toggle`에 있다 — 아무것도 선택되지 않은 화면은 사용자가 되돌릴 방법이 없는
-/// 막다른 상태이고, 서버도 빈 배열을 거절한다. 위젯은 눌린 사실만 전달한다.
+/// **맨 앞은 "전체"이며 모드 토글이다**(사용자 결정, 2026-08-15).
+/// - "전체"를 누르면 개별 선택이 전부 풀린다([onSelectAll]) — 서버에는 카테고리
+///   인자를 **보내지 않는다**(빈 배열은 서버가 거절한다).
+/// - 개별 칩을 누르면 "전체"가 꺼지고 그 칩이 켜진다.
+/// - 마지막 개별 칩을 끄면 선택이 비므로 "전체"가 저절로 다시 켜진다. 그래서
+///   "마지막 하나는 해제 불가"라는 옛 규칙이 필요 없어졌다 — 빈 집합이 이제
+///   막다른 상태가 아니라 "전체"라는 정상 상태다.
 ///
-/// 라벨은 **서버가 준 [SpotCategory.label]**이다(R11). `spotCategoryLabel()`과
-/// `discoverCategory*` arb 키는 제거됐다 — 서버가 카테고리를 추가해도 앱 업데이트
-/// 없이 라벨이 따라와야 하기 때문이다(AC1.3).
-///
-/// **선택 상태는 화면이 준다**([selected]·[onToggle]). Discover 스와이프·좋아요
-/// 목록·검색·지도가 같은 바를 쓰지만 선택은 서로 독립이어야 하기 때문이다(R12) —
-/// 하나의 provider에 묶으면 좋아요 목록에서 고른 필터가 스와이프 스택까지 갈아치운다.
+/// **선택 표시는 색·굵기에 [Semantics]를 더한다.** `FilterChip`은 체크 표시로
+/// 선택을 알렸는데 이 디자인에는 그것이 없다. 색만으로 알리면 색각 이상에서
+/// 구분되지 않으므로 접근성 트리에 선택 상태를 명시한다.
 class CategoryBar extends StatelessWidget {
   const CategoryBar({
     super.key,
     required this.available,
-    required this.selected,
+    required this.selectedIds,
+    required this.allLabel,
     required this.onToggle,
+    required this.onSelectAll,
   });
 
-  /// 서버가 준 가용 카테고리. 비어 있으면 바 자체를 그리지 않는다 — 목록이 아직
-  /// 오지 않았거나 조회에 실패한 상태이며, 그때 빈 바를 그리면 자리만 차지한다.
-  final List<SpotCategory> available;
+  /// 그릴 카테고리. 비어 있으면 바 자체를 그리지 않는다 — 목록이 아직 오지 않았거나
+  /// 조회에 실패한 상태이며, 그때 "전체" 하나만 남은 바는 자리만 차지한다.
+  final List<CategoryChipData> available;
 
-  /// 현재 선택된 카테고리 집합. 비어 있지 않다(목록이 오기 전 첫 프레임 제외).
-  final Set<SpotCategory> selected;
+  /// 지금 켜진 카테고리의 [CategoryChipData.id] 집합. 비어 있으면 "전체"다.
+  final Set<String> selectedIds;
 
-  /// 칩을 누를 때 호출된다. 켜기·끄기 판단은 provider의 `toggle`이 한다.
-  final ValueChanged<SpotCategory> onToggle;
+  /// "전체" 칩의 표시 문구. 문자열을 l10n에서 읽는 일은 화면이 맡는다 — `common/`은
+  /// `AppLocalizations`를 참조해도 되지만, 커뮤니티가 자기 키를 계속 쓸 수 있어야
+  /// 해서 문구를 밖에서 받는다.
+  final String allLabel;
 
-  /// 표시 순서. **기본 카테고리(관광지)를 맨 앞에 두고** 나머지는 서버 순서를
-  /// 유지한다(사용자 결정, 2026-08-15).
-  ///
-  /// 서버는 `code` 알파벳순으로 주는데, 그러면 한글 라벨에서는 순서가 무작위로
-  /// 보이고 무엇보다 **기본 선택된 칩이 목록 한가운데** 놓인다(맛집·쇼핑·관광지·
-  /// 여행코스). 처음 보는 칩이 기본 선택과 일치해야 화면이 설명된다.
-  ///
-  /// **선택 여부로 정렬하지 않는다.** 고른 것을 앞으로 모으면 누를 때마다 칩이
-  /// 자리를 옮겨, 연달아 고르는 동안 방금 누른 칩이 손가락 아래에서 사라진다.
-  /// 순서는 선택과 무관하게 고정이다.
-  List<SpotCategory> get _ordered {
-    final int i = available.indexWhere(
-      (SpotCategory c) => c.code == kDefaultSpotCategoryCode,
-    );
-    if (i <= 0) return available; // 없거나 이미 첫 번째면 그대로.
-    return <SpotCategory>[
-      available[i],
-      ...available.where((SpotCategory c) => c.code != kDefaultSpotCategoryCode),
-    ];
-  }
+  /// 개별 칩을 누를 때. 켜기·끄기 판단은 호출부(provider)가 한다.
+  final ValueChanged<String> onToggle;
+
+  /// "전체"를 누를 때. 개별 선택을 전부 푼다.
+  final VoidCallback onSelectAll;
 
   @override
   Widget build(BuildContext context) {
-    // 카테고리 목록 자체가 로딩/실패면 바를 접는다(카드 흐름을 막지 않음).
+    // 카테고리 목록 자체가 로딩/실패면 바를 접는다(본문 흐름을 막지 않음).
     if (available.isEmpty) return const SizedBox.shrink();
 
-    final List<SpotCategory> ordered = _ordered;
+    final List<CategoryChipData> ordered = orderedCategoryChips(available);
     return SizedBox(
-      height: 48,
-      child: ListView.separated(
+      height: 88,
+      child: ListView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: ordered.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
-        itemBuilder: (BuildContext context, int index) {
-          final SpotCategory category = ordered[index];
-          return _CategoryChip(
-            label: category.label,
-            icon: spotCategoryIcon(category.code),
-            selected: selected.contains(category),
-            onTap: () => onToggle(category),
-          );
-        },
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        children: <Widget>[
+          CategoryBarEntry(
+            icon: Icons.grid_view_rounded,
+            label: allLabel,
+            selected: selectedIds.isEmpty,
+            onTap: onSelectAll,
+          ),
+          for (final CategoryChipData chip in ordered)
+            CategoryBarEntry(
+              icon: chip.icon,
+              label: chip.label,
+              selected: selectedIds.contains(chip.id),
+              onTap: () => onToggle(chip.id),
+            ),
+        ],
       ),
     );
   }
 }
 
-/// 칩 하나.
+/// 항목 하나 — 원형 아이콘 + 그 아래 라벨.
 ///
-/// **`ChoiceChip`이 아니라 `FilterChip`이다.** M3에서 `ChoiceChip`은 "여럿 중 하나"를,
-/// `FilterChip`은 "여러 개를 걸러낸다"를 뜻한다 — 다중 선택이 된 이상 의미가 맞는
-/// 쪽을 쓴다. 접근성 트리에도 그대로 반영돼, 스크린 리더가 단일 선택으로 읽지 않는다.
+/// 선택 상태는 원의 채움색과 라벨 굵기로 나타낸다. 테두리를 두르면 납작한 느낌이
+/// 사라진다. 색만으로는 색각 이상에서 구분되지 않으므로 [Semantics]에 선택 여부를
+/// 함께 싣는다 — 스크린 리더가 "선택됨"으로 읽는다.
 ///
-/// 선택 시 아이콘 자리에 체크가 들어간다(`showCheckmark` 기본값) — 색만으로 상태를
-/// 알리지 않아야 색각 이상에서도 구분된다.
-class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({
-    required this.label,
+/// **공개 위젯인 이유**: 커뮤니티가 같은 모양을 자기 단일 선택 규칙으로 쓴다.
+class CategoryBarEntry extends StatelessWidget {
+  const CategoryBarEntry({
+    super.key,
     required this.icon,
+    required this.label,
     required this.selected,
     required this.onTap,
   });
 
-  final String label;
   final IconData icon;
+  final String label;
   final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: FilterChip(
-        label: Text(label),
-        // 선택되면 체크가 아이콘 자리를 차지하므로 아이콘은 비선택일 때만 그린다 —
-        // 둘을 함께 두면 칩이 언어에 따라 과하게 길어진다.
-        avatar: selected ? null : Icon(icon, size: 18),
-        selected: selected,
-        onSelected: (_) => onTap(),
+    final ThemeData theme = Theme.of(context);
+    final Color background = selected
+        ? theme.colorScheme.primaryContainer
+        : theme.colorScheme.surfaceContainerHighest;
+    final Color foreground = selected
+        ? theme.colorScheme.onPrimaryContainer
+        : theme.colorScheme.onSurfaceVariant;
+
+    return Semantics(
+      selected: selected,
+      button: true,
+      label: label,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+          child: SizedBox(
+            // 라벨이 길어도 항목 폭이 흔들리지 않도록 상한만 둔다. 고정 폭이 아니라
+            // 상한이라 짧은 언어에서는 좁게 붙는다.
+            width: 64,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: background,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, size: 22, color: foreground),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: selected
+                        ? theme.colorScheme.onSurface
+                        : theme.colorScheme.onSurfaceVariant,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

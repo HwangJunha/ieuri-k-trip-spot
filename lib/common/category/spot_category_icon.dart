@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'category_chip_data.dart';
+import 'spot_category.dart';
+
 /// 카테고리 코드 → Material 아이콘(SPEC-0020 R11).
 ///
 /// 서버 `iconUrl`이 현재 전 카테고리 null이라 **이 매핑이 실제로 쓰이는 경로**다.
@@ -28,3 +31,17 @@ const IconData _fallbackIcon = Icons.place_outlined;
 
 /// [code]에 대응하는 아이콘. 매핑에 없으면 중립 기본값이다.
 IconData spotCategoryIcon(String code) => _iconByCode[code] ?? _fallbackIcon;
+
+/// [SpotCategory]를 [CategoryBar]의 표시 모델로 옮긴다.
+///
+/// 라벨은 **서버가 준 [SpotCategory.label]**이다(R11) — 서버가 카테고리를 추가해도
+/// 앱 업데이트 없이 라벨이 따라와야 하기 때문이다(AC1.3).
+List<CategoryChipData> spotCategoryChips(List<SpotCategory> categories) =>
+    <CategoryChipData>[
+      for (final SpotCategory c in categories)
+        CategoryChipData(
+          id: c.code,
+          label: c.label,
+          icon: spotCategoryIcon(c.code),
+        ),
+    ];

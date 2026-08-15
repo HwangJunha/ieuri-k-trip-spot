@@ -201,6 +201,10 @@
   "@viewAll": {
     "description": "섹션 헤더 전체 보기 링크"
   },
+  "categoryAll": "전체",
+  "@categoryAll": {
+    "description": "카테고리 바 - 필터 없음(전체) 칩"
+  },
   "navHome": "홈",
   "@navHome": {
     "description": "하단 내비 - 홈 탭"

@@ -9,9 +9,8 @@ import '../../../common/permission/provider/permission_providers.dart';
 import '../../../common/storage/search_radius_controller.dart';
 import '../../../common/widget/failure_notice.dart';
 import '../../../l10n/gen/app_localizations.dart';
-import '../../../common/category/category_bar.dart';
+import '../../../common/category/spot_category_bar.dart';
 import '../component/drag_feedback_overlay.dart';
-import '../provider/spot_category_seed.dart';
 import '../component/swipe_card.dart';
 import '../model/retry_exhausted.dart';
 import '../../../common/category/spot_category.dart';
@@ -37,15 +36,9 @@ class DiscoverSwipeView extends ConsumerWidget {
     );
     final bool locationBlocked = locationState?.needsSettings ?? false;
 
-    // 목록이 오면 기본 선택을 심는다(R4·AC4.1·AC4.2). 목록은 비동기이므로
-    // `listen`으로 받는다 — build 안에서 provider 상태를 바꾸면 Riverpod이 막는다.
-    // `seedDefault`는 이미 고른 것이 있으면 아무 일도 하지 않아, 언어 전환으로 목록이
-    // 다시 와도 사용자의 선택을 덮지 않는다.
-    seedSpotCategoryDefault(
-      ref,
-      () => ref.read(selectedSpotCategoryProvider.notifier),
-    );
-
+    // 최초 상태는 "전체"다(사용자 결정, 2026-08-15) — 아무것도 심지 않는다. 예전에는
+    // 진입 시 TOURIST_SPOT을 심었는데(R4), "전체" 칩이 생기면서 그 자리가 자연스러운
+    // 시작 상태가 됐다.
     final Set<SpotCategory> selected = ref.watch(selectedSpotCategoryProvider);
     final SpotCategorySelection selection = SpotCategorySelection(selected);
     final AsyncValue<SwipeQueue> queue = ref.watch(
@@ -57,13 +50,15 @@ class DiscoverSwipeView extends ConsumerWidget {
         const SizedBox(height: 8),
         // 스와이프의 선택 상태는 세션에 속하는 keepAlive provider다(탭을
         // 옮겼다 와도 유지된다, AC12.3).
-        CategoryBar(
+        SpotCategoryBar(
           available:
               ref.watch(availableSpotCategoriesProvider).value ??
               const <SpotCategory>[],
           selected: selected,
           onToggle: (SpotCategory next) =>
               ref.read(selectedSpotCategoryProvider.notifier).toggle(next),
+          onSelectAll: () =>
+              ref.read(selectedSpotCategoryProvider.notifier).selectAll(),
         ),
         const SizedBox(height: 8),
         Expanded(
@@ -191,22 +186,13 @@ class _EmptyState extends ConsumerWidget {
     }
   }
 
-  /// 선택을 기본 카테고리 하나로 되돌린다(R4의 기본값과 같은 규칙).
+  /// 선택을 "전체"로 되돌린다.
   ///
-  /// 가용 목록이 아직 없으면 아무 일도 하지 않는다 — 심을 값이 없다. 빈 집합으로
-  /// 만들지 않는 이유는 그것이 서버가 거절하는 상태이기 때문이다(AC5.1).
-  void _resetCategory(WidgetRef ref) {
-    final List<SpotCategory> available =
-        ref.read(availableSpotCategoriesProvider).value ??
-        const <SpotCategory>[];
-    if (available.isEmpty) return;
-    ref.read(selectedSpotCategoryProvider.notifier).replace(<SpotCategory>{
-      available.firstWhere(
-        (SpotCategory c) => c.code == kDefaultSpotCategoryCode,
-        orElse: () => available.first,
-      ),
-    });
-  }
+  /// 예전에는 기본 카테고리 하나로 되돌렸으나(R4), "전체" 칩이 생기면서 필터를 가장
+  /// 넓히는 자리가 그쪽이 됐다 — "결과가 없으니 필터를 풀어 보라"는 이 버튼의 뜻에
+  /// 맞는다. 빈 집합은 서버에 인자를 보내지 않는 상태다(AC5.1).
+  void _resetCategory(WidgetRef ref) =>
+      ref.read(selectedSpotCategoryProvider.notifier).selectAll();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

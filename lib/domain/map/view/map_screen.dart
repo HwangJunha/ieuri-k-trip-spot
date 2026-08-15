@@ -11,16 +11,15 @@ import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
 import '../../../common/navigation/picked_place.dart';
 import '../../../common/navigation/spot_detail_route.dart';
-import '../../../common/category/category_bar.dart';
 import '../../../common/category/spot_category.dart';
+import '../../../common/category/spot_category_bar.dart';
 import '../../../common/widget/floating_bottom_nav_scaffold.dart';
 import '../../../l10n/gen/app_localizations.dart';
 // **spot 기능을 참조한다**(CLAUDE.md §3의 예외). 카테고리 *목록*은 서버 리소스이고
 // 그 접근 경로가 `SpotRepository`이므로, 지도는 그 소비자로서 spot의 provider를
 // 읽는다. common으로 올리면 `common/`이 도메인 데이터 접근(GraphQL 오퍼레이션 포함)을
 // 갖게 되어 더 나쁜 위반이 된다 — 공유 가능한 부분(모델·토글·위젯·아이콘)은 이미
-// `common/category/`로 올렸고, 여기 남은 둘은 그 목록 하나로 귀결된다.
-import '../../spot/provider/spot_category_seed.dart';
+// `common/category/`로 올렸고, 여기 남은 하나는 그 목록이다.
 import '../../spot/provider/swipe_providers.dart';
 import '../component/area_info_card.dart';
 import '../component/congestion_legend.dart';
@@ -756,12 +755,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
 
-    // 카테고리 기본값을 심는다(R4). 다른 화면과 같은 규칙을 쓴다 — 목록이 도착하면
-    // TOURIST_SPOT을, 없으면 목록의 첫 값을 고른다.
-    seedSpotCategoryDefault(
-      ref,
-      () => ref.read(mapSelectedCategoryProvider.notifier),
-    );
+    // 카테고리 최초 상태는 "전체"다(사용자 결정, 2026-08-15) — 다른 화면과 같은
+    // 규칙이라 심는 것이 없다.
 
     // 키가 없거나 SDK 인증에 실패하면 지도를 띄울 수 없다. 앱을 죽이지 않고 이
     // 화면만 안내로 대체한다(설계 §10).
@@ -940,7 +935,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                       offset: const Offset(-12, 0),
                       child: SizedBox(
                         width: MediaQuery.sizeOf(context).width,
-                        child: CategoryBar(
+                        child: SpotCategoryBar(
                           available:
                               ref
                                   .watch(availableSpotCategoriesProvider)
@@ -951,6 +946,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                             ref
                                 .read(mapSelectedCategoryProvider.notifier)
                                 .toggle(next);
+                            _onCategoryFilterChanged();
+                          },
+                          onSelectAll: () {
+                            ref
+                                .read(mapSelectedCategoryProvider.notifier)
+                                .selectAll();
                             _onCategoryFilterChanged();
                           },
                         ),

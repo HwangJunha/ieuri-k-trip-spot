@@ -5,9 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../common/navigation/settings_routes.dart';
 import '../../../common/pagination/pagination_list_view.dart';
 import '../../../l10n/gen/app_localizations.dart';
-import '../../../common/category/category_bar.dart';
+import '../../../common/category/spot_category_bar.dart';
 import '../component/liked_spot_card.dart';
-import '../provider/spot_category_seed.dart';
 import '../provider/swipe_providers.dart';
 import '../model/liked_spot.dart';
 import '../../../common/category/spot_category.dart';
@@ -34,12 +33,7 @@ class LikedSpotsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
 
-    // 목록이 오면 기본 선택을 심는다(R4) — 세 화면이 같은 규칙을 쓴다.
-    seedSpotCategoryDefault(
-      ref,
-      () => ref.read(selectedLikedCategoryProvider.notifier),
-    );
-
+    // 최초 상태는 "전체"다(사용자 결정, 2026-08-15) — 네 화면이 같은 규칙을 쓴다.
     final Set<SpotCategory> selected = ref.watch(selectedLikedCategoryProvider);
     final SpotCategorySelection selection = SpotCategorySelection(selected);
     final AsyncValue<LikedSpotsState> state = ref.watch(
@@ -54,13 +48,15 @@ class LikedSpotsScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             // Discover와 같은 바를 쓰되 선택 상태는 이 화면 것이다 — 여기서 고른
             // 필터가 스와이프 스택을 갈아치우면 안 된다.
-            CategoryBar(
+            SpotCategoryBar(
               available:
                   ref.watch(availableSpotCategoriesProvider).value ??
                   const <SpotCategory>[],
               selected: selected,
               onToggle: (SpotCategory next) =>
                   ref.read(selectedLikedCategoryProvider.notifier).toggle(next),
+              onSelectAll: () =>
+                  ref.read(selectedLikedCategoryProvider.notifier).selectAll(),
             ),
             const SizedBox(height: 8),
             // 본문만 상태에 따라 갈린다 — 카테고리를 바꿔 로딩이 떠도 바는 그대로
