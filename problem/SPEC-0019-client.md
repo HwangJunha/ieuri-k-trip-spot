@@ -89,6 +89,55 @@ family라 자연히 다시 조회된다. 커뮤니티 글은 사용자가 쓴 �
 `sharedPreferencesProvider` 오버라이드를 요구해서, 깨진 `liked_spots_controller_test`도
 함께 고쳤다.
 
+## 3-B. 별건: `searchSpots`가 category 인자를 무시한다 (서버 결함)
+
+사용자가 "'올리브'로 검색하면 관광지·문화시설·축제행사 탭에도 결과가 나온다"고
+지적해 확인했다. **클라이언트는 정상이고, 서버가 인자를 무시한다.**
+
+### 클라이언트는 제대로 보낸다
+
+전송 변수를 직접 찍어 확인했다:
+
+```
+{query: 올리브, latitude: 37.5665, longitude: 126.978, radiusMeters: 20000,
+ category: TOURIST_SPOT, page: 0, size: 5}
+```
+
+`.graphql` 연산·repository·provider 모두 `category`를 싣고 있다.
+
+### 서버가 무시한다
+
+라이브 서버(localhost:8888)에 같은 질의를 카테고리만 바꿔 넣어보면 **네 번 모두
+같은 결과**가 온다:
+
+| 요청 | 결과 |
+|---|---|
+| `searchSpots("올리브")` | SHOPPING 5건 |
+| `searchSpots("올리브", TOURIST_SPOT)` | **똑같은 SHOPPING 5건** |
+| `searchSpots("올리브", CULTURAL_FACILITY)` | **똑같은 SHOPPING 5건** |
+| `searchSpots("올리브", FESTIVAL_EVENT)` | **똑같은 SHOPPING 5건** |
+
+"해당 카테고리에 결과가 없어서 폴백한 것"도 아니다. 여러 카테고리에 결과가 있는
+질의(`"서울"`)로도 확인했는데, `TOURIST_SPOT`을 줘도 CULTURAL_FACILITY·LODGING·
+FESTIVAL_EVENT가 섞인 **동일한 목록**이 온다.
+
+**같은 서버의 `spots` 쿼리는 정상 필터링된다** — `category: TOURIST_SPOT`이면
+TOURIST_SPOT만, `SHOPPING`이면 SHOPPING만 온다. 즉 스키마에는 두 쿼리 모두
+`category` 인자가 선언돼 있는데(introspection 확인) **`searchSpots`의 구현만 그것을
+where 절에 넣지 않고 있다.**
+
+### 클라이언트 조치
+
+**결과를 클라이언트에서 거르지 않는다.** POL-019가 정렬·필터를 서버 계약으로 두고
+있어, 여기서 거르면 페이지 크기와 `hasNext`가 서버가 센 것과 어긋나 페이징이 깨진다
+(5건 받아 3건을 버리면 "다음 페이지 있음"인데 화면엔 3건만 남는다).
+
+대신 **클라이언트가 인자를 제대로 싣는다는 것을 테스트로 고정했다** — 서버가 고쳐질
+때 클라이언트를 의심하지 않도록. 서버 수정이 곧 화면 수정이다.
+
+**서버에 전달 필요:** `searchSpots`의 `category` 인자가 조회 조건에 반영되지 않음.
+`spots`와 같은 방식으로 걸면 된다.
+
 ## 3. 언어 전환 — 재조회는 유지한다
 
 `swipeControllerProvider`가 `localeControllerProvider`를 watch 해 언어가 바뀌면 세션을
