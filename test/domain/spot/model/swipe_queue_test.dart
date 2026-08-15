@@ -35,10 +35,12 @@ void main() {
 
   test('isExhausted only when empty and no next page', () {
     expect(
+      // 번역본까지 다 받았을 때만 소진이다(SPEC-0019) — 원문이 끝난 것은 절반이다.
       const SwipeQueue(
         cards: <TouristSpot>[],
         loadedPage: 0,
         hasNextPage: false,
+        originExhausted: true,
       ).isExhausted,
       isTrue,
     );
@@ -72,8 +74,34 @@ void main() {
       cards: <TouristSpot>[_a],
       loadedPage: 2,
       hasNextPage: false,
+      originExhausted: true,
     );
     expect(done.nextPage, isNull);
+  });
+
+  // SPEC-0019 — 원문 구간이 끝나면 번역본 구간으로 넘어간다. 번역본은 별개의 결과
+  // 집합이라 페이지를 0부터 다시 센다.
+  test('원문이 끝나면 번역본 0페이지로 넘어간다', () {
+    const SwipeQueue originDone = SwipeQueue(
+      cards: <TouristSpot>[_a],
+      loadedPage: 3,
+      hasNextPage: false,
+    );
+
+    expect(originDone.nextPage, 0, reason: '번역본은 처음부터 센다');
+    expect(originDone.nextHasOrigin, isFalse, reason: '다음 조회는 번역본이다');
+    expect(originDone.isExhausted, isFalse, reason: '아직 번역본이 남았다');
+  });
+
+  test('원문 구간에서는 nextHasOrigin이 true다', () {
+    const SwipeQueue inOrigin = SwipeQueue(
+      cards: <TouristSpot>[_a],
+      loadedPage: 1,
+      hasNextPage: true,
+    );
+
+    expect(inOrigin.nextHasOrigin, isTrue);
+    expect(inOrigin.nextPage, 2);
   });
 
   test('copyWith replaces only given fields', () {

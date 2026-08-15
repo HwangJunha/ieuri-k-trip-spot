@@ -4,10 +4,12 @@ import '../../../common/localization/locale_controller.dart';
 import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
 import '../../../common/pagination/offset_page.dart';
+import '../../../common/pagination/origin_fill.dart';
 import '../../../common/pagination/page.dart';
 import '../../../common/storage/search_radius_controller.dart';
 import '../model/popular_spot.dart';
 import '../model/tourist_spot.dart';
+import '../repository/spot_repository.dart';
 import 'spot_providers.dart';
 
 part 'home_section_providers.g.dart';
@@ -15,6 +17,7 @@ part 'home_section_providers.g.dart';
 /// 홈 섹션이 한 번에 보여주는 개수. 가로 스크롤·짧은 세로 목록이라 한 페이지면
 /// 족하고, 홈에서는 페이지를 더 넘기지 않는다(더 보려면 Discover로 간다).
 const int homeSectionSize = 10;
+
 
 /// 홈 "Near you" 섹션(R16). 설정된 반경 안의 spot을 서버가 계산한 거리순으로 준다.
 ///
@@ -40,18 +43,24 @@ Future<List<TouristSpot>> nearbySpotsSection(Ref ref) async {
   final Coordinates coords = await ref.watch(currentCoordinatesProvider.future);
   final double radiusKm = ref.watch(searchRadiusControllerProvider);
 
-  final OffsetPage<TouristSpot> page = await ref
-      .watch(spotRepositoryProvider)
-      .fetchSpotPage(
+  final SpotRepository repository = ref.watch(spotRepositoryProvider);
+
+  // 정렬은 서버가 보장한다(거리 오름차순) — 클라이언트가 다시 정렬하지 않는다.
+  // 원문을 먼저 채우고 모자란 만큼만 번역본을 덧붙인다(SPEC-0019).
+  return fillWithTranslated<TouristSpot>(
+    target: homeSectionSize,
+    fetch: (bool hasOrigin, int size) async {
+      final OffsetPage<TouristSpot> page = await repository.fetchSpotPage(
         latitude: coords.latitude,
         longitude: coords.longitude,
         radiusMeters: radiusMetersOf(radiusKm),
+        hasOrigin: hasOrigin,
         page: 0,
-        size: homeSectionSize,
+        size: size,
       );
-
-  // 정렬은 서버가 보장한다(거리 오름차순) — 클라이언트가 다시 정렬하지 않는다.
-  return page.items;
+      return page.items;
+    },
+  );
 }
 
 /// 홈 "Popular" 섹션(R18). 반경 안의 spot을 누적 좋아요 총합 내림차순으로 준다.
@@ -73,14 +82,20 @@ Future<List<PopularSpot>> popularSpotsSection(Ref ref) async {
   final Coordinates coords = await ref.watch(currentCoordinatesProvider.future);
   final double radiusKm = ref.watch(searchRadiusControllerProvider);
 
-  final CursorPage<PopularSpot> page = await ref
-      .watch(spotRepositoryProvider)
-      .fetchPopularSpots(
+  final SpotRepository repository = ref.watch(spotRepositoryProvider);
+
+  // Near you와 같은 규약 — 원문 우선, 부족분만 번역본(SPEC-0019).
+  return fillWithTranslated<PopularSpot>(
+    target: homeSectionSize,
+    fetch: (bool hasOrigin, int size) async {
+      final CursorPage<PopularSpot> page = await repository.fetchPopularSpots(
         latitude: coords.latitude,
         longitude: coords.longitude,
         radiusMeters: radiusMetersOf(radiusKm),
-        first: homeSectionSize,
+        hasOrigin: hasOrigin,
+        first: size,
       );
-
-  return page.items;
+      return page.items;
+    },
+  );
 }

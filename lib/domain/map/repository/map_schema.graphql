@@ -127,6 +127,8 @@ extend type Query {
     # 카카오맵 줌 레벨(1~14, 클수록 확대).
     zoom: Int!
     category: SpotCategory
+    # true면 요청 언어로 쓰인 원문만, false면 번역본만, 생략하면 둘 다(SPEC-0019).
+    hasOrigin: Boolean
   ): MapViewportResult!
 
   # areaIds 또는 bbox 중 하나는 필수다(R6). 둘 다 주면 areaIds가 우선한다.

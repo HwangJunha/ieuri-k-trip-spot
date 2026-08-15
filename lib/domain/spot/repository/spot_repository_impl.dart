@@ -47,6 +47,7 @@ class SpotRepositoryImpl implements SpotRepository {
     required double longitude,
     int? radiusMeters,
     SpotCategory? category,
+    bool? hasOrigin,
     required int page,
     required int size,
   }) async {
@@ -57,6 +58,8 @@ class SpotRepositoryImpl implements SpotRepository {
         longitude: longitude,
         radiusMeters: radiusMeters,
         category: category == null ? null : _category(category),
+        // null이면 변수를 보내지 않아 서버가 원문·번역을 모두 준다(SPEC-0019).
+        hasOrigin: hasOrigin,
         page: page,
         size: size,
       ).toJson(),
@@ -247,6 +250,7 @@ class SpotRepositoryImpl implements SpotRepository {
     required double longitude,
     int? radiusMeters,
     SpotCategory? category,
+    bool? hasOrigin,
     int? first,
     String? after,
   }) async {
@@ -257,6 +261,7 @@ class SpotRepositoryImpl implements SpotRepository {
         longitude: longitude,
         radiusMeters: radiusMeters,
         category: category == null ? null : _category(category),
+        hasOrigin: hasOrigin,
         first: first,
         after: after,
       ).toJson(),

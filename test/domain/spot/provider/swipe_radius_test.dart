@@ -47,13 +47,15 @@ Future<void> _load(ProviderContainer container) async {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  // 피드가 비어 있으면 원문 조회 뒤 번역본 보충이 한 번 더 나간다(SPEC-0019).
+  // 반경은 **모든 조회**에 같은 값으로 실려야 한다.
   test('설정한 반경이 미터로 조회에 실린다', () async {
     final FakeSpotRepository repo = FakeSpotRepository();
     final ProviderContainer container = await _container(repo, radiusKm: 1);
 
     await _load(container);
 
-    expect(repo.requestedRadiiMeters, <int?>[1000]);
+    expect(repo.requestedRadiiMeters, everyElement(1000));
   });
 
   test('저장한 적 없으면 기본 20km가 실린다', () async {
@@ -62,7 +64,7 @@ void main() {
 
     await _load(container);
 
-    expect(repo.requestedRadiiMeters, <int?>[20000]);
+    expect(repo.requestedRadiiMeters, everyElement(20000));
   });
 
   // 0km는 "현재 위치만"을 뜻하지 **빈 결과**가 아니다(R13 네 번째 기준). 반경 0인
@@ -73,7 +75,7 @@ void main() {
 
     await _load(container);
 
-    expect(repo.requestedRadiiMeters, <int?>[null]);
+    expect(repo.requestedRadiiMeters, everyElement(null));
   });
 
   // 사용자가 보고한 증상: 반경을 바꿔도 Discover에 새 데이터가 안 들어왔다.
@@ -82,15 +84,15 @@ void main() {
     final FakeSpotRepository repo = FakeSpotRepository();
     final ProviderContainer container = await _container(repo, radiusKm: 50);
     await _load(container);
-    expect(repo.requestedRadiiMeters, <int?>[50000]);
+    expect(repo.requestedRadiiMeters, everyElement(50000));
 
     await container.read(searchRadiusControllerProvider.notifier).select(1);
     await container.read(swipeControllerProvider(null).future);
 
-    expect(repo.requestedRadiiMeters, <int?>[
-      50000,
-      1000,
-    ], reason: '새 반경으로 다시 조회해야 한다');
+    // 빈 피드라 원문 조회마다 번역본 보충이 뒤따른다(SPEC-0019) — 요지는 반경이
+    // 바뀐 뒤의 조회가 **새 반경**으로 나갔는지다.
+    expect(repo.requestedRadiiMeters.first, 50000);
+    expect(repo.requestedRadiiMeters.last, 1000, reason: '새 반경으로 다시 조회해야 한다');
   });
 
   test('반경 단위 변환은 km→m다', () {

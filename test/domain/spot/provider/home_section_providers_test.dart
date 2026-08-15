@@ -76,7 +76,9 @@ void main() {
 
       await container.read(nearbySpotsSectionProvider.future);
 
-      expect(repository.requestedRadiiMeters.single, 30000);
+      // 원문이 1건뿐이라 번역본 보충 조회가 한 번 더 나간다(SPEC-0019). 반경은
+      // **두 조회 모두**에 실려야 한다.
+      expect(repository.requestedRadiiMeters, everyElement(30000));
     });
 
     test('AC-16.2 · 반경이 바뀌면 다음 조회에 반영된다', () async {
@@ -141,7 +143,8 @@ void main() {
 
       await container.read(popularSpotsSectionProvider.future);
 
-      expect(repository.popularRadiiMeters.single, 30000);
+      // Near you와 같다 — 원문이 목표를 못 채우면 보충 조회가 뒤따른다(SPEC-0019).
+      expect(repository.popularRadiiMeters, everyElement(30000));
     });
   });
 
@@ -209,9 +212,10 @@ void main() {
         // 첫 호출만 실패하고 두 번째부터 성공한다.
         failPageTimes: 1,
       );
+      final events = FakeEventRepository(festivals: const <Festival>[]);
       final container = makeContainer(
         spotRepository: repository,
-        eventRepository: FakeEventRepository(festivals: const <Festival>[]),
+        eventRepository: events,
       );
 
       // 첫 조회는 실패한다. 오류 Future를 붙잡지 않도록 상태로 기다린다(위와 동일).
@@ -237,9 +241,13 @@ void main() {
       );
       sub.close();
 
-      expect(spots.single.id, 'a');
-      // Near you만 두 번 조회됐다 — 재시도가 다른 섹션을 건드리지 않았다.
-      expect(repository.spotPageCallCount, 2);
+      expect(spots.map((TouristSpot s) => s.id), contains('a'));
+      // 재시도가 **다른 섹션을 건드리지 않았다**는 것이 이 테스트의 요지다(AC-20.2).
+      // 축제 섹션은 한 번도 조회되지 않았다.
+      expect(events.callCount, 0);
+      // Near you는 실패 1회 + 재시도 성공이다. 성공한 조회는 원문이 목표(10건)를
+      // 못 채워 번역본 보충이 뒤따르므로 2회다(SPEC-0019).
+      expect(repository.spotPageCallCount, 3);
     });
   });
 
@@ -256,14 +264,77 @@ void main() {
         spotRepository: repository,
       );
       await container.read(nearbySpotsSectionProvider.future);
-      expect(repository.spotPageCallCount, 1);
+      // 원문이 목표를 못 채워 번역본 보충까지 2회 나간다(SPEC-0019).
+      final int afterFirstLoad = repository.spotPageCallCount;
+      expect(afterFirstLoad, greaterThan(0));
 
       await container
           .read(localeControllerProvider.notifier)
           .select(AppLanguage.korean);
       await container.read(nearbySpotsSectionProvider.future);
 
-      expect(repository.spotPageCallCount, 2);
+      // 언어가 바뀌면 처음부터 다시 받는다 — 조회가 더 나갔다는 것이 요지다.
+      expect(repository.spotPageCallCount, greaterThan(afterFirstLoad));
+    });
+  });
+
+  // SPEC-0019 — 원문(hasOrigin: true)을 먼저 채우고, 목표에 모자라면 번역본
+  // (hasOrigin: false)으로 보충한다. 홈은 페이징이 없어 "끝에 도달"이라는 계기가
+  // 없으므로, 한 번에 목표 건수를 채우는 것이 유일한 노출 경로다.
+  group('원문 우선 · 번역본 보충', () {
+    test('원문이 모자라면 번역본으로 채운다', () async {
+      final repository = FakeSpotRepository(
+        feed: <TouristSpot>[homeSpot('o1'), homeSpot('o2')],
+        translatedFeed: <TouristSpot>[homeSpot('t1'), homeSpot('t2')],
+        pageSize: 10,
+      );
+      final container = makeContainer(spotRepository: repository);
+
+      final List<TouristSpot> spots = await container.read(
+        nearbySpotsSectionProvider.future,
+      );
+
+      // 원문이 앞, 번역본이 뒤 — 순서가 뒤집히면 원문 우선이 무의미하다.
+      expect(spots.map((TouristSpot s) => s.id), <String>[
+        'o1',
+        'o2',
+        't1',
+        't2',
+      ]);
+      expect(repository.requestedHasOrigin, <bool?>[true, false]);
+    });
+
+    test('원문이 목표를 채우면 번역본을 조회하지 않는다', () async {
+      // 목표(homeSectionSize=10)를 원문만으로 채운다.
+      final repository = FakeSpotRepository(
+        feed: List<TouristSpot>.generate(10, (int i) => homeSpot('o$i')),
+        translatedFeed: <TouristSpot>[homeSpot('t1')],
+        pageSize: 10,
+      );
+      final container = makeContainer(spotRepository: repository);
+
+      final List<TouristSpot> spots = await container.read(
+        nearbySpotsSectionProvider.future,
+      );
+
+      expect(spots, hasLength(10));
+      // 추가 왕복이 없다 — 대부분의 지역이 이 경로다.
+      expect(repository.requestedHasOrigin, <bool?>[true]);
+      expect(spots.map((TouristSpot s) => s.id), isNot(contains('t1')));
+    });
+
+    test('축제도 같은 규약으로 보충한다', () async {
+      final events = FakeEventRepository(
+        festivals: <Festival>[festival('o1')],
+      )..translatedFestivals = <Festival>[festival('t1')];
+      final container = makeContainer(eventRepository: events);
+
+      final List<Festival> items = await container.read(
+        happeningNowEventsProvider.future,
+      );
+
+      expect(items.map((Festival f) => f.id), <String>['o1', 't1']);
+      expect(events.requestedHasOrigin, <bool?>[true, false]);
     });
   });
 }

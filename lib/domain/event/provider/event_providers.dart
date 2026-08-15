@@ -4,6 +4,7 @@ import '../../../common/localization/locale_controller.dart';
 import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
 import '../../../common/network/graphql_client.dart';
+import '../../../common/pagination/origin_fill.dart';
 import '../../../common/pagination/page.dart';
 import '../../../common/storage/search_radius_controller.dart';
 import '../model/festival.dart';
@@ -37,14 +38,20 @@ Future<List<Festival>> happeningNowEvents(Ref ref) async {
   final Coordinates coords = await ref.watch(currentCoordinatesProvider.future);
   final double radiusKm = ref.watch(searchRadiusControllerProvider);
 
-  final CursorPage<Festival> page = await ref
-      .watch(eventRepositoryProvider)
-      .fetchOngoingFestivals(
+  final EventRepository repository = ref.watch(eventRepositoryProvider);
+
+  // 홈 다른 섹션과 같은 규약 — 원문 우선, 부족분만 번역본(SPEC-0019).
+  return fillWithTranslated<Festival>(
+    target: happeningNowSize,
+    fetch: (bool hasOrigin, int size) async {
+      final CursorPage<Festival> page = await repository.fetchOngoingFestivals(
         latitude: coords.latitude,
         longitude: coords.longitude,
         radiusMeters: radiusMetersOf(radiusKm),
-        first: happeningNowSize,
+        hasOrigin: hasOrigin,
+        first: size,
       );
-
-  return page.items;
+      return page.items;
+    },
+  );
 }

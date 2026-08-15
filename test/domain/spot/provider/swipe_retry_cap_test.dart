@@ -97,7 +97,10 @@ void main() {
     await container.read(swipeControllerProvider(null).future);
     await Future<void>.delayed(const Duration(milliseconds: 600));
 
-    expect(repo.spotPageCallCount, 1);
+    // 원문 1건이 첫 페이지에서 끝나 번역본 보충이 뒤따르므로 2회다(SPEC-0019).
+    // **재시도가 없었다는 것**이 이 테스트의 요지 — 재시도라면 같은 원문 조회가
+    // 두 번 나가지만, 여기서는 원문 1회 + 번역본 1회로 형태가 다르다.
+    expect(repo.requestedHasOrigin, <bool?>[true, false]);
   });
 
   test('상한 소진 후 무효화가 반복돼도 repository 호출이 늘지 않는다 (AC-11·AC-12)', () async {
