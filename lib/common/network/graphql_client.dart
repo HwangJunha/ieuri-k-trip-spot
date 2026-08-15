@@ -55,6 +55,14 @@ TokenRefreshBridge tokenRefreshBridge(Ref ref) => TokenRefreshBridge();
 /// 충분하지만, 뒤가 없으면 소켓이 열린 채 남을 수 있다.
 const Duration _requestTimeout = Duration(seconds: 30);
 
+/// 앱 구분자(SPEC-0020 R13). 서버가 `availableSpotCategories` 같은 앱별 노출 구성을
+/// 이 값으로 가른다. 헤더가 없으면 서버는 "기본 앱"으로 읽는데, 지금은 결과가 같아
+/// 증상이 없지만 구성이 갈리는 순간 조용히 잘못된 목록을 받게 된다.
+///
+/// 값이 고정이라 요청마다 계산할 필요가 없어 `HttpLink` 정적 헤더에 둔다 —
+/// `Accept-Language`처럼 매번 달라지는 값만 Link로 싣는다.
+const String _appKey = 'k-trip-spot';
+
 /// The shared `graphql_flutter` client (CLAUDE.md §4 — lives only in
 /// `common/network`). Injects `Authorization: Bearer <accessToken>` from
 /// [SecureStorage] on every request, sends the app's active language as an
@@ -67,6 +75,7 @@ GraphQLClient graphqlClient(Ref ref) {
 
   final HttpLink httpLink = HttpLink(
     GraphqlEndpoint.resolve(),
+    defaultHeaders: const <String, String>{'X-App-Key': _appKey},
     httpClient: _TimeoutHttpClient(),
   );
 

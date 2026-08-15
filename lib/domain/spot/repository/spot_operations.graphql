@@ -7,7 +7,7 @@ query Spots(
   $latitude: Float!
   $longitude: Float!
   $radiusMeters: Int
-  $category: SpotCategory
+  $categories: [String!]
   $hasOrigin: Boolean
   $page: Int
   $size: Int
@@ -16,7 +16,7 @@ query Spots(
     latitude: $latitude
     longitude: $longitude
     radiusMeters: $radiusMeters
-    category: $category
+    categories: $categories
     hasOrigin: $hasOrigin
     page: $page
     size: $size
@@ -27,7 +27,11 @@ query Spots(
       address
       thumbnailImageUrl
       distanceMeters
-      category
+      category {
+        code
+        label
+        iconUrl
+      }
       copyright
       attributionText
     }
@@ -39,21 +43,29 @@ query Spots(
 
 # 활성 언어에서 서버가 노출하는 카테고리(spec §5). 언어는 헤더로 전달된다.
 query AvailableSpotCategories {
-  availableSpotCategories
+  availableSpotCategories {
+    code
+    label
+    iconUrl
+  }
 }
 
 # SPEC-0003 상세 단건 조회. 언어는 Accept-Language 헤더로 전달(인자 없음, spec §2).
 # 생성 타입은 repository 안에서만 쓰이고 도메인 모델(SpotDetail/SpotImage)로 매핑된다
 # (POL-020, AC-32).
 #
-# $category는 intro/infoItems가 요구하는 필수 인자다. 같은 응답의 category 필드를
-# 인자로 참조할 수 없어서(GraphQL 제약) 호출부가 넘긴다 — Discover 카드가 이미
-# 들고 있는 값이라 추가 조회는 필요 없다.
-query SpotDetail($id: ID!, $category: SpotCategory!) {
+# SPEC-0020: $category 인자가 사라졌다. 예전에는 intro/infoItems가 카테고리를
+# 요구해 호출부가 넘겼으나, 이제 서버가 spot 자신의 카테고리로 해석한다 —
+# 상세를 열 때 카테고리를 알 필요가 없어졌다(라우팅에서도 제거됨).
+query SpotDetail($id: ID!) {
   spotDetail(id: $id) {
     id
     title
-    category
+    category {
+      code
+      label
+      iconUrl
+    }
     thumbnailImageUrl
     overview
     address
@@ -71,7 +83,7 @@ query SpotDetail($id: ID!, $category: SpotCategory!) {
     likeCount
     # 운영 정보. 카테고리마다 서버가 공통 이름으로 정규화해 주고, 해당 개념이 없는
     # 카테고리에선 필드가 null이다 — 값 있는 행만 렌더한다.
-    intro(category: $category) {
+    intro {
       businessHours
       closedDays
       parking
@@ -81,7 +93,7 @@ query SpotDetail($id: ID!, $category: SpotCategory!) {
       creditCardAccepted
     }
     # 이용안내 항목명/내용 쌍. 비어 있을 수 있다.
-    infoItems(category: $category) {
+    infoItems {
       name
       text
     }
@@ -93,8 +105,8 @@ query SpotDetail($id: ID!, $category: SpotCategory!) {
 #
 # likedAt은 엣지에 있지만 조회하지 않는다 — 화면이 좋아요 시각을 표시하지 않고(요구사항에
 # 표시 요건 없음), 정렬은 서버가 보장하므로 클라이언트가 재정렬하지 않는다(§5.2).
-query LikedSpots($category: SpotCategory, $first: Int, $after: String) {
-  likedSpots(category: $category, first: $first, after: $after) {
+query LikedSpots($categories: [String!], $first: Int, $after: String) {
+  likedSpots(categories: $categories, first: $first, after: $after) {
     edges {
       cursor
       node {
@@ -102,7 +114,11 @@ query LikedSpots($category: SpotCategory, $first: Int, $after: String) {
         title
         thumbnailImageUrl
         address
-        category
+        category {
+          code
+          label
+          iconUrl
+        }
         copyright
         attributionText
       }
@@ -142,7 +158,7 @@ query SearchSpots(
   $latitude: Float!
   $longitude: Float!
   $radiusMeters: Int
-  $category: SpotCategory
+  $categories: [String!]
   $page: Int
   $size: Int
 ) {
@@ -151,7 +167,7 @@ query SearchSpots(
     latitude: $latitude
     longitude: $longitude
     radiusMeters: $radiusMeters
-    category: $category
+    categories: $categories
     page: $page
     size: $size
   ) {
@@ -167,7 +183,11 @@ query SearchSpots(
         address
         thumbnailImageUrl
         distanceMeters
-        category
+        category {
+          code
+          label
+          iconUrl
+        }
         copyright
         attributionText
         # 지도(SPEC-0014)가 검색 결과로 지도를 옮기는 데 쓴다. mapX가 경도,
@@ -199,7 +219,11 @@ query SpotSearchSuggestions(
   ) {
     id
     title
-    category
+    category {
+      code
+      label
+      iconUrl
+    }
   }
 }
 
@@ -211,7 +235,7 @@ query PopularSpots(
   $latitude: Float!
   $longitude: Float!
   $radiusMeters: Int
-  $category: SpotCategory
+  $categories: [String!]
   $hasOrigin: Boolean
   $first: Int
   $after: String
@@ -220,7 +244,7 @@ query PopularSpots(
     latitude: $latitude
     longitude: $longitude
     radiusMeters: $radiusMeters
-    category: $category
+    categories: $categories
     hasOrigin: $hasOrigin
     first: $first
     after: $after
@@ -232,7 +256,11 @@ query PopularSpots(
         address
         thumbnailImageUrl
         distanceMeters
-        category
+        category {
+          code
+          label
+          iconUrl
+        }
         copyright
         attributionText
       }

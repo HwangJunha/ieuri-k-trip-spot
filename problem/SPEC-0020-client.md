@@ -1,4 +1,4 @@
-> spec: SPEC-0020 · source: `Specs/SPEC-0020/spec.md` (Obsidian) · status: draft
+> spec: SPEC-0020 · source: `Specs/SPEC-0020/spec.md` (Obsidian) · status: approved (v1.1)
 
 요구사항·수용 기준·계약 초안은 위 spec을 따릅니다. 이 문서는 클라이언트 설계 결정만 담습니다.
 
@@ -8,6 +8,129 @@
 2. 지도 화면 카테고리 필터 신설
 3. spot 카드 디자인 정합 (커뮤니티 기준선)
 4. 서브 컬러 교체
+
+## 구현 순서와 서버 의존
+
+**서버 작업 완료 — 전 단계 착수 가능합니다**(2026-08-15 라이브 확인, #74). 과도기 처리는 불필요해졌습니다.
+
+다만 **카테고리 체계 자체가 바뀌었습니다.** `SpotCategory`가 enum이 아니라 객체이며, 클라이언트가 알던 전제 대부분이 무효입니다.
+
+| 단계 | 작업 | 대응 |
+|---|---|---|
+| 0 | `X-App-Key: k-trip-spot` 헤더 추가 (독립·선행 가능) | R13 |
+| 1 | 카테고리 모델 교체 — enum → `code`/`label`/`iconUrl` 객체 + 아이콘 매핑 | R11 |
+| 2 | `CategoryBar` 다중 선택 전환, "전체 보기" 칩 제거, 라벨을 `label`로 | R1·R2·R3·R11 |
+| 3 | 세 provider를 단일 값 → 집합으로, 기본값 `{TOURIST_SPOT}`·폴백·빈 목록 | R2·R4·R12 |
+| 4 | 집합 → `categories: [String!]` 매핑, 5개 연산 배선 | R5 |
+| 5 | 지도 카테고리 필터 신설 + 디바운스 | R7·R8 |
+| — | 카드 썸네일·간격 (완료) · 서브 컬러 (`#B4501E` 적용 대기) | R9·R10 |
+
+**1단계가 선행 조건입니다** — 로컬 `SpotCategory` enum과 `spotCategoryLabel()` l10n 매핑을 걷어내지 않으면 나머지가 전부 옛 타입에 묶입니다.
+
+### 1단계 상세 — 카테고리 모델 전환
+
+현재 `lib/domain/spot/model/spot_category.dart`는 서버 enum과 1:1로 맞춘 로컬 enum이며, 주석이 그 전제를 명시합니다("값 집합은 서버 `SpotCategory` enum과 1:1로 맞춘다"). **이 전제가 깨졌습니다.**
+
+영향 범위는 생성 파일 제외 **30개 파일**입니다. 단순 치환이 아니라 도메인 모델 전환이므로 아래를 지킵니다.
+
+**enum을 없애고 값 객체로 바꿉니다.** enum으로 남기면 서버가 새 카테고리를 추가할 때 파싱이 깨지거나 `unknown`으로 흘리게 되고, 그러면 "앱 업데이트 없이 늘어난다"는 서버 설계가 클라이언트에서 무효가 됩니다(AC1.3).
+
+```
+class SpotCategory {        // 예시 — 형태만 제시, 구현은 하네스 재량
+  final String code;        // 안정 식별자. 비교·필터·전송은 전부 이 값
+  final String label;       // 서버 제공 표시 문구. 클라이언트가 번역하지 않는다
+  final String? iconUrl;    // null이면 기본 표현으로 폴백
+}
+```
+
+- **동등성은 `code` 기준**입니다. 선택 집합의 원소 비교, 칩 선택 상태 판정이 전부 `code`로 이뤄집니다.
+- `spotCategoryLabel(l10n, category)`(`spot_display.dart`)와 대응 arb 키는 **제거**합니다. 라벨은 `category.label`입니다.
+- 카테고리를 담고 있던 모델들(`TouristSpot`·`LikedSpot`·`SpotDetail`·`MapMarker`·`SpotSuggestion` 등)의 필드 타입이 함께 바뀝니다. GraphQL 생성 타입은 리포지토리 경계에서 도메인 모델로 매핑합니다 — 생성 타입이 provider·위젯까지 새어 나가지 않게 합니다(POL-020).
+- 커뮤니티의 `TargetCategory`·`NearbySpotCategory`는 **다른 enum이며 이 전환 대상이 아닙니다.** 이름이 비슷해 함께 고치기 쉬우나 서버 계약이 다릅니다.
+
+**반드시 걷어내야 할 것 — 미지의 카테고리를 버리는 경로**
+
+`spot_repository_impl.dart`의 현재 매핑이 서버의 확장성을 무력화합니다.
+
+```dart
+Enum$SpotCategory.$unknown => null,          // 436~447행 _categoryFromEnum
+...
+.map(_categoryFromEnum).whereType<SpotCategory>()   // 92~93행
+```
+
+모르는 값을 `null`로 만들고 `whereType`으로 걸러내므로, **서버가 카테고리를 추가하면 클라이언트에서 조용히 사라집니다.** 목록에서 빠지는 데 그치지 않고 그 카테고리의 spot이 표시될 때도 문제가 됩니다. AC1.3이 요구하는 것이 정확히 이 경로의 제거입니다.
+
+전환 후에는 `code`가 문자열이므로 매핑 자체가 불필요합니다 — 서버 값을 그대로 담고, 모르는 코드는 **아이콘만** 기본값으로 떨어집니다(AC11.5). 값을 버리지 않습니다.
+
+`_category`(도메인 → 생성 enum) 역방향 함수도 함께 사라집니다. 필터 전송은 `code` 문자열 배열이므로 변환이 없습니다(AC5.2).
+
+**라우팅에 카테고리가 실려 다닙니다 — 표기가 바뀝니다**
+
+`routes.dart`와 `picked_place.dart`가 상세 화면으로 카테고리를 **URL 쿼리 파라미터**로 넘깁니다. 현재 값은 Dart enum 이름(`SpotCategory.name` → `touristSpot`)이고, 서버 `code`는 `TOURIST_SPOT`입니다.
+
+```dart
+// routes.dart 375~377행 — enum 이름 기준 복원, 실패 시 touristSpot으로 폴백
+SpotCategory _spotCategoryFrom(String? name) =>
+    SpotCategory.values.where((c) => c.name == name).firstOrNull ??
+    SpotCategory.touristSpot;
+```
+
+전환 후에는 **`code`를 그대로 실어야 합니다**(`TOURIST_SPOT`). `SpotCategory.values` 조회가 사라지므로 복원 로직도 단순 문자열 전달이 됩니다.
+
+주의할 점 두 가지:
+
+1. `spot_detail_route.dart`가 축제 상세를 `SpotCategory.festivalEvent.name`으로 하드코딩합니다 — `'FESTIVAL_EVENT'`로 바뀝니다.
+2. `fetchSpotDetail(id, category)`는 `category`가 **필수 인자**입니다(서버 `intro`/`infoItems`가 요구). 즉 상세 화면은 카테고리 없이 열 수 없습니다.
+
+**외부 딥링크는 없음을 확인했습니다**(2026-08-15) — Android intent-filter는 카카오 OAuth 콜백(`kakao{앱키}://oauth`) 전용이고, spot 상세로 들어오는 경로가 없습니다. 따라서 라우팅 표기 변경은 앱 내부에서만 닫히며 하위 호환 처리가 필요 없습니다.
+
+### 아이콘 — `iconUrl` → Material → 중립
+
+`iconUrl`은 현재 전 카테고리가 `null`입니다(실측). 즉 **당분간 Material 아이콘이 실제로 쓰이는 경로**이며, 매핑은 지금 필요합니다.
+
+| `code` | Material 아이콘 |
+|---|---|
+| `TOURIST_SPOT` | `Icons.photo_camera_outlined` |
+| `CULTURAL_FACILITY` | `Icons.museum_outlined` |
+| `FESTIVAL_EVENT` | `Icons.celebration_outlined` |
+| `TRAVEL_COURSE` | `Icons.route_outlined` |
+| `LEISURE_SPORTS` | `Icons.hiking_outlined` |
+| `LODGING` | `Icons.hotel_outlined` |
+| `SHOPPING` | `Icons.shopping_bag_outlined` |
+| `RESTAURANT` | `Icons.restaurant_outlined` |
+| `TRANSPORT` | `Icons.directions_subway_outlined` |
+
+- 9종은 **전체 집합**이며 한 언어에 다 나오지 않습니다 — 언어당 8종(공통 7 + KO `TRAVEL_COURSE` / 비KO `TRANSPORT`). 언어 전환 시 양쪽이 나타나므로 9종 모두 둡니다.
+- 매핑에 없는 `code`는 **중립 기본 아이콘**으로 떨어집니다(AC11.5). 이 매핑은 유효성 검사가 아니라 "아는 것을 예쁘게 그리는" 최적화입니다 — `switch`를 exhaustive하게 쓰지 말고 기본값이 있는 조회로 두십시오. 그래야 서버가 카테고리를 추가해도 앱이 깨지지 않습니다(AC1.3).
+- `iconUrl`이 생기면 그것이 우선하며, **로딩 실패 시에도 Material 아이콘으로 떨어집니다**(AC11.6).
+- 커뮤니티 `category_chip_row.dart`에 같은 모양의 매핑이 있으나 `TargetCategory` enum 기준이라 재사용할 수 없습니다. `code` 문자열 기준으로 새로 두고, 공통화 여부는 재량입니다.
+
+### `X-App-Key` 헤더 (R13)
+
+**현재 클라이언트는 이 헤더를 보내지 않습니다.** 커뮤니티 리포지토리 주석에 언급만 있고 구현이 없습니다.
+
+`lib/common/network/graphql_client.dart`의 `HttpLink` 정적 헤더에 `X-App-Key: k-trip-spot`을 넣습니다. `Accept-Language`처럼 요청마다 값이 달라지지 않으므로 `_AcceptLanguageLink` 같은 별도 Link는 필요 없습니다 — 정적 헤더와 컨텍스트 헤더는 `HttpLink`가 병합하므로 서로 덮어쓰지 않습니다(AC13.2).
+
+**적용 지점** — `graphqlClient` provider 안의 `HttpLink` 생성부(현재 `GraphqlEndpoint.resolve()`와 `httpClient:`만 넘기고 있습니다):
+
+```dart
+// 앱 구분자. availableSpotCategories 등 앱별 노출 구성을 서버가 이 값으로 가른다.
+// 값이 고정이라 요청마다 계산할 필요가 없어 HttpLink 정적 헤더에 둔다 —
+// Accept-Language처럼 매번 달라지는 값만 Link로 싣는다.
+const String _appKey = 'k-trip-spot';
+
+final HttpLink httpLink = HttpLink(
+  GraphqlEndpoint.resolve(),
+  defaultHeaders: const <String, String>{'X-App-Key': _appKey},
+  httpClient: _TimeoutHttpClient(),
+);
+```
+
+상수는 `graphql_client.dart` 파일 상단에 두거나, 앱 식별자를 이미 모아둔 곳이 있으면 그쪽을 씁니다(POL-026 앱 식별자 규칙 확인 후 재량).
+
+**병합 순서 확인됨**(`gql_http_link`): `{Content-type, Accept, ...defaultHeaders, ...contextHeaders}` 순으로 합쳐집니다. `X-App-Key`(정적)와 `Accept-Language`(컨텍스트)는 키가 달라 충돌하지 않습니다. 다만 **컨텍스트 헤더가 정적 헤더를 덮는 방향**이므로, 앞으로 같은 키를 Link에서 실으면 정적 값이 조용히 무시됩니다 — 정적 헤더에는 요청마다 달라지지 않는 값만 둡니다.
+
+헤더가 없으면 서버는 "기본 앱"으로 읽습니다. 현재는 결과가 같아 증상이 없으나, 앱별 노출 구성이 갈리는 순간 조용히 잘못된 카테고리 목록을 받게 됩니다.
 
 ## 설계 결정
 
@@ -20,6 +143,19 @@
 - 토글 로직(추가·해제·마지막 1개 해제 불가)은 provider에 있습니다. 위젯이 아니라 provider에 있어야 테스트가 위젯 없이 성립합니다(spec 테스트 범위).
 - `selected == null` 표현은 제거합니다. "필터 없음"은 UI에 더 이상 존재하지 않습니다.
 - 서버 전송 시 집합 → `categories` 리스트로 매핑합니다. 집합이 비는 경우는 provider가 만들지 않으므로 `[]`는 전송되지 않습니다(계약상 `EMPTY_CATEGORY_SET`).
+
+**대상 provider는 이미 3개로 분리되어 있습니다** — R12(화면별 독립)는 신규 결정이 아니라 코드베이스가 따르던 규칙을 문서화한 것입니다. 각 provider의 `SpotCategory?`를 비어 있을 수 없는 집합으로 바꾸면 됩니다.
+
+| provider | 파일 | 화면 |
+|---|---|---|
+| `SelectedSpotCategory` | `spot/provider/swipe_providers.dart` | Discover 스와이프 |
+| `SelectedLikedCategory` | `spot/provider/liked_spots_providers.dart` | 좋아요 목록 |
+| `SpotSearchCategory` | `spot/provider/spot_search_providers.dart` | 검색 |
+| (신규) | 지도 | R7 — 새로 만듭니다 |
+
+세 provider 모두 `@Riverpod(keepAlive: true)`이며 **이 성질은 유지합니다.** 상세 화면에 다녀오는 것만으로 필터가 풀리면 결과와 어긋나기 때문입니다(AC12.3). R12의 "비영속"은 **재시작 기준**이며(AC12.2), 영속 저장소에 쓰지 않는 것만을 요구합니다 — 세션 내 유지와 충돌하지 않습니다.
+
+기존 주석들이 분리 근거를 이미 담고 있으므로(“같은 provider를 쓰면 좋아요 목록에서 고른 필터가 스와이프 스택까지 갈아치운다”) 다중 선택 전환 시에도 그대로 둡니다.
 
 > **서버 계약이 달랐다 (2026-08-14 확인, 서버 대기 중).** 라이브 introspection 결과
 > `spots`·`likedSpots`·`searchSpots`·`mapViewport`·`popularSpots` 5개 쿼리가 전부
@@ -77,7 +213,7 @@
 > AC9.3의 공통 여백 정의는 `lib/common/widget/card_metrics.dart`로 신설하고 두 카드의
 > 하드코딩 값을 걷어냈습니다.
 
-정보 위계 재설계와 시각적 리듬은 검증 기준을 세울 수 없어 이 스펙 범위 밖입니다(spec 미결 사항).
+정보 위계 재설계와 시각적 리듬은 검증 기준을 세울 수 없어 이 스펙 범위 밖입니다(spec §결정 사항).
 
 ### 서브 컬러
 
@@ -112,7 +248,31 @@
 
 teal 잔존 0건(AC10.4). `*Fixed` 4종도 함께 교체했습니다.
 
-**미해결: `#A56200`이 기존 `tertiary` `#805200`과 색상환에서 2.8° 차이입니다**(둘 사이 대비 1.39:1). AC는 전부 통과하나 두 역할이 화면에서 거의 같은 색으로 보입니다. 실사용처가 `score_breakdown.dart` 1곳뿐이라 실제 영향은 작습니다 — 화면 확인 후 조정 대상.
+### 서브 컬러 이동: `#A56200` → `#B4501E` (적용 필요)
+
+ΔE(CIE Lab)로 재측정한 결과, 충돌은 `secondary` 본체가 아니라 **컨테이너 톤**에 있었습니다.
+
+| 쌍 | ΔE (`#A56200`) | ΔE (`#B4501E`) |
+|---|---|---|
+| `secondary` / `tertiary` | 14.5 (구분됨) | 25.5 |
+| `secondaryContainer` / `tertiaryContainer` | 52.5 (구분됨) | 60.6 |
+| **`secondaryContainer` / `tertiaryFixed`** | **0.5 — 동일** | **13.2** |
+
+`#FFDDB3`와 `#FFDDB4`가 1스텝 차이로 같은 색이었습니다. 상호 대비비 1.39:1을 근거로 본체가 충돌한다고 본 초기 진단은 과잉이었습니다 — 대비비는 명도만 재므로 색 구분의 척도가 아닙니다.
+
+**`tertiary`는 옮기지 않습니다.** `email_change_pending_banner.dart`가 "error가 아닌 대기 상태"를 나타내는 amber로 쓰고 있어 의미가 색에 묶여 있습니다. 이동 대상은 `secondary`입니다.
+
+적용할 값:
+
+| 토큰 | 값 | 비고 |
+|---|---|---|
+| `AppColors.secondary` | `#B4501E` | H=20° — primary(2°)와 amber(38°) 사이 |
+| 라이트 `secondary` | `#B4501E` | surface 4.88:1 · 흰 글자 5.11:1 |
+| 라이트 `secondaryContainer` | `#FFDBCC` | |
+| 라이트 `onSecondaryContainer` | `#7A3210` | container 대비 7.10:1 |
+| 다크 `secondary` 계열 | 구현 시 산출 | 같은 hue 대역의 밝은 톤. 다크 surface 대비 4.5:1 이상 |
+
+검증 기준은 spec **AC10.5**(모든 대응 톤 쌍 ΔE ≥ 10) · **AC10.6**(다크 대비)입니다.
 
 ### 라벨
 
@@ -128,6 +288,9 @@ teal 잔존 0건(AC10.4). `*Fixed` 4종도 함께 교체했습니다.
 | 카테고리 선택 provider | 마지막 1개 해제 불가 | AC3.1 |
 | 카테고리 선택 provider | 9개 전부 선택 → 8회 해제 → 크기 1, 9번째 해제는 무변화 | AC3.2 |
 | 테마 값 검증 | secondary 계열 대비비(텍스트 4.5:1 / 비텍스트 3:1), teal 계열 잔존 없음 | AC10.1~10.4 |
+| 아이콘 해석 | `iconUrl` 우선 · null이면 `code` 매핑 · 모르는 `code`는 중립 기본값 | AC11.2·11.4·11.5 |
+| 카테고리 모델 매핑 | 생성 타입 → 도메인 값 객체, 동등성은 `code` 기준 | AC5.2 |
+| GraphQL 링크 | `X-App-Key`가 실리고 `Accept-Language`와 공존 | AC13.1·13.2 |
 | 카테고리 선택 provider | 화면별 인스턴스 독립 — 한 화면 변경이 다른 화면에 전파되지 않음 | AC12.1 |
 | 카테고리 선택 provider | 재시작 시 기본값 초기화(영속 저장 없음) | AC12.2 |
 | 카테고리 선택 provider | 최초 기본값 `TOURIST_SPOT` | AC4.1 |

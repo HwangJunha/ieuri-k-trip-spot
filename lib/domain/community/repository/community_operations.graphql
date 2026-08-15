@@ -494,7 +494,7 @@ query NearbySpots(
   $latitude: Float!
   $longitude: Float!
   $radiusMeters: Int
-  $category: SpotCategory
+  $categories: [String!]
   $page: Int
   $size: Int
 ) {
@@ -502,7 +502,7 @@ query NearbySpots(
     latitude: $latitude
     longitude: $longitude
     radiusMeters: $radiusMeters
-    category: $category
+    categories: $categories
     page: $page
     size: $size
   ) {
@@ -550,8 +550,8 @@ query NearbySpotCategories {
 #
 # `copyright`·`attributionText`·`likedAt`은 요청하지 않는다 — 시트가 그리지 않는다.
 # `category`도 마찬가지다: 고른 값은 이미 앱이 알고 있다.
-query CommunityLikedSpots($category: SpotCategory, $first: Int, $after: String) {
-  likedSpots(category: $category, first: $first, after: $after) {
+query CommunityLikedSpots($categories: [String!], $first: Int, $after: String) {
+  likedSpots(categories: $categories, first: $first, after: $after) {
     edges {
       cursor
       node {
@@ -590,7 +590,7 @@ query CommunitySearchSpots(
   $latitude: Float!
   $longitude: Float!
   $radiusMeters: Int
-  $category: SpotCategory
+  $categories: [String!]
   $page: Int
   $size: Int
 ) {
@@ -599,7 +599,7 @@ query CommunitySearchSpots(
     latitude: $latitude
     longitude: $longitude
     radiusMeters: $radiusMeters
-    category: $category
+    categories: $categories
     page: $page
     size: $size
   ) {
