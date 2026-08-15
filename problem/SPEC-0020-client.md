@@ -96,6 +96,28 @@
 정렬은 이제 클라이언트가 잡습니다(`kCategoryDisplayOrder`) — 서버가 순서를
 보장한다는 옛 주석들을 함께 정정했습니다.
 
+### 커뮤니티 다중 선택 — 서버 대기 (2026-08-16)
+
+칩 계약을 고쳐 줄이 정상적으로 뜨자, 커뮤니티만 단일 선택으로 남은 것이 드러났습니다.
+다중으로 맞추려 했으나 **서버가 아직 받지 못합니다.**
+
+```
+posts(… category: TargetCategory …)   ← 단수뿐, 리스트 인자 없음
+posts(category: [TOURIST_SPOT, RESTAURANT])
+  → WrongType … Expected an AST type of 'EnumValue' but it was a 'ArrayValue'
+```
+
+spot이 #74 이전에 받던 것과 같은 오류입니다. 요청서:
+`problem/SPEC-0020-SERVER-community-categories.md`.
+
+서버에 인자가 추가될 때까지 **커뮤니티는 단일 선택을 유지합니다.** 위젯(`CategoryBar`)은
+이미 다중을 지원하므로, 서버가 준비되면 provider를 집합으로 바꾸고 호출부를 잇는 것이
+남은 일입니다 — spot에서 한 것과 같은 모양입니다.
+
+`TargetCategory`가 enum이라 인자 형태가 두 갈래(`[TargetCategory!]` 또는 spot과 같은
+`[String!]`)인데, 서버가 `TargetCategory`도 객체화할 계획인지에 달려 있어 요청서에서
+양쪽을 열어 두었습니다.
+
 ### 함께 고친 기존 버그
 
 - **지도 마커 탭이 늘 `touristSpot`으로 열렸습니다.** `map_repository_impl.dart`가 생성 enum의 `.name`(`TOURIST_SPOT`)을 실었는데 라우터는 Dart enum 이름(`touristSpot`)과 비교해 매칭이 영영 실패했습니다. 표기가 `code` 하나로 통일되며 사라졌습니다.
