@@ -44,20 +44,42 @@ class CategoryBar extends StatelessWidget {
   /// 칩을 누를 때 호출된다. 켜기·끄기 판단은 provider의 `toggle`이 한다.
   final ValueChanged<SpotCategory> onToggle;
 
+  /// 표시 순서. **기본 카테고리(관광지)를 맨 앞에 두고** 나머지는 서버 순서를
+  /// 유지한다(사용자 결정, 2026-08-15).
+  ///
+  /// 서버는 `code` 알파벳순으로 주는데, 그러면 한글 라벨에서는 순서가 무작위로
+  /// 보이고 무엇보다 **기본 선택된 칩이 목록 한가운데** 놓인다(맛집·쇼핑·관광지·
+  /// 여행코스). 처음 보는 칩이 기본 선택과 일치해야 화면이 설명된다.
+  ///
+  /// **선택 여부로 정렬하지 않는다.** 고른 것을 앞으로 모으면 누를 때마다 칩이
+  /// 자리를 옮겨, 연달아 고르는 동안 방금 누른 칩이 손가락 아래에서 사라진다.
+  /// 순서는 선택과 무관하게 고정이다.
+  List<SpotCategory> get _ordered {
+    final int i = available.indexWhere(
+      (SpotCategory c) => c.code == kDefaultSpotCategoryCode,
+    );
+    if (i <= 0) return available; // 없거나 이미 첫 번째면 그대로.
+    return <SpotCategory>[
+      available[i],
+      ...available.where((SpotCategory c) => c.code != kDefaultSpotCategoryCode),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     // 카테고리 목록 자체가 로딩/실패면 바를 접는다(카드 흐름을 막지 않음).
     if (available.isEmpty) return const SizedBox.shrink();
 
+    final List<SpotCategory> ordered = _ordered;
     return SizedBox(
       height: 48,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: available.length,
+        itemCount: ordered.length,
         separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (BuildContext context, int index) {
-          final SpotCategory category = available[index];
+          final SpotCategory category = ordered[index];
           return _CategoryChip(
             label: category.label,
             icon: spotCategoryIcon(category.code),
