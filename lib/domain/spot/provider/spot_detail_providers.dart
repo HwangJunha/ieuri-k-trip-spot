@@ -4,7 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../model/retry_budget.dart';
 import '../model/retry_exhausted.dart';
-import '../model/spot_category.dart';
+import '../../../common/category/spot_category_selection.dart';
 import '../model/spot_detail.dart';
 import '../model/spot_failure.dart';
 import '../model/spot_reaction.dart';
@@ -44,7 +44,7 @@ class SpotDetailController extends _$SpotDetailController {
       ref.read(spotRetryBudgetProvider(detailRetryScope(contentId)));
 
   @override
-  Future<SpotDetail> build(String contentId, SpotCategory category) {
+  Future<SpotDetail> build(String contentId) {
     // 상한 소진 상태면 repository를 호출하지 않는다(AC-11·AC-12). 원인은 예산이 들고
     // 있던 실제 실패를 쓴다 — 스와이프 쪽과 같은 이유다.
     final RetryBudget budget = _budgetState;
@@ -57,7 +57,7 @@ class SpotDetailController extends _$SpotDetailController {
   /// 상세를 조회하고 실패를 상한에 계상한다. 계상 규칙은 스와이프와 동일하다(§2.3).
   Future<SpotDetail> _fetchDetail() async {
     try {
-      return await _repository.fetchSpotDetail(contentId, category);
+      return await _repository.fetchSpotDetail(contentId);
     } catch (error) {
       // 축제가 종료돼 서버에서 삭제된 경우(SPEC-0007 AC-43). 이 화면은 오류 상태를
       // 그대로 그리지만(사용자가 직접 연 화면이라 조용히 넘기면 더 혼란스럽다),
@@ -74,21 +74,23 @@ class SpotDetailController extends _$SpotDetailController {
     }
   }
 
-  /// 사라진 [spotId]를 스와이프 세션에서 제거한다. 어떤 카테고리 세션에서 열었는지
-  /// 모르므로 살아 있는 세션 전부에 알린다 — 해당 id가 없는 세션은 무시한다.
+  /// 사라진 [spotId]를 스와이프 세션에서 제거한다. 어떤 선택으로 연 세션인지 모르므로
+  /// 살아 있는 세션 전부에 알린다 — 해당 id가 없는 세션은 무시한다.
   ///
-  /// **이미 만들어진 세션만** 건드린다([Ref.exists]). 없는 카테고리까지 read하면
-  /// 사용자가 열지도 않은 세션 10개가 위치·목록 조회를 시작한다.
+  /// **살아 있는 세션만 훑는다.** 예전에는 `SpotCategory.values`로 카테고리 10개를
+  /// 확인했지만, 다중 선택 이후로 가능한 조합이 2^n이라 열거할 수 없다 —
+  /// [liveSwipeSessions]에 세션이 스스로 등록해 둔 명부를 쓴다. 없는 세션을 read하면
+  /// 사용자가 열지도 않은 피드가 위치·목록 조회를 시작하므로 [Ref.exists]로 한 번 더
+  /// 거른다(명부가 컨테이너를 넘어 남을 수 있다).
   ///
   /// 세션을 오류로 만들거나 배너를 띄우지 않는다(§4.2) — 사용자가 한 행동의 결과가
   /// 아니기 때문이다.
   void _dropFromSwipeSessions(String spotId) {
-    for (final SpotCategory? category in <SpotCategory?>[
-      null,
-      ...SpotCategory.values,
-    ]) {
+    for (final SpotCategorySelection selection in liveSwipeSessions.toList(
+      growable: false,
+    )) {
       final SwipeControllerProvider provider = swipeControllerProvider(
-        category,
+        selection,
       );
       if (!ref.exists(provider)) continue;
       ref.read(provider.notifier).dropMissingCard(spotId);

@@ -10,7 +10,7 @@ import '../../../common/pagination/page.dart';
 import '../model/copyright_type.dart';
 import '../model/liked_spot.dart';
 import '../model/popular_spot.dart';
-import '../model/spot_category.dart';
+import '../../../common/category/spot_category.dart';
 import '../model/spot_detail.dart';
 import '../model/spot_failure.dart';
 import '../model/spot_image.dart';
@@ -46,7 +46,7 @@ class SpotRepositoryImpl implements SpotRepository {
     required double latitude,
     required double longitude,
     int? radiusMeters,
-    SpotCategory? category,
+    List<String>? categoryCodes,
     bool? hasOrigin,
     required int page,
     required int size,
@@ -57,7 +57,7 @@ class SpotRepositoryImpl implements SpotRepository {
         latitude: latitude,
         longitude: longitude,
         radiusMeters: radiusMeters,
-        category: category == null ? null : _category(category),
+        categories: _categories(categoryCodes),
         // null이면 변수를 보내지 않아 서버가 원문·번역을 모두 준다(SPEC-0019).
         hasOrigin: hasOrigin,
         page: page,
@@ -87,24 +87,23 @@ class SpotRepositoryImpl implements SpotRepository {
     );
     final Query$AvailableSpotCategories result =
         Query$AvailableSpotCategories.fromJson(data);
-    // 알 수 없는 값은 매핑이 null → 걸러낸다(서버가 새 값을 추가해도 크래시 없음).
+    // **한 건도 버리지 않는다**(SPEC-0020 AC1.3). 예전에는 생성 enum을 로컬 enum으로
+    // 매핑하며 모르는 값을 null → whereType으로 걸렀는데, 그러면 서버가 카테고리를
+    // 추가해도 클라이언트에서 조용히 사라졌다. 이제 code가 문자열이라 매핑 자체가
+    // 없고, 모르는 코드는 아이콘만 기본값으로 떨어진다(AC11.5).
     return result.availableSpotCategories
-        .map(_categoryFromEnum)
-        .whereType<SpotCategory>()
+        .map(_categoryFrom)
         .toList(growable: false);
   }
 
   @override
-  Future<SpotDetail> fetchSpotDetail(String id, SpotCategory category) async {
+  Future<SpotDetail> fetchSpotDetail(String id) async {
     // 언어는 인자로 보내지 않는다 — Accept-Language 헤더로 전달된다(spec §2).
-    // category는 intro/infoItems가 요구하는 필수 인자다(같은 응답의 필드를 인자로
-    // 참조할 수 없어 호출부가 넘긴다).
+    // **카테고리 인자는 사라졌다**(SPEC-0020) — intro/infoItems를 서버가 spot 자신의
+    // 카테고리로 해석하므로 호출부가 넘길 값이 없다.
     final Map<String, dynamic> data = await _query(
       documentNodeQuerySpotDetail,
-      Variables$Query$SpotDetail(
-        id: id,
-        category: _category(category),
-      ).toJson(),
+      Variables$Query$SpotDetail(id: id).toJson(),
       'spotDetail',
     );
     final Query$SpotDetail$spotDetail result = Query$SpotDetail.fromJson(
@@ -115,16 +114,16 @@ class SpotRepositoryImpl implements SpotRepository {
 
   @override
   Future<CursorPage<LikedSpot>> fetchLikedSpots({
-    SpotCategory? category,
+    List<String>? categoryCodes,
     int? first,
     String? after,
   }) async {
     // 언어는 인자로 보내지 않는다 — Accept-Language 헤더로 전달된다(spec §2).
-    // category가 null이면 인자를 비워 전체를 받는다(서버 규약).
+    // categoryCodes가 null/빈 목록이면 인자를 비워 전체를 받는다(서버 규약).
     final Map<String, dynamic> data = await _query(
       documentNodeQueryLikedSpots,
       Variables$Query$LikedSpots(
-        category: category == null ? null : _category(category),
+        categories: _categories(categoryCodes),
         first: first,
         after: after,
       ).toJson(),
@@ -156,7 +155,7 @@ class SpotRepositoryImpl implements SpotRepository {
     required double latitude,
     required double longitude,
     int? radiusMeters,
-    SpotCategory? category,
+    List<String>? categoryCodes,
     int? page,
     int? size,
   }) async {
@@ -167,7 +166,7 @@ class SpotRepositoryImpl implements SpotRepository {
         latitude: latitude,
         longitude: longitude,
         radiusMeters: radiusMeters,
-        category: category == null ? null : _category(category),
+        categories: _categories(categoryCodes),
         page: page,
         size: size,
       ).toJson(),
@@ -237,7 +236,11 @@ class SpotRepositoryImpl implements SpotRepository {
                 id: s.id,
                 // TourAPI 원문이라 엔티티가 섞여 온다(다른 표면과 동일하게 정리).
                 title: sanitizeTourApiText(s.title) ?? s.title,
-                category: _categoryFromEnum(s.category),
+                category: _categoryOf(
+                  s.category.code,
+                  s.category.label,
+                  s.category.iconUrl,
+                ),
               ),
         )
         .toList(growable: false);
@@ -249,7 +252,7 @@ class SpotRepositoryImpl implements SpotRepository {
     required double latitude,
     required double longitude,
     int? radiusMeters,
-    SpotCategory? category,
+    List<String>? categoryCodes,
     bool? hasOrigin,
     int? first,
     String? after,
@@ -260,7 +263,7 @@ class SpotRepositoryImpl implements SpotRepository {
         latitude: latitude,
         longitude: longitude,
         radiusMeters: radiusMeters,
-        category: category == null ? null : _category(category),
+        categories: _categories(categoryCodes),
         hasOrigin: hasOrigin,
         first: first,
         after: after,
@@ -318,7 +321,11 @@ class SpotRepositoryImpl implements SpotRepository {
     distanceMeters: item.distanceMeters.round(),
     copyright: _copyright(item.copyright),
     attributionText: item.attributionText,
-    category: _categoryFromEnum(item.category),
+    category: _categoryOf(
+      item.category.code,
+      item.category.label,
+      item.category.iconUrl,
+    ),
   );
 
   /// 검색 결과 노드 → 도메인 [TouristSpot](SPEC-0013).
@@ -337,7 +344,11 @@ class SpotRepositoryImpl implements SpotRepository {
     distanceMeters: n.distanceMeters.round(),
     copyright: _copyright(n.copyright),
     attributionText: n.attributionText,
-    category: _categoryFromEnum(n.category),
+    category: _categoryOf(
+      n.category.code,
+      n.category.label,
+      n.category.iconUrl,
+    ),
     // **`mapX`가 경도, `mapY`가 위도다** — 이름이 직관과 반대라 뒤집기 쉽다.
     // 지도(SPEC-0014)가 검색 결과로 지도를 옮기는 데 쓴다.
     coordinates: Coordinates(latitude: n.mapY, longitude: n.mapX),
@@ -357,15 +368,18 @@ class SpotRepositoryImpl implements SpotRepository {
     distanceMeters: n.distanceMeters.round(),
     copyright: _copyright(n.copyright),
     attributionText: n.attributionText,
-    category: _categoryFromEnum(n.category),
+    category: _categoryOf(
+      n.category.code,
+      n.category.label,
+      n.category.iconUrl,
+    ),
   );
 
   /// 좋아요 목록 노드 → 도메인 [LikedSpot](POL-020, §5.2).
   ///
-  /// 카테고리가 아직 매핑되지 않은 서버 enum이면 [SpotCategory.touristSpot]으로
-  /// 떨어뜨린다 — 항목을 목록에서 빼는 것보다 낫고, 라우터가 같은 이유로 이미 쓰는
-  /// 폴백이다. 상세 진입 시 카테고리가 실제와 다르면 서버가 빈 값을 주므로 해당
-  /// 섹션이 렌더되지 않는다.
+  /// **폴백이 없다**(SPEC-0020). 예전에는 매핑되지 않은 서버 enum을 touristSpot으로
+  /// 떨어뜨렸는데, 이제 카테고리가 코드/라벨을 실은 객체라 서버가 보낸 값을 그대로
+  /// 담으면 된다 — 지어낼 것이 없다.
   LikedSpot _likedFromNode(Query$LikedSpots$likedSpots$edges$node n) =>
       LikedSpot(
         id: n.id,
@@ -373,7 +387,11 @@ class SpotRepositoryImpl implements SpotRepository {
         title: sanitizeTourApiText(n.title) ?? n.title,
         thumbnailImageUrl: n.thumbnailImageUrl,
         address: sanitizeTourApiText(n.address),
-        category: _categoryFromEnum(n.category) ?? SpotCategory.touristSpot,
+        category: _categoryOf(
+          n.category.code,
+          n.category.label,
+          n.category.iconUrl,
+        ),
         copyright: _copyright(n.copyright),
         attributionText: n.attributionText,
       );
@@ -388,7 +406,11 @@ class SpotRepositoryImpl implements SpotRepository {
     id: r.id,
     // 제목도 TourAPI 원문이라 엔티티가 섞여 온다(스와이프 카드와 동일하게 정리).
     title: sanitizeTourApiText(r.title) ?? r.title,
-    category: _categoryFromEnum(r.category),
+    category: _categoryOf(
+      r.category.code,
+      r.category.label,
+      r.category.iconUrl,
+    ),
     thumbnailImageUrl: r.thumbnailImageUrl,
     overview: r.overview,
     address: r.address,
@@ -432,31 +454,26 @@ class SpotRepositoryImpl implements SpotRepository {
         attributionText: g.attributionText,
       );
 
-  /// 생성 enum → 도메인 enum. 미래 서버가 새 값을 추가하면 `$unknown`이 되어 null.
-  SpotCategory? _categoryFromEnum(Enum$SpotCategory value) => switch (value) {
-    Enum$SpotCategory.TOURIST_SPOT => SpotCategory.touristSpot,
-    Enum$SpotCategory.CULTURAL_FACILITY => SpotCategory.culturalFacility,
-    Enum$SpotCategory.FESTIVAL_EVENT => SpotCategory.festivalEvent,
-    Enum$SpotCategory.TRAVEL_COURSE => SpotCategory.travelCourse,
-    Enum$SpotCategory.LEISURE_SPORTS => SpotCategory.leisureSports,
-    Enum$SpotCategory.LODGING => SpotCategory.lodging,
-    Enum$SpotCategory.SHOPPING => SpotCategory.shopping,
-    Enum$SpotCategory.RESTAURANT => SpotCategory.restaurant,
-    Enum$SpotCategory.TRANSPORT => SpotCategory.transport,
-    Enum$SpotCategory.$unknown => null,
-  };
+  /// 생성 카테고리 객체 → 도메인 [SpotCategory](SPEC-0020 R11).
+  ///
+  /// **판정도 걸러내기도 하지 않는다**(AC1.3). 서버 값을 그대로 담을 뿐이라 서버가
+  /// 카테고리를 추가해도 클라이언트는 아무것도 잃지 않는다 — 모르는 코드는 아이콘만
+  /// 중립 기본값으로 떨어진다(AC11.5).
+  ///
+  /// 오퍼레이션마다 생성 타입이 갈리므로([Query$Spots$spots$items$category] 등) 인자를
+  /// 구조적으로 받는다. 필드 이름이 같아 호출부가 그대로 넘긴다.
+  SpotCategory _categoryOf(String code, String label, String? iconUrl) =>
+      SpotCategory(code: code, label: label, iconUrl: iconUrl);
 
-  Enum$SpotCategory _category(SpotCategory category) => switch (category) {
-    SpotCategory.touristSpot => Enum$SpotCategory.TOURIST_SPOT,
-    SpotCategory.culturalFacility => Enum$SpotCategory.CULTURAL_FACILITY,
-    SpotCategory.festivalEvent => Enum$SpotCategory.FESTIVAL_EVENT,
-    SpotCategory.travelCourse => Enum$SpotCategory.TRAVEL_COURSE,
-    SpotCategory.leisureSports => Enum$SpotCategory.LEISURE_SPORTS,
-    SpotCategory.lodging => Enum$SpotCategory.LODGING,
-    SpotCategory.shopping => Enum$SpotCategory.SHOPPING,
-    SpotCategory.restaurant => Enum$SpotCategory.RESTAURANT,
-    SpotCategory.transport => Enum$SpotCategory.TRANSPORT,
-  };
+  /// `availableSpotCategories` 항목 매핑(칩 목록).
+  SpotCategory _categoryFrom(
+    Query$AvailableSpotCategories$availableSpotCategories c,
+  ) => _categoryOf(c.code, c.label, c.iconUrl);
+
+  /// 선택 집합 → `categories` 변수. **빈 목록은 보내지 않는다** — 서버가
+  /// `EMPTY_CATEGORY_SET`으로 거절하므로 null로 접어 전체를 받는다(AC5.1).
+  List<String>? _categories(List<String>? codes) =>
+      (codes == null || codes.isEmpty) ? null : codes;
 
   CopyrightType _copyright(Enum$CopyrightType value) => switch (value) {
     Enum$CopyrightType.TYPE1 => CopyrightType.type1,

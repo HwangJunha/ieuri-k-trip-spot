@@ -42,6 +42,17 @@ import 'region_recommendation_screen.dart';
 /// **마커와 혼잡도는 서로 기다리지 않는다**(설계 §6.3). 별개 최상위 필드라 한쪽이
 /// 느리거나 실패해도 다른 쪽은 그려져야 한다 — 혼잡도가 죽어도 마커와 지도 조작은
 /// 그대로다(R29).
+/// "이 지역 재검색" 버튼을 상단 오버레이 아래로 내리는 거리.
+///
+/// 상단 Column의 구성과 묶인 값이다 — 검색창(위 여백 8 + 높이 약 46) 아래로
+/// 내린다. 검색창의 높이나 여백이 바뀌면 여기도 함께 움직여야 한다. 상수로 뺀
+/// 이유는 그 사실을 이름으로 남기기 위해서다 — 예전에는 62라는 숫자만 있어
+/// 무언가를 끼울 때마다 버튼이 그 위에 겹쳤다.
+///
+/// **지도에는 카테고리 필터를 두지 않는다**(사용자 결정, 2026-08-16). 오버레이가
+/// 가장 많은 화면이라 바를 하나 더 얹으면 가독성이 떨어진다.
+const double _searchThisAreaTop = 8 + 46 + 8;
+
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
 
@@ -412,13 +423,17 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   void _onMarkerTap(MapMarker marker) {
     // 문화행사는 아직 상세 화면이 없다 — 계약이 주는 것은 외부 링크뿐이다(spec §7.9).
     if (marker.kind != MapMarkerKind.spot) return;
-    // `common/navigation`의 헬퍼를 쓴다. 인자 규약(category가 서버 필수 인자라는 것)이
-    // 거기 모여 있어, 직접 pushNamed하면 그 규약을 여기서 다시 지켜야 한다.
-    openSpotDetail(context, id: marker.id, category: marker.categoryName);
+    // `common/navigation`의 헬퍼를 쓴다 — 인자 규약이 거기 모여 있어, 직접
+    // pushNamed하면 그 규약을 여기서 다시 지켜야 한다.
+    //
+    // **카테고리는 넘기지 않는다**(SPEC-0020). 서버가 상세를 spot 자신의 카테고리로
+    // 해석하므로 인자가 사라졌다 — 마커가 실어 온 `categoryName`(=서버 `code`)은
+    // 지도 위 표현에만 쓴다.
+    openSpotDetail(context, id: marker.id);
   }
 
   /// 클러스터 탭(R22)은 없다 — 서버가 클러스터 필드를 제거했다(2026-08-10).
-  ///
+
   /// 현재 뷰포트를 산출해 조회한다.
   ///
   /// **경계는 SDK가 주지 않는다**(설계 §2.1). `CameraPosition`은 중심과 정수 줌만
@@ -692,6 +707,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
 
+    // 카테고리 최초 상태는 "전체"다(사용자 결정, 2026-08-15) — 다른 화면과 같은
+    // 규칙이라 심는 것이 없다.
+
     // 키가 없거나 SDK 인증에 실패하면 지도를 띄울 수 없다. 앱을 죽이지 않고 이
     // 화면만 안내로 대체한다(설계 §10).
     if (!MapSdkInitializer.isReady) {
@@ -895,8 +913,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               top: 0,
               child: SafeArea(
                 child: Padding(
-                  // 검색창(높이 약 46 + 위 여백 8) 아래로 내린다.
-                  padding: const EdgeInsets.only(top: 62),
+                  // 검색창(높이 약 46 + 위 여백 8)과 **카테고리 바**(높이 48 + 위
+                  // 여백 8) 아래로 내린다. 값이 상단 Column의 구성과 묶여 있으므로
+                  // 둘 중 하나를 바꾸면 여기도 함께 봐야 한다(SPEC-0020 R7).
+                  padding: const EdgeInsets.only(top: _searchThisAreaTop),
                   child: SearchThisAreaButton(
                     isSearching: _isSearchingArea,
                     onPressed: _onSearchThisArea,

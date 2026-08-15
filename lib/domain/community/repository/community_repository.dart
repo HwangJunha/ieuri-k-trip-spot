@@ -4,7 +4,6 @@ import '../../../common/pagination/offset_page.dart';
 import '../../../common/pagination/page.dart';
 import '../model/blocked_user.dart';
 import '../../../common/model/comment.dart';
-import '../model/community_chip.dart';
 import '../model/nearby_spot.dart';
 import '../model/nearby_spot_category.dart';
 import '../../../common/model/post.dart';
@@ -31,7 +30,7 @@ abstract interface class CommunityRepository {
   /// |---|---|
   /// | 장소 상세의 글 | `catalogId` |
   /// | 커뮤니티 탭(내 주변) | `latitude`+`longitude`(+`radiusMeters`) |
-  /// | 상단 칩 | `category` |
+  /// | 상단 칩 | `categories` |
   /// | 태그 | `tag` |
   /// | 전체 피드 | 아무것도 안 줌 |
   ///
@@ -40,7 +39,12 @@ abstract interface class CommunityRepository {
   /// - [catalogId]와 좌표를 둘 다 주면 **[catalogId]가 이긴다**
   /// - [radiusMeters]는 좌표를 줄 때만 의미가 있다(기본 20000 / 상한 100000이며
   ///   초과해도 오류가 아니라 잘린다)
-  /// - **[category]·[tag]는 범위와 독립**이라 단독으로도 걸린다
+  /// - **[categories]·[tag]는 범위와 독립**이라 단독으로도 걸린다
+  ///
+  /// [categories]는 **복수 OR 필터다**(서버 #77). null이거나 비어 있으면 전체이며,
+  /// **빈 목록은 서버로 보내지 않는다** — 서버가 `EmptyCategorySetException`으로
+  /// 거절하므로 구현이 빈 목록을 null로 접는다. 호출부는 접기를 신경 쓰지 않아도
+  /// 된다.
   ///
   /// [first]는 기본 20 / 상한 50이며 초과해도 오류가 아니라 잘린다.
   ///
@@ -52,14 +56,14 @@ abstract interface class CommunityRepository {
   /// 다시 조회해야 한다. 이전 커서를 그대로 넘기면 `INVALID_INPUT`이다.
   ///
   /// [hiddenByViewer]가 true면 **내가 숨긴 글만** 온다(2차 가이드 §2). 숨긴 글은 그
-  /// 밖의 모든 조회에서 빠지므로 해제 화면이 이 인자를 쓴다. 이때도 [category]·[tag]
+  /// 밖의 모든 조회에서 빠지므로 해제 화면이 이 인자를 쓴다. 이때도 [categories]·[tag]
   /// 필터와 [sort]가 그대로 걸린다 — 별도 쿼리를 두지 않은 이유가 그것이다.
   Future<CursorPage<Post>> fetchPosts({
     String? catalogId,
     double? latitude,
     double? longitude,
     int? radiusMeters,
-    TargetCategory? category,
+    Iterable<TargetCategory>? categories,
     String? tag,
     PostSortOrder? sort,
     bool? hiddenByViewer,
@@ -164,8 +168,10 @@ abstract interface class CommunityRepository {
   /// 상단 칩 구성. **빈 목록이 정상이다**(가이드 §2) — 구성이 없는 앱이면 비어 오고
   /// 오류가 아니므로 칩 영역이 비는 레이아웃을 허용해야 한다.
   ///
-  /// `position` 오름차순으로 이미 정렬돼 오며 표시 문구는 클라이언트가 매핑한다.
-  Future<List<CommunityChip>> fetchCommunityChips();
+  /// **순서는 서버가 정하지 않는다**(2026-08-16 계약 변경). 예전에는 `position`을
+  /// 가진 객체가 왔지만 지금은 enum 배열이 코드 알파벳순으로 올 뿐이다 — 표시 순서는
+  /// `kCategoryDisplayOrder`가 정하고, 표시 문구는 클라이언트가 매핑한다.
+  Future<List<TargetCategory>> fetchCommunityChips();
 
   /// 내가 차단한 사람 한 페이지. **나를 차단한 사람은 여기 없다**(가이드 §6).
   Future<CursorPage<BlockedUser>> fetchBlockedUsers({

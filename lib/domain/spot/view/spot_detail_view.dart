@@ -13,7 +13,7 @@ import '../component/spot_info_item_list.dart';
 import '../component/spot_intro_rows.dart';
 import '../model/retry_exhausted.dart';
 import '../../../common/navigation/spot_detail_route.dart';
-import '../model/spot_category.dart';
+import '../../../common/category/spot_category_selection.dart';
 import '../model/spot_detail.dart';
 import '../model/spot_failure.dart';
 import '../model/spot_image.dart';
@@ -30,7 +30,6 @@ class SpotDetailView extends ConsumerWidget {
   const SpotDetailView({
     super.key,
     required this.contentId,
-    required this.category,
     this.initialThumbnailUrl,
     this.feedCategory,
   });
@@ -41,29 +40,23 @@ class SpotDetailView extends ConsumerWidget {
   /// (AC-25). 조회가 끝나면 응답의 `thumbnailImageUrl`이 최종 값이다(AC-26).
   final String? initialThumbnailUrl;
 
-  /// 이 상세가 어느 스와이프 피드에서 열렸는지(null=전체 피드, SPEC-0006 R11).
-  /// 반응 후 그 피드에서 카드를 소비할 때 쓴다.
+  /// 이 상세가 **어느 스와이프 피드에서** 열렸는지(null=피드 밖에서 진입,
+  /// SPEC-0006 R11). 반응 후 그 피드에서 카드를 소비할 때 쓰는 세션 키다.
   ///
-  /// [category]와 다른 값이다 — [category]는 **이 관광지의** 카테고리이고, 이 값은
-  /// **피드의 필터**다. 전체 피드에서 식당 카드를 열면 앞은 restaurant, 뒤는 null이다.
-  /// 현재 선택 상태를 다시 읽지 않는 이유는, 상세를 열어둔 채 카테고리를 바꾸면 그
-  /// 선택이 이미 다른 피드를 가리켜 정작 카드가 있는 인스턴스를 놓치기 때문이다.
-  final SpotCategory? feedCategory;
+  /// 이 관광지 자신의 카테고리가 아니라 **피드의 필터 집합**이다. 현재 선택 상태를
+  /// 다시 읽지 않는 이유는, 상세를 열어둔 채 필터를 바꾸면 그 선택이 이미 다른 피드를
+  /// 가리켜 정작 카드가 있는 인스턴스를 놓치기 때문이다.
+  final SpotCategorySelection? feedCategory;
 
   /// Discover 카드의 contentId(=Spot.id). 라우트 파라미터로 전달된다(R9).
   final String contentId;
-
-  /// 카드가 이미 알고 있는 카테고리. 서버의 `intro`/`infoItems`가 필수 인자로
-  /// 요구하는데 조회 중인 응답의 필드를 인자로 참조할 수 없어, 스와이프 피드에서
-  /// 받은 값을 그대로 넘긴다(추가 왕복 없음).
-  final SpotCategory category;
 
   static String get routeName => spotDetailRouteName;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<SpotDetail> detail = ref.watch(
-      spotDetailControllerProvider(contentId, category),
+      spotDetailControllerProvider(contentId),
     );
 
     return Scaffold(
@@ -74,14 +67,11 @@ class SpotDetailView extends ConsumerWidget {
           error: (Object error, _) => _ErrorState(
             error: error,
             onRetry: () => ref
-                .read(
-                  spotDetailControllerProvider(contentId, category).notifier,
-                )
+                .read(spotDetailControllerProvider(contentId).notifier)
                 .reload(),
           ),
           data: (SpotDetail data) => _DetailBody(
             contentId: contentId,
-            category: category,
             feedCategory: feedCategory,
             detail: data,
             initialThumbnailUrl: initialThumbnailUrl,
@@ -186,17 +176,15 @@ class _ErrorState extends StatelessWidget {
 class _DetailBody extends ConsumerWidget {
   const _DetailBody({
     required this.contentId,
-    required this.category,
     required this.feedCategory,
     required this.detail,
     this.initialThumbnailUrl,
   });
 
   final String contentId;
-  final SpotCategory category;
 
-  /// 이 상세가 열린 스와이프 피드의 필터(null=전체). 반응 후 카드 소비 대상이다.
-  final SpotCategory? feedCategory;
+  /// 이 상세가 열린 스와이프 피드의 필터(null=피드 밖). 반응 후 카드 소비 대상이다.
+  final SpotCategorySelection? feedCategory;
 
   final SpotDetail detail;
 
@@ -252,7 +240,7 @@ class _DetailBody extends ConsumerWidget {
                 const SizedBox(height: 16),
                 // 좋아요 개수만 좁게 watch 한다 — 낙관적 갱신/롤백 시 이 배지만
                 // 다시 그리고, 갤러리·소개 등 정적 서브트리는 건드리지 않는다(§5 select).
-                _LikeCount(contentId: contentId, category: category),
+                _LikeCount(contentId: contentId),
 
                 // 소개글: overview 값이 있을 때만(AC-25).
                 if (detail.hasOverview) ...<Widget>[
@@ -336,7 +324,7 @@ class _DetailBody extends ConsumerWidget {
     ).spotDetailReactionFailed;
     try {
       await ref
-          .read(spotDetailControllerProvider(contentId, category).notifier)
+          .read(spotDetailControllerProvider(contentId).notifier)
           .react(reaction);
     } catch (_) {
       messenger.showSnackBar(SnackBar(content: Text(failedText)));
@@ -345,10 +333,18 @@ class _DetailBody extends ConsumerWidget {
 
     // 반응은 상세가 이미 보냈으므로 카드만 제거한다(중복 전송 금지).
     //
-    // 어떤 피드에서 왔는지는 **현재 선택된 카테고리가 아니라** 이 화면이 열릴 때 받은
-    // 값이 답이다 — 상세를 열어둔 채 카테고리를 바꾸면 선택 상태는 이미 다른 피드를
+    // 어떤 피드에서 왔는지는 **현재 선택된 필터가 아니라** 이 화면이 열릴 때 받은
+    // 값이 답이다 — 상세를 열어둔 채 필터를 바꾸면 선택 상태는 이미 다른 피드를
     // 가리켜, 정작 카드가 있는 인스턴스를 놓친다. 피드에 없는 id면 아무 일도 없다.
-    ref.read(swipeControllerProvider(feedCategory).notifier).consume(contentId);
+    //
+    // null이면 스와이프 피드 밖에서 들어온 것이라(검색·좋아요·지도·딥링크) 소비할
+    // 스택이 없다. 예전에는 null이 "전체 피드"를 뜻해 그 인스턴스를 건드렸지만,
+    // "전체"가 사라진 지금 null을 넘기면 **없던 세션을 새로 만들어** 위치·목록 조회를
+    // 시작시킨다.
+    final SpotCategorySelection? feed = feedCategory;
+    if (feed != null) {
+      ref.read(swipeControllerProvider(feed).notifier).consume(contentId);
+    }
 
     if (navigator.canPop()) navigator.pop();
   }
@@ -357,17 +353,15 @@ class _DetailBody extends ConsumerWidget {
 /// 좋아요 개수 배지를 좁게 watch 하는 래퍼. `select`로 likeCount만 구독해 낙관적
 /// 갱신/롤백 시 이 위젯만 다시 그린다(§5) — 갤러리·소개 등 정적 서브트리는 정지.
 class _LikeCount extends ConsumerWidget {
-  const _LikeCount({required this.contentId, required this.category});
+  const _LikeCount({required this.contentId});
 
   final String contentId;
-  final SpotCategory category;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final int likeCount = ref.watch(
       spotDetailControllerProvider(
         contentId,
-        category,
       ).select((AsyncValue<SpotDetail> v) => v.value?.likeCount ?? 0),
     );
     return LikeCountBadge(likeCount: likeCount);

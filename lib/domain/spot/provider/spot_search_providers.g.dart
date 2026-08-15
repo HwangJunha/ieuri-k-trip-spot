@@ -8,36 +8,45 @@ part of 'spot_search_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 검색에 걸린 카테고리 필터(R5). null이면 전체다(AC-5.2).
+/// 검색에 걸린 카테고리 필터(SPEC-0013 R5 · SPEC-0020 R2). **비어 있을 수 없는
+/// 집합이다** — "전체 보기"가 사라졌으므로 `null`("필터 없음")이라는 표현이 없다.
 ///
-/// **Discover의 [SelectedSpotCategory]와 별개다** — 같은 provider를 쓰면 Discover에서
-/// 고른 필터가 검색 결과까지 갈아치운다. `CategoryBar`가 선택 상태를 화면에서 받도록
-/// 만들어진 것도 같은 이유다.
+/// **Discover의 [SelectedSpotCategory]와 별개다**(R12) — 같은 provider를 쓰면
+/// Discover에서 고른 필터가 검색 결과까지 갈아치운다.
 ///
 /// `keepAlive`인 이유는 검색 상태와 같다 — 상세를 다녀와도 고른 필터가 남아야
-/// 결과와 어긋나지 않는다(AC-13.2).
+/// 결과와 어긋나지 않는다(AC-13.2·AC12.3).
+///
+/// **결과를 다시 받는 것은 호출부(화면)가 한다** — 이 provider는 조회 조건만 들고
+/// 있고, 무엇을 언제 다시 조회할지는 검색 notifier가 정한다.
 
 @ProviderFor(SpotSearchCategory)
 const spotSearchCategoryProvider = SpotSearchCategoryProvider._();
 
-/// 검색에 걸린 카테고리 필터(R5). null이면 전체다(AC-5.2).
+/// 검색에 걸린 카테고리 필터(SPEC-0013 R5 · SPEC-0020 R2). **비어 있을 수 없는
+/// 집합이다** — "전체 보기"가 사라졌으므로 `null`("필터 없음")이라는 표현이 없다.
 ///
-/// **Discover의 [SelectedSpotCategory]와 별개다** — 같은 provider를 쓰면 Discover에서
-/// 고른 필터가 검색 결과까지 갈아치운다. `CategoryBar`가 선택 상태를 화면에서 받도록
-/// 만들어진 것도 같은 이유다.
+/// **Discover의 [SelectedSpotCategory]와 별개다**(R12) — 같은 provider를 쓰면
+/// Discover에서 고른 필터가 검색 결과까지 갈아치운다.
 ///
 /// `keepAlive`인 이유는 검색 상태와 같다 — 상세를 다녀와도 고른 필터가 남아야
-/// 결과와 어긋나지 않는다(AC-13.2).
+/// 결과와 어긋나지 않는다(AC-13.2·AC12.3).
+///
+/// **결과를 다시 받는 것은 호출부(화면)가 한다** — 이 provider는 조회 조건만 들고
+/// 있고, 무엇을 언제 다시 조회할지는 검색 notifier가 정한다.
 final class SpotSearchCategoryProvider
-    extends $NotifierProvider<SpotSearchCategory, SpotCategory?> {
-  /// 검색에 걸린 카테고리 필터(R5). null이면 전체다(AC-5.2).
+    extends $NotifierProvider<SpotSearchCategory, Set<SpotCategory>> {
+  /// 검색에 걸린 카테고리 필터(SPEC-0013 R5 · SPEC-0020 R2). **비어 있을 수 없는
+  /// 집합이다** — "전체 보기"가 사라졌으므로 `null`("필터 없음")이라는 표현이 없다.
   ///
-  /// **Discover의 [SelectedSpotCategory]와 별개다** — 같은 provider를 쓰면 Discover에서
-  /// 고른 필터가 검색 결과까지 갈아치운다. `CategoryBar`가 선택 상태를 화면에서 받도록
-  /// 만들어진 것도 같은 이유다.
+  /// **Discover의 [SelectedSpotCategory]와 별개다**(R12) — 같은 provider를 쓰면
+  /// Discover에서 고른 필터가 검색 결과까지 갈아치운다.
   ///
   /// `keepAlive`인 이유는 검색 상태와 같다 — 상세를 다녀와도 고른 필터가 남아야
-  /// 결과와 어긋나지 않는다(AC-13.2).
+  /// 결과와 어긋나지 않는다(AC-13.2·AC12.3).
+  ///
+  /// **결과를 다시 받는 것은 호출부(화면)가 한다** — 이 provider는 조회 조건만 들고
+  /// 있고, 무엇을 언제 다시 조회할지는 검색 notifier가 정한다.
   const SpotSearchCategoryProvider._()
     : super(
         from: null,
@@ -57,38 +66,41 @@ final class SpotSearchCategoryProvider
   SpotSearchCategory create() => SpotSearchCategory();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(SpotCategory? value) {
+  Override overrideWithValue(Set<SpotCategory> value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<SpotCategory?>(value),
+      providerOverride: $SyncValueProvider<Set<SpotCategory>>(value),
     );
   }
 }
 
 String _$spotSearchCategoryHash() =>
-    r'103b4dd75faec7d938d297123b6e11dbc7703db8';
+    r'0f4f9ef54472cea80fe2a7b138b27be64b4b5383';
 
-/// 검색에 걸린 카테고리 필터(R5). null이면 전체다(AC-5.2).
+/// 검색에 걸린 카테고리 필터(SPEC-0013 R5 · SPEC-0020 R2). **비어 있을 수 없는
+/// 집합이다** — "전체 보기"가 사라졌으므로 `null`("필터 없음")이라는 표현이 없다.
 ///
-/// **Discover의 [SelectedSpotCategory]와 별개다** — 같은 provider를 쓰면 Discover에서
-/// 고른 필터가 검색 결과까지 갈아치운다. `CategoryBar`가 선택 상태를 화면에서 받도록
-/// 만들어진 것도 같은 이유다.
+/// **Discover의 [SelectedSpotCategory]와 별개다**(R12) — 같은 provider를 쓰면
+/// Discover에서 고른 필터가 검색 결과까지 갈아치운다.
 ///
 /// `keepAlive`인 이유는 검색 상태와 같다 — 상세를 다녀와도 고른 필터가 남아야
-/// 결과와 어긋나지 않는다(AC-13.2).
+/// 결과와 어긋나지 않는다(AC-13.2·AC12.3).
+///
+/// **결과를 다시 받는 것은 호출부(화면)가 한다** — 이 provider는 조회 조건만 들고
+/// 있고, 무엇을 언제 다시 조회할지는 검색 notifier가 정한다.
 
-abstract class _$SpotSearchCategory extends $Notifier<SpotCategory?> {
-  SpotCategory? build();
+abstract class _$SpotSearchCategory extends $Notifier<Set<SpotCategory>> {
+  Set<SpotCategory> build();
   @$mustCallSuper
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<SpotCategory?, SpotCategory?>;
+    final ref = this.ref as $Ref<Set<SpotCategory>, Set<SpotCategory>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<SpotCategory?, SpotCategory?>,
-              SpotCategory?,
+              AnyNotifier<Set<SpotCategory>, Set<SpotCategory>>,
+              Set<SpotCategory>,
               Object?,
               Object?
             >;
@@ -153,7 +165,7 @@ final class SpotSearchProvider
   }
 }
 
-String _$spotSearchHash() => r'ab02e3cf61e58e44c076d989c35c690d36ca4db7';
+String _$spotSearchHash() => r'f3402ea76db6cbf0f4754efc4ec0c5d00ab3335a';
 
 /// 검색 결과 상태 기계(R11).
 ///

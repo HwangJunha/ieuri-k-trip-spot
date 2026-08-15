@@ -1,7 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, unused_import, unused_element
 import '../../../common/network/shared_schema.graphql.dart';
-import '../../spot/repository/spot_schema.graphql.dart';
 import 'community_schema.graphql.dart';
 import 'package:gql/ast.dart';
 
@@ -918,7 +917,7 @@ class Variables$Query$Posts {
     double? latitude,
     double? longitude,
     int? radiusMeters,
-    Enum$TargetCategory? category,
+    List<Enum$TargetCategory>? categories,
     String? tag,
     Enum$PostSortOrder? sort,
     bool? hiddenByViewer,
@@ -929,7 +928,7 @@ class Variables$Query$Posts {
     if (latitude != null) r'latitude': latitude,
     if (longitude != null) r'longitude': longitude,
     if (radiusMeters != null) r'radiusMeters': radiusMeters,
-    if (category != null) r'category': category,
+    if (categories != null) r'categories': categories,
     if (tag != null) r'tag': tag,
     if (sort != null) r'sort': sort,
     if (hiddenByViewer != null) r'hiddenByViewer': hiddenByViewer,
@@ -957,11 +956,11 @@ class Variables$Query$Posts {
       final l$radiusMeters = data['radiusMeters'];
       result$data['radiusMeters'] = (l$radiusMeters as int?);
     }
-    if (data.containsKey('category')) {
-      final l$category = data['category'];
-      result$data['category'] = l$category == null
-          ? null
-          : fromJson$Enum$TargetCategory((l$category as String));
+    if (data.containsKey('categories')) {
+      final l$categories = data['categories'];
+      result$data['categories'] = (l$categories as List<dynamic>?)
+          ?.map((e) => fromJson$Enum$TargetCategory((e as String)))
+          .toList();
     }
     if (data.containsKey('tag')) {
       final l$tag = data['tag'];
@@ -998,8 +997,8 @@ class Variables$Query$Posts {
 
   int? get radiusMeters => (_$data['radiusMeters'] as int?);
 
-  Enum$TargetCategory? get category =>
-      (_$data['category'] as Enum$TargetCategory?);
+  List<Enum$TargetCategory>? get categories =>
+      (_$data['categories'] as List<Enum$TargetCategory>?);
 
   String? get tag => (_$data['tag'] as String?);
 
@@ -1029,11 +1028,11 @@ class Variables$Query$Posts {
       final l$radiusMeters = radiusMeters;
       result$data['radiusMeters'] = l$radiusMeters;
     }
-    if (_$data.containsKey('category')) {
-      final l$category = category;
-      result$data['category'] = l$category == null
-          ? null
-          : toJson$Enum$TargetCategory(l$category);
+    if (_$data.containsKey('categories')) {
+      final l$categories = categories;
+      result$data['categories'] = l$categories
+          ?.map((e) => toJson$Enum$TargetCategory(e))
+          .toList();
     }
     if (_$data.containsKey('tag')) {
       final l$tag = tag;
@@ -1107,13 +1106,24 @@ class Variables$Query$Posts {
     if (l$radiusMeters != lOther$radiusMeters) {
       return false;
     }
-    final l$category = category;
-    final lOther$category = other.category;
-    if (_$data.containsKey('category') !=
-        other._$data.containsKey('category')) {
+    final l$categories = categories;
+    final lOther$categories = other.categories;
+    if (_$data.containsKey('categories') !=
+        other._$data.containsKey('categories')) {
       return false;
     }
-    if (l$category != lOther$category) {
+    if (l$categories != null && lOther$categories != null) {
+      if (l$categories.length != lOther$categories.length) {
+        return false;
+      }
+      for (int i = 0; i < l$categories.length; i++) {
+        final l$categories$entry = l$categories[i];
+        final lOther$categories$entry = lOther$categories[i];
+        if (l$categories$entry != lOther$categories$entry) {
+          return false;
+        }
+      }
+    } else if (l$categories != lOther$categories) {
       return false;
     }
     final l$tag = tag;
@@ -1166,7 +1176,7 @@ class Variables$Query$Posts {
     final l$latitude = latitude;
     final l$longitude = longitude;
     final l$radiusMeters = radiusMeters;
-    final l$category = category;
+    final l$categories = categories;
     final l$tag = tag;
     final l$sort = sort;
     final l$hiddenByViewer = hiddenByViewer;
@@ -1177,7 +1187,11 @@ class Variables$Query$Posts {
       _$data.containsKey('latitude') ? l$latitude : const {},
       _$data.containsKey('longitude') ? l$longitude : const {},
       _$data.containsKey('radiusMeters') ? l$radiusMeters : const {},
-      _$data.containsKey('category') ? l$category : const {},
+      _$data.containsKey('categories')
+          ? l$categories == null
+                ? null
+                : Object.hashAll(l$categories.map((v) => v))
+          : const {},
       _$data.containsKey('tag') ? l$tag : const {},
       _$data.containsKey('sort') ? l$sort : const {},
       _$data.containsKey('hiddenByViewer') ? l$hiddenByViewer : const {},
@@ -1201,7 +1215,7 @@ abstract class CopyWith$Variables$Query$Posts<TRes> {
     double? latitude,
     double? longitude,
     int? radiusMeters,
-    Enum$TargetCategory? category,
+    List<Enum$TargetCategory>? categories,
     String? tag,
     Enum$PostSortOrder? sort,
     bool? hiddenByViewer,
@@ -1225,7 +1239,7 @@ class _CopyWithImpl$Variables$Query$Posts<TRes>
     Object? latitude = _undefined,
     Object? longitude = _undefined,
     Object? radiusMeters = _undefined,
-    Object? category = _undefined,
+    Object? categories = _undefined,
     Object? tag = _undefined,
     Object? sort = _undefined,
     Object? hiddenByViewer = _undefined,
@@ -1238,8 +1252,8 @@ class _CopyWithImpl$Variables$Query$Posts<TRes>
       if (latitude != _undefined) 'latitude': (latitude as double?),
       if (longitude != _undefined) 'longitude': (longitude as double?),
       if (radiusMeters != _undefined) 'radiusMeters': (radiusMeters as int?),
-      if (category != _undefined)
-        'category': (category as Enum$TargetCategory?),
+      if (categories != _undefined)
+        'categories': (categories as List<Enum$TargetCategory>?),
       if (tag != _undefined) 'tag': (tag as String?),
       if (sort != _undefined) 'sort': (sort as Enum$PostSortOrder?),
       if (hiddenByViewer != _undefined)
@@ -1261,7 +1275,7 @@ class _CopyWithStubImpl$Variables$Query$Posts<TRes>
     double? latitude,
     double? longitude,
     int? radiusMeters,
-    Enum$TargetCategory? category,
+    List<Enum$TargetCategory>? categories,
     String? tag,
     Enum$PostSortOrder? sort,
     bool? hiddenByViewer,
@@ -1395,9 +1409,12 @@ const documentNodeQueryPosts = DocumentNode(
           directives: [],
         ),
         VariableDefinitionNode(
-          variable: VariableNode(name: NameNode(value: 'category')),
-          type: NamedTypeNode(
-            name: NameNode(value: 'TargetCategory'),
+          variable: VariableNode(name: NameNode(value: 'categories')),
+          type: ListTypeNode(
+            type: NamedTypeNode(
+              name: NameNode(value: 'TargetCategory'),
+              isNonNull: true,
+            ),
             isNonNull: false,
           ),
           defaultValue: DefaultValueNode(value: null),
@@ -1470,8 +1487,8 @@ const documentNodeQueryPosts = DocumentNode(
                 value: VariableNode(name: NameNode(value: 'radiusMeters')),
               ),
               ArgumentNode(
-                name: NameNode(value: 'category'),
-                value: VariableNode(name: NameNode(value: 'category')),
+                name: NameNode(value: 'categories'),
+                value: VariableNode(name: NameNode(value: 'categories')),
               ),
               ArgumentNode(
                 name: NameNode(value: 'tag'),
@@ -3885,22 +3902,18 @@ class Query$CommunityChips {
     final l$communityChips = json['communityChips'];
     return Query$CommunityChips(
       communityChips: (l$communityChips as List<dynamic>)
-          .map(
-            (e) => Query$CommunityChips$communityChips.fromJson(
-              (e as Map<String, dynamic>),
-            ),
-          )
+          .map((e) => fromJson$Enum$TargetCategory((e as String)))
           .toList(),
     );
   }
 
-  final List<Query$CommunityChips$communityChips> communityChips;
+  final List<Enum$TargetCategory> communityChips;
 
   Map<String, dynamic> toJson() {
     final _resultData = <String, dynamic>{};
     final l$communityChips = communityChips;
     _resultData['communityChips'] = l$communityChips
-        .map((e) => e.toJson())
+        .map((e) => toJson$Enum$TargetCategory(e))
         .toList();
     return _resultData;
   }
@@ -3949,17 +3962,7 @@ abstract class CopyWith$Query$CommunityChips<TRes> {
   factory CopyWith$Query$CommunityChips.stub(TRes res) =
       _CopyWithStubImpl$Query$CommunityChips;
 
-  TRes call({List<Query$CommunityChips$communityChips>? communityChips});
-  TRes communityChips(
-    Iterable<Query$CommunityChips$communityChips> Function(
-      Iterable<
-        CopyWith$Query$CommunityChips$communityChips<
-          Query$CommunityChips$communityChips
-        >
-      >,
-    )
-    _fn,
-  );
+  TRes call({List<Enum$TargetCategory>? communityChips});
 }
 
 class _CopyWithImpl$Query$CommunityChips<TRes>
@@ -3976,25 +3979,8 @@ class _CopyWithImpl$Query$CommunityChips<TRes>
     Query$CommunityChips(
       communityChips: communityChips == _undefined || communityChips == null
           ? _instance.communityChips
-          : (communityChips as List<Query$CommunityChips$communityChips>),
+          : (communityChips as List<Enum$TargetCategory>),
     ),
-  );
-
-  TRes communityChips(
-    Iterable<Query$CommunityChips$communityChips> Function(
-      Iterable<
-        CopyWith$Query$CommunityChips$communityChips<
-          Query$CommunityChips$communityChips
-        >
-      >,
-    )
-    _fn,
-  ) => call(
-    communityChips: _fn(
-      _instance.communityChips.map(
-        (e) => CopyWith$Query$CommunityChips$communityChips(e, (i) => i),
-      ),
-    ).toList(),
   );
 }
 
@@ -4004,9 +3990,7 @@ class _CopyWithStubImpl$Query$CommunityChips<TRes>
 
   TRes _res;
 
-  call({List<Query$CommunityChips$communityChips>? communityChips}) => _res;
-
-  communityChips(_fn) => _res;
+  call({List<Enum$TargetCategory>? communityChips}) => _res;
 }
 
 const documentNodeQueryCommunityChips = DocumentNode(
@@ -4023,142 +4007,13 @@ const documentNodeQueryCommunityChips = DocumentNode(
             alias: null,
             arguments: [],
             directives: [],
-            selectionSet: SelectionSetNode(
-              selections: [
-                FieldNode(
-                  name: NameNode(value: 'category'),
-                  alias: null,
-                  arguments: [],
-                  directives: [],
-                  selectionSet: null,
-                ),
-                FieldNode(
-                  name: NameNode(value: 'position'),
-                  alias: null,
-                  arguments: [],
-                  directives: [],
-                  selectionSet: null,
-                ),
-              ],
-            ),
+            selectionSet: null,
           ),
         ],
       ),
     ),
   ],
 );
-
-class Query$CommunityChips$communityChips {
-  Query$CommunityChips$communityChips({
-    required this.category,
-    required this.position,
-  });
-
-  factory Query$CommunityChips$communityChips.fromJson(
-    Map<String, dynamic> json,
-  ) {
-    final l$category = json['category'];
-    final l$position = json['position'];
-    return Query$CommunityChips$communityChips(
-      category: fromJson$Enum$TargetCategory((l$category as String)),
-      position: (l$position as int),
-    );
-  }
-
-  final Enum$TargetCategory category;
-
-  final int position;
-
-  Map<String, dynamic> toJson() {
-    final _resultData = <String, dynamic>{};
-    final l$category = category;
-    _resultData['category'] = toJson$Enum$TargetCategory(l$category);
-    final l$position = position;
-    _resultData['position'] = l$position;
-    return _resultData;
-  }
-
-  @override
-  int get hashCode {
-    final l$category = category;
-    final l$position = position;
-    return Object.hashAll([l$category, l$position]);
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) {
-      return true;
-    }
-    if (other is! Query$CommunityChips$communityChips ||
-        runtimeType != other.runtimeType) {
-      return false;
-    }
-    final l$category = category;
-    final lOther$category = other.category;
-    if (l$category != lOther$category) {
-      return false;
-    }
-    final l$position = position;
-    final lOther$position = other.position;
-    if (l$position != lOther$position) {
-      return false;
-    }
-    return true;
-  }
-}
-
-extension UtilityExtension$Query$CommunityChips$communityChips
-    on Query$CommunityChips$communityChips {
-  CopyWith$Query$CommunityChips$communityChips<
-    Query$CommunityChips$communityChips
-  >
-  get copyWith => CopyWith$Query$CommunityChips$communityChips(this, (i) => i);
-}
-
-abstract class CopyWith$Query$CommunityChips$communityChips<TRes> {
-  factory CopyWith$Query$CommunityChips$communityChips(
-    Query$CommunityChips$communityChips instance,
-    TRes Function(Query$CommunityChips$communityChips) then,
-  ) = _CopyWithImpl$Query$CommunityChips$communityChips;
-
-  factory CopyWith$Query$CommunityChips$communityChips.stub(TRes res) =
-      _CopyWithStubImpl$Query$CommunityChips$communityChips;
-
-  TRes call({Enum$TargetCategory? category, int? position});
-}
-
-class _CopyWithImpl$Query$CommunityChips$communityChips<TRes>
-    implements CopyWith$Query$CommunityChips$communityChips<TRes> {
-  _CopyWithImpl$Query$CommunityChips$communityChips(this._instance, this._then);
-
-  final Query$CommunityChips$communityChips _instance;
-
-  final TRes Function(Query$CommunityChips$communityChips) _then;
-
-  static const _undefined = <dynamic, dynamic>{};
-
-  TRes call({Object? category = _undefined, Object? position = _undefined}) =>
-      _then(
-        Query$CommunityChips$communityChips(
-          category: category == _undefined || category == null
-              ? _instance.category
-              : (category as Enum$TargetCategory),
-          position: position == _undefined || position == null
-              ? _instance.position
-              : (position as int),
-        ),
-      );
-}
-
-class _CopyWithStubImpl$Query$CommunityChips$communityChips<TRes>
-    implements CopyWith$Query$CommunityChips$communityChips<TRes> {
-  _CopyWithStubImpl$Query$CommunityChips$communityChips(this._res);
-
-  TRes _res;
-
-  call({Enum$TargetCategory? category, int? position}) => _res;
-}
 
 class Variables$Query$BlockedUsers {
   factory Variables$Query$BlockedUsers({int? first, String? after}) =>
@@ -15273,14 +15128,14 @@ class Variables$Query$NearbySpots {
     required double latitude,
     required double longitude,
     int? radiusMeters,
-    Enum$SpotCategory? category,
+    List<String>? categories,
     int? page,
     int? size,
   }) => Variables$Query$NearbySpots._({
     r'latitude': latitude,
     r'longitude': longitude,
     if (radiusMeters != null) r'radiusMeters': radiusMeters,
-    if (category != null) r'category': category,
+    if (categories != null) r'categories': categories,
     if (page != null) r'page': page,
     if (size != null) r'size': size,
   });
@@ -15297,11 +15152,11 @@ class Variables$Query$NearbySpots {
       final l$radiusMeters = data['radiusMeters'];
       result$data['radiusMeters'] = (l$radiusMeters as int?);
     }
-    if (data.containsKey('category')) {
-      final l$category = data['category'];
-      result$data['category'] = l$category == null
-          ? null
-          : fromJson$Enum$SpotCategory((l$category as String));
+    if (data.containsKey('categories')) {
+      final l$categories = data['categories'];
+      result$data['categories'] = (l$categories as List<dynamic>?)
+          ?.map((e) => (e as String))
+          .toList();
     }
     if (data.containsKey('page')) {
       final l$page = data['page'];
@@ -15322,7 +15177,7 @@ class Variables$Query$NearbySpots {
 
   int? get radiusMeters => (_$data['radiusMeters'] as int?);
 
-  Enum$SpotCategory? get category => (_$data['category'] as Enum$SpotCategory?);
+  List<String>? get categories => (_$data['categories'] as List<String>?);
 
   int? get page => (_$data['page'] as int?);
 
@@ -15338,11 +15193,9 @@ class Variables$Query$NearbySpots {
       final l$radiusMeters = radiusMeters;
       result$data['radiusMeters'] = l$radiusMeters;
     }
-    if (_$data.containsKey('category')) {
-      final l$category = category;
-      result$data['category'] = l$category == null
-          ? null
-          : toJson$Enum$SpotCategory(l$category);
+    if (_$data.containsKey('categories')) {
+      final l$categories = categories;
+      result$data['categories'] = l$categories?.map((e) => e).toList();
     }
     if (_$data.containsKey('page')) {
       final l$page = page;
@@ -15386,13 +15239,24 @@ class Variables$Query$NearbySpots {
     if (l$radiusMeters != lOther$radiusMeters) {
       return false;
     }
-    final l$category = category;
-    final lOther$category = other.category;
-    if (_$data.containsKey('category') !=
-        other._$data.containsKey('category')) {
+    final l$categories = categories;
+    final lOther$categories = other.categories;
+    if (_$data.containsKey('categories') !=
+        other._$data.containsKey('categories')) {
       return false;
     }
-    if (l$category != lOther$category) {
+    if (l$categories != null && lOther$categories != null) {
+      if (l$categories.length != lOther$categories.length) {
+        return false;
+      }
+      for (int i = 0; i < l$categories.length; i++) {
+        final l$categories$entry = l$categories[i];
+        final lOther$categories$entry = lOther$categories[i];
+        if (l$categories$entry != lOther$categories$entry) {
+          return false;
+        }
+      }
+    } else if (l$categories != lOther$categories) {
       return false;
     }
     final l$page = page;
@@ -15419,14 +15283,18 @@ class Variables$Query$NearbySpots {
     final l$latitude = latitude;
     final l$longitude = longitude;
     final l$radiusMeters = radiusMeters;
-    final l$category = category;
+    final l$categories = categories;
     final l$page = page;
     final l$size = size;
     return Object.hashAll([
       l$latitude,
       l$longitude,
       _$data.containsKey('radiusMeters') ? l$radiusMeters : const {},
-      _$data.containsKey('category') ? l$category : const {},
+      _$data.containsKey('categories')
+          ? l$categories == null
+                ? null
+                : Object.hashAll(l$categories.map((v) => v))
+          : const {},
       _$data.containsKey('page') ? l$page : const {},
       _$data.containsKey('size') ? l$size : const {},
     ]);
@@ -15446,7 +15314,7 @@ abstract class CopyWith$Variables$Query$NearbySpots<TRes> {
     double? latitude,
     double? longitude,
     int? radiusMeters,
-    Enum$SpotCategory? category,
+    List<String>? categories,
     int? page,
     int? size,
   });
@@ -15466,7 +15334,7 @@ class _CopyWithImpl$Variables$Query$NearbySpots<TRes>
     Object? latitude = _undefined,
     Object? longitude = _undefined,
     Object? radiusMeters = _undefined,
-    Object? category = _undefined,
+    Object? categories = _undefined,
     Object? page = _undefined,
     Object? size = _undefined,
   }) => _then(
@@ -15477,7 +15345,7 @@ class _CopyWithImpl$Variables$Query$NearbySpots<TRes>
       if (longitude != _undefined && longitude != null)
         'longitude': (longitude as double),
       if (radiusMeters != _undefined) 'radiusMeters': (radiusMeters as int?),
-      if (category != _undefined) 'category': (category as Enum$SpotCategory?),
+      if (categories != _undefined) 'categories': (categories as List<String>?),
       if (page != _undefined) 'page': (page as int?),
       if (size != _undefined) 'size': (size as int?),
     }),
@@ -15494,7 +15362,7 @@ class _CopyWithStubImpl$Variables$Query$NearbySpots<TRes>
     double? latitude,
     double? longitude,
     int? radiusMeters,
-    Enum$SpotCategory? category,
+    List<String>? categories,
     int? page,
     int? size,
   }) => _res;
@@ -15623,9 +15491,12 @@ const documentNodeQueryNearbySpots = DocumentNode(
           directives: [],
         ),
         VariableDefinitionNode(
-          variable: VariableNode(name: NameNode(value: 'category')),
-          type: NamedTypeNode(
-            name: NameNode(value: 'SpotCategory'),
+          variable: VariableNode(name: NameNode(value: 'categories')),
+          type: ListTypeNode(
+            type: NamedTypeNode(
+              name: NameNode(value: 'String'),
+              isNonNull: true,
+            ),
             isNonNull: false,
           ),
           defaultValue: DefaultValueNode(value: null),
@@ -15664,8 +15535,8 @@ const documentNodeQueryNearbySpots = DocumentNode(
                 value: VariableNode(name: NameNode(value: 'radiusMeters')),
               ),
               ArgumentNode(
-                name: NameNode(value: 'category'),
-                value: VariableNode(name: NameNode(value: 'category')),
+                name: NameNode(value: 'categories'),
+                value: VariableNode(name: NameNode(value: 'categories')),
               ),
               ArgumentNode(
                 name: NameNode(value: 'page'),
@@ -16130,18 +16001,23 @@ class Query$NearbySpotCategories {
     final l$availableSpotCategories = json['availableSpotCategories'];
     return Query$NearbySpotCategories(
       availableSpotCategories: (l$availableSpotCategories as List<dynamic>)
-          .map((e) => fromJson$Enum$SpotCategory((e as String)))
+          .map(
+            (e) => Query$NearbySpotCategories$availableSpotCategories.fromJson(
+              (e as Map<String, dynamic>),
+            ),
+          )
           .toList(),
     );
   }
 
-  final List<Enum$SpotCategory> availableSpotCategories;
+  final List<Query$NearbySpotCategories$availableSpotCategories>
+  availableSpotCategories;
 
   Map<String, dynamic> toJson() {
     final _resultData = <String, dynamic>{};
     final l$availableSpotCategories = availableSpotCategories;
     _resultData['availableSpotCategories'] = l$availableSpotCategories
-        .map((e) => toJson$Enum$SpotCategory(e))
+        .map((e) => e.toJson())
         .toList();
     return _resultData;
   }
@@ -16197,7 +16073,20 @@ abstract class CopyWith$Query$NearbySpotCategories<TRes> {
   factory CopyWith$Query$NearbySpotCategories.stub(TRes res) =
       _CopyWithStubImpl$Query$NearbySpotCategories;
 
-  TRes call({List<Enum$SpotCategory>? availableSpotCategories});
+  TRes call({
+    List<Query$NearbySpotCategories$availableSpotCategories>?
+    availableSpotCategories,
+  });
+  TRes availableSpotCategories(
+    Iterable<Query$NearbySpotCategories$availableSpotCategories> Function(
+      Iterable<
+        CopyWith$Query$NearbySpotCategories$availableSpotCategories<
+          Query$NearbySpotCategories$availableSpotCategories
+        >
+      >,
+    )
+    _fn,
+  );
 }
 
 class _CopyWithImpl$Query$NearbySpotCategories<TRes>
@@ -16216,8 +16105,29 @@ class _CopyWithImpl$Query$NearbySpotCategories<TRes>
           availableSpotCategories == _undefined ||
               availableSpotCategories == null
           ? _instance.availableSpotCategories
-          : (availableSpotCategories as List<Enum$SpotCategory>),
+          : (availableSpotCategories
+                as List<Query$NearbySpotCategories$availableSpotCategories>),
     ),
+  );
+
+  TRes availableSpotCategories(
+    Iterable<Query$NearbySpotCategories$availableSpotCategories> Function(
+      Iterable<
+        CopyWith$Query$NearbySpotCategories$availableSpotCategories<
+          Query$NearbySpotCategories$availableSpotCategories
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    availableSpotCategories: _fn(
+      _instance.availableSpotCategories.map(
+        (e) => CopyWith$Query$NearbySpotCategories$availableSpotCategories(
+          e,
+          (i) => i,
+        ),
+      ),
+    ).toList(),
   );
 }
 
@@ -16227,7 +16137,12 @@ class _CopyWithStubImpl$Query$NearbySpotCategories<TRes>
 
   TRes _res;
 
-  call({List<Enum$SpotCategory>? availableSpotCategories}) => _res;
+  call({
+    List<Query$NearbySpotCategories$availableSpotCategories>?
+    availableSpotCategories,
+  }) => _res;
+
+  availableSpotCategories(_fn) => _res;
 }
 
 const documentNodeQueryNearbySpotCategories = DocumentNode(
@@ -16244,7 +16159,31 @@ const documentNodeQueryNearbySpotCategories = DocumentNode(
             alias: null,
             arguments: [],
             directives: [],
-            selectionSet: null,
+            selectionSet: SelectionSetNode(
+              selections: [
+                FieldNode(
+                  name: NameNode(value: 'code'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'label'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'iconUrl'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -16252,13 +16191,155 @@ const documentNodeQueryNearbySpotCategories = DocumentNode(
   ],
 );
 
+class Query$NearbySpotCategories$availableSpotCategories {
+  Query$NearbySpotCategories$availableSpotCategories({
+    required this.code,
+    required this.label,
+    this.iconUrl,
+  });
+
+  factory Query$NearbySpotCategories$availableSpotCategories.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$code = json['code'];
+    final l$label = json['label'];
+    final l$iconUrl = json['iconUrl'];
+    return Query$NearbySpotCategories$availableSpotCategories(
+      code: (l$code as String),
+      label: (l$label as String),
+      iconUrl: (l$iconUrl as String?),
+    );
+  }
+
+  final String code;
+
+  final String label;
+
+  final String? iconUrl;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$label = label;
+    _resultData['label'] = l$label;
+    final l$iconUrl = iconUrl;
+    _resultData['iconUrl'] = l$iconUrl;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$code = code;
+    final l$label = label;
+    final l$iconUrl = iconUrl;
+    return Object.hashAll([l$code, l$label, l$iconUrl]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$NearbySpotCategories$availableSpotCategories ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$label = label;
+    final lOther$label = other.label;
+    if (l$label != lOther$label) {
+      return false;
+    }
+    final l$iconUrl = iconUrl;
+    final lOther$iconUrl = other.iconUrl;
+    if (l$iconUrl != lOther$iconUrl) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$NearbySpotCategories$availableSpotCategories
+    on Query$NearbySpotCategories$availableSpotCategories {
+  CopyWith$Query$NearbySpotCategories$availableSpotCategories<
+    Query$NearbySpotCategories$availableSpotCategories
+  >
+  get copyWith => CopyWith$Query$NearbySpotCategories$availableSpotCategories(
+    this,
+    (i) => i,
+  );
+}
+
+abstract class CopyWith$Query$NearbySpotCategories$availableSpotCategories<
+  TRes
+> {
+  factory CopyWith$Query$NearbySpotCategories$availableSpotCategories(
+    Query$NearbySpotCategories$availableSpotCategories instance,
+    TRes Function(Query$NearbySpotCategories$availableSpotCategories) then,
+  ) = _CopyWithImpl$Query$NearbySpotCategories$availableSpotCategories;
+
+  factory CopyWith$Query$NearbySpotCategories$availableSpotCategories.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Query$NearbySpotCategories$availableSpotCategories;
+
+  TRes call({String? code, String? label, String? iconUrl});
+}
+
+class _CopyWithImpl$Query$NearbySpotCategories$availableSpotCategories<TRes>
+    implements
+        CopyWith$Query$NearbySpotCategories$availableSpotCategories<TRes> {
+  _CopyWithImpl$Query$NearbySpotCategories$availableSpotCategories(
+    this._instance,
+    this._then,
+  );
+
+  final Query$NearbySpotCategories$availableSpotCategories _instance;
+
+  final TRes Function(Query$NearbySpotCategories$availableSpotCategories) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? code = _undefined,
+    Object? label = _undefined,
+    Object? iconUrl = _undefined,
+  }) => _then(
+    Query$NearbySpotCategories$availableSpotCategories(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      label: label == _undefined || label == null
+          ? _instance.label
+          : (label as String),
+      iconUrl: iconUrl == _undefined ? _instance.iconUrl : (iconUrl as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$NearbySpotCategories$availableSpotCategories<TRes>
+    implements
+        CopyWith$Query$NearbySpotCategories$availableSpotCategories<TRes> {
+  _CopyWithStubImpl$Query$NearbySpotCategories$availableSpotCategories(
+    this._res,
+  );
+
+  TRes _res;
+
+  call({String? code, String? label, String? iconUrl}) => _res;
+}
+
 class Variables$Query$CommunityLikedSpots {
   factory Variables$Query$CommunityLikedSpots({
-    Enum$SpotCategory? category,
+    List<String>? categories,
     int? first,
     String? after,
   }) => Variables$Query$CommunityLikedSpots._({
-    if (category != null) r'category': category,
+    if (categories != null) r'categories': categories,
     if (first != null) r'first': first,
     if (after != null) r'after': after,
   });
@@ -16269,11 +16350,11 @@ class Variables$Query$CommunityLikedSpots {
     Map<String, dynamic> data,
   ) {
     final result$data = <String, dynamic>{};
-    if (data.containsKey('category')) {
-      final l$category = data['category'];
-      result$data['category'] = l$category == null
-          ? null
-          : fromJson$Enum$SpotCategory((l$category as String));
+    if (data.containsKey('categories')) {
+      final l$categories = data['categories'];
+      result$data['categories'] = (l$categories as List<dynamic>?)
+          ?.map((e) => (e as String))
+          .toList();
     }
     if (data.containsKey('first')) {
       final l$first = data['first'];
@@ -16288,7 +16369,7 @@ class Variables$Query$CommunityLikedSpots {
 
   Map<String, dynamic> _$data;
 
-  Enum$SpotCategory? get category => (_$data['category'] as Enum$SpotCategory?);
+  List<String>? get categories => (_$data['categories'] as List<String>?);
 
   int? get first => (_$data['first'] as int?);
 
@@ -16296,11 +16377,9 @@ class Variables$Query$CommunityLikedSpots {
 
   Map<String, dynamic> toJson() {
     final result$data = <String, dynamic>{};
-    if (_$data.containsKey('category')) {
-      final l$category = category;
-      result$data['category'] = l$category == null
-          ? null
-          : toJson$Enum$SpotCategory(l$category);
+    if (_$data.containsKey('categories')) {
+      final l$categories = categories;
+      result$data['categories'] = l$categories?.map((e) => e).toList();
     }
     if (_$data.containsKey('first')) {
       final l$first = first;
@@ -16327,13 +16406,24 @@ class Variables$Query$CommunityLikedSpots {
         runtimeType != other.runtimeType) {
       return false;
     }
-    final l$category = category;
-    final lOther$category = other.category;
-    if (_$data.containsKey('category') !=
-        other._$data.containsKey('category')) {
+    final l$categories = categories;
+    final lOther$categories = other.categories;
+    if (_$data.containsKey('categories') !=
+        other._$data.containsKey('categories')) {
       return false;
     }
-    if (l$category != lOther$category) {
+    if (l$categories != null && lOther$categories != null) {
+      if (l$categories.length != lOther$categories.length) {
+        return false;
+      }
+      for (int i = 0; i < l$categories.length; i++) {
+        final l$categories$entry = l$categories[i];
+        final lOther$categories$entry = lOther$categories[i];
+        if (l$categories$entry != lOther$categories$entry) {
+          return false;
+        }
+      }
+    } else if (l$categories != lOther$categories) {
       return false;
     }
     final l$first = first;
@@ -16357,11 +16447,15 @@ class Variables$Query$CommunityLikedSpots {
 
   @override
   int get hashCode {
-    final l$category = category;
+    final l$categories = categories;
     final l$first = first;
     final l$after = after;
     return Object.hashAll([
-      _$data.containsKey('category') ? l$category : const {},
+      _$data.containsKey('categories')
+          ? l$categories == null
+                ? null
+                : Object.hashAll(l$categories.map((v) => v))
+          : const {},
       _$data.containsKey('first') ? l$first : const {},
       _$data.containsKey('after') ? l$after : const {},
     ]);
@@ -16377,7 +16471,7 @@ abstract class CopyWith$Variables$Query$CommunityLikedSpots<TRes> {
   factory CopyWith$Variables$Query$CommunityLikedSpots.stub(TRes res) =
       _CopyWithStubImpl$Variables$Query$CommunityLikedSpots;
 
-  TRes call({Enum$SpotCategory? category, int? first, String? after});
+  TRes call({List<String>? categories, int? first, String? after});
 }
 
 class _CopyWithImpl$Variables$Query$CommunityLikedSpots<TRes>
@@ -16391,13 +16485,13 @@ class _CopyWithImpl$Variables$Query$CommunityLikedSpots<TRes>
   static const _undefined = <dynamic, dynamic>{};
 
   TRes call({
-    Object? category = _undefined,
+    Object? categories = _undefined,
     Object? first = _undefined,
     Object? after = _undefined,
   }) => _then(
     Variables$Query$CommunityLikedSpots._({
       ..._instance._$data,
-      if (category != _undefined) 'category': (category as Enum$SpotCategory?),
+      if (categories != _undefined) 'categories': (categories as List<String>?),
       if (first != _undefined) 'first': (first as int?),
       if (after != _undefined) 'after': (after as String?),
     }),
@@ -16410,7 +16504,7 @@ class _CopyWithStubImpl$Variables$Query$CommunityLikedSpots<TRes>
 
   TRes _res;
 
-  call({Enum$SpotCategory? category, int? first, String? after}) => _res;
+  call({List<String>? categories, int? first, String? after}) => _res;
 }
 
 class Query$CommunityLikedSpots {
@@ -16523,9 +16617,12 @@ const documentNodeQueryCommunityLikedSpots = DocumentNode(
       name: NameNode(value: 'CommunityLikedSpots'),
       variableDefinitions: [
         VariableDefinitionNode(
-          variable: VariableNode(name: NameNode(value: 'category')),
-          type: NamedTypeNode(
-            name: NameNode(value: 'SpotCategory'),
+          variable: VariableNode(name: NameNode(value: 'categories')),
+          type: ListTypeNode(
+            type: NamedTypeNode(
+              name: NameNode(value: 'String'),
+              isNonNull: true,
+            ),
             isNonNull: false,
           ),
           defaultValue: DefaultValueNode(value: null),
@@ -16555,8 +16652,8 @@ const documentNodeQueryCommunityLikedSpots = DocumentNode(
             alias: null,
             arguments: [
               ArgumentNode(
-                name: NameNode(value: 'category'),
-                value: VariableNode(name: NameNode(value: 'category')),
+                name: NameNode(value: 'categories'),
+                value: VariableNode(name: NameNode(value: 'categories')),
               ),
               ArgumentNode(
                 name: NameNode(value: 'first'),
@@ -17255,7 +17352,7 @@ class Variables$Query$CommunitySearchSpots {
     required double latitude,
     required double longitude,
     int? radiusMeters,
-    Enum$SpotCategory? category,
+    List<String>? categories,
     int? page,
     int? size,
   }) => Variables$Query$CommunitySearchSpots._({
@@ -17263,7 +17360,7 @@ class Variables$Query$CommunitySearchSpots {
     r'latitude': latitude,
     r'longitude': longitude,
     if (radiusMeters != null) r'radiusMeters': radiusMeters,
-    if (category != null) r'category': category,
+    if (categories != null) r'categories': categories,
     if (page != null) r'page': page,
     if (size != null) r'size': size,
   });
@@ -17284,11 +17381,11 @@ class Variables$Query$CommunitySearchSpots {
       final l$radiusMeters = data['radiusMeters'];
       result$data['radiusMeters'] = (l$radiusMeters as int?);
     }
-    if (data.containsKey('category')) {
-      final l$category = data['category'];
-      result$data['category'] = l$category == null
-          ? null
-          : fromJson$Enum$SpotCategory((l$category as String));
+    if (data.containsKey('categories')) {
+      final l$categories = data['categories'];
+      result$data['categories'] = (l$categories as List<dynamic>?)
+          ?.map((e) => (e as String))
+          .toList();
     }
     if (data.containsKey('page')) {
       final l$page = data['page'];
@@ -17311,7 +17408,7 @@ class Variables$Query$CommunitySearchSpots {
 
   int? get radiusMeters => (_$data['radiusMeters'] as int?);
 
-  Enum$SpotCategory? get category => (_$data['category'] as Enum$SpotCategory?);
+  List<String>? get categories => (_$data['categories'] as List<String>?);
 
   int? get page => (_$data['page'] as int?);
 
@@ -17329,11 +17426,9 @@ class Variables$Query$CommunitySearchSpots {
       final l$radiusMeters = radiusMeters;
       result$data['radiusMeters'] = l$radiusMeters;
     }
-    if (_$data.containsKey('category')) {
-      final l$category = category;
-      result$data['category'] = l$category == null
-          ? null
-          : toJson$Enum$SpotCategory(l$category);
+    if (_$data.containsKey('categories')) {
+      final l$categories = categories;
+      result$data['categories'] = l$categories?.map((e) => e).toList();
     }
     if (_$data.containsKey('page')) {
       final l$page = page;
@@ -17384,13 +17479,24 @@ class Variables$Query$CommunitySearchSpots {
     if (l$radiusMeters != lOther$radiusMeters) {
       return false;
     }
-    final l$category = category;
-    final lOther$category = other.category;
-    if (_$data.containsKey('category') !=
-        other._$data.containsKey('category')) {
+    final l$categories = categories;
+    final lOther$categories = other.categories;
+    if (_$data.containsKey('categories') !=
+        other._$data.containsKey('categories')) {
       return false;
     }
-    if (l$category != lOther$category) {
+    if (l$categories != null && lOther$categories != null) {
+      if (l$categories.length != lOther$categories.length) {
+        return false;
+      }
+      for (int i = 0; i < l$categories.length; i++) {
+        final l$categories$entry = l$categories[i];
+        final lOther$categories$entry = lOther$categories[i];
+        if (l$categories$entry != lOther$categories$entry) {
+          return false;
+        }
+      }
+    } else if (l$categories != lOther$categories) {
       return false;
     }
     final l$page = page;
@@ -17418,7 +17524,7 @@ class Variables$Query$CommunitySearchSpots {
     final l$latitude = latitude;
     final l$longitude = longitude;
     final l$radiusMeters = radiusMeters;
-    final l$category = category;
+    final l$categories = categories;
     final l$page = page;
     final l$size = size;
     return Object.hashAll([
@@ -17426,7 +17532,11 @@ class Variables$Query$CommunitySearchSpots {
       l$latitude,
       l$longitude,
       _$data.containsKey('radiusMeters') ? l$radiusMeters : const {},
-      _$data.containsKey('category') ? l$category : const {},
+      _$data.containsKey('categories')
+          ? l$categories == null
+                ? null
+                : Object.hashAll(l$categories.map((v) => v))
+          : const {},
       _$data.containsKey('page') ? l$page : const {},
       _$data.containsKey('size') ? l$size : const {},
     ]);
@@ -17447,7 +17557,7 @@ abstract class CopyWith$Variables$Query$CommunitySearchSpots<TRes> {
     double? latitude,
     double? longitude,
     int? radiusMeters,
-    Enum$SpotCategory? category,
+    List<String>? categories,
     int? page,
     int? size,
   });
@@ -17471,7 +17581,7 @@ class _CopyWithImpl$Variables$Query$CommunitySearchSpots<TRes>
     Object? latitude = _undefined,
     Object? longitude = _undefined,
     Object? radiusMeters = _undefined,
-    Object? category = _undefined,
+    Object? categories = _undefined,
     Object? page = _undefined,
     Object? size = _undefined,
   }) => _then(
@@ -17483,7 +17593,7 @@ class _CopyWithImpl$Variables$Query$CommunitySearchSpots<TRes>
       if (longitude != _undefined && longitude != null)
         'longitude': (longitude as double),
       if (radiusMeters != _undefined) 'radiusMeters': (radiusMeters as int?),
-      if (category != _undefined) 'category': (category as Enum$SpotCategory?),
+      if (categories != _undefined) 'categories': (categories as List<String>?),
       if (page != _undefined) 'page': (page as int?),
       if (size != _undefined) 'size': (size as int?),
     }),
@@ -17501,7 +17611,7 @@ class _CopyWithStubImpl$Variables$Query$CommunitySearchSpots<TRes>
     double? latitude,
     double? longitude,
     int? radiusMeters,
-    Enum$SpotCategory? category,
+    List<String>? categories,
     int? page,
     int? size,
   }) => _res;
@@ -17641,9 +17751,12 @@ const documentNodeQueryCommunitySearchSpots = DocumentNode(
           directives: [],
         ),
         VariableDefinitionNode(
-          variable: VariableNode(name: NameNode(value: 'category')),
-          type: NamedTypeNode(
-            name: NameNode(value: 'SpotCategory'),
+          variable: VariableNode(name: NameNode(value: 'categories')),
+          type: ListTypeNode(
+            type: NamedTypeNode(
+              name: NameNode(value: 'String'),
+              isNonNull: true,
+            ),
             isNonNull: false,
           ),
           defaultValue: DefaultValueNode(value: null),
@@ -17686,8 +17799,8 @@ const documentNodeQueryCommunitySearchSpots = DocumentNode(
                 value: VariableNode(name: NameNode(value: 'radiusMeters')),
               ),
               ArgumentNode(
-                name: NameNode(value: 'category'),
-                value: VariableNode(name: NameNode(value: 'category')),
+                name: NameNode(value: 'categories'),
+                value: VariableNode(name: NameNode(value: 'categories')),
               ),
               ArgumentNode(
                 name: NameNode(value: 'page'),

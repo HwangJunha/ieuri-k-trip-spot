@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/model/comment.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/community_chip.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_failure.dart';
 import 'package:ieuri_k_trip_spot/common/model/target_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/comments_providers.dart';
@@ -146,24 +145,22 @@ void main() {
     test('서버가 준 칩을 그대로 노출한다', () async {
       final ProviderContainer container = _container(
         FakeCommunityRepository(
-          chips: const <CommunityChip>[
-            CommunityChip(category: TargetCategory.restaurant, position: 0),
-          ],
+          chips: const <TargetCategory>[TargetCategory.restaurant],
         ),
       );
 
-      final List<CommunityChip> chips = await container.read(
+      final List<TargetCategory> chips = await container.read(
         communityChipsProvider.future,
       );
 
-      expect(chips.single.category, TargetCategory.restaurant);
+      expect(chips.single, TargetCategory.restaurant);
     });
 
     // 가이드 §2 — 빈 목록은 오류가 아니다. 화면이 그 경우를 허용해야 한다.
     test('빈 목록도 정상 데이터다', () async {
       final ProviderContainer container = _container(FakeCommunityRepository());
 
-      final List<CommunityChip> chips = await container.read(
+      final List<TargetCategory> chips = await container.read(
         communityChipsProvider.future,
       );
 

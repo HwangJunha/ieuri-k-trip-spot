@@ -1,4 +1,4 @@
-import 'spot_category.dart';
+import '../../../common/category/spot_category.dart';
 
 /// 검색 자동완성 항목(SPEC-0013 R9).
 ///

@@ -3,7 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
 import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/retry_exhausted.dart';
-import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
+import 'package:ieuri_k_trip_spot/common/category/spot_category.dart';
+import 'package:ieuri_k_trip_spot/common/category/spot_category_selection.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/swipe_queue.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/tourist_spot.dart';
@@ -23,7 +24,7 @@ late final SharedPreferences _prefs;
 
 ProviderContainer _container(
   FakeSpotRepository repo, {
-  SpotCategory? category,
+  SpotCategorySelection? selection,
 }) {
   final container = ProviderContainer(
     overrides: [
@@ -34,7 +35,7 @@ ProviderContainer _container(
   );
   addTearDown(container.dispose);
   container.listen(
-    swipeControllerProvider(category),
+    swipeControllerProvider(selection ?? noCategories),
     (_, _) {},
     fireImmediately: true,
   );
@@ -47,11 +48,13 @@ ProviderContainer _container(
 /// 전부 삼키면 TypeError 같은 회귀가 "아직 재시도 중"으로 보여 테스트가 통과해 버린다.
 Future<void> _settle(
   ProviderContainer container, {
-  SpotCategory? category,
+  SpotCategorySelection? selection,
 }) async {
   for (int i = 0; i < 5; i++) {
     try {
-      await container.read(swipeControllerProvider(category).future);
+      await container.read(
+        swipeControllerProvider(selection ?? noCategories).future,
+      );
       return;
     } on SpotFailure {
       await Future<void>.delayed(_settleStep);
@@ -94,7 +97,7 @@ void main() {
     );
     final container = _container(repo);
 
-    await container.read(swipeControllerProvider(null).future);
+    await container.read(swipeControllerProvider(noCategories).future);
     await Future<void>.delayed(const Duration(milliseconds: 600));
 
     // 원문 1건이 첫 페이지에서 끝나 번역본 보충이 뒤따르므로 2회다(SPEC-0019).
@@ -112,7 +115,7 @@ void main() {
 
     // 폭주의 경로였던 재빌드를 반복해도 조회가 늘지 않아야 한다.
     for (int i = 0; i < 3; i++) {
-      container.invalidate(swipeControllerProvider(null));
+      container.invalidate(swipeControllerProvider(noCategories));
       await _settle(container);
     }
 
@@ -126,7 +129,7 @@ void main() {
     await _settle(container);
 
     final AsyncValue<SwipeQueue> state = container.read(
-      swipeControllerProvider(null),
+      swipeControllerProvider(noCategories),
     );
     expect(state.hasError, isTrue);
     expect(state.error, isA<RetryExhausted>());
@@ -139,7 +142,9 @@ void main() {
     await _settle(container);
     final int afterExhaustion = repo.spotPageCallCount;
 
-    await container.read(swipeControllerProvider(null).notifier).reload();
+    await container
+        .read(swipeControllerProvider(noCategories).notifier)
+        .reload();
 
     expect(repo.spotPageCallCount, greaterThan(afterExhaustion));
   });
@@ -156,17 +161,22 @@ void main() {
 
     await _settle(container);
     expect(
-      container.read(swipeControllerProvider(null)).error,
+      container.read(swipeControllerProvider(noCategories)).error,
       isA<RetryExhausted>(),
     );
 
     // 명시적 재시도 → 성공.
-    await container.read(swipeControllerProvider(null).notifier).reload();
-    expect(container.read(swipeControllerProvider(null)).hasValue, isTrue);
+    await container
+        .read(swipeControllerProvider(noCategories).notifier)
+        .reload();
+    expect(
+      container.read(swipeControllerProvider(noCategories)).hasValue,
+      isTrue,
+    );
 
     // 카운터가 초기화됐으므로 소진 상태가 아니다 — 이후 실패에 다시 자동 재시도가 붙는다.
     expect(
-      container.read(swipeControllerProvider(null)).error,
+      container.read(swipeControllerProvider(noCategories)).error,
       isNot(isA<RetryExhausted>()),
     );
   });
@@ -176,10 +186,12 @@ void main() {
     final container = _container(repo);
 
     await _settle(container);
-    await container.read(swipeControllerProvider(null).notifier).reload();
+    await container
+        .read(swipeControllerProvider(noCategories).notifier)
+        .reload();
 
     expect(
-      container.read(swipeControllerProvider(null)).error,
+      container.read(swipeControllerProvider(noCategories)).error,
       isA<RetryExhausted>(),
     );
   });
@@ -194,7 +206,7 @@ void main() {
     expect(repo.spotPageCallCount, 1);
     // 종료 상태로 승격되지도 않는다(계상되지 않았으므로 상한을 쓰지 않았다).
     expect(
-      container.read(swipeControllerProvider(null)).error,
+      container.read(swipeControllerProvider(noCategories)).error,
       isNot(isA<RetryExhausted>()),
     );
   });
@@ -209,7 +221,7 @@ void main() {
 
     expect(repo.spotPageCallCount, 2);
     expect(
-      container.read(swipeControllerProvider(null)).error,
+      container.read(swipeControllerProvider(noCategories)).error,
       isA<RetryExhausted>(),
     );
   });
@@ -223,11 +235,14 @@ void main() {
 
     // 다른 카테고리는 자기 상한을 새로 쓴다 — 우회가 아니라 확정된 정상 동작이다.
     container.listen(
-      swipeControllerProvider(SpotCategory.lodging),
+      swipeControllerProvider(selectionOf(const <SpotCategory>[catLodging])),
       (_, _) {},
       fireImmediately: true,
     );
-    await _settle(container, category: SpotCategory.lodging);
+    await _settle(
+      container,
+      selection: selectionOf(const <SpotCategory>[catLodging]),
+    );
 
     expect(repo.spotPageCallCount, 4);
   });

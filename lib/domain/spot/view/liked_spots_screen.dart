@@ -5,10 +5,12 @@ import 'package:go_router/go_router.dart';
 import '../../../common/navigation/settings_routes.dart';
 import '../../../common/pagination/pagination_list_view.dart';
 import '../../../l10n/gen/app_localizations.dart';
-import '../component/category_bar.dart';
+import '../../../common/category/spot_category_bar.dart';
 import '../component/liked_spot_card.dart';
+import '../provider/swipe_providers.dart';
 import '../model/liked_spot.dart';
-import '../model/spot_category.dart';
+import '../../../common/category/spot_category.dart';
+import '../../../common/category/spot_category_selection.dart';
 import '../provider/liked_spots_providers.dart';
 import 'spot_detail_view.dart';
 
@@ -30,9 +32,12 @@ class LikedSpotsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final SpotCategory? category = ref.watch(selectedLikedCategoryProvider);
+
+    // 최초 상태는 "전체"다(사용자 결정, 2026-08-15) — 네 화면이 같은 규칙을 쓴다.
+    final Set<SpotCategory> selected = ref.watch(selectedLikedCategoryProvider);
+    final SpotCategorySelection selection = SpotCategorySelection(selected);
     final AsyncValue<LikedSpotsState> state = ref.watch(
-      likedSpotsControllerProvider(category),
+      likedSpotsControllerProvider(selection),
     );
 
     return Scaffold(
@@ -43,10 +48,15 @@ class LikedSpotsScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             // Discover와 같은 바를 쓰되 선택 상태는 이 화면 것이다 — 여기서 고른
             // 필터가 스와이프 스택을 갈아치우면 안 된다.
-            CategoryBar(
-              selected: category,
-              onSelected: (SpotCategory? next) =>
-                  ref.read(selectedLikedCategoryProvider.notifier).select(next),
+            SpotCategoryBar(
+              available:
+                  ref.watch(availableSpotCategoriesProvider).value ??
+                  const <SpotCategory>[],
+              selected: selected,
+              onToggle: (SpotCategory next) =>
+                  ref.read(selectedLikedCategoryProvider.notifier).toggle(next),
+              onSelectAll: () =>
+                  ref.read(selectedLikedCategoryProvider.notifier).selectAll(),
             ),
             const SizedBox(height: 8),
             // 본문만 상태에 따라 갈린다 — 카테고리를 바꿔 로딩이 떠도 바는 그대로
@@ -58,11 +68,11 @@ class LikedSpotsScreen extends ConsumerWidget {
                 // 여기선 일반 오류와 같게 다루고 재시도만 제공한다(§5.2).
                 error: (_, _) => _ErrorBody(
                   onRetry: () =>
-                      ref.invalidate(likedSpotsControllerProvider(category)),
+                      ref.invalidate(likedSpotsControllerProvider(selection)),
                 ),
                 data: (LikedSpotsState data) => data.isEmpty
                     ? Center(child: Text(l10n.likedSpotsEmpty))
-                    : _LikedList(category: category, data: data),
+                    : _LikedList(selection: selection, data: data),
               ),
             ),
           ],
@@ -74,10 +84,10 @@ class LikedSpotsScreen extends ConsumerWidget {
 
 /// 목록 본문. 스크롤·추가 로딩은 공용 [PaginationListView]가 담당한다(§4).
 class _LikedList extends ConsumerWidget {
-  const _LikedList({required this.category, required this.data});
+  const _LikedList({required this.selection, required this.data});
 
-  /// 어느 카테고리의 목록인지 — 추가 로딩을 같은 family 인스턴스에 요청해야 한다.
-  final SpotCategory? category;
+  /// 어느 선택의 목록인지 — 추가 로딩을 같은 family 인스턴스에 요청해야 한다.
+  final SpotCategorySelection selection;
   final LikedSpotsState data;
 
   @override
@@ -87,7 +97,7 @@ class _LikedList extends ConsumerWidget {
     hasMore: data.hasMore,
     isLoadingMore: data.isLoadingMore,
     onLoadMore: () =>
-        ref.read(likedSpotsControllerProvider(category).notifier).loadMore(),
+        ref.read(likedSpotsControllerProvider(selection).notifier).loadMore(),
     itemBuilder: (BuildContext context, int index) {
       final LikedSpot spot = data.items[index];
       return LikedSpotCard(spot: spot, onTap: () => _openDetail(context, spot));
@@ -97,20 +107,17 @@ class _LikedList extends ConsumerWidget {
   /// 기존 상세 라우트로 진입한다(§5.1). [LikedSpot.id]가 그대로 `spotDetail(id:)`에
   /// 들어가는 같은 식별자다.
   ///
-  /// category·thumb를 함께 넘기는 이유는 스와이프에서 열 때와 같다 — 서버의
-  /// `intro`/`infoItems`가 카테고리를 필수 인자로 요구하고, 썸네일은 본문 조회를
-  /// 기다리는 동안 깜빡임을 없앤다.
+  /// **카테고리는 넘기지 않는다**(SPEC-0020) — 서버가 상세를 spot 자신의 카테고리로
+  /// 해석하므로 호출부가 알려줄 것이 없다. `thumb`는 본문 조회를 기다리는 동안
+  /// 깜빡임을 없앤다.
   ///
-  /// `feed` 파라미터는 넘기지 않는다. 좋아요 목록은 스와이프 피드가 아니므로 반응
-  /// 후 소비할 카드 스택이 없다 — 라우트가 null(전체 피드)로 되돌린다.
+  /// `feed` 파라미터도 넘기지 않는다. 좋아요 목록은 스와이프 피드가 아니므로 반응
+  /// 후 소비할 카드 스택이 없다 — 라우트가 null로 되돌린다.
   void _openDetail(BuildContext context, LikedSpot spot) {
     context.pushNamed(
       SpotDetailView.routeName,
       pathParameters: <String, String>{'id': spot.id},
-      queryParameters: <String, String>{
-        'category': spot.category.name,
-        'thumb': spot.thumbnailImageUrl,
-      },
+      queryParameters: <String, String>{'thumb': spot.thumbnailImageUrl},
     );
   }
 }

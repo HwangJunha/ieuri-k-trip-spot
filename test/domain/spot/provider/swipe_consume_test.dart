@@ -29,18 +29,18 @@ Future<(ProviderContainer, SwipeQueue)> _load(int n) async {
   );
   addTearDown(container.dispose);
   container.listen(
-    swipeControllerProvider(null),
+    swipeControllerProvider(noCategories),
     (_, _) {},
     fireImmediately: true,
   );
   final SwipeQueue queue = await container.read(
-    swipeControllerProvider(null).future,
+    swipeControllerProvider(noCategories).future,
   );
   return (container, queue);
 }
 
 List<String> _ids(ProviderContainer container) => container
-    .read(swipeControllerProvider(null))
+    .read(swipeControllerProvider(noCategories))
     .value!
     .cards
     .map((TouristSpot s) => s.id)
@@ -56,7 +56,9 @@ void main() {
     final (container, queue) = await _load(3);
     expect(queue.cards.length, 3);
 
-    container.read(swipeControllerProvider(null).notifier).consume('s0');
+    container
+        .read(swipeControllerProvider(noCategories).notifier)
+        .consume('s0');
 
     expect(_ids(container), isNot(contains('s0')));
     expect(_ids(container), containsAll(<String>['s1', 's2']));
@@ -68,7 +70,9 @@ void main() {
 
     // 맨 위가 아닌 카드를 고른다 — 섞인 뒤라 어느 id가 맨 위인지는 그때그때 다르다.
     final String notTop = _ids(container)[1];
-    container.read(swipeControllerProvider(null).notifier).consume(notTop);
+    container
+        .read(swipeControllerProvider(noCategories).notifier)
+        .consume(notTop);
 
     expect(_ids(container), isNot(contains(notTop)));
     expect(_ids(container), hasLength(2));
@@ -78,7 +82,9 @@ void main() {
     final (container, _) = await _load(3);
     final List<String> before = _ids(container);
 
-    container.read(swipeControllerProvider(null).notifier).consume('없는-id');
+    container
+        .read(swipeControllerProvider(noCategories).notifier)
+        .consume('없는-id');
 
     expect(_ids(container), before);
   });
@@ -88,10 +94,10 @@ void main() {
     final List<String> before = _ids(container);
     final String top = before.first;
 
-    container.read(swipeControllerProvider(null).notifier).consume(top);
+    container.read(swipeControllerProvider(noCategories).notifier).consume(top);
 
     final SwipeQueue after = container
-        .read(swipeControllerProvider(null))
+        .read(swipeControllerProvider(noCategories))
         .value!;
     // 소비한 카드가 아니라 그 다음 카드가 맨 위에 온다 — 복귀 순간 전진이 보인다.
     expect(after.top!.id, before[1]);
@@ -100,10 +106,12 @@ void main() {
   test('마지막 카드를 소비하면 소진 상태가 된다 (AC-40)', () async {
     final (container, _) = await _load(1);
 
-    container.read(swipeControllerProvider(null).notifier).consume('s0');
+    container
+        .read(swipeControllerProvider(noCategories).notifier)
+        .consume('s0');
 
     final SwipeQueue after = container
-        .read(swipeControllerProvider(null))
+        .read(swipeControllerProvider(noCategories))
         .value!;
     expect(after.isExhausted, isTrue);
   });

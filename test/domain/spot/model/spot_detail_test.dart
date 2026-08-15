@@ -1,10 +1,29 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
-import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
+import 'package:ieuri_k_trip_spot/common/category/spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_detail.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_image.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_info_item.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_intro.dart';
+
+/// SPEC-0020 이후 카테고리는 enum이 아니라 값 객체다. 동등성은 `code`만 보므로
+/// 라벨이 달라도 같은 카테고리다.
+const SpotCategory catTouristSpot = SpotCategory(
+  code: 'TOURIST_SPOT',
+  label: 'Tourist Spots',
+);
+const SpotCategory catRestaurant = SpotCategory(
+  code: 'RESTAURANT',
+  label: 'Restaurants',
+);
+const SpotCategory catTravelCourse = SpotCategory(
+  code: 'TRAVEL_COURSE',
+  label: 'Travel Courses',
+);
+const SpotCategory catTransport = SpotCategory(
+  code: 'TRANSPORT',
+  label: 'Transport',
+);
 
 void main() {
   const SpotImage image = SpotImage(
@@ -16,7 +35,7 @@ void main() {
   SpotDetail build({int likeCount = 5}) => SpotDetail(
     id: 'c1',
     title: 'Gyeongbokgung',
-    category: SpotCategory.touristSpot,
+    category: catTouristSpot,
     thumbnailImageUrl: 'https://img/thumb.jpg',
     overview: 'A palace.',
     address: 'Seoul',
@@ -40,7 +59,7 @@ void main() {
     final SpotDetail blank = SpotDetail(
       id: 'c1',
       title: 'T',
-      category: SpotCategory.touristSpot,
+      category: catTouristSpot,
       thumbnailImageUrl: 'https://img/t.jpg',
       overview: '',
       address: '   ',
@@ -73,7 +92,7 @@ void main() {
     SpotDetail withHomepage(String? homepage) => SpotDetail(
       id: 'c1',
       title: 'T',
-      category: SpotCategory.touristSpot,
+      category: catTouristSpot,
       thumbnailImageUrl: 'https://img/t.jpg',
       homepage: homepage,
       copyright: CopyrightType.type1,
@@ -136,7 +155,7 @@ void main() {
         SpotDetail(
           id: 'c1',
           title: 'T',
-          category: SpotCategory.touristSpot,
+          category: catTouristSpot,
           thumbnailImageUrl: 'https://img/t.jpg',
           copyright: CopyrightType.type1,
           attributionText: 'KTO',
@@ -197,7 +216,7 @@ void main() {
     final SpotDetail original = SpotDetail(
       id: 'c1',
       title: 'T',
-      category: SpotCategory.touristSpot,
+      category: catTouristSpot,
       thumbnailImageUrl: 'https://img/t.jpg',
       copyright: CopyrightType.type1,
       attributionText: 'KTO',
@@ -218,7 +237,7 @@ void main() {
     final SpotDetail detail = SpotDetail(
       id: 'c1',
       title: 'T',
-      category: SpotCategory.touristSpot,
+      category: catTouristSpot,
       thumbnailImageUrl: 'https://img/t.jpg',
       copyright: CopyrightType.type1,
       attributionText: 'Source: KTO',
@@ -269,7 +288,7 @@ void main() {
     const SpotDetail sparse = SpotDetail(
       id: 'c1',
       title: 'Gyeongbokgung',
-      category: SpotCategory.touristSpot,
+      category: catTouristSpot,
       thumbnailImageUrl: 'https://img/thumb.jpg',
       address: 'Seoul',
       copyright: CopyrightType.type1,
@@ -288,7 +307,7 @@ void main() {
     expect(sparse.title, 'Gyeongbokgung');
     expect(sparse.thumbnailImageUrl, isNotEmpty);
     expect(sparse.hasAddress, isTrue);
-    expect(sparse.category, SpotCategory.touristSpot);
+    expect(sparse.category, catTouristSpot);
 
     // likeCount는 non-null이 유지되므로 축약 화면에서도 표시·반응이 가능하다(§3.2).
     expect(sparse.likeCount, 3);
@@ -301,7 +320,7 @@ void main() {
     const SpotDetail sparse = SpotDetail(
       id: 'c1',
       title: 'T',
-      category: SpotCategory.touristSpot,
+      category: catTouristSpot,
       thumbnailImageUrl: 'https://img/thumb.jpg',
       copyright: CopyrightType.type1,
       attributionText: 'Source: KTO',

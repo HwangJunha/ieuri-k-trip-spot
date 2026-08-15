@@ -32,7 +32,8 @@ import '../domain/settings/view/settings_screen.dart';
 import '../domain/settings/view/terms_screen.dart';
 import '../domain/map/view/map_screen.dart';
 import '../domain/map/view/region_recommendation_screen.dart';
-import '../domain/spot/model/spot_category.dart';
+import '../common/category/spot_category.dart';
+import '../common/category/spot_category_selection.dart';
 import '../domain/spot/view/home_screen.dart';
 import '../domain/spot/view/liked_spots_screen.dart';
 import '../domain/spot/view/search_screen.dart';
@@ -99,8 +100,10 @@ List<RouteBase> buildRoutes() => <RouteBase>[
   // 탭을 덮고, Discover 스와이프 스택은 셸 브랜치에 그대로 보존된다(R9). id는 경로
   // 파라미터로 받는다(모델 객체가 아니라 식별자만 넘긴다, §6).
   //
-  // category는 쿼리 파라미터다. 서버의 `intro`/`infoItems`가 필수 인자로 요구하는데
-  // 조회 중인 응답의 필드를 인자로 쓸 수 없어, 스와이프 피드가 이미 가진 값을 넘긴다.
+  // **category 쿼리 파라미터는 사라졌다**(SPEC-0020). 서버의 `intro`/`infoItems`가
+  // 카테고리를 요구해 스와이프 피드가 가진 값을 실어 보냈으나, 이제 서버가 spot
+  // 자신의 카테고리로 해석하므로 상세를 여는 데 필요 없다 — 인자가 줄어 폴백으로
+  // 잘못된 카테고리가 실릴 여지도 함께 사라졌다.
   //
   // 전환은 아래→위 진입, 위→아래 종료다(SPEC-0006 R6·R7, AC-17·AC-20). 기본
   // 좌우 슬라이드는 "옆으로 넘어간다"를 뜻해 스와이프 스택 위로 덮이는 이 화면의
@@ -117,11 +120,11 @@ List<RouteBase> buildRoutes() => <RouteBase>[
       key: state.pageKey,
       child: SpotDetailView(
         contentId: state.pathParameters['id']!,
-        category: _spotCategoryFrom(state.uri.queryParameters['category']),
         initialThumbnailUrl: state.uri.queryParameters['thumb'],
-        // 어느 피드에서 열렸는지(R11). category(관광지의 카테고리)와 다른 값이며,
-        // 파라미터가 없으면 전체 피드(null)로 본다 — 직접 진입도 같은 경로다.
-        feedCategory: _feedCategoryFrom(state.uri.queryParameters['feed']),
+        // 어느 스와이프 피드에서 열렸는지(R11) — 그 피드의 **선택 집합**이다.
+        // 파라미터가 없으면 피드 밖에서 들어온 것이라 null이며, 그때는 소비할
+        // 카드 스택이 없다(직접 진입·검색·좋아요·지도).
+        feedCategory: _feedSelectionFrom(state.uri.queryParameters['feed']),
       ),
       transitionDuration: const Duration(milliseconds: 300),
       reverseTransitionDuration: const Duration(milliseconds: 250),
@@ -353,16 +356,24 @@ Widget _slideUpFromBottom(
   child: child,
 );
 
-/// 쿼리 파라미터로 온 카테고리 이름을 [SpotCategory]로 되돌린다.
+/// 스와이프 피드의 선택 집합을 쿼리 파라미터에서 되돌린다(SPEC-0020).
 ///
-/// 서버가 아직 매핑되지 않은 enum 값을 추가했거나 파라미터가 빠진 경우엔
-/// [SpotCategory.touristSpot]으로 떨어진다 — 상세 화면 전체를 실패시키는 것보다
-/// 낫고, 이때 운영 정보·이용안내가 실제와 다르면 서버가 빈 값을 주므로 해당 섹션이
-/// 렌더되지 않는다.
-/// 피드 필터를 되돌린다. [_spotCategoryFrom]과 달리 **null이 유효한 값**이다 —
-/// "전체" 피드를 뜻하므로 기본값으로 떨어뜨리면 안 된다.
-SpotCategory? _feedCategoryFrom(String? name) =>
-    SpotCategory.values.where((SpotCategory c) => c.name == name).firstOrNull;
+/// 값은 **콤마로 이은 카테고리 코드**다(`LODGING,TOURIST_SPOT`). 코드만 있으면
+/// 되므로 [SpotCategory.ofCode]로 만든다 — 이 값은 세션을 찾는 키로만 쓰이고 화면에
+/// 라벨을 그리지 않는다.
+///
+/// **null이 유효한 값이다** — 스와이프 피드 밖에서 들어온 진입(검색·좋아요·지도·
+/// 딥링크)이며, 그때는 소비할 카드 스택이 없다. 빈 문자열도 같게 본다.
+///
+/// 예전에는 Dart enum 이름을 되돌렸는데, `SpotCategory.values` 조회가 사라지면서
+/// 단순 문자열 파싱이 됐다 — 지도 마커가 서버 `code`를 싣고 라우터가 enum 이름과
+/// 비교해 **항상 폴백으로 떨어지던 어긋남**도 표기가 하나로 통일되며 사라졌다.
+SpotCategorySelection? _feedSelectionFrom(String? codes) {
+  if (codes == null || codes.isEmpty) return null;
+  return SpotCategorySelection(
+    codes.split(',').where((String c) => c.isNotEmpty).map(SpotCategory.ofCode),
+  );
+}
 
 /// 컴포저에 넘어온 카테고리 제안을 되돌린다. **null이 유효한 값이다** — 커뮤니티
 /// 탭에서 열면 제안이 없고 사용자가 직접 고른다(가이드 §5).
@@ -371,10 +382,6 @@ SpotCategory? _feedCategoryFrom(String? name) =>
 TargetCategory? _targetCategoryFrom(String? name) => TargetCategory.values
     .where((TargetCategory c) => c.name == name)
     .firstOrNull;
-
-SpotCategory _spotCategoryFrom(String? name) =>
-    SpotCategory.values.where((SpotCategory c) => c.name == name).firstOrNull ??
-    SpotCategory.touristSpot;
 
 /// One tab branch of the bottom-nav shell: a single-route stack.
 StatefulShellBranch _branch(String path, String name, Widget screen) =>

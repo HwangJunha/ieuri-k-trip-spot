@@ -40,10 +40,10 @@ class AppTheme {
     onPrimary: Color(0xFFFFFFFF),
     primaryContainer: Color(0xFFD53B32),
     onPrimaryContainer: Color(0xFFFFFBFF),
-    secondary: Color(0xFF006A6A),
+    secondary: Color(0xFFB4501E),
     onSecondary: Color(0xFFFFFFFF),
-    secondaryContainer: Color(0xFF7FF2F1),
-    onSecondaryContainer: Color(0xFF006E6E),
+    secondaryContainer: Color(0xFFFFDBCC),
+    onSecondaryContainer: Color(0xFF7A3210),
     tertiary: Color(0xFF805200),
     onTertiary: Color(0xFFFFFFFF),
     tertiaryContainer: Color(0xFFA16900),
@@ -72,10 +72,10 @@ class AppTheme {
     primaryFixedDim: Color(0xFFFFB4AA),
     onPrimaryFixed: Color(0xFF410002),
     onPrimaryFixedVariant: Color(0xFF93020A),
-    secondaryFixed: Color(0xFF82F5F4),
-    secondaryFixedDim: Color(0xFF63D8D8),
-    onSecondaryFixed: Color(0xFF002020),
-    onSecondaryFixedVariant: Color(0xFF004F50),
+    secondaryFixed: Color(0xFFFFDBCC),
+    secondaryFixedDim: Color(0xFFE5A183),
+    onSecondaryFixed: Color(0xFF33150A),
+    onSecondaryFixedVariant: Color(0xFF7A3210),
     tertiaryFixed: Color(0xFFFFDDB4),
     tertiaryFixedDim: Color(0xFFFFB955),
     onTertiaryFixed: Color(0xFF291800),
@@ -84,8 +84,20 @@ class AppTheme {
 
   /// Dark scheme seeded from the brand key color, with secondary/tertiary
   /// nudged to the brand values. Replace with Stitch dark tones when available.
-  static final ColorScheme _darkScheme = ColorScheme.fromSeed(
-    seedColor: AppColors.primary,
-    brightness: Brightness.dark,
-  ).copyWith(secondary: AppColors.secondary, tertiary: AppColors.tertiary);
+  ///
+  /// **secondary 계열은 파생 톤까지 함께 덮는다**(SPEC-0020 R10). `copyWith`로
+  /// `secondary` 하나만 바꾸면 `onSecondary`·`secondaryContainer`는 시드(primary)
+  /// 기준으로 남아 서브 컬러와 어긋난다 — 어두운 배경에서 밝은 secondary를 쓰므로
+  /// `onSecondary`는 흰색이 아니라 어두운 톤이어야 대비가 선다.
+  static final ColorScheme _darkScheme =
+      ColorScheme.fromSeed(
+        seedColor: AppColors.primary,
+        brightness: Brightness.dark,
+      ).copyWith(
+        secondary: const Color(0xFFFFB59B),
+        onSecondary: const Color(0xFF5A2100),
+        secondaryContainer: const Color(0xFF7A3210),
+        onSecondaryContainer: const Color(0xFFFFDBCC),
+        tertiary: AppColors.tertiary,
+      );
 }

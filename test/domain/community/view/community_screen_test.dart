@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
 import 'package:ieuri_k_trip_spot/common/widget/floating_bottom_nav_scaffold.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/community_chip.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_failure.dart';
 import 'package:ieuri_k_trip_spot/common/model/post.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_sort_order.dart';
@@ -317,9 +316,7 @@ void main() {
         tester,
         FakeCommunityRepository(
           posts: <Post>[fakePost()],
-          chips: const <CommunityChip>[
-            CommunityChip(category: TargetCategory.restaurant, position: 0),
-          ],
+          chips: const <TargetCategory>[TargetCategory.restaurant],
         ),
       );
 
@@ -341,16 +338,16 @@ void main() {
     testWidgets('칩을 누르면 그 카테고리로 서버에 다시 조회한다', (WidgetTester tester) async {
       final FakeCommunityRepository repo = FakeCommunityRepository(
         posts: <Post>[fakePost()],
-        chips: const <CommunityChip>[
-          CommunityChip(category: TargetCategory.restaurant, position: 0),
-        ],
+        chips: const <TargetCategory>[TargetCategory.restaurant],
       );
       await _pump(tester, repo);
 
       await tester.tap(find.text('Food'));
       await tester.pumpAndSettle();
 
-      expect(repo.lastFetchPosts?.category, TargetCategory.restaurant);
+      expect(repo.lastFetchPosts?.categories, <TargetCategory>[
+        TargetCategory.restaurant,
+      ]);
     });
   });
 
@@ -400,9 +397,7 @@ void main() {
       tester,
       FakeCommunityRepository(
         feedError: CommunityFailure.network,
-        chips: const <CommunityChip>[
-          CommunityChip(category: TargetCategory.restaurant, position: 0),
-        ],
+        chips: const <TargetCategory>[TargetCategory.restaurant],
       ),
     );
 

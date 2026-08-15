@@ -8,27 +8,48 @@ part of 'feed_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 커뮤니티 탭에서 선택된 카테고리(null=전체).
+/// 커뮤니티 탭에서 선택된 카테고리 집합(**빈 집합 = 전체**).
+///
+/// 서버가 복수 인자를 받게 되면서(#77, 2026-08-16) spot 쪽과 같은 다중 선택이 됐다.
+/// 빈 집합이 "전체"인 것도 앱 전체 규약을 따른다 — 바 맨 앞의 "전체" 칩이 켜지고,
+/// 서버에는 `categories` 인자를 **보내지 않는다**(빈 배열은 거절된다).
+/// 예전의 "마지막 하나는 해제 불가" 규칙은 없다.
 ///
 /// keepAlive인 이유는 좋아요 목록의 카테고리 필터와 같다 — 사용자가 고른 필터는
 /// 화면이 아니라 세션에 속한다. autoDispose면 상세에 다녀오는 것만으로 "전체"로
 /// 되돌아간다.
+///
+/// **토글 규칙이 위젯이 아니라 여기 있는 이유**: 위젯 없이 테스트가 성립해야 한다.
 
 @ProviderFor(SelectedCategory)
 const selectedCategoryProvider = SelectedCategoryProvider._();
 
-/// 커뮤니티 탭에서 선택된 카테고리(null=전체).
+/// 커뮤니티 탭에서 선택된 카테고리 집합(**빈 집합 = 전체**).
+///
+/// 서버가 복수 인자를 받게 되면서(#77, 2026-08-16) spot 쪽과 같은 다중 선택이 됐다.
+/// 빈 집합이 "전체"인 것도 앱 전체 규약을 따른다 — 바 맨 앞의 "전체" 칩이 켜지고,
+/// 서버에는 `categories` 인자를 **보내지 않는다**(빈 배열은 거절된다).
+/// 예전의 "마지막 하나는 해제 불가" 규칙은 없다.
 ///
 /// keepAlive인 이유는 좋아요 목록의 카테고리 필터와 같다 — 사용자가 고른 필터는
 /// 화면이 아니라 세션에 속한다. autoDispose면 상세에 다녀오는 것만으로 "전체"로
 /// 되돌아간다.
+///
+/// **토글 규칙이 위젯이 아니라 여기 있는 이유**: 위젯 없이 테스트가 성립해야 한다.
 final class SelectedCategoryProvider
-    extends $NotifierProvider<SelectedCategory, TargetCategory?> {
-  /// 커뮤니티 탭에서 선택된 카테고리(null=전체).
+    extends $NotifierProvider<SelectedCategory, Set<TargetCategory>> {
+  /// 커뮤니티 탭에서 선택된 카테고리 집합(**빈 집합 = 전체**).
+  ///
+  /// 서버가 복수 인자를 받게 되면서(#77, 2026-08-16) spot 쪽과 같은 다중 선택이 됐다.
+  /// 빈 집합이 "전체"인 것도 앱 전체 규약을 따른다 — 바 맨 앞의 "전체" 칩이 켜지고,
+  /// 서버에는 `categories` 인자를 **보내지 않는다**(빈 배열은 거절된다).
+  /// 예전의 "마지막 하나는 해제 불가" 규칙은 없다.
   ///
   /// keepAlive인 이유는 좋아요 목록의 카테고리 필터와 같다 — 사용자가 고른 필터는
   /// 화면이 아니라 세션에 속한다. autoDispose면 상세에 다녀오는 것만으로 "전체"로
   /// 되돌아간다.
+  ///
+  /// **토글 규칙이 위젯이 아니라 여기 있는 이유**: 위젯 없이 테스트가 성립해야 한다.
   const SelectedCategoryProvider._()
     : super(
         from: null,
@@ -48,34 +69,41 @@ final class SelectedCategoryProvider
   SelectedCategory create() => SelectedCategory();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(TargetCategory? value) {
+  Override overrideWithValue(Set<TargetCategory> value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<TargetCategory?>(value),
+      providerOverride: $SyncValueProvider<Set<TargetCategory>>(value),
     );
   }
 }
 
-String _$selectedCategoryHash() => r'ac186e8b1b949485b0b82f79888f6065283290ed';
+String _$selectedCategoryHash() => r'199f36f50b6ebc7f2c728a269da718bc87fc2e8b';
 
-/// 커뮤니티 탭에서 선택된 카테고리(null=전체).
+/// 커뮤니티 탭에서 선택된 카테고리 집합(**빈 집합 = 전체**).
+///
+/// 서버가 복수 인자를 받게 되면서(#77, 2026-08-16) spot 쪽과 같은 다중 선택이 됐다.
+/// 빈 집합이 "전체"인 것도 앱 전체 규약을 따른다 — 바 맨 앞의 "전체" 칩이 켜지고,
+/// 서버에는 `categories` 인자를 **보내지 않는다**(빈 배열은 거절된다).
+/// 예전의 "마지막 하나는 해제 불가" 규칙은 없다.
 ///
 /// keepAlive인 이유는 좋아요 목록의 카테고리 필터와 같다 — 사용자가 고른 필터는
 /// 화면이 아니라 세션에 속한다. autoDispose면 상세에 다녀오는 것만으로 "전체"로
 /// 되돌아간다.
+///
+/// **토글 규칙이 위젯이 아니라 여기 있는 이유**: 위젯 없이 테스트가 성립해야 한다.
 
-abstract class _$SelectedCategory extends $Notifier<TargetCategory?> {
-  TargetCategory? build();
+abstract class _$SelectedCategory extends $Notifier<Set<TargetCategory>> {
+  Set<TargetCategory> build();
   @$mustCallSuper
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<TargetCategory?, TargetCategory?>;
+    final ref = this.ref as $Ref<Set<TargetCategory>, Set<TargetCategory>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<TargetCategory?, TargetCategory?>,
-              TargetCategory?,
+              AnyNotifier<Set<TargetCategory>, Set<TargetCategory>>,
+              Set<TargetCategory>,
               Object?,
               Object?
             >;
@@ -174,9 +202,13 @@ abstract class _$SelectedSort extends $Notifier<PostSortOrder> {
   }
 }
 
-/// 커뮤니티 탭의 지역 피드. [category]·[sort]별 패밀리 — 둘 중 하나를 바꾸면 다른
+/// 커뮤니티 탭의 지역 피드. [selection]·[sort]별 패밀리 — 둘 중 하나를 바꾸면 다른
 /// 인스턴스가 로딩되고 **필터링·정렬은 서버가 한다**(클라이언트가 받은 목록을 거르거나
 /// 다시 정렬하지 않는다).
+///
+/// **family 인자가 `Set`이 아니라 [TargetCategorySelection]인 이유**: `Set`은 값
+/// 동등성이 없어 선택이 그대로여도 매 빌드마다 새 인스턴스가 만들어지고, keepAlive라
+/// 버려지지도 않아 피드를 처음부터 다시 받는다.
 ///
 /// **[sort]가 family 인자인 것이 "정렬을 바꾸면 커서를 버린다"는 규약의 구현이다**
 /// (2차 가이드 §3). 두 정렬의 커서 형식이 달라 이전 커서를 넘기면 서버가
@@ -193,9 +225,13 @@ abstract class _$SelectedSort extends $Notifier<PostSortOrder> {
 @ProviderFor(FeedController)
 const feedControllerProvider = FeedControllerFamily._();
 
-/// 커뮤니티 탭의 지역 피드. [category]·[sort]별 패밀리 — 둘 중 하나를 바꾸면 다른
+/// 커뮤니티 탭의 지역 피드. [selection]·[sort]별 패밀리 — 둘 중 하나를 바꾸면 다른
 /// 인스턴스가 로딩되고 **필터링·정렬은 서버가 한다**(클라이언트가 받은 목록을 거르거나
 /// 다시 정렬하지 않는다).
+///
+/// **family 인자가 `Set`이 아니라 [TargetCategorySelection]인 이유**: `Set`은 값
+/// 동등성이 없어 선택이 그대로여도 매 빌드마다 새 인스턴스가 만들어지고, keepAlive라
+/// 버려지지도 않아 피드를 처음부터 다시 받는다.
 ///
 /// **[sort]가 family 인자인 것이 "정렬을 바꾸면 커서를 버린다"는 규약의 구현이다**
 /// (2차 가이드 §3). 두 정렬의 커서 형식이 달라 이전 커서를 넘기면 서버가
@@ -210,9 +246,13 @@ const feedControllerProvider = FeedControllerFamily._();
 /// 걸리므로 좌표가 있든 없든 같은 인자로 넘어간다.
 final class FeedControllerProvider
     extends $AsyncNotifierProvider<FeedController, FeedState> {
-  /// 커뮤니티 탭의 지역 피드. [category]·[sort]별 패밀리 — 둘 중 하나를 바꾸면 다른
+  /// 커뮤니티 탭의 지역 피드. [selection]·[sort]별 패밀리 — 둘 중 하나를 바꾸면 다른
   /// 인스턴스가 로딩되고 **필터링·정렬은 서버가 한다**(클라이언트가 받은 목록을 거르거나
   /// 다시 정렬하지 않는다).
+  ///
+  /// **family 인자가 `Set`이 아니라 [TargetCategorySelection]인 이유**: `Set`은 값
+  /// 동등성이 없어 선택이 그대로여도 매 빌드마다 새 인스턴스가 만들어지고, keepAlive라
+  /// 버려지지도 않아 피드를 처음부터 다시 받는다.
   ///
   /// **[sort]가 family 인자인 것이 "정렬을 바꾸면 커서를 버린다"는 규약의 구현이다**
   /// (2차 가이드 §3). 두 정렬의 커서 형식이 달라 이전 커서를 넘기면 서버가
@@ -227,7 +267,7 @@ final class FeedControllerProvider
   /// 걸리므로 좌표가 있든 없든 같은 인자로 넘어간다.
   const FeedControllerProvider._({
     required FeedControllerFamily super.from,
-    required (TargetCategory?, PostSortOrder) super.argument,
+    required (TargetCategorySelection, PostSortOrder) super.argument,
   }) : super(
          retry: communityRetryPolicy,
          name: r'feedControllerProvider',
@@ -261,11 +301,15 @@ final class FeedControllerProvider
   }
 }
 
-String _$feedControllerHash() => r'45dd47ea76dda825625a68d2b6510358ffbe4950';
+String _$feedControllerHash() => r'dc72b1a1cac20fb5d4ada375dd6b3f80e7333e76';
 
-/// 커뮤니티 탭의 지역 피드. [category]·[sort]별 패밀리 — 둘 중 하나를 바꾸면 다른
+/// 커뮤니티 탭의 지역 피드. [selection]·[sort]별 패밀리 — 둘 중 하나를 바꾸면 다른
 /// 인스턴스가 로딩되고 **필터링·정렬은 서버가 한다**(클라이언트가 받은 목록을 거르거나
 /// 다시 정렬하지 않는다).
+///
+/// **family 인자가 `Set`이 아니라 [TargetCategorySelection]인 이유**: `Set`은 값
+/// 동등성이 없어 선택이 그대로여도 매 빌드마다 새 인스턴스가 만들어지고, keepAlive라
+/// 버려지지도 않아 피드를 처음부터 다시 받는다.
 ///
 /// **[sort]가 family 인자인 것이 "정렬을 바꾸면 커서를 버린다"는 규약의 구현이다**
 /// (2차 가이드 §3). 두 정렬의 커서 형식이 달라 이전 커서를 넘기면 서버가
@@ -286,7 +330,7 @@ final class FeedControllerFamily extends $Family
           AsyncValue<FeedState>,
           FeedState,
           FutureOr<FeedState>,
-          (TargetCategory?, PostSortOrder)
+          (TargetCategorySelection, PostSortOrder)
         > {
   const FeedControllerFamily._()
     : super(
@@ -297,9 +341,13 @@ final class FeedControllerFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// 커뮤니티 탭의 지역 피드. [category]·[sort]별 패밀리 — 둘 중 하나를 바꾸면 다른
+  /// 커뮤니티 탭의 지역 피드. [selection]·[sort]별 패밀리 — 둘 중 하나를 바꾸면 다른
   /// 인스턴스가 로딩되고 **필터링·정렬은 서버가 한다**(클라이언트가 받은 목록을 거르거나
   /// 다시 정렬하지 않는다).
+  ///
+  /// **family 인자가 `Set`이 아니라 [TargetCategorySelection]인 이유**: `Set`은 값
+  /// 동등성이 없어 선택이 그대로여도 매 빌드마다 새 인스턴스가 만들어지고, keepAlive라
+  /// 버려지지도 않아 피드를 처음부터 다시 받는다.
   ///
   /// **[sort]가 family 인자인 것이 "정렬을 바꾸면 커서를 버린다"는 규약의 구현이다**
   /// (2차 가이드 §3). 두 정렬의 커서 형식이 달라 이전 커서를 넘기면 서버가
@@ -313,16 +361,22 @@ final class FeedControllerFamily extends $Family
   /// **좌표와 카테고리는 서로 독립이다**(가이드 §2) — 카테고리는 범위와 무관하게
   /// 걸리므로 좌표가 있든 없든 같은 인자로 넘어간다.
 
-  FeedControllerProvider call(TargetCategory? category, PostSortOrder sort) =>
-      FeedControllerProvider._(argument: (category, sort), from: this);
+  FeedControllerProvider call(
+    TargetCategorySelection selection,
+    PostSortOrder sort,
+  ) => FeedControllerProvider._(argument: (selection, sort), from: this);
 
   @override
   String toString() => r'feedControllerProvider';
 }
 
-/// 커뮤니티 탭의 지역 피드. [category]·[sort]별 패밀리 — 둘 중 하나를 바꾸면 다른
+/// 커뮤니티 탭의 지역 피드. [selection]·[sort]별 패밀리 — 둘 중 하나를 바꾸면 다른
 /// 인스턴스가 로딩되고 **필터링·정렬은 서버가 한다**(클라이언트가 받은 목록을 거르거나
 /// 다시 정렬하지 않는다).
+///
+/// **family 인자가 `Set`이 아니라 [TargetCategorySelection]인 이유**: `Set`은 값
+/// 동등성이 없어 선택이 그대로여도 매 빌드마다 새 인스턴스가 만들어지고, keepAlive라
+/// 버려지지도 않아 피드를 처음부터 다시 받는다.
 ///
 /// **[sort]가 family 인자인 것이 "정렬을 바꾸면 커서를 버린다"는 규약의 구현이다**
 /// (2차 가이드 §3). 두 정렬의 커서 형식이 달라 이전 커서를 넘기면 서버가
@@ -337,11 +391,14 @@ final class FeedControllerFamily extends $Family
 /// 걸리므로 좌표가 있든 없든 같은 인자로 넘어간다.
 
 abstract class _$FeedController extends $AsyncNotifier<FeedState> {
-  late final _$args = ref.$arg as (TargetCategory?, PostSortOrder);
-  TargetCategory? get category => _$args.$1;
+  late final _$args = ref.$arg as (TargetCategorySelection, PostSortOrder);
+  TargetCategorySelection get selection => _$args.$1;
   PostSortOrder get sort => _$args.$2;
 
-  FutureOr<FeedState> build(TargetCategory? category, PostSortOrder sort);
+  FutureOr<FeedState> build(
+    TargetCategorySelection selection,
+    PostSortOrder sort,
+  );
   @$mustCallSuper
   @override
   void runBuild() {

@@ -3,7 +3,7 @@ import 'package:ieuri_k_trip_spot/common/pagination/offset_page.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
 import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
-import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
+import 'package:ieuri_k_trip_spot/common/category/spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_search_result.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_search_state.dart';
@@ -295,14 +295,14 @@ void main() {
       final repository = FakeSpotRepository()
         ..searchResult = resultWith(<String>['a']);
       final container = makeContainer(repository);
-      container
-          .read(spotSearchCategoryProvider.notifier)
-          .select(SpotCategory.restaurant);
+      container.read(spotSearchCategoryProvider.notifier).replace(
+        <SpotCategory>{catRestaurant},
+      );
 
       await container.read(spotSearchProvider.notifier).search('경복궁');
 
       // 걸러 내는 것은 서버 몫이다 — 클라이언트는 필터를 실어 보내기만 한다.
-      expect(repository.lastSearchCategory, SpotCategory.restaurant);
+      expect(repository.lastSearchCategoryCodes, <String>[catRestaurant.code]);
     });
 
     test('AC-5.2 · 카테고리를 고르지 않으면 전체가 대상이다', () async {
@@ -313,16 +313,16 @@ void main() {
       await container.read(spotSearchProvider.notifier).search('경복궁');
 
       // null = 전체(서버 규약).
-      expect(repository.lastSearchCategory, isNull);
+      expect(repository.lastSearchCategoryCodes, isNull);
     });
 
     test('AC-5.3 · 일치하는 spot이 없으면 실패가 아니라 빈 결과다', () async {
       final repository = FakeSpotRepository()
         ..searchResult = SpotSearchResult.empty;
       final container = makeContainer(repository);
-      container
-          .read(spotSearchCategoryProvider.notifier)
-          .select(SpotCategory.lodging);
+      container.read(spotSearchCategoryProvider.notifier).replace(
+        <SpotCategory>{catLodging},
+      );
 
       await container.read(spotSearchProvider.notifier).search('경복궁');
 
@@ -335,14 +335,14 @@ void main() {
       final container = makeContainer(repository);
       await container.read(spotSearchProvider.notifier).search('경복궁');
 
-      container
-          .read(spotSearchCategoryProvider.notifier)
-          .select(SpotCategory.restaurant);
+      container.read(spotSearchCategoryProvider.notifier).replace(
+        <SpotCategory>{catRestaurant},
+      );
       await container.read(spotSearchProvider.notifier).reapplyCategory();
 
       expect(repository.searchCallCount, 2);
       expect(repository.lastSearchQuery, '경복궁');
-      expect(repository.lastSearchCategory, SpotCategory.restaurant);
+      expect(repository.lastSearchCategoryCodes, <String>[catRestaurant.code]);
       // 이어 붙이지 않고 0페이지부터 받는다 — 필터가 바뀌면 결과 집합이 다르다.
       expect(repository.lastSearchPage, 0);
     });
@@ -351,9 +351,9 @@ void main() {
       final repository = FakeSpotRepository();
       final container = makeContainer(repository);
 
-      container
-          .read(spotSearchCategoryProvider.notifier)
-          .select(SpotCategory.restaurant);
+      container.read(spotSearchCategoryProvider.notifier).replace(
+        <SpotCategory>{catRestaurant},
+      );
       await container.read(spotSearchProvider.notifier).reapplyCategory();
 
       // 고를 질의가 없다 — 선택만 기억하고 다음 검색에 실린다.
@@ -372,23 +372,28 @@ void main() {
         ..searchResult = resultWith(<String>['a']);
       final container = makeContainer(repository);
 
-      container
-          .read(spotSearchCategoryProvider.notifier)
-          .select(SpotCategory.culturalFacility);
+      container.read(spotSearchCategoryProvider.notifier).replace(
+        <SpotCategory>{catCulturalFacility},
+      );
       await container.read(spotSearchProvider.notifier).search('올리브');
 
-      expect(repository.lastSearchCategory, SpotCategory.culturalFacility);
+      expect(repository.lastSearchCategoryCodes, <String>[
+        catCulturalFacility.code,
+      ]);
     });
 
-    test('전체(null)를 고르면 카테고리 인자를 보내지 않는다', () async {
+    // AC5.1 — **빈 배열은 보내지 않는다.** 서버가 `EMPTY_CATEGORY_SET`으로 거절하므로
+    // 선택이 비면 인자를 생략해 전체를 받는다. 프로덕션 화면은 기본값을 심어 이
+    // 상태를 만들지 않지만, 그 방어가 repository 경계에 있다는 것을 고정한다.
+    test('선택이 비면 카테고리 인자를 보내지 않는다(빈 배열 아님)', () async {
       final repository = FakeSpotRepository()
         ..searchResult = resultWith(<String>['a']);
       final container = makeContainer(repository);
 
-      container.read(spotSearchCategoryProvider.notifier).select(null);
+      // 아무것도 고르지 않은 상태 그대로 조회한다.
       await container.read(spotSearchProvider.notifier).search('올리브');
 
-      expect(repository.lastSearchCategory, isNull);
+      expect(repository.lastSearchCategoryCodes, isNull);
     });
   });
 }

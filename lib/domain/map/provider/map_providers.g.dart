@@ -60,6 +60,8 @@ String _$mapRepositoryHash() => r'ebd1feef5797a36458540e43a75a28142ac397fa';
 /// (설계 §3.3).
 /// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). 화면은 원문으로 마커를 채우고 자리가
 /// 남으면 번역본으로 한 번 더 채운다 — 두 값이 서로 다른 family 인스턴스가 된다.
+/// **카테고리 필터를 받지 않는다**(사용자 결정, 2026-08-16). 서버 인자는 있지만
+/// 지도는 오버레이가 가장 많은 화면이라 바를 하나 더 얹으면 가독성이 떨어진다.
 
 @ProviderFor(mapViewport)
 const mapViewportProvider = MapViewportFamily._();
@@ -74,6 +76,8 @@ const mapViewportProvider = MapViewportFamily._();
 /// (설계 §3.3).
 /// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). 화면은 원문으로 마커를 채우고 자리가
 /// 남으면 번역본으로 한 번 더 채운다 — 두 값이 서로 다른 family 인스턴스가 된다.
+/// **카테고리 필터를 받지 않는다**(사용자 결정, 2026-08-16). 서버 인자는 있지만
+/// 지도는 오버레이가 가장 많은 화면이라 바를 하나 더 얹으면 가독성이 떨어진다.
 
 final class MapViewportProvider
     extends
@@ -95,6 +99,8 @@ final class MapViewportProvider
   /// (설계 §3.3).
   /// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). 화면은 원문으로 마커를 채우고 자리가
   /// 남으면 번역본으로 한 번 더 채운다 — 두 값이 서로 다른 family 인스턴스가 된다.
+  /// **카테고리 필터를 받지 않는다**(사용자 결정, 2026-08-16). 서버 인자는 있지만
+  /// 지도는 오버레이가 가장 많은 화면이라 바를 하나 더 얹으면 가독성이 떨어진다.
   const MapViewportProvider._({
     required MapViewportFamily super.from,
     required (MapBounds, int, {bool? hasOrigin}) super.argument,
@@ -156,6 +162,8 @@ String _$mapViewportHash() => r'cd68ff20f411cccd64c4c450e18efde70074ba5f';
 /// (설계 §3.3).
 /// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). 화면은 원문으로 마커를 채우고 자리가
 /// 남으면 번역본으로 한 번 더 채운다 — 두 값이 서로 다른 family 인스턴스가 된다.
+/// **카테고리 필터를 받지 않는다**(사용자 결정, 2026-08-16). 서버 인자는 있지만
+/// 지도는 오버레이가 가장 많은 화면이라 바를 하나 더 얹으면 가독성이 떨어진다.
 
 final class MapViewportFamily extends $Family
     with
@@ -182,6 +190,8 @@ final class MapViewportFamily extends $Family
   /// (설계 §3.3).
   /// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). 화면은 원문으로 마커를 채우고 자리가
   /// 남으면 번역본으로 한 번 더 채운다 — 두 값이 서로 다른 family 인스턴스가 된다.
+  /// **카테고리 필터를 받지 않는다**(사용자 결정, 2026-08-16). 서버 인자는 있지만
+  /// 지도는 오버레이가 가장 많은 화면이라 바를 하나 더 얹으면 가독성이 떨어진다.
 
   MapViewportProvider call(MapBounds bbox, int zoom, {bool? hasOrigin}) =>
       MapViewportProvider._(

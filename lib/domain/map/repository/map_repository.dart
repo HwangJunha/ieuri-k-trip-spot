@@ -17,13 +17,17 @@ abstract interface class MapRepository {
   /// [zoom]에 따라 서버가 개별 마커와 클러스터 중 한쪽만 채운다 — 클라이언트가 그
   /// 판정을 다시 하지 않는다.
   ///
-  /// **카테고리 필터를 받지 않는다.** 서버 쿼리에는 인자가 있지만 R21이 토글 필터를
-  /// 두지 말라고 하므로 이 화면에는 거를 기준이 없다. 필요해지면 그때 넓힌다.
+  /// [categoryCodes]로 종류를 거른다(SPEC-0020 R7). **SPEC-0014의 R21이 뒤집혔다** —
+  /// 그때는 토글 필터를 두지 말라고 해서 이 인자가 없었으나, SPEC-0020이 지도에도
+  /// 카테고리 필터를 신설한다. null이면 전체이고, **빈 목록은 넘기지 않는다**
+  /// (서버가 `EMPTY_CATEGORY_SET`으로 거절한다, AC5.1) — 다른 조회와 같은 규약이다.
+  ///
   /// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). true면 요청 언어로 **쓰인** 장소만,
   /// false면 **번역된** 장소만, null이면 둘 다 온다.
   Future<MapViewportResult> fetchViewport({
     required MapBounds bbox,
     required int zoom,
+    List<String>? categoryCodes,
     bool? hasOrigin,
   });
 

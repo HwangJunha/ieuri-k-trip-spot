@@ -8,7 +8,7 @@ class Variables$Query$Spots {
     required double latitude,
     required double longitude,
     int? radiusMeters,
-    Enum$SpotCategory? category,
+    List<String>? categories,
     bool? hasOrigin,
     int? page,
     int? size,
@@ -16,7 +16,7 @@ class Variables$Query$Spots {
     r'latitude': latitude,
     r'longitude': longitude,
     if (radiusMeters != null) r'radiusMeters': radiusMeters,
-    if (category != null) r'category': category,
+    if (categories != null) r'categories': categories,
     if (hasOrigin != null) r'hasOrigin': hasOrigin,
     if (page != null) r'page': page,
     if (size != null) r'size': size,
@@ -34,11 +34,11 @@ class Variables$Query$Spots {
       final l$radiusMeters = data['radiusMeters'];
       result$data['radiusMeters'] = (l$radiusMeters as int?);
     }
-    if (data.containsKey('category')) {
-      final l$category = data['category'];
-      result$data['category'] = l$category == null
-          ? null
-          : fromJson$Enum$SpotCategory((l$category as String));
+    if (data.containsKey('categories')) {
+      final l$categories = data['categories'];
+      result$data['categories'] = (l$categories as List<dynamic>?)
+          ?.map((e) => (e as String))
+          .toList();
     }
     if (data.containsKey('hasOrigin')) {
       final l$hasOrigin = data['hasOrigin'];
@@ -63,7 +63,7 @@ class Variables$Query$Spots {
 
   int? get radiusMeters => (_$data['radiusMeters'] as int?);
 
-  Enum$SpotCategory? get category => (_$data['category'] as Enum$SpotCategory?);
+  List<String>? get categories => (_$data['categories'] as List<String>?);
 
   bool? get hasOrigin => (_$data['hasOrigin'] as bool?);
 
@@ -81,11 +81,9 @@ class Variables$Query$Spots {
       final l$radiusMeters = radiusMeters;
       result$data['radiusMeters'] = l$radiusMeters;
     }
-    if (_$data.containsKey('category')) {
-      final l$category = category;
-      result$data['category'] = l$category == null
-          ? null
-          : toJson$Enum$SpotCategory(l$category);
+    if (_$data.containsKey('categories')) {
+      final l$categories = categories;
+      result$data['categories'] = l$categories?.map((e) => e).toList();
     }
     if (_$data.containsKey('hasOrigin')) {
       final l$hasOrigin = hasOrigin;
@@ -132,13 +130,24 @@ class Variables$Query$Spots {
     if (l$radiusMeters != lOther$radiusMeters) {
       return false;
     }
-    final l$category = category;
-    final lOther$category = other.category;
-    if (_$data.containsKey('category') !=
-        other._$data.containsKey('category')) {
+    final l$categories = categories;
+    final lOther$categories = other.categories;
+    if (_$data.containsKey('categories') !=
+        other._$data.containsKey('categories')) {
       return false;
     }
-    if (l$category != lOther$category) {
+    if (l$categories != null && lOther$categories != null) {
+      if (l$categories.length != lOther$categories.length) {
+        return false;
+      }
+      for (int i = 0; i < l$categories.length; i++) {
+        final l$categories$entry = l$categories[i];
+        final lOther$categories$entry = lOther$categories[i];
+        if (l$categories$entry != lOther$categories$entry) {
+          return false;
+        }
+      }
+    } else if (l$categories != lOther$categories) {
       return false;
     }
     final l$hasOrigin = hasOrigin;
@@ -174,7 +183,7 @@ class Variables$Query$Spots {
     final l$latitude = latitude;
     final l$longitude = longitude;
     final l$radiusMeters = radiusMeters;
-    final l$category = category;
+    final l$categories = categories;
     final l$hasOrigin = hasOrigin;
     final l$page = page;
     final l$size = size;
@@ -182,7 +191,11 @@ class Variables$Query$Spots {
       l$latitude,
       l$longitude,
       _$data.containsKey('radiusMeters') ? l$radiusMeters : const {},
-      _$data.containsKey('category') ? l$category : const {},
+      _$data.containsKey('categories')
+          ? l$categories == null
+                ? null
+                : Object.hashAll(l$categories.map((v) => v))
+          : const {},
       _$data.containsKey('hasOrigin') ? l$hasOrigin : const {},
       _$data.containsKey('page') ? l$page : const {},
       _$data.containsKey('size') ? l$size : const {},
@@ -203,7 +216,7 @@ abstract class CopyWith$Variables$Query$Spots<TRes> {
     double? latitude,
     double? longitude,
     int? radiusMeters,
-    Enum$SpotCategory? category,
+    List<String>? categories,
     bool? hasOrigin,
     int? page,
     int? size,
@@ -224,7 +237,7 @@ class _CopyWithImpl$Variables$Query$Spots<TRes>
     Object? latitude = _undefined,
     Object? longitude = _undefined,
     Object? radiusMeters = _undefined,
-    Object? category = _undefined,
+    Object? categories = _undefined,
     Object? hasOrigin = _undefined,
     Object? page = _undefined,
     Object? size = _undefined,
@@ -236,7 +249,7 @@ class _CopyWithImpl$Variables$Query$Spots<TRes>
       if (longitude != _undefined && longitude != null)
         'longitude': (longitude as double),
       if (radiusMeters != _undefined) 'radiusMeters': (radiusMeters as int?),
-      if (category != _undefined) 'category': (category as Enum$SpotCategory?),
+      if (categories != _undefined) 'categories': (categories as List<String>?),
       if (hasOrigin != _undefined) 'hasOrigin': (hasOrigin as bool?),
       if (page != _undefined) 'page': (page as int?),
       if (size != _undefined) 'size': (size as int?),
@@ -254,7 +267,7 @@ class _CopyWithStubImpl$Variables$Query$Spots<TRes>
     double? latitude,
     double? longitude,
     int? radiusMeters,
-    Enum$SpotCategory? category,
+    List<String>? categories,
     bool? hasOrigin,
     int? page,
     int? size,
@@ -380,9 +393,12 @@ const documentNodeQuerySpots = DocumentNode(
           directives: [],
         ),
         VariableDefinitionNode(
-          variable: VariableNode(name: NameNode(value: 'category')),
-          type: NamedTypeNode(
-            name: NameNode(value: 'SpotCategory'),
+          variable: VariableNode(name: NameNode(value: 'categories')),
+          type: ListTypeNode(
+            type: NamedTypeNode(
+              name: NameNode(value: 'String'),
+              isNonNull: true,
+            ),
             isNonNull: false,
           ),
           defaultValue: DefaultValueNode(value: null),
@@ -430,8 +446,8 @@ const documentNodeQuerySpots = DocumentNode(
                 value: VariableNode(name: NameNode(value: 'radiusMeters')),
               ),
               ArgumentNode(
-                name: NameNode(value: 'category'),
-                value: VariableNode(name: NameNode(value: 'category')),
+                name: NameNode(value: 'categories'),
+                value: VariableNode(name: NameNode(value: 'categories')),
               ),
               ArgumentNode(
                 name: NameNode(value: 'hasOrigin'),
@@ -496,7 +512,31 @@ const documentNodeQuerySpots = DocumentNode(
                         alias: null,
                         arguments: [],
                         directives: [],
-                        selectionSet: null,
+                        selectionSet: SelectionSetNode(
+                          selections: [
+                            FieldNode(
+                              name: NameNode(value: 'code'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: null,
+                            ),
+                            FieldNode(
+                              name: NameNode(value: 'label'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: null,
+                            ),
+                            FieldNode(
+                              name: NameNode(value: 'iconUrl'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: null,
+                            ),
+                          ],
+                        ),
                       ),
                       FieldNode(
                         name: NameNode(value: 'copyright'),
@@ -758,7 +798,9 @@ class Query$Spots$spots$items {
       address: (l$address as String?),
       thumbnailImageUrl: (l$thumbnailImageUrl as String),
       distanceMeters: (l$distanceMeters as num).toDouble(),
-      category: fromJson$Enum$SpotCategory((l$category as String)),
+      category: Query$Spots$spots$items$category.fromJson(
+        (l$category as Map<String, dynamic>),
+      ),
       copyright: fromJson$Enum$CopyrightType((l$copyright as String)),
       attributionText: (l$attributionText as String),
     );
@@ -774,7 +816,7 @@ class Query$Spots$spots$items {
 
   final double distanceMeters;
 
-  final Enum$SpotCategory category;
+  final Query$Spots$spots$items$category category;
 
   final Enum$CopyrightType copyright;
 
@@ -793,7 +835,7 @@ class Query$Spots$spots$items {
     final l$distanceMeters = distanceMeters;
     _resultData['distanceMeters'] = l$distanceMeters;
     final l$category = category;
-    _resultData['category'] = toJson$Enum$SpotCategory(l$category);
+    _resultData['category'] = l$category.toJson();
     final l$copyright = copyright;
     _resultData['copyright'] = toJson$Enum$CopyrightType(l$copyright);
     final l$attributionText = attributionText;
@@ -895,10 +937,11 @@ abstract class CopyWith$Query$Spots$spots$items<TRes> {
     String? address,
     String? thumbnailImageUrl,
     double? distanceMeters,
-    Enum$SpotCategory? category,
+    Query$Spots$spots$items$category? category,
     Enum$CopyrightType? copyright,
     String? attributionText,
   });
+  CopyWith$Query$Spots$spots$items$category<TRes> get category;
 }
 
 class _CopyWithImpl$Query$Spots$spots$items<TRes>
@@ -936,7 +979,7 @@ class _CopyWithImpl$Query$Spots$spots$items<TRes>
           : (distanceMeters as double),
       category: category == _undefined || category == null
           ? _instance.category
-          : (category as Enum$SpotCategory),
+          : (category as Query$Spots$spots$items$category),
       copyright: copyright == _undefined || copyright == null
           ? _instance.copyright
           : (copyright as Enum$CopyrightType),
@@ -945,6 +988,14 @@ class _CopyWithImpl$Query$Spots$spots$items<TRes>
           : (attributionText as String),
     ),
   );
+
+  CopyWith$Query$Spots$spots$items$category<TRes> get category {
+    final local$category = _instance.category;
+    return CopyWith$Query$Spots$spots$items$category(
+      local$category,
+      (e) => call(category: e),
+    );
+  }
 }
 
 class _CopyWithStubImpl$Query$Spots$spots$items<TRes>
@@ -959,10 +1010,138 @@ class _CopyWithStubImpl$Query$Spots$spots$items<TRes>
     String? address,
     String? thumbnailImageUrl,
     double? distanceMeters,
-    Enum$SpotCategory? category,
+    Query$Spots$spots$items$category? category,
     Enum$CopyrightType? copyright,
     String? attributionText,
   }) => _res;
+
+  CopyWith$Query$Spots$spots$items$category<TRes> get category =>
+      CopyWith$Query$Spots$spots$items$category.stub(_res);
+}
+
+class Query$Spots$spots$items$category {
+  Query$Spots$spots$items$category({
+    required this.code,
+    required this.label,
+    this.iconUrl,
+  });
+
+  factory Query$Spots$spots$items$category.fromJson(Map<String, dynamic> json) {
+    final l$code = json['code'];
+    final l$label = json['label'];
+    final l$iconUrl = json['iconUrl'];
+    return Query$Spots$spots$items$category(
+      code: (l$code as String),
+      label: (l$label as String),
+      iconUrl: (l$iconUrl as String?),
+    );
+  }
+
+  final String code;
+
+  final String label;
+
+  final String? iconUrl;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$label = label;
+    _resultData['label'] = l$label;
+    final l$iconUrl = iconUrl;
+    _resultData['iconUrl'] = l$iconUrl;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$code = code;
+    final l$label = label;
+    final l$iconUrl = iconUrl;
+    return Object.hashAll([l$code, l$label, l$iconUrl]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$Spots$spots$items$category ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$label = label;
+    final lOther$label = other.label;
+    if (l$label != lOther$label) {
+      return false;
+    }
+    final l$iconUrl = iconUrl;
+    final lOther$iconUrl = other.iconUrl;
+    if (l$iconUrl != lOther$iconUrl) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$Spots$spots$items$category
+    on Query$Spots$spots$items$category {
+  CopyWith$Query$Spots$spots$items$category<Query$Spots$spots$items$category>
+  get copyWith => CopyWith$Query$Spots$spots$items$category(this, (i) => i);
+}
+
+abstract class CopyWith$Query$Spots$spots$items$category<TRes> {
+  factory CopyWith$Query$Spots$spots$items$category(
+    Query$Spots$spots$items$category instance,
+    TRes Function(Query$Spots$spots$items$category) then,
+  ) = _CopyWithImpl$Query$Spots$spots$items$category;
+
+  factory CopyWith$Query$Spots$spots$items$category.stub(TRes res) =
+      _CopyWithStubImpl$Query$Spots$spots$items$category;
+
+  TRes call({String? code, String? label, String? iconUrl});
+}
+
+class _CopyWithImpl$Query$Spots$spots$items$category<TRes>
+    implements CopyWith$Query$Spots$spots$items$category<TRes> {
+  _CopyWithImpl$Query$Spots$spots$items$category(this._instance, this._then);
+
+  final Query$Spots$spots$items$category _instance;
+
+  final TRes Function(Query$Spots$spots$items$category) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? code = _undefined,
+    Object? label = _undefined,
+    Object? iconUrl = _undefined,
+  }) => _then(
+    Query$Spots$spots$items$category(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      label: label == _undefined || label == null
+          ? _instance.label
+          : (label as String),
+      iconUrl: iconUrl == _undefined ? _instance.iconUrl : (iconUrl as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$Spots$spots$items$category<TRes>
+    implements CopyWith$Query$Spots$spots$items$category<TRes> {
+  _CopyWithStubImpl$Query$Spots$spots$items$category(this._res);
+
+  TRes _res;
+
+  call({String? code, String? label, String? iconUrl}) => _res;
 }
 
 class Query$AvailableSpotCategories {
@@ -972,18 +1151,24 @@ class Query$AvailableSpotCategories {
     final l$availableSpotCategories = json['availableSpotCategories'];
     return Query$AvailableSpotCategories(
       availableSpotCategories: (l$availableSpotCategories as List<dynamic>)
-          .map((e) => fromJson$Enum$SpotCategory((e as String)))
+          .map(
+            (e) =>
+                Query$AvailableSpotCategories$availableSpotCategories.fromJson(
+                  (e as Map<String, dynamic>),
+                ),
+          )
           .toList(),
     );
   }
 
-  final List<Enum$SpotCategory> availableSpotCategories;
+  final List<Query$AvailableSpotCategories$availableSpotCategories>
+  availableSpotCategories;
 
   Map<String, dynamic> toJson() {
     final _resultData = <String, dynamic>{};
     final l$availableSpotCategories = availableSpotCategories;
     _resultData['availableSpotCategories'] = l$availableSpotCategories
-        .map((e) => toJson$Enum$SpotCategory(e))
+        .map((e) => e.toJson())
         .toList();
     return _resultData;
   }
@@ -1039,7 +1224,20 @@ abstract class CopyWith$Query$AvailableSpotCategories<TRes> {
   factory CopyWith$Query$AvailableSpotCategories.stub(TRes res) =
       _CopyWithStubImpl$Query$AvailableSpotCategories;
 
-  TRes call({List<Enum$SpotCategory>? availableSpotCategories});
+  TRes call({
+    List<Query$AvailableSpotCategories$availableSpotCategories>?
+    availableSpotCategories,
+  });
+  TRes availableSpotCategories(
+    Iterable<Query$AvailableSpotCategories$availableSpotCategories> Function(
+      Iterable<
+        CopyWith$Query$AvailableSpotCategories$availableSpotCategories<
+          Query$AvailableSpotCategories$availableSpotCategories
+        >
+      >,
+    )
+    _fn,
+  );
 }
 
 class _CopyWithImpl$Query$AvailableSpotCategories<TRes>
@@ -1058,8 +1256,29 @@ class _CopyWithImpl$Query$AvailableSpotCategories<TRes>
           availableSpotCategories == _undefined ||
               availableSpotCategories == null
           ? _instance.availableSpotCategories
-          : (availableSpotCategories as List<Enum$SpotCategory>),
+          : (availableSpotCategories
+                as List<Query$AvailableSpotCategories$availableSpotCategories>),
     ),
+  );
+
+  TRes availableSpotCategories(
+    Iterable<Query$AvailableSpotCategories$availableSpotCategories> Function(
+      Iterable<
+        CopyWith$Query$AvailableSpotCategories$availableSpotCategories<
+          Query$AvailableSpotCategories$availableSpotCategories
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    availableSpotCategories: _fn(
+      _instance.availableSpotCategories.map(
+        (e) => CopyWith$Query$AvailableSpotCategories$availableSpotCategories(
+          e,
+          (i) => i,
+        ),
+      ),
+    ).toList(),
   );
 }
 
@@ -1069,7 +1288,12 @@ class _CopyWithStubImpl$Query$AvailableSpotCategories<TRes>
 
   TRes _res;
 
-  call({List<Enum$SpotCategory>? availableSpotCategories}) => _res;
+  call({
+    List<Query$AvailableSpotCategories$availableSpotCategories>?
+    availableSpotCategories,
+  }) => _res;
+
+  availableSpotCategories(_fn) => _res;
 }
 
 const documentNodeQueryAvailableSpotCategories = DocumentNode(
@@ -1086,7 +1310,31 @@ const documentNodeQueryAvailableSpotCategories = DocumentNode(
             alias: null,
             arguments: [],
             directives: [],
-            selectionSet: null,
+            selectionSet: SelectionSetNode(
+              selections: [
+                FieldNode(
+                  name: NameNode(value: 'code'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'label'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'iconUrl'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -1094,11 +1342,155 @@ const documentNodeQueryAvailableSpotCategories = DocumentNode(
   ],
 );
 
+class Query$AvailableSpotCategories$availableSpotCategories {
+  Query$AvailableSpotCategories$availableSpotCategories({
+    required this.code,
+    required this.label,
+    this.iconUrl,
+  });
+
+  factory Query$AvailableSpotCategories$availableSpotCategories.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$code = json['code'];
+    final l$label = json['label'];
+    final l$iconUrl = json['iconUrl'];
+    return Query$AvailableSpotCategories$availableSpotCategories(
+      code: (l$code as String),
+      label: (l$label as String),
+      iconUrl: (l$iconUrl as String?),
+    );
+  }
+
+  final String code;
+
+  final String label;
+
+  final String? iconUrl;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$label = label;
+    _resultData['label'] = l$label;
+    final l$iconUrl = iconUrl;
+    _resultData['iconUrl'] = l$iconUrl;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$code = code;
+    final l$label = label;
+    final l$iconUrl = iconUrl;
+    return Object.hashAll([l$code, l$label, l$iconUrl]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$AvailableSpotCategories$availableSpotCategories ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$label = label;
+    final lOther$label = other.label;
+    if (l$label != lOther$label) {
+      return false;
+    }
+    final l$iconUrl = iconUrl;
+    final lOther$iconUrl = other.iconUrl;
+    if (l$iconUrl != lOther$iconUrl) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$AvailableSpotCategories$availableSpotCategories
+    on Query$AvailableSpotCategories$availableSpotCategories {
+  CopyWith$Query$AvailableSpotCategories$availableSpotCategories<
+    Query$AvailableSpotCategories$availableSpotCategories
+  >
+  get copyWith =>
+      CopyWith$Query$AvailableSpotCategories$availableSpotCategories(
+        this,
+        (i) => i,
+      );
+}
+
+abstract class CopyWith$Query$AvailableSpotCategories$availableSpotCategories<
+  TRes
+> {
+  factory CopyWith$Query$AvailableSpotCategories$availableSpotCategories(
+    Query$AvailableSpotCategories$availableSpotCategories instance,
+    TRes Function(Query$AvailableSpotCategories$availableSpotCategories) then,
+  ) = _CopyWithImpl$Query$AvailableSpotCategories$availableSpotCategories;
+
+  factory CopyWith$Query$AvailableSpotCategories$availableSpotCategories.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Query$AvailableSpotCategories$availableSpotCategories;
+
+  TRes call({String? code, String? label, String? iconUrl});
+}
+
+class _CopyWithImpl$Query$AvailableSpotCategories$availableSpotCategories<TRes>
+    implements
+        CopyWith$Query$AvailableSpotCategories$availableSpotCategories<TRes> {
+  _CopyWithImpl$Query$AvailableSpotCategories$availableSpotCategories(
+    this._instance,
+    this._then,
+  );
+
+  final Query$AvailableSpotCategories$availableSpotCategories _instance;
+
+  final TRes Function(Query$AvailableSpotCategories$availableSpotCategories)
+  _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? code = _undefined,
+    Object? label = _undefined,
+    Object? iconUrl = _undefined,
+  }) => _then(
+    Query$AvailableSpotCategories$availableSpotCategories(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      label: label == _undefined || label == null
+          ? _instance.label
+          : (label as String),
+      iconUrl: iconUrl == _undefined ? _instance.iconUrl : (iconUrl as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$AvailableSpotCategories$availableSpotCategories<
+  TRes
+>
+    implements
+        CopyWith$Query$AvailableSpotCategories$availableSpotCategories<TRes> {
+  _CopyWithStubImpl$Query$AvailableSpotCategories$availableSpotCategories(
+    this._res,
+  );
+
+  TRes _res;
+
+  call({String? code, String? label, String? iconUrl}) => _res;
+}
+
 class Variables$Query$SpotDetail {
-  factory Variables$Query$SpotDetail({
-    required String id,
-    required Enum$SpotCategory category,
-  }) => Variables$Query$SpotDetail._({r'id': id, r'category': category});
+  factory Variables$Query$SpotDetail({required String id}) =>
+      Variables$Query$SpotDetail._({r'id': id});
 
   Variables$Query$SpotDetail._(this._$data);
 
@@ -1106,10 +1498,6 @@ class Variables$Query$SpotDetail {
     final result$data = <String, dynamic>{};
     final l$id = data['id'];
     result$data['id'] = (l$id as String);
-    final l$category = data['category'];
-    result$data['category'] = fromJson$Enum$SpotCategory(
-      (l$category as String),
-    );
     return Variables$Query$SpotDetail._(result$data);
   }
 
@@ -1117,14 +1505,10 @@ class Variables$Query$SpotDetail {
 
   String get id => (_$data['id'] as String);
 
-  Enum$SpotCategory get category => (_$data['category'] as Enum$SpotCategory);
-
   Map<String, dynamic> toJson() {
     final result$data = <String, dynamic>{};
     final l$id = id;
     result$data['id'] = l$id;
-    final l$category = category;
-    result$data['category'] = toJson$Enum$SpotCategory(l$category);
     return result$data;
   }
 
@@ -1145,19 +1529,13 @@ class Variables$Query$SpotDetail {
     if (l$id != lOther$id) {
       return false;
     }
-    final l$category = category;
-    final lOther$category = other.category;
-    if (l$category != lOther$category) {
-      return false;
-    }
     return true;
   }
 
   @override
   int get hashCode {
     final l$id = id;
-    final l$category = category;
-    return Object.hashAll([l$id, l$category]);
+    return Object.hashAll([l$id]);
   }
 }
 
@@ -1170,7 +1548,7 @@ abstract class CopyWith$Variables$Query$SpotDetail<TRes> {
   factory CopyWith$Variables$Query$SpotDetail.stub(TRes res) =
       _CopyWithStubImpl$Variables$Query$SpotDetail;
 
-  TRes call({String? id, Enum$SpotCategory? category});
+  TRes call({String? id});
 }
 
 class _CopyWithImpl$Variables$Query$SpotDetail<TRes>
@@ -1183,12 +1561,10 @@ class _CopyWithImpl$Variables$Query$SpotDetail<TRes>
 
   static const _undefined = <dynamic, dynamic>{};
 
-  TRes call({Object? id = _undefined, Object? category = _undefined}) => _then(
+  TRes call({Object? id = _undefined}) => _then(
     Variables$Query$SpotDetail._({
       ..._instance._$data,
       if (id != _undefined && id != null) 'id': (id as String),
-      if (category != _undefined && category != null)
-        'category': (category as Enum$SpotCategory),
     }),
   );
 }
@@ -1199,7 +1575,7 @@ class _CopyWithStubImpl$Variables$Query$SpotDetail<TRes>
 
   TRes _res;
 
-  call({String? id, Enum$SpotCategory? category}) => _res;
+  call({String? id}) => _res;
 }
 
 class Query$SpotDetail {
@@ -1315,15 +1691,6 @@ const documentNodeQuerySpotDetail = DocumentNode(
           defaultValue: DefaultValueNode(value: null),
           directives: [],
         ),
-        VariableDefinitionNode(
-          variable: VariableNode(name: NameNode(value: 'category')),
-          type: NamedTypeNode(
-            name: NameNode(value: 'SpotCategory'),
-            isNonNull: true,
-          ),
-          defaultValue: DefaultValueNode(value: null),
-          directives: [],
-        ),
       ],
       directives: [],
       selectionSet: SelectionSetNode(
@@ -1359,7 +1726,31 @@ const documentNodeQuerySpotDetail = DocumentNode(
                   alias: null,
                   arguments: [],
                   directives: [],
-                  selectionSet: null,
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'code'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'label'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'iconUrl'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
                 ),
                 FieldNode(
                   name: NameNode(value: 'thumbnailImageUrl'),
@@ -1465,12 +1856,7 @@ const documentNodeQuerySpotDetail = DocumentNode(
                 FieldNode(
                   name: NameNode(value: 'intro'),
                   alias: null,
-                  arguments: [
-                    ArgumentNode(
-                      name: NameNode(value: 'category'),
-                      value: VariableNode(name: NameNode(value: 'category')),
-                    ),
-                  ],
+                  arguments: [],
                   directives: [],
                   selectionSet: SelectionSetNode(
                     selections: [
@@ -1529,12 +1915,7 @@ const documentNodeQuerySpotDetail = DocumentNode(
                 FieldNode(
                   name: NameNode(value: 'infoItems'),
                   alias: null,
-                  arguments: [
-                    ArgumentNode(
-                      name: NameNode(value: 'category'),
-                      value: VariableNode(name: NameNode(value: 'category')),
-                    ),
-                  ],
+                  arguments: [],
                   directives: [],
                   selectionSet: SelectionSetNode(
                     selections: [
@@ -1600,7 +1981,9 @@ class Query$SpotDetail$spotDetail {
     return Query$SpotDetail$spotDetail(
       id: (l$id as String),
       title: (l$title as String),
-      category: fromJson$Enum$SpotCategory((l$category as String)),
+      category: Query$SpotDetail$spotDetail$category.fromJson(
+        (l$category as Map<String, dynamic>),
+      ),
       thumbnailImageUrl: (l$thumbnailImageUrl as String),
       overview: (l$overview as String?),
       address: (l$address as String?),
@@ -1635,7 +2018,7 @@ class Query$SpotDetail$spotDetail {
 
   final String title;
 
-  final Enum$SpotCategory category;
+  final Query$SpotDetail$spotDetail$category category;
 
   final String thumbnailImageUrl;
 
@@ -1666,7 +2049,7 @@ class Query$SpotDetail$spotDetail {
     final l$title = title;
     _resultData['title'] = l$title;
     final l$category = category;
-    _resultData['category'] = toJson$Enum$SpotCategory(l$category);
+    _resultData['category'] = l$category.toJson();
     final l$thumbnailImageUrl = thumbnailImageUrl;
     _resultData['thumbnailImageUrl'] = l$thumbnailImageUrl;
     final l$overview = overview;
@@ -1849,7 +2232,7 @@ abstract class CopyWith$Query$SpotDetail$spotDetail<TRes> {
   TRes call({
     String? id,
     String? title,
-    Enum$SpotCategory? category,
+    Query$SpotDetail$spotDetail$category? category,
     String? thumbnailImageUrl,
     String? overview,
     String? address,
@@ -1862,6 +2245,7 @@ abstract class CopyWith$Query$SpotDetail$spotDetail<TRes> {
     Query$SpotDetail$spotDetail$intro? intro,
     List<Query$SpotDetail$spotDetail$infoItems>? infoItems,
   });
+  CopyWith$Query$SpotDetail$spotDetail$category<TRes> get category;
   TRes gallery(
     Iterable<Query$SpotDetail$spotDetail$gallery>? Function(
       Iterable<
@@ -1918,7 +2302,7 @@ class _CopyWithImpl$Query$SpotDetail$spotDetail<TRes>
           : (title as String),
       category: category == _undefined || category == null
           ? _instance.category
-          : (category as Enum$SpotCategory),
+          : (category as Query$SpotDetail$spotDetail$category),
       thumbnailImageUrl:
           thumbnailImageUrl == _undefined || thumbnailImageUrl == null
           ? _instance.thumbnailImageUrl
@@ -1951,6 +2335,14 @@ class _CopyWithImpl$Query$SpotDetail$spotDetail<TRes>
           : (infoItems as List<Query$SpotDetail$spotDetail$infoItems>?),
     ),
   );
+
+  CopyWith$Query$SpotDetail$spotDetail$category<TRes> get category {
+    final local$category = _instance.category;
+    return CopyWith$Query$SpotDetail$spotDetail$category(
+      local$category,
+      (e) => call(category: e),
+    );
+  }
 
   TRes gallery(
     Iterable<Query$SpotDetail$spotDetail$gallery>? Function(
@@ -2006,7 +2398,7 @@ class _CopyWithStubImpl$Query$SpotDetail$spotDetail<TRes>
   call({
     String? id,
     String? title,
-    Enum$SpotCategory? category,
+    Query$SpotDetail$spotDetail$category? category,
     String? thumbnailImageUrl,
     String? overview,
     String? address,
@@ -2020,12 +2412,147 @@ class _CopyWithStubImpl$Query$SpotDetail$spotDetail<TRes>
     List<Query$SpotDetail$spotDetail$infoItems>? infoItems,
   }) => _res;
 
+  CopyWith$Query$SpotDetail$spotDetail$category<TRes> get category =>
+      CopyWith$Query$SpotDetail$spotDetail$category.stub(_res);
+
   gallery(_fn) => _res;
 
   CopyWith$Query$SpotDetail$spotDetail$intro<TRes> get intro =>
       CopyWith$Query$SpotDetail$spotDetail$intro.stub(_res);
 
   infoItems(_fn) => _res;
+}
+
+class Query$SpotDetail$spotDetail$category {
+  Query$SpotDetail$spotDetail$category({
+    required this.code,
+    required this.label,
+    this.iconUrl,
+  });
+
+  factory Query$SpotDetail$spotDetail$category.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$code = json['code'];
+    final l$label = json['label'];
+    final l$iconUrl = json['iconUrl'];
+    return Query$SpotDetail$spotDetail$category(
+      code: (l$code as String),
+      label: (l$label as String),
+      iconUrl: (l$iconUrl as String?),
+    );
+  }
+
+  final String code;
+
+  final String label;
+
+  final String? iconUrl;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$label = label;
+    _resultData['label'] = l$label;
+    final l$iconUrl = iconUrl;
+    _resultData['iconUrl'] = l$iconUrl;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$code = code;
+    final l$label = label;
+    final l$iconUrl = iconUrl;
+    return Object.hashAll([l$code, l$label, l$iconUrl]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$SpotDetail$spotDetail$category ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$label = label;
+    final lOther$label = other.label;
+    if (l$label != lOther$label) {
+      return false;
+    }
+    final l$iconUrl = iconUrl;
+    final lOther$iconUrl = other.iconUrl;
+    if (l$iconUrl != lOther$iconUrl) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$SpotDetail$spotDetail$category
+    on Query$SpotDetail$spotDetail$category {
+  CopyWith$Query$SpotDetail$spotDetail$category<
+    Query$SpotDetail$spotDetail$category
+  >
+  get copyWith => CopyWith$Query$SpotDetail$spotDetail$category(this, (i) => i);
+}
+
+abstract class CopyWith$Query$SpotDetail$spotDetail$category<TRes> {
+  factory CopyWith$Query$SpotDetail$spotDetail$category(
+    Query$SpotDetail$spotDetail$category instance,
+    TRes Function(Query$SpotDetail$spotDetail$category) then,
+  ) = _CopyWithImpl$Query$SpotDetail$spotDetail$category;
+
+  factory CopyWith$Query$SpotDetail$spotDetail$category.stub(TRes res) =
+      _CopyWithStubImpl$Query$SpotDetail$spotDetail$category;
+
+  TRes call({String? code, String? label, String? iconUrl});
+}
+
+class _CopyWithImpl$Query$SpotDetail$spotDetail$category<TRes>
+    implements CopyWith$Query$SpotDetail$spotDetail$category<TRes> {
+  _CopyWithImpl$Query$SpotDetail$spotDetail$category(
+    this._instance,
+    this._then,
+  );
+
+  final Query$SpotDetail$spotDetail$category _instance;
+
+  final TRes Function(Query$SpotDetail$spotDetail$category) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? code = _undefined,
+    Object? label = _undefined,
+    Object? iconUrl = _undefined,
+  }) => _then(
+    Query$SpotDetail$spotDetail$category(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      label: label == _undefined || label == null
+          ? _instance.label
+          : (label as String),
+      iconUrl: iconUrl == _undefined ? _instance.iconUrl : (iconUrl as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$SpotDetail$spotDetail$category<TRes>
+    implements CopyWith$Query$SpotDetail$spotDetail$category<TRes> {
+  _CopyWithStubImpl$Query$SpotDetail$spotDetail$category(this._res);
+
+  TRes _res;
+
+  call({String? code, String? label, String? iconUrl}) => _res;
 }
 
 class Query$SpotDetail$spotDetail$gallery {
@@ -2543,11 +3070,11 @@ class _CopyWithStubImpl$Query$SpotDetail$spotDetail$infoItems<TRes>
 
 class Variables$Query$LikedSpots {
   factory Variables$Query$LikedSpots({
-    Enum$SpotCategory? category,
+    List<String>? categories,
     int? first,
     String? after,
   }) => Variables$Query$LikedSpots._({
-    if (category != null) r'category': category,
+    if (categories != null) r'categories': categories,
     if (first != null) r'first': first,
     if (after != null) r'after': after,
   });
@@ -2556,11 +3083,11 @@ class Variables$Query$LikedSpots {
 
   factory Variables$Query$LikedSpots.fromJson(Map<String, dynamic> data) {
     final result$data = <String, dynamic>{};
-    if (data.containsKey('category')) {
-      final l$category = data['category'];
-      result$data['category'] = l$category == null
-          ? null
-          : fromJson$Enum$SpotCategory((l$category as String));
+    if (data.containsKey('categories')) {
+      final l$categories = data['categories'];
+      result$data['categories'] = (l$categories as List<dynamic>?)
+          ?.map((e) => (e as String))
+          .toList();
     }
     if (data.containsKey('first')) {
       final l$first = data['first'];
@@ -2575,7 +3102,7 @@ class Variables$Query$LikedSpots {
 
   Map<String, dynamic> _$data;
 
-  Enum$SpotCategory? get category => (_$data['category'] as Enum$SpotCategory?);
+  List<String>? get categories => (_$data['categories'] as List<String>?);
 
   int? get first => (_$data['first'] as int?);
 
@@ -2583,11 +3110,9 @@ class Variables$Query$LikedSpots {
 
   Map<String, dynamic> toJson() {
     final result$data = <String, dynamic>{};
-    if (_$data.containsKey('category')) {
-      final l$category = category;
-      result$data['category'] = l$category == null
-          ? null
-          : toJson$Enum$SpotCategory(l$category);
+    if (_$data.containsKey('categories')) {
+      final l$categories = categories;
+      result$data['categories'] = l$categories?.map((e) => e).toList();
     }
     if (_$data.containsKey('first')) {
       final l$first = first;
@@ -2612,13 +3137,24 @@ class Variables$Query$LikedSpots {
         runtimeType != other.runtimeType) {
       return false;
     }
-    final l$category = category;
-    final lOther$category = other.category;
-    if (_$data.containsKey('category') !=
-        other._$data.containsKey('category')) {
+    final l$categories = categories;
+    final lOther$categories = other.categories;
+    if (_$data.containsKey('categories') !=
+        other._$data.containsKey('categories')) {
       return false;
     }
-    if (l$category != lOther$category) {
+    if (l$categories != null && lOther$categories != null) {
+      if (l$categories.length != lOther$categories.length) {
+        return false;
+      }
+      for (int i = 0; i < l$categories.length; i++) {
+        final l$categories$entry = l$categories[i];
+        final lOther$categories$entry = lOther$categories[i];
+        if (l$categories$entry != lOther$categories$entry) {
+          return false;
+        }
+      }
+    } else if (l$categories != lOther$categories) {
       return false;
     }
     final l$first = first;
@@ -2642,11 +3178,15 @@ class Variables$Query$LikedSpots {
 
   @override
   int get hashCode {
-    final l$category = category;
+    final l$categories = categories;
     final l$first = first;
     final l$after = after;
     return Object.hashAll([
-      _$data.containsKey('category') ? l$category : const {},
+      _$data.containsKey('categories')
+          ? l$categories == null
+                ? null
+                : Object.hashAll(l$categories.map((v) => v))
+          : const {},
       _$data.containsKey('first') ? l$first : const {},
       _$data.containsKey('after') ? l$after : const {},
     ]);
@@ -2662,7 +3202,7 @@ abstract class CopyWith$Variables$Query$LikedSpots<TRes> {
   factory CopyWith$Variables$Query$LikedSpots.stub(TRes res) =
       _CopyWithStubImpl$Variables$Query$LikedSpots;
 
-  TRes call({Enum$SpotCategory? category, int? first, String? after});
+  TRes call({List<String>? categories, int? first, String? after});
 }
 
 class _CopyWithImpl$Variables$Query$LikedSpots<TRes>
@@ -2676,13 +3216,13 @@ class _CopyWithImpl$Variables$Query$LikedSpots<TRes>
   static const _undefined = <dynamic, dynamic>{};
 
   TRes call({
-    Object? category = _undefined,
+    Object? categories = _undefined,
     Object? first = _undefined,
     Object? after = _undefined,
   }) => _then(
     Variables$Query$LikedSpots._({
       ..._instance._$data,
-      if (category != _undefined) 'category': (category as Enum$SpotCategory?),
+      if (categories != _undefined) 'categories': (categories as List<String>?),
       if (first != _undefined) 'first': (first as int?),
       if (after != _undefined) 'after': (after as String?),
     }),
@@ -2695,7 +3235,7 @@ class _CopyWithStubImpl$Variables$Query$LikedSpots<TRes>
 
   TRes _res;
 
-  call({Enum$SpotCategory? category, int? first, String? after}) => _res;
+  call({List<String>? categories, int? first, String? after}) => _res;
 }
 
 class Query$LikedSpots {
@@ -2806,9 +3346,12 @@ const documentNodeQueryLikedSpots = DocumentNode(
       name: NameNode(value: 'LikedSpots'),
       variableDefinitions: [
         VariableDefinitionNode(
-          variable: VariableNode(name: NameNode(value: 'category')),
-          type: NamedTypeNode(
-            name: NameNode(value: 'SpotCategory'),
+          variable: VariableNode(name: NameNode(value: 'categories')),
+          type: ListTypeNode(
+            type: NamedTypeNode(
+              name: NameNode(value: 'String'),
+              isNonNull: true,
+            ),
             isNonNull: false,
           ),
           defaultValue: DefaultValueNode(value: null),
@@ -2838,8 +3381,8 @@ const documentNodeQueryLikedSpots = DocumentNode(
             alias: null,
             arguments: [
               ArgumentNode(
-                name: NameNode(value: 'category'),
-                value: VariableNode(name: NameNode(value: 'category')),
+                name: NameNode(value: 'categories'),
+                value: VariableNode(name: NameNode(value: 'categories')),
               ),
               ArgumentNode(
                 name: NameNode(value: 'first'),
@@ -2907,7 +3450,31 @@ const documentNodeQueryLikedSpots = DocumentNode(
                               alias: null,
                               arguments: [],
                               directives: [],
-                              selectionSet: null,
+                              selectionSet: SelectionSetNode(
+                                selections: [
+                                  FieldNode(
+                                    name: NameNode(value: 'code'),
+                                    alias: null,
+                                    arguments: [],
+                                    directives: [],
+                                    selectionSet: null,
+                                  ),
+                                  FieldNode(
+                                    name: NameNode(value: 'label'),
+                                    alias: null,
+                                    arguments: [],
+                                    directives: [],
+                                    selectionSet: null,
+                                  ),
+                                  FieldNode(
+                                    name: NameNode(value: 'iconUrl'),
+                                    alias: null,
+                                    arguments: [],
+                                    directives: [],
+                                    selectionSet: null,
+                                  ),
+                                ],
+                              ),
                             ),
                             FieldNode(
                               name: NameNode(value: 'copyright'),
@@ -3275,7 +3842,9 @@ class Query$LikedSpots$likedSpots$edges$node {
       title: (l$title as String),
       thumbnailImageUrl: (l$thumbnailImageUrl as String),
       address: (l$address as String?),
-      category: fromJson$Enum$SpotCategory((l$category as String)),
+      category: Query$LikedSpots$likedSpots$edges$node$category.fromJson(
+        (l$category as Map<String, dynamic>),
+      ),
       copyright: fromJson$Enum$CopyrightType((l$copyright as String)),
       attributionText: (l$attributionText as String),
     );
@@ -3289,7 +3858,7 @@ class Query$LikedSpots$likedSpots$edges$node {
 
   final String? address;
 
-  final Enum$SpotCategory category;
+  final Query$LikedSpots$likedSpots$edges$node$category category;
 
   final Enum$CopyrightType copyright;
 
@@ -3306,7 +3875,7 @@ class Query$LikedSpots$likedSpots$edges$node {
     final l$address = address;
     _resultData['address'] = l$address;
     final l$category = category;
-    _resultData['category'] = toJson$Enum$SpotCategory(l$category);
+    _resultData['category'] = l$category.toJson();
     final l$copyright = copyright;
     _resultData['copyright'] = toJson$Enum$CopyrightType(l$copyright);
     final l$attributionText = attributionText;
@@ -3405,10 +3974,11 @@ abstract class CopyWith$Query$LikedSpots$likedSpots$edges$node<TRes> {
     String? title,
     String? thumbnailImageUrl,
     String? address,
-    Enum$SpotCategory? category,
+    Query$LikedSpots$likedSpots$edges$node$category? category,
     Enum$CopyrightType? copyright,
     String? attributionText,
   });
+  CopyWith$Query$LikedSpots$likedSpots$edges$node$category<TRes> get category;
 }
 
 class _CopyWithImpl$Query$LikedSpots$likedSpots$edges$node<TRes>
@@ -3445,7 +4015,7 @@ class _CopyWithImpl$Query$LikedSpots$likedSpots$edges$node<TRes>
       address: address == _undefined ? _instance.address : (address as String?),
       category: category == _undefined || category == null
           ? _instance.category
-          : (category as Enum$SpotCategory),
+          : (category as Query$LikedSpots$likedSpots$edges$node$category),
       copyright: copyright == _undefined || copyright == null
           ? _instance.copyright
           : (copyright as Enum$CopyrightType),
@@ -3454,6 +4024,14 @@ class _CopyWithImpl$Query$LikedSpots$likedSpots$edges$node<TRes>
           : (attributionText as String),
     ),
   );
+
+  CopyWith$Query$LikedSpots$likedSpots$edges$node$category<TRes> get category {
+    final local$category = _instance.category;
+    return CopyWith$Query$LikedSpots$likedSpots$edges$node$category(
+      local$category,
+      (e) => call(category: e),
+    );
+  }
 }
 
 class _CopyWithStubImpl$Query$LikedSpots$likedSpots$edges$node<TRes>
@@ -3467,10 +4045,147 @@ class _CopyWithStubImpl$Query$LikedSpots$likedSpots$edges$node<TRes>
     String? title,
     String? thumbnailImageUrl,
     String? address,
-    Enum$SpotCategory? category,
+    Query$LikedSpots$likedSpots$edges$node$category? category,
     Enum$CopyrightType? copyright,
     String? attributionText,
   }) => _res;
+
+  CopyWith$Query$LikedSpots$likedSpots$edges$node$category<TRes> get category =>
+      CopyWith$Query$LikedSpots$likedSpots$edges$node$category.stub(_res);
+}
+
+class Query$LikedSpots$likedSpots$edges$node$category {
+  Query$LikedSpots$likedSpots$edges$node$category({
+    required this.code,
+    required this.label,
+    this.iconUrl,
+  });
+
+  factory Query$LikedSpots$likedSpots$edges$node$category.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$code = json['code'];
+    final l$label = json['label'];
+    final l$iconUrl = json['iconUrl'];
+    return Query$LikedSpots$likedSpots$edges$node$category(
+      code: (l$code as String),
+      label: (l$label as String),
+      iconUrl: (l$iconUrl as String?),
+    );
+  }
+
+  final String code;
+
+  final String label;
+
+  final String? iconUrl;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$label = label;
+    _resultData['label'] = l$label;
+    final l$iconUrl = iconUrl;
+    _resultData['iconUrl'] = l$iconUrl;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$code = code;
+    final l$label = label;
+    final l$iconUrl = iconUrl;
+    return Object.hashAll([l$code, l$label, l$iconUrl]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$LikedSpots$likedSpots$edges$node$category ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$label = label;
+    final lOther$label = other.label;
+    if (l$label != lOther$label) {
+      return false;
+    }
+    final l$iconUrl = iconUrl;
+    final lOther$iconUrl = other.iconUrl;
+    if (l$iconUrl != lOther$iconUrl) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$LikedSpots$likedSpots$edges$node$category
+    on Query$LikedSpots$likedSpots$edges$node$category {
+  CopyWith$Query$LikedSpots$likedSpots$edges$node$category<
+    Query$LikedSpots$likedSpots$edges$node$category
+  >
+  get copyWith =>
+      CopyWith$Query$LikedSpots$likedSpots$edges$node$category(this, (i) => i);
+}
+
+abstract class CopyWith$Query$LikedSpots$likedSpots$edges$node$category<TRes> {
+  factory CopyWith$Query$LikedSpots$likedSpots$edges$node$category(
+    Query$LikedSpots$likedSpots$edges$node$category instance,
+    TRes Function(Query$LikedSpots$likedSpots$edges$node$category) then,
+  ) = _CopyWithImpl$Query$LikedSpots$likedSpots$edges$node$category;
+
+  factory CopyWith$Query$LikedSpots$likedSpots$edges$node$category.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Query$LikedSpots$likedSpots$edges$node$category;
+
+  TRes call({String? code, String? label, String? iconUrl});
+}
+
+class _CopyWithImpl$Query$LikedSpots$likedSpots$edges$node$category<TRes>
+    implements CopyWith$Query$LikedSpots$likedSpots$edges$node$category<TRes> {
+  _CopyWithImpl$Query$LikedSpots$likedSpots$edges$node$category(
+    this._instance,
+    this._then,
+  );
+
+  final Query$LikedSpots$likedSpots$edges$node$category _instance;
+
+  final TRes Function(Query$LikedSpots$likedSpots$edges$node$category) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? code = _undefined,
+    Object? label = _undefined,
+    Object? iconUrl = _undefined,
+  }) => _then(
+    Query$LikedSpots$likedSpots$edges$node$category(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      label: label == _undefined || label == null
+          ? _instance.label
+          : (label as String),
+      iconUrl: iconUrl == _undefined ? _instance.iconUrl : (iconUrl as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$LikedSpots$likedSpots$edges$node$category<TRes>
+    implements CopyWith$Query$LikedSpots$likedSpots$edges$node$category<TRes> {
+  _CopyWithStubImpl$Query$LikedSpots$likedSpots$edges$node$category(this._res);
+
+  TRes _res;
+
+  call({String? code, String? label, String? iconUrl}) => _res;
 }
 
 class Query$LikedSpots$likedSpots$pageInfo {
@@ -4164,7 +4879,7 @@ class Variables$Query$SearchSpots {
     required double latitude,
     required double longitude,
     int? radiusMeters,
-    Enum$SpotCategory? category,
+    List<String>? categories,
     int? page,
     int? size,
   }) => Variables$Query$SearchSpots._({
@@ -4172,7 +4887,7 @@ class Variables$Query$SearchSpots {
     r'latitude': latitude,
     r'longitude': longitude,
     if (radiusMeters != null) r'radiusMeters': radiusMeters,
-    if (category != null) r'category': category,
+    if (categories != null) r'categories': categories,
     if (page != null) r'page': page,
     if (size != null) r'size': size,
   });
@@ -4191,11 +4906,11 @@ class Variables$Query$SearchSpots {
       final l$radiusMeters = data['radiusMeters'];
       result$data['radiusMeters'] = (l$radiusMeters as int?);
     }
-    if (data.containsKey('category')) {
-      final l$category = data['category'];
-      result$data['category'] = l$category == null
-          ? null
-          : fromJson$Enum$SpotCategory((l$category as String));
+    if (data.containsKey('categories')) {
+      final l$categories = data['categories'];
+      result$data['categories'] = (l$categories as List<dynamic>?)
+          ?.map((e) => (e as String))
+          .toList();
     }
     if (data.containsKey('page')) {
       final l$page = data['page'];
@@ -4218,7 +4933,7 @@ class Variables$Query$SearchSpots {
 
   int? get radiusMeters => (_$data['radiusMeters'] as int?);
 
-  Enum$SpotCategory? get category => (_$data['category'] as Enum$SpotCategory?);
+  List<String>? get categories => (_$data['categories'] as List<String>?);
 
   int? get page => (_$data['page'] as int?);
 
@@ -4236,11 +4951,9 @@ class Variables$Query$SearchSpots {
       final l$radiusMeters = radiusMeters;
       result$data['radiusMeters'] = l$radiusMeters;
     }
-    if (_$data.containsKey('category')) {
-      final l$category = category;
-      result$data['category'] = l$category == null
-          ? null
-          : toJson$Enum$SpotCategory(l$category);
+    if (_$data.containsKey('categories')) {
+      final l$categories = categories;
+      result$data['categories'] = l$categories?.map((e) => e).toList();
     }
     if (_$data.containsKey('page')) {
       final l$page = page;
@@ -4289,13 +5002,24 @@ class Variables$Query$SearchSpots {
     if (l$radiusMeters != lOther$radiusMeters) {
       return false;
     }
-    final l$category = category;
-    final lOther$category = other.category;
-    if (_$data.containsKey('category') !=
-        other._$data.containsKey('category')) {
+    final l$categories = categories;
+    final lOther$categories = other.categories;
+    if (_$data.containsKey('categories') !=
+        other._$data.containsKey('categories')) {
       return false;
     }
-    if (l$category != lOther$category) {
+    if (l$categories != null && lOther$categories != null) {
+      if (l$categories.length != lOther$categories.length) {
+        return false;
+      }
+      for (int i = 0; i < l$categories.length; i++) {
+        final l$categories$entry = l$categories[i];
+        final lOther$categories$entry = lOther$categories[i];
+        if (l$categories$entry != lOther$categories$entry) {
+          return false;
+        }
+      }
+    } else if (l$categories != lOther$categories) {
       return false;
     }
     final l$page = page;
@@ -4323,7 +5047,7 @@ class Variables$Query$SearchSpots {
     final l$latitude = latitude;
     final l$longitude = longitude;
     final l$radiusMeters = radiusMeters;
-    final l$category = category;
+    final l$categories = categories;
     final l$page = page;
     final l$size = size;
     return Object.hashAll([
@@ -4331,7 +5055,11 @@ class Variables$Query$SearchSpots {
       l$latitude,
       l$longitude,
       _$data.containsKey('radiusMeters') ? l$radiusMeters : const {},
-      _$data.containsKey('category') ? l$category : const {},
+      _$data.containsKey('categories')
+          ? l$categories == null
+                ? null
+                : Object.hashAll(l$categories.map((v) => v))
+          : const {},
       _$data.containsKey('page') ? l$page : const {},
       _$data.containsKey('size') ? l$size : const {},
     ]);
@@ -4352,7 +5080,7 @@ abstract class CopyWith$Variables$Query$SearchSpots<TRes> {
     double? latitude,
     double? longitude,
     int? radiusMeters,
-    Enum$SpotCategory? category,
+    List<String>? categories,
     int? page,
     int? size,
   });
@@ -4373,7 +5101,7 @@ class _CopyWithImpl$Variables$Query$SearchSpots<TRes>
     Object? latitude = _undefined,
     Object? longitude = _undefined,
     Object? radiusMeters = _undefined,
-    Object? category = _undefined,
+    Object? categories = _undefined,
     Object? page = _undefined,
     Object? size = _undefined,
   }) => _then(
@@ -4385,7 +5113,7 @@ class _CopyWithImpl$Variables$Query$SearchSpots<TRes>
       if (longitude != _undefined && longitude != null)
         'longitude': (longitude as double),
       if (radiusMeters != _undefined) 'radiusMeters': (radiusMeters as int?),
-      if (category != _undefined) 'category': (category as Enum$SpotCategory?),
+      if (categories != _undefined) 'categories': (categories as List<String>?),
       if (page != _undefined) 'page': (page as int?),
       if (size != _undefined) 'size': (size as int?),
     }),
@@ -4403,7 +5131,7 @@ class _CopyWithStubImpl$Variables$Query$SearchSpots<TRes>
     double? latitude,
     double? longitude,
     int? radiusMeters,
-    Enum$SpotCategory? category,
+    List<String>? categories,
     int? page,
     int? size,
   }) => _res;
@@ -4541,9 +5269,12 @@ const documentNodeQuerySearchSpots = DocumentNode(
           directives: [],
         ),
         VariableDefinitionNode(
-          variable: VariableNode(name: NameNode(value: 'category')),
-          type: NamedTypeNode(
-            name: NameNode(value: 'SpotCategory'),
+          variable: VariableNode(name: NameNode(value: 'categories')),
+          type: ListTypeNode(
+            type: NamedTypeNode(
+              name: NameNode(value: 'String'),
+              isNonNull: true,
+            ),
             isNonNull: false,
           ),
           defaultValue: DefaultValueNode(value: null),
@@ -4586,8 +5317,8 @@ const documentNodeQuerySearchSpots = DocumentNode(
                 value: VariableNode(name: NameNode(value: 'radiusMeters')),
               ),
               ArgumentNode(
-                name: NameNode(value: 'category'),
-                value: VariableNode(name: NameNode(value: 'category')),
+                name: NameNode(value: 'categories'),
+                value: VariableNode(name: NameNode(value: 'categories')),
               ),
               ArgumentNode(
                 name: NameNode(value: 'page'),
@@ -4686,7 +5417,31 @@ const documentNodeQuerySearchSpots = DocumentNode(
                               alias: null,
                               arguments: [],
                               directives: [],
-                              selectionSet: null,
+                              selectionSet: SelectionSetNode(
+                                selections: [
+                                  FieldNode(
+                                    name: NameNode(value: 'code'),
+                                    alias: null,
+                                    arguments: [],
+                                    directives: [],
+                                    selectionSet: null,
+                                  ),
+                                  FieldNode(
+                                    name: NameNode(value: 'label'),
+                                    alias: null,
+                                    arguments: [],
+                                    directives: [],
+                                    selectionSet: null,
+                                  ),
+                                  FieldNode(
+                                    name: NameNode(value: 'iconUrl'),
+                                    alias: null,
+                                    arguments: [],
+                                    directives: [],
+                                    selectionSet: null,
+                                  ),
+                                ],
+                              ),
                             ),
                             FieldNode(
                               name: NameNode(value: 'copyright'),
@@ -5300,7 +6055,10 @@ class Query$SearchSpots$searchSpots$connection$items {
       address: (l$address as String?),
       thumbnailImageUrl: (l$thumbnailImageUrl as String),
       distanceMeters: (l$distanceMeters as num).toDouble(),
-      category: fromJson$Enum$SpotCategory((l$category as String)),
+      category:
+          Query$SearchSpots$searchSpots$connection$items$category.fromJson(
+            (l$category as Map<String, dynamic>),
+          ),
       copyright: fromJson$Enum$CopyrightType((l$copyright as String)),
       attributionText: (l$attributionText as String),
       mapX: (l$mapX as num).toDouble(),
@@ -5318,7 +6076,7 @@ class Query$SearchSpots$searchSpots$connection$items {
 
   final double distanceMeters;
 
-  final Enum$SpotCategory category;
+  final Query$SearchSpots$searchSpots$connection$items$category category;
 
   final Enum$CopyrightType copyright;
 
@@ -5341,7 +6099,7 @@ class Query$SearchSpots$searchSpots$connection$items {
     final l$distanceMeters = distanceMeters;
     _resultData['distanceMeters'] = l$distanceMeters;
     final l$category = category;
-    _resultData['category'] = toJson$Enum$SpotCategory(l$category);
+    _resultData['category'] = l$category.toJson();
     final l$copyright = copyright;
     _resultData['copyright'] = toJson$Enum$CopyrightType(l$copyright);
     final l$attributionText = attributionText;
@@ -5467,12 +6225,14 @@ abstract class CopyWith$Query$SearchSpots$searchSpots$connection$items<TRes> {
     String? address,
     String? thumbnailImageUrl,
     double? distanceMeters,
-    Enum$SpotCategory? category,
+    Query$SearchSpots$searchSpots$connection$items$category? category,
     Enum$CopyrightType? copyright,
     String? attributionText,
     double? mapX,
     double? mapY,
   });
+  CopyWith$Query$SearchSpots$searchSpots$connection$items$category<TRes>
+  get category;
 }
 
 class _CopyWithImpl$Query$SearchSpots$searchSpots$connection$items<TRes>
@@ -5515,7 +6275,8 @@ class _CopyWithImpl$Query$SearchSpots$searchSpots$connection$items<TRes>
           : (distanceMeters as double),
       category: category == _undefined || category == null
           ? _instance.category
-          : (category as Enum$SpotCategory),
+          : (category
+                as Query$SearchSpots$searchSpots$connection$items$category),
       copyright: copyright == _undefined || copyright == null
           ? _instance.copyright
           : (copyright as Enum$CopyrightType),
@@ -5530,6 +6291,15 @@ class _CopyWithImpl$Query$SearchSpots$searchSpots$connection$items<TRes>
           : (mapY as double),
     ),
   );
+
+  CopyWith$Query$SearchSpots$searchSpots$connection$items$category<TRes>
+  get category {
+    final local$category = _instance.category;
+    return CopyWith$Query$SearchSpots$searchSpots$connection$items$category(
+      local$category,
+      (e) => call(category: e),
+    );
+  }
 }
 
 class _CopyWithStubImpl$Query$SearchSpots$searchSpots$connection$items<TRes>
@@ -5544,12 +6314,166 @@ class _CopyWithStubImpl$Query$SearchSpots$searchSpots$connection$items<TRes>
     String? address,
     String? thumbnailImageUrl,
     double? distanceMeters,
-    Enum$SpotCategory? category,
+    Query$SearchSpots$searchSpots$connection$items$category? category,
     Enum$CopyrightType? copyright,
     String? attributionText,
     double? mapX,
     double? mapY,
   }) => _res;
+
+  CopyWith$Query$SearchSpots$searchSpots$connection$items$category<TRes>
+  get category =>
+      CopyWith$Query$SearchSpots$searchSpots$connection$items$category.stub(
+        _res,
+      );
+}
+
+class Query$SearchSpots$searchSpots$connection$items$category {
+  Query$SearchSpots$searchSpots$connection$items$category({
+    required this.code,
+    required this.label,
+    this.iconUrl,
+  });
+
+  factory Query$SearchSpots$searchSpots$connection$items$category.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$code = json['code'];
+    final l$label = json['label'];
+    final l$iconUrl = json['iconUrl'];
+    return Query$SearchSpots$searchSpots$connection$items$category(
+      code: (l$code as String),
+      label: (l$label as String),
+      iconUrl: (l$iconUrl as String?),
+    );
+  }
+
+  final String code;
+
+  final String label;
+
+  final String? iconUrl;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$label = label;
+    _resultData['label'] = l$label;
+    final l$iconUrl = iconUrl;
+    _resultData['iconUrl'] = l$iconUrl;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$code = code;
+    final l$label = label;
+    final l$iconUrl = iconUrl;
+    return Object.hashAll([l$code, l$label, l$iconUrl]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$SearchSpots$searchSpots$connection$items$category ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$label = label;
+    final lOther$label = other.label;
+    if (l$label != lOther$label) {
+      return false;
+    }
+    final l$iconUrl = iconUrl;
+    final lOther$iconUrl = other.iconUrl;
+    if (l$iconUrl != lOther$iconUrl) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$SearchSpots$searchSpots$connection$items$category
+    on Query$SearchSpots$searchSpots$connection$items$category {
+  CopyWith$Query$SearchSpots$searchSpots$connection$items$category<
+    Query$SearchSpots$searchSpots$connection$items$category
+  >
+  get copyWith =>
+      CopyWith$Query$SearchSpots$searchSpots$connection$items$category(
+        this,
+        (i) => i,
+      );
+}
+
+abstract class CopyWith$Query$SearchSpots$searchSpots$connection$items$category<
+  TRes
+> {
+  factory CopyWith$Query$SearchSpots$searchSpots$connection$items$category(
+    Query$SearchSpots$searchSpots$connection$items$category instance,
+    TRes Function(Query$SearchSpots$searchSpots$connection$items$category) then,
+  ) = _CopyWithImpl$Query$SearchSpots$searchSpots$connection$items$category;
+
+  factory CopyWith$Query$SearchSpots$searchSpots$connection$items$category.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Query$SearchSpots$searchSpots$connection$items$category;
+
+  TRes call({String? code, String? label, String? iconUrl});
+}
+
+class _CopyWithImpl$Query$SearchSpots$searchSpots$connection$items$category<
+  TRes
+>
+    implements
+        CopyWith$Query$SearchSpots$searchSpots$connection$items$category<TRes> {
+  _CopyWithImpl$Query$SearchSpots$searchSpots$connection$items$category(
+    this._instance,
+    this._then,
+  );
+
+  final Query$SearchSpots$searchSpots$connection$items$category _instance;
+
+  final TRes Function(Query$SearchSpots$searchSpots$connection$items$category)
+  _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? code = _undefined,
+    Object? label = _undefined,
+    Object? iconUrl = _undefined,
+  }) => _then(
+    Query$SearchSpots$searchSpots$connection$items$category(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      label: label == _undefined || label == null
+          ? _instance.label
+          : (label as String),
+      iconUrl: iconUrl == _undefined ? _instance.iconUrl : (iconUrl as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$SearchSpots$searchSpots$connection$items$category<
+  TRes
+>
+    implements
+        CopyWith$Query$SearchSpots$searchSpots$connection$items$category<TRes> {
+  _CopyWithStubImpl$Query$SearchSpots$searchSpots$connection$items$category(
+    this._res,
+  );
+
+  TRes _res;
+
+  call({String? code, String? label, String? iconUrl}) => _res;
 }
 
 class Variables$Query$SpotSearchSuggestions {
@@ -5989,7 +6913,31 @@ const documentNodeQuerySpotSearchSuggestions = DocumentNode(
                   alias: null,
                   arguments: [],
                   directives: [],
-                  selectionSet: null,
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'code'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'label'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'iconUrl'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -6016,7 +6964,10 @@ class Query$SpotSearchSuggestions$spotSearchSuggestions {
     return Query$SpotSearchSuggestions$spotSearchSuggestions(
       id: (l$id as String),
       title: (l$title as String),
-      category: fromJson$Enum$SpotCategory((l$category as String)),
+      category:
+          Query$SpotSearchSuggestions$spotSearchSuggestions$category.fromJson(
+            (l$category as Map<String, dynamic>),
+          ),
     );
   }
 
@@ -6024,7 +6975,7 @@ class Query$SpotSearchSuggestions$spotSearchSuggestions {
 
   final String title;
 
-  final Enum$SpotCategory category;
+  final Query$SpotSearchSuggestions$spotSearchSuggestions$category category;
 
   Map<String, dynamic> toJson() {
     final _resultData = <String, dynamic>{};
@@ -6033,7 +6984,7 @@ class Query$SpotSearchSuggestions$spotSearchSuggestions {
     final l$title = title;
     _resultData['title'] = l$title;
     final l$category = category;
-    _resultData['category'] = toJson$Enum$SpotCategory(l$category);
+    _resultData['category'] = l$category.toJson();
     return _resultData;
   }
 
@@ -6096,7 +7047,13 @@ abstract class CopyWith$Query$SpotSearchSuggestions$spotSearchSuggestions<
     TRes res,
   ) = _CopyWithStubImpl$Query$SpotSearchSuggestions$spotSearchSuggestions;
 
-  TRes call({String? id, String? title, Enum$SpotCategory? category});
+  TRes call({
+    String? id,
+    String? title,
+    Query$SpotSearchSuggestions$spotSearchSuggestions$category? category,
+  });
+  CopyWith$Query$SpotSearchSuggestions$spotSearchSuggestions$category<TRes>
+  get category;
 }
 
 class _CopyWithImpl$Query$SpotSearchSuggestions$spotSearchSuggestions<TRes>
@@ -6125,9 +7082,19 @@ class _CopyWithImpl$Query$SpotSearchSuggestions$spotSearchSuggestions<TRes>
           : (title as String),
       category: category == _undefined || category == null
           ? _instance.category
-          : (category as Enum$SpotCategory),
+          : (category
+                as Query$SpotSearchSuggestions$spotSearchSuggestions$category),
     ),
   );
+
+  CopyWith$Query$SpotSearchSuggestions$spotSearchSuggestions$category<TRes>
+  get category {
+    final local$category = _instance.category;
+    return CopyWith$Query$SpotSearchSuggestions$spotSearchSuggestions$category(
+      local$category,
+      (e) => call(category: e),
+    );
+  }
 }
 
 class _CopyWithStubImpl$Query$SpotSearchSuggestions$spotSearchSuggestions<TRes>
@@ -6139,7 +7106,172 @@ class _CopyWithStubImpl$Query$SpotSearchSuggestions$spotSearchSuggestions<TRes>
 
   TRes _res;
 
-  call({String? id, String? title, Enum$SpotCategory? category}) => _res;
+  call({
+    String? id,
+    String? title,
+    Query$SpotSearchSuggestions$spotSearchSuggestions$category? category,
+  }) => _res;
+
+  CopyWith$Query$SpotSearchSuggestions$spotSearchSuggestions$category<TRes>
+  get category =>
+      CopyWith$Query$SpotSearchSuggestions$spotSearchSuggestions$category.stub(
+        _res,
+      );
+}
+
+class Query$SpotSearchSuggestions$spotSearchSuggestions$category {
+  Query$SpotSearchSuggestions$spotSearchSuggestions$category({
+    required this.code,
+    required this.label,
+    this.iconUrl,
+  });
+
+  factory Query$SpotSearchSuggestions$spotSearchSuggestions$category.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$code = json['code'];
+    final l$label = json['label'];
+    final l$iconUrl = json['iconUrl'];
+    return Query$SpotSearchSuggestions$spotSearchSuggestions$category(
+      code: (l$code as String),
+      label: (l$label as String),
+      iconUrl: (l$iconUrl as String?),
+    );
+  }
+
+  final String code;
+
+  final String label;
+
+  final String? iconUrl;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$label = label;
+    _resultData['label'] = l$label;
+    final l$iconUrl = iconUrl;
+    _resultData['iconUrl'] = l$iconUrl;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$code = code;
+    final l$label = label;
+    final l$iconUrl = iconUrl;
+    return Object.hashAll([l$code, l$label, l$iconUrl]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$SpotSearchSuggestions$spotSearchSuggestions$category ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$label = label;
+    final lOther$label = other.label;
+    if (l$label != lOther$label) {
+      return false;
+    }
+    final l$iconUrl = iconUrl;
+    final lOther$iconUrl = other.iconUrl;
+    if (l$iconUrl != lOther$iconUrl) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$SpotSearchSuggestions$spotSearchSuggestions$category
+    on Query$SpotSearchSuggestions$spotSearchSuggestions$category {
+  CopyWith$Query$SpotSearchSuggestions$spotSearchSuggestions$category<
+    Query$SpotSearchSuggestions$spotSearchSuggestions$category
+  >
+  get copyWith =>
+      CopyWith$Query$SpotSearchSuggestions$spotSearchSuggestions$category(
+        this,
+        (i) => i,
+      );
+}
+
+abstract class CopyWith$Query$SpotSearchSuggestions$spotSearchSuggestions$category<
+  TRes
+> {
+  factory CopyWith$Query$SpotSearchSuggestions$spotSearchSuggestions$category(
+    Query$SpotSearchSuggestions$spotSearchSuggestions$category instance,
+    TRes Function(Query$SpotSearchSuggestions$spotSearchSuggestions$category)
+    then,
+  ) = _CopyWithImpl$Query$SpotSearchSuggestions$spotSearchSuggestions$category;
+
+  factory CopyWith$Query$SpotSearchSuggestions$spotSearchSuggestions$category.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Query$SpotSearchSuggestions$spotSearchSuggestions$category;
+
+  TRes call({String? code, String? label, String? iconUrl});
+}
+
+class _CopyWithImpl$Query$SpotSearchSuggestions$spotSearchSuggestions$category<
+  TRes
+>
+    implements
+        CopyWith$Query$SpotSearchSuggestions$spotSearchSuggestions$category<
+          TRes
+        > {
+  _CopyWithImpl$Query$SpotSearchSuggestions$spotSearchSuggestions$category(
+    this._instance,
+    this._then,
+  );
+
+  final Query$SpotSearchSuggestions$spotSearchSuggestions$category _instance;
+
+  final TRes Function(
+    Query$SpotSearchSuggestions$spotSearchSuggestions$category,
+  )
+  _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? code = _undefined,
+    Object? label = _undefined,
+    Object? iconUrl = _undefined,
+  }) => _then(
+    Query$SpotSearchSuggestions$spotSearchSuggestions$category(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      label: label == _undefined || label == null
+          ? _instance.label
+          : (label as String),
+      iconUrl: iconUrl == _undefined ? _instance.iconUrl : (iconUrl as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$SpotSearchSuggestions$spotSearchSuggestions$category<
+  TRes
+>
+    implements
+        CopyWith$Query$SpotSearchSuggestions$spotSearchSuggestions$category<
+          TRes
+        > {
+  _CopyWithStubImpl$Query$SpotSearchSuggestions$spotSearchSuggestions$category(
+    this._res,
+  );
+
+  TRes _res;
+
+  call({String? code, String? label, String? iconUrl}) => _res;
 }
 
 class Variables$Query$PopularSpots {
@@ -6147,7 +7279,7 @@ class Variables$Query$PopularSpots {
     required double latitude,
     required double longitude,
     int? radiusMeters,
-    Enum$SpotCategory? category,
+    List<String>? categories,
     bool? hasOrigin,
     int? first,
     String? after,
@@ -6155,7 +7287,7 @@ class Variables$Query$PopularSpots {
     r'latitude': latitude,
     r'longitude': longitude,
     if (radiusMeters != null) r'radiusMeters': radiusMeters,
-    if (category != null) r'category': category,
+    if (categories != null) r'categories': categories,
     if (hasOrigin != null) r'hasOrigin': hasOrigin,
     if (first != null) r'first': first,
     if (after != null) r'after': after,
@@ -6173,11 +7305,11 @@ class Variables$Query$PopularSpots {
       final l$radiusMeters = data['radiusMeters'];
       result$data['radiusMeters'] = (l$radiusMeters as int?);
     }
-    if (data.containsKey('category')) {
-      final l$category = data['category'];
-      result$data['category'] = l$category == null
-          ? null
-          : fromJson$Enum$SpotCategory((l$category as String));
+    if (data.containsKey('categories')) {
+      final l$categories = data['categories'];
+      result$data['categories'] = (l$categories as List<dynamic>?)
+          ?.map((e) => (e as String))
+          .toList();
     }
     if (data.containsKey('hasOrigin')) {
       final l$hasOrigin = data['hasOrigin'];
@@ -6202,7 +7334,7 @@ class Variables$Query$PopularSpots {
 
   int? get radiusMeters => (_$data['radiusMeters'] as int?);
 
-  Enum$SpotCategory? get category => (_$data['category'] as Enum$SpotCategory?);
+  List<String>? get categories => (_$data['categories'] as List<String>?);
 
   bool? get hasOrigin => (_$data['hasOrigin'] as bool?);
 
@@ -6220,11 +7352,9 @@ class Variables$Query$PopularSpots {
       final l$radiusMeters = radiusMeters;
       result$data['radiusMeters'] = l$radiusMeters;
     }
-    if (_$data.containsKey('category')) {
-      final l$category = category;
-      result$data['category'] = l$category == null
-          ? null
-          : toJson$Enum$SpotCategory(l$category);
+    if (_$data.containsKey('categories')) {
+      final l$categories = categories;
+      result$data['categories'] = l$categories?.map((e) => e).toList();
     }
     if (_$data.containsKey('hasOrigin')) {
       final l$hasOrigin = hasOrigin;
@@ -6272,13 +7402,24 @@ class Variables$Query$PopularSpots {
     if (l$radiusMeters != lOther$radiusMeters) {
       return false;
     }
-    final l$category = category;
-    final lOther$category = other.category;
-    if (_$data.containsKey('category') !=
-        other._$data.containsKey('category')) {
+    final l$categories = categories;
+    final lOther$categories = other.categories;
+    if (_$data.containsKey('categories') !=
+        other._$data.containsKey('categories')) {
       return false;
     }
-    if (l$category != lOther$category) {
+    if (l$categories != null && lOther$categories != null) {
+      if (l$categories.length != lOther$categories.length) {
+        return false;
+      }
+      for (int i = 0; i < l$categories.length; i++) {
+        final l$categories$entry = l$categories[i];
+        final lOther$categories$entry = lOther$categories[i];
+        if (l$categories$entry != lOther$categories$entry) {
+          return false;
+        }
+      }
+    } else if (l$categories != lOther$categories) {
       return false;
     }
     final l$hasOrigin = hasOrigin;
@@ -6314,7 +7455,7 @@ class Variables$Query$PopularSpots {
     final l$latitude = latitude;
     final l$longitude = longitude;
     final l$radiusMeters = radiusMeters;
-    final l$category = category;
+    final l$categories = categories;
     final l$hasOrigin = hasOrigin;
     final l$first = first;
     final l$after = after;
@@ -6322,7 +7463,11 @@ class Variables$Query$PopularSpots {
       l$latitude,
       l$longitude,
       _$data.containsKey('radiusMeters') ? l$radiusMeters : const {},
-      _$data.containsKey('category') ? l$category : const {},
+      _$data.containsKey('categories')
+          ? l$categories == null
+                ? null
+                : Object.hashAll(l$categories.map((v) => v))
+          : const {},
       _$data.containsKey('hasOrigin') ? l$hasOrigin : const {},
       _$data.containsKey('first') ? l$first : const {},
       _$data.containsKey('after') ? l$after : const {},
@@ -6343,7 +7488,7 @@ abstract class CopyWith$Variables$Query$PopularSpots<TRes> {
     double? latitude,
     double? longitude,
     int? radiusMeters,
-    Enum$SpotCategory? category,
+    List<String>? categories,
     bool? hasOrigin,
     int? first,
     String? after,
@@ -6364,7 +7509,7 @@ class _CopyWithImpl$Variables$Query$PopularSpots<TRes>
     Object? latitude = _undefined,
     Object? longitude = _undefined,
     Object? radiusMeters = _undefined,
-    Object? category = _undefined,
+    Object? categories = _undefined,
     Object? hasOrigin = _undefined,
     Object? first = _undefined,
     Object? after = _undefined,
@@ -6376,7 +7521,7 @@ class _CopyWithImpl$Variables$Query$PopularSpots<TRes>
       if (longitude != _undefined && longitude != null)
         'longitude': (longitude as double),
       if (radiusMeters != _undefined) 'radiusMeters': (radiusMeters as int?),
-      if (category != _undefined) 'category': (category as Enum$SpotCategory?),
+      if (categories != _undefined) 'categories': (categories as List<String>?),
       if (hasOrigin != _undefined) 'hasOrigin': (hasOrigin as bool?),
       if (first != _undefined) 'first': (first as int?),
       if (after != _undefined) 'after': (after as String?),
@@ -6394,7 +7539,7 @@ class _CopyWithStubImpl$Variables$Query$PopularSpots<TRes>
     double? latitude,
     double? longitude,
     int? radiusMeters,
-    Enum$SpotCategory? category,
+    List<String>? categories,
     bool? hasOrigin,
     int? first,
     String? after,
@@ -6527,9 +7672,12 @@ const documentNodeQueryPopularSpots = DocumentNode(
           directives: [],
         ),
         VariableDefinitionNode(
-          variable: VariableNode(name: NameNode(value: 'category')),
-          type: NamedTypeNode(
-            name: NameNode(value: 'SpotCategory'),
+          variable: VariableNode(name: NameNode(value: 'categories')),
+          type: ListTypeNode(
+            type: NamedTypeNode(
+              name: NameNode(value: 'String'),
+              isNonNull: true,
+            ),
             isNonNull: false,
           ),
           defaultValue: DefaultValueNode(value: null),
@@ -6580,8 +7728,8 @@ const documentNodeQueryPopularSpots = DocumentNode(
                 value: VariableNode(name: NameNode(value: 'radiusMeters')),
               ),
               ArgumentNode(
-                name: NameNode(value: 'category'),
-                value: VariableNode(name: NameNode(value: 'category')),
+                name: NameNode(value: 'categories'),
+                value: VariableNode(name: NameNode(value: 'categories')),
               ),
               ArgumentNode(
                 name: NameNode(value: 'hasOrigin'),
@@ -6653,7 +7801,31 @@ const documentNodeQueryPopularSpots = DocumentNode(
                               alias: null,
                               arguments: [],
                               directives: [],
-                              selectionSet: null,
+                              selectionSet: SelectionSetNode(
+                                selections: [
+                                  FieldNode(
+                                    name: NameNode(value: 'code'),
+                                    alias: null,
+                                    arguments: [],
+                                    directives: [],
+                                    selectionSet: null,
+                                  ),
+                                  FieldNode(
+                                    name: NameNode(value: 'label'),
+                                    alias: null,
+                                    arguments: [],
+                                    directives: [],
+                                    selectionSet: null,
+                                  ),
+                                  FieldNode(
+                                    name: NameNode(value: 'iconUrl'),
+                                    alias: null,
+                                    arguments: [],
+                                    directives: [],
+                                    selectionSet: null,
+                                  ),
+                                ],
+                              ),
                             ),
                             FieldNode(
                               name: NameNode(value: 'copyright'),
@@ -7078,7 +8250,9 @@ class Query$PopularSpots$popularSpots$edges$node {
       address: (l$address as String?),
       thumbnailImageUrl: (l$thumbnailImageUrl as String),
       distanceMeters: (l$distanceMeters as num).toDouble(),
-      category: fromJson$Enum$SpotCategory((l$category as String)),
+      category: Query$PopularSpots$popularSpots$edges$node$category.fromJson(
+        (l$category as Map<String, dynamic>),
+      ),
       copyright: fromJson$Enum$CopyrightType((l$copyright as String)),
       attributionText: (l$attributionText as String),
     );
@@ -7094,7 +8268,7 @@ class Query$PopularSpots$popularSpots$edges$node {
 
   final double distanceMeters;
 
-  final Enum$SpotCategory category;
+  final Query$PopularSpots$popularSpots$edges$node$category category;
 
   final Enum$CopyrightType copyright;
 
@@ -7113,7 +8287,7 @@ class Query$PopularSpots$popularSpots$edges$node {
     final l$distanceMeters = distanceMeters;
     _resultData['distanceMeters'] = l$distanceMeters;
     final l$category = category;
-    _resultData['category'] = toJson$Enum$SpotCategory(l$category);
+    _resultData['category'] = l$category.toJson();
     final l$copyright = copyright;
     _resultData['copyright'] = toJson$Enum$CopyrightType(l$copyright);
     final l$attributionText = attributionText;
@@ -7220,10 +8394,12 @@ abstract class CopyWith$Query$PopularSpots$popularSpots$edges$node<TRes> {
     String? address,
     String? thumbnailImageUrl,
     double? distanceMeters,
-    Enum$SpotCategory? category,
+    Query$PopularSpots$popularSpots$edges$node$category? category,
     Enum$CopyrightType? copyright,
     String? attributionText,
   });
+  CopyWith$Query$PopularSpots$popularSpots$edges$node$category<TRes>
+  get category;
 }
 
 class _CopyWithImpl$Query$PopularSpots$popularSpots$edges$node<TRes>
@@ -7264,7 +8440,7 @@ class _CopyWithImpl$Query$PopularSpots$popularSpots$edges$node<TRes>
           : (distanceMeters as double),
       category: category == _undefined || category == null
           ? _instance.category
-          : (category as Enum$SpotCategory),
+          : (category as Query$PopularSpots$popularSpots$edges$node$category),
       copyright: copyright == _undefined || copyright == null
           ? _instance.copyright
           : (copyright as Enum$CopyrightType),
@@ -7273,6 +8449,15 @@ class _CopyWithImpl$Query$PopularSpots$popularSpots$edges$node<TRes>
           : (attributionText as String),
     ),
   );
+
+  CopyWith$Query$PopularSpots$popularSpots$edges$node$category<TRes>
+  get category {
+    final local$category = _instance.category;
+    return CopyWith$Query$PopularSpots$popularSpots$edges$node$category(
+      local$category,
+      (e) => call(category: e),
+    );
+  }
 }
 
 class _CopyWithStubImpl$Query$PopularSpots$popularSpots$edges$node<TRes>
@@ -7287,10 +8472,159 @@ class _CopyWithStubImpl$Query$PopularSpots$popularSpots$edges$node<TRes>
     String? address,
     String? thumbnailImageUrl,
     double? distanceMeters,
-    Enum$SpotCategory? category,
+    Query$PopularSpots$popularSpots$edges$node$category? category,
     Enum$CopyrightType? copyright,
     String? attributionText,
   }) => _res;
+
+  CopyWith$Query$PopularSpots$popularSpots$edges$node$category<TRes>
+  get category =>
+      CopyWith$Query$PopularSpots$popularSpots$edges$node$category.stub(_res);
+}
+
+class Query$PopularSpots$popularSpots$edges$node$category {
+  Query$PopularSpots$popularSpots$edges$node$category({
+    required this.code,
+    required this.label,
+    this.iconUrl,
+  });
+
+  factory Query$PopularSpots$popularSpots$edges$node$category.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$code = json['code'];
+    final l$label = json['label'];
+    final l$iconUrl = json['iconUrl'];
+    return Query$PopularSpots$popularSpots$edges$node$category(
+      code: (l$code as String),
+      label: (l$label as String),
+      iconUrl: (l$iconUrl as String?),
+    );
+  }
+
+  final String code;
+
+  final String label;
+
+  final String? iconUrl;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$label = label;
+    _resultData['label'] = l$label;
+    final l$iconUrl = iconUrl;
+    _resultData['iconUrl'] = l$iconUrl;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$code = code;
+    final l$label = label;
+    final l$iconUrl = iconUrl;
+    return Object.hashAll([l$code, l$label, l$iconUrl]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$PopularSpots$popularSpots$edges$node$category ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$label = label;
+    final lOther$label = other.label;
+    if (l$label != lOther$label) {
+      return false;
+    }
+    final l$iconUrl = iconUrl;
+    final lOther$iconUrl = other.iconUrl;
+    if (l$iconUrl != lOther$iconUrl) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$PopularSpots$popularSpots$edges$node$category
+    on Query$PopularSpots$popularSpots$edges$node$category {
+  CopyWith$Query$PopularSpots$popularSpots$edges$node$category<
+    Query$PopularSpots$popularSpots$edges$node$category
+  >
+  get copyWith => CopyWith$Query$PopularSpots$popularSpots$edges$node$category(
+    this,
+    (i) => i,
+  );
+}
+
+abstract class CopyWith$Query$PopularSpots$popularSpots$edges$node$category<
+  TRes
+> {
+  factory CopyWith$Query$PopularSpots$popularSpots$edges$node$category(
+    Query$PopularSpots$popularSpots$edges$node$category instance,
+    TRes Function(Query$PopularSpots$popularSpots$edges$node$category) then,
+  ) = _CopyWithImpl$Query$PopularSpots$popularSpots$edges$node$category;
+
+  factory CopyWith$Query$PopularSpots$popularSpots$edges$node$category.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Query$PopularSpots$popularSpots$edges$node$category;
+
+  TRes call({String? code, String? label, String? iconUrl});
+}
+
+class _CopyWithImpl$Query$PopularSpots$popularSpots$edges$node$category<TRes>
+    implements
+        CopyWith$Query$PopularSpots$popularSpots$edges$node$category<TRes> {
+  _CopyWithImpl$Query$PopularSpots$popularSpots$edges$node$category(
+    this._instance,
+    this._then,
+  );
+
+  final Query$PopularSpots$popularSpots$edges$node$category _instance;
+
+  final TRes Function(Query$PopularSpots$popularSpots$edges$node$category)
+  _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? code = _undefined,
+    Object? label = _undefined,
+    Object? iconUrl = _undefined,
+  }) => _then(
+    Query$PopularSpots$popularSpots$edges$node$category(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      label: label == _undefined || label == null
+          ? _instance.label
+          : (label as String),
+      iconUrl: iconUrl == _undefined ? _instance.iconUrl : (iconUrl as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$PopularSpots$popularSpots$edges$node$category<
+  TRes
+>
+    implements
+        CopyWith$Query$PopularSpots$popularSpots$edges$node$category<TRes> {
+  _CopyWithStubImpl$Query$PopularSpots$popularSpots$edges$node$category(
+    this._res,
+  );
+
+  TRes _res;
+
+  call({String? code, String? label, String? iconUrl}) => _res;
 }
 
 class Query$PopularSpots$popularSpots$pageInfo {

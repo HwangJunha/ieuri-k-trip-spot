@@ -61,27 +61,33 @@ final class AvailableSpotCategoriesProvider
 String _$availableSpotCategoriesHash() =>
     r'fc2f7f8ea17881476c5db007d85ddb5c5060dc3d';
 
-/// 현재 선택된 카테고리(null=전체). CategoryBar가 갱신하고 SwipeController 패밀리
-/// 인자로 쓰인다 — 값이 바뀌면 다른 SwipeController 인스턴스를 보게 되어 재로딩된다.
+/// Discover 스와이프의 카테고리 선택(SPEC-0020 R2). **비어 있을 수 없는 집합이다** —
+/// "전체 보기"가 사라졌으므로 `null`("필터 없음")이라는 표현 자체가 없다.
 ///
 /// [SwipeController]와 같은 이유로 `keepAlive`다 — autoDispose면 다른 탭에 다녀오는
-/// 것만으로 선택이 "전체"로 되돌아간다. 사용자가 고른 필터는 화면이 아니라 세션에 속한다.
+/// 것만으로 선택이 초기화된다. 사용자가 고른 필터는 화면이 아니라 세션에 속한다
+/// (AC12.3). R12의 "비영속"은 **재시작 기준**이라(AC12.2) 세션 내 유지와 충돌하지
+/// 않는다 — 디스크에 쓰지 않는 것만을 요구한다.
 
 @ProviderFor(SelectedSpotCategory)
 const selectedSpotCategoryProvider = SelectedSpotCategoryProvider._();
 
-/// 현재 선택된 카테고리(null=전체). CategoryBar가 갱신하고 SwipeController 패밀리
-/// 인자로 쓰인다 — 값이 바뀌면 다른 SwipeController 인스턴스를 보게 되어 재로딩된다.
+/// Discover 스와이프의 카테고리 선택(SPEC-0020 R2). **비어 있을 수 없는 집합이다** —
+/// "전체 보기"가 사라졌으므로 `null`("필터 없음")이라는 표현 자체가 없다.
 ///
 /// [SwipeController]와 같은 이유로 `keepAlive`다 — autoDispose면 다른 탭에 다녀오는
-/// 것만으로 선택이 "전체"로 되돌아간다. 사용자가 고른 필터는 화면이 아니라 세션에 속한다.
+/// 것만으로 선택이 초기화된다. 사용자가 고른 필터는 화면이 아니라 세션에 속한다
+/// (AC12.3). R12의 "비영속"은 **재시작 기준**이라(AC12.2) 세션 내 유지와 충돌하지
+/// 않는다 — 디스크에 쓰지 않는 것만을 요구한다.
 final class SelectedSpotCategoryProvider
-    extends $NotifierProvider<SelectedSpotCategory, SpotCategory?> {
-  /// 현재 선택된 카테고리(null=전체). CategoryBar가 갱신하고 SwipeController 패밀리
-  /// 인자로 쓰인다 — 값이 바뀌면 다른 SwipeController 인스턴스를 보게 되어 재로딩된다.
+    extends $NotifierProvider<SelectedSpotCategory, Set<SpotCategory>> {
+  /// Discover 스와이프의 카테고리 선택(SPEC-0020 R2). **비어 있을 수 없는 집합이다** —
+  /// "전체 보기"가 사라졌으므로 `null`("필터 없음")이라는 표현 자체가 없다.
   ///
   /// [SwipeController]와 같은 이유로 `keepAlive`다 — autoDispose면 다른 탭에 다녀오는
-  /// 것만으로 선택이 "전체"로 되돌아간다. 사용자가 고른 필터는 화면이 아니라 세션에 속한다.
+  /// 것만으로 선택이 초기화된다. 사용자가 고른 필터는 화면이 아니라 세션에 속한다
+  /// (AC12.3). R12의 "비영속"은 **재시작 기준**이라(AC12.2) 세션 내 유지와 충돌하지
+  /// 않는다 — 디스크에 쓰지 않는 것만을 요구한다.
   const SelectedSpotCategoryProvider._()
     : super(
         from: null,
@@ -101,35 +107,37 @@ final class SelectedSpotCategoryProvider
   SelectedSpotCategory create() => SelectedSpotCategory();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(SpotCategory? value) {
+  Override overrideWithValue(Set<SpotCategory> value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<SpotCategory?>(value),
+      providerOverride: $SyncValueProvider<Set<SpotCategory>>(value),
     );
   }
 }
 
 String _$selectedSpotCategoryHash() =>
-    r'8b907ad64dad6b02e9a9bf71ab63a790d76cf3c1';
+    r'1021630b06fe16538a3457a8ba3f8e0ebea4e39d';
 
-/// 현재 선택된 카테고리(null=전체). CategoryBar가 갱신하고 SwipeController 패밀리
-/// 인자로 쓰인다 — 값이 바뀌면 다른 SwipeController 인스턴스를 보게 되어 재로딩된다.
+/// Discover 스와이프의 카테고리 선택(SPEC-0020 R2). **비어 있을 수 없는 집합이다** —
+/// "전체 보기"가 사라졌으므로 `null`("필터 없음")이라는 표현 자체가 없다.
 ///
 /// [SwipeController]와 같은 이유로 `keepAlive`다 — autoDispose면 다른 탭에 다녀오는
-/// 것만으로 선택이 "전체"로 되돌아간다. 사용자가 고른 필터는 화면이 아니라 세션에 속한다.
+/// 것만으로 선택이 초기화된다. 사용자가 고른 필터는 화면이 아니라 세션에 속한다
+/// (AC12.3). R12의 "비영속"은 **재시작 기준**이라(AC12.2) 세션 내 유지와 충돌하지
+/// 않는다 — 디스크에 쓰지 않는 것만을 요구한다.
 
-abstract class _$SelectedSpotCategory extends $Notifier<SpotCategory?> {
-  SpotCategory? build();
+abstract class _$SelectedSpotCategory extends $Notifier<Set<SpotCategory>> {
+  Set<SpotCategory> build();
   @$mustCallSuper
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<SpotCategory?, SpotCategory?>;
+    final ref = this.ref as $Ref<Set<SpotCategory>, Set<SpotCategory>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<SpotCategory?, SpotCategory?>,
-              SpotCategory?,
+              AnyNotifier<Set<SpotCategory>, Set<SpotCategory>>,
+              Set<SpotCategory>,
               Object?,
               Object?
             >;
@@ -137,8 +145,13 @@ abstract class _$SelectedSpotCategory extends $Notifier<SpotCategory?> {
   }
 }
 
-/// Discover 스와이프 카드 스택 컨트롤러(spec §4). [category]별 패밀리 —
-/// 카테고리 변경은 다른 인스턴스 로딩으로 이어진다.
+/// Discover 스와이프 카드 스택 컨트롤러(spec §4). [selection]별 패밀리 —
+/// 선택 변경은 다른 인스턴스 로딩으로 이어진다.
+///
+/// **family 인자가 `Set`이 아니라 [SpotCategorySelection]인 이유**(SPEC-0020):
+/// Dart의 `Set`은 값 동등성이 없어, 원소가 같아도 매 빌드마다 새 키가 되어
+/// keepAlive 세션이 무한히 쌓이고 피드를 계속 다시 받는다. 정렬된 코드 문자열로
+/// 동등성을 정의한 값 객체가 그것을 막는다.
 ///
 /// - 첫 빌드: 현재 좌표를 얻어 첫 페이지(page 0, size 100)를 조회해 [SwipeQueue]를 만든다.
 /// - [swipe]: 낙관적으로 맨 위 카드를 즉시 제거하고 `reactToSpot`을 비동기 발사한다.
@@ -161,8 +174,13 @@ abstract class _$SelectedSpotCategory extends $Notifier<SpotCategory?> {
 @ProviderFor(SwipeController)
 const swipeControllerProvider = SwipeControllerFamily._();
 
-/// Discover 스와이프 카드 스택 컨트롤러(spec §4). [category]별 패밀리 —
-/// 카테고리 변경은 다른 인스턴스 로딩으로 이어진다.
+/// Discover 스와이프 카드 스택 컨트롤러(spec §4). [selection]별 패밀리 —
+/// 선택 변경은 다른 인스턴스 로딩으로 이어진다.
+///
+/// **family 인자가 `Set`이 아니라 [SpotCategorySelection]인 이유**(SPEC-0020):
+/// Dart의 `Set`은 값 동등성이 없어, 원소가 같아도 매 빌드마다 새 키가 되어
+/// keepAlive 세션이 무한히 쌓이고 피드를 계속 다시 받는다. 정렬된 코드 문자열로
+/// 동등성을 정의한 값 객체가 그것을 막는다.
 ///
 /// - 첫 빌드: 현재 좌표를 얻어 첫 페이지(page 0, size 100)를 조회해 [SwipeQueue]를 만든다.
 /// - [swipe]: 낙관적으로 맨 위 카드를 즉시 제거하고 `reactToSpot`을 비동기 발사한다.
@@ -183,8 +201,13 @@ const swipeControllerProvider = SwipeControllerFamily._();
 /// 피드를 새로 받는 계기는 앱 재시작·언어 전환·명시적 [reload]뿐이어야 한다.
 final class SwipeControllerProvider
     extends $AsyncNotifierProvider<SwipeController, SwipeQueue> {
-  /// Discover 스와이프 카드 스택 컨트롤러(spec §4). [category]별 패밀리 —
-  /// 카테고리 변경은 다른 인스턴스 로딩으로 이어진다.
+  /// Discover 스와이프 카드 스택 컨트롤러(spec §4). [selection]별 패밀리 —
+  /// 선택 변경은 다른 인스턴스 로딩으로 이어진다.
+  ///
+  /// **family 인자가 `Set`이 아니라 [SpotCategorySelection]인 이유**(SPEC-0020):
+  /// Dart의 `Set`은 값 동등성이 없어, 원소가 같아도 매 빌드마다 새 키가 되어
+  /// keepAlive 세션이 무한히 쌓이고 피드를 계속 다시 받는다. 정렬된 코드 문자열로
+  /// 동등성을 정의한 값 객체가 그것을 막는다.
   ///
   /// - 첫 빌드: 현재 좌표를 얻어 첫 페이지(page 0, size 100)를 조회해 [SwipeQueue]를 만든다.
   /// - [swipe]: 낙관적으로 맨 위 카드를 즉시 제거하고 `reactToSpot`을 비동기 발사한다.
@@ -205,7 +228,7 @@ final class SwipeControllerProvider
   /// 피드를 새로 받는 계기는 앱 재시작·언어 전환·명시적 [reload]뿐이어야 한다.
   const SwipeControllerProvider._({
     required SwipeControllerFamily super.from,
-    required SpotCategory? super.argument,
+    required SpotCategorySelection super.argument,
   }) : super(
          retry: spotRetryPolicy,
          name: r'swipeControllerProvider',
@@ -239,10 +262,15 @@ final class SwipeControllerProvider
   }
 }
 
-String _$swipeControllerHash() => r'b72793df97445ffa67cb84179fb0375d9c810b61';
+String _$swipeControllerHash() => r'd7c482261578c2743457753bb9c66f0e7302f53a';
 
-/// Discover 스와이프 카드 스택 컨트롤러(spec §4). [category]별 패밀리 —
-/// 카테고리 변경은 다른 인스턴스 로딩으로 이어진다.
+/// Discover 스와이프 카드 스택 컨트롤러(spec §4). [selection]별 패밀리 —
+/// 선택 변경은 다른 인스턴스 로딩으로 이어진다.
+///
+/// **family 인자가 `Set`이 아니라 [SpotCategorySelection]인 이유**(SPEC-0020):
+/// Dart의 `Set`은 값 동등성이 없어, 원소가 같아도 매 빌드마다 새 키가 되어
+/// keepAlive 세션이 무한히 쌓이고 피드를 계속 다시 받는다. 정렬된 코드 문자열로
+/// 동등성을 정의한 값 객체가 그것을 막는다.
 ///
 /// - 첫 빌드: 현재 좌표를 얻어 첫 페이지(page 0, size 100)를 조회해 [SwipeQueue]를 만든다.
 /// - [swipe]: 낙관적으로 맨 위 카드를 즉시 제거하고 `reactToSpot`을 비동기 발사한다.
@@ -269,7 +297,7 @@ final class SwipeControllerFamily extends $Family
           AsyncValue<SwipeQueue>,
           SwipeQueue,
           FutureOr<SwipeQueue>,
-          SpotCategory?
+          SpotCategorySelection
         > {
   const SwipeControllerFamily._()
     : super(
@@ -280,8 +308,13 @@ final class SwipeControllerFamily extends $Family
         isAutoDispose: false,
       );
 
-  /// Discover 스와이프 카드 스택 컨트롤러(spec §4). [category]별 패밀리 —
-  /// 카테고리 변경은 다른 인스턴스 로딩으로 이어진다.
+  /// Discover 스와이프 카드 스택 컨트롤러(spec §4). [selection]별 패밀리 —
+  /// 선택 변경은 다른 인스턴스 로딩으로 이어진다.
+  ///
+  /// **family 인자가 `Set`이 아니라 [SpotCategorySelection]인 이유**(SPEC-0020):
+  /// Dart의 `Set`은 값 동등성이 없어, 원소가 같아도 매 빌드마다 새 키가 되어
+  /// keepAlive 세션이 무한히 쌓이고 피드를 계속 다시 받는다. 정렬된 코드 문자열로
+  /// 동등성을 정의한 값 객체가 그것을 막는다.
   ///
   /// - 첫 빌드: 현재 좌표를 얻어 첫 페이지(page 0, size 100)를 조회해 [SwipeQueue]를 만든다.
   /// - [swipe]: 낙관적으로 맨 위 카드를 즉시 제거하고 `reactToSpot`을 비동기 발사한다.
@@ -301,15 +334,20 @@ final class SwipeControllerFamily extends $Family
   /// 목록이 매번 랜덤으로 바뀌는 것으로 보이고, 이미 스와이프해 소비한 카드까지 되살아난다.
   /// 피드를 새로 받는 계기는 앱 재시작·언어 전환·명시적 [reload]뿐이어야 한다.
 
-  SwipeControllerProvider call(SpotCategory? category) =>
-      SwipeControllerProvider._(argument: category, from: this);
+  SwipeControllerProvider call(SpotCategorySelection selection) =>
+      SwipeControllerProvider._(argument: selection, from: this);
 
   @override
   String toString() => r'swipeControllerProvider';
 }
 
-/// Discover 스와이프 카드 스택 컨트롤러(spec §4). [category]별 패밀리 —
-/// 카테고리 변경은 다른 인스턴스 로딩으로 이어진다.
+/// Discover 스와이프 카드 스택 컨트롤러(spec §4). [selection]별 패밀리 —
+/// 선택 변경은 다른 인스턴스 로딩으로 이어진다.
+///
+/// **family 인자가 `Set`이 아니라 [SpotCategorySelection]인 이유**(SPEC-0020):
+/// Dart의 `Set`은 값 동등성이 없어, 원소가 같아도 매 빌드마다 새 키가 되어
+/// keepAlive 세션이 무한히 쌓이고 피드를 계속 다시 받는다. 정렬된 코드 문자열로
+/// 동등성을 정의한 값 객체가 그것을 막는다.
 ///
 /// - 첫 빌드: 현재 좌표를 얻어 첫 페이지(page 0, size 100)를 조회해 [SwipeQueue]를 만든다.
 /// - [swipe]: 낙관적으로 맨 위 카드를 즉시 제거하고 `reactToSpot`을 비동기 발사한다.
@@ -330,10 +368,10 @@ final class SwipeControllerFamily extends $Family
 /// 피드를 새로 받는 계기는 앱 재시작·언어 전환·명시적 [reload]뿐이어야 한다.
 
 abstract class _$SwipeController extends $AsyncNotifier<SwipeQueue> {
-  late final _$args = ref.$arg as SpotCategory?;
-  SpotCategory? get category => _$args;
+  late final _$args = ref.$arg as SpotCategorySelection;
+  SpotCategorySelection get selection => _$args;
 
-  FutureOr<SwipeQueue> build(SpotCategory? category);
+  FutureOr<SwipeQueue> build(SpotCategorySelection selection);
   @$mustCallSuper
   @override
   void runBuild() {

@@ -1,7 +1,7 @@
 import '../../../common/location/coordinates.dart';
 import 'copyright_type.dart';
 import 'distance.dart';
-import 'spot_category.dart';
+import '../../../common/category/spot_category.dart';
 
 /// A tourist spot. Pure domain model — no widgets, no transport types. The
 /// repository maps the GraphQL response into this.

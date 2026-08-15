@@ -201,6 +201,10 @@
   "@viewAll": {
     "description": "섹션 헤더 전체 보기 링크"
   },
+  "categoryAll": "전체",
+  "@categoryAll": {
+    "description": "카테고리 바 - 필터 없음(전체) 칩"
+  },
   "navHome": "홈",
   "@navHome": {
     "description": "하단 내비 - 홈 탭"
@@ -532,42 +536,6 @@
   "discoverNopeLabel": "패스",
   "@discoverNopeLabel": {
     "description": "스와이프 왼쪽 드래그 피드백 라벨 (NOPE)"
-  },
-  "discoverCategoryTouristSpot": "관광지",
-  "@discoverCategoryTouristSpot": {
-    "description": "스팟 카테고리 - 관광지"
-  },
-  "discoverCategoryCulturalFacility": "문화시설",
-  "@discoverCategoryCulturalFacility": {
-    "description": "스팟 카테고리 - 문화시설"
-  },
-  "discoverCategoryFestivalEvent": "축제·행사",
-  "@discoverCategoryFestivalEvent": {
-    "description": "스팟 카테고리 - 축제·행사"
-  },
-  "discoverCategoryTravelCourse": "여행코스",
-  "@discoverCategoryTravelCourse": {
-    "description": "스팟 카테고리 - 여행코스"
-  },
-  "discoverCategoryLeisureSports": "레포츠",
-  "@discoverCategoryLeisureSports": {
-    "description": "스팟 카테고리 - 레포츠"
-  },
-  "discoverCategoryLodging": "숙박",
-  "@discoverCategoryLodging": {
-    "description": "스팟 카테고리 - 숙박"
-  },
-  "discoverCategoryShopping": "쇼핑",
-  "@discoverCategoryShopping": {
-    "description": "스팟 카테고리 - 쇼핑"
-  },
-  "discoverCategoryRestaurant": "음식점",
-  "@discoverCategoryRestaurant": {
-    "description": "스팟 카테고리 - 음식점"
-  },
-  "discoverCategoryTransport": "교통",
-  "@discoverCategoryTransport": {
-    "description": "스팟 카테고리 - 교통"
   },
   "distanceKilometers": "{distance}km",
   "@distanceKilometers": {

@@ -21,11 +21,11 @@ type CommentConnection {
 # `PageInfo`·`UserError`는 auth 스키마 조각이 이미 선언한다. codegen이 모든 조각을
 # 한 네임스페이스에서 합치므로 여기서 다시 선언하면 중복이다.
 
-# 상단 칩. **표시 문구는 서버가 주지 않는다** — enum 값과 순서만 온다(가이드 §2).
-type CommunityChip {
-  category: TargetCategory!
-  position: Int!
-}
+# `CommunityChip` 타입은 **서버에서 사라졌다**(2026-08-16 라이브 확인).
+# `communityChips`가 `[TargetCategory!]!` — 하위 선택이 불가능한 leaf 배열 —로 바뀌면서
+# `category`·`position` 필드를 가진 객체 타입이 없어졌다. 순서는 이제 서버가 코드
+# 알파벳순으로 줄 뿐 의미가 없어, 표시 순서는 클라이언트가 정한다
+# (`common/category/category_chip_data.dart`의 `kCategoryDisplayOrder`).
 
 type BlockedUserEdge {
   cursor: String!
@@ -279,7 +279,10 @@ extend type Query {
     latitude: Float
     longitude: Float
     radiusMeters: Int
-    category: TargetCategory
+    # SPEC-0020: 다중 선택. 생략은 "전체", 빈 배열은 서버가 거절한다
+    # (EmptyCategorySetException). 관광지 쪽 `categories: [String!]`와 달리
+    # 여기는 아직 닫힌 enum이라 `[TargetCategory!]`다.
+    categories: [TargetCategory!]
     tag: String
     sort: PostSortOrder
     # true면 **내가 숨긴 글만** 온다(해제 화면용). 숨긴 글은 그 밖의 모든 조회에서
@@ -292,7 +295,7 @@ extend type Query {
   comments(postId: ID!, first: Int, after: String): CommentConnection!
   post(id: ID!): Post
   blockedUsers(first: Int, after: String): BlockedUserConnection!
-  communityChips: [CommunityChip!]!
+  communityChips: [TargetCategory!]!
   # SPEC-0013 R14의 `searchSpots`는 여기서 **다시 선언하지 않는다** — spot 조각이
   # 이미 `extend type Query`에 올렸고, codegen이 모든 조각을 하나로 병합하므로
   # 같은 필드를 두 번 선언하면 충돌한다. 커뮤니티는 오퍼레이션 이름만 달리 두어

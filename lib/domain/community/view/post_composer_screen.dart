@@ -10,7 +10,6 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../component/community_labels.dart';
 import '../component/post_photo.dart';
 import '../component/spot_picker_sheet.dart';
-import '../model/community_chip.dart';
 import '../../../common/model/composer_photo.dart';
 import '../model/nearby_spot.dart';
 import '../../../common/model/post.dart';
@@ -729,12 +728,7 @@ class _CategorySelector extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final List<TargetCategory> categories =
-        ref
-            .watch(communityChipsProvider)
-            .value
-            ?.map((CommunityChip c) => c.category)
-            .toList(growable: false) ??
-        const <TargetCategory>[];
+        ref.watch(communityChipsProvider).value ?? const <TargetCategory>[];
 
     final List<TargetCategory> options = categories.isEmpty
         ? TargetCategory.values

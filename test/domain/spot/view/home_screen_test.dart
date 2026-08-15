@@ -229,7 +229,8 @@ void main() {
     await tester.tap(find.byType(EventCard));
     await tester.pumpAndSettle();
 
-    // 축제는 항상 축제 카테고리로 연다 — 문자열이 enum 이름과 맞아야 한다.
-    expect(find.text('detail:f1:festivalEvent'), findsOneWidget);
+    // **카테고리를 싣지 않는다**(SPEC-0020) — 서버가 상세를 spot 자신의 카테고리로
+    // 해석하므로 라우트에서 인자가 사라졌다.
+    expect(find.text('detail:f1:-'), findsOneWidget);
   });
 }

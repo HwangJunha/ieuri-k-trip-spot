@@ -45,15 +45,12 @@ class HappeningNowSection extends ConsumerWidget {
                   // 축제도 관광지 상세로 연다 — `Festival.id`는 `Spot.id`(contentId)와
                   // 같은 식별자다.
                   //
-                  // 카테고리는 항상 축제다(`ongoingFestivals`가 축제만 준다).
-                  // **enum이 아니라 문자열로 넘긴다** — `SpotCategory`는
-                  // `domain/spot` 소유라 여기서 import하면 기능 간 의존이 생긴다
-                  // (`Festival` 모델이 그 값을 담지 않는 이유와 같다). 라우트가
-                  // 이름으로 되돌리며, 어긋나면 기본값으로 폴백해 상세는 열린다.
+                  // **카테고리는 넘기지 않는다**(SPEC-0020). 예전에는 서버의
+                  // `intro`/`infoItems`가 요구해 축제 코드를 실어 보냈으나, 이제
+                  // 서버가 spot 자신의 카테고리로 해석한다.
                   onTap: () => openSpotDetail(
                     context,
                     id: f.id,
-                    category: festivalEventCategoryName,
                     thumbnailUrl: f.thumbnailImageUrl,
                   ),
                 ),

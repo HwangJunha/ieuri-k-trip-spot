@@ -67,6 +67,9 @@ String _$communityRepositoryHash() =>
 /// 상단 칩 구성(가이드 §2). **빈 목록이 정상**이므로 빈 결과를 오류로 다루지 않는다 —
 /// 구성이 없는 앱이면 비어 오고, 칩 영역이 비는 레이아웃을 화면이 허용해야 한다.
 ///
+/// **서버가 준 순서를 그대로 쓰지 않는다** — 코드 알파벳순일 뿐이라 언어를 바꾸면
+/// 같은 칩이 다른 자리로 간다. 표시 순서는 그리는 쪽이 `kCategoryDisplayOrder`로 잡는다.
+///
 /// 피드와 **분리된 provider**인 이유는 실패가 서로를 가리지 않게 하기 위해서다.
 /// 칩 조회가 실패해도 피드는 그대로 뜨고, 그 반대도 같다.
 
@@ -76,21 +79,27 @@ const communityChipsProvider = CommunityChipsProvider._();
 /// 상단 칩 구성(가이드 §2). **빈 목록이 정상**이므로 빈 결과를 오류로 다루지 않는다 —
 /// 구성이 없는 앱이면 비어 오고, 칩 영역이 비는 레이아웃을 화면이 허용해야 한다.
 ///
+/// **서버가 준 순서를 그대로 쓰지 않는다** — 코드 알파벳순일 뿐이라 언어를 바꾸면
+/// 같은 칩이 다른 자리로 간다. 표시 순서는 그리는 쪽이 `kCategoryDisplayOrder`로 잡는다.
+///
 /// 피드와 **분리된 provider**인 이유는 실패가 서로를 가리지 않게 하기 위해서다.
 /// 칩 조회가 실패해도 피드는 그대로 뜨고, 그 반대도 같다.
 
 final class CommunityChipsProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<CommunityChip>>,
-          List<CommunityChip>,
-          FutureOr<List<CommunityChip>>
+          AsyncValue<List<TargetCategory>>,
+          List<TargetCategory>,
+          FutureOr<List<TargetCategory>>
         >
     with
-        $FutureModifier<List<CommunityChip>>,
-        $FutureProvider<List<CommunityChip>> {
+        $FutureModifier<List<TargetCategory>>,
+        $FutureProvider<List<TargetCategory>> {
   /// 상단 칩 구성(가이드 §2). **빈 목록이 정상**이므로 빈 결과를 오류로 다루지 않는다 —
   /// 구성이 없는 앱이면 비어 오고, 칩 영역이 비는 레이아웃을 화면이 허용해야 한다.
+  ///
+  /// **서버가 준 순서를 그대로 쓰지 않는다** — 코드 알파벳순일 뿐이라 언어를 바꾸면
+  /// 같은 칩이 다른 자리로 간다. 표시 순서는 그리는 쪽이 `kCategoryDisplayOrder`로 잡는다.
   ///
   /// 피드와 **분리된 provider**인 이유는 실패가 서로를 가리지 않게 하기 위해서다.
   /// 칩 조회가 실패해도 피드는 그대로 뜨고, 그 반대도 같다.
@@ -110,14 +119,14 @@ final class CommunityChipsProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<CommunityChip>> $createElement(
+  $FutureProviderElement<List<TargetCategory>> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<List<CommunityChip>> create(Ref ref) {
+  FutureOr<List<TargetCategory>> create(Ref ref) {
     return communityChips(ref);
   }
 }
 
-String _$communityChipsHash() => r'4388a7e24151113c15385a8a47baab9e076ca5a1';
+String _$communityChipsHash() => r'484095824303e1a43df876c6d9bc9a43ab15d044';

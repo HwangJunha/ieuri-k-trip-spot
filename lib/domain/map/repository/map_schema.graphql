@@ -126,7 +126,8 @@ extend type Query {
     bbox: MapBoundsInput!
     # 카카오맵 줌 레벨(1~14, 클수록 확대).
     zoom: Int!
-    category: SpotCategory
+    # SPEC-0020 R7: 지도 카테고리 필터. code 문자열 배열이며 OR로 걸린다.
+    categories: [String!]
     # true면 요청 언어로 쓰인 원문만, false면 번역본만, 생략하면 둘 다(SPEC-0019).
     hasOrigin: Boolean
   ): MapViewportResult!

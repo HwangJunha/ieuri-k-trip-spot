@@ -8,7 +8,6 @@ import 'package:ieuri_k_trip_spot/common/location/coordinates.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_service.dart';
 import 'package:ieuri_k_trip_spot/domain/community/component/post_photo.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/community_chip.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_failure.dart';
 import 'package:ieuri_k_trip_spot/common/model/composer_photo.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot.dart';
@@ -357,9 +356,7 @@ void main() {
       await _pump(
         tester,
         FakeCommunityRepository(
-          chips: const <CommunityChip>[
-            CommunityChip(category: TargetCategory.restaurant, position: 0),
-          ],
+          chips: const <TargetCategory>[TargetCategory.restaurant],
         ),
       );
 

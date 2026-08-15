@@ -18,7 +18,6 @@ part 'home_section_providers.g.dart';
 /// 족하고, 홈에서는 페이지를 더 넘기지 않는다(더 보려면 Discover로 간다).
 const int homeSectionSize = 10;
 
-
 /// 홈 "Near you" 섹션(R16). 설정된 반경 안의 spot을 서버가 계산한 거리순으로 준다.
 ///
 /// **Discover와 같은 `spots` 쿼리를 재사용한다**(설계 §3). 홈 전용 조회 경로를

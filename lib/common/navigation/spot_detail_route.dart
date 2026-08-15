@@ -19,33 +19,30 @@ const String spotDetailRouteName = 'spotDetail';
 /// 진실의 출처는 `SearchScreen.routeName`이고 이 상수가 그 값을 복사한다.
 const String searchRouteName = 'search';
 
-/// 축제의 상세 카테고리 인자 값(`SpotCategory.festivalEvent.name`).
-///
-/// `domain/event`가 축제를 상세로 열 때 쓴다 — 그쪽은 `SpotCategory`를 import할 수
-/// 없으므로(기능 간 의존) 문자열이 필요하다. **enum 이름과 어긋나면 라우트가 기본값
-/// 으로 폴백해 조용히 다른 카테고리로 열리므로**, 값을 바꾸려면 `SpotCategory`와
-/// 함께 봐야 한다 — 그래서 라우트 인자 규약을 아는 이 파일에 둔다.
-const String festivalEventCategoryName = 'festivalEvent';
+// `festivalEventCategoryName`은 SPEC-0020에서 제거됐다. 축제를 상세로 열 때
+// 카테고리를 실어 보내던 상수였는데, 서버가 상세를 spot 자신의 카테고리로 해석하게
+// 되면서 라우트에서 카테고리 인자 자체가 사라졌다 — 넘길 곳이 없으니 상수도 없앤다.
+// (값이 필요하면 `domain/spot`의 `kFestivalEventCategoryCode`가 진실의 출처다.)
 
 /// 관광지 상세로 이동한다.
 ///
-/// **인자 규약을 한곳에 모은다.** 호출부가 넷이고 규약이 두 가지라, 각자 만들면
-/// 한 곳만 빠뜨려도 그 진입점에서만 상세가 반쪽으로 열린다:
+/// **인자 규약을 한곳에 모은다.** 호출부가 넷이라 각자 만들면 한 곳만 빠뜨려도 그
+/// 진입점에서만 상세가 반쪽으로 열린다.
 ///
-/// - [category]는 서버의 `intro`/`infoItems`가 **필수로 요구하는 인자**다. 조회 중인
-///   응답의 필드를 인자로 쓸 수 없어 호출부가 이미 가진 값을 넘긴다. 없으면(매핑되지
-///   않은 서버 enum) 파라미터를 빼고 라우트가 기본값으로 폴백한다.
-/// - [thumbnailUrl]은 본문 조회를 기다리는 동안 같은 이미지를 그려 깜빡임을 없앤다
-///   (SPEC-0006 R8·AC-24). 없어도 오류가 아니다(AC-25).
+/// **카테고리 인자는 사라졌다**(SPEC-0020). 예전에는 서버의 `intro`/`infoItems`가
+/// 필수로 요구해 호출부가 이미 가진 값을 실어 보냈으나, 이제 서버가 spot 자신의
+/// 카테고리로 해석한다 — 상세를 여는 데 카테고리를 알 필요가 없다.
 ///
-/// [feedCategory]는 **어느 피드에서 열렸는지**이며 [category]와 다른 값이다. 스와이프
+/// [thumbnailUrl]은 본문 조회를 기다리는 동안 같은 이미지를 그려 깜빡임을 없앤다
+/// (SPEC-0006 R8·AC-24). 없어도 오류가 아니다(AC-25).
+///
+/// [feedCategory]는 **어느 피드에서 열렸는지**다(스와이프 세션의 선택 키). 스와이프
 /// 피드에서 열 때만 넘긴다 — 반응 후 소비할 카드 스택이 그쪽에만 있다(SPEC-0007 R11).
 ///
 /// `push`이므로 돌아오면 호출한 화면이 그대로 살아 있다.
 void openSpotDetail(
   BuildContext context, {
   required String id,
-  String? category,
   String? thumbnailUrl,
   String? feedCategory,
 }) {
@@ -53,7 +50,6 @@ void openSpotDetail(
     spotDetailRouteName,
     pathParameters: <String, String>{'id': id},
     queryParameters: <String, String>{
-      if (category case final String value) 'category': value,
       if (thumbnailUrl case final String value) 'thumb': value,
       if (feedCategory case final String value) 'feed': value,
     },

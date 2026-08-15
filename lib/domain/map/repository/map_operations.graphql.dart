@@ -1,6 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, unused_import, unused_element
-import '../../spot/repository/spot_schema.graphql.dart';
 import 'map_schema.graphql.dart';
 import 'package:gql/ast.dart';
 
@@ -8,12 +7,12 @@ class Variables$Query$MapViewport {
   factory Variables$Query$MapViewport({
     required Input$MapBoundsInput bbox,
     required int zoom,
-    Enum$SpotCategory? category,
+    List<String>? categories,
     bool? hasOrigin,
   }) => Variables$Query$MapViewport._({
     r'bbox': bbox,
     r'zoom': zoom,
-    if (category != null) r'category': category,
+    if (categories != null) r'categories': categories,
     if (hasOrigin != null) r'hasOrigin': hasOrigin,
   });
 
@@ -27,11 +26,11 @@ class Variables$Query$MapViewport {
     );
     final l$zoom = data['zoom'];
     result$data['zoom'] = (l$zoom as int);
-    if (data.containsKey('category')) {
-      final l$category = data['category'];
-      result$data['category'] = l$category == null
-          ? null
-          : fromJson$Enum$SpotCategory((l$category as String));
+    if (data.containsKey('categories')) {
+      final l$categories = data['categories'];
+      result$data['categories'] = (l$categories as List<dynamic>?)
+          ?.map((e) => (e as String))
+          .toList();
     }
     if (data.containsKey('hasOrigin')) {
       final l$hasOrigin = data['hasOrigin'];
@@ -46,7 +45,7 @@ class Variables$Query$MapViewport {
 
   int get zoom => (_$data['zoom'] as int);
 
-  Enum$SpotCategory? get category => (_$data['category'] as Enum$SpotCategory?);
+  List<String>? get categories => (_$data['categories'] as List<String>?);
 
   bool? get hasOrigin => (_$data['hasOrigin'] as bool?);
 
@@ -56,11 +55,9 @@ class Variables$Query$MapViewport {
     result$data['bbox'] = l$bbox.toJson();
     final l$zoom = zoom;
     result$data['zoom'] = l$zoom;
-    if (_$data.containsKey('category')) {
-      final l$category = category;
-      result$data['category'] = l$category == null
-          ? null
-          : toJson$Enum$SpotCategory(l$category);
+    if (_$data.containsKey('categories')) {
+      final l$categories = categories;
+      result$data['categories'] = l$categories?.map((e) => e).toList();
     }
     if (_$data.containsKey('hasOrigin')) {
       final l$hasOrigin = hasOrigin;
@@ -91,13 +88,24 @@ class Variables$Query$MapViewport {
     if (l$zoom != lOther$zoom) {
       return false;
     }
-    final l$category = category;
-    final lOther$category = other.category;
-    if (_$data.containsKey('category') !=
-        other._$data.containsKey('category')) {
+    final l$categories = categories;
+    final lOther$categories = other.categories;
+    if (_$data.containsKey('categories') !=
+        other._$data.containsKey('categories')) {
       return false;
     }
-    if (l$category != lOther$category) {
+    if (l$categories != null && lOther$categories != null) {
+      if (l$categories.length != lOther$categories.length) {
+        return false;
+      }
+      for (int i = 0; i < l$categories.length; i++) {
+        final l$categories$entry = l$categories[i];
+        final lOther$categories$entry = lOther$categories[i];
+        if (l$categories$entry != lOther$categories$entry) {
+          return false;
+        }
+      }
+    } else if (l$categories != lOther$categories) {
       return false;
     }
     final l$hasOrigin = hasOrigin;
@@ -116,12 +124,16 @@ class Variables$Query$MapViewport {
   int get hashCode {
     final l$bbox = bbox;
     final l$zoom = zoom;
-    final l$category = category;
+    final l$categories = categories;
     final l$hasOrigin = hasOrigin;
     return Object.hashAll([
       l$bbox,
       l$zoom,
-      _$data.containsKey('category') ? l$category : const {},
+      _$data.containsKey('categories')
+          ? l$categories == null
+                ? null
+                : Object.hashAll(l$categories.map((v) => v))
+          : const {},
       _$data.containsKey('hasOrigin') ? l$hasOrigin : const {},
     ]);
   }
@@ -139,7 +151,7 @@ abstract class CopyWith$Variables$Query$MapViewport<TRes> {
   TRes call({
     Input$MapBoundsInput? bbox,
     int? zoom,
-    Enum$SpotCategory? category,
+    List<String>? categories,
     bool? hasOrigin,
   });
 }
@@ -157,7 +169,7 @@ class _CopyWithImpl$Variables$Query$MapViewport<TRes>
   TRes call({
     Object? bbox = _undefined,
     Object? zoom = _undefined,
-    Object? category = _undefined,
+    Object? categories = _undefined,
     Object? hasOrigin = _undefined,
   }) => _then(
     Variables$Query$MapViewport._({
@@ -165,7 +177,7 @@ class _CopyWithImpl$Variables$Query$MapViewport<TRes>
       if (bbox != _undefined && bbox != null)
         'bbox': (bbox as Input$MapBoundsInput),
       if (zoom != _undefined && zoom != null) 'zoom': (zoom as int),
-      if (category != _undefined) 'category': (category as Enum$SpotCategory?),
+      if (categories != _undefined) 'categories': (categories as List<String>?),
       if (hasOrigin != _undefined) 'hasOrigin': (hasOrigin as bool?),
     }),
   );
@@ -180,7 +192,7 @@ class _CopyWithStubImpl$Variables$Query$MapViewport<TRes>
   call({
     Input$MapBoundsInput? bbox,
     int? zoom,
-    Enum$SpotCategory? category,
+    List<String>? categories,
     bool? hasOrigin,
   }) => _res;
 }
@@ -308,9 +320,12 @@ const documentNodeQueryMapViewport = DocumentNode(
           directives: [],
         ),
         VariableDefinitionNode(
-          variable: VariableNode(name: NameNode(value: 'category')),
-          type: NamedTypeNode(
-            name: NameNode(value: 'SpotCategory'),
+          variable: VariableNode(name: NameNode(value: 'categories')),
+          type: ListTypeNode(
+            type: NamedTypeNode(
+              name: NameNode(value: 'String'),
+              isNonNull: true,
+            ),
             isNonNull: false,
           ),
           defaultValue: DefaultValueNode(value: null),
@@ -342,8 +357,8 @@ const documentNodeQueryMapViewport = DocumentNode(
                 value: VariableNode(name: NameNode(value: 'zoom')),
               ),
               ArgumentNode(
-                name: NameNode(value: 'category'),
-                value: VariableNode(name: NameNode(value: 'category')),
+                name: NameNode(value: 'categories'),
+                value: VariableNode(name: NameNode(value: 'categories')),
               ),
               ArgumentNode(
                 name: NameNode(value: 'hasOrigin'),
@@ -386,7 +401,31 @@ const documentNodeQueryMapViewport = DocumentNode(
                         alias: null,
                         arguments: [],
                         directives: [],
-                        selectionSet: null,
+                        selectionSet: SelectionSetNode(
+                          selections: [
+                            FieldNode(
+                              name: NameNode(value: 'code'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: null,
+                            ),
+                            FieldNode(
+                              name: NameNode(value: 'label'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: null,
+                            ),
+                            FieldNode(
+                              name: NameNode(value: 'iconUrl'),
+                              alias: null,
+                              arguments: [],
+                              directives: [],
+                              selectionSet: null,
+                            ),
+                          ],
+                        ),
                       ),
                       FieldNode(
                         name: NameNode(value: 'lng'),
@@ -726,7 +765,9 @@ class Query$MapViewport$mapViewport$spots {
       id: (l$id as String),
       title: (l$title as String),
       thumbnailImageUrl: (l$thumbnailImageUrl as String),
-      category: fromJson$Enum$SpotCategory((l$category as String)),
+      category: Query$MapViewport$mapViewport$spots$category.fromJson(
+        (l$category as Map<String, dynamic>),
+      ),
       lng: (l$lng as num).toDouble(),
       lat: (l$lat as num).toDouble(),
     );
@@ -738,7 +779,7 @@ class Query$MapViewport$mapViewport$spots {
 
   final String thumbnailImageUrl;
 
-  final Enum$SpotCategory category;
+  final Query$MapViewport$mapViewport$spots$category category;
 
   final double lng;
 
@@ -753,7 +794,7 @@ class Query$MapViewport$mapViewport$spots {
     final l$thumbnailImageUrl = thumbnailImageUrl;
     _resultData['thumbnailImageUrl'] = l$thumbnailImageUrl;
     final l$category = category;
-    _resultData['category'] = toJson$Enum$SpotCategory(l$category);
+    _resultData['category'] = l$category.toJson();
     final l$lng = lng;
     _resultData['lng'] = l$lng;
     final l$lat = lat;
@@ -843,10 +884,11 @@ abstract class CopyWith$Query$MapViewport$mapViewport$spots<TRes> {
     String? id,
     String? title,
     String? thumbnailImageUrl,
-    Enum$SpotCategory? category,
+    Query$MapViewport$mapViewport$spots$category? category,
     double? lng,
     double? lat,
   });
+  CopyWith$Query$MapViewport$mapViewport$spots$category<TRes> get category;
 }
 
 class _CopyWithImpl$Query$MapViewport$mapViewport$spots<TRes>
@@ -878,11 +920,19 @@ class _CopyWithImpl$Query$MapViewport$mapViewport$spots<TRes>
           : (thumbnailImageUrl as String),
       category: category == _undefined || category == null
           ? _instance.category
-          : (category as Enum$SpotCategory),
+          : (category as Query$MapViewport$mapViewport$spots$category),
       lng: lng == _undefined || lng == null ? _instance.lng : (lng as double),
       lat: lat == _undefined || lat == null ? _instance.lat : (lat as double),
     ),
   );
+
+  CopyWith$Query$MapViewport$mapViewport$spots$category<TRes> get category {
+    final local$category = _instance.category;
+    return CopyWith$Query$MapViewport$mapViewport$spots$category(
+      local$category,
+      (e) => call(category: e),
+    );
+  }
 }
 
 class _CopyWithStubImpl$Query$MapViewport$mapViewport$spots<TRes>
@@ -895,10 +945,146 @@ class _CopyWithStubImpl$Query$MapViewport$mapViewport$spots<TRes>
     String? id,
     String? title,
     String? thumbnailImageUrl,
-    Enum$SpotCategory? category,
+    Query$MapViewport$mapViewport$spots$category? category,
     double? lng,
     double? lat,
   }) => _res;
+
+  CopyWith$Query$MapViewport$mapViewport$spots$category<TRes> get category =>
+      CopyWith$Query$MapViewport$mapViewport$spots$category.stub(_res);
+}
+
+class Query$MapViewport$mapViewport$spots$category {
+  Query$MapViewport$mapViewport$spots$category({
+    required this.code,
+    required this.label,
+    this.iconUrl,
+  });
+
+  factory Query$MapViewport$mapViewport$spots$category.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$code = json['code'];
+    final l$label = json['label'];
+    final l$iconUrl = json['iconUrl'];
+    return Query$MapViewport$mapViewport$spots$category(
+      code: (l$code as String),
+      label: (l$label as String),
+      iconUrl: (l$iconUrl as String?),
+    );
+  }
+
+  final String code;
+
+  final String label;
+
+  final String? iconUrl;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$label = label;
+    _resultData['label'] = l$label;
+    final l$iconUrl = iconUrl;
+    _resultData['iconUrl'] = l$iconUrl;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$code = code;
+    final l$label = label;
+    final l$iconUrl = iconUrl;
+    return Object.hashAll([l$code, l$label, l$iconUrl]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$MapViewport$mapViewport$spots$category ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$label = label;
+    final lOther$label = other.label;
+    if (l$label != lOther$label) {
+      return false;
+    }
+    final l$iconUrl = iconUrl;
+    final lOther$iconUrl = other.iconUrl;
+    if (l$iconUrl != lOther$iconUrl) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$MapViewport$mapViewport$spots$category
+    on Query$MapViewport$mapViewport$spots$category {
+  CopyWith$Query$MapViewport$mapViewport$spots$category<
+    Query$MapViewport$mapViewport$spots$category
+  >
+  get copyWith =>
+      CopyWith$Query$MapViewport$mapViewport$spots$category(this, (i) => i);
+}
+
+abstract class CopyWith$Query$MapViewport$mapViewport$spots$category<TRes> {
+  factory CopyWith$Query$MapViewport$mapViewport$spots$category(
+    Query$MapViewport$mapViewport$spots$category instance,
+    TRes Function(Query$MapViewport$mapViewport$spots$category) then,
+  ) = _CopyWithImpl$Query$MapViewport$mapViewport$spots$category;
+
+  factory CopyWith$Query$MapViewport$mapViewport$spots$category.stub(TRes res) =
+      _CopyWithStubImpl$Query$MapViewport$mapViewport$spots$category;
+
+  TRes call({String? code, String? label, String? iconUrl});
+}
+
+class _CopyWithImpl$Query$MapViewport$mapViewport$spots$category<TRes>
+    implements CopyWith$Query$MapViewport$mapViewport$spots$category<TRes> {
+  _CopyWithImpl$Query$MapViewport$mapViewport$spots$category(
+    this._instance,
+    this._then,
+  );
+
+  final Query$MapViewport$mapViewport$spots$category _instance;
+
+  final TRes Function(Query$MapViewport$mapViewport$spots$category) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? code = _undefined,
+    Object? label = _undefined,
+    Object? iconUrl = _undefined,
+  }) => _then(
+    Query$MapViewport$mapViewport$spots$category(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      label: label == _undefined || label == null
+          ? _instance.label
+          : (label as String),
+      iconUrl: iconUrl == _undefined ? _instance.iconUrl : (iconUrl as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$MapViewport$mapViewport$spots$category<TRes>
+    implements CopyWith$Query$MapViewport$mapViewport$spots$category<TRes> {
+  _CopyWithStubImpl$Query$MapViewport$mapViewport$spots$category(this._res);
+
+  TRes _res;
+
+  call({String? code, String? label, String? iconUrl}) => _res;
 }
 
 class Query$MapViewport$mapViewport$events {

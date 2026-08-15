@@ -5,11 +5,13 @@ import '../../../common/location/location_providers.dart';
 // 페이지 모델은 공용 OffsetPage다 — 기능이 자기 페이지네이션을 만들지 않는다(§4).
 import '../../../common/pagination/offset_page.dart';
 import '../../../common/storage/search_radius_controller.dart';
-import '../model/spot_category.dart';
+import '../../../common/category/spot_category.dart';
+import '../../../common/category/spot_category_selection.dart';
 import '../model/spot_search_result.dart';
 import '../model/spot_search_state.dart';
 import '../model/spot_suggestion.dart';
 import 'recent_searches_providers.dart';
+import '../../../common/category/spot_category_toggle.dart';
 import 'spot_providers.dart';
 
 part 'spot_search_providers.g.dart';
@@ -17,22 +19,21 @@ part 'spot_search_providers.g.dart';
 /// 검색 페이지가 한 번에 받는 결과 수. 계약 기본값(20)을 따른다.
 const int spotSearchPageSize = 20;
 
-/// 검색에 걸린 카테고리 필터(R5). null이면 전체다(AC-5.2).
+/// 검색에 걸린 카테고리 필터(SPEC-0013 R5 · SPEC-0020 R2). **비어 있을 수 없는
+/// 집합이다** — "전체 보기"가 사라졌으므로 `null`("필터 없음")이라는 표현이 없다.
 ///
-/// **Discover의 [SelectedSpotCategory]와 별개다** — 같은 provider를 쓰면 Discover에서
-/// 고른 필터가 검색 결과까지 갈아치운다. `CategoryBar`가 선택 상태를 화면에서 받도록
-/// 만들어진 것도 같은 이유다.
+/// **Discover의 [SelectedSpotCategory]와 별개다**(R12) — 같은 provider를 쓰면
+/// Discover에서 고른 필터가 검색 결과까지 갈아치운다.
 ///
 /// `keepAlive`인 이유는 검색 상태와 같다 — 상세를 다녀와도 고른 필터가 남아야
-/// 결과와 어긋나지 않는다(AC-13.2).
+/// 결과와 어긋나지 않는다(AC-13.2·AC12.3).
+///
+/// **결과를 다시 받는 것은 호출부(화면)가 한다** — 이 provider는 조회 조건만 들고
+/// 있고, 무엇을 언제 다시 조회할지는 검색 notifier가 정한다.
 @Riverpod(keepAlive: true)
-class SpotSearchCategory extends _$SpotSearchCategory {
+class SpotSearchCategory extends _$SpotSearchCategory with SpotCategoryToggle {
   @override
-  SpotCategory? build() => null;
-
-  /// 필터를 바꾼다. **결과를 다시 받는 것은 호출부(화면)가 한다** — 이 provider는
-  /// 조회 조건만 들고 있고, 무엇을 언제 다시 조회할지는 검색 notifier가 정한다.
-  void select(SpotCategory? category) => state = category;
+  Set<SpotCategory> build() => <SpotCategory>{};
 }
 
 /// 검색 결과 상태 기계(R11).
@@ -99,6 +100,11 @@ class SpotSearch extends _$SpotSearch {
     await _run(current.query);
   }
 
+  /// 현재 선택을 조회 변수로 접는다. 빈 집합은 null이 되어 인자가 생략된다
+  /// (빈 배열은 서버가 거절한다, AC5.1).
+  List<String>? _categoryCodes() =>
+      SpotCategorySelection(ref.read(spotSearchCategoryProvider)).codesOrNull;
+
   Future<void> _run(String query) async {
     try {
       final Coordinates coords = await ref.read(
@@ -113,8 +119,9 @@ class SpotSearch extends _$SpotSearch {
             latitude: coords.latitude,
             longitude: coords.longitude,
             radiusMeters: radiusMetersOf(radiusKm),
-            // null이면 전체가 대상이다(AC-5.2) — 서버가 nullable로 받는다.
-            category: ref.read(spotSearchCategoryProvider),
+            // 빈 집합이면 인자를 생략해 전체를 받는다 — 빈 배열은 서버가
+            // `EMPTY_CATEGORY_SET`으로 거절한다(SPEC-0020 AC5.1).
+            categoryCodes: _categoryCodes(),
             page: 0,
             size: spotSearchPageSize,
           );
@@ -161,7 +168,7 @@ class SpotSearch extends _$SpotSearch {
             radiusMeters: radiusMetersOf(radiusKm),
             // 첫 페이지와 **같은 필터로** 이어 받는다 — 도중에 바뀌면 화면이
             // 처음부터 다시 조회하므로 이 경로는 실행되지 않는다.
-            category: ref.read(spotSearchCategoryProvider),
+            categoryCodes: _categoryCodes(),
             page: current.result.pageNumber + 1,
             size: spotSearchPageSize,
           );

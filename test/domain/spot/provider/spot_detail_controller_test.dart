@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
 import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
-import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_detail.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_reaction.dart';
@@ -22,12 +21,12 @@ Future<(ProviderContainer, SpotDetail)> _load(FakeSpotRepository repo) async {
   );
   addTearDown(container.dispose);
   container.listen(
-    spotDetailControllerProvider('c1', SpotCategory.touristSpot),
+    spotDetailControllerProvider('c1'),
     (_, _) {},
     fireImmediately: true,
   );
   final SpotDetail detail = await container.read(
-    spotDetailControllerProvider('c1', SpotCategory.touristSpot).future,
+    spotDetailControllerProvider('c1').future,
   );
   return (container, detail);
 }
@@ -55,19 +54,11 @@ void main() {
       final (container, _) = await _load(repo);
 
       await container
-          .read(
-            spotDetailControllerProvider(
-              'c1',
-              SpotCategory.touristSpot,
-            ).notifier,
-          )
+          .read(spotDetailControllerProvider('c1').notifier)
           .react(SpotReaction.like);
 
       expect(
-        container
-            .read(spotDetailControllerProvider('c1', SpotCategory.touristSpot))
-            .value!
-            .likeCount,
+        container.read(spotDetailControllerProvider('c1')).value!.likeCount,
         11,
       );
       expect(repo.recordedReactions, <(String, SpotReaction)>[
@@ -80,17 +71,14 @@ void main() {
     final repo = FakeSpotRepository(detail: detailSpot('c1', likeCount: 10));
     final (container, _) = await _load(repo);
     final notifier = container.read(
-      spotDetailControllerProvider('c1', SpotCategory.touristSpot).notifier,
+      spotDetailControllerProvider('c1').notifier,
     );
 
     await notifier.react(SpotReaction.like); // 10 → 11
     await notifier.react(SpotReaction.dislike); // 이전 LIKE 취소 → 10
 
     expect(
-      container
-          .read(spotDetailControllerProvider('c1', SpotCategory.touristSpot))
-          .value!
-          .likeCount,
+      container.read(spotDetailControllerProvider('c1')).value!.likeCount,
       10,
     );
   });
@@ -102,7 +90,7 @@ void main() {
     );
     final (container, _) = await _load(repo);
     final notifier = container.read(
-      spotDetailControllerProvider('c1', SpotCategory.touristSpot).notifier,
+      spotDetailControllerProvider('c1').notifier,
     );
 
     await expectLater(
@@ -111,10 +99,7 @@ void main() {
     );
     // 낙관적 +1이 롤백돼 원래 값으로 복귀.
     expect(
-      container
-          .read(spotDetailControllerProvider('c1', SpotCategory.touristSpot))
-          .value!
-          .likeCount,
+      container.read(spotDetailControllerProvider('c1')).value!.likeCount,
       10,
     );
   });
@@ -129,7 +114,7 @@ void main() {
       );
       final (container, _) = await _load(repo);
       final notifier = container.read(
-        spotDetailControllerProvider('c1', SpotCategory.touristSpot).notifier,
+        spotDetailControllerProvider('c1').notifier,
       );
 
       // 인증 실패로 시작했지만 갱신 후 재시도가 성공하므로 예외가 나오지 않는다.
@@ -137,10 +122,7 @@ void main() {
 
       // 낙관적 +1이 그대로 유지된다 — 롤백 없음.
       expect(
-        container
-            .read(spotDetailControllerProvider('c1', SpotCategory.touristSpot))
-            .value!
-            .likeCount,
+        container.read(spotDetailControllerProvider('c1')).value!.likeCount,
         11,
       );
     },
@@ -172,18 +154,16 @@ void main() {
     );
     addTearDown(container.dispose);
     container.listen(
-      swipeControllerProvider(null),
+      swipeControllerProvider(noCategories),
       (_, _) {},
       fireImmediately: true,
     );
-    await container.read(swipeControllerProvider(null).future);
+    await container.read(swipeControllerProvider(noCategories).future);
 
     final notifier = container.read(
-      spotDetailControllerProvider('c1', SpotCategory.touristSpot).notifier,
+      spotDetailControllerProvider('c1').notifier,
     );
-    await container.read(
-      spotDetailControllerProvider('c1', SpotCategory.touristSpot).future,
-    );
+    await container.read(spotDetailControllerProvider('c1').future);
 
     await expectLater(
       () => notifier.react(SpotReaction.like),
@@ -192,16 +172,13 @@ void main() {
 
     // 낙관적 +1 롤백(AC-30 그대로).
     expect(
-      container
-          .read(spotDetailControllerProvider('c1', SpotCategory.touristSpot))
-          .value!
-          .likeCount,
+      container.read(spotDetailControllerProvider('c1')).value!.likeCount,
       10,
     );
     // 사라진 축제는 스와이프 스택에서도 빠진다(AC-44).
     expect(
       container
-          .read(swipeControllerProvider(null))
+          .read(swipeControllerProvider(noCategories))
           .value!
           .cards
           .map((TouristSpot s) => s.id),
@@ -234,39 +211,28 @@ void main() {
     );
     addTearDown(container.dispose);
     container.listen(
-      swipeControllerProvider(null),
+      swipeControllerProvider(noCategories),
       (_, _) {},
       fireImmediately: true,
     );
-    await container.read(swipeControllerProvider(null).future);
+    await container.read(swipeControllerProvider(noCategories).future);
 
     // 상세를 한 번 정상적으로 연 뒤, 그 사이 축제가 삭제된 상황을 만든다.
     container.listen(
-      spotDetailControllerProvider('c1', SpotCategory.touristSpot),
+      spotDetailControllerProvider('c1'),
       (_, _) {},
       fireImmediately: true,
     );
-    await container.read(
-      spotDetailControllerProvider('c1', SpotCategory.touristSpot).future,
-    );
+    await container.read(spotDetailControllerProvider('c1').future);
 
     repo.detailFailure = SpotFailure.notFound;
-    await container
-        .read(
-          spotDetailControllerProvider('c1', SpotCategory.touristSpot).notifier,
-        )
-        .reload();
+    await container.read(spotDetailControllerProvider('c1').notifier).reload();
 
     // 상세 자체는 오류 상태다(사용자가 연 화면이라 그대로 보여준다).
-    expect(
-      container
-          .read(spotDetailControllerProvider('c1', SpotCategory.touristSpot))
-          .hasError,
-      isTrue,
-    );
+    expect(container.read(spotDetailControllerProvider('c1')).hasError, isTrue);
 
     final AsyncValue<SwipeQueue> session = container.read(
-      swipeControllerProvider(null),
+      swipeControllerProvider(noCategories),
     );
     // 세션은 살아 있고, 사라진 카드만 빠졌다.
     expect(session.hasError, isFalse);

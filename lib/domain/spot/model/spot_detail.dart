@@ -1,5 +1,5 @@
 import 'copyright_type.dart';
-import 'spot_category.dart';
+import '../../../common/category/spot_category.dart';
 import 'spot_image.dart';
 import 'spot_info_item.dart';
 import 'spot_intro.dart';
