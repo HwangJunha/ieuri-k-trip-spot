@@ -15,7 +15,6 @@ import '../../../common/pagination/page.dart';
 // 커뮤니티가 소유한 `NearbySpotCategory`다(CLAUDE.md §3).
 import '../model/blocked_user.dart';
 import '../../../common/model/comment.dart';
-import '../model/community_chip.dart';
 import '../model/community_failure.dart';
 import '../model/nearby_spot.dart';
 import '../model/nearby_spot_category.dart';
@@ -314,7 +313,7 @@ class CommunityRepositoryImpl implements CommunityRepository {
   }
 
   @override
-  Future<List<CommunityChip>> fetchCommunityChips() async {
+  Future<List<TargetCategory>> fetchCommunityChips() async {
     // 앱 구분(X-App-Key)과 언어(Accept-Language)는 인자가 아니라 헤더로 간다
     // (가이드 §1). 빈 목록이 정상이므로 오류로 만들지 않는다(§2).
     final Map<String, dynamic> data = await _query(
@@ -323,10 +322,15 @@ class CommunityRepositoryImpl implements CommunityRepository {
       'communityChips',
     );
     return Query$CommunityChips.fromJson(data).communityChips
-        .map(_chipFromNode)
-        // 클라이언트가 모르는 카테고리는 그릴 수 없으므로 뺀다 — 칩 하나 때문에
-        // 상단 줄 전체를 실패시키지 않는다.
-        .whereType<CommunityChip>()
+        .map(_categoryFromEnum)
+        // **모르는 코드는 여기서만 버린다.** 서버가 카테고리를 늘리면 생성 enum이
+        // `$unknown`을 주는데, 이 필드는 값 자체가 카테고리라서 클라이언트에 라벨도
+        // 아이콘도 없다 — 그리려 해도 그릴 것이 없다. 칩 하나 때문에 상단 줄 전체를
+        // 실패시키지 않으려고 거르며, 이것이 서버가 늘린 카테고리를 사용자에게
+        // 숨기는 유일한 지점이다(앱 업데이트로 enum이 추가되면 그대로 나타난다).
+        // 반대로 `kCategoryDisplayOrder`에 없을 뿐인 **아는** 코드는 버리지 않고
+        // 줄 끝에 붙는다(`orderedCategoryChips`).
+        .whereType<TargetCategory>()
         .toList(growable: false);
   }
 
@@ -919,14 +923,6 @@ class CommunityRepositoryImpl implements CommunityRepository {
     required String? profileImageUrl,
   }) =>
       PostAuthor(id: id, nickname: nickname, profileImageUrl: profileImageUrl);
-
-  /// 칩 하나. 클라이언트가 모르는 카테고리면 null이라 호출부가 걸러 낸다.
-  CommunityChip? _chipFromNode(Query$CommunityChips$communityChips n) {
-    final TargetCategory? category = _categoryFromEnum(n.category);
-    return category == null
-        ? null
-        : CommunityChip(category: category, position: n.position);
-  }
 
   /// 서버가 준 ISO-8601 문자열을 시각으로 파싱한다. 형식이 어긋나면 글 전체를
   /// 실패시키지 않고 epoch로 떨어뜨린다 — 상대 시각 하나 때문에 피드가 비면 손해가

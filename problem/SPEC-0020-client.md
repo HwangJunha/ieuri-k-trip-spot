@@ -22,7 +22,7 @@
 | 2 | `CategoryBar` 다중 선택 전환, "전체 보기" 칩 제거, 라벨을 `label`로 | R1·R2·R3·R11 | ✅ |
 | 3 | 세 provider를 단일 값 → 집합으로, 기본값 `{TOURIST_SPOT}`·폴백·빈 목록 | R2·R4·R12 | ✅ |
 | 4 | 집합 → `categories: [String!]` 매핑, 5개 연산 배선 | R5 | ✅ |
-| 5 | 지도 카테고리 필터 신설 + 디바운스 | R7·R8 | ✅ |
+| 5 | ~~지도 카테고리 필터 신설 + 디바운스~~ — **철회** | R7·R8 | ❌ |
 | — | 카드 썸네일·간격 · 서브 컬러 `#B4501E` | R9·R10 | ✅ |
 
 **전 단계 구현 완료(2026-08-15).** `flutter analyze` 무결점, 테스트 1180개 통과.
@@ -59,6 +59,42 @@
 **`availableSpotCategoriesProvider`와 `spot_category_seed.dart`는 spot에 남깁니다.** 전자가 `SpotRepository`(GraphQL 오퍼레이션 포함)에 묶여 있어, common으로 올리면 `common/`이 도메인 데이터 접근을 갖게 됩니다 — 교차 기능 import보다 나쁜 위반입니다. 카테고리 *목록*은 서버 리소스이고 그 접근 경로를 spot이 소유하며, 지도는 소비자입니다.
 
 결과적으로 map→spot 참조는 **5건에서 2건**으로 줄었고, 남은 둘은 그 목록 하나로 귀결됩니다. `common/category/`는 도메인을 전혀 참조하지 않습니다.
+
+### 지도 필터 철회 (2026-08-16 사용자 결정)
+
+**R7·R8을 구현했다가 걷어냈습니다.** 실기기에서 보니 검색창·범례·재검색 버튼·줌
+컨트롤·현재 위치·추천 버튼이 이미 얹힌 위에 카테고리 바가 하나 더 들어가 가독성이
+떨어졌습니다. 스펙 자신도 "지도는 이 앱에서 오버레이가 가장 많은 화면"이라며 배치
+충돌을 경고하고 있었는데, 실제로 그 경고가 맞았습니다.
+
+제거 대상: `MapSelectedCategory` provider, `mapViewport`의 `categoryKey` 인자,
+지도 화면의 바·디바운스 핸들러(`_onCategoryFilterChanged`). 재검색 버튼 오프셋도
+원래 값으로 되돌렸습니다.
+
+리포지토리(`fetchViewport`의 `categoryCodes`)와 GraphQL 오퍼레이션의 `categories`
+인자는 **남겨 둡니다** — 서버 계약이고, 나중에 다른 형태(예: 필터 시트)로 붙일 때
+다시 쓸 수 있습니다. 지금은 항상 null이 갑니다.
+
+### 커뮤니티 칩 계약 수정 (2026-08-16)
+
+**커뮤니티 카테고리 줄이 아예 뜨지 않고 있었습니다.** 서버가 `communityChips`를
+객체 배열에서 enum 배열로 바꿨는데 클라이언트가 따라가지 않아, 조회가 늘
+`SubselectionNotAllowed`로 실패하고 화면이 `orElse`로 빈 위젯을 그렸습니다.
+
+```
+서버: communityChips: [TargetCategory!]!          (leaf)
+옛 클라이언트: communityChips { category position }  → 거절
+```
+
+`CommunityChip` 타입과 `position` 필드는 서버에 더 이상 없습니다. 모델
+(`community_chip.dart`)을 지우고 `TargetCategory`를 직접 씁니다.
+
+**`origin/dev`에도 같은 상태였습니다** — 이번 작업이 만든 문제가 아니라 드러난
+문제입니다. 페이크 리포지토리를 쓰는 위젯 테스트가 깨진 쿼리를 우회해 통과하고
+있어 그동안 잡히지 않았습니다.
+
+정렬은 이제 클라이언트가 잡습니다(`kCategoryDisplayOrder`) — 서버가 순서를
+보장한다는 옛 주석들을 함께 정정했습니다.
 
 ### 함께 고친 기존 버그
 

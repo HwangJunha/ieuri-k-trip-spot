@@ -4,7 +4,6 @@ import '../../../common/category/category_bar.dart';
 import '../../../common/category/category_chip_data.dart';
 import '../../../common/category/spot_category_icon.dart';
 import '../../../l10n/gen/app_localizations.dart';
-import '../model/community_chip.dart';
 import '../../../common/model/target_category.dart';
 import 'community_labels.dart';
 
@@ -14,10 +13,12 @@ import 'community_labels.dart';
 /// 디자인이 앱 전체의 기준이 되면서, spot 쪽 바가 여기 모양으로 맞춰졌고 이쪽은
 /// 그 공용 위젯을 다시 쓴다 — 같은 모양이 두 벌 남으면 한쪽만 고쳐 갈라진다.
 ///
-/// **항목 구성은 서버가 정한다** — `communityChips`가 카테고리와 순서를 내려주고
-/// 앱은 표시 문구만 매핑한다(가이드 §2). 다만 **표시 순서는 앱이 고정한다**
-/// (`kCategoryDisplayOrder`): 사용자가 자리로 기억하는 줄이라 spot 쪽 바와 같은
-/// 순서여야 하고, 서버 `position`을 따르면 두 화면의 순서가 갈린다.
+/// **항목 구성은 서버가 정한다** — `communityChips`가 어떤 카테고리를 쓸지 내려주고
+/// 앱은 표시 문구만 매핑한다(가이드 §2). 다만 **순서는 서버가 정하지 않는다**:
+/// 서버는 코드 알파벳순 배열을 줄 뿐이라 언어를 바꾸면 같은 칩이 다른 자리로 간다.
+/// 표시 순서는 [CategoryBar]가 `kCategoryDisplayOrder`로 고정한다 — 사용자가 자리로
+/// 기억하는 줄이라 spot 쪽 바와 같은 순서여야 한다. 그 목록에 없는 코드도 버리지 않고
+/// 줄 끝에 붙는다.
 ///
 /// **[chips]가 비어도 정상이다.** 구성이 없는 앱이면 서버가 빈 목록을 준다 — 그때는
 /// "전체" 하나만 남는 것이 아니라 **줄 자체를 그리지 않는다**([CategoryBar]가 빈
@@ -34,7 +35,7 @@ class CategoryChipRow extends StatelessWidget {
     required this.onSelected,
   });
 
-  final List<CommunityChip> chips;
+  final List<TargetCategory> chips;
 
   /// 지금 선택된 카테고리. null이면 "전체" 항목이 선택 상태다.
   final TargetCategory? selected;
@@ -46,14 +47,14 @@ class CategoryChipRow extends StatelessWidget {
     final AppLocalizations l10n = AppLocalizations.of(context);
     return CategoryBar(
       available: <CategoryChipData>[
-        for (final CommunityChip chip in chips)
+        for (final TargetCategory chip in chips)
           CategoryChipData(
-            id: _codeOf(chip.category),
-            label: targetCategoryLabel(l10n, chip.category),
+            id: _codeOf(chip),
+            label: targetCategoryLabel(l10n, chip),
             // 아이콘은 코드 기준 공용 매핑을 쓴다 — 예전에는 이 파일이 같은 모양의
             // switch를 따로 들고 있었고, 두 벌이 갈리면 같은 카테고리가 화면마다
             // 다른 아이콘으로 보인다.
-            icon: spotCategoryIcon(_codeOf(chip.category)),
+            icon: spotCategoryIcon(_codeOf(chip)),
           ),
       ],
       selectedIds: selected == null

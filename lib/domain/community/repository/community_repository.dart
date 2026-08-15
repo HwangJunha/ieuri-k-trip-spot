@@ -4,7 +4,6 @@ import '../../../common/pagination/offset_page.dart';
 import '../../../common/pagination/page.dart';
 import '../model/blocked_user.dart';
 import '../../../common/model/comment.dart';
-import '../model/community_chip.dart';
 import '../model/nearby_spot.dart';
 import '../model/nearby_spot_category.dart';
 import '../../../common/model/post.dart';
@@ -164,8 +163,10 @@ abstract interface class CommunityRepository {
   /// 상단 칩 구성. **빈 목록이 정상이다**(가이드 §2) — 구성이 없는 앱이면 비어 오고
   /// 오류가 아니므로 칩 영역이 비는 레이아웃을 허용해야 한다.
   ///
-  /// `position` 오름차순으로 이미 정렬돼 오며 표시 문구는 클라이언트가 매핑한다.
-  Future<List<CommunityChip>> fetchCommunityChips();
+  /// **순서는 서버가 정하지 않는다**(2026-08-16 계약 변경). 예전에는 `position`을
+  /// 가진 객체가 왔지만 지금은 enum 배열이 코드 알파벳순으로 올 뿐이다 — 표시 순서는
+  /// `kCategoryDisplayOrder`가 정하고, 표시 문구는 클라이언트가 매핑한다.
+  Future<List<TargetCategory>> fetchCommunityChips();
 
   /// 내가 차단한 사람 한 페이지. **나를 차단한 사람은 여기 없다**(가이드 §6).
   Future<CursorPage<BlockedUser>> fetchBlockedUsers({

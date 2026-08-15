@@ -10,7 +10,6 @@ import '../component/category_chip_row.dart';
 import '../component/feed_sort_toggle.dart';
 import '../component/post_card.dart';
 import '../component/post_photo.dart';
-import '../model/community_chip.dart';
 import '../../../common/model/post.dart';
 import '../model/post_sort_order.dart';
 import '../../../common/model/target_category.dart';
@@ -131,7 +130,7 @@ class _Chips extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) => ref
       .watch(communityChipsProvider)
       .maybeWhen(
-        data: (List<CommunityChip> chips) => CategoryChipRow(
+        data: (List<TargetCategory> chips) => CategoryChipRow(
           chips: chips,
           selected: selected,
           onSelected: (TargetCategory? next) =>

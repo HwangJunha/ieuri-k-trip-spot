@@ -4,7 +4,6 @@ import 'package:ieuri_k_trip_spot/common/pagination/offset_page.dart';
 import 'package:ieuri_k_trip_spot/common/pagination/page.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/blocked_user.dart';
 import 'package:ieuri_k_trip_spot/common/model/comment.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/community_chip.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot_category.dart';
@@ -398,18 +397,16 @@ void main() {
 
   group('communityChips', () {
     test('칩을 매핑한다 (표시 문구는 서버가 주지 않는다)', () async {
-      final List<CommunityChip> chips = await _repo(
+      // 서버는 객체가 아니라 **enum 배열**을 준다(2026-08-16 계약 변경).
+      final List<TargetCategory> chips = await _repo(
         _FakeLink(
           data: <String, dynamic>{
-            'communityChips': <dynamic>[
-              <String, dynamic>{'category': 'RESTAURANT', 'position': 0},
-              <String, dynamic>{'category': 'LODGING', 'position': 1},
-            ],
+            'communityChips': <dynamic>['RESTAURANT', 'LODGING'],
           },
         ),
       ).fetchCommunityChips();
 
-      expect(chips.map((CommunityChip c) => c.category), <TargetCategory>[
+      expect(chips, <TargetCategory>[
         TargetCategory.restaurant,
         TargetCategory.lodging,
       ]);
@@ -417,7 +414,7 @@ void main() {
 
     // 가이드 §2 — 구성이 없는 앱이면 빈 목록이고 그것이 정상이다.
     test('빈 목록은 정상이다', () async {
-      final List<CommunityChip> chips = await _repo(
+      final List<TargetCategory> chips = await _repo(
         _FakeLink(data: <String, dynamic>{'communityChips': <dynamic>[]}),
       ).fetchCommunityChips();
 
@@ -426,19 +423,15 @@ void main() {
 
     // 클라이언트가 모르는 카테고리 하나 때문에 상단 줄 전체를 실패시키지 않는다.
     test('모르는 카테고리는 빼고 나머지를 준다', () async {
-      final List<CommunityChip> chips = await _repo(
+      final List<TargetCategory> chips = await _repo(
         _FakeLink(
           data: <String, dynamic>{
-            'communityChips': <dynamic>[
-              <String, dynamic>{'category': 'SOMETHING_NEW', 'position': 0},
-              <String, dynamic>{'category': 'RESTAURANT', 'position': 1},
-            ],
+            'communityChips': <dynamic>['SOMETHING_NEW', 'RESTAURANT'],
           },
         ),
       ).fetchCommunityChips();
 
-      expect(chips, hasLength(1));
-      expect(chips.single.category, TargetCategory.restaurant);
+      expect(chips, <TargetCategory>[TargetCategory.restaurant]);
     });
   });
 

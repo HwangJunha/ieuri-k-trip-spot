@@ -3884,22 +3884,18 @@ class Query$CommunityChips {
     final l$communityChips = json['communityChips'];
     return Query$CommunityChips(
       communityChips: (l$communityChips as List<dynamic>)
-          .map(
-            (e) => Query$CommunityChips$communityChips.fromJson(
-              (e as Map<String, dynamic>),
-            ),
-          )
+          .map((e) => fromJson$Enum$TargetCategory((e as String)))
           .toList(),
     );
   }
 
-  final List<Query$CommunityChips$communityChips> communityChips;
+  final List<Enum$TargetCategory> communityChips;
 
   Map<String, dynamic> toJson() {
     final _resultData = <String, dynamic>{};
     final l$communityChips = communityChips;
     _resultData['communityChips'] = l$communityChips
-        .map((e) => e.toJson())
+        .map((e) => toJson$Enum$TargetCategory(e))
         .toList();
     return _resultData;
   }
@@ -3948,17 +3944,7 @@ abstract class CopyWith$Query$CommunityChips<TRes> {
   factory CopyWith$Query$CommunityChips.stub(TRes res) =
       _CopyWithStubImpl$Query$CommunityChips;
 
-  TRes call({List<Query$CommunityChips$communityChips>? communityChips});
-  TRes communityChips(
-    Iterable<Query$CommunityChips$communityChips> Function(
-      Iterable<
-        CopyWith$Query$CommunityChips$communityChips<
-          Query$CommunityChips$communityChips
-        >
-      >,
-    )
-    _fn,
-  );
+  TRes call({List<Enum$TargetCategory>? communityChips});
 }
 
 class _CopyWithImpl$Query$CommunityChips<TRes>
@@ -3975,25 +3961,8 @@ class _CopyWithImpl$Query$CommunityChips<TRes>
     Query$CommunityChips(
       communityChips: communityChips == _undefined || communityChips == null
           ? _instance.communityChips
-          : (communityChips as List<Query$CommunityChips$communityChips>),
+          : (communityChips as List<Enum$TargetCategory>),
     ),
-  );
-
-  TRes communityChips(
-    Iterable<Query$CommunityChips$communityChips> Function(
-      Iterable<
-        CopyWith$Query$CommunityChips$communityChips<
-          Query$CommunityChips$communityChips
-        >
-      >,
-    )
-    _fn,
-  ) => call(
-    communityChips: _fn(
-      _instance.communityChips.map(
-        (e) => CopyWith$Query$CommunityChips$communityChips(e, (i) => i),
-      ),
-    ).toList(),
   );
 }
 
@@ -4003,9 +3972,7 @@ class _CopyWithStubImpl$Query$CommunityChips<TRes>
 
   TRes _res;
 
-  call({List<Query$CommunityChips$communityChips>? communityChips}) => _res;
-
-  communityChips(_fn) => _res;
+  call({List<Enum$TargetCategory>? communityChips}) => _res;
 }
 
 const documentNodeQueryCommunityChips = DocumentNode(
@@ -4022,142 +3989,13 @@ const documentNodeQueryCommunityChips = DocumentNode(
             alias: null,
             arguments: [],
             directives: [],
-            selectionSet: SelectionSetNode(
-              selections: [
-                FieldNode(
-                  name: NameNode(value: 'category'),
-                  alias: null,
-                  arguments: [],
-                  directives: [],
-                  selectionSet: null,
-                ),
-                FieldNode(
-                  name: NameNode(value: 'position'),
-                  alias: null,
-                  arguments: [],
-                  directives: [],
-                  selectionSet: null,
-                ),
-              ],
-            ),
+            selectionSet: null,
           ),
         ],
       ),
     ),
   ],
 );
-
-class Query$CommunityChips$communityChips {
-  Query$CommunityChips$communityChips({
-    required this.category,
-    required this.position,
-  });
-
-  factory Query$CommunityChips$communityChips.fromJson(
-    Map<String, dynamic> json,
-  ) {
-    final l$category = json['category'];
-    final l$position = json['position'];
-    return Query$CommunityChips$communityChips(
-      category: fromJson$Enum$TargetCategory((l$category as String)),
-      position: (l$position as int),
-    );
-  }
-
-  final Enum$TargetCategory category;
-
-  final int position;
-
-  Map<String, dynamic> toJson() {
-    final _resultData = <String, dynamic>{};
-    final l$category = category;
-    _resultData['category'] = toJson$Enum$TargetCategory(l$category);
-    final l$position = position;
-    _resultData['position'] = l$position;
-    return _resultData;
-  }
-
-  @override
-  int get hashCode {
-    final l$category = category;
-    final l$position = position;
-    return Object.hashAll([l$category, l$position]);
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) {
-      return true;
-    }
-    if (other is! Query$CommunityChips$communityChips ||
-        runtimeType != other.runtimeType) {
-      return false;
-    }
-    final l$category = category;
-    final lOther$category = other.category;
-    if (l$category != lOther$category) {
-      return false;
-    }
-    final l$position = position;
-    final lOther$position = other.position;
-    if (l$position != lOther$position) {
-      return false;
-    }
-    return true;
-  }
-}
-
-extension UtilityExtension$Query$CommunityChips$communityChips
-    on Query$CommunityChips$communityChips {
-  CopyWith$Query$CommunityChips$communityChips<
-    Query$CommunityChips$communityChips
-  >
-  get copyWith => CopyWith$Query$CommunityChips$communityChips(this, (i) => i);
-}
-
-abstract class CopyWith$Query$CommunityChips$communityChips<TRes> {
-  factory CopyWith$Query$CommunityChips$communityChips(
-    Query$CommunityChips$communityChips instance,
-    TRes Function(Query$CommunityChips$communityChips) then,
-  ) = _CopyWithImpl$Query$CommunityChips$communityChips;
-
-  factory CopyWith$Query$CommunityChips$communityChips.stub(TRes res) =
-      _CopyWithStubImpl$Query$CommunityChips$communityChips;
-
-  TRes call({Enum$TargetCategory? category, int? position});
-}
-
-class _CopyWithImpl$Query$CommunityChips$communityChips<TRes>
-    implements CopyWith$Query$CommunityChips$communityChips<TRes> {
-  _CopyWithImpl$Query$CommunityChips$communityChips(this._instance, this._then);
-
-  final Query$CommunityChips$communityChips _instance;
-
-  final TRes Function(Query$CommunityChips$communityChips) _then;
-
-  static const _undefined = <dynamic, dynamic>{};
-
-  TRes call({Object? category = _undefined, Object? position = _undefined}) =>
-      _then(
-        Query$CommunityChips$communityChips(
-          category: category == _undefined || category == null
-              ? _instance.category
-              : (category as Enum$TargetCategory),
-          position: position == _undefined || position == null
-              ? _instance.position
-              : (position as int),
-        ),
-      );
-}
-
-class _CopyWithStubImpl$Query$CommunityChips$communityChips<TRes>
-    implements CopyWith$Query$CommunityChips$communityChips<TRes> {
-  _CopyWithStubImpl$Query$CommunityChips$communityChips(this._res);
-
-  TRes _res;
-
-  call({Enum$TargetCategory? category, int? position}) => _res;
-}
 
 class Variables$Query$BlockedUsers {
   factory Variables$Query$BlockedUsers({int? first, String? after}) =>

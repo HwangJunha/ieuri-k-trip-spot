@@ -11,16 +11,8 @@ import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
 import '../../../common/navigation/picked_place.dart';
 import '../../../common/navigation/spot_detail_route.dart';
-import '../../../common/category/spot_category.dart';
-import '../../../common/category/spot_category_bar.dart';
 import '../../../common/widget/floating_bottom_nav_scaffold.dart';
 import '../../../l10n/gen/app_localizations.dart';
-// **spot 기능을 참조한다**(CLAUDE.md §3의 예외). 카테고리 *목록*은 서버 리소스이고
-// 그 접근 경로가 `SpotRepository`이므로, 지도는 그 소비자로서 spot의 provider를
-// 읽는다. common으로 올리면 `common/`이 도메인 데이터 접근(GraphQL 오퍼레이션 포함)을
-// 갖게 되어 더 나쁜 위반이 된다 — 공유 가능한 부분(모델·토글·위젯·아이콘)은 이미
-// `common/category/`로 올렸고, 여기 남은 하나는 그 목록이다.
-import '../../spot/provider/swipe_providers.dart';
 import '../component/area_info_card.dart';
 import '../component/congestion_legend.dart';
 import '../component/map_overlay_painter.dart';
@@ -52,11 +44,14 @@ import 'region_recommendation_screen.dart';
 /// 그대로다(R29).
 /// "이 지역 재검색" 버튼을 상단 오버레이 아래로 내리는 거리.
 ///
-/// 상단 Column의 구성과 묶인 값이다 — 검색창(위 여백 8 + 높이 약 46)에 카테고리
-/// 바(위 여백 8 + 높이 48)를 더한 값. 둘 중 하나의 높이나 여백이 바뀌면 여기도
-/// 함께 움직여야 한다. 상수로 뺀 이유는 그 사실을 이름으로 남기기 위해서다 —
-/// 예전에는 62라는 숫자만 있어 카테고리 바를 끼우자 버튼이 바 위에 겹쳤다.
-const double _searchThisAreaTop = 8 + 46 + 8 + 48;
+/// 상단 Column의 구성과 묶인 값이다 — 검색창(위 여백 8 + 높이 약 46) 아래로
+/// 내린다. 검색창의 높이나 여백이 바뀌면 여기도 함께 움직여야 한다. 상수로 뺀
+/// 이유는 그 사실을 이름으로 남기기 위해서다 — 예전에는 62라는 숫자만 있어
+/// 무언가를 끼울 때마다 버튼이 그 위에 겹쳤다.
+///
+/// **지도에는 카테고리 필터를 두지 않는다**(사용자 결정, 2026-08-16). 오버레이가
+/// 가장 많은 화면이라 바를 하나 더 얹으면 가독성이 떨어진다.
+const double _searchThisAreaTop = 8 + 46 + 8;
 
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
@@ -351,7 +346,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           bbox,
           serverZoom,
           hasOrigin: true,
-          categoryKey: _categoryKey(),
         ).future,
       );
       if (!mounted || generation != _markerGeneration) return;
@@ -377,7 +371,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             bbox,
             serverZoom,
             hasOrigin: false,
-            categoryKey: _categoryKey(),
           ).future,
         );
         if (!mounted || generation != _markerGeneration) return;
@@ -448,39 +441,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   }
 
   /// 클러스터 탭(R22)은 없다 — 서버가 클러스터 필드를 제거했다(2026-08-10).
-  ///
-  /// 지금 선택된 카테고리를 조회 변수로 쓸 안정 키로 접는다(SPEC-0020 R7).
-  ///
-  /// 빈 문자열은 "필터 없음"이다 — 목록이 아직 오지 않은 첫 프레임에만 나타나며,
-  /// 빈 배열을 보내면 서버가 거절하므로 그때는 인자를 생략한다(AC5.1).
-  String _categoryKey() =>
-      ref.read(mapSelectedCategoryProvider.notifier).selection.codes.join(',');
-
-  /// 카테고리 필터가 바뀌면 **뷰포트 이동과 같은 디바운스 경로로** 다시 조회한다
-  /// (R8, POL-037).
-  ///
-  /// 같은 [_idleTimer]를 쓰는 것이 핵심이다 — 칩을 연달아 토글해도 조회는 멈춘 뒤
-  /// 1회이고(AC7.3), 토글하는 사이 지도를 움직여도 두 계기가 서로를 취소해 마지막
-  /// 상태로 한 번만 나간다. 타이머를 따로 두면 그 합류가 깨져 두 번 나간다.
-  ///
-  /// **결과는 통째로 갈아 끼운다**(`replaceShown: true`). 필터를 좁혔는데 이전
-  /// 카테고리의 마커가 남아 있으면 필터가 듣지 않는 것으로 보인다 — 뷰포트 이동
-  /// (보태는 방식)과 다른 점이다.
-  void _onCategoryFilterChanged() {
-    _idleTimer?.cancel();
-    _idleTimer = Timer(MapTuning.idleDebounce, () async {
-      if (!mounted) return;
-      final MapBounds? visible = await _visibleBounds();
-      if (visible == null || !mounted) return;
-      // 줌은 마지막으로 마커를 받은 값을 쓴다 — 필터 변경은 지도를 움직이지 않으므로
-      // 그때의 줌이 지금의 줌이다. 아직 한 번도 안 받았으면 초기 줌으로 시작한다.
-      await _searchMarkersHere(
-        visible,
-        _lastMarkerZoom ?? MapTuning.initialZoom,
-        replaceShown: true,
-      );
-    });
-  }
 
   /// 현재 뷰포트를 산출해 조회한다.
   ///
@@ -921,42 +881,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: MapSearchBar(onTap: _onSearchTap),
-                  ),
-                  // 카테고리 필터(SPEC-0020 R7). 검색창 바로 아래에 둔다 — 다른
-                  // 화면(Discover·좋아요·검색)이 모두 같은 자리에 같은 바를 두므로
-                  // 사용자가 새로 배울 것이 없다.
-                  //
-                  // **좌우 여백을 상쇄한다.** 이 Column은 `left/right: 12`에 놓여
-                  // 있는데 바가 그 안에 갇히면 칩이 화면 가장자리 전에 잘린다 —
-                  // 가로 스크롤은 화면 끝까지 이어져야 더 있다는 것이 보인다.
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Transform.translate(
-                      offset: const Offset(-12, 0),
-                      child: SizedBox(
-                        width: MediaQuery.sizeOf(context).width,
-                        child: SpotCategoryBar(
-                          available:
-                              ref
-                                  .watch(availableSpotCategoriesProvider)
-                                  .value ??
-                              const <SpotCategory>[],
-                          selected: ref.watch(mapSelectedCategoryProvider),
-                          onToggle: (SpotCategory next) {
-                            ref
-                                .read(mapSelectedCategoryProvider.notifier)
-                                .toggle(next);
-                            _onCategoryFilterChanged();
-                          },
-                          onSelectAll: () {
-                            ref
-                                .read(mapSelectedCategoryProvider.notifier)
-                                .selectAll();
-                            _onCategoryFilterChanged();
-                          },
-                        ),
-                      ),
-                    ),
                   ),
                   // **혼잡도 실패는 배너로 알리지 않는다**(사용자 결정, 2026-08-12).
                   //

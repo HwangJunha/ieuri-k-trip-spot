@@ -4,7 +4,6 @@ import 'package:ieuri_k_trip_spot/common/pagination/offset_page.dart';
 import 'package:ieuri_k_trip_spot/common/pagination/page.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/blocked_user.dart';
 import 'package:ieuri_k_trip_spot/common/model/comment.dart';
-import 'package:ieuri_k_trip_spot/domain/community/model/community_chip.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/nearby_spot_category.dart';
 import 'package:ieuri_k_trip_spot/common/model/post.dart';
@@ -25,7 +24,7 @@ export '../../common/post_fixtures.dart' show fakeComment, fakePost;
 class FakeCommunityRepository implements CommunityRepository {
   FakeCommunityRepository({
     this.posts = const <Post>[],
-    this.chips = const <CommunityChip>[],
+    this.chips = const <TargetCategory>[],
     this.comments = const <Comment>[],
     this.blockedUsers = const <BlockedUser>[],
     this.post,
@@ -38,7 +37,7 @@ class FakeCommunityRepository implements CommunityRepository {
   });
 
   final List<Post> posts;
-  final List<CommunityChip> chips;
+  final List<TargetCategory> chips;
   final List<Comment> comments;
   final List<BlockedUser> blockedUsers;
   final Post? post;
@@ -173,7 +172,7 @@ class FakeCommunityRepository implements CommunityRepository {
   }
 
   @override
-  Future<List<CommunityChip>> fetchCommunityChips() async => chips;
+  Future<List<TargetCategory>> fetchCommunityChips() async => chips;
 
   /// 컴포저 장소 선택 시트가 받을 주변 장소. 거리 오름차순으로 오는 것을 흉내 낸다.
   List<NearbySpot> nearbySpots = const <NearbySpot>[];

@@ -152,13 +152,15 @@ query Comments($postId: ID!, $first: Int, $after: String) {
   }
 }
 
-# 상단 칩 구성. `position` 오름차순으로 이미 정렬돼 있어 그대로 그리면 된다.
+# 상단 칩 구성. **하위 선택을 붙이면 안 된다** — `[TargetCategory!]!`는 leaf라
+# `{ category position }`를 붙이면 서버가 `SubselectionNotAllowed`로 거절하고
+# 칩 줄이 통째로 사라진다(2026-08-16에 고친 실제 버그).
+#
+# **순서는 의미가 없다** — 서버는 코드 알파벳순으로 줄 뿐이라 언어를 바꾸면 같은 칩이
+# 다른 자리로 간다. 표시 순서는 클라이언트의 `kCategoryDisplayOrder`가 정한다.
 # 표시 문구는 앱이 매핑하고, **구성이 없는 앱이면 빈 목록이 정상**이다(가이드 §2).
 query CommunityChips {
-  communityChips {
-    category
-    position
-  }
+  communityChips
 }
 
 # 내가 차단한 사람 목록. **나를 차단한 사람은 여기 없다** — 남이 건 차단은 내가
