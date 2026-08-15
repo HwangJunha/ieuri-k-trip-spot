@@ -342,11 +342,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       final int serverZoom = MapTuning.clampForServer(zoomLevel);
       // **원문부터 받는다**(SPEC-0019). 요청 언어로 쓰인 장소를 우선 그린다.
       final MapViewportResult result = await ref.read(
-        mapViewportProvider(
-          bbox,
-          serverZoom,
-          hasOrigin: true,
-        ).future,
+        mapViewportProvider(bbox, serverZoom, hasOrigin: true).future,
       );
       if (!mounted || generation != _markerGeneration) return;
 
@@ -367,11 +363,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       // 비우면 원문 우선이 무의미해진다.
       if (ref.read(mapMarkerControllerProvider.notifier).hasRoomIn(visible)) {
         final MapViewportResult translated = await ref.read(
-          mapViewportProvider(
-            bbox,
-            serverZoom,
-            hasOrigin: false,
-          ).future,
+          mapViewportProvider(bbox, serverZoom, hasOrigin: false).future,
         );
         if (!mounted || generation != _markerGeneration) return;
         ref

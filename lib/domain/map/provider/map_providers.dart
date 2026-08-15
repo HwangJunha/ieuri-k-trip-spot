@@ -37,11 +37,7 @@ Future<MapViewportResult> mapViewport(
   bool? hasOrigin,
 }) => ref
     .watch(mapRepositoryProvider)
-    .fetchViewport(
-      bbox: bbox,
-      zoom: zoom,
-      hasOrigin: hasOrigin,
-    );
+    .fetchViewport(bbox: bbox, zoom: zoom, hasOrigin: hasOrigin);
 
 /// 뷰포트에 걸치는 구역의 실시간 혼잡도(R6~R11).
 ///

@@ -63,7 +63,7 @@ class CommunityRepositoryImpl implements CommunityRepository {
     double? latitude,
     double? longitude,
     int? radiusMeters,
-    TargetCategory? category,
+    Iterable<TargetCategory>? categories,
     String? tag,
     PostSortOrder? sort,
     bool? hiddenByViewer,
@@ -74,6 +74,13 @@ class CommunityRepositoryImpl implements CommunityRepository {
     // 어중간한 요청을 보내느니 여기서 아예 빼서 "전체 피드"라는 의도를 분명히 한다
     // (가이드 §2).
     final bool hasCoords = latitude != null && longitude != null;
+    // **빈 목록은 null로 접는다.** 빈 배열을 그대로 보내면 서버가
+    // `EmptyCategorySetException`으로 거절하는데, 그 오류는 `errorType: INTERNAL`에
+    // Java 예외명이 실려 올 뿐이라 코드로 분기할 수도 없다. 인자를 생략하면 전체다.
+    final List<Enum$TargetCategory>? categoryInput =
+        (categories == null || categories.isEmpty)
+        ? null
+        : categories.map(_categoryInput).toList(growable: false);
     final Map<String, dynamic> data = await _query(
       documentNodeQueryPosts,
       Variables$Query$Posts(
@@ -81,7 +88,7 @@ class CommunityRepositoryImpl implements CommunityRepository {
         latitude: hasCoords ? latitude : null,
         longitude: hasCoords ? longitude : null,
         radiusMeters: hasCoords ? radiusMeters : null,
-        category: category == null ? null : _categoryInput(category),
+        categories: categoryInput,
         tag: tag,
         // null이면 변수를 보내지 않아 서버 기본값(LATEST)이 걸린다.
         sort: sort == null ? null : _sortInput(sort),

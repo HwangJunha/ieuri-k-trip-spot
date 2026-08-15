@@ -917,7 +917,7 @@ class Variables$Query$Posts {
     double? latitude,
     double? longitude,
     int? radiusMeters,
-    Enum$TargetCategory? category,
+    List<Enum$TargetCategory>? categories,
     String? tag,
     Enum$PostSortOrder? sort,
     bool? hiddenByViewer,
@@ -928,7 +928,7 @@ class Variables$Query$Posts {
     if (latitude != null) r'latitude': latitude,
     if (longitude != null) r'longitude': longitude,
     if (radiusMeters != null) r'radiusMeters': radiusMeters,
-    if (category != null) r'category': category,
+    if (categories != null) r'categories': categories,
     if (tag != null) r'tag': tag,
     if (sort != null) r'sort': sort,
     if (hiddenByViewer != null) r'hiddenByViewer': hiddenByViewer,
@@ -956,11 +956,11 @@ class Variables$Query$Posts {
       final l$radiusMeters = data['radiusMeters'];
       result$data['radiusMeters'] = (l$radiusMeters as int?);
     }
-    if (data.containsKey('category')) {
-      final l$category = data['category'];
-      result$data['category'] = l$category == null
-          ? null
-          : fromJson$Enum$TargetCategory((l$category as String));
+    if (data.containsKey('categories')) {
+      final l$categories = data['categories'];
+      result$data['categories'] = (l$categories as List<dynamic>?)
+          ?.map((e) => fromJson$Enum$TargetCategory((e as String)))
+          .toList();
     }
     if (data.containsKey('tag')) {
       final l$tag = data['tag'];
@@ -997,8 +997,8 @@ class Variables$Query$Posts {
 
   int? get radiusMeters => (_$data['radiusMeters'] as int?);
 
-  Enum$TargetCategory? get category =>
-      (_$data['category'] as Enum$TargetCategory?);
+  List<Enum$TargetCategory>? get categories =>
+      (_$data['categories'] as List<Enum$TargetCategory>?);
 
   String? get tag => (_$data['tag'] as String?);
 
@@ -1028,11 +1028,11 @@ class Variables$Query$Posts {
       final l$radiusMeters = radiusMeters;
       result$data['radiusMeters'] = l$radiusMeters;
     }
-    if (_$data.containsKey('category')) {
-      final l$category = category;
-      result$data['category'] = l$category == null
-          ? null
-          : toJson$Enum$TargetCategory(l$category);
+    if (_$data.containsKey('categories')) {
+      final l$categories = categories;
+      result$data['categories'] = l$categories
+          ?.map((e) => toJson$Enum$TargetCategory(e))
+          .toList();
     }
     if (_$data.containsKey('tag')) {
       final l$tag = tag;
@@ -1106,13 +1106,24 @@ class Variables$Query$Posts {
     if (l$radiusMeters != lOther$radiusMeters) {
       return false;
     }
-    final l$category = category;
-    final lOther$category = other.category;
-    if (_$data.containsKey('category') !=
-        other._$data.containsKey('category')) {
+    final l$categories = categories;
+    final lOther$categories = other.categories;
+    if (_$data.containsKey('categories') !=
+        other._$data.containsKey('categories')) {
       return false;
     }
-    if (l$category != lOther$category) {
+    if (l$categories != null && lOther$categories != null) {
+      if (l$categories.length != lOther$categories.length) {
+        return false;
+      }
+      for (int i = 0; i < l$categories.length; i++) {
+        final l$categories$entry = l$categories[i];
+        final lOther$categories$entry = lOther$categories[i];
+        if (l$categories$entry != lOther$categories$entry) {
+          return false;
+        }
+      }
+    } else if (l$categories != lOther$categories) {
       return false;
     }
     final l$tag = tag;
@@ -1165,7 +1176,7 @@ class Variables$Query$Posts {
     final l$latitude = latitude;
     final l$longitude = longitude;
     final l$radiusMeters = radiusMeters;
-    final l$category = category;
+    final l$categories = categories;
     final l$tag = tag;
     final l$sort = sort;
     final l$hiddenByViewer = hiddenByViewer;
@@ -1176,7 +1187,11 @@ class Variables$Query$Posts {
       _$data.containsKey('latitude') ? l$latitude : const {},
       _$data.containsKey('longitude') ? l$longitude : const {},
       _$data.containsKey('radiusMeters') ? l$radiusMeters : const {},
-      _$data.containsKey('category') ? l$category : const {},
+      _$data.containsKey('categories')
+          ? l$categories == null
+                ? null
+                : Object.hashAll(l$categories.map((v) => v))
+          : const {},
       _$data.containsKey('tag') ? l$tag : const {},
       _$data.containsKey('sort') ? l$sort : const {},
       _$data.containsKey('hiddenByViewer') ? l$hiddenByViewer : const {},
@@ -1200,7 +1215,7 @@ abstract class CopyWith$Variables$Query$Posts<TRes> {
     double? latitude,
     double? longitude,
     int? radiusMeters,
-    Enum$TargetCategory? category,
+    List<Enum$TargetCategory>? categories,
     String? tag,
     Enum$PostSortOrder? sort,
     bool? hiddenByViewer,
@@ -1224,7 +1239,7 @@ class _CopyWithImpl$Variables$Query$Posts<TRes>
     Object? latitude = _undefined,
     Object? longitude = _undefined,
     Object? radiusMeters = _undefined,
-    Object? category = _undefined,
+    Object? categories = _undefined,
     Object? tag = _undefined,
     Object? sort = _undefined,
     Object? hiddenByViewer = _undefined,
@@ -1237,8 +1252,8 @@ class _CopyWithImpl$Variables$Query$Posts<TRes>
       if (latitude != _undefined) 'latitude': (latitude as double?),
       if (longitude != _undefined) 'longitude': (longitude as double?),
       if (radiusMeters != _undefined) 'radiusMeters': (radiusMeters as int?),
-      if (category != _undefined)
-        'category': (category as Enum$TargetCategory?),
+      if (categories != _undefined)
+        'categories': (categories as List<Enum$TargetCategory>?),
       if (tag != _undefined) 'tag': (tag as String?),
       if (sort != _undefined) 'sort': (sort as Enum$PostSortOrder?),
       if (hiddenByViewer != _undefined)
@@ -1260,7 +1275,7 @@ class _CopyWithStubImpl$Variables$Query$Posts<TRes>
     double? latitude,
     double? longitude,
     int? radiusMeters,
-    Enum$TargetCategory? category,
+    List<Enum$TargetCategory>? categories,
     String? tag,
     Enum$PostSortOrder? sort,
     bool? hiddenByViewer,
@@ -1394,9 +1409,12 @@ const documentNodeQueryPosts = DocumentNode(
           directives: [],
         ),
         VariableDefinitionNode(
-          variable: VariableNode(name: NameNode(value: 'category')),
-          type: NamedTypeNode(
-            name: NameNode(value: 'TargetCategory'),
+          variable: VariableNode(name: NameNode(value: 'categories')),
+          type: ListTypeNode(
+            type: NamedTypeNode(
+              name: NameNode(value: 'TargetCategory'),
+              isNonNull: true,
+            ),
             isNonNull: false,
           ),
           defaultValue: DefaultValueNode(value: null),
@@ -1469,8 +1487,8 @@ const documentNodeQueryPosts = DocumentNode(
                 value: VariableNode(name: NameNode(value: 'radiusMeters')),
               ),
               ArgumentNode(
-                name: NameNode(value: 'category'),
-                value: VariableNode(name: NameNode(value: 'category')),
+                name: NameNode(value: 'categories'),
+                value: VariableNode(name: NameNode(value: 'categories')),
               ),
               ArgumentNode(
                 name: NameNode(value: 'tag'),

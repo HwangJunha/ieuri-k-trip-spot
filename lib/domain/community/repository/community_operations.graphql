@@ -38,11 +38,17 @@ fragment PostCardFields on Post {
 # 피드는 이 쿼리 하나뿐이고 **인자 조합이 범위를 정한다**(가이드 §2):
 #   - 커뮤니티 탭   → latitude·longitude(+radiusMeters)
 #   - 장소 상세     → catalogId
-#   - 상단 칩       → category
+#   - 상단 칩       → categories
 #   - 태그          → tag
 #
 # 규칙: 좌표는 **둘 다** 줘야 하고(하나만 주면 둘 다 무시), `catalogId`와 좌표를 같이
-# 주면 `catalogId`가 이긴다. `category`·`tag`는 범위와 독립이라 단독으로도 걸린다.
+# 주면 `catalogId`가 이긴다. `categories`·`tag`는 범위와 독립이라 단독으로도 걸린다.
+#
+# **`categories`는 복수 OR 필터다**(서버 #77, 2026-08-16 라이브 확인). 단수 `category`는
+# 과도기 없이 **제거**됐으므로 클라이언트가 전환하지 않으면 조회가 전부 실패한다.
+# `[TargetCategory!]`이라 관광지 쪽 `categories: [String!]`와 달리 여전히 닫힌 enum이다.
+# **빈 배열은 보내지 않는다** — 서버가 `EmptyCategorySetException`(errorType INTERNAL,
+# 코드로 분기할 수 없음)으로 거절한다. 인자를 생략하면 전체다.
 #
 # `hasPreviousPage`는 요청하지 않는다 — 앞으로만 가는 피드라 믿을 수 없는 값이다
 # (가이드 §2).
@@ -59,7 +65,7 @@ query Posts(
   $latitude: Float
   $longitude: Float
   $radiusMeters: Int
-  $category: TargetCategory
+  $categories: [TargetCategory!]
   $tag: String
   $sort: PostSortOrder
   $hiddenByViewer: Boolean
@@ -71,7 +77,7 @@ query Posts(
     latitude: $latitude
     longitude: $longitude
     radiusMeters: $radiusMeters
-    category: $category
+    categories: $categories
     tag: $tag
     sort: $sort
     hiddenByViewer: $hiddenByViewer

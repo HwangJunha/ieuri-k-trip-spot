@@ -7,6 +7,7 @@ import '../../../common/location/location_providers.dart';
 import '../../../common/pagination/page.dart';
 import '../../../common/model/post.dart';
 import '../model/post_sort_order.dart';
+import '../model/target_category_selection.dart';
 import '../../../common/model/target_category.dart';
 import '../repository/community_repository.dart';
 import 'community_providers.dart';
@@ -17,18 +18,37 @@ part 'feed_providers.g.dart';
 /// 50으로 잘린다(가이드 §2).
 const int _pageSize = 20;
 
-/// 커뮤니티 탭에서 선택된 카테고리(null=전체).
+/// 커뮤니티 탭에서 선택된 카테고리 집합(**빈 집합 = 전체**).
+///
+/// 서버가 복수 인자를 받게 되면서(#77, 2026-08-16) spot 쪽과 같은 다중 선택이 됐다.
+/// 빈 집합이 "전체"인 것도 앱 전체 규약을 따른다 — 바 맨 앞의 "전체" 칩이 켜지고,
+/// 서버에는 `categories` 인자를 **보내지 않는다**(빈 배열은 거절된다).
+/// 예전의 "마지막 하나는 해제 불가" 규칙은 없다.
 ///
 /// keepAlive인 이유는 좋아요 목록의 카테고리 필터와 같다 — 사용자가 고른 필터는
 /// 화면이 아니라 세션에 속한다. autoDispose면 상세에 다녀오는 것만으로 "전체"로
 /// 되돌아간다.
+///
+/// **토글 규칙이 위젯이 아니라 여기 있는 이유**: 위젯 없이 테스트가 성립해야 한다.
 @Riverpod(keepAlive: true)
 class SelectedCategory extends _$SelectedCategory {
   @override
-  TargetCategory? build() => null;
+  Set<TargetCategory> build() => const <TargetCategory>{};
 
-  /// 칩을 선택한다. 같은 칩을 다시 누르면 해제(전체)다.
-  void select(TargetCategory? category) => state = category;
+  /// [category]를 켜거나 끈다. 마지막 하나를 꺼도 막지 않는다 — 빈 집합은 "전체"이며
+  /// 되돌릴 방법이 있는 정상 상태다.
+  void toggle(TargetCategory category) {
+    final Set<TargetCategory> next = <TargetCategory>{...state};
+    if (!next.remove(category)) next.add(category);
+    state = next;
+  }
+
+  /// "전체"로 되돌린다 — 개별 선택을 전부 푼다.
+  void selectAll() => state = const <TargetCategory>{};
+
+  /// family 인자·조회 변수로 쓸 안정 키. `Set`은 값 동등성이 없어 그대로 넘기면
+  /// 매 빌드마다 새 피드 인스턴스가 생긴다([TargetCategorySelection] 주석).
+  TargetCategorySelection get selection => TargetCategorySelection(state);
 }
 
 /// 커뮤니티 탭에서 선택된 정렬(2차 가이드 §3). 기본은 [PostSortOrder.latest]다.
@@ -85,9 +105,13 @@ class FeedState {
   );
 }
 
-/// 커뮤니티 탭의 지역 피드. [category]·[sort]별 패밀리 — 둘 중 하나를 바꾸면 다른
+/// 커뮤니티 탭의 지역 피드. [selection]·[sort]별 패밀리 — 둘 중 하나를 바꾸면 다른
 /// 인스턴스가 로딩되고 **필터링·정렬은 서버가 한다**(클라이언트가 받은 목록을 거르거나
 /// 다시 정렬하지 않는다).
+///
+/// **family 인자가 `Set`이 아니라 [TargetCategorySelection]인 이유**: `Set`은 값
+/// 동등성이 없어 선택이 그대로여도 매 빌드마다 새 인스턴스가 만들어지고, keepAlive라
+/// 버려지지도 않아 피드를 처음부터 다시 받는다.
 ///
 /// **[sort]가 family 인자인 것이 "정렬을 바꾸면 커서를 버린다"는 규약의 구현이다**
 /// (2차 가이드 §3). 두 정렬의 커서 형식이 달라 이전 커서를 넘기면 서버가
@@ -105,14 +129,17 @@ class FeedController extends _$FeedController {
   CommunityRepository get _repository => ref.read(communityRepositoryProvider);
 
   @override
-  Future<FeedState> build(TargetCategory? category, PostSortOrder sort) async {
+  Future<FeedState> build(
+    TargetCategorySelection selection,
+    PostSortOrder sort,
+  ) async {
     final Coordinates coords = await ref.watch(
       currentCoordinatesProvider.future,
     );
     final CursorPage<Post> page = await _repository.fetchPosts(
       latitude: coords.latitude,
       longitude: coords.longitude,
-      category: category,
+      categories: selection.valuesOrNull,
       sort: sort,
       first: _pageSize,
     );
@@ -139,7 +166,7 @@ class FeedController extends _$FeedController {
       final CursorPage<Post> next = await _repository.fetchPosts(
         latitude: coords.latitude,
         longitude: coords.longitude,
-        category: category,
+        categories: selection.valuesOrNull,
         // **첫 페이지와 같은 정렬을 넘겨야 한다** — 커서는 정렬마다 형식이 달라서
         // 다른 정렬로 이어 받으면 서버가 `INVALID_INPUT`을 준다(2차 가이드 §3).
         sort: sort,

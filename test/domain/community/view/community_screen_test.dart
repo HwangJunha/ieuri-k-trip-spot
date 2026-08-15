@@ -345,7 +345,9 @@ void main() {
       await tester.tap(find.text('Food'));
       await tester.pumpAndSettle();
 
-      expect(repo.lastFetchPosts?.category, TargetCategory.restaurant);
+      expect(repo.lastFetchPosts?.categories, <TargetCategory>[
+        TargetCategory.restaurant,
+      ]);
     });
   });
 

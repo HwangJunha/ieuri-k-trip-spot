@@ -145,7 +145,10 @@ void main() {
       final CursorPage<Post> page = await _repo(link).fetchPosts(
         latitude: 37.5665,
         longitude: 126.978,
-        category: TargetCategory.touristSpot,
+        categories: const <TargetCategory>[
+          TargetCategory.touristSpot,
+          TargetCategory.restaurant,
+        ],
         first: 20,
       );
 
@@ -162,7 +165,21 @@ void main() {
       expect(page.hasNextPage, isTrue);
       expect(page.endCursor, 'p2');
       // 필터는 서버로 넘어간다 — 클라이언트가 받은 목록을 거르지 않는다.
-      expect(link.sentVariables?['category'], 'TOURIST_SPOT');
+      // 복수 OR 필터다(서버 #77).
+      expect(link.sentVariables?['categories'], <String>[
+        'TOURIST_SPOT',
+        'RESTAURANT',
+      ]);
+    });
+
+    // 빈 배열은 서버가 `EmptyCategorySetException`으로 거절한다 — 인자를 생략해
+    // 전체를 받는다. 접는 일은 리포지토리가 맡아 호출부가 신경 쓰지 않아도 된다.
+    test('빈 카테고리 목록은 변수를 아예 보내지 않는다', () async {
+      final _FakeLink link = _FakeLink(data: _postsData());
+
+      await _repo(link).fetchPosts(categories: const <TargetCategory>[]);
+
+      expect(link.sentVariables?['categories'], isNull);
     });
 
     // 2차 가이드 §3 — 정렬은 서버 인자다. 클라이언트가 받은 목록을 다시 세우지 않는다.

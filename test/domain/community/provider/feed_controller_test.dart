@@ -4,6 +4,7 @@ import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_failure.dart';
 import 'package:ieuri_k_trip_spot/common/model/post.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_sort_order.dart';
+import 'package:ieuri_k_trip_spot/domain/community/model/target_category_selection.dart';
 import 'package:ieuri_k_trip_spot/common/model/target_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/feed_providers.dart';
@@ -25,23 +26,27 @@ ProviderContainer _container(FakeCommunityRepository repo) {
   return container;
 }
 
+/// 필터 없음("전체") — 서버에는 `categories` 인자가 나가지 않는다.
+final TargetCategorySelection _allCategories = TargetCategorySelection(
+  const <TargetCategory>[],
+);
+
 void main() {
   group('SelectedCategory', () {
-    test('처음에는 전체(null)다', () {
+    test('처음에는 전체(빈 집합)다', () {
       final ProviderContainer container = _container(FakeCommunityRepository());
-      expect(container.read(selectedCategoryProvider), isNull);
+      expect(container.read(selectedCategoryProvider), isEmpty);
     });
 
     test('칩 선택이 상태에 반영된다', () {
       final ProviderContainer container = _container(FakeCommunityRepository());
       container
           .read(selectedCategoryProvider.notifier)
-          .select(TargetCategory.restaurant);
+          .toggle(TargetCategory.restaurant);
 
-      expect(
-        container.read(selectedCategoryProvider),
+      expect(container.read(selectedCategoryProvider), <TargetCategory>{
         TargetCategory.restaurant,
-      );
+      });
     });
   });
 
@@ -52,7 +57,7 @@ void main() {
       );
 
       final FeedState state = await container.read(
-        feedControllerProvider(null, PostSortOrder.latest).future,
+        feedControllerProvider(_allCategories, PostSortOrder.latest).future,
       );
 
       expect(state.items, hasLength(1));
@@ -64,7 +69,7 @@ void main() {
       final ProviderContainer container = _container(FakeCommunityRepository());
 
       final FeedState state = await container.read(
-        feedControllerProvider(null, PostSortOrder.latest).future,
+        feedControllerProvider(_allCategories, PostSortOrder.latest).future,
       );
 
       expect(state.isEmpty, isTrue);
@@ -77,12 +82,18 @@ void main() {
 
       await container.read(
         feedControllerProvider(
-          TargetCategory.lodging,
+          TargetCategorySelection(const <TargetCategory>[
+            TargetCategory.lodging,
+            TargetCategory.restaurant,
+          ]),
           PostSortOrder.latest,
         ).future,
       );
 
-      expect(repo.lastFetchPosts?.category, TargetCategory.lodging);
+      expect(repo.lastFetchPosts?.categories, <TargetCategory>[
+        TargetCategory.lodging,
+        TargetCategory.restaurant,
+      ]);
       expect(repo.lastFetchPosts?.latitude, isNotNull);
       expect(repo.lastFetchPosts?.longitude, isNotNull);
       // 커뮤니티 탭은 좌표 피드라 catalogId를 주지 않는다 — 주면 좌표가 무시된다.
@@ -97,15 +108,20 @@ void main() {
       );
       final ProviderContainer container = _container(repo);
       await container.read(
-        feedControllerProvider(null, PostSortOrder.latest).future,
+        feedControllerProvider(_allCategories, PostSortOrder.latest).future,
       );
 
       await container
-          .read(feedControllerProvider(null, PostSortOrder.latest).notifier)
+          .read(
+            feedControllerProvider(
+              _allCategories,
+              PostSortOrder.latest,
+            ).notifier,
+          )
           .loadMore();
 
       final FeedState state = container
-          .read(feedControllerProvider(null, PostSortOrder.latest))
+          .read(feedControllerProvider(_allCategories, PostSortOrder.latest))
           .value!;
       expect(state.items.map((Post p) => p.id), <String>['p1', 'p2']);
       expect(state.hasMore, isFalse);
@@ -119,11 +135,16 @@ void main() {
       );
       final ProviderContainer container = _container(repo);
       await container.read(
-        feedControllerProvider(null, PostSortOrder.latest).future,
+        feedControllerProvider(_allCategories, PostSortOrder.latest).future,
       );
 
       await container
-          .read(feedControllerProvider(null, PostSortOrder.latest).notifier)
+          .read(
+            feedControllerProvider(
+              _allCategories,
+              PostSortOrder.latest,
+            ).notifier,
+          )
           .loadMore();
 
       expect(repo.lastFetchPosts?.after, isNull);
@@ -134,14 +155,14 @@ void main() {
         FakeCommunityRepository(feedError: CommunityFailure.network),
       );
       container.listen(
-        feedControllerProvider(null, PostSortOrder.latest),
+        feedControllerProvider(_allCategories, PostSortOrder.latest),
         (_, _) {},
         fireImmediately: true,
       );
 
       await expectLater(
         container.read(
-          feedControllerProvider(null, PostSortOrder.latest).future,
+          feedControllerProvider(_allCategories, PostSortOrder.latest).future,
         ),
         throwsA(isA<CommunityFailure>()),
       );
@@ -157,15 +178,20 @@ void main() {
       );
       final ProviderContainer container = _container(repo);
       await container.read(
-        feedControllerProvider(null, PostSortOrder.latest).future,
+        feedControllerProvider(_allCategories, PostSortOrder.latest).future,
       );
 
       await container
-          .read(feedControllerProvider(null, PostSortOrder.latest).notifier)
+          .read(
+            feedControllerProvider(
+              _allCategories,
+              PostSortOrder.latest,
+            ).notifier,
+          )
           .toggleLike('p1');
 
       final Post post = container
-          .read(feedControllerProvider(null, PostSortOrder.latest))
+          .read(feedControllerProvider(_allCategories, PostSortOrder.latest))
           .value!
           .items
           .single;
@@ -181,16 +207,21 @@ void main() {
       );
       final ProviderContainer container = _container(repo);
       await container.read(
-        feedControllerProvider(null, PostSortOrder.latest).future,
+        feedControllerProvider(_allCategories, PostSortOrder.latest).future,
       );
 
       await container
-          .read(feedControllerProvider(null, PostSortOrder.latest).notifier)
+          .read(
+            feedControllerProvider(
+              _allCategories,
+              PostSortOrder.latest,
+            ).notifier,
+          )
           .toggleLike('p1');
 
       expect(repo.unlikeCalls, 1);
       final Post post = container
-          .read(feedControllerProvider(null, PostSortOrder.latest))
+          .read(feedControllerProvider(_allCategories, PostSortOrder.latest))
           .value!
           .items
           .single;
@@ -205,18 +236,23 @@ void main() {
       );
       final ProviderContainer container = _container(repo);
       await container.read(
-        feedControllerProvider(null, PostSortOrder.latest).future,
+        feedControllerProvider(_allCategories, PostSortOrder.latest).future,
       );
 
       await expectLater(
         container
-            .read(feedControllerProvider(null, PostSortOrder.latest).notifier)
+            .read(
+              feedControllerProvider(
+                _allCategories,
+                PostSortOrder.latest,
+              ).notifier,
+            )
             .toggleLike('p1'),
         throwsA(isA<CommunityFailure>()),
       );
 
       final Post post = container
-          .read(feedControllerProvider(null, PostSortOrder.latest))
+          .read(feedControllerProvider(_allCategories, PostSortOrder.latest))
           .value!
           .items
           .single;
@@ -248,7 +284,7 @@ void main() {
       final ProviderContainer container = _container(repo);
 
       await container.read(
-        feedControllerProvider(null, PostSortOrder.distance).future,
+        feedControllerProvider(_allCategories, PostSortOrder.distance).future,
       );
 
       expect(repo.lastFetchPosts?.sort, PostSortOrder.distance);
@@ -266,15 +302,20 @@ void main() {
 
       // 최신순으로 첫 페이지 + 다음 페이지까지 받아 커서를 소진한다.
       await container.read(
-        feedControllerProvider(null, PostSortOrder.latest).future,
+        feedControllerProvider(_allCategories, PostSortOrder.latest).future,
       );
       await container
-          .read(feedControllerProvider(null, PostSortOrder.latest).notifier)
+          .read(
+            feedControllerProvider(
+              _allCategories,
+              PostSortOrder.latest,
+            ).notifier,
+          )
           .loadMore();
 
       // 거리순으로 옮긴다 — 다른 family 인스턴스라 커서 없이 처음부터 받는다.
       await container.read(
-        feedControllerProvider(null, PostSortOrder.distance).future,
+        feedControllerProvider(_allCategories, PostSortOrder.distance).future,
       );
 
       final ({PostSortOrder? sort, String? after, bool? hiddenByViewer}) last =
@@ -299,11 +340,16 @@ void main() {
       );
       final ProviderContainer container = _container(repo);
       await container.read(
-        feedControllerProvider(null, PostSortOrder.distance).future,
+        feedControllerProvider(_allCategories, PostSortOrder.distance).future,
       );
 
       await container
-          .read(feedControllerProvider(null, PostSortOrder.distance).notifier)
+          .read(
+            feedControllerProvider(
+              _allCategories,
+              PostSortOrder.distance,
+            ).notifier,
+          )
           .loadMore();
 
       expect(repo.lastFetchPosts?.sort, PostSortOrder.distance);
@@ -318,7 +364,7 @@ void main() {
       final ProviderContainer container = _container(repo);
 
       final FeedState state = await container.read(
-        feedControllerProvider(null, PostSortOrder.distance).future,
+        feedControllerProvider(_allCategories, PostSortOrder.distance).future,
       );
 
       expect(state.items, hasLength(1));

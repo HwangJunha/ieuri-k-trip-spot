@@ -24,23 +24,32 @@ import 'community_labels.dart';
 /// "전체" 하나만 남는 것이 아니라 **줄 자체를 그리지 않는다**([CategoryBar]가 빈
 /// 목록을 그렇게 접는다): 고를 것이 하나뿐인 필터 줄은 자리만 차지한다.
 ///
-/// **단일 선택이다.** spot 쪽 바는 다중 선택이지만 커뮤니티 피드는 카테고리 하나만
-/// 받는다 — 서버 계약이 그렇고, 이 통일은 모양에 관한 것이지 동작에 관한 것이 아니다.
-/// 선택된 항목을 다시 누르면 "전체"([selected]가 null)로 돌아간다.
+/// **다중 선택이다**(서버 #77, 2026-08-16). 서버 `posts`가 복수 `categories`를 받게
+/// 되면서 spot 쪽 바와 동작까지 같아졌다 — 그 전까지는 서버가 하나만 받아 모양만
+/// 같고 동작은 단일 선택이었다.
+///
+/// **빈 선택이 "전체"다.** 마지막 칩을 꺼도 막지 않고 "전체"가 저절로 켜진다. 서버에는
+/// 그때 `categories` 인자를 보내지 않는다(빈 배열은 거절된다) — 접는 일은 리포지토리가
+/// 맡는다.
 class CategoryChipRow extends StatelessWidget {
   const CategoryChipRow({
     super.key,
     required this.chips,
     required this.selected,
-    required this.onSelected,
+    required this.onToggle,
+    required this.onSelectAll,
   });
 
   final List<TargetCategory> chips;
 
-  /// 지금 선택된 카테고리. null이면 "전체" 항목이 선택 상태다.
-  final TargetCategory? selected;
+  /// 지금 켜진 카테고리. 비어 있으면 "전체" 항목이 선택 상태다.
+  final Set<TargetCategory> selected;
 
-  final ValueChanged<TargetCategory?> onSelected;
+  /// 개별 칩을 누를 때. 켜기·끄기 판단은 호출부(provider)가 한다.
+  final ValueChanged<TargetCategory> onToggle;
+
+  /// "전체"를 누를 때. 개별 선택을 전부 푼다.
+  final VoidCallback onSelectAll;
 
   @override
   Widget build(BuildContext context) {
@@ -49,47 +58,25 @@ class CategoryChipRow extends StatelessWidget {
       available: <CategoryChipData>[
         for (final TargetCategory chip in chips)
           CategoryChipData(
-            id: _codeOf(chip),
+            id: chip.code,
             label: targetCategoryLabel(l10n, chip),
             // 아이콘은 코드 기준 공용 매핑을 쓴다 — 예전에는 이 파일이 같은 모양의
             // switch를 따로 들고 있었고, 두 벌이 갈리면 같은 카테고리가 화면마다
             // 다른 아이콘으로 보인다.
-            icon: spotCategoryIcon(_codeOf(chip)),
+            icon: spotCategoryIcon(chip.code),
           ),
       ],
-      selectedIds: selected == null
-          ? const <String>{}
-          : <String>{_codeOf(selected!)},
+      selectedIds: selected.map((TargetCategory c) => c.code).toSet(),
       // **커뮤니티 자기 키를 쓴다.** 공용 `categoryAll`과 문구가 같더라도, 이 키는
       // 커뮤니티가 소유하고 다른 화면에서도 쓰이고 있다.
       allLabel: l10n.communityCategoryAll,
-      // 단일 선택이라 누른 것 하나만 남기고, 같은 것을 다시 누르면 해제한다.
+      // 바가 돌려주는 id는 늘 위에서 실어 보낸 값이라 대응이 있다. 그래도 모르는
+      // 코드는 조용히 무시한다 — 서버가 enum을 늘렸을 때 탭 한 번에 앱이 죽지 않게.
       onToggle: (String code) {
-        final TargetCategory next = _categoryOf(code);
-        onSelected(selected == next ? null : next);
+        final TargetCategory? next = TargetCategory.fromCode(code);
+        if (next != null) onToggle(next);
       },
-      onSelectAll: () => onSelected(null),
+      onSelectAll: onSelectAll,
     );
   }
-
-  /// [TargetCategory] → 서버 코드. [CategoryChipData.id]와 표시 순서가 이 값을 쓴다.
-  ///
-  /// spot의 `SpotCategory.code`와 같은 문자열이다 — 서버가 두 도메인에 같은 코드
-  /// 체계를 쓰기 때문이며, 그래서 아이콘 매핑과 표시 순서를 함께 쓸 수 있다.
-  /// 타입을 합치지는 않는다(두 도메인의 계약이 다르다, `target_category.dart`).
-  static String _codeOf(TargetCategory category) => switch (category) {
-    TargetCategory.touristSpot => 'TOURIST_SPOT',
-    TargetCategory.culturalFacility => 'CULTURAL_FACILITY',
-    TargetCategory.festivalEvent => 'FESTIVAL_EVENT',
-    TargetCategory.travelCourse => 'TRAVEL_COURSE',
-    TargetCategory.leisureSports => 'LEISURE_SPORTS',
-    TargetCategory.lodging => 'LODGING',
-    TargetCategory.shopping => 'SHOPPING',
-    TargetCategory.restaurant => 'RESTAURANT',
-    TargetCategory.transport => 'TRANSPORT',
-  };
-
-  /// [_codeOf]의 역방향. 바가 돌려주는 id는 늘 위에서 실어 보낸 값이라 대응이 있다.
-  static TargetCategory _categoryOf(String code) => TargetCategory.values
-      .firstWhere((TargetCategory c) => _codeOf(c) == code);
 }

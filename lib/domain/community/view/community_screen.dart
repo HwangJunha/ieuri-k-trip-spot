@@ -12,6 +12,7 @@ import '../component/post_card.dart';
 import '../component/post_photo.dart';
 import '../../../common/model/post.dart';
 import '../model/post_sort_order.dart';
+import '../model/target_category_selection.dart';
 import '../../../common/model/target_category.dart';
 import '../provider/community_providers.dart';
 import '../provider/feed_providers.dart';
@@ -38,7 +39,10 @@ class CommunityScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final TargetCategory? category = ref.watch(selectedCategoryProvider);
+    final Set<TargetCategory> selected = ref.watch(selectedCategoryProvider);
+    // family 인자는 값 동등성이 있는 값 객체여야 한다 — `Set`을 그대로 넘기면 선택이
+    // 그대로여도 매 빌드마다 새 피드 인스턴스가 만들어진다.
+    final TargetCategorySelection selection = TargetCategorySelection(selected);
     final PostSortOrder sort = ref.watch(selectedSortProvider);
 
     return Scaffold(
@@ -73,14 +77,14 @@ class CommunityScreen extends ConsumerWidget {
         ),
         child: FloatingActionButton(
           tooltip: l10n.communityComposeAction,
-          onPressed: () => _openComposer(context, ref, category, sort),
+          onPressed: () => _openComposer(context, ref, selection, sort),
           child: const Icon(Icons.edit_outlined),
         ),
       ),
       body: SafeArea(
         child: Column(
           children: <Widget>[
-            _Chips(selected: category),
+            _Chips(selected: selected),
             // 정렬 토글. **여기서는 상태만 바꾼다** — 피드가 정렬별 family라 값이
             // 바뀌면 새 인스턴스가 커서 없이 첫 페이지부터 받는다(2차 가이드 §3).
             FeedSortToggle(
@@ -91,7 +95,7 @@ class CommunityScreen extends ConsumerWidget {
             // 본문만 상태에 따라 갈린다 — 피드가 로딩·오류여도 칩 줄과 정렬 토글은
             // 그대로 있어야 다른 카테고리·정렬로 옮겨갈 수 있다.
             Expanded(
-              child: _Feed(category: category, sort: sort),
+              child: _Feed(selection: selection, sort: sort),
             ),
           ],
         ),
@@ -105,14 +109,14 @@ class CommunityScreen extends ConsumerWidget {
   Future<void> _openComposer(
     BuildContext context,
     WidgetRef ref,
-    TargetCategory? category,
+    TargetCategorySelection selection,
     PostSortOrder sort,
   ) async {
     final bool? created = await context.pushNamed<bool>(
       PostComposerScreen.routeName,
     );
     if (created ?? false) {
-      ref.invalidate(feedControllerProvider(category, sort));
+      ref.invalidate(feedControllerProvider(selection, sort));
     }
   }
 }
@@ -124,7 +128,8 @@ class CommunityScreen extends ConsumerWidget {
 class _Chips extends ConsumerWidget {
   const _Chips({required this.selected});
 
-  final TargetCategory? selected;
+  /// 지금 켜진 카테고리. 비어 있으면 "전체"다.
+  final Set<TargetCategory> selected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => ref
@@ -133,8 +138,10 @@ class _Chips extends ConsumerWidget {
         data: (List<TargetCategory> chips) => CategoryChipRow(
           chips: chips,
           selected: selected,
-          onSelected: (TargetCategory? next) =>
-              ref.read(selectedCategoryProvider.notifier).select(next),
+          onToggle: (TargetCategory next) =>
+              ref.read(selectedCategoryProvider.notifier).toggle(next),
+          onSelectAll: () =>
+              ref.read(selectedCategoryProvider.notifier).selectAll(),
         ),
         orElse: () => const SizedBox.shrink(),
       );
@@ -145,9 +152,10 @@ class _Chips extends ConsumerWidget {
 /// 특히 위치 실패는 빈 피드와 구분해 그 사유를 보여준다 — "글이 없다"와 "위치를 못
 /// 얻었다"는 사용자가 할 일이 다르다.
 class _Feed extends ConsumerWidget {
-  const _Feed({required this.category, required this.sort});
+  const _Feed({required this.selection, required this.sort});
 
-  final TargetCategory? category;
+  /// 어느 카테고리 조합의 피드인지. 비어 있으면 "전체"다.
+  final TargetCategorySelection selection;
 
   /// 어느 정렬의 피드인지. **family 인자라서 정렬이 바뀌면 다른 인스턴스가**
   /// 커서 없이 처음부터 로딩된다(2차 가이드 §3).
@@ -157,7 +165,7 @@ class _Feed extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final AsyncValue<FeedState> state = ref.watch(
-      feedControllerProvider(category, sort),
+      feedControllerProvider(selection, sort),
     );
 
     return state.when(
@@ -170,11 +178,11 @@ class _Feed extends ConsumerWidget {
         body: error is LocationUnavailable
             ? null
             : l10n.communityFeedUnavailableBody,
-        onRetry: () => ref.invalidate(feedControllerProvider(category, sort)),
+        onRetry: () => ref.invalidate(feedControllerProvider(selection, sort)),
       ),
       data: (FeedState data) => data.isEmpty
           ? Center(child: Text(l10n.communityFeedEmpty))
-          : _FeedList(category: category, sort: sort, data: data),
+          : _FeedList(selection: selection, sort: sort, data: data),
     );
   }
 }
@@ -186,7 +194,7 @@ class _Feed extends ConsumerWidget {
 /// 구분선으로만 항목을 나눈다.
 class _FeedList extends ConsumerWidget {
   const _FeedList({
-    required this.category,
+    required this.selection,
     required this.sort,
     required this.data,
   });
@@ -194,7 +202,7 @@ class _FeedList extends ConsumerWidget {
   /// 어느 카테고리·정렬의 피드인지 — 추가 로딩을 **같은 family 인스턴스**에
   /// 요청해야 한다. 다른 인스턴스에 요청하면 커서 형식이 어긋나 서버가
   /// `INVALID_INPUT`을 준다(2차 가이드 §3).
-  final TargetCategory? category;
+  final TargetCategorySelection selection;
   final PostSortOrder sort;
   final FeedState data;
 
@@ -213,7 +221,7 @@ class _FeedList extends ConsumerWidget {
       hasMore: data.hasMore,
       isLoadingMore: data.isLoadingMore,
       onLoadMore: () =>
-          ref.read(feedControllerProvider(category, sort).notifier).loadMore(),
+          ref.read(feedControllerProvider(selection, sort).notifier).loadMore(),
       // 당겨서 새로고침. 공용 `common/pagination`의 선택 인자를 쓴다 — 화면이 자기
       // RefreshIndicator를 따로 만들지 않는다(CLAUDE.md §4).
       //
@@ -225,9 +233,9 @@ class _FeedList extends ConsumerWidget {
       // 보인다. 실패는 provider가 오류 상태로 들고 화면이 그 자리에서 사유를
       // 보여주므로 여기서 다시 던지지 않는다.
       onRefresh: () async {
-        ref.invalidate(feedControllerProvider(category, sort));
+        ref.invalidate(feedControllerProvider(selection, sort));
         await ref
-            .read(feedControllerProvider(category, sort).future)
+            .read(feedControllerProvider(selection, sort).future)
             .catchError((Object _) => data);
       },
       itemBuilder: (BuildContext context, int index) {
@@ -243,7 +251,7 @@ class _FeedList extends ConsumerWidget {
                 pathParameters: <String, String>{'id': post.id},
               ),
               onLike: () => ref
-                  .read(feedControllerProvider(category, sort).notifier)
+                  .read(feedControllerProvider(selection, sort).notifier)
                   .toggleLike(post.id)
                   // 실패는 컨트롤러가 롤백하고 로그를 남긴다. 여기서 다시 던지면
                   // 프레임 밖 예외가 되어 앱이 죽는다.
@@ -260,7 +268,7 @@ class _FeedList extends ConsumerWidget {
                 ref,
                 post: post,
                 onChanged: () =>
-                    ref.invalidate(feedControllerProvider(category, sort)),
+                    ref.invalidate(feedControllerProvider(selection, sort)),
               ),
             ),
           ],

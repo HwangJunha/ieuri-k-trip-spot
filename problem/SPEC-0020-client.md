@@ -23,11 +23,17 @@
 | 3 | 세 provider를 단일 값 → 집합으로, 기본값 `{TOURIST_SPOT}`·폴백·빈 목록 | R2·R4·R12 | ✅ |
 | 4 | 집합 → `categories: [String!]` 매핑, 5개 연산 배선 | R5 | ✅ |
 | 5 | ~~지도 카테고리 필터 신설 + 디바운스~~ — **철회** | R7·R8 | ❌ |
+| 6 | 커뮤니티 칩 계약 수정 + 다중 선택 전환 | 범위 확장 | ✅ |
 | — | 카드 썸네일·간격 · 서브 컬러 `#B4501E` | R9·R10 | ✅ |
 
-**전 단계 구현 완료(2026-08-15).** `flutter analyze` 무결점, 테스트 1180개 통과.
+**전 단계 구현 완료(2026-08-16).** `flutter analyze` 무결점, 테스트 1183개 통과.
 남은 것은 스펙의 "테스트 대상 단위" 표에 있는 provider 단위 테스트 작성이며, CLAUDE.md
 §8에 따라 사용자가 "작업 완료"를 선언한 뒤에 씁니다.
+
+**6단계는 스펙 범위 밖이었으나 사용자 결정으로 들어왔습니다** — "체계 똑같이 맞추는
+것까지가 작업"이라는 판단입니다. 원래 스펙은 커뮤니티 `CategoryChipRow`를 범위 밖으로
+두었는데(문서 끝 §범위 밖), 카테고리 칩을 앱 전체에서 같은 모양·같은 동작으로 맞추는
+과정에서 함께 전환했습니다.
 
 **1단계가 선행 조건입니다** — 로컬 `SpotCategory` enum과 `spotCategoryLabel()` l10n 매핑을 걷어내지 않으면 나머지가 전부 옛 타입에 묶입니다.
 
@@ -96,7 +102,61 @@
 정렬은 이제 클라이언트가 잡습니다(`kCategoryDisplayOrder`) — 서버가 순서를
 보장한다는 옛 주석들을 함께 정정했습니다.
 
-### 커뮤니티 다중 선택 — 서버 대기 (2026-08-16)
+### 커뮤니티 다중 선택 — 서버 도착, 전환 완료 (2026-08-16)
+
+아래 "서버 대기" 절은 **해소됐습니다.** 서버 #77이 `posts`에 복수 인자를 실었고,
+라이브에서 확인했습니다.
+
+```
+posts(categories: [TargetCategory!])   ← 신설
+posts(category: TargetCategory)        ← 제거(deprecated가 아니라 UnknownArgument)
+```
+
+**단수는 과도기 없이 사라졌습니다** — spot 때(#74)와 같은 방식이라, 클라이언트가
+전환하지 않으면 커뮤니티 피드 조회가 전부 실패합니다.
+
+**타입이 spot과 다릅니다.** spot은 `categories: [String!]`(열린 코드)인데 커뮤니티는
+`[TargetCategory!]`, 즉 **여전히 닫힌 enum**입니다. 그래서 `TargetCategory`를 값
+객체로 바꾸는 spot식 전환은 하지 않았고 enum을 그대로 둡니다. 서버가 두 도메인의
+카테고리 체계를 언젠가 하나로 맞출지는 아직 서버의 결정입니다.
+
+**빈 배열은 여전히 금지입니다.** `categories: []`는 `EmptyCategorySetException`으로
+거절되고, `errorType: INTERNAL`에 Java 예외명만 실려 와 **코드로 분기할 수 없습니다**
+(위 계약 차이 3번과 같습니다). 인자를 생략하면 전체입니다. 따라서 빈 집합을 null로
+접는 지점을 **리포지토리에 두었습니다** — provider·위젯이 각자 접으면 한 곳만 빠져도
+서버가 500을 줍니다.
+
+전환한 것:
+
+| 층 | 변경 |
+|---|---|
+| operation | `Posts` 쿼리의 `$category: TargetCategory` → `$categories: [TargetCategory!]` |
+| repository | `fetchPosts(category:)` → `fetchPosts(categories:)`, 빈 목록을 null로 접음 |
+| model | `TargetCategorySelection` 신설(정규화·값 동등성), `TargetCategory.code`/`fromCode` |
+| provider | `SelectedCategory`가 `TargetCategory?` → `Set<TargetCategory>`, `toggle`·`selectAll` |
+| provider | `FeedController` family 첫 인자가 `TargetCategorySelection` |
+| component·view | `CategoryChipRow`가 `onToggle`/`onSelectAll`로 다중 선택 |
+
+**`CreatePostInput.category`와 수정 입력은 단수 그대로입니다** — 글 하나가 갖는
+카테고리는 하나입니다. 필터만 복수가 됐습니다.
+
+#### spot의 `SpotCategoryToggle` mixin을 제네릭으로 열지 않은 이유
+
+공용 mixin(`common/category/spot_category_toggle.dart`)과 `SpotCategorySelection`은
+`SpotCategory`(`code`를 가진 값 객체)에 묶여 있고, 커뮤니티는 `TargetCategory`(enum)를
+씁니다. 제네릭으로 열려면 `common/`이 "코드 뽑는 함수"를 타입 인자와 함께 받아야 하고,
+spot 쪽 호출부 네 곳이 그 시그니처를 따라 바뀝니다. 얻는 것은 30줄짜리 파일 하나를
+아끼는 것뿐이라 **커뮤니티 로컬 값 객체**(`domain/community/model/
+target_category_selection.dart`)를 두었습니다 — CLAUDE.md §1.3, 경계가 요구하지 않는
+구조는 복잡도입니다. `common/`이 `TargetCategory`를 알게 되지 않는다는 §4의 선도
+그대로입니다.
+
+대신 **서버 코드 문자열은 한 곳으로 모았습니다.** `TargetCategory.code`/`fromCode`가
+`common/model/target_category.dart`에 생겼고, 예전에 `category_chip_row.dart` 안에
+있던 private switch를 걷어냈습니다 — 칩 id·표시 순서·아이콘 매핑이 같은 값을 쓰는데
+두 벌로 갈리면 한쪽만 고쳐 어긋납니다.
+
+### ~~커뮤니티 다중 선택 — 서버 대기~~ (2026-08-16, 위에서 해소)
 
 칩 계약을 고쳐 줄이 정상적으로 뜨자, 커뮤니티만 단일 선택으로 남은 것이 드러났습니다.
 다중으로 맞추려 했으나 **서버가 아직 받지 못합니다.**
@@ -308,7 +368,7 @@ Discover 빈 상태의 "카테고리 바꾸기" 버튼도 기본 카테고리가
 | `common/category/spot_category_bar.dart` | `SpotCategory` ↔ `CategoryChipData` 어댑터(네 화면이 같은 변환을 반복하지 않게) |
 
 - spot은 라벨을 **서버**(`SpotCategory.label`)에서, 커뮤니티는 **l10n**(`targetCategoryLabel`)에서 가져옵니다. 바는 어느 쪽인지 모릅니다.
-- 커뮤니티는 **단일 선택 그대로**입니다. 서버 계약이 카테고리 하나만 받으므로 이 통일은 모양에 관한 것이지 동작에 관한 것이 아닙니다. 재탭 해제("전체"로 복귀)도 그대로입니다. `TargetCategory`·`NearbySpotCategory`·provider·서버 계약은 건드리지 않았습니다.
+- ~~커뮤니티는 **단일 선택 그대로**입니다.~~ — **무효**(2026-08-16, 서버 #77). 당시에는 서버가 카테고리 하나만 받아 통일이 모양에 그쳤으나, 복수 인자가 생기면서 동작까지 같아졌습니다. 아래 §커뮤니티 다중 선택을 보십시오. `NearbySpotCategory`(장소 선택 시트)는 여전히 단일이며 이 전환 대상이 아닙니다.
 - 커뮤니티는 서버 `position` 대신 `kCategoryDisplayOrder`를 따릅니다 — 사용자가 자리로 기억하는 줄이라 두 화면의 순서가 갈리면 안 됩니다.
 - 커뮤니티의 아이콘 switch(`TargetCategory` 기준)를 걷어내고 공용 `spotCategoryIcon(code)`로 모았습니다. 같은 매핑 두 벌이 갈리면 같은 카테고리가 화면마다 다른 아이콘으로 보입니다.
 - `TargetCategory` → 서버 코드 변환(`TOURIST_SPOT` 등)은 커뮤니티 위젯 안의 private switch입니다. 두 도메인이 같은 코드 문자열을 쓰는 것은 서버가 같은 코드 체계를 쓰기 때문이며, **타입을 합치지는 않습니다**(§3, `target_category.dart` 주석).
@@ -470,5 +530,5 @@ teal 잔존 0건(AC10.4). `*Fixed` 4종 포함 secondary 계열 전체를 교체
 
 - 정보 위계 재설계·시각적 리듬 — R9 범위 밖입니다(spec §결정 사항). 실제 화면을 보며 조정할 사항이며, 필요 시 후속 스펙으로 분리합니다.
 - `category` 인자 제거 — 별도 스펙입니다.
-- ~~커뮤니티 `CategoryChipRow`~~ — **범위에 들어왔습니다**(2026-08-15 사용자 결정, 위 §커뮤니티도 같은 위젯을 씁니다). 그 위젯의 디자인이 앱 기준선이 되면서 공용 `CategoryBar`로 흡수했습니다. 단일 선택 동작과 서버 계약은 그대로입니다.
+- ~~커뮤니티 `CategoryChipRow`~~ — **범위에 들어왔습니다**(2026-08-15·16 사용자 결정). 그 위젯의 디자인이 앱 기준선이 되면서 공용 `CategoryBar`로 흡수했고(15일), 이어서 **다중 선택으로도 전환했습니다**(16일, 서버 #77이 `posts.categories`를 실은 뒤). 칩 계약이 깨져 줄 자체가 뜨지 않던 것도 이때 고쳤습니다. `TargetCategory` enum과 글 작성 시의 단수 카테고리는 그대로입니다.
 - 위젯 렌더링 검증 — 테스트 범위 밖입니다.

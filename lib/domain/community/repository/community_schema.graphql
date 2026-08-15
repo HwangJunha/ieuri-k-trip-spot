@@ -279,7 +279,10 @@ extend type Query {
     latitude: Float
     longitude: Float
     radiusMeters: Int
-    category: TargetCategory
+    # SPEC-0020: 다중 선택. 생략은 "전체", 빈 배열은 서버가 거절한다
+    # (EmptyCategorySetException). 관광지 쪽 `categories: [String!]`와 달리
+    # 여기는 아직 닫힌 enum이라 `[TargetCategory!]`다.
+    categories: [TargetCategory!]
     tag: String
     sort: PostSortOrder
     # true면 **내가 숨긴 글만** 온다(해제 화면용). 숨긴 글은 그 밖의 모든 조회에서
