@@ -12,6 +12,7 @@ import '../component/recent_searches_list.dart';
 // 기능이 자기 페이지네이션을 만들지 않는다(CLAUDE.md §4).
 import '../component/search_result_list.dart';
 import '../component/search_suggestion_list.dart';
+import '../component/spot_category_seed.dart';
 import '../model/spot_category.dart';
 import '../model/spot_search_state.dart';
 import '../model/tourist_spot.dart';
@@ -91,6 +92,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final SpotSearchState state = ref.watch(spotSearchProvider);
 
+    // 목록이 오면 기본 선택을 심는다(R4) — Discover·좋아요와 같은 규칙이다.
+    seedSpotCategoryDefault(
+      ref,
+      () => ref.read(spotSearchCategoryProvider.notifier),
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.searchTitle),
@@ -129,7 +136,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               // 필터가 검색 결과까지 갈아치운다.
               CategoryBar(
                 selected: ref.watch(spotSearchCategoryProvider),
-                onSelected: _selectCategory,
+                onSelected: _toggleCategory,
               ),
             ],
           ),
@@ -201,18 +208,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   /// 카테고리를 고르면 **같은 질의로 처음부터 다시 조회한다**(R5).
   ///
   /// 아직 검색 전이면 선택만 기억한다 — 다음 검색에 그 필터가 실린다.
-  void _selectCategory(SpotCategory? category) {
-    ref.read(spotSearchCategoryProvider.notifier).select(category);
+  void _toggleCategory(SpotCategory category) {
+    ref.read(spotSearchCategoryProvider.notifier).toggle(category);
     setState(() => _recentOpen = false);
     ref.read(spotSearchProvider.notifier).reapplyCategory();
   }
 
   /// 결과를 선택하면 그 spot의 상세로 간다(AC-13.1).
   ///
-  /// category·thumb를 함께 넘기는 이유는 다른 진입점과 같다 — 서버의
-  /// `intro`/`infoItems`가 카테고리를 필수 인자로 요구하고, 썸네일은 본문 조회를
-  /// 기다리는 동안 깜빡임을 없앤다. 값이 없으면 파라미터를 빼고 라우트가
-  /// 폴백하게 둔다.
+  /// **카테고리는 넘기지 않는다**(SPEC-0020) — 서버가 상세를 spot 자신의 카테고리로
+  /// 해석한다. `thumb`는 본문 조회를 기다리는 동안 깜빡임을 없앤다.
   ///
   /// **`push`라서 돌아오면 이 화면이 그대로 살아 있다**(AC-13.2) — 검색 상태가
   /// keepAlive이므로 질의와 결과가 유지된다.
@@ -231,7 +236,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             id: spot.id,
             name: spot.name,
             coordinates: coordinates,
-            categoryName: spot.category?.name,
+            // 서버 `code`를 싣는다(SPEC-0020) — 지도 마커가 쓰는 표기와 같다.
+            categoryName: spot.category?.code,
             // **검색 목록과 같은 폴백을 쓴다**(`search_result_list.dart`).
             // `thumbnailImageUrl`이 비는 경우가 있어 그것만 보면 사진 없는 마커가
             // 된다 — 목록에는 사진이 보이는데 지도에만 안 보이던 이유다.
@@ -246,7 +252,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       SpotDetailView.routeName,
       pathParameters: <String, String>{'id': spot.id},
       queryParameters: <String, String>{
-        if (spot.category != null) 'category': spot.category!.name,
         if (spot.thumbnailImageUrl != null) 'thumb': spot.thumbnailImageUrl!,
       },
     );

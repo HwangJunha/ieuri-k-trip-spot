@@ -14,17 +14,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../spot_test_doubles.dart';
 
 /// 좋아요 목록 커서 페이징 상태 전이(SPEC-0008 R-18, 설계 §6).
-LikedSpot _liked(
-  String id, {
-  SpotCategory category = SpotCategory.touristSpot,
-}) => LikedSpot(
-  id: id,
-  title: 'Spot $id',
-  thumbnailImageUrl: 'https://img/$id.jpg',
-  category: category,
-  copyright: CopyrightType.type1,
-  attributionText: 'KTO',
-);
+LikedSpot _liked(String id, {SpotCategory category = catTouristSpot}) =>
+    LikedSpot(
+      id: id,
+      title: 'Spot $id',
+      thumbnailImageUrl: 'https://img/$id.jpg',
+      category: category,
+      copyright: CopyrightType.type1,
+      attributionText: 'KTO',
+    );
 
 /// 컨트롤러가 언어 전환 시 목록을 다시 받으려고 locale을 watch하므로, 그 뒤에 있는
 /// 저장소도 덮어써야 한다(swipe_controller_test와 같은 규약).
@@ -57,7 +55,7 @@ void main() {
 
     final LikedSpotsState state = await _container(
       repo,
-    ).read(likedSpotsControllerProvider(null).future);
+    ).read(likedSpotsControllerProvider(noCategories).future);
 
     expect(state.items.map((LikedSpot s) => s.id), <String>['a', 'b']);
     expect(state.hasMore, isTrue);
@@ -69,14 +67,14 @@ void main() {
       liked: <LikedSpot>[_liked('a'), _liked('b'), _liked('c')],
     );
     final ProviderContainer container = _container(repo);
-    await container.read(likedSpotsControllerProvider(null).future);
+    await container.read(likedSpotsControllerProvider(noCategories).future);
 
     await container
-        .read(likedSpotsControllerProvider(null).notifier)
+        .read(likedSpotsControllerProvider(noCategories).notifier)
         .loadMore();
 
     final LikedSpotsState state = container
-        .read(likedSpotsControllerProvider(null))
+        .read(likedSpotsControllerProvider(noCategories))
         .requireValue;
     // 서버가 준 순서 그대로 이어 붙는다 — 클라이언트가 정렬하지 않는다(§5.2).
     expect(state.items.map((LikedSpot s) => s.id), <String>['a', 'b', 'c']);
@@ -88,11 +86,11 @@ void main() {
       liked: <LikedSpot>[_liked('a')],
     );
     final ProviderContainer container = _container(repo);
-    await container.read(likedSpotsControllerProvider(null).future);
+    await container.read(likedSpotsControllerProvider(noCategories).future);
     expect(repo.likedSpotsCallCount, 1);
 
     await container
-        .read(likedSpotsControllerProvider(null).notifier)
+        .read(likedSpotsControllerProvider(noCategories).notifier)
         .loadMore();
 
     // hasMore=false이므로 호출이 늘지 않는다.
@@ -102,7 +100,7 @@ void main() {
   test('좋아요가 없으면 빈 상태다', () async {
     final LikedSpotsState state = await _container(
       FakeSpotRepository(),
-    ).read(likedSpotsControllerProvider(null).future);
+    ).read(likedSpotsControllerProvider(noCategories).future);
 
     expect(state.items, isEmpty);
     expect(state.isEmpty, isTrue);
@@ -115,12 +113,12 @@ void main() {
       FakeSpotRepository(likedSpotsFailure: SpotFailure.unauthenticated),
     );
     // autoDispose라 구독을 유지해야 오류 상태를 읽는 동안 살아있다.
-    container.listen(likedSpotsControllerProvider(null), (_, _) {});
+    container.listen(likedSpotsControllerProvider(noCategories), (_, _) {});
 
     // Future를 먼저 변수로 붙잡아 구독을 확정한 뒤 매처에 넘긴다 — expectLater에
     // `.future`를 바로 넘기면 구독이 한 틀 늦게 붙어 컨테이너 폐기와 경쟁한다.
     final Future<LikedSpotsState> pending = container.read(
-      likedSpotsControllerProvider(null).future,
+      likedSpotsControllerProvider(noCategories).future,
     );
 
     await expectLater(
@@ -142,31 +140,35 @@ void main() {
     final FakeSpotRepository repo = FakeSpotRepository(
       liked: <LikedSpot>[
         _liked('a'),
-        _liked('b', category: SpotCategory.restaurant),
+        _liked('b', category: catRestaurant),
       ],
     );
 
-    await _container(
-      repo,
-    ).read(likedSpotsControllerProvider(SpotCategory.restaurant).future);
+    await _container(repo).read(
+      likedSpotsControllerProvider(
+        selectionOf(const <SpotCategory>[catRestaurant]),
+      ).future,
+    );
 
-    expect(repo.lastLikedCategory, SpotCategory.restaurant);
+    expect(repo.lastLikedCategoryCodes, <String>[catRestaurant.code]);
   });
 
   test('카테고리마다 별개의 목록을 본다', () async {
     final FakeSpotRepository repo = FakeSpotRepository(
       liked: <LikedSpot>[
         _liked('a'),
-        _liked('b', category: SpotCategory.restaurant),
+        _liked('b', category: catRestaurant),
       ],
     );
     final ProviderContainer container = _container(repo);
 
     final LikedSpotsState all = await container.read(
-      likedSpotsControllerProvider(null).future,
+      likedSpotsControllerProvider(noCategories).future,
     );
     final LikedSpotsState dining = await container.read(
-      likedSpotsControllerProvider(SpotCategory.restaurant).future,
+      likedSpotsControllerProvider(
+        selectionOf(const <SpotCategory>[catRestaurant]),
+      ).future,
     );
 
     // 전체는 둘 다, 음식점은 하나만 — family 인스턴스가 서로 섞이지 않는다.
@@ -179,9 +181,11 @@ void main() {
       liked: <LikedSpot>[_liked('a')],
     );
 
-    await _container(repo).read(likedSpotsControllerProvider(null).future);
+    await _container(
+      repo,
+    ).read(likedSpotsControllerProvider(noCategories).future);
 
-    expect(repo.lastLikedCategory, isNull);
+    expect(repo.lastLikedCategoryCodes, isNull);
   });
 
   test('추가 로딩이 실패해도 이미 받은 목록은 지우지 않는다', () async {
@@ -192,14 +196,14 @@ void main() {
       failLikedAfter: 1,
     );
     final ProviderContainer container = _container(repo);
-    await container.read(likedSpotsControllerProvider(null).future);
+    await container.read(likedSpotsControllerProvider(noCategories).future);
 
     await container
-        .read(likedSpotsControllerProvider(null).notifier)
+        .read(likedSpotsControllerProvider(noCategories).notifier)
         .loadMore();
 
     final LikedSpotsState state = container
-        .read(likedSpotsControllerProvider(null))
+        .read(likedSpotsControllerProvider(noCategories))
         .requireValue;
     // 보고 있던 목록은 그대로 남고 오류 화면으로 바뀌지 않는다.
     expect(state.items.map((LikedSpot s) => s.id), <String>['a', 'b']);
@@ -215,13 +219,13 @@ void main() {
       liked: <LikedSpot>[_liked('a')],
     );
     final ProviderContainer container = _container(repo);
-    await container.read(likedSpotsControllerProvider(null).future);
+    await container.read(likedSpotsControllerProvider(noCategories).future);
     expect(repo.likedSpotsCallCount, 1);
 
     await container
         .read(localeControllerProvider.notifier)
         .select(AppLanguage.korean);
-    await container.read(likedSpotsControllerProvider(null).future);
+    await container.read(likedSpotsControllerProvider(noCategories).future);
 
     expect(repo.likedSpotsCallCount, 2);
   });

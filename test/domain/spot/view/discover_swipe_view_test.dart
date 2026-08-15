@@ -120,10 +120,7 @@ void main() {
       tester,
       repo: FakeSpotRepository(
         feed: _spots(2),
-        categories: const <SpotCategory>[
-          SpotCategory.touristSpot,
-          SpotCategory.transport,
-        ],
+        categories: const <SpotCategory>[catTouristSpot, catTransport],
       ),
     );
     await tester.pumpAndSettle();

@@ -37,11 +37,11 @@ Future<ProviderContainer> _container(
 
 Future<void> _load(ProviderContainer container) async {
   container.listen(
-    swipeControllerProvider(null),
+    swipeControllerProvider(noCategories),
     (_, _) {},
     fireImmediately: true,
   );
-  await container.read(swipeControllerProvider(null).future);
+  await container.read(swipeControllerProvider(noCategories).future);
 }
 
 void main() {
@@ -87,7 +87,7 @@ void main() {
     expect(repo.requestedRadiiMeters, everyElement(50000));
 
     await container.read(searchRadiusControllerProvider.notifier).select(1);
-    await container.read(swipeControllerProvider(null).future);
+    await container.read(swipeControllerProvider(noCategories).future);
 
     // 빈 피드라 원문 조회마다 번역본 보충이 뒤따른다(SPEC-0019) — 요지는 반경이
     // 바뀐 뒤의 조회가 **새 반경**으로 나갔는지다.

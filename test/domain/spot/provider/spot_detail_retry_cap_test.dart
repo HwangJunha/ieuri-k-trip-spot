@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/retry_exhausted.dart';
-import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_detail.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/spot_detail_providers.dart';
@@ -10,15 +9,13 @@ import 'package:ieuri_k_trip_spot/domain/spot/provider/spot_providers.dart';
 
 import '../spot_test_doubles.dart';
 
-const SpotCategory _category = SpotCategory.touristSpot;
-
 ProviderContainer _container(FakeSpotRepository repo) {
   final container = ProviderContainer(
     overrides: [spotRepositoryProvider.overrideWithValue(repo)],
   );
   addTearDown(container.dispose);
   container.listen(
-    spotDetailControllerProvider('c1', _category),
+    spotDetailControllerProvider('c1'),
     (_, _) {},
     fireImmediately: true,
   );
@@ -30,9 +27,7 @@ ProviderContainer _container(FakeSpotRepository repo) {
 Future<void> _settle(ProviderContainer container) async {
   for (int i = 0; i < 5; i++) {
     try {
-      await container.read(
-        spotDetailControllerProvider('c1', _category).future,
-      );
+      await container.read(spotDetailControllerProvider('c1').future);
       return;
     } on SpotFailure {
       await Future<void>.delayed(const Duration(milliseconds: 20));
@@ -55,7 +50,7 @@ void main() {
 
     expect(repo.detailCallCount, 2);
     expect(
-      container.read(spotDetailControllerProvider('c1', _category)).error,
+      container.read(spotDetailControllerProvider('c1')).error,
       isA<RetryExhausted>(),
     );
   });
@@ -68,7 +63,7 @@ void main() {
     final int afterExhaustion = repo.detailCallCount;
 
     for (int i = 0; i < 3; i++) {
-      container.invalidate(spotDetailControllerProvider('c1', _category));
+      container.invalidate(spotDetailControllerProvider('c1'));
       await _settle(container);
     }
 
@@ -83,7 +78,7 @@ void main() {
 
     expect(repo.detailCallCount, 1);
     expect(
-      container.read(spotDetailControllerProvider('c1', _category)).error,
+      container.read(spotDetailControllerProvider('c1')).error,
       isNot(isA<RetryExhausted>()),
     );
   });
@@ -95,18 +90,13 @@ void main() {
 
     await _settle(container);
     expect(
-      container.read(spotDetailControllerProvider('c1', _category)).error,
+      container.read(spotDetailControllerProvider('c1')).error,
       isA<RetryExhausted>(),
     );
 
-    await container
-        .read(spotDetailControllerProvider('c1', _category).notifier)
-        .reload();
+    await container.read(spotDetailControllerProvider('c1').notifier).reload();
 
-    expect(
-      container.read(spotDetailControllerProvider('c1', _category)).hasValue,
-      isTrue,
-    );
+    expect(container.read(spotDetailControllerProvider('c1')).hasValue, isTrue);
   });
 
   test('본문 조회가 완료되면 응답의 썸네일이 최종 값이 된다 (AC-26)', () async {
@@ -114,7 +104,7 @@ void main() {
     final container = _container(repo);
 
     final SpotDetail detail = await container.read(
-      spotDetailControllerProvider('c1', _category).future,
+      spotDetailControllerProvider('c1').future,
     );
 
     // 라우트가 넘긴 값과 무관하게, 조회 결과의 thumbnailImageUrl이 최종 값이다.

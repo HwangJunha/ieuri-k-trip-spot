@@ -9,12 +9,10 @@ import '../../../common/network/shared_schema.graphql.dart';
 import '../../../common/network/graphql_failure.dart';
 import '../../../common/pagination/offset_page.dart';
 import '../../../common/pagination/page.dart';
-// **생성 타입 하나만 가져온다 — 기능 간 의존이 아니다.** codegen은 모든 스키마를 한
-// 이름공간에 합치므로 `SpotCategory`의 생성 enum이 이 파일에 놓인다(`spots`/`SpotPage`도
-// 이미 그렇다). 같은 타입을 커뮤니티 스키마에 다시 선언하면 중복 정의로 빌드가 깨진다.
-// 이 타입은 repository 밖으로 나가지 않고, 도메인 모델은 커뮤니티가 소유한
-// `NearbySpotCategory`다(CLAUDE.md §3).
-import '../../spot/repository/spot_schema.graphql.dart';
+// `spot_schema.graphql.dart` import는 SPEC-0020에서 사라졌다 — 서버 `SpotCategory`가
+// enum에서 객체로 바뀌며 `Enum$SpotCategory`가 없어졌고, 이제 카테고리를 코드
+// 문자열로 주고받으므로 생성 타입을 빌려올 이유가 없다. 도메인 모델은 여전히
+// 커뮤니티가 소유한 `NearbySpotCategory`다(CLAUDE.md §3).
 import '../model/blocked_user.dart';
 import '../../../common/model/comment.dart';
 import '../model/community_chip.dart';
@@ -159,7 +157,7 @@ class CommunityRepositoryImpl implements CommunityRepository {
         longitude: longitude,
         radiusMeters: radiusMeters,
         // null이면 전체다 — 서버가 nullable로 받는다.
-        category: category == null ? null : _spotCategoryInput(category),
+        categories: category == null ? null : _spotCategoryInput(category),
         page: page,
         size: size,
       ).toJson(),
@@ -208,7 +206,7 @@ class CommunityRepositoryImpl implements CommunityRepository {
         longitude: longitude,
         radiusMeters: radiusMeters,
         // null이면 전체다 — 주변 목록과 같은 규약.
-        category: category == null ? null : _spotCategoryInput(category),
+        categories: category == null ? null : _spotCategoryInput(category),
         page: page,
         size: size,
       ).toJson(),
@@ -267,7 +265,7 @@ class CommunityRepositoryImpl implements CommunityRepository {
       documentNodeQueryCommunityLikedSpots,
       Variables$Query$CommunityLikedSpots(
         // 주변 장소와 같은 필터다 — null이면 전체.
-        category: category == null ? null : _spotCategoryInput(category),
+        categories: category == null ? null : _spotCategoryInput(category),
         first: first,
         after: after,
       ).toJson(),
@@ -305,7 +303,10 @@ class CommunityRepositoryImpl implements CommunityRepository {
       'availableSpotCategories',
     );
     return Query$NearbySpotCategories.fromJson(data).availableSpotCategories
-        .map(_spotCategoryFromEnum)
+        .map(
+          (Query$NearbySpotCategories$availableSpotCategories c) =>
+              _spotCategoryFromCode(c.code),
+        )
         // 클라이언트가 모르는 값은 그릴 수 없으므로 뺀다 — 칩 하나 때문에 줄
         // 전체를 실패시키지 않는다(상단 칩과 같은 규약).
         .whereType<NearbySpotCategory>()
@@ -965,41 +966,42 @@ class CommunityRepositoryImpl implements CommunityRepository {
         TargetCategory.transport => Enum$TargetCategory.TRANSPORT,
       };
 
-  /// 서버 `SpotCategory` → 커뮤니티 도메인 enum. 모르는 값은 null이라 카테고리 줄에서
-  /// 빠지고, 나머지 칩은 그대로 그려진다.
+  /// 서버 카테고리 `code` → 커뮤니티 도메인 enum. 모르는 코드는 null이라 카테고리
+  /// 줄에서 빠지고, 나머지 칩은 그대로 그려진다.
   ///
-  /// **생성 enum이 `domain/spot`의 파일에 있는 것은 codegen의 이름공간이 하나이기
-  /// 때문이다** — `spots`/`SpotPage`를 이미 그렇게 쓰고 있다(같은 타입을 두 번
-  /// 선언하면 중복 정의로 빌드가 깨진다). 그 타입은 이 파일 밖으로 나가지 않고,
-  /// 도메인 모델은 커뮤니티가 소유한 [NearbySpotCategory]다(CLAUDE.md §3).
-  NearbySpotCategory? _spotCategoryFromEnum(Enum$SpotCategory value) =>
-      switch (value) {
-        Enum$SpotCategory.TOURIST_SPOT => NearbySpotCategory.touristSpot,
-        Enum$SpotCategory.CULTURAL_FACILITY =>
-          NearbySpotCategory.culturalFacility,
-        Enum$SpotCategory.FESTIVAL_EVENT => NearbySpotCategory.festivalEvent,
-        Enum$SpotCategory.TRAVEL_COURSE => NearbySpotCategory.travelCourse,
-        Enum$SpotCategory.LEISURE_SPORTS => NearbySpotCategory.leisureSports,
-        Enum$SpotCategory.LODGING => NearbySpotCategory.lodging,
-        Enum$SpotCategory.SHOPPING => NearbySpotCategory.shopping,
-        Enum$SpotCategory.RESTAURANT => NearbySpotCategory.restaurant,
-        Enum$SpotCategory.TRANSPORT => NearbySpotCategory.transport,
-        Enum$SpotCategory.$unknown => null,
-      };
+  /// **SPEC-0020에서 서버 `SpotCategory`가 enum에서 객체(`code`/`label`/`iconUrl`)로
+  /// 바뀌었다.** 커뮤니티는 이 스펙의 전환 대상이 아니므로(spec §범위 밖) 도메인
+  /// 타입은 [NearbySpotCategory] 그대로 두고, 매핑 기준만 생성 enum에서 코드
+  /// 문자열로 옮긴다 — 시트가 그리는 값 집합은 달라지지 않는다.
+  NearbySpotCategory? _spotCategoryFromCode(String code) => switch (code) {
+    'TOURIST_SPOT' => NearbySpotCategory.touristSpot,
+    'CULTURAL_FACILITY' => NearbySpotCategory.culturalFacility,
+    'FESTIVAL_EVENT' => NearbySpotCategory.festivalEvent,
+    'TRAVEL_COURSE' => NearbySpotCategory.travelCourse,
+    'LEISURE_SPORTS' => NearbySpotCategory.leisureSports,
+    'LODGING' => NearbySpotCategory.lodging,
+    'SHOPPING' => NearbySpotCategory.shopping,
+    'RESTAURANT' => NearbySpotCategory.restaurant,
+    'TRANSPORT' => NearbySpotCategory.transport,
+    _ => null,
+  };
 
-  Enum$SpotCategory _spotCategoryInput(NearbySpotCategory category) =>
-      switch (category) {
-        NearbySpotCategory.touristSpot => Enum$SpotCategory.TOURIST_SPOT,
-        NearbySpotCategory.culturalFacility =>
-          Enum$SpotCategory.CULTURAL_FACILITY,
-        NearbySpotCategory.festivalEvent => Enum$SpotCategory.FESTIVAL_EVENT,
-        NearbySpotCategory.travelCourse => Enum$SpotCategory.TRAVEL_COURSE,
-        NearbySpotCategory.leisureSports => Enum$SpotCategory.LEISURE_SPORTS,
-        NearbySpotCategory.lodging => Enum$SpotCategory.LODGING,
-        NearbySpotCategory.shopping => Enum$SpotCategory.SHOPPING,
-        NearbySpotCategory.restaurant => Enum$SpotCategory.RESTAURANT,
-        NearbySpotCategory.transport => Enum$SpotCategory.TRANSPORT,
-      };
+  /// 도메인 enum → 서버 코드. **단일 선택을 1원소 리스트로 감싼다** — 서버 인자가
+  /// `categories: [String!]`(복수 OR 필터)로 바뀌었으나 장소 선택 시트는 여전히
+  /// 칩 하나만 고르는 UI라, 다중 선택은 이 스펙에서 spot 도메인만 받는다.
+  List<String> _spotCategoryInput(NearbySpotCategory category) => <String>[
+    switch (category) {
+      NearbySpotCategory.touristSpot => 'TOURIST_SPOT',
+      NearbySpotCategory.culturalFacility => 'CULTURAL_FACILITY',
+      NearbySpotCategory.festivalEvent => 'FESTIVAL_EVENT',
+      NearbySpotCategory.travelCourse => 'TRAVEL_COURSE',
+      NearbySpotCategory.leisureSports => 'LEISURE_SPORTS',
+      NearbySpotCategory.lodging => 'LODGING',
+      NearbySpotCategory.shopping => 'SHOPPING',
+      NearbySpotCategory.restaurant => 'RESTAURANT',
+      NearbySpotCategory.transport => 'TRANSPORT',
+    },
+  ];
 
   /// 도메인 정렬 → 생성 enum. 서버 기본값이 `LATEST`라 호출부가 null을 주면 이
   /// 매핑을 거치지 않고 변수 자체를 생략한다.

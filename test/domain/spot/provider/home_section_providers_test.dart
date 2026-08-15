@@ -324,9 +324,8 @@ void main() {
     });
 
     test('축제도 같은 규약으로 보충한다', () async {
-      final events = FakeEventRepository(
-        festivals: <Festival>[festival('o1')],
-      )..translatedFestivals = <Festival>[festival('t1')];
+      final events = FakeEventRepository(festivals: <Festival>[festival('o1')])
+        ..translatedFestivals = <Festival>[festival('t1')];
       final container = makeContainer(eventRepository: events);
 
       final List<Festival> items = await container.read(

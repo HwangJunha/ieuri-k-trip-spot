@@ -49,7 +49,7 @@ final class SpotDetailControllerProvider
   /// [retry]로 자동 재시도를 1회로 묶는다(SPEC-0006 R1) — 스와이프와 같은 정책이다.
   const SpotDetailControllerProvider._({
     required SpotDetailControllerFamily super.from,
-    required (String, SpotCategory) super.argument,
+    required String super.argument,
   }) : super(
          retry: spotRetryPolicy,
          name: r'spotDetailControllerProvider',
@@ -65,7 +65,7 @@ final class SpotDetailControllerProvider
   String toString() {
     return r'spotDetailControllerProvider'
         ''
-        '$argument';
+        '($argument)';
   }
 
   @$internal
@@ -84,7 +84,7 @@ final class SpotDetailControllerProvider
 }
 
 String _$spotDetailControllerHash() =>
-    r'b6f58fc4299ad1dd6027d69711f214fd0ed4fee8';
+    r'9c9bee8fbd34f472f3a071fb2b03a49c7a070ec0';
 
 /// 관광지 상세 컨트롤러(SPEC-0003). [contentId]별 패밀리 — 상세 진입마다 해당 id의
 /// 인스턴스를 로드한다.
@@ -105,7 +105,7 @@ final class SpotDetailControllerFamily extends $Family
           AsyncValue<SpotDetail>,
           SpotDetail,
           FutureOr<SpotDetail>,
-          (String, SpotCategory)
+          String
         > {
   const SpotDetailControllerFamily._()
     : super(
@@ -128,11 +128,8 @@ final class SpotDetailControllerFamily extends $Family
   ///   직전 +1을 되돌려 순변화 −1. 같은 반응 반복은 순변화 0.
   /// [retry]로 자동 재시도를 1회로 묶는다(SPEC-0006 R1) — 스와이프와 같은 정책이다.
 
-  SpotDetailControllerProvider call(String contentId, SpotCategory category) =>
-      SpotDetailControllerProvider._(
-        argument: (contentId, category),
-        from: this,
-      );
+  SpotDetailControllerProvider call(String contentId) =>
+      SpotDetailControllerProvider._(argument: contentId, from: this);
 
   @override
   String toString() => r'spotDetailControllerProvider';
@@ -151,15 +148,14 @@ final class SpotDetailControllerFamily extends $Family
 /// [retry]로 자동 재시도를 1회로 묶는다(SPEC-0006 R1) — 스와이프와 같은 정책이다.
 
 abstract class _$SpotDetailController extends $AsyncNotifier<SpotDetail> {
-  late final _$args = ref.$arg as (String, SpotCategory);
-  String get contentId => _$args.$1;
-  SpotCategory get category => _$args.$2;
+  late final _$args = ref.$arg as String;
+  String get contentId => _$args;
 
-  FutureOr<SpotDetail> build(String contentId, SpotCategory category);
+  FutureOr<SpotDetail> build(String contentId);
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build(_$args.$1, _$args.$2);
+    final created = build(_$args);
     final ref = this.ref as $Ref<AsyncValue<SpotDetail>, SpotDetail>;
     final element =
         ref.element

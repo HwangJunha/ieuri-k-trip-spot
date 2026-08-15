@@ -529,8 +529,16 @@ query NearbySpots(
 #
 # 오퍼레이션 이름이 `AvailableSpotCategories`가 아닌 이유: codegen이 모든
 # 오퍼레이션을 한 이름공간에 모으므로 `domain/spot`의 같은 이름과 부딪힌다.
+#
+# SPEC-0020: `SpotCategory`가 enum에서 객체(`code`/`label`/`iconUrl`)로 바뀌어
+# 하위 선택이 필요해졌다. 시트는 자기 도메인 enum([NearbySpotCategory])으로
+# 매핑하므로 `code`만 쓰지만, 라벨을 서버에서 받도록 넓힐 여지를 남겨 함께 받는다.
 query NearbySpotCategories {
-  availableSpotCategories
+  availableSpotCategories {
+    code
+    label
+    iconUrl
+  }
 }
 
 # 장소 선택 시트의 두 번째 출처 — 내가 좋아요한 장소.

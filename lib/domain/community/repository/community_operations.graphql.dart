@@ -16303,7 +16303,31 @@ const documentNodeQueryNearbySpotCategories = DocumentNode(
             alias: null,
             arguments: [],
             directives: [],
-            selectionSet: null,
+            selectionSet: SelectionSetNode(
+              selections: [
+                FieldNode(
+                  name: NameNode(value: 'code'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'label'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'iconUrl'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -16312,22 +16336,48 @@ const documentNodeQueryNearbySpotCategories = DocumentNode(
 );
 
 class Query$NearbySpotCategories$availableSpotCategories {
-  Query$NearbySpotCategories$availableSpotCategories();
+  Query$NearbySpotCategories$availableSpotCategories({
+    required this.code,
+    required this.label,
+    this.iconUrl,
+  });
 
   factory Query$NearbySpotCategories$availableSpotCategories.fromJson(
     Map<String, dynamic> json,
   ) {
-    return Query$NearbySpotCategories$availableSpotCategories();
+    final l$code = json['code'];
+    final l$label = json['label'];
+    final l$iconUrl = json['iconUrl'];
+    return Query$NearbySpotCategories$availableSpotCategories(
+      code: (l$code as String),
+      label: (l$label as String),
+      iconUrl: (l$iconUrl as String?),
+    );
   }
+
+  final String code;
+
+  final String label;
+
+  final String? iconUrl;
 
   Map<String, dynamic> toJson() {
     final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$label = label;
+    _resultData['label'] = l$label;
+    final l$iconUrl = iconUrl;
+    _resultData['iconUrl'] = l$iconUrl;
     return _resultData;
   }
 
   @override
   int get hashCode {
-    return Object.hashAll([]);
+    final l$code = code;
+    final l$label = label;
+    final l$iconUrl = iconUrl;
+    return Object.hashAll([l$code, l$label, l$iconUrl]);
   }
 
   @override
@@ -16337,6 +16387,21 @@ class Query$NearbySpotCategories$availableSpotCategories {
     }
     if (other is! Query$NearbySpotCategories$availableSpotCategories ||
         runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$label = label;
+    final lOther$label = other.label;
+    if (l$label != lOther$label) {
+      return false;
+    }
+    final l$iconUrl = iconUrl;
+    final lOther$iconUrl = other.iconUrl;
+    if (l$iconUrl != lOther$iconUrl) {
       return false;
     }
     return true;
@@ -16366,7 +16431,7 @@ abstract class CopyWith$Query$NearbySpotCategories$availableSpotCategories<
     TRes res,
   ) = _CopyWithStubImpl$Query$NearbySpotCategories$availableSpotCategories;
 
-  TRes call();
+  TRes call({String? code, String? label, String? iconUrl});
 }
 
 class _CopyWithImpl$Query$NearbySpotCategories$availableSpotCategories<TRes>
@@ -16383,7 +16448,21 @@ class _CopyWithImpl$Query$NearbySpotCategories$availableSpotCategories<TRes>
 
   static const _undefined = <dynamic, dynamic>{};
 
-  TRes call() => _then(Query$NearbySpotCategories$availableSpotCategories());
+  TRes call({
+    Object? code = _undefined,
+    Object? label = _undefined,
+    Object? iconUrl = _undefined,
+  }) => _then(
+    Query$NearbySpotCategories$availableSpotCategories(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      label: label == _undefined || label == null
+          ? _instance.label
+          : (label as String),
+      iconUrl: iconUrl == _undefined ? _instance.iconUrl : (iconUrl as String?),
+    ),
+  );
 }
 
 class _CopyWithStubImpl$Query$NearbySpotCategories$availableSpotCategories<TRes>
@@ -16395,7 +16474,7 @@ class _CopyWithStubImpl$Query$NearbySpotCategories$availableSpotCategories<TRes>
 
   TRes _res;
 
-  call() => _res;
+  call({String? code, String? label, String? iconUrl}) => _res;
 }
 
 class Variables$Query$CommunityLikedSpots {

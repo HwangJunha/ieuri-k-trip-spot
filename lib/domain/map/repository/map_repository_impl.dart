@@ -31,15 +31,19 @@ class MapRepositoryImpl implements MapRepository {
   Future<MapViewportResult> fetchViewport({
     required MapBounds bbox,
     required int zoom,
+    List<String>? categoryCodes,
     bool? hasOrigin,
   }) async {
-    // 카테고리 인자를 넘기지 않는다 — R21이 토글 필터를 두지 말라고 하므로 이
-    // 화면에는 거를 기준이 없다. 서버 인자는 남아 있으니 필요해지면 그때 연결한다.
     final Map<String, dynamic> data = await _query(
       documentNodeQueryMapViewport,
       Variables$Query$MapViewport(
         bbox: _boundsInput(bbox),
         zoom: zoom,
+        // 빈 목록은 보내지 않는다 — 서버가 `EMPTY_CATEGORY_SET`으로 거절하므로
+        // null로 접어 전체를 받는다(SPEC-0020 AC5.1).
+        categories: (categoryCodes == null || categoryCodes.isEmpty)
+            ? null
+            : categoryCodes,
         // null이면 변수를 보내지 않아 서버가 원문·번역을 모두 준다(SPEC-0019).
         hasOrigin: hasOrigin,
       ).toJson(),
@@ -59,7 +63,11 @@ class MapRepositoryImpl implements MapRepository {
             latitude: s.lat,
             longitude: s.lng,
             kind: MapMarkerKind.spot,
-            categoryName: s.category.name,
+            // **서버 `code`를 그대로 싣는다**(SPEC-0020). 예전에는 생성 enum의
+            // `.name`(=`TOURIST_SPOT`)을 담았는데, 이 값을 받는 라우터는 Dart enum
+            // 이름(`touristSpot`)과 비교하고 있어 **마커 탭이 항상 폴백으로
+            // 떨어졌다.** 표기가 `code` 하나로 통일되며 그 어긋남이 사라진다.
+            categoryName: s.category.code,
             // 빈 문자열이 오면 없는 것으로 본다 — URL로 쓰면 로드가 실패한다.
             thumbnailUrl: s.thumbnailImageUrl.isEmpty
                 ? null

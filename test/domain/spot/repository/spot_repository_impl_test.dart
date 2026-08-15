@@ -55,6 +55,8 @@ SpotRepositoryImpl _repo(_FakeLink link) => SpotRepositoryImpl(
   ),
 );
 
+/// [category]는 서버가 주는 **객체**다(SPEC-0020) — 인자로는 코드만 받고 여기서
+/// `{code, label, iconUrl}`로 감싼다.
 Map<String, dynamic> _spotItem({
   String id = 'spot-1',
   String category = 'RESTAURANT',
@@ -65,7 +67,11 @@ Map<String, dynamic> _spotItem({
   'address': '88 Changgyeonggung-ro, Seoul',
   'thumbnailImageUrl': 'https://img/$id.jpg',
   'distanceMeters': 851.6,
-  'category': category,
+  'category': <String, dynamic>{
+    'code': category,
+    'label': category,
+    'iconUrl': null,
+  },
   'copyright': copyright,
   'attributionText': 'KTO',
   // 지도(SPEC-0014)가 검색 결과로 지도를 옮기는 데 쓴다. **mapX가 경도, mapY가
@@ -73,6 +79,25 @@ Map<String, dynamic> _spotItem({
   'mapX': 127.0,
   'mapY': 37.5,
 };
+
+/// SPEC-0020 이후 카테고리는 enum이 아니라 값 객체다. 동등성은 `code`만 보므로
+/// 라벨이 달라도 같은 카테고리다.
+const SpotCategory catTouristSpot = SpotCategory(
+  code: 'TOURIST_SPOT',
+  label: 'Tourist Spots',
+);
+const SpotCategory catRestaurant = SpotCategory(
+  code: 'RESTAURANT',
+  label: 'Restaurants',
+);
+const SpotCategory catTravelCourse = SpotCategory(
+  code: 'TRAVEL_COURSE',
+  label: 'Travel Courses',
+);
+const SpotCategory catTransport = SpotCategory(
+  code: 'TRANSPORT',
+  label: 'Transport',
+);
 
 void main() {
   test(
@@ -110,11 +135,11 @@ void main() {
       final TouristSpot first = page.items.first;
       expect(first.id, 's1');
       expect(first.name, 'Gwangjang Market');
-      expect(first.category, SpotCategory.restaurant);
+      expect(first.category, catRestaurant);
       expect(first.copyright, CopyrightType.type1);
       // Float 미터 → 반올림 정수.
       expect(first.distanceMeters, 852);
-      expect(page.items[1].category, SpotCategory.transport);
+      expect(page.items[1].category, catTransport);
       expect(page.items[1].copyright, CopyrightType.type3);
     },
   );
@@ -238,14 +263,26 @@ void main() {
     },
   );
 
-  test('fetchAvailableCategories maps server enum tokens', () async {
+  test('fetchAvailableCategories maps server category objects', () async {
     final SpotRepositoryImpl repo = _repo(
       _FakeLink(
         data: <String, dynamic>{
           'availableSpotCategories': <dynamic>[
-            'TOURIST_SPOT',
-            'TRAVEL_COURSE',
-            'RESTAURANT',
+            <String, dynamic>{
+              'code': 'TOURIST_SPOT',
+              'label': '관광지',
+              'iconUrl': null,
+            },
+            <String, dynamic>{
+              'code': 'TRAVEL_COURSE',
+              'label': '여행코스',
+              'iconUrl': null,
+            },
+            <String, dynamic>{
+              'code': 'RESTAURANT',
+              'label': '음식점',
+              'iconUrl': null,
+            },
           ],
         },
       ),
@@ -256,9 +293,9 @@ void main() {
     );
 
     expect(categories, <SpotCategory>[
-      SpotCategory.touristSpot,
-      SpotCategory.travelCourse,
-      SpotCategory.restaurant,
+      catTouristSpot,
+      catTravelCourse,
+      catRestaurant,
     ]);
   });
 
@@ -316,7 +353,11 @@ void main() {
             'spotDetail': <String, dynamic>{
               'id': 'c1',
               'title': 'Gyeongbokgung',
-              'category': 'TOURIST_SPOT',
+              'category': <String, dynamic>{
+                'code': 'TOURIST_SPOT',
+                'label': 'TOURIST_SPOT',
+                'iconUrl': null,
+              },
               'thumbnailImageUrl': 'https://img/thumb.jpg',
               'overview': 'A palace.',
               'address': 'Seoul',
@@ -352,10 +393,10 @@ void main() {
         ),
       );
 
-      final detail = await repo.fetchSpotDetail('c1', SpotCategory.touristSpot);
+      final detail = await repo.fetchSpotDetail('c1');
 
       expect(detail.id, 'c1');
-      expect(detail.category, SpotCategory.touristSpot);
+      expect(detail.category, catTouristSpot);
       expect(detail.overview, 'A palace.');
       expect(detail.likeCount, 42);
       expect(detail.gallery, hasLength(1));
@@ -381,7 +422,11 @@ void main() {
             'spotDetail': <String, dynamic>{
               'id': 'c2',
               'title': 'Sparse Spot',
-              'category': 'RESTAURANT',
+              'category': <String, dynamic>{
+                'code': 'RESTAURANT',
+                'label': 'RESTAURANT',
+                'iconUrl': null,
+              },
               'thumbnailImageUrl': 'https://img/t.jpg',
               'overview': null,
               'address': null,
@@ -399,7 +444,7 @@ void main() {
         ),
       );
 
-      final detail = await repo.fetchSpotDetail('c2', SpotCategory.restaurant);
+      final detail = await repo.fetchSpotDetail('c2');
 
       expect(detail.overview, isNull);
       expect(detail.homepage, isNull);
@@ -426,7 +471,11 @@ void main() {
                 'address': '서울<br>송파구',
                 'thumbnailImageUrl': 'https://img/s1.jpg',
                 'distanceMeters': 100.0,
-                'category': 'TOURIST_SPOT',
+                'category': <String, dynamic>{
+                  'code': 'TOURIST_SPOT',
+                  'label': 'TOURIST_SPOT',
+                  'iconUrl': null,
+                },
                 'copyright': 'TYPE1',
                 'attributionText': 'KTO',
               },
@@ -450,7 +499,7 @@ void main() {
     expect(page.items.first.address, '서울\n송파구');
   });
 
-  test('fetchSpotDetail sends the category the server requires', () async {
+  test('fetchSpotDetail sends only the id (no category argument)', () async {
     // intro/infoItems는 category를 필수 인자로 요구한다 — 변수로 실려 나가지 않으면
     // 서버가 MissingFieldArgument로 쿼리를 거절한다.
     final _FakeLink link = _FakeLink(
@@ -458,7 +507,11 @@ void main() {
         'spotDetail': <String, dynamic>{
           'id': 'c1',
           'title': 'T',
-          'category': 'RESTAURANT',
+          'category': <String, dynamic>{
+            'code': 'RESTAURANT',
+            'label': 'RESTAURANT',
+            'iconUrl': null,
+          },
           'thumbnailImageUrl': 'https://img/t.jpg',
           'overview': null,
           'address': null,
@@ -474,10 +527,13 @@ void main() {
       },
     );
 
-    await _repo(link).fetchSpotDetail('c1', SpotCategory.restaurant);
+    await _repo(link).fetchSpotDetail('c1');
 
+    // SPEC-0020: 카테고리 인자가 사라졌다 — id만 실린다. 서버가 spot 자신의
+    // 카테고리로 intro/infoItems를 해석하므로 호출부가 알려줄 것이 없다.
     expect(link.sentVariables?['id'], 'c1');
-    expect(link.sentVariables?['category'], 'RESTAURANT');
+    expect(link.sentVariables?.containsKey('category'), isFalse);
+    expect(link.sentVariables?.containsKey('categories'), isFalse);
   });
 
   test(
@@ -495,7 +551,7 @@ void main() {
       );
 
       await expectLater(
-        repo.fetchSpotDetail('missing', SpotCategory.touristSpot),
+        repo.fetchSpotDetail('missing'),
         throwsA(
           isA<SpotFailure>().having(
             (SpotFailure f) => f.kind,
@@ -519,7 +575,7 @@ void main() {
       );
 
       await expectLater(
-        repo.fetchSpotDetail('c1', SpotCategory.touristSpot),
+        repo.fetchSpotDetail('c1'),
         throwsA(
           isA<SpotFailure>().having(
             (SpotFailure f) => f.kind,
@@ -539,7 +595,7 @@ void main() {
       );
 
       await expectLater(
-        repo.fetchSpotDetail('c1', SpotCategory.touristSpot),
+        repo.fetchSpotDetail('c1'),
         throwsA(
           isA<SpotFailure>().having(
             (SpotFailure f) => f.kind,
@@ -684,7 +740,11 @@ void main() {
             <String, dynamic>{
               'id': 's1',
               'title': '경복궁',
-              'category': 'TOURIST_SPOT',
+              'category': <String, dynamic>{
+                'code': 'TOURIST_SPOT',
+                'label': 'TOURIST_SPOT',
+                'iconUrl': null,
+              },
             },
           ],
         },
@@ -698,7 +758,7 @@ void main() {
     );
 
     expect(suggestions.single.title, '경복궁');
-    expect(suggestions.single.category, SpotCategory.touristSpot);
+    expect(suggestions.single.category, catTouristSpot);
   });
 
   test('R18 · 인기 spot은 likeCount와 함께 매핑된다', () async {
@@ -741,10 +801,7 @@ void main() {
       _FakeLink(data: _detailData(gallery: null, infoItems: null)),
     );
 
-    final SpotDetail detail = await repo.fetchSpotDetail(
-      'c1',
-      SpotCategory.touristSpot,
-    );
+    final SpotDetail detail = await repo.fetchSpotDetail('c1');
 
     expect(detail.gallery, isEmpty);
     expect(detail.infoItems, isEmpty);
@@ -760,10 +817,7 @@ void main() {
       ),
     );
 
-    final SpotDetail detail = await repo.fetchSpotDetail(
-      'c1',
-      SpotCategory.touristSpot,
-    );
+    final SpotDetail detail = await repo.fetchSpotDetail('c1');
 
     expect(detail.hasOverview, isFalse);
     expect(detail.hasIntro, isFalse);
@@ -787,10 +841,7 @@ void main() {
       ),
     );
 
-    final SpotDetail detail = await repo.fetchSpotDetail(
-      'c1',
-      SpotCategory.touristSpot,
-    );
+    final SpotDetail detail = await repo.fetchSpotDetail('c1');
 
     // 던지지 않고 본문을 돌려준다.
     expect(detail.id, 'c1');
@@ -810,10 +861,7 @@ void main() {
       ),
     );
 
-    await expectLater(
-      repo.fetchSpotDetail('c1', SpotCategory.touristSpot),
-      throwsA(isA<SpotFailure>()),
-    );
+    await expectLater(repo.fetchSpotDetail('c1'), throwsA(isA<SpotFailure>()));
   });
 
   test('부분 실패가 앞에 와도 루트 오류 코드를 놓치지 않는다', () async {
@@ -837,7 +885,7 @@ void main() {
     );
 
     await expectLater(
-      repo.fetchSpotDetail('c1', SpotCategory.touristSpot),
+      repo.fetchSpotDetail('c1'),
       throwsA(
         isA<SpotFailure>().having(
           (SpotFailure f) => f.kind,
@@ -862,7 +910,11 @@ void main() {
                 'title': 'Gyeongbokgung',
                 'thumbnailImageUrl': 'https://img/1.jpg',
                 'address': 'Seoul',
-                'category': 'TOURIST_SPOT',
+                'category': <String, dynamic>{
+                  'code': 'TOURIST_SPOT',
+                  'label': 'TOURIST_SPOT',
+                  'iconUrl': null,
+                },
                 'copyright': 'TYPE1',
                 'attributionText': 'KTO',
               },
@@ -879,13 +931,13 @@ void main() {
     ).fetchLikedSpots(first: 20);
 
     expect(page.items.single.id, 'spot-1');
-    expect(page.items.single.category, SpotCategory.touristSpot);
+    expect(page.items.single.category, catTouristSpot);
     expect(page.hasNextPage, isTrue);
     expect(page.endCursor, 'c1');
     expect(link.sentVariables?['first'], 20);
   });
 
-  test('fetchLikedSpots가 카테고리를 서버 enum으로 실어 보낸다', () async {
+  test('fetchLikedSpots가 카테고리 코드 배열을 실어 보낸다', () async {
     final _FakeLink link = _FakeLink(
       data: <String, dynamic>{
         'likedSpots': <String, dynamic>{
@@ -898,12 +950,14 @@ void main() {
       },
     );
 
-    await _repo(link).fetchLikedSpots(category: SpotCategory.restaurant);
+    await _repo(
+      link,
+    ).fetchLikedSpots(categoryCodes: <String>[catRestaurant.code]);
 
-    expect(link.sentVariables?['category'], 'RESTAURANT');
+    expect(link.sentVariables?['categories'], <String>['RESTAURANT']);
   });
 
-  test('카테고리가 null이면 필터를 보내지 않는다 (전체)', () async {
+  test('카테고리 목록이 null이면 필터를 보내지 않는다 (전체)', () async {
     final _FakeLink link = _FakeLink(
       data: <String, dynamic>{
         'likedSpots': <String, dynamic>{
@@ -918,7 +972,7 @@ void main() {
 
     await _repo(link).fetchLikedSpots();
 
-    expect(link.sentVariables?['category'], isNull);
+    expect(link.sentVariables?['categories'], isNull);
   });
 
   test('fetchLikedSpots는 after 커서를 그대로 보낸다', () async {
@@ -970,7 +1024,11 @@ Map<String, dynamic> _detailData({
   'spotDetail': <String, dynamic>{
     'id': 'c1',
     'title': 'T',
-    'category': 'TOURIST_SPOT',
+    'category': <String, dynamic>{
+      'code': 'TOURIST_SPOT',
+      'label': 'TOURIST_SPOT',
+      'iconUrl': null,
+    },
     'thumbnailImageUrl': 'https://img/t.jpg',
     'overview': overview,
     'address': 'Seoul',

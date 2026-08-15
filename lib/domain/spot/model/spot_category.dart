@@ -16,11 +16,7 @@
 /// 가리켜야 한다. `label`은 언어에 따라 달라지므로 동등성에 넣으면 언어 전환 시
 /// 같은 카테고리가 다른 family 키가 된다.
 class SpotCategory {
-  const SpotCategory({
-    required this.code,
-    required this.label,
-    this.iconUrl,
-  });
+  const SpotCategory({required this.code, required this.label, this.iconUrl});
 
   /// 서버가 준 코드만 있고 표시 문구가 없을 때(라우팅 복원 등) 쓴다.
   ///

@@ -1245,7 +1245,7 @@ void main() {
       expect(page.hasNextPage, isTrue);
       expect(page.endCursor, 'MjAyNi0wOC0wNA');
       // 카테고리는 서버로 넘어간다 — 주변 장소와 같은 필터다.
-      expect(link.sentVariables?['category'], 'CULTURAL_FACILITY');
+      expect(link.sentVariables?['categories'], <String>['CULTURAL_FACILITY']);
     });
 
     // 좋아요한 장소가 없는 계정이 정상 상태다 — 오류가 아니라 빈 페이지다.
@@ -1379,7 +1379,7 @@ void main() {
     });
 
     // 이름 필터와 달리 카테고리는 **서버가 거른다** — 값이 실제로 전송돼야 한다.
-    test('카테고리가 서버 enum으로 전송된다', () async {
+    test('카테고리가 코드 배열로 전송된다', () async {
       final _FakeLink link = _FakeLink(data: _emptySpotPage);
 
       await _repo(link).fetchNearbySpots(
@@ -1388,7 +1388,7 @@ void main() {
         category: NearbySpotCategory.restaurant,
       );
 
-      expect(link.sentVariables?['category'], 'RESTAURANT');
+      expect(link.sentVariables?['categories'], <String>['RESTAURANT']);
     });
 
     // null은 "전체"다 — 서버가 nullable로 받으므로 값을 지어내지 않는다.
@@ -1402,14 +1402,28 @@ void main() {
   });
 
   group('availableSpotCategories — 장소 선택 시트의 카테고리 줄', () {
-    test('서버 enum을 커뮤니티 도메인 enum으로 매핑한다', () async {
+    // SPEC-0020: 서버 `SpotCategory`가 enum에서 객체로 바뀌었다. 커뮤니티는 그
+    // 전환의 대상이 아니라(spec §범위 밖) 도메인 타입은 그대로 두고 `code`로 매핑한다.
+    test('서버 카테고리 객체의 code를 커뮤니티 도메인 enum으로 매핑한다', () async {
       final List<NearbySpotCategory> categories = await _repo(
         _FakeLink(
           data: <String, dynamic>{
             'availableSpotCategories': <dynamic>[
-              'TOURIST_SPOT',
-              'RESTAURANT',
-              'TRAVEL_COURSE',
+              <String, dynamic>{
+                'code': 'TOURIST_SPOT',
+                'label': '관광지',
+                'iconUrl': null,
+              },
+              <String, dynamic>{
+                'code': 'RESTAURANT',
+                'label': '음식점',
+                'iconUrl': null,
+              },
+              <String, dynamic>{
+                'code': 'TRAVEL_COURSE',
+                'label': '여행코스',
+                'iconUrl': null,
+              },
             ],
           },
         ),

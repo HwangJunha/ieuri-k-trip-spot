@@ -19,12 +19,21 @@ import '../model/tourist_spot.dart';
 ///
 /// Methods return domain values built on `common/pagination` so no feature
 /// rolls its own pagination.
+///
+/// **카테고리 필터는 `List<String>? categoryCodes`로 받는다**(SPEC-0020 R5). 도메인
+/// 값 객체([SpotCategory])가 아니라 코드 목록인 이유는 그것이 곧 전송 형태이기
+/// 때문이다 — `categories: [String!]` 인자에 변환 없이 그대로 실린다(AC5.2). 라벨과
+/// 아이콘은 필터링에 아무 역할도 하지 않으므로 경계를 넘길 이유가 없다.
+///
+/// **빈 목록은 넘기지 않는다.** 서버가 `EMPTY_CATEGORY_SET`으로 거절하므로, 선택이
+/// 비면 호출부가 null을 주고 서버는 전체를 돌려준다(AC5.1). 그 접기는
+/// `SpotCategorySelection.codesOrNull`이 한다.
 abstract interface class SpotRepository {
   /// One page of the Discover swipe feed. The server has no cursor support, so
   /// this is offset pagination: [page] is the 0-based page number and [size] the
   /// page length. [latitude]/[longitude] are the user's location (server-required),
-  /// [radiusMeters] bounds the search, and [category] filters when set. Returns an
-  /// [OffsetPage] carrying items + `page` + `hasNext` (spec §4).
+  /// [radiusMeters] bounds the search, and [categoryCodes] filters when set. Returns
+  /// an [OffsetPage] carrying items + `page` + `hasNext` (spec §4).
   /// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). true면 요청 언어로 **쓰인** 장소만,
   /// false면 **번역된** 장소만, null이면 둘 다 온다. 두 집합은 서로 겹치지 않아
   /// 원문을 먼저 채우고 모자란 만큼 번역본으로 보충하는 2단계 조회가 가능하다.
@@ -32,7 +41,7 @@ abstract interface class SpotRepository {
     required double latitude,
     required double longitude,
     int? radiusMeters,
-    SpotCategory? category,
+    List<String>? categoryCodes,
     bool? hasOrigin,
     required int page,
     required int size,
@@ -44,12 +53,10 @@ abstract interface class SpotRepository {
   /// query-level failures surface as a [SpotFailure] the provider translates to a
   /// UI state (SPOT_NOT_FOUND / UPSTREAM_RATE_LIMITED / UPSTREAM_UNAVAILABLE, §6).
   ///
-  /// [category] is required by the server's `intro`/`infoItems` fields, which
-  /// normalize category-specific TourAPI responses. It cannot be read from the
-  /// response being fetched, so the caller supplies the value it already has from
-  /// the swipe feed. When it is null (an unmapped server enum) the caller omits
-  /// those two sections rather than failing the whole screen.
-  Future<SpotDetail> fetchSpotDetail(String id, SpotCategory category);
+  /// **카테고리 인자가 없다**(SPEC-0020). 예전에는 `intro`/`infoItems`가 카테고리를
+  /// 요구해 호출부가 이미 가진 값을 넘겼으나, 이제 서버가 spot 자신의 카테고리로
+  /// 해석한다 — 상세를 여는 데 카테고리를 알 필요가 없고, 라우팅에서도 빠졌다.
+  Future<SpotDetail> fetchSpotDetail(String id);
 
   /// The categories the server exposes for the active [language] (spec §5). The
   /// server is the single source of availability — the client renders exactly
@@ -76,7 +83,7 @@ abstract interface class SpotRepository {
     required double latitude,
     required double longitude,
     int? radiusMeters,
-    SpotCategory? category,
+    List<String>? categoryCodes,
     int? page,
     int? size,
   });
@@ -103,7 +110,7 @@ abstract interface class SpotRepository {
     required double latitude,
     required double longitude,
     int? radiusMeters,
-    SpotCategory? category,
+    List<String>? categoryCodes,
     bool? hasOrigin,
     int? first,
     String? after,
@@ -114,14 +121,14 @@ abstract interface class SpotRepository {
   /// 공용 타입이고, 기능이 자기 페이지네이션을 새로 만들지 않는다(CLAUDE.md §4).
   ///
   /// [after]는 이전 페이지의 `endCursor`이며 첫 조회에선 null이다. [first]는 페이지 크기.
-  /// [category]가 null이면 전체다 — 필터링은 서버가 하고 클라이언트는 받은 페이지를
-  /// 그대로 잇는다(Discover의 [fetchSpotPage]와 같은 규약).
+  /// [categoryCodes]가 null이면 전체다 — 필터링은 서버가 하고 클라이언트는 받은
+  /// 페이지를 그대로 잇는다(Discover의 [fetchSpotPage]와 같은 규약).
   ///
   /// 정렬은 서버가 보장하므로 클라이언트가 재정렬하지 않는다. 미인증이면 최상위
   /// `errors[]`의 `UNAUTHENTICATED`가 [SpotFailure]로 번역되어 SPEC-0005의 세션 갱신
   /// 경로를 탄다 — 이 스펙이 별도 처리를 더하지 않는다(§5.2).
   Future<CursorPage<LikedSpot>> fetchLikedSpots({
-    SpotCategory? category,
+    List<String>? categoryCodes,
     int? first,
     String? after,
   });

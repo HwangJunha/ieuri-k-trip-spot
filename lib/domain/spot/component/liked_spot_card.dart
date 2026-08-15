@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../common/widget/card_metrics.dart';
 import '../../../common/widget/spot_thumbnail.dart';
-import '../../../l10n/gen/app_localizations.dart';
 import '../model/liked_spot.dart';
-import 'spot_display.dart';
 
 /// 좋아요 목록의 항목 한 장(SPEC-0008 R-18).
 ///
@@ -27,7 +25,6 @@ class LikedSpotCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final AppLocalizations l10n = AppLocalizations.of(context);
 
     return InkWell(
       onTap: onTap,
@@ -53,8 +50,11 @@ class LikedSpotCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: CardMetrics.titleGap),
+                  // 서버가 활성 언어로 준 표시 문구를 그대로 그린다(SPEC-0020
+                  // R11) — 클라이언트가 번역하지 않으므로 서버가 카테고리를
+                  // 추가해도 앱 업데이트 없이 라벨이 따라온다.
                   Text(
-                    spotCategoryLabel(l10n, spot.category),
+                    spot.category.label,
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: theme.colorScheme.primary,
                     ),

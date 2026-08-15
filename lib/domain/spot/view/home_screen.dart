@@ -110,7 +110,6 @@ class _NearYouSection extends ConsumerWidget {
             onTap: () => openSpotDetail(
               context,
               id: items[i].id,
-              category: items[i].category?.name,
               thumbnailUrl: items[i].thumbnailImageUrl,
             ),
           ),
@@ -148,7 +147,6 @@ class _PopularSection extends ConsumerWidget {
                   onTap: () => openSpotDetail(
                     context,
                     id: p.spot.id,
-                    category: p.spot.category?.name,
                     thumbnailUrl: p.spot.thumbnailImageUrl,
                   ),
                 ),

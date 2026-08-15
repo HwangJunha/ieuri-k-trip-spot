@@ -5,6 +5,7 @@ import 'package:ieuri_k_trip_spot/common/localization/locale_controller.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
 import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category_selection.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_reaction.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/swipe_queue.dart';
@@ -34,17 +35,17 @@ Future<ProviderContainer> _container(FakeSpotRepository repo) async {
 /// [category]로 SwipeController를 로드해 첫 큐를 반환한다.
 Future<(ProviderContainer, SwipeQueue)> _load(
   FakeSpotRepository repo, {
-  SpotCategory? category,
+  SpotCategorySelection? selection,
 }) async {
   final ProviderContainer container = await _container(repo);
   // autoDispose 프로바이더가 read 사이에 폐기되지 않도록 구독을 유지한다.
   container.listen(
-    swipeControllerProvider(category),
+    swipeControllerProvider(selection ?? noCategories),
     (_, _) {},
     fireImmediately: true,
   );
   final SwipeQueue queue = await container.read(
-    swipeControllerProvider(category).future,
+    swipeControllerProvider(selection ?? noCategories).future,
   );
   return (container, queue);
 }
@@ -62,12 +63,12 @@ void main() {
     final ProviderContainer container = await _container(repo);
 
     expect(
-      container.read(swipeControllerProvider(null)),
+      container.read(swipeControllerProvider(noCategories)),
       const AsyncLoading<SwipeQueue>(),
     );
 
     final SwipeQueue queue = await container.read(
-      swipeControllerProvider(null).future,
+      swipeControllerProvider(noCategories).future,
     );
     expect(queue.cards.length, 3);
     expect(queue.hasNextPage, isFalse);
@@ -79,11 +80,11 @@ void main() {
     final String topId = queue.cards.first.id;
 
     container
-        .read(swipeControllerProvider(null).notifier)
+        .read(swipeControllerProvider(noCategories).notifier)
         .swipe(SpotReaction.like);
 
     final SwipeQueue after = container
-        .read(swipeControllerProvider(null))
+        .read(swipeControllerProvider(noCategories))
         .value!;
     expect(after.cards.length, 2);
     expect(after.cards.map((TouristSpot s) => s.id), isNot(contains(topId)));
@@ -95,7 +96,7 @@ void main() {
     final String topId = queue.cards.first.id;
 
     container
-        .read(swipeControllerProvider(null).notifier)
+        .read(swipeControllerProvider(noCategories).notifier)
         .swipe(SpotReaction.dislike);
     await Future<void>.delayed(Duration.zero);
 
@@ -115,13 +116,13 @@ void main() {
     final (container, _) = await _load(repo);
 
     container
-        .read(swipeControllerProvider(null).notifier)
+        .read(swipeControllerProvider(noCategories).notifier)
         .swipe(SpotReaction.like);
     await Future<void>.delayed(Duration.zero);
 
     // 실패해도 큐는 2장으로 유지(복원 없음).
     expect(
-      container.read(swipeControllerProvider(null)).value!.cards.length,
+      container.read(swipeControllerProvider(noCategories)).value!.cards.length,
       2,
     );
   });
@@ -139,16 +140,19 @@ void main() {
     final String topId = queue.cards.first.id;
 
     container
-        .read(swipeControllerProvider(null).notifier)
+        .read(swipeControllerProvider(noCategories).notifier)
         .swipe(SpotReaction.like);
     await Future<void>.delayed(Duration.zero);
 
     // 재전송이 성공해 반응이 기록된다.
     expect(repo.recordedReactions, contains((topId, SpotReaction.like)));
     // 그리고 큐는 정상 상태 — 오류로 인한 부작용이 없다(오류 미노출).
-    expect(container.read(swipeControllerProvider(null)).hasError, isFalse);
     expect(
-      container.read(swipeControllerProvider(null)).value!.cards.length,
+      container.read(swipeControllerProvider(noCategories)).hasError,
+      isFalse,
+    );
+    expect(
+      container.read(swipeControllerProvider(noCategories)).value!.cards.length,
       2,
     );
   });
@@ -163,13 +167,13 @@ void main() {
       expect(queue.hasNextPage, isTrue);
 
       container
-          .read(swipeControllerProvider(null).notifier)
+          .read(swipeControllerProvider(noCategories).notifier)
           .swipe(SpotReaction.like);
       // 낙관적 제거로 2장, 이어서 선제 조회가 다음 페이지를 붙인다.
       await Future<void>.delayed(Duration.zero);
 
       final SwipeQueue after = container
-          .read(swipeControllerProvider(null))
+          .read(swipeControllerProvider(noCategories))
           .value!;
       expect(after.cards.length, greaterThan(2));
     },
@@ -182,12 +186,12 @@ void main() {
       final (container, _) = await _load(repo);
 
       container
-          .read(swipeControllerProvider(null).notifier)
+          .read(swipeControllerProvider(noCategories).notifier)
           .swipe(SpotReaction.like);
       await Future<void>.delayed(Duration.zero);
 
       final SwipeQueue after = container
-          .read(swipeControllerProvider(null))
+          .read(swipeControllerProvider(noCategories))
           .value!;
       expect(after.cards, isEmpty);
       expect(after.isExhausted, isTrue);
@@ -212,12 +216,12 @@ void main() {
       final String reacted = initial.top!.id;
 
       container
-          .read(swipeControllerProvider(null).notifier)
+          .read(swipeControllerProvider(noCategories).notifier)
           .swipe(SpotReaction.like);
       await Future<void>.delayed(Duration.zero);
 
       final SwipeQueue after = container
-          .read(swipeControllerProvider(null))
+          .read(swipeControllerProvider(noCategories))
           .value!;
       // 반응한 카드가 사라졌고, 나머지는 남는다.
       expect(
@@ -226,7 +230,10 @@ void main() {
       );
       expect(after.cards.length, 2);
       // 세션은 계속된다 — 오류 상태로 넘어가지 않는다.
-      expect(container.read(swipeControllerProvider(null)).hasError, isFalse);
+      expect(
+        container.read(swipeControllerProvider(noCategories)).hasError,
+        isFalse,
+      );
     },
   );
 
@@ -240,11 +247,11 @@ void main() {
       final (container, _) = await _load(repo);
 
       container
-          .read(swipeControllerProvider(null).notifier)
+          .read(swipeControllerProvider(noCategories).notifier)
           .dropMissingCard('gone');
 
       final AsyncValue<SwipeQueue> state = container.read(
-        swipeControllerProvider(null),
+        swipeControllerProvider(noCategories),
       );
       expect(state.hasError, isFalse);
       expect(state.value!.cards.map((TouristSpot s) => s.id), <String>[
@@ -262,12 +269,16 @@ void main() {
       final repo = FakeSpotRepository(feed: const <TouristSpot>[], pageSize: 5);
       final (container, queue) = await _load(
         repo,
-        category: SpotCategory.festivalEvent,
+        selection: selectionOf(const <SpotCategory>[catFestivalEvent]),
       );
 
       expect(
         container
-            .read(swipeControllerProvider(SpotCategory.festivalEvent))
+            .read(
+              swipeControllerProvider(
+                selectionOf(const <SpotCategory>[catFestivalEvent]),
+              ),
+            )
             .hasError,
         isFalse,
       );
@@ -285,11 +296,15 @@ void main() {
 
       // 카드 하나를 소비해 세션이 처음 상태가 아니게 만든다.
       container
-          .read(swipeControllerProvider(null).notifier)
+          .read(swipeControllerProvider(noCategories).notifier)
           .swipe(SpotReaction.like);
       await Future<void>.delayed(Duration.zero);
       expect(
-        container.read(swipeControllerProvider(null)).value!.cards.length,
+        container
+            .read(swipeControllerProvider(noCategories))
+            .value!
+            .cards
+            .length,
         2,
       );
 
@@ -298,7 +313,7 @@ void main() {
           .select(AppLanguage.korean);
 
       final SwipeQueue rebuilt = await container.read(
-        swipeControllerProvider(null).future,
+        swipeControllerProvider(noCategories).future,
       );
       expect(rebuilt.cards.length, 3);
       expect(rebuilt.loadedPage, 0);
@@ -315,14 +330,14 @@ void main() {
     final String reacted = initial.top!.id;
 
     container
-        .read(swipeControllerProvider(null).notifier)
+        .read(swipeControllerProvider(noCategories).notifier)
         .swipe(SpotReaction.like);
     await Future<void>.delayed(Duration.zero);
 
     // 낙관적으로 빠진 맨 위 카드만 사라지고, 나머지는 그대로다 — SPOT_NOT_FOUND가
     // 아니므로 큐에서 추가로 걷어내지 않는다.
     final SwipeQueue after = container
-        .read(swipeControllerProvider(null))
+        .read(swipeControllerProvider(noCategories))
         .value!;
     expect(after.cards.map((TouristSpot s) => s.id), isNot(contains(reacted)));
     expect(after.cards.length, 1);
@@ -331,15 +346,17 @@ void main() {
   test('category families load independently', () async {
     final repo = FakeSpotRepository(
       feed: <TouristSpot>[
-        swipeSpot('f1', category: SpotCategory.restaurant),
-        swipeSpot('n1', category: SpotCategory.touristSpot),
+        swipeSpot('f1', category: catRestaurant),
+        swipeSpot('n1', category: catTouristSpot),
       ],
       pageSize: 5,
     );
     final (container, _) = await _load(repo);
 
     final SwipeQueue food = await container.read(
-      swipeControllerProvider(SpotCategory.restaurant).future,
+      swipeControllerProvider(
+        selectionOf(const <SpotCategory>[catRestaurant]),
+      ).future,
     );
     expect(food.cards.single.id, 'f1');
   });
@@ -383,11 +400,13 @@ void main() {
       final (container, queue) = await _load(repo);
       final String topId = queue.cards.first.id;
 
-      container.read(swipeControllerProvider(null).notifier).consume(topId);
+      container
+          .read(swipeControllerProvider(noCategories).notifier)
+          .consume(topId);
       await Future<void>.delayed(Duration.zero);
 
       final SwipeQueue after = container
-          .read(swipeControllerProvider(null))
+          .read(swipeControllerProvider(noCategories))
           .value!;
       expect(after.cards.map((TouristSpot s) => s.id), isNot(contains(topId)));
       expect(after.cards.length, 2);
@@ -402,10 +421,12 @@ void main() {
       final String middleId = queue.cards[1].id;
       final String topId = queue.cards.first.id;
 
-      container.read(swipeControllerProvider(null).notifier).consume(middleId);
+      container
+          .read(swipeControllerProvider(noCategories).notifier)
+          .consume(middleId);
 
       final SwipeQueue after = container
-          .read(swipeControllerProvider(null))
+          .read(swipeControllerProvider(noCategories))
           .value!;
       expect(
         after.cards.map((TouristSpot s) => s.id),
@@ -419,9 +440,14 @@ void main() {
       final repo = FakeSpotRepository(feed: _spots(3), pageSize: 5);
       final (container, before) = await _load(repo);
 
-      container.read(swipeControllerProvider(null).notifier).consume('nope');
+      container
+          .read(swipeControllerProvider(noCategories).notifier)
+          .consume('nope');
 
-      expect(container.read(swipeControllerProvider(null)).value, before);
+      expect(
+        container.read(swipeControllerProvider(noCategories)).value,
+        before,
+      );
     });
   });
 

@@ -12,6 +12,7 @@ import '../../../common/storage/search_radius_controller.dart';
 import '../model/retry_budget.dart';
 import '../model/retry_exhausted.dart';
 import '../model/spot_category.dart';
+import '../model/spot_category_selection.dart';
 import '../model/spot_failure.dart';
 import '../model/spot_reaction.dart';
 import '../model/swipe_queue.dart';
@@ -19,6 +20,7 @@ import '../model/tourist_spot.dart';
 import '../repository/spot_repository.dart';
 import 'retry_budget_providers.dart';
 import 'retry_counting.dart';
+import 'spot_category_toggle.dart';
 import 'spot_providers.dart';
 
 part 'swipe_providers.g.dart';
@@ -59,21 +61,45 @@ Future<List<SpotCategory>> availableSpotCategories(Ref ref) {
   return ref.watch(spotRepositoryProvider).fetchAvailableCategories(language);
 }
 
-/// 현재 선택된 카테고리(null=전체). CategoryBar가 갱신하고 SwipeController 패밀리
-/// 인자로 쓰인다 — 값이 바뀌면 다른 SwipeController 인스턴스를 보게 되어 재로딩된다.
+/// Discover 스와이프의 카테고리 선택(SPEC-0020 R2). **비어 있을 수 없는 집합이다** —
+/// "전체 보기"가 사라졌으므로 `null`("필터 없음")이라는 표현 자체가 없다.
 ///
 /// [SwipeController]와 같은 이유로 `keepAlive`다 — autoDispose면 다른 탭에 다녀오는
-/// 것만으로 선택이 "전체"로 되돌아간다. 사용자가 고른 필터는 화면이 아니라 세션에 속한다.
+/// 것만으로 선택이 초기화된다. 사용자가 고른 필터는 화면이 아니라 세션에 속한다
+/// (AC12.3). R12의 "비영속"은 **재시작 기준**이라(AC12.2) 세션 내 유지와 충돌하지
+/// 않는다 — 디스크에 쓰지 않는 것만을 요구한다.
 @Riverpod(keepAlive: true)
-class SelectedSpotCategory extends _$SelectedSpotCategory {
+class SelectedSpotCategory extends _$SelectedSpotCategory
+    with SpotCategoryToggle {
   @override
-  SpotCategory? build() => null;
-
-  void select(SpotCategory? category) => state = category;
+  Set<SpotCategory> build() => <SpotCategory>{};
 }
 
-/// Discover 스와이프 카드 스택 컨트롤러(spec §4). [category]별 패밀리 —
-/// 카테고리 변경은 다른 인스턴스 로딩으로 이어진다.
+/// 지금 살아 있는 스와이프 세션의 선택 집합(SPEC-0007 §4.2 지원).
+///
+/// **왜 필요한가.** 상세 화면이 "서버에서 사라진 카드"를 스와이프 세션에서 걷어낼 때,
+/// 어느 세션에서 열렸는지 모르므로 살아 있는 세션 전부에 알려야 한다. 예전에는
+/// `SpotCategory.values`를 훑어 카테고리 10개를 확인하면 됐지만, **다중 선택 이후로는
+/// 가능한 조합이 2^n이라 열거할 수 없다.** 그래서 세션이 스스로 등록한다.
+///
+/// **provider가 아니라 평범한 집합인 이유.** provider로 두면 [SwipeController]의
+/// `build`가 다른 provider의 상태를 바꾸게 되는데, Riverpod은 빌드 중 상태 변경을
+/// 금지한다 — 실제로 그렇게 만들었더니 컨트롤러가 로딩에서 빠져나오지 못하고
+/// 그대로 멈췄다(예외가 아니라 정지로 드러난다). 여기 담기는 것은 UI가 구독할
+/// 상태가 아니라 "지금 존재하는 인스턴스의 명부"이므로 provider일 이유도 없다.
+///
+/// 등록·해제는 컨트롤러의 `build`/`onDispose`가 짝으로 한다. 컨테이너를 넘어 남지만
+/// [SwipeController]가 `keepAlive`라 실질 수명이 같고, 없는 세션은 `ref.exists`가
+/// 걸러낸다.
+final Set<SpotCategorySelection> liveSwipeSessions = <SpotCategorySelection>{};
+
+/// Discover 스와이프 카드 스택 컨트롤러(spec §4). [selection]별 패밀리 —
+/// 선택 변경은 다른 인스턴스 로딩으로 이어진다.
+///
+/// **family 인자가 `Set`이 아니라 [SpotCategorySelection]인 이유**(SPEC-0020):
+/// Dart의 `Set`은 값 동등성이 없어, 원소가 같아도 매 빌드마다 새 키가 되어
+/// keepAlive 세션이 무한히 쌓이고 피드를 계속 다시 받는다. 정렬된 코드 문자열로
+/// 동등성을 정의한 값 객체가 그것을 막는다.
 ///
 /// - 첫 빌드: 현재 좌표를 얻어 첫 페이지(page 0, size 100)를 조회해 [SwipeQueue]를 만든다.
 /// - [swipe]: 낙관적으로 맨 위 카드를 즉시 제거하고 `reactToSpot`을 비동기 발사한다.
@@ -98,18 +124,27 @@ class SwipeController extends _$SwipeController {
 
   bool _isPrefetching = false;
 
-  /// 이 카테고리의 재시도 예산(SPEC-0006 R4). 컨트롤러 바깥의 keepAlive provider라
+  /// 이 선택의 재시도 예산(SPEC-0006 R4). 컨트롤러 바깥의 keepAlive provider라
   /// 재빌드를 넘어 살아남는다 — 인스턴스 필드에 두면 폭주 경로인 재빌드가 카운터를
   /// 초기화해 상한이 무의미해진다(설계문서 §2.2).
-  SpotRetryBudget get _budget => ref.read(
-    spotRetryBudgetProvider(swipeRetryScope(category?.name)).notifier,
-  );
+  ///
+  /// 캐시 키는 정렬된 코드 문자열이다 — 예전에는 Dart enum 이름(`.name`)이었으나
+  /// 그 표현이 사라졌고, 선택 순서가 예산을 가르면 안 되므로 정렬된 값을 쓴다.
+  String get _retryScope => swipeRetryScope(selection.codes.join(','));
+
+  SpotRetryBudget get _budget =>
+      ref.read(spotRetryBudgetProvider(_retryScope).notifier);
 
   RetryBudget get _budgetState =>
-      ref.read(spotRetryBudgetProvider(swipeRetryScope(category?.name)));
+      ref.read(spotRetryBudgetProvider(_retryScope));
 
   @override
-  Future<SwipeQueue> build(SpotCategory? category) async {
+  Future<SwipeQueue> build(SpotCategorySelection selection) async {
+    // 살아 있는 세션으로 등록한다 — 상세 화면이 사라진 카드를 걷어낼 때 훑을 목록이다.
+    // 다중 선택 이후로는 가능한 조합을 열거할 수 없어 세션이 스스로 알린다.
+    liveSwipeSessions.add(selection);
+    ref.onDispose(() => liveSwipeSessions.remove(selection));
+
     // 언어가 바뀌면 세션을 통째로 다시 만든다(SPEC-0007 §4.5·R-14). **이제 id 때문이
     // 아니다** — SPEC-0019에서 id가 언어 무관해져 옛 카드로도 상세·반응이 통한다.
     // 다시 받는 이유는 카드에 박힌 제목·주소가 이전 언어의 문장이기 때문이다.
@@ -153,7 +188,7 @@ class SwipeController extends _$SwipeController {
         latitude: coords.latitude,
         longitude: coords.longitude,
         radiusMeters: radiusMetersOf(radiusKm),
-        category: category,
+        categoryCodes: selection.codesOrNull,
         hasOrigin: true,
         page: 0,
         size: _pageSize,
@@ -174,7 +209,7 @@ class SwipeController extends _$SwipeController {
             latitude: coords.latitude,
             longitude: coords.longitude,
             radiusMeters: radiusMetersOf(radiusKm),
-            category: category,
+            categoryCodes: selection.codesOrNull,
             hasOrigin: false,
             page: 0,
             size: _pageSize,
@@ -295,7 +330,7 @@ class SwipeController extends _$SwipeController {
       final OffsetPage<TouristSpot> next = await _repository.fetchSpotPage(
         latitude: coords.latitude,
         longitude: coords.longitude,
-        category: category,
+        categoryCodes: selection.codesOrNull,
         hasOrigin: hasOrigin,
         page: nextPage,
         size: _pageSize,

@@ -412,9 +412,13 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   void _onMarkerTap(MapMarker marker) {
     // 문화행사는 아직 상세 화면이 없다 — 계약이 주는 것은 외부 링크뿐이다(spec §7.9).
     if (marker.kind != MapMarkerKind.spot) return;
-    // `common/navigation`의 헬퍼를 쓴다. 인자 규약(category가 서버 필수 인자라는 것)이
-    // 거기 모여 있어, 직접 pushNamed하면 그 규약을 여기서 다시 지켜야 한다.
-    openSpotDetail(context, id: marker.id, category: marker.categoryName);
+    // `common/navigation`의 헬퍼를 쓴다 — 인자 규약이 거기 모여 있어, 직접
+    // pushNamed하면 그 규약을 여기서 다시 지켜야 한다.
+    //
+    // **카테고리는 넘기지 않는다**(SPEC-0020). 서버가 상세를 spot 자신의 카테고리로
+    // 해석하므로 인자가 사라졌다 — 마커가 실어 온 `categoryName`(=서버 `code`)은
+    // 지도 위 표현에만 쓴다.
+    openSpotDetail(context, id: marker.id);
   }
 
   /// 클러스터 탭(R22)은 없다 — 서버가 클러스터 필드를 제거했다(2026-08-10).

@@ -11,9 +11,11 @@ import '../../../common/widget/failure_notice.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/category_bar.dart';
 import '../component/drag_feedback_overlay.dart';
+import '../component/spot_category_seed.dart';
 import '../component/swipe_card.dart';
 import '../model/retry_exhausted.dart';
 import '../model/spot_category.dart';
+import '../model/spot_category_selection.dart';
 import '../model/spot_reaction.dart';
 import '../model/swipe_queue.dart';
 import '../model/tourist_spot.dart';
@@ -35,26 +37,36 @@ class DiscoverSwipeView extends ConsumerWidget {
     );
     final bool locationBlocked = locationState?.needsSettings ?? false;
 
-    final SpotCategory? category = ref.watch(selectedSpotCategoryProvider);
+    // 목록이 오면 기본 선택을 심는다(R4·AC4.1·AC4.2). 목록은 비동기이므로
+    // `listen`으로 받는다 — build 안에서 provider 상태를 바꾸면 Riverpod이 막는다.
+    // `seedDefault`는 이미 고른 것이 있으면 아무 일도 하지 않아, 언어 전환으로 목록이
+    // 다시 와도 사용자의 선택을 덮지 않는다.
+    seedSpotCategoryDefault(
+      ref,
+      () => ref.read(selectedSpotCategoryProvider.notifier),
+    );
+
+    final Set<SpotCategory> selected = ref.watch(selectedSpotCategoryProvider);
+    final SpotCategorySelection selection = SpotCategorySelection(selected);
     final AsyncValue<SwipeQueue> queue = ref.watch(
-      swipeControllerProvider(category),
+      swipeControllerProvider(selection),
     );
 
     return Column(
       children: <Widget>[
         const SizedBox(height: 8),
-        // 스와이프의 선택 상태는 세션에 속하는 keepAlive provider다(카테고리를
-        // 옮겼다 와도 유지된다).
+        // 스와이프의 선택 상태는 세션에 속하는 keepAlive provider다(탭을
+        // 옮겼다 와도 유지된다, AC12.3).
         CategoryBar(
-          selected: category,
-          onSelected: (SpotCategory? next) =>
-              ref.read(selectedSpotCategoryProvider.notifier).select(next),
+          selected: selected,
+          onSelected: (SpotCategory next) =>
+              ref.read(selectedSpotCategoryProvider.notifier).toggle(next),
         ),
         const SizedBox(height: 8),
         Expanded(
           child: locationBlocked
               ? const _LocationBlocked()
-              : _QueueBody(category: category, queue: queue),
+              : _QueueBody(selection: selection, queue: queue),
         ),
       ],
     );
@@ -78,9 +90,9 @@ class _LocationBlocked extends StatelessWidget {
 }
 
 class _QueueBody extends ConsumerWidget {
-  const _QueueBody({required this.category, required this.queue});
+  const _QueueBody({required this.selection, required this.queue});
 
-  final SpotCategory? category;
+  final SpotCategorySelection selection;
   final AsyncValue<SwipeQueue> queue;
 
   @override
@@ -90,11 +102,11 @@ class _QueueBody extends ConsumerWidget {
       error: (Object error, _) => _ErrorState(
         error: error,
         onRetry: () =>
-            ref.read(swipeControllerProvider(category).notifier).reload(),
+            ref.read(swipeControllerProvider(selection).notifier).reload(),
       ),
       data: (SwipeQueue data) {
         if (data.isExhausted) return const _EmptyState();
-        return _CardStack(category: category, queue: data);
+        return _CardStack(selection: selection, queue: data);
       },
     );
   }
@@ -176,6 +188,23 @@ class _EmptyState extends ConsumerWidget {
     }
   }
 
+  /// 선택을 기본 카테고리 하나로 되돌린다(R4의 기본값과 같은 규칙).
+  ///
+  /// 가용 목록이 아직 없으면 아무 일도 하지 않는다 — 심을 값이 없다. 빈 집합으로
+  /// 만들지 않는 이유는 그것이 서버가 거절하는 상태이기 때문이다(AC5.1).
+  void _resetCategory(WidgetRef ref) {
+    final List<SpotCategory> available =
+        ref.read(availableSpotCategoriesProvider).value ??
+        const <SpotCategory>[];
+    if (available.isEmpty) return;
+    ref.read(selectedSpotCategoryProvider.notifier).replace(<SpotCategory>{
+      available.firstWhere(
+        (SpotCategory c) => c.code == kDefaultSpotCategoryCode,
+        orElse: () => available.first,
+      ),
+    });
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
@@ -210,10 +239,11 @@ class _EmptyState extends ConsumerWidget {
                   icon: const Icon(Icons.zoom_out_map),
                   label: Text(l10n.discoverWidenRadius),
                 ),
+                // 예전에는 "전체 보기"로 되돌리는 버튼이었으나 그 상태가 사라져
+                // (SPEC-0020 R1) 기본 카테고리로 되돌린다 — 어느 쪽이든 뜻은
+                // "지금 필터로는 결과가 없으니 필터를 바꿔 보라"로 같다.
                 FilledButton.tonalIcon(
-                  onPressed: () => ref
-                      .read(selectedSpotCategoryProvider.notifier)
-                      .select(null),
+                  onPressed: () => _resetCategory(ref),
                   icon: const Icon(Icons.category_outlined),
                   label: Text(l10n.discoverChangeCategory),
                 ),
@@ -229,9 +259,9 @@ class _EmptyState extends ConsumerWidget {
 /// 드래그 가능한 카드 스택. 맨 위 카드만 제스처를 받고, 그 아래 다음 카드는 살짝
 /// 작게(scale-up 대기) 깔린다. 확정 임계값·기울기·다음 카드 스케일업은 [_DraggableTop].
 class _CardStack extends ConsumerStatefulWidget {
-  const _CardStack({required this.category, required this.queue});
+  const _CardStack({required this.selection, required this.queue});
 
-  final SpotCategory? category;
+  final SpotCategorySelection selection;
   final SwipeQueue queue;
 
   @override
@@ -249,27 +279,28 @@ class _CardStackState extends ConsumerState<_CardStack> {
   static const double _flingVelocity = 800;
 
   void _onReaction(SpotReaction reaction) {
-    ref.read(swipeControllerProvider(widget.category).notifier).swipe(reaction);
+    ref
+        .read(swipeControllerProvider(widget.selection).notifier)
+        .swipe(reaction);
     setState(() => _dragX = 0);
   }
 
   /// 카드 탭 → 상세로 push(§5, R9). 식별자만 넘기고, Discover 스택은 셸에 보존된다.
   ///
-  /// category도 함께 넘긴다 — 서버의 `intro`/`infoItems`가 필수 인자로 요구하는데
-  /// 상세 응답의 필드를 인자로 쓸 수 없어서다. 카드가 이미 가진 값이라 추가 왕복은
-  /// 없다. 매핑되지 않은 값이면 라우트가 기본값으로 떨어뜨린다.
-  /// 썸네일 URL도 함께 넘긴다(SPEC-0006 R8) — 상세가 본문 조회를 기다리는 동안 카드에서
+  /// **카테고리는 더 이상 넘기지 않는다**(SPEC-0020) — 서버가 상세의 `intro`/`infoItems`를
+  /// spot 자신의 카테고리로 해석하므로 호출부가 알려줄 것이 없다.
+  ///
+  /// 썸네일 URL은 함께 넘긴다(SPEC-0006 R8) — 상세가 본문 조회를 기다리는 동안 카드에서
   /// 보던 같은 이미지를 그대로 그려, 같은 URL을 다시 로드하며 깜빡이는 것을 막는다(AC-24).
   void _openDetail(TouristSpot spot) {
     context.pushNamed(
       SpotDetailView.routeName,
       pathParameters: <String, String>{'id': spot.id},
       queryParameters: <String, String>{
-        if (spot.category != null) 'category': spot.category!.name,
         if (spot.thumbnailImageUrl != null) 'thumb': spot.thumbnailImageUrl!,
         // 어느 피드에서 열렸는지(R11) — 반응 후 이 피드에서 카드를 소비한다.
-        // 전체 피드(null)면 파라미터를 붙이지 않고, 라우트가 null로 되돌린다.
-        if (widget.category != null) 'feed': widget.category!.name,
+        // 정렬된 코드를 콤마로 이어 싣고, 라우트가 같은 규약으로 되돌린다.
+        'feed': widget.selection.codes.join(','),
       },
     );
   }

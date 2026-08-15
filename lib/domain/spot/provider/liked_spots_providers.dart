@@ -6,8 +6,10 @@ import '../../../common/localization/locale_controller.dart';
 import '../../../common/pagination/page.dart';
 import '../model/liked_spot.dart';
 import '../model/spot_category.dart';
+import '../model/spot_category_selection.dart';
 import '../repository/spot_repository.dart';
 import 'retry_counting.dart';
+import 'spot_category_toggle.dart';
 import 'spot_providers.dart';
 
 part 'liked_spots_providers.g.dart';
@@ -61,25 +63,28 @@ class LikedSpotsState {
   );
 }
 
-/// 좋아요 목록에서 선택된 카테고리(null=전체).
+/// 좋아요 목록의 카테고리 선택(SPEC-0020 R2). **비어 있을 수 없는 집합이다** —
+/// "전체 보기"가 사라졌으므로 `null`("필터 없음")이라는 표현 자체가 없다.
 ///
-/// Discover의 `selectedSpotCategory`와 **일부러 분리한다.** 같은 provider를 쓰면
+/// Discover의 `selectedSpotCategory`와 **일부러 분리한다**(R12). 같은 provider를 쓰면
 /// 좋아요 목록에서 고른 필터가 스와이프 스택까지 갈아치워, 탭을 옮겼을 때 보고 있던
 /// 카드가 사라진다. 두 화면의 필터는 서로 독립이다.
 ///
 /// keepAlive인 이유는 Discover의 것과 같다 — 사용자가 고른 필터는 화면이 아니라
-/// 세션에 속한다. autoDispose면 상세에 다녀오는 것만으로 "전체"로 되돌아간다.
+/// 세션에 속한다(AC12.3). autoDispose면 상세에 다녀오는 것만으로 초기화된다.
 @Riverpod(keepAlive: true)
-class SelectedLikedCategory extends _$SelectedLikedCategory {
+class SelectedLikedCategory extends _$SelectedLikedCategory
+    with SpotCategoryToggle {
   @override
-  SpotCategory? build() => null;
-
-  void select(SpotCategory? category) => state = category;
+  Set<SpotCategory> build() => <SpotCategory>{};
 }
 
-/// 좋아요 목록 컨트롤러(SPEC-0008 R-18). [category]별 패밀리 — 카테고리를 바꾸면
+/// 좋아요 목록 컨트롤러(SPEC-0008 R-18). [selection]별 패밀리 — 선택을 바꾸면
 /// 다른 인스턴스가 로딩되고, 필터링은 서버가 한다(클라이언트가 받은 목록을 거르지
 /// 않는다).
+///
+/// family 인자가 `Set`이 아니라 [SpotCategorySelection]인 이유는 스와이프 컨트롤러와
+/// 같다 — `Set`은 값 동등성이 없어 family 키로 쓸 수 없다.
 ///
 /// 미인증이면 repository가 `UNAUTHENTICATED`를 [SpotFailure]로 던지고, 그것이
 /// `AsyncValue.error`로 UI에 노출되어 SPEC-0005의 세션 갱신 경로를 탄다 — 이 스펙이
@@ -98,7 +103,7 @@ class LikedSpotsController extends _$LikedSpotsController {
   SpotRepository get _repository => ref.read(spotRepositoryProvider);
 
   @override
-  Future<LikedSpotsState> build(SpotCategory? category) async {
+  Future<LikedSpotsState> build(SpotCategorySelection selection) async {
     // 언어를 바꾸면 목록을 다시 받는다. 좋아요 **자체는** SPEC-0019 이후 언어를 넘어
     // 유지되지만, 쌓아둔 항목의 제목·주소는 이전 언어로 받아온 문장이다. 좋아요 탭도
     // 셸 브랜치라 계속 mount되어 autoDispose가 돌지 않으므로, 이 구독이 없으면
@@ -106,7 +111,7 @@ class LikedSpotsController extends _$LikedSpotsController {
     ref.watch(localeControllerProvider);
 
     final CursorPage<LikedSpot> page = await _repository.fetchLikedSpots(
-      category: category,
+      categoryCodes: selection.codesOrNull,
       first: _pageSize,
     );
     return LikedSpotsState(
@@ -125,6 +130,10 @@ class LikedSpotsController extends _$LikedSpotsController {
     state = AsyncData<LikedSpotsState>(current.copyWith(isLoadingMore: true));
     try {
       final CursorPage<LikedSpot> next = await _repository.fetchLikedSpots(
+        // **첫 페이지와 같은 필터로 이어 받는다.** 예전에는 이 인자가 빠져 있어
+        // 다음 장부터 필터가 풀렸다 — 커서만 잇고 조건을 바꾸면 서로 이어지지
+        // 않는 두 목록을 붙이는 셈이다.
+        categoryCodes: selection.codesOrNull,
         first: _pageSize,
         after: current.endCursor,
       );

@@ -10,7 +10,6 @@ import 'package:ieuri_k_trip_spot/domain/spot/component/spot_gallery.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/component/spot_info_item_list.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/component/spot_intro_rows.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
-import 'package:ieuri_k_trip_spot/domain/spot/model/spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_image.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_info_item.dart';
@@ -40,7 +39,6 @@ Future<void> _pump(
         locale: const Locale('en'),
         home: SpotDetailView(
           contentId: 'c1',
-          category: SpotCategory.touristSpot,
           initialThumbnailUrl: initialThumbnailUrl,
         ),
       ),
@@ -165,12 +163,13 @@ void main() {
   testWidgets('passes the route category through to the repository', (
     tester,
   ) async {
-    // 서버 intro/infoItems가 필수로 요구하는 값 — 화면이 조회 시 넘겨야 한다.
+    // SPEC-0020: 상세 조회에 카테고리 인자가 없다 — 서버가 spot 자신의 카테고리로
+    // intro/infoItems를 해석한다. 화면은 id 하나로 조회한다.
     final repo = FakeSpotRepository(detail: detailSpot('c1'));
     await _pump(tester, repo);
     await tester.pumpAndSettle();
 
-    expect(repo.requestedDetailCategory, SpotCategory.touristSpot);
+    expect(repo.detailCallCount, 1);
   });
 
   testWidgets('renders only the intro rows that have a value', (tester) async {

@@ -13,17 +13,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../spot_test_doubles.dart';
 
-LikedSpot _liked(
-  String id, {
-  SpotCategory category = SpotCategory.touristSpot,
-}) => LikedSpot(
-  id: id,
-  title: 'Spot $id',
-  thumbnailImageUrl: 'https://img/$id.jpg',
-  category: category,
-  copyright: CopyrightType.type1,
-  attributionText: '출처: 한국관광공사',
-);
+LikedSpot _liked(String id, {SpotCategory category = catTouristSpot}) =>
+    LikedSpot(
+      id: id,
+      title: 'Spot $id',
+      thumbnailImageUrl: 'https://img/$id.jpg',
+      category: category,
+      copyright: CopyrightType.type1,
+      attributionText: '출처: 한국관광공사',
+    );
 
 /// `availableSpotCategories`가 locale을 watch하므로 `sharedPreferencesProvider`
 /// override와 바인딩 초기화가 필요하다(CLAUDE.md §8).
@@ -53,19 +51,23 @@ void main() {
   testWidgets('상단 카테고리 바가 서버가 준 카테고리를 렌더한다', (tester) async {
     final FakeSpotRepository repo = FakeSpotRepository(
       liked: <LikedSpot>[_liked('a')],
-      categories: const <SpotCategory>[
-        SpotCategory.touristSpot,
-        SpotCategory.restaurant,
-      ],
+      categories: const <SpotCategory>[catTouristSpot, catRestaurant],
     );
 
     await _pump(tester, repo);
 
-    // 첫 칩은 "전체", 뒤로 서버가 준 카테고리가 붙는다. 카드에도 카테고리 라벨이
-    // 있으므로 칩으로 한정해 센다.
+    // **"전체 보기" 칩은 사라졌다**(SPEC-0020 R1) — 선택이 비어 있을 수 없으므로
+    // "필터 없음"이라는 칩이 뜻할 것이 없다. 서버가 준 카테고리만 그리고, 라벨도
+    // 서버가 준 `label`이다(클라이언트가 번역하지 않는다, R11).
+    //
+    // 카드에도 카테고리 라벨이 있으므로 칩으로 한정해 센다.
     final Finder chips = find.byType(ChoiceChip);
     expect(
       find.descendant(of: chips, matching: find.text('View all')),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: chips, matching: find.text('Tourist Spots')),
       findsOneWidget,
     );
     expect(
@@ -74,20 +76,18 @@ void main() {
     );
   });
 
-  testWidgets('카테고리를 고르면 그 필터로 다시 조회한다', (tester) async {
+  testWidgets('카테고리를 고르면 선택 집합에 더해져 다시 조회한다', (tester) async {
     final FakeSpotRepository repo = FakeSpotRepository(
       liked: <LikedSpot>[
         _liked('a'),
-        _liked('b', category: SpotCategory.restaurant),
+        _liked('b', category: catRestaurant),
       ],
-      categories: const <SpotCategory>[
-        SpotCategory.touristSpot,
-        SpotCategory.restaurant,
-      ],
+      categories: const <SpotCategory>[catTouristSpot, catRestaurant],
     );
 
     await _pump(tester, repo);
-    expect(repo.lastLikedCategory, isNull);
+    // 최초 진입 기본값은 TOURIST_SPOT이다(R4·AC4.1) — 예전의 "전체"(null)가 아니다.
+    expect(repo.lastLikedCategoryCodes, <String>[catTouristSpot.code]);
 
     // 카드에도 같은 카테고리 라벨이 있으므로 칩(ChoiceChip)으로 한정해 누른다.
     await tester.tap(
@@ -98,10 +98,16 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // 필터링은 서버가 한다 — 카테고리가 조회에 실려 나간다.
-    expect(repo.lastLikedCategory, SpotCategory.restaurant);
+    // 필터링은 서버가 한다 — 고른 카테고리 **집합**이 조회에 실려 나간다.
+    // 토글은 기본값을 덮지 않고 **더한다**(R2·AC2.1) — 기본 TOURIST_SPOT에
+    // RESTAURANT가 얹혀 둘 다 실린다. 코드는 정렬된 순서다.
+    expect(repo.lastLikedCategoryCodes, <String>[
+      catRestaurant.code,
+      catTouristSpot.code,
+    ]);
+    // 두 카테고리가 모두 걸렸으므로 둘 다 남는다(OR 필터).
+    expect(find.text('Spot a'), findsOneWidget);
     expect(find.text('Spot b'), findsOneWidget);
-    expect(find.text('Spot a'), findsNothing);
   });
 
   testWidgets('목록 카드에는 출처 문구를 얹지 않는다', (tester) async {
