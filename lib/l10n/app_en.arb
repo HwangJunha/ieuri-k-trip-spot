@@ -1087,82 +1087,31 @@
   "mapRegionAboutScoringCongestion": "Rank — it covers all candidates in the province, not just the ones returned.",
   "mapRegionAboutScoringDistance": "Missing data — factors with no data are left out of the calculation.",
   "mapRegionAboutScoringTotal": "Candidates — chosen only within the province of your reference location, excluding the district it is in. Regions without enough attractions are excluded.",
-  "feedSegmentForYou": "For You",
-  "feedSegmentFeed": "Feed",
   "dmMessagesAction": "DM",
   "dmUnreadBadgeLabel": "Unread DMs",
-  "feedEmptyTitle": "No posts yet",
-  "feedEmptyBody": "Be the first to share a spot.",
-  "feedUnavailableTitle": "Couldn’t load the feed",
-  "feedUnavailableBody": "Please try again in a moment.",
-  "feedRetry": "Try again",
-  "feedLikeAction": "Like",
-  "feedOptionsAction": "More",
-  "feedReportAction": "Report this post",
-  "feedReportSubmitted": "Report submitted.",
-  "feedReportFailed": "Couldn’t submit the report.",
-  "feedMessageAuthorAction": "Send a DM",
-  "feedShowMore": "More",
-  "feedShowLess": "Less",
-  "feedConversationStartFailed": "Couldn’t start the conversation.",
-  "feedPhotoIndicatorLabel": "Photo {current} of {total}",
-  "feedComposeAction": "New post",
-  "feedComposeTitle": "New post",
-  "feedComposeSubmit": "Post",
-  "feedComposeBodyHint": "Share what this place was like.",
-  "feedComposeSpotAction": "Add a place",
-  "feedComposeSpotRequired": "A place is required.",
-  "feedComposeSpotClear": "Remove place",
-  "feedComposePhotosAction": "Add photos",
-  "feedComposePhotosRequired": "Add at least one photo.",
-  "feedComposePhotoRemove": "Remove photo",
-  "feedComposePhotoTooLarge": "{count, plural, =1{1 photo was too large and was skipped.} other{{count} photos were too large and were skipped.}}",
-  "@feedComposePhotoTooLarge": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
+  "dmUnavailableBody": "Please try again in a moment.",
+  "@dmUnavailableBody": {
+    "description": "Body of the DM list error state."
   },
-  "feedComposeTooManyPhotos": "You can add up to 5 photos.",
-  "feedComposeCounter": "{count} / 500",
-  "@feedComposeCounter": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
+  "dmRetry": "Try again",
+  "@dmRetry": {
+    "description": "Retry action in DM error states."
   },
-  "feedComposeTooLong": "{count} over the limit",
-  "@feedComposeTooLong": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
+  "dmReportSubmitted": "Report submitted.",
+  "@dmReportSubmitted": {
+    "description": "Confirmation after reporting DM messages."
   },
-  "feedComposeDone": "Posted.",
-  "feedComposeDonePhotosFailed": "Posted, but these photos didn’t upload: {names}",
-  "@feedComposeDonePhotosFailed": {
-    "placeholders": {
-      "names": {
-        "type": "String"
-      }
-    }
+  "dmReportFailed": "Couldn’t submit the report.",
+  "@dmReportFailed": {
+    "description": "Shown when reporting DM messages failed."
   },
-  "feedComposePhotosFailed": "Couldn’t upload these photos: {names}",
-  "@feedComposePhotosFailed": {
-    "placeholders": {
-      "names": {
-        "type": "String"
-      }
-    }
+  "dmEmptyMessage": "This message is no longer available",
+  "@dmEmptyMessage": {
+    "description": "Placeholder inside a message bubble that has no body and no photo."
   },
-  "feedComposeFailed": "Couldn’t post. Please try again.",
-  "feedComposeSignInRequired": "Sign in to post.",
   "dmConversationsTitle": "DM",
   "dmConversationsEmptyTitle": "No DMs yet",
-  "dmConversationsEmptyBody": "Start one from a feed post you like.",
+  "dmConversationsEmptyBody": "Your conversations will show up here.",
   "dmConversationsUnavailable": "Couldn’t load your DMs",
   "dmPhotoMessagePreview": "Photo",
   "dmUnreadCountLabel": "{count} unread DMs",
@@ -1176,7 +1125,6 @@
   "dmTypingIndicator": "{nickname} is typing…",
   "dmSyncFailedBanner": "Couldn’t refresh",
   "dmConversationEmpty": "Say hello to start the conversation.",
-  "dmDeletedFeedQuote": "Post no longer available",
   "dmSelectMessagesAction": "Select messages",
   "dmSelectionCount": "{count} selected",
   "dmSelectionCancel": "Cancel selection",
