@@ -235,7 +235,6 @@ void main() {
   SpotDetail buildSpotDetail({int likeCount = 5}) => SpotDetail(
     id: 'c1',
     title: 'Gyeongbokgung',
-    category: detailCatTouristSpot,
     thumbnailImageUrl: 'https://img/thumb.jpg',
     overview: 'A palace.',
     address: 'Seoul',
@@ -259,7 +258,6 @@ void main() {
     final SpotDetail blank = SpotDetail(
       id: 'c1',
       title: 'T',
-      category: detailCatTouristSpot,
       thumbnailImageUrl: 'https://img/t.jpg',
       overview: '',
       address: '   ',
@@ -292,7 +290,6 @@ void main() {
     SpotDetail withHomepage(String? homepage) => SpotDetail(
       id: 'c1',
       title: 'T',
-      category: detailCatTouristSpot,
       thumbnailImageUrl: 'https://img/t.jpg',
       homepage: homepage,
       copyright: CopyrightType.type1,
@@ -355,7 +352,6 @@ void main() {
         SpotDetail(
           id: 'c1',
           title: 'T',
-          category: detailCatTouristSpot,
           thumbnailImageUrl: 'https://img/t.jpg',
           copyright: CopyrightType.type1,
           attributionText: 'KTO',
@@ -416,7 +412,6 @@ void main() {
     final SpotDetail original = SpotDetail(
       id: 'c1',
       title: 'T',
-      category: detailCatTouristSpot,
       thumbnailImageUrl: 'https://img/t.jpg',
       copyright: CopyrightType.type1,
       attributionText: 'KTO',
@@ -437,7 +432,6 @@ void main() {
     final SpotDetail detail = SpotDetail(
       id: 'c1',
       title: 'T',
-      category: detailCatTouristSpot,
       thumbnailImageUrl: 'https://img/t.jpg',
       copyright: CopyrightType.type1,
       attributionText: 'Source: KTO',
@@ -488,7 +482,6 @@ void main() {
     const SpotDetail sparse = SpotDetail(
       id: 'c1',
       title: 'Gyeongbokgung',
-      category: detailCatTouristSpot,
       thumbnailImageUrl: 'https://img/thumb.jpg',
       address: 'Seoul',
       copyright: CopyrightType.type1,
@@ -507,7 +500,6 @@ void main() {
     expect(sparse.title, 'Gyeongbokgung');
     expect(sparse.thumbnailImageUrl, isNotEmpty);
     expect(sparse.hasAddress, isTrue);
-    expect(sparse.category, detailCatTouristSpot);
 
     // likeCount는 non-null이 유지되므로 축약 화면에서도 표시·반응이 가능하다(§3.2).
     expect(sparse.likeCount, 3);
@@ -520,7 +512,6 @@ void main() {
     const SpotDetail sparse = SpotDetail(
       id: 'c1',
       title: 'T',
-      category: detailCatTouristSpot,
       thumbnailImageUrl: 'https://img/thumb.jpg',
       copyright: CopyrightType.type1,
       attributionText: 'Source: KTO',

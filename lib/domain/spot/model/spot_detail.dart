@@ -1,5 +1,4 @@
 import 'copyright_type.dart';
-import '../../../common/category/spot_category.dart';
 import 'spot_image.dart';
 import 'spot_info_item.dart';
 import 'spot_intro.dart';
@@ -19,7 +18,6 @@ class SpotDetail {
   const SpotDetail({
     required this.id,
     required this.title,
-    required this.category,
     required this.thumbnailImageUrl,
     required this.copyright,
     required this.attributionText,
@@ -36,7 +34,11 @@ class SpotDetail {
   /// contentId — [TouristSpot.id]와 동일 식별자 공간(언어별로 갈림).
   final String id;
   final String title;
-  final SpotCategory? category;
+
+  // **카테고리는 여기 없다.** 서버가 `spotDetail.category`를 채우지 못해
+  // (non-null 위반이 부모로 전파돼 상세 응답 전체가 null이 된다) 쿼리에서 아예
+  // 빼야 했다. 상세 화면은 카테고리를 그리지 않고, 운영정보 조회에 필요한 코드는
+  // 목록이 넘겨준 값(`spotCategoryCodes`)을 쓰므로 이 모델에 담을 이유가 없다.
 
   /// 갤러리 폴백/헤더 이미지(항상 존재).
   final String thumbnailImageUrl;
@@ -163,7 +165,6 @@ class SpotDetail {
       other is SpotDetail &&
       other.id == id &&
       other.title == title &&
-      other.category == category &&
       other.thumbnailImageUrl == thumbnailImageUrl &&
       other.overview == overview &&
       other.address == address &&
@@ -180,7 +181,6 @@ class SpotDetail {
   int get hashCode => Object.hash(
     id,
     title,
-    category,
     thumbnailImageUrl,
     overview,
     address,
@@ -198,7 +198,6 @@ class SpotDetail {
   SpotDetail copyWithLikeCount(int likeCount) => SpotDetail(
     id: id,
     title: title,
-    category: category,
     thumbnailImageUrl: thumbnailImageUrl,
     copyright: copyright,
     attributionText: attributionText,

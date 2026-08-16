@@ -382,7 +382,6 @@ SpotDetail detailSpot(
 }) => SpotDetail(
   id: id,
   title: title,
-  category: category,
   thumbnailImageUrl: 'https://img/$id.jpg',
   overview: overview,
   address: address,

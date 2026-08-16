@@ -427,11 +427,6 @@ class SpotRepositoryImpl implements SpotRepository {
     id: r.id,
     // 제목도 TourAPI 원문이라 엔티티가 섞여 온다(스와이프 카드와 동일하게 정리).
     title: sanitizeTourApiText(r.title) ?? r.title,
-    category: _categoryOf(
-      r.category.code,
-      r.category.label,
-      r.category.iconUrl,
-    ),
     thumbnailImageUrl: r.thumbnailImageUrl,
     overview: r.overview,
     address: r.address,

@@ -66,11 +66,13 @@ query SpotDetail($id: ID!, $categoryCode: String!) {
   spotDetail(id: $id) {
     id
     title
-    category {
-      code
-      label
-      iconUrl
-    }
+    # **category를 요청하지 않는다.** 서버가 이 필드를 채우지 못해
+    # (`SpotCategory.code`가 null, 내부적으로는 String을 객체로 캐스팅하다 터진다)
+    # non-null 위반이 부모로 전파돼 spotDetail 전체가 null이 된다 — 상세 화면이
+    # 통째로 죽는 원인이었다.
+    #
+    # 상세 화면은 카테고리를 그리지 않고, 운영정보 조회에 필요한 코드는 목록이
+    # 넘겨준 값(`spotCategoryCodes`)을 쓰므로 응답에서 받을 이유가 없다.
     thumbnailImageUrl
     overview
     address

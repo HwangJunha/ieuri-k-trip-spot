@@ -446,7 +446,6 @@ void main() {
       final detail = await repo.fetchSpotDetail('c1');
 
       expect(detail.id, 'c1');
-      expect(detail.category, catTouristSpot);
       expect(detail.overview, 'A palace.');
       expect(detail.likeCount, 42);
       expect(detail.gallery, hasLength(1));

@@ -179,7 +179,8 @@ Validation error (MissingFieldArgument@[spotDetail/infoItems]) : Missing field a
 수정:
 
 - `SpotDetail` 쿼리에 `$categoryCode: String!`을 더하고 `intro`/`infoItems`에 전달합니다. SDL도 서버대로 고쳤습니다
-- **`spotDetail.category.code`로는 채울 수 없습니다** — 서버가 전 spot에서 null을 돌려줍니다(`NullValueInNonNullableField`). 그래서 목록(스와이프·검색·좋아요)이 이미 아는 코드를 `spotCategoryCodes` provider에 적어 두고 상세가 읽습니다
+- **`spotDetail.category`를 아예 요청하지 않습니다.** 처음에는 "서버가 null을 주니 못 쓴다"고만 보고 필드는 그대로 뒀는데, **그것으로는 부족했습니다.** `SpotCategory.code`가 non-null이라 null 위반이 부모로 전파돼 `spotDetail` 응답 전체가 null이 되고, 상세 화면이 통째로 죽습니다(서버 로그상 원인은 String을 `SpotCategory` 객체로 캐스팅하다 나는 `ClassCastException`입니다). 쿼리·매핑·`SpotDetail` 모델에서 함께 걷어냈습니다 — 상세 화면은 카테고리를 그리지 않으므로 잃는 것이 없습니다
+- 운영정보 조회에 필요한 코드는 목록(스와이프·검색·좋아요)이 이미 아는 값을 `spotCategoryCodes` provider에 적어 두고 상세가 읽습니다
 - **family 키에 넣지 않았습니다.** 카테고리는 같은 spot이면 늘 같아 조회 결과를 가르지 않는데, 키에 넣으면 딥링크 진입(코드 없음)과 목록 진입(코드 있음)이 같은 spot을 두 번 조회합니다
 - 코드를 모르면 repository가 `TOURIST_SPOT`을 채웁니다. **빈 문자열은 서버가 예외로 거부하고, 틀린 코드는 `intro: null`·`infoItems: []`로 조용히 답하기 때문**입니다 — 운영정보 섹션만 비고 상세 본문은 살아납니다
 
@@ -193,7 +194,13 @@ Validation error (MissingFieldArgument@[spotDetail/infoItems]) : Missing field a
 
 **전체 오퍼레이션 문서 9개를 라이브 서버에 쏴서 검증했고 수정 후 불일치 0건입니다.** 이 검사를 처음부터 돌렸으면 SPEC-0020 시점에 잡혔을 문제라, 회귀 테스트 2건(`categoryCode`가 실제로 실리는지, 모를 때 빈 문자열이 안 나가는지)을 repository 테스트에 남겼습니다.
 
-남은 것 하나 — 우리 쿼리 원문을 실제 데이터로 끝까지 돌려보는 검증은 서버가 도중에 내려가 못 했습니다. 서버가 다시 뜨면 상세 화면을 직접 열어 운영정보가 뜨는지 확인이 필요합니다.
+**우리 쿼리 원문을 실제 데이터로 끝까지 돌려 확인했습니다.** 처음에는 서버가 도중에 내려가 이 검증을 건너뛰었고, 그 사이 `category` 필드 문제가 남아 상세가 여전히 죽고 있었습니다 — 앱을 실행한 사용자가 발견했습니다. **오퍼레이션을 고쳤으면 실제 데이터로 한 번 돌려봐야 한다**는 것이 이 건의 교훈이고, CLAUDE.md §0 체크리스트와 §13에 반영했습니다.
+
+| spot / 카테고리 | 결과 |
+|---|---|
+| 197169 / CULTURAL_FACILITY | 제목·운영정보·갤러리 6장 정상 |
+| 240526 / FESTIVAL_EVENT | 제목·운영정보·이용안내 2건·갤러리 6장 정상 |
+| 197169 / TOURIST_SPOT(틀린 코드) | 운영정보만 비고 나머지 정상 — 폴백 설계대로 |
 
 ### 테스트
 
