@@ -137,4 +137,65 @@ void main() {
       expect(destinationAfterGate(onboardingPath), discoverPath);
     });
   });
+
+  group('이메일 인증 게이트 (SPEC-0024 R10)', () {
+    const AuthGateState unverified = AuthGateState.emailVerificationRequired;
+
+    test('인증 미완이면 메인이 막히고 인증 화면으로 간다', () {
+      // R10-1·R10-2. 화면을 띄운 뒤 가리는 게 아니라 아예 도달하지 못해야 한다.
+      expect(_gate(discoverPath, auth: unverified), emailVerificationPath);
+      expect(_gate('/home', auth: unverified), emailVerificationPath);
+    });
+
+    test('인증 미완이면 상세·커뮤니티 같은 하위 경로도 막힌다', () {
+      expect(_gate('/spot/123', auth: unverified), emailVerificationPath);
+      expect(_gate('/community', auth: unverified), emailVerificationPath);
+    });
+
+    test('인증 화면 자체는 그대로 둔다', () {
+      expect(_gate(emailVerificationPath, auth: unverified), isNull);
+    });
+
+    test('탈퇴 화면은 열려 있다', () {
+      // 인증할 수 없는 주소로 갇힌 사용자가 계정을 지우고 나갈 유일한 길이다.
+      expect(_gate(deleteAccountPath, auth: unverified), isNull);
+    });
+
+    test('설정 계열의 나머지는 막힌다', () {
+      // 약관 게이트와 다르다 — 미인증 토큰으로는 서버가 프로필 조회를 거부하므로
+      // 열어 줘도 오류 화면만 보게 된다.
+      expect(_gate(settingsPath, auth: unverified), emailVerificationPath);
+      expect(
+        _gate('/settings/profile', auth: unverified),
+        emailVerificationPath,
+      );
+    });
+
+    test('온보딩보다 앞서 판정된다', () {
+      // 서버가 미인증 토큰의 비허용 오퍼레이션을 거부하므로(R9) 온보딩을 먼저
+      // 태우면 그 안의 서버 호출이 실패한다.
+      expect(_gate(onboardingPath, auth: unverified), emailVerificationPath);
+    });
+
+    test('언어 선택이 이메일 인증보다 앞선다', () {
+      expect(
+        _gate(discoverPath, languageChosen: false, auth: unverified),
+        languagePath,
+      );
+    });
+
+    test('인증을 마치면 게이트가 열린다', () {
+      // R10-3. 판정 근거가 참으로 바뀌면 그다음 게이트(온보딩)로 넘어간다.
+      expect(
+        _gate(discoverPath, auth: AuthGateState.onboardingRequired),
+        onboardingPath,
+      );
+      expect(_gate(discoverPath, auth: AuthGateState.ready), isNull);
+    });
+
+    test('인증을 마친 사용자를 인증 화면에 두지 않는다', () {
+      expect(_gate(emailVerificationPath, auth: AuthGateState.ready),
+          discoverPath);
+    });
+  });
 }

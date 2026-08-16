@@ -56,7 +56,16 @@ Future<SecureStorage> seededSecureStorage({
 class FakeAuthRepository implements AuthRepository {
   FakeAuthRepository({
     this.session,
-    this.me = const Me(id: '7', email: 'a@b.com', nickname: 'Traveler'),
+    // 기본값은 **이메일 인증을 마친** 회원이다(SPEC-0024 R10). 라우터 게이트가
+    // `emailVerified`로 메인 진입을 막으므로, 기본이 미인증이면 인증과 무관한
+    // 테스트까지 전부 인증 화면에 갇힌다. 미인증은 그것을 보려는 테스트가
+    // 명시적으로 넘긴다.
+    this.me = const Me(
+      id: '7',
+      email: 'a@b.com',
+      nickname: 'Traveler',
+      emailVerified: true,
+    ),
     this.failure,
     this.verificationId = 'verify-1',
     this.refreshResult,

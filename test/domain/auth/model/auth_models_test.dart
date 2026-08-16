@@ -6,6 +6,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/auth_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/auth_session.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/model/auth_state.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/me.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/password_policy.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/sns_credential.dart';
@@ -246,4 +247,39 @@ void main() {
     expect(result.needsVerification, isFalse);
   });
 
+  group('AuthState.emailVerified — 라우터 게이트의 판정 근거 (SPEC-0024 R10)', () {
+    AuthState stateWith({required bool verified}) => AuthState(
+      session: AuthSession(
+        accessToken: 'a',
+        refreshToken: 'r',
+        user: Me(
+          id: 'm-1',
+          email: 'a@b.com',
+          nickname: 'tester',
+          emailVerified: verified,
+        ),
+      ),
+    );
+
+    test('서버가 인증됨을 주면 참이다', () {
+      expect(stateWith(verified: true).emailVerified, isTrue);
+    });
+
+    test('서버가 미인증을 주면 거짓이다 — 게이트가 막는 경우다', () {
+      expect(stateWith(verified: false).emailVerified, isFalse);
+    });
+
+    test('me를 아직 못 읽었으면 참으로 본다', () {
+      // 토큰은 있는데 me 조회가 아직 끝나지 않은 구간이다. 거짓을 주면 인증을
+      // 마친 사용자가 조회 실패 한 번에 인증 화면으로 튕긴다.
+      const AuthState state = AuthState(
+        session: AuthSession(accessToken: 'a', refreshToken: 'r'),
+      );
+      expect(state.emailVerified, isTrue);
+    });
+
+    test('미인증 상태에서도 참이다 — 인증 게이트가 판정을 가져간다', () {
+      expect(AuthState.unauthenticated.emailVerified, isTrue);
+    });
+  });
 }

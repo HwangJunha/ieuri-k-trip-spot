@@ -94,10 +94,14 @@ GoRouter goRouter(Ref ref) {
 /// loading과 error/null을 **같이 다룬다** — 둘 다 "판정할 수 없음"이고, 그 구간에
 /// 보호 화면을 그리면 provider가 발화한다. `spots`가 토큰 없이도 200에 데이터를
 /// 반환하므로 게이트가 새면 화면이 정상처럼 채워져 결함이 눈에 띄지 않는다.
+/// 이메일 인증 판정(SPEC-0024 R10)은 여기 한 곳에서만 한다. 로그인 직후(R10-1)와
+/// 세션 복원 직후(R10-4)가 모두 `authControllerProvider`를 거쳐 이 함수로 오므로,
+/// 두 경로를 따로 다루면 판정이 갈라진다.
 AuthGateState _authGate(AsyncValue<AuthState> auth) {
   final AuthState? value = auth.value;
   if (auth.isLoading || value == null) return AuthGateState.loading;
   if (!value.isAuthenticated) return AuthGateState.unauthenticated;
+  if (!value.emailVerified) return AuthGateState.emailVerificationRequired;
   if (!value.onboardingCompleted) return AuthGateState.onboardingRequired;
   return AuthGateState.ready;
 }
