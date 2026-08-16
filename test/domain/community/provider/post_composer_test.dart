@@ -8,13 +8,23 @@ import 'package:ieuri_k_trip_spot/domain/community/model/post_draft.dart';
 import 'package:ieuri_k_trip_spot/common/model/post_image_upload.dart';
 import 'package:ieuri_k_trip_spot/common/model/target_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.dart';
+import 'package:ieuri_k_trip_spot/common/storage/draft_store_impl.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/post_composer_providers.dart';
 
+import '../../../common/storage/fake_draft_store.dart';
 import '../community_test_doubles.dart';
 
-ProviderContainer _container(FakeCommunityRepository repo) {
+/// 초안 저장소는 **항상 override한다**(SPEC-0022 §8) — 실제 구현은
+/// `shared_preferences`와 파일 시스템을 잡는다.
+ProviderContainer _container(
+  FakeCommunityRepository repo, {
+  FakeDraftStore? drafts,
+}) {
   final ProviderContainer container = ProviderContainer(
-    overrides: [communityRepositoryProvider.overrideWithValue(repo)],
+    overrides: [
+      communityRepositoryProvider.overrideWithValue(repo),
+      draftStoreProvider.overrideWithValue(drafts ?? FakeDraftStore()),
+    ],
   );
   addTearDown(container.dispose);
   return container;

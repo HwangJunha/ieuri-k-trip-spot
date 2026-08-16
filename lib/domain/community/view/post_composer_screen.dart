@@ -82,7 +82,8 @@ class PostComposerScreen extends ConsumerStatefulWidget {
   ConsumerState<PostComposerScreen> createState() => _PostComposerScreenState();
 }
 
-class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
+class _PostComposerScreenState extends ConsumerState<PostComposerScreen>
+    with WidgetsBindingObserver {
   final TextEditingController _title = TextEditingController();
   final TextEditingController _body = TextEditingController();
 
@@ -105,10 +106,63 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
   );
 
   @override
+  void initState() {
+    super.initState();
+    // 새 글에서만 초안을 다룬다(R11) — 수정 모드는 저장도 복원도 하지 않고, 진입이
+    // 기존 초안을 지우지도 않는다(R11-3).
+    if (_isEditing) return;
+    WidgetsBinding.instance.addObserver(this);
+    // 판정은 컴포저를 여는 시점에 **한 번**이다(SPEC-0022 §5).
+    WidgetsBinding.instance.addPostFrameCallback((_) => _considerDraft());
+  }
+
+  @override
   void dispose() {
+    if (!_isEditing) WidgetsBinding.instance.removeObserver(this);
     _title.dispose();
     _body.dispose();
     super.dispose();
+  }
+
+  /// 앱이 백그라운드로 갈 때 대기 중인 변경을 즉시 쓴다(§4) — OS가 이 뒤에 앱을
+  /// 죽여도 마지막 상태가 남는다.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      ref.read(_provider.notifier).flush();
+    }
+  }
+
+  /// 저장된 초안이 있으면 이어쓰기를 제안한다(R5). TTL 초과·복원 불가는 notifier가
+  /// 조용히 지우고 넘어가므로 여기서는 제안만 다룬다(R8·R10-3).
+  Future<void> _considerDraft() async {
+    final PostComposer notifier = ref.read(_provider.notifier);
+    await notifier.considerDraft();
+    if (!mounted) return;
+    if (notifier.restorePrompt != DraftRestorePrompt.offered) return;
+
+    final bool? resume = await showDialog<bool>(
+      context: context,
+      // 밖을 눌러 닫으면 아무 결정도 하지 않은 것이라 초안을 지우지 않는다 —
+      // 실수로 닫았는데 글이 사라지면 이 기능의 취지가 무너진다.
+      builder: (BuildContext context) => const _DraftResumeDialog(),
+    );
+    if (!mounted) return;
+
+    if (resume ?? false) {
+      notifier.restoreDraft();
+      // 컨트롤러는 초안 상태를 따라오지 않으므로 직접 맞춘다 — 안 하면 화면에는
+      // 빈 칸이 보이는데 상태에는 복원된 글이 들어 있다.
+      final PostDraft restored = ref.read(_provider);
+      _title.text = restored.title;
+      _body.text = restored.body;
+    } else if (resume != null) {
+      await notifier.discardDraft();
+    } else {
+      // 밖을 눌러 닫았다 — 초안은 그대로 두되 판정은 끝난 것으로 본다. 안 그러면
+      // 이후의 저장이 제안 상태를 되살린다(R5-4).
+      notifier.dismissDraftPrompt();
+    }
   }
 
   @override
@@ -481,6 +535,34 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen> {
   void _toast(String message) => ScaffoldMessenger.of(
     context,
   ).showSnackBar(SnackBar(content: Text(message)));
+}
+
+/// 이어쓰기 제안(SPEC-0022 R5). 저장된 초안이 있고 만료·손상되지 않았을 때만 뜬다.
+///
+/// **버리기는 되돌릴 수 없으므로 취소만큼 쉽게 눌리면 안 된다** — 이어쓰기를 강조
+/// 버튼으로 두고 버리기는 평범한 버튼으로 둔다. 밖을 눌러 닫으면(null) 아무 결정도
+/// 하지 않은 것이라 초안이 그대로 남는다.
+class _DraftResumeDialog extends StatelessWidget {
+  const _DraftResumeDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(l10n.communityDraftResumeTitle),
+      content: Text(l10n.communityDraftResumeBody),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(l10n.communityDraftDiscardAction),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(l10n.communityDraftResumeAction),
+        ),
+      ],
+    );
+  }
 }
 
 /// 수정할 글을 받아 오는 동안, 또는 받아 오지 못했을 때 폼 대신 서는 화면.

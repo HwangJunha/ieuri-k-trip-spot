@@ -31,6 +31,10 @@ dependencies:
   # Local (non-secret) persistence: locale + onboarding flag
   shared_preferences: ^2.3.0
 
+  # 앱 전용 디렉토리 — 초안 사진 바이트를 파일로 둔다(SPEC-0022 §2).
+  # 사진 5장이면 최대 50MiB라 shared_preferences에 담을 수 없다.
+  path_provider: ^2.1.4
+
   # GraphQL data layer (repository only)
   graphql_flutter: ^5.1.2
   # DocumentNode type for the graphql_codegen-generated operations (repo only)
