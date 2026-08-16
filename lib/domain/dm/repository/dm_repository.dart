@@ -36,12 +36,14 @@ abstract interface class DmRepository {
   /// 지정한 회원과의 1:1 대화를 시작한다(SPEC-0021 R11).
   ///
   /// **입력이 피드 항목 id에서 회원 id로 바뀌었다.** 피드가 사라지면서 "이 글의
-  /// 작성자와 대화" 라는 간접 지정이 성립하지 않기 때문이다. 이미 대화가 있으면
-  /// 새로 만들지 않고 기존 대화를 돌려준다(AC7-2).
+  /// 작성자와 대화" 라는 간접 지정이 성립하지 않기 때문이다. 서버 필드명은
+  /// `counterpartMemberId`이며 — 상대를 가리키는 값이라는 뜻이 이름에 들어 있다 —
+  /// 이 경계의 인자명도 그대로 따른다. 이미 대화가 있으면 새로 만들지 않고 기존
+  /// 대화를 돌려준다(AC7-2).
   ///
   /// **지금 이것을 부르는 화면이 없다.** 상대를 고르는 화면은 이 스펙의 범위 밖이라
   /// ([TBD-2]) 후속 채팅 스펙이 만든다 — 그때 쓰려고 남겨 둔다.
-  Future<DmMutationResult<String>> startConversation(String memberId);
+  Future<DmMutationResult<String>> startConversation(String counterpartMemberId);
 
   /// 내가 참여한 대화 목록. 최근 활동순이다.
   Future<CursorPage<Conversation>> fetchConversations({

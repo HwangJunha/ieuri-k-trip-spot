@@ -130,13 +130,20 @@ repository와 GraphQL 오퍼레이션 문서는 피드와 DM이 한 파일에 �
 
 **후속 채팅 스펙이 DM 진입점을 재배치하면 이 의존은 사라집니다**([TBD-2]). 그때까지의 임시 상태입니다.
 
-### 서버 계약을 확인하지 못했습니다
+### 서버 계약 (라이브 확인 완료)
 
-`startConversation`의 새 입력을 **`memberId: ID!`로 가정했습니다.** 스펙의 "서버 계약이 회원 id를 받도록 바뀐다"만 근거이고, 작업 시점에 `localhost:8888`이 떠 있지 않아 introspection으로 확인하지 못했습니다. `lib/domain/dm/repository/dm_schema.graphql`도 그 가정대로 손으로 고쳤습니다.
+처음에는 서버가 떠 있지 않아 `startConversation`의 새 입력을 `memberId: ID!`로 **가정**했습니다. 이후 서버를 띄우고 introspection으로 확인한 결과 **그 가정이 틀렸습니다** — 실제 필드명은 `counterpartMemberId: ID!`입니다. SDL·오퍼레이션·repository 경계·페이크의 인자명을 모두 서버 이름으로 맞췄습니다.
 
-codegen은 이 SDL을 읽으므로 **빌드가 통과한다고 서버와 맞는다는 뜻은 아닙니다.** 서버가 뜨면 실제 필드명을 확인해야 하며, 다르면 SDL·오퍼레이션·`DmRepository.startConversation`·페이크 세 곳만 고치면 됩니다(부르는 화면이 없어 파급이 없습니다).
+Dart 쪽 인자명도 `counterpartMemberId`로 통일했습니다. 상대를 가리키는 값이라는 뜻이 이름에 드러나고, 경계 양쪽 이름이 갈리면 다음 사람이 둘을 대조해야 합니다.
 
-`Message.feedItem`과 `SendMessageInput.feedItemId`도 같은 근거로 걷어냈습니다.
+**SDL 일치만으로 끝내지 않고 라이브 서버에 실제로 쏴서 확인했습니다.** codegen은 커밋된 SDL을 읽으므로 빌드 통과가 서버와 맞는다는 보장이 아니기 때문입니다. DM 오퍼레이션 6종(`Conversations`·`ConversationMessages`·`StartConversation`·`SendMessage`·`MarkConversationRead`·`NotifyTyping`·`ReportMessages`)이 전부 필드 검증을 통과해 인증 단계까지 도달했습니다 — `ValidationError`가 없다는 것이 필드·타입 일치의 증거입니다. 대조군으로 옛 이름 `memberId`를 쏘면 `missing required fields '[counterpartMemberId]'`로 거부됩니다.
+
+나머지는 전부 일치했습니다:
+
+- `Message`에 `feedItem`이 실제로 없습니다 — `id`·`body`·`photoKey`·`sender`·`ownedByViewer`·`createdAt`뿐입니다
+- `SendMessageInput`에 `feedItemId`가 없습니다 — `conversationId`·`body`·`photoKey`뿐입니다
+- `Query`·`Mutation` 루트에 피드 계열 필드가 하나도 남아 있지 않습니다
+- `Conversation`·`StartConversationPayload`·`ReportMessagesInput`·`MarkConversationReadInput`·`NotifyTypingInput`·`Subscription`·`TypingEvent` 모두 일치합니다
 
 ### 내용 없는 메시지 (R4)
 

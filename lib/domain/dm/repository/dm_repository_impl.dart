@@ -156,10 +156,12 @@ class DmRepositoryImpl implements DmRepository {
   // ------------------------------------------------------------------ DM
 
   @override
-  Future<DmMutationResult<String>> startConversation(String memberId) =>
+  Future<DmMutationResult<String>> startConversation(String counterpartMemberId) =>
       _mutateResult(
         documentNodeMutationStartConversation,
-        Variables$Mutation$StartConversation(memberId: memberId).toJson(),
+        Variables$Mutation$StartConversation(
+          counterpartMemberId: counterpartMemberId,
+        ).toJson(),
         'startConversation',
         (Map<String, dynamic> data) {
           final payload = Mutation$StartConversation.fromJson(

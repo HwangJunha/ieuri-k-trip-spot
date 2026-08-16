@@ -2318,8 +2318,11 @@ class _CopyWithStubImpl$Query$ConversationMessages$conversationMessages$pageInfo
 }
 
 class Variables$Mutation$StartConversation {
-  factory Variables$Mutation$StartConversation({required String memberId}) =>
-      Variables$Mutation$StartConversation._({r'memberId': memberId});
+  factory Variables$Mutation$StartConversation({
+    required String counterpartMemberId,
+  }) => Variables$Mutation$StartConversation._({
+    r'counterpartMemberId': counterpartMemberId,
+  });
 
   Variables$Mutation$StartConversation._(this._$data);
 
@@ -2327,19 +2330,19 @@ class Variables$Mutation$StartConversation {
     Map<String, dynamic> data,
   ) {
     final result$data = <String, dynamic>{};
-    final l$memberId = data['memberId'];
-    result$data['memberId'] = (l$memberId as String);
+    final l$counterpartMemberId = data['counterpartMemberId'];
+    result$data['counterpartMemberId'] = (l$counterpartMemberId as String);
     return Variables$Mutation$StartConversation._(result$data);
   }
 
   Map<String, dynamic> _$data;
 
-  String get memberId => (_$data['memberId'] as String);
+  String get counterpartMemberId => (_$data['counterpartMemberId'] as String);
 
   Map<String, dynamic> toJson() {
     final result$data = <String, dynamic>{};
-    final l$memberId = memberId;
-    result$data['memberId'] = l$memberId;
+    final l$counterpartMemberId = counterpartMemberId;
+    result$data['counterpartMemberId'] = l$counterpartMemberId;
     return result$data;
   }
 
@@ -2357,9 +2360,9 @@ class Variables$Mutation$StartConversation {
         runtimeType != other.runtimeType) {
       return false;
     }
-    final l$memberId = memberId;
-    final lOther$memberId = other.memberId;
-    if (l$memberId != lOther$memberId) {
+    final l$counterpartMemberId = counterpartMemberId;
+    final lOther$counterpartMemberId = other.counterpartMemberId;
+    if (l$counterpartMemberId != lOther$counterpartMemberId) {
       return false;
     }
     return true;
@@ -2367,8 +2370,8 @@ class Variables$Mutation$StartConversation {
 
   @override
   int get hashCode {
-    final l$memberId = memberId;
-    return Object.hashAll([l$memberId]);
+    final l$counterpartMemberId = counterpartMemberId;
+    return Object.hashAll([l$counterpartMemberId]);
   }
 }
 
@@ -2381,7 +2384,7 @@ abstract class CopyWith$Variables$Mutation$StartConversation<TRes> {
   factory CopyWith$Variables$Mutation$StartConversation.stub(TRes res) =
       _CopyWithStubImpl$Variables$Mutation$StartConversation;
 
-  TRes call({String? memberId});
+  TRes call({String? counterpartMemberId});
 }
 
 class _CopyWithImpl$Variables$Mutation$StartConversation<TRes>
@@ -2397,11 +2400,11 @@ class _CopyWithImpl$Variables$Mutation$StartConversation<TRes>
 
   static const _undefined = <dynamic, dynamic>{};
 
-  TRes call({Object? memberId = _undefined}) => _then(
+  TRes call({Object? counterpartMemberId = _undefined}) => _then(
     Variables$Mutation$StartConversation._({
       ..._instance._$data,
-      if (memberId != _undefined && memberId != null)
-        'memberId': (memberId as String),
+      if (counterpartMemberId != _undefined && counterpartMemberId != null)
+        'counterpartMemberId': (counterpartMemberId as String),
     }),
   );
 }
@@ -2412,7 +2415,7 @@ class _CopyWithStubImpl$Variables$Mutation$StartConversation<TRes>
 
   TRes _res;
 
-  call({String? memberId}) => _res;
+  call({String? counterpartMemberId}) => _res;
 }
 
 class Mutation$StartConversation {
@@ -2530,7 +2533,7 @@ const documentNodeMutationStartConversation = DocumentNode(
       name: NameNode(value: 'StartConversation'),
       variableDefinitions: [
         VariableDefinitionNode(
-          variable: VariableNode(name: NameNode(value: 'memberId')),
+          variable: VariableNode(name: NameNode(value: 'counterpartMemberId')),
           type: NamedTypeNode(name: NameNode(value: 'ID'), isNonNull: true),
           defaultValue: DefaultValueNode(value: null),
           directives: [],
@@ -2548,8 +2551,10 @@ const documentNodeMutationStartConversation = DocumentNode(
                 value: ObjectValueNode(
                   fields: [
                     ObjectFieldNode(
-                      name: NameNode(value: 'memberId'),
-                      value: VariableNode(name: NameNode(value: 'memberId')),
+                      name: NameNode(value: 'counterpartMemberId'),
+                      value: VariableNode(
+                        name: NameNode(value: 'counterpartMemberId'),
+                      ),
                     ),
                   ],
                 ),

@@ -29,10 +29,10 @@ class ConversationStarter {
 
   final DmRepository _repository;
 
-  Future<String?> start(String memberId) async {
+  Future<String?> start(String counterpartMemberId) async {
     try {
       final DmMutationResult<String> result = await _repository
-          .startConversation(memberId);
+          .startConversation(counterpartMemberId);
       if (!result.succeeded) {
         developer.log(
           'startConversation rejected: ${result.errorCode}',

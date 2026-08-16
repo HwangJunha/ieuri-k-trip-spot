@@ -128,8 +128,10 @@ class FakeDmRepository implements DmRepository {
   }
 
   @override
-  Future<DmMutationResult<String>> startConversation(String memberId) async {
-    startedMemberIds.add(memberId);
+  Future<DmMutationResult<String>> startConversation(
+    String counterpartMemberId,
+  ) async {
+    startedMemberIds.add(counterpartMemberId);
     return const DmMutationResult<String>.success('c1');
   }
 

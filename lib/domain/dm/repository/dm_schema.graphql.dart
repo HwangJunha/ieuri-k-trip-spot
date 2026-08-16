@@ -3,26 +3,28 @@
 import '../../community/repository/community_schema.graphql.dart';
 
 class Input$StartConversationInput {
-  factory Input$StartConversationInput({required String memberId}) =>
-      Input$StartConversationInput._({r'memberId': memberId});
+  factory Input$StartConversationInput({required String counterpartMemberId}) =>
+      Input$StartConversationInput._({
+        r'counterpartMemberId': counterpartMemberId,
+      });
 
   Input$StartConversationInput._(this._$data);
 
   factory Input$StartConversationInput.fromJson(Map<String, dynamic> data) {
     final result$data = <String, dynamic>{};
-    final l$memberId = data['memberId'];
-    result$data['memberId'] = (l$memberId as String);
+    final l$counterpartMemberId = data['counterpartMemberId'];
+    result$data['counterpartMemberId'] = (l$counterpartMemberId as String);
     return Input$StartConversationInput._(result$data);
   }
 
   Map<String, dynamic> _$data;
 
-  String get memberId => (_$data['memberId'] as String);
+  String get counterpartMemberId => (_$data['counterpartMemberId'] as String);
 
   Map<String, dynamic> toJson() {
     final result$data = <String, dynamic>{};
-    final l$memberId = memberId;
-    result$data['memberId'] = l$memberId;
+    final l$counterpartMemberId = counterpartMemberId;
+    result$data['counterpartMemberId'] = l$counterpartMemberId;
     return result$data;
   }
 
@@ -38,9 +40,9 @@ class Input$StartConversationInput {
         runtimeType != other.runtimeType) {
       return false;
     }
-    final l$memberId = memberId;
-    final lOther$memberId = other.memberId;
-    if (l$memberId != lOther$memberId) {
+    final l$counterpartMemberId = counterpartMemberId;
+    final lOther$counterpartMemberId = other.counterpartMemberId;
+    if (l$counterpartMemberId != lOther$counterpartMemberId) {
       return false;
     }
     return true;
@@ -48,8 +50,8 @@ class Input$StartConversationInput {
 
   @override
   int get hashCode {
-    final l$memberId = memberId;
-    return Object.hashAll([l$memberId]);
+    final l$counterpartMemberId = counterpartMemberId;
+    return Object.hashAll([l$counterpartMemberId]);
   }
 }
 
@@ -62,7 +64,7 @@ abstract class CopyWith$Input$StartConversationInput<TRes> {
   factory CopyWith$Input$StartConversationInput.stub(TRes res) =
       _CopyWithStubImpl$Input$StartConversationInput;
 
-  TRes call({String? memberId});
+  TRes call({String? counterpartMemberId});
 }
 
 class _CopyWithImpl$Input$StartConversationInput<TRes>
@@ -75,11 +77,11 @@ class _CopyWithImpl$Input$StartConversationInput<TRes>
 
   static const _undefined = <dynamic, dynamic>{};
 
-  TRes call({Object? memberId = _undefined}) => _then(
+  TRes call({Object? counterpartMemberId = _undefined}) => _then(
     Input$StartConversationInput._({
       ..._instance._$data,
-      if (memberId != _undefined && memberId != null)
-        'memberId': (memberId as String),
+      if (counterpartMemberId != _undefined && counterpartMemberId != null)
+        'counterpartMemberId': (counterpartMemberId as String),
     }),
   );
 }
@@ -90,7 +92,7 @@ class _CopyWithStubImpl$Input$StartConversationInput<TRes>
 
   TRes _res;
 
-  call({String? memberId}) => _res;
+  call({String? counterpartMemberId}) => _res;
 }
 
 class Input$SendMessageInput {

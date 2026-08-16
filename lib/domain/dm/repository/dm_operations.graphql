@@ -68,8 +68,8 @@ query ConversationMessages($conversationId: ID!, $first: Int, $after: String) {
 }
 
 # 회원을 직접 지정한다(SPEC-0021 R11) — 피드 항목을 거치던 간접 지정이 사라졌다.
-mutation StartConversation($memberId: ID!) {
-  startConversation(input: { memberId: $memberId }) {
+mutation StartConversation($counterpartMemberId: ID!) {
+  startConversation(input: { counterpartMemberId: $counterpartMemberId }) {
     success
     userErrors {
       code
