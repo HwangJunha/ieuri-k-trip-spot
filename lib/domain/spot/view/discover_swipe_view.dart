@@ -18,6 +18,7 @@ import '../../../common/category/spot_category_selection.dart';
 import '../model/spot_reaction.dart';
 import '../model/swipe_queue.dart';
 import '../model/tourist_spot.dart';
+import '../provider/spot_detail_providers.dart';
 import '../provider/swipe_providers.dart';
 import 'spot_detail_view.dart';
 
@@ -277,11 +278,16 @@ class _CardStackState extends ConsumerState<_CardStack> {
   /// 카드 탭 → 상세로 push(§5, R9). 식별자만 넘기고, Discover 스택은 셸에 보존된다.
   ///
   /// **카테고리는 더 이상 넘기지 않는다**(SPEC-0020) — 서버가 상세의 `intro`/`infoItems`를
-  /// spot 자신의 카테고리로 해석하므로 호출부가 알려줄 것이 없다.
+  /// **spot의 카테고리 코드를 상세에 알려준다.** 서버가 `intro`/`infoItems`에
+  /// `categoryCode`를 요구하는데 상세 응답의 `category.code`는 null로 오므로,
+  /// 카드가 이미 가진 값을 넘겨야 운영정보가 뜬다.
   ///
   /// 썸네일 URL은 함께 넘긴다(SPEC-0006 R8) — 상세가 본문 조회를 기다리는 동안 카드에서
   /// 보던 같은 이미지를 그대로 그려, 같은 URL을 다시 로드하며 깜빡이는 것을 막는다(AC-24).
   void _openDetail(TouristSpot spot) {
+    ref
+        .read(spotCategoryCodesProvider.notifier)
+        .remember(spot.id, spot.category?.code);
     context.pushNamed(
       SpotDetailView.routeName,
       pathParameters: <String, String>{'id': spot.id},

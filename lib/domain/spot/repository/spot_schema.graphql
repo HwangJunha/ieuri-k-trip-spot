@@ -94,13 +94,17 @@ type SpotDetail {
   # 화면 결과가 같으므로 repository가 하나로 접는다(AC-28) — 도메인 모델은 구분하지 않는다.
   gallery: [SpotImage!]
   likeCount: Int!
-  # SPEC-0020: category 인자가 사라졌다. 예전에는 카테고리별로 다른 TourAPI 응답을
-  # 정규화하기 위해 호출부가 값을 넘겼으나, 이제 서버가 spot 자신의 카테고리로
-  # 해석한다 — 상세를 열 때 카테고리를 알 필요가 없어졌다.
-  intro: SpotIntro
+  # 카테고리별로 다른 TourAPI 응답을 정규화하려면 **서버가 카테고리를 알아야 한다.**
+  # SPEC-0020이 이 인자가 사라진 것으로 보고 걷어냈으나 실제로는 이름과 타입만
+  # 바뀌었다(`category: SpotCategory!` → `categoryCode: String!`). 여기 인자를 빠뜨리면
+  # codegen은 통과하고 런타임에 MissingFieldArgument로 상세가 통째로 막힌다.
+  #
+  # 값은 `SpotCategory.code`(`TOURIST_SPOT` 등)를 그대로 쓴다. **빈 문자열은 서버가
+  # 예외로 거부하고, 틀린 코드는 조용히 빈 값을 준다.**
+  intro(categoryCode: String!): SpotIntro
   # gallery와 같은 규칙(SPEC-0008 R-8): 조회 실패면 null, 정상적으로 없으면 빈 배열.
   # 둘 다 이용안내 섹션을 숨기고 오류 문구를 띄우지 않는다(AC-29).
-  infoItems: [SpotInfoItem!]
+  infoItems(categoryCode: String!): [SpotInfoItem!]
 }
 
 # SPEC-0008 R-18 좋아요 목록. 커서 페이징이며, 상세(SpotDetail)가 아니라 목록 카드가

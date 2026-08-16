@@ -1744,14 +1744,6 @@
   "@mapRegionAboutScoringTotal": {
     "description": "추천 산출 근거 고지 — 점수 산정 방식(개인정보보호법 §37조의2)."
   },
-  "feedSegmentForYou": "추천",
-  "@feedSegmentForYou": {
-    "description": "둘러보기 세그먼트 토글 — 스와이프 추천 쪽"
-  },
-  "feedSegmentFeed": "피드",
-  "@feedSegmentFeed": {
-    "description": "둘러보기 세그먼트 토글 — 세로 전면 스크롤 피드 쪽"
-  },
   "dmMessagesAction": "DM",
   "@dmMessagesAction": {
     "description": "둘러보기 헤더의 DM 재진입(대화함) 아이콘 툴팁. 작성자에게 새 대화를 거는 feedMessageAuthorAction과 다른 뜻이라 문구도 아이콘도 구분한다"
@@ -1760,175 +1752,11 @@
   "@dmUnreadBadgeLabel": {
     "description": "DM 아이콘의 점 배지 — 스크린리더용. 서버가 전체 합계를 주지 않아 숫자가 없다"
   },
-  "feedEmptyTitle": "아직 글이 없어요",
-  "@feedEmptyTitle": {
-    "description": "피드가 비었을 때 — 오류가 아니므로 재시도 버튼을 두지 않는다"
-  },
-  "feedEmptyBody": "첫 번째 글을 남겨보세요.",
-  "@feedEmptyBody": {
-    "description": "피드 빈 상태 보조 문구"
-  },
-  "feedUnavailableTitle": "피드를 불러오지 못했어요",
-  "@feedUnavailableTitle": {
-    "description": "피드 조회 실패 제목 — 추천 쪽은 막지 않는다(AC5-3)"
-  },
-  "feedUnavailableBody": "잠시 후 다시 시도해 주세요.",
-  "@feedUnavailableBody": {
-    "description": "피드 조회 실패 보조 문구"
-  },
-  "feedRetry": "다시 시도",
-  "@feedRetry": {
-    "description": "피드·DM 공통 재시도 버튼"
-  },
-  "feedLikeAction": "좋아요",
-  "@feedLikeAction": {
-    "description": "피드 좋아요 버튼 툴팁"
-  },
-  "feedOptionsAction": "더보기",
-  "@feedOptionsAction": {
-    "description": "피드 항목 우상단 오버플로 버튼 툴팁"
-  },
-  "feedReportAction": "이 글 신고하기",
-  "@feedReportAction": {
-    "description": "피드 오버플로 시트의 신고 항목"
-  },
-  "feedReportSubmitted": "신고가 접수되었어요.",
-  "@feedReportSubmitted": {
-    "description": "피드·DM 신고 접수 완료 스낵바"
-  },
-  "feedReportFailed": "신고를 접수하지 못했어요.",
-  "@feedReportFailed": {
-    "description": "피드·DM 신고 실패 스낵바"
-  },
-  "feedMessageAuthorAction": "DM 보내기",
-  "@feedMessageAuthorAction": {
-    "description": "피드 작성자에게 새 대화를 거는 아이콘 툴팁 — 내 글에는 그리지 않는다(R7). 헤더의 대화함(dmMessagesAction)과 뜻이 달라 보내기 계열 아이콘을 쓴다"
-  },
-  "feedShowMore": "더보기",
-  "@feedShowMore": {
-    "description": "긴 본문을 펼치는 링크 — 본문이 실제로 접힌 줄 수를 넘을 때만 그린다"
-  },
-  "feedShowLess": "접기",
-  "@feedShowLess": {
-    "description": "펼친 본문을 다시 접는 링크 — 펼치기만 되고 못 접으면 사진이 계속 가린다"
-  },
-  "feedConversationStartFailed": "대화를 시작하지 못했어요.",
-  "@feedConversationStartFailed": {
-    "description": "startConversation 실패 스낵바"
-  },
-  "feedPhotoIndicatorLabel": "{total}장 중 {current}장",
-  "@feedPhotoIndicatorLabel": {
-    "description": "사진 페이저 점 인디케이터의 스크린리더 라벨 — 화면에는 점만 보인다",
-    "placeholders": {
-      "current": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "feedComposeAction": "새 글 쓰기",
-  "@feedComposeAction": {
-    "description": "피드 화면 우측에 떠 있는 작성 버튼 툴팁 — 빈 상태에서도 닿을 수 있어야 한다"
-  },
-  "feedComposeTitle": "새 글",
-  "@feedComposeTitle": {
-    "description": "피드 컴포저 화면 제목"
-  },
-  "feedComposeSubmit": "올리기",
-  "@feedComposeSubmit": {
-    "description": "피드 컴포저 제출 버튼 — 장소·사진·본문이 갖춰지기 전엔 비활성"
-  },
-  "feedComposeBodyHint": "이 장소가 어땠는지 들려주세요.",
-  "@feedComposeBodyHint": {
-    "description": "피드 본문 입력 힌트"
-  },
-  "feedComposeSpotAction": "장소 고르기",
-  "@feedComposeSpotAction": {
-    "description": "장소 선택 버튼 — 피드는 장소가 필수 1곳이다(R1)"
-  },
-  "feedComposeSpotRequired": "장소를 골라야 올릴 수 있어요.",
-  "@feedComposeSpotRequired": {
-    "description": "장소 미선택 안내 — 커뮤니티와 달리 피드는 장소가 필수다"
-  },
-  "feedComposeSpotClear": "장소 지우기",
-  "@feedComposeSpotClear": {
-    "description": "고른 장소를 떼는 버튼 — 시트에는 해제 항목을 두지 않는다"
-  },
-  "feedComposePhotosAction": "사진 추가",
-  "@feedComposePhotosAction": {
-    "description": "사진 선택 버튼 — 피드는 사진 1~5장이 필수다(R2)"
-  },
-  "feedComposePhotosRequired": "사진을 최소 한 장 넣어주세요.",
-  "@feedComposePhotosRequired": {
-    "description": "사진 미선택 안내"
-  },
-  "feedComposePhotoRemove": "사진 빼기",
-  "@feedComposePhotoRemove": {
-    "description": "고른 사진 한 장을 빼는 버튼"
-  },
-  "feedComposePhotoTooLarge": "{count}장이 너무 커서 제외했어요.",
-  "@feedComposePhotoTooLarge": {
-    "description": "크기 상한(10MiB)을 넘어 거른 장 수 — 고르는 자리에서 바로 알린다",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "feedComposeTooManyPhotos": "사진은 5장까지 넣을 수 있어요.",
-  "@feedComposeTooManyPhotos": {
-    "description": "사진 상한 안내"
-  },
-  "feedComposeCounter": "{count} / 500",
-  "@feedComposeCounter": {
-    "description": "본문 글자 수 — 한계에 가까워졌을 때만 드러낸다",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "feedComposeTooLong": "{count}자 초과",
-  "@feedComposeTooLong": {
-    "description": "본문 길이 초과 — 입력을 자르지 않고 제출만 막는다",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "feedComposeDone": "글을 올렸어요.",
-  "@feedComposeDone": {
-    "description": "피드 등록 성공 스낵바"
-  },
-  "feedComposeDonePhotosFailed": "글은 올렸지만 다음 사진을 올리지 못했어요: {names}",
-  "@feedComposeDonePhotosFailed": {
-    "description": "일부 사진만 실패 — **어느 장인지 이름으로 알린다**(설계 §4)",
-    "placeholders": {
-      "names": {
-        "type": "String"
-      }
-    }
-  },
-  "feedComposePhotosFailed": "다음 사진을 올리지 못했어요: {names}",
-  "@feedComposePhotosFailed": {
-    "description": "사진이 한 장도 올라가지 않아 제출하지 못했을 때 — 뭉뚱그리지 않고 이름을 든다",
-    "placeholders": {
-      "names": {
-        "type": "String"
-      }
-    }
-  },
-  "feedComposeFailed": "글을 올리지 못했어요. 잠시 후 다시 시도해 주세요.",
-  "@feedComposeFailed": {
-    "description": "피드 등록 실패 — 입력값은 보존한다"
-  },
-  "feedComposeSignInRequired": "로그인해야 글을 올릴 수 있어요.",
-  "@feedComposeSignInRequired": {
-    "description": "미로그인 상태로 작성 시도"
-  },
+  "dmUnavailableBody": "잠시 후 다시 시도해 주세요.",
+  "dmRetry": "다시 시도",
+  "dmReportSubmitted": "신고가 접수되었어요.",
+  "dmReportFailed": "신고를 접수하지 못했어요.",
+  "dmEmptyMessage": "더 이상 볼 수 없는 메시지예요",
   "dmConversationsTitle": "DM",
   "@dmConversationsTitle": {
     "description": "대화 목록 화면 제목"
@@ -1937,7 +1765,7 @@
   "@dmConversationsEmptyTitle": {
     "description": "대화 목록 빈 상태 — 오류가 아니다"
   },
-  "dmConversationsEmptyBody": "마음에 드는 피드 글에서 대화를 시작해 보세요.",
+  "dmConversationsEmptyBody": "주고받은 대화가 여기에 표시돼요.",
   "@dmConversationsEmptyBody": {
     "description": "대화 목록 빈 상태 보조 문구 — 어디서 시작하는지 알려주는 것이 이 화면의 일이다"
   },
@@ -2002,10 +1830,6 @@
   "dmConversationEmpty": "첫 메시지를 보내보세요.",
   "@dmConversationEmpty": {
     "description": "메시지가 하나도 없는 대화 — 대화 시작과 첫 전송이 별개 호출이라 생길 수 있다"
-  },
-  "dmDeletedFeedQuote": "삭제된 글",
-  "@dmDeletedFeedQuote": {
-    "description": "인용된 피드가 삭제됐을 때 — 말풍선 자체는 남는다"
   },
   "dmSelectMessagesAction": "메시지 선택",
   "@dmSelectMessagesAction": {

@@ -1,0 +1,156 @@
+# DM 오퍼레이션(SPEC-0017 · SPEC-0021). 생성 타입은 이 repository 밖으로 나가지
+# 않는다(POL-020).
+
+fragment DmAuthorParts on PostAuthor {
+  id
+  nickname
+  profileImageUrl
+}
+
+# 인용 필드가 없다(SPEC-0021 R4) — 피드가 사라지면서 서버가 걷어냈다. 본문도 사진도
+# 없이 내려오는 과거 메시지가 생기므로 표시 계층이 "내용 없음"을 그린다.
+fragment MessageParts on Message {
+  id
+  body
+  photoKey
+  sender {
+    ...DmAuthorParts
+  }
+  ownedByViewer
+  createdAt
+}
+
+fragment ConversationParts on Conversation {
+  id
+  counterpart {
+    ...DmAuthorParts
+  }
+  lastMessage {
+    ...MessageParts
+  }
+  unreadCount
+  updatedAt
+}
+
+query Conversations($first: Int, $after: String) {
+  conversations(first: $first, after: $after) {
+    edges {
+      cursor
+      node {
+        ...ConversationParts
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+# 최신순(내림차순)이며 after로 과거를 이어읽는다.
+query ConversationMessages($conversationId: ID!, $first: Int, $after: String) {
+  conversationMessages(
+    conversationId: $conversationId
+    first: $first
+    after: $after
+  ) {
+    edges {
+      cursor
+      node {
+        ...MessageParts
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+# 회원을 직접 지정한다(SPEC-0021 R11) — 피드 항목을 거치던 간접 지정이 사라졌다.
+mutation StartConversation($counterpartMemberId: ID!) {
+  startConversation(input: { counterpartMemberId: $counterpartMemberId }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    conversationId
+  }
+}
+
+mutation SendMessage($conversationId: ID!, $body: String!, $photoKey: String) {
+  sendMessage(
+    input: {
+      conversationId: $conversationId
+      body: $body
+      photoKey: $photoKey
+    }
+  ) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    messageId
+  }
+}
+
+mutation NotifyTyping($conversationId: ID!) {
+  notifyTyping(input: { conversationId: $conversationId }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+# 처리 후 잔여 수를 돌려주므로 재조회가 필요 없다.
+mutation MarkConversationRead($conversationId: ID!, $upToMessageId: ID) {
+  markConversationRead(
+    input: { conversationId: $conversationId, upToMessageId: $upToMessageId }
+  ) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    unreadCount
+  }
+}
+
+mutation ReportMessages($messageIds: [ID!]!, $reason: ReportReason!, $detail: String) {
+  reportMessages(
+    input: { messageIds: $messageIds, reason: $reason, detail: $detail }
+  ) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+# 유실 허용 — 재전송이 없으므로 클라이언트가 emittedAt 기준 타임아웃으로 표시를 내린다.
+subscription TypingIndicator($conversationId: ID!) {
+  typingIndicator(conversationId: $conversationId) {
+    sender {
+      ...DmAuthorParts
+    }
+    emittedAt
+  }
+}
+
+# 유실 불가 — 재연결 시 ConversationMessages로 공백을 메운다. 자기 메시지도 에코되므로
+# 낙관적으로 그린 말풍선과 id로 dedupe해야 한다.
+subscription NewMessage($conversationId: ID!) {
+  newMessage(conversationId: $conversationId) {
+    ...MessageParts
+  }
+}

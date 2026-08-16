@@ -308,7 +308,7 @@ class FakeSpotRepository implements SpotRepository {
   int failDetailTimes = 0;
 
   @override
-  Future<SpotDetail> fetchSpotDetail(String id) async {
+  Future<SpotDetail> fetchSpotDetail(String id, {String? categoryCode}) async {
     detailCallCount++;
     if (detailFailure != null &&
         (failDetailTimes == 0 || detailCallCount <= failDetailTimes)) {
@@ -382,7 +382,6 @@ SpotDetail detailSpot(
 }) => SpotDetail(
   id: id,
   title: title,
-  category: category,
   thumbnailImageUrl: 'https://img/$id.jpg',
   overview: overview,
   address: address,

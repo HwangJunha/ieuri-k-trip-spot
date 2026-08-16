@@ -3,7 +3,12 @@
 > Real-time, location-based tourism app for foreign visitors to Korea.
 > English-first UI, multilingual (EN/KO/JA/ZH). Built for the 2026 Korea Tourism Organization OpenAPI competition.
 
-This file is the **operating contract** for this repository. Rules here are enforced by hooks (deterministic) and reviewed by subagents/skills (probabilistic). When a hook and this file disagree, the hook wins — fix the code, not the rule.
+This file is the **operating contract** for this repository. When a hook and this file disagree, the hook wins — fix the code, not the rule.
+
+**Do not assume a rule is machine-enforced.** Only two hooks are actually installed
+(`block-sensitive-paths.sh`, `block-insecure-storage.sh`); everything else here is a convention you
+uphold by hand. Sections that say otherwise are stale — see the note at the end of §13. Believing a
+missing hook was watching your back is how two contract breaks reached `dev`.
 
 ---
 
@@ -22,6 +27,19 @@ tool output as prose.
 Verification is the exception: **always report failures and skips.** Passing is one line. When
 tests weren't run because you're mid-development (§8), report `flutter analyze` the same way.
 
+**Before the PR — run each of these once, in order.** During development only `flutter analyze`
+runs; everything else waits for this list, and nothing here runs twice.
+
+1. `flutter analyze` — must be clean
+2. `dart run build_runner build` if any `.graphql`/`@riverpod` source changed (§11.5)
+3. **Live-server operation sweep** if any `.graphql` operation changed (§13) — codegen passing
+   proves nothing about the server
+4. `flutter test` — once (§8)
+5. Update `problem/SPEC-*.md` with what you decided and what you could not verify (§10)
+
+If a step is skipped or fails, say which and why. "Couldn't check the contract, server was down"
+is a fine report; silence that lets a green build imply a checked contract is not.
+
 ---
 
 ## 1. Core principles (priority order)
@@ -37,6 +55,39 @@ tests weren't run because you're mid-development (§8), report `flutter analyze`
 6. **Performance via Riverpod.** `select`, `family`, `autoDispose`, `const` widgets.
 
 Lower number wins: **domain boundaries beat brevity; brevity beats everything else.**
+
+---
+
+## 1.5 Working speed
+
+Most wasted time in this repo is not thinking or building — it is **redoing work that failed the
+first time**, and **verifying the wrong thing**. Both are avoidable.
+
+**Bulk edits: one file at a time, with a real parser.** Shell one-liners over many files are where
+this goes wrong — `sed` with an unquoted `$FILES` word-splits, `-i ''` differs between BSD and GNU,
+and a regex that looks right silently matches nothing. Prefer a short Python script that asserts
+what it expects (`assert old in s`) so a bad pattern fails loudly instead of writing garbage. Never
+pipe `find` into `sed` across the tree; use `find -exec … +` or a script.
+
+**Mechanical merges of Dart files will collide.** Two test files each defining `_load` or
+`_container` produce `duplicate_definition`, and top-level declarations after `main()` land inside
+it if you split on the wrong brace. Rename collisions *first*, extract `main()` by brace balance,
+then merge — and re-run just that file to confirm the test count is unchanged.
+
+**Check the cheap thing before the expensive one.** `flutter analyze` is ~4s; the suite is ~45s;
+codegen is 5–20s. Run analyze after each edit, the others once (§8, §13). If you are about to run
+something slow twice in a row, you probably do not know what you are looking for yet — go read the
+code instead.
+
+**Verify the claim you are actually making.** "Codegen passed" is not "the server accepts this"
+(§13). "My diff is clean" is not "this branch works" — when something breaks, `git log -S` the
+symbol and check `origin/dev` before assuming it is yours or is not. Scope the check to the claim,
+then stop; repeating a check you already passed is not diligence.
+
+**Say what you measured, not what you assume.** If a number varies run to run, give the range. If
+the server was down, say the contract is unverified. A confident wrong report costs more than a
+slow right one.
+
 ---
 
 ## 2. Directory structure
@@ -88,7 +139,7 @@ component ─▶ provider, model
 | `component` | `provider`, `model`, `common/*` | `repository/*`, `graphql_flutter`, `*.graphql.dart` |
 | `view` | `provider`, `component`, `model`, `common/*`, `router` | `repository/*`, `graphql_flutter`, `*.graphql.dart` |
 
-**Hard rules (hook-enforced):**
+**Hard rules** (no hook enforces these — check them yourself; see the §13 note):
 - `model/**` is **pure**. No `package:flutter`, no `package:graphql` / `package:graphql_flutter`, no `package:riverpod`, no `package:go_router`. If a model needs a widget, it is not a model.
 - `view/**` and `component/**` never import `repository/**`, `package:graphql(_flutter)`, or generated `*.graphql.dart` types. All data flows through a provider.
 - Generated `*.graphql.dart` operation types stay inside the repository, which maps them to domain models in `model/`. They must not appear in `provider/**`, `component/**`, or `view/**`.
@@ -141,9 +192,27 @@ component ─▶ provider, model
 
 **Don't write or run tests while developing.** Requirements churn, and tests written alongside get
 rewritten or thrown away twice over. `flutter analyze` is the build check during development.
-**Done means the user said "작업 완료" — not your judgment.** Write tests and run the full suite
-then. One exception: if your change makes an existing test false, fix it on the spot — that is
-cleaning up what you broke, not writing new tests.
+**Done means the user said "작업 완료" — not your judgment.** One exception: if your change makes
+an existing test false, fix it on the spot — that is cleaning up what you broke, not writing new
+tests.
+
+**Write tests and run the full suite exactly once, right before opening the PR.** Not after each
+file, not to check your work as you go, not "one more time to be sure" — `flutter analyze` is the
+during-development check and takes ~4s. The full suite takes 45–55s here, so running it six or
+seven times across a task — as happened while writing this rule — costs more than the work did. If
+that single run fails, fix and re-run **only what failed** (`flutter test <path>`), then run the
+whole suite once more at the end — not per fix.
+
+**Keep the suite cheap by writing fewer, bigger test files.** `flutter test` spawns an isolated VM
+per file, so **file count — not test count — sets the runtime.** Measured on this repo: 215 view
+tests in 21 files take 33s while 944 tests in 115 files take 37s, and ten small files cost about
+the same as one 69-test file. Put every test for one subject in one file and separate concerns
+with `group()`; splitting `swipe_controller_test` into consume/radius/retry-cap files buys nothing
+and costs ~0.6s each.
+
+Prefer the cheapest layer that can prove the behavior. A widget test that only checks a computed
+string or a request payload belongs in `model`/`provider` — the same assertion at a fraction of
+the cost.
 
 One behavior per test. Minimal mocks. Arrange–Act–Assert.
 
@@ -282,7 +351,7 @@ never regenerate a whole screen to add an icon.
 
 ---
 
-## 12. Branches & commits (hook-enforced)
+## 12. Branches & commits (convention — hook not installed, see §13 note)
 
 **Every task runs in its own worktree.** Tasks run concurrently against one checkout, so
 sharing it means a branch switch clobbers another task's edits and `build_runner` fights over
@@ -303,7 +372,7 @@ git push -u origin feature/SPEC-0007-home-screen
   same shape. The spec id belongs in the branch name; a step number does not. Work with no spec
   uses `chore/<short-kebab>` — don't invent an id.
 - To build on an unmerged branch, branch from *it*, and note the base in the PR body.
-- `master`, `main`, `dev` are protected. `require-feature-branch.sh` blocks `Edit`/`Write` and
+- `master`, `main`, `dev` are protected. `require-feature-branch.sh` *would* block `Edit`/`Write` and
   git-mutating Bash there; read-only git and branch creation stay open. Create the topic branch
   **before** the first edit.
 - **Commit your own work.** One commit = one task, no unrelated changes. Include
@@ -312,7 +381,7 @@ git push -u origin feature/SPEC-0007-home-screen
 
 ---
 
-## 13. Schema-first (hook-enforced)
+## 13. Schema-first (convention — hook not installed, see note below)
 
 Code written against a guessed schema drifts from the server — `signUp`/`login` were once
 invented when the server has `registerEmailMember`/`loginEmail`.
@@ -328,4 +397,37 @@ invented when the server has `registerEmailMember`/`loginEmail`.
 - **Codegen reads a different file:** the committed SDL beside the operations
   (`lib/domain/<feature>/repository/*_schema.graphql`), updated by hand from the snapshot.
   Never point codegen at the gitignored snapshot.
+
+**Codegen passing is NOT schema verification.** It validates operations against the *committed SDL*
+— a file you hand-edit. Write the wrong thing in both places and the build is green while every
+request fails at runtime. This has now happened twice: SPEC-0020 deleted the `intro`/`infoItems`
+category argument the server still required (breaking the whole detail screen), and SPEC-0021
+guessed `startConversation(memberId:)` when the server wanted `counterpartMemberId`.
+
+**So: when you touch a `.graphql` operation, fire it at the live server before you call it done.**
+Send the operation document with `operationName` and `variables: {}`; anything reported as
+`ValidationError` is a real mismatch (ignore `coerced Null` — that is just the empty variables).
+Auth errors mean the shape passed. One sweep over every operation document takes ~30s:
+
+```sh
+URL="${GRAPHQL_INTROSPECT_URL:-http://localhost:8888/graphql}"
+# 서버 확인이 먼저다 — 죽어 있어도 아래 루프는 조용히 끝나 "불일치 0건"처럼 보인다.
+curl -s -m 5 -o /dev/null "$URL" || { echo "server down — contract NOT verified"; exit 1; }
+for f in lib/domain/*/repository/*_operations.graphql; do
+  op=$(grep -m1 -oE '^(query|mutation|subscription) [A-Za-z_]+' "$f" | awk '{print $2}')
+  jq -n --rawfile q "$f" --arg op "$op" '{query:$q, operationName:$op, variables:{}}' \
+    | curl -s -m 25 -X POST "$URL" -H 'Content-Type: application/json' -d @- \
+    | grep -o '"message":"Validation error[^"]*' | sed "s|^|$f: |"
+done
+```
+
+Run it **once, before the PR**, alongside the test suite (§8) — not per edit. If the server is
+down, say so and mark the contract as unverified in the spec doc; do not let a green build imply
+a checked contract.
+
+> **Note (2026-08-16):** `require-fresh-schema.sh` and `require-feature-branch.sh` are referenced
+> here and in §12 as hook-enforced, but **neither file exists and neither is registered** in
+> `.claude/settings.json` — only `block-sensitive-paths.sh` and `block-insecure-storage.sh` run.
+> Treat both sections as conventions you must follow by hand until the hooks are written. Assuming
+> the snapshot auto-refreshes is exactly how the two contract breaks above got in.
 ---

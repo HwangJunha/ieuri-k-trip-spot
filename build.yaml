@@ -39,7 +39,8 @@ targets:
           # codegen이 조각을 하나로 병합하므로 spot 쪽 정의를 그대로 쓴다.
           - lib/domain/map/repository/map_operations.graphql
           - lib/domain/map/repository/map_schema.graphql
-          # SPEC-0017 피드·DM. PostAuthor·PostSpot·PageInfo·UserError·ReportReason은
-          # 다른 조각이 이미 선언하므로 참조만 한다. Subscription 루트는 여기가 최초다.
-          - lib/domain/feed/repository/feed_operations.graphql
-          - lib/domain/feed/repository/feed_schema.graphql
+          # SPEC-0017 DM(SPEC-0021로 피드가 빠졌다). PostAuthor·PageInfo·UserError·
+          # ReportReason은 다른 조각이 이미 선언하므로 참조만 한다. Subscription 루트는
+          # 여기가 최초다.
+          - lib/domain/dm/repository/dm_operations.graphql
+          - lib/domain/dm/repository/dm_schema.graphql

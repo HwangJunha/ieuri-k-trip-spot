@@ -11,6 +11,7 @@ import '../provider/swipe_providers.dart';
 import '../model/liked_spot.dart';
 import '../../../common/category/spot_category.dart';
 import '../../../common/category/spot_category_selection.dart';
+import '../provider/spot_detail_providers.dart';
 import '../provider/liked_spots_providers.dart';
 import 'spot_detail_view.dart';
 
@@ -100,7 +101,7 @@ class _LikedList extends ConsumerWidget {
         ref.read(likedSpotsControllerProvider(selection).notifier).loadMore(),
     itemBuilder: (BuildContext context, int index) {
       final LikedSpot spot = data.items[index];
-      return LikedSpotCard(spot: spot, onTap: () => _openDetail(context, spot));
+      return LikedSpotCard(spot: spot, onTap: () => _openDetail(context, ref, spot));
     },
   );
 
@@ -113,7 +114,12 @@ class _LikedList extends ConsumerWidget {
   ///
   /// `feed` 파라미터도 넘기지 않는다. 좋아요 목록은 스와이프 피드가 아니므로 반응
   /// 후 소비할 카드 스택이 없다 — 라우트가 null로 되돌린다.
-  void _openDetail(BuildContext context, LikedSpot spot) {
+  void _openDetail(BuildContext context, WidgetRef ref, LikedSpot spot) {
+    // 상세가 운영정보를 받으려면 카테고리 코드가 필요하다 — 목록은 알고 있고
+    // 상세 응답의 `category.code`는 null로 온다.
+    ref
+        .read(spotCategoryCodesProvider.notifier)
+        .remember(spot.id, spot.category.code);
     context.pushNamed(
       SpotDetailView.routeName,
       pathParameters: <String, String>{'id': spot.id},

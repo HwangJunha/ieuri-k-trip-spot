@@ -16,6 +16,35 @@ import 'swipe_providers.dart';
 
 part 'spot_detail_providers.g.dart';
 
+/// 상세를 열기 직전에 목록이 알려주는 **spot의 카테고리 코드**(contentId → code).
+///
+/// **왜 필요한가.** `spotDetail`의 `intro`/`infoItems`는 카테고리마다 다른 TourAPI
+/// 응답을 정규화하므로 서버가 `categoryCode`를 요구한다. 그런데 상세 응답의
+/// `category.code`는 서버가 전 spot에서 null로 주므로 응답만으로는 채울 수 없다.
+/// 목록(스와이프·검색·좋아요)은 그 코드를 이미 알고 있어서, 상세로 넘어가기 전에
+/// 여기 적어 둔다.
+///
+/// **family 키가 아니라 별도 맵인 이유.** 카테고리는 같은 spot이면 늘 같은 값이라
+/// 조회 결과를 가르지 않는다. `spotDetailController`의 family 키에 넣으면 딥링크
+/// 진입(코드 없음)과 목록 진입(코드 있음)이 같은 spot에서 서로 다른 provider가 되어
+/// 같은 상세를 두 번 조회한다.
+///
+/// keepAlive다 — 상세를 열고 닫는 동안 살아 있어야 하고, 항목 몇 개의 문자열이라
+/// 비용이 없다.
+@Riverpod(keepAlive: true)
+class SpotCategoryCodes extends _$SpotCategoryCodes {
+  @override
+  Map<String, String> build() => const <String, String>{};
+
+  /// 목록이 상세로 보내기 직전에 부른다. 이미 같은 값이면 상태를 바꾸지 않는다 —
+  /// 불필요한 재빌드를 만들지 않기 위해서다.
+  void remember(String contentId, String? categoryCode) {
+    if (categoryCode == null || categoryCode.isEmpty) return;
+    if (state[contentId] == categoryCode) return;
+    state = <String, String>{...state, contentId: categoryCode};
+  }
+}
+
 /// 관광지 상세 컨트롤러(SPEC-0003). [contentId]별 패밀리 — 상세 진입마다 해당 id의
 /// 인스턴스를 로드한다.
 ///
@@ -57,7 +86,12 @@ class SpotDetailController extends _$SpotDetailController {
   /// 상세를 조회하고 실패를 상한에 계상한다. 계상 규칙은 스와이프와 동일하다(§2.3).
   Future<SpotDetail> _fetchDetail() async {
     try {
-      return await _repository.fetchSpotDetail(contentId);
+      // 목록이 적어 둔 코드를 쓴다. 없으면(딥링크 등) repository가 기본값을 채우고,
+      // 그때는 운영정보 섹션만 비고 본문은 정상이다.
+      return await _repository.fetchSpotDetail(
+        contentId,
+        categoryCode: ref.read(spotCategoryCodesProvider)[contentId],
+      );
     } catch (error) {
       // 축제가 종료돼 서버에서 삭제된 경우(SPEC-0007 AC-43). 이 화면은 오류 상태를
       // 그대로 그리지만(사용자가 직접 연 화면이라 조용히 넘기면 더 혼란스럽다),
