@@ -9,6 +9,7 @@ import '../model/congestion_level.dart';
 import '../model/congestion_overlay.dart';
 import '../model/congestion_palette.dart';
 import '../model/map_marker.dart';
+import '../model/marker_appearance.dart';
 import 'map_marker_icons.dart';
 
 /// 지도 위에 마커와 폴리곤을 그리고 지운다.
@@ -92,6 +93,15 @@ class MapOverlayPainter {
     final int token = ++_markerDrawToken;
     final LabelController layer = _markerLayer;
 
+    // **이번에 새로 보이게 된 마커**를 갱신 전에 구한다(R9·R10). 풀 인덱스로는 알 수
+    // 없다 — `Poi`를 지우지 않고 재사용하므로 같은 슬롯에 다른 장소가 들어온다
+    // (설계 §4.2). 안정적인 식별자로 비교해야 숨겼다 다시 보이는 것도 신규로 잡힌다
+    // (AC R10-2).
+    final Set<String> newcomerKeys = MarkerAppearance.newcomers(
+      previous: _visibleMarkers,
+      next: markers,
+    ).map(MarkerAppearance.keyOf).toSet();
+
     for (int i = 0; i < markers.length; i++) {
       if (token != _markerDrawToken) return;
 
@@ -108,22 +118,29 @@ class MapOverlayPainter {
       // 실패하면 SDK가 `Error`를 던지는데, 놓치면 앱이 통째로 죽는다.
       try {
         final KImage icon = await _markerIcon(marker, color);
+        final bool isNewcomer = newcomerKeys.contains(
+          MarkerAppearance.keyOf(marker),
+        );
 
+        final Poi poi;
         if (i < _markers.length) {
-          final Poi poi = _markers[i];
+          poi = _markers[i];
           await poi.changeStyles(PoiStyle(icon: icon));
           await poi.move(LatLng(marker.latitude, marker.longitude));
+          // **탭 콜백은 스타일 교체와 무관하게 갈아 끼운다**(R12) — 아래 등장 연출은
+          // 크기만 건드리므로 연출 중에도 탭이 살아 있다(설계 §4.5).
           poi.onClick = () => onMarkerTap(marker);
           await poi.show();
         } else {
-          _markers.add(
-            await layer.addPoi(
-              LatLng(marker.latitude, marker.longitude),
-              style: PoiStyle(icon: icon),
-              onClick: () => onMarkerTap(marker),
-            ),
+          poi = await layer.addPoi(
+            LatLng(marker.latitude, marker.longitude),
+            style: PoiStyle(icon: icon),
+            onClick: () => onMarkerTap(marker),
           );
+          _markers.add(poi);
         }
+
+        if (isNewcomer) await _playAppearance(poi, token);
       } on Object catch (error) {
         if (kDebugMode) {
           debugPrint('[Map] 마커 갱신 실패(${marker.name}): $error');
@@ -140,12 +157,76 @@ class MapOverlayPainter {
       }
     }
 
+    // **다음 갱신의 "이전 상태"가 된다.** 숨긴 것은 빼고 실제로 보이는 것만 남긴다 —
+    // 숨긴 마커를 들고 있으면 그것이 다시 나타날 때 신규로 잡히지 않는다(AC R10-2).
+    //
+    // 취소된 그리기는 이 자리에 닿지 못하므로(위 `return`) 이전 상태가 덮어써지지
+    // 않는다 — 중간까지 그리다 만 목록을 "보이던 것"으로 기록하면 다음 갱신의
+    // 신규 판정이 어긋난다.
+    if (token == _markerDrawToken) {
+      _visibleMarkers = List<MapMarker>.of(markers);
+    }
+
     if (kDebugMode) {
       debugPrint('[Map] 마커 ${markers.length}개 표시 (풀 ${_markers.length}개)');
     }
 
     // 클러스터는 그리지 않는다 — 서버가 필드를 제거했다(2026-08-10).
     // 저줌에서 마커가 몰리는 문제는 격자 솎아내기가 맡는다.
+  }
+
+  /// 지금 지도에 **실제로 보이는** 마커. 다음 갱신에서 신규 등장을 가리는 기준이다
+  /// (설계 §4.2). 숨긴 것은 들어 있지 않다.
+  List<MapMarker> _visibleMarkers = <MapMarker>[];
+
+  /// 새로 나타난 마커를 작게 시작해 제 크기로 키운다(R9).
+  ///
+  /// ## SDK가 주는 크기 애니메이션을 쓴다
+  ///
+  /// `Poi.scale(x, y, millis)`는 네이티브가 보간해 주는 애니메이션이다(설계 §4.1의
+  /// 1번 경로). 크기가 다른 비트맵을 여러 장 만들어 갈아 끼우는 2번 경로를 쓰지
+  /// 않으므로 **아이콘 캐시가 프레임 수만큼 늘어나는 비용이 없다** — 아이콘은 그대로
+  /// 한 장이고 변형만 네이티브가 건다.
+  ///
+  /// **iOS는 이 메소드가 없다**(1.2.6 기준: Android만 `scalePoi`를 구현하고 iOS는
+  /// `FlutterMethodNotImplemented`를 돌려준다). 그때는 `MissingPluginException`이
+  /// 올라오는데, 잡아서 **최종 크기로 확정한다** — 연출 없이 제 크기로 나타나는 것이
+  /// 설계 §4.4가 정한 안전한 기본값이다. 마커가 작은 채로 남는 것보다 낫다.
+  ///
+  /// [token]이 바뀌면(새 갱신) 연출을 중단하되 **크기는 1.0으로 되돌린다**(R11,
+  /// 설계 §4.3) — 중간 배율로 멈추면 그 마커만 작게 남는다.
+  Future<void> _playAppearance(Poi poi, int token) async {
+    try {
+      // 작게 시작한다. 여기에는 시간을 주지 않는다 — 즉시 줄여 놓고 커지는 것만
+      // 보여야 "작게 시작해 커진다"로 읽힌다.
+      await poi.scale(
+        MarkerAppearance.startScale,
+        MarkerAppearance.startScale,
+      );
+      if (token != _markerDrawToken) {
+        await _settleScale(poi);
+        return;
+      }
+
+      // 제 크기까지 네이티브가 보간한다. **끝 값은 반드시 1.0이어야 한다**(R11) —
+      // 연출이 끝난 마커의 크기가 연출 없는 마커와 같아야 한다.
+      await poi.scale(1, 1, MarkerAppearance.durationMillis.toDouble());
+      // 연출은 있으면 좋은 것이지 마커 표시의 조건이 아니다(R9 > R11·R12 아님,
+      // 설계 §4.1) — 실패하면 조용히 제 크기로 확정하고 지도는 계속 돌아간다.
+    } on Object catch (error) {
+      if (kDebugMode) debugPrint('[Map] 마커 등장 연출 생략: $error');
+      await _settleScale(poi);
+    }
+  }
+
+  /// 마커를 최종 크기로 확정한다. 연출이 취소·실패한 모든 경로가 여기를 지난다 —
+  /// 중간 배율로 멈추는 경로가 없어야 R11이 성립한다(설계 §4.4).
+  Future<void> _settleScale(Poi poi) async {
+    try {
+      await poi.scale(1, 1);
+    } on Object {
+      // 크기 조작 자체가 없는 플랫폼(iOS)이면 애초에 줄어들지도 않았다 — 할 일이 없다.
+    }
   }
 
   /// 실시간 내 위치 점. **마커 풀과 따로 둔다.**
@@ -385,6 +466,9 @@ class MapOverlayPainter {
   Future<void> _clearMarkers() async {
     final List<Poi> targets = List<Poi>.of(_markers);
     _markers.clear();
+    // 보이던 목록도 함께 비운다 — 남겨 두면 다시 그릴 때 그 마커들이 신규로 잡히지
+    // 않아 등장 연출이 빠진다.
+    _visibleMarkers = <MapMarker>[];
 
     for (final Poi poi in targets) {
       try {

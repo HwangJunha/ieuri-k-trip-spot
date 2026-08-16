@@ -16,6 +16,8 @@ import '../model/retry_exhausted.dart';
 import '../../../common/category/spot_category.dart';
 import '../../../common/category/spot_category_selection.dart';
 import '../model/spot_reaction.dart';
+import '../model/swipe_card_metrics.dart';
+import '../model/swipe_drag.dart';
 import '../model/swipe_queue.dart';
 import '../model/tourist_spot.dart';
 import '../provider/spot_detail_providers.dart';
@@ -46,31 +48,78 @@ class DiscoverSwipeView extends ConsumerWidget {
       swipeControllerProvider(selection),
     );
 
-    return Column(
+    final Widget body = locationBlocked
+        ? const _LocationBlocked()
+        : _QueueBody(selection: selection, queue: queue);
+
+    // **카테고리 바가 사진 위에 겹친다**(R14, 사용자 결정 2026-08-17). 예전에는
+    // `Column`으로 카드 위에 쌓여 그만큼 사진을 밀어냈는데, 전체화면화는 사진 면적을
+    // 최대로 두는 쪽을 택했다.
+    //
+    // 카드가 화면 상단부터 시작하므로 카테고리 바는 `Stack`으로 얹는다 — 여기서
+    // 자리를 차지하면 카드 높이가 그만큼 줄어 AC R1-2를 만족할 수 없다.
+    return Stack(
       children: <Widget>[
-        const SizedBox(height: 8),
-        // 스와이프의 선택 상태는 세션에 속하는 keepAlive provider다(탭을
-        // 옮겼다 와도 유지된다, AC12.3).
-        SpotCategoryBar(
-          available:
-              ref.watch(availableSpotCategoriesProvider).value ??
-              const <SpotCategory>[],
-          selected: selected,
-          onToggle: (SpotCategory next) =>
-              ref.read(selectedSpotCategoryProvider.notifier).toggle(next),
-          onSelectAll: () =>
-              ref.read(selectedSpotCategoryProvider.notifier).selectAll(),
-        ),
-        const SizedBox(height: 8),
-        Expanded(
-          child: locationBlocked
-              ? const _LocationBlocked()
-              : _QueueBody(selection: selection, queue: queue),
+        Positioned.fill(child: body),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: _OverlayControls(
+            child: SpotCategoryBar(
+              // 스와이프의 선택 상태는 세션에 속하는 keepAlive provider다(탭을
+              // 옮겼다 와도 유지된다, AC12.3).
+              available:
+                  ref.watch(availableSpotCategoriesProvider).value ??
+                  const <SpotCategory>[],
+              selected: selected,
+              onToggle: (SpotCategory next) =>
+                  ref.read(selectedSpotCategoryProvider.notifier).toggle(next),
+              onSelectAll: () =>
+                  ref.read(selectedSpotCategoryProvider.notifier).selectAll(),
+            ),
+          ),
         ),
       ],
     );
   }
 }
+
+/// 겹쳐 놓인 카테고리 바의 배경. **가독성 보조는 R14의 일부다.**
+///
+/// 44x44 원형 아이콘이 가로로 늘어선 형태라 밝은 사진 위에서 특히 취약하다
+/// (설계 §2.5). 위에서 아래로 옅어지는 스크림을 깔아 아이콘이 사진에 묻히지 않게
+/// 한다 — 아이콘마다 배경을 다는 대신 한 겹으로 끝낸다.
+class _OverlayControls extends StatelessWidget {
+  const _OverlayControls({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    // 앱바가 투명하게 겹쳐 있으므로(→[DiscoverScreen]) 그 아래로 내려 앉힌다 —
+    // 상태바 높이와 앱바 높이를 더한 만큼이 앱바가 실제로 덮는 영역이다.
+    final double appBarInset =
+        MediaQuery.of(context).viewPadding.top + kToolbarHeight;
+
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: <Color>[Colors.black54, Colors.transparent],
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.only(top: appBarInset + 8, bottom: 16),
+        child: child,
+      ),
+    );
+  }
+}
+
+/// 겹쳐 놓인 카테고리 바가 차지하는 높이. 카드 위 스크림을 그 높이에 맞춘다.
+const double _overlayControlsHeight = 68;
 
 /// 위치 영구거부 상태: SPEC-0001의 [PermissionBlockedNotice]를 재사용해 설정 이동
 /// 경로를 노출한다(중복 구현 없음).
@@ -262,12 +311,6 @@ class _CardStackState extends ConsumerState<_CardStack> {
   /// 현재 수평 드래그 변위(px, 오른쪽 양수).
   double _dragX = 0;
 
-  /// 확정 임계값: 카드 폭의 28%(spec §3 시작값).
-  static const double _confirmFraction = 0.28;
-
-  /// fling 확정 속도 임계(px/s).
-  static const double _flingVelocity = 800;
-
   void _onReaction(SpotReaction reaction) {
     ref
         .read(swipeControllerProvider(widget.selection).notifier)
@@ -306,45 +349,49 @@ class _CardStackState extends ConsumerState<_CardStack> {
     final TouristSpot top = cards.first;
     final TouristSpot? next = cards.length > 1 ? cards[1] : null;
 
+    // 하단 인셋은 기기가 정한다 — 고정 픽셀값은 기기별로 어긋난다(설계 §2.2).
+    final MediaQueryData media = MediaQuery.of(context);
+
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         final double width = constraints.maxWidth;
-        // 드래그 강도에 따라 다음 카드가 0.92 → 1.0으로 스케일업(§3).
-        final double progress = width == 0
-            ? 0
-            : (_dragX.abs() / (width * _confirmFraction)).clamp(0.0, 1.0);
-        final double nextScale = 0.92 + 0.08 * progress;
+        final SwipeCardMetrics metrics = SwipeCardMetrics.fromScreen(
+          screenWidth: width,
+          screenHeight: constraints.maxHeight,
+          // 카드 스택은 이미 하단 탭 바 위 영역만 받는다 — 여기서 또 빼면 두 번
+          // 빼는 셈이 된다. 안전 영역은 [SwipeCardMetrics]가 감당한다.
+          bottomNavHeight: 0,
+          bottomViewPadding: media.viewPadding.bottom,
+          topViewPadding: media.viewPadding.top,
+          overlayControlsHeight: _overlayControlsHeight,
+        );
 
-        return Padding(
+        // 드래그 강도에 따라 다음 카드가 0.92 → 1.0으로 스케일업(§3).
+        final double nextScale = SwipeDrag.nextCardScale(_dragX, width);
+
+        return Stack(
           key: const Key('discover_card_stack'),
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-          child: Stack(
-            children: <Widget>[
-              if (next != null)
-                Positioned.fill(
-                  child: Transform.scale(
-                    scale: nextScale,
-                    child: SwipeCard(
-                      key: ValueKey<String>(next.id),
-                      spot: next,
-                    ),
-                  ),
-                ),
+          children: <Widget>[
+            if (next != null)
               Positioned.fill(
-                child: _DraggableTop(
-                  key: ValueKey<String>(top.id),
-                  spot: top,
-                  width: width,
-                  dragX: _dragX,
-                  confirmFraction: _confirmFraction,
-                  flingVelocity: _flingVelocity,
-                  onDragUpdate: (double dx) => setState(() => _dragX = dx),
-                  onReaction: _onReaction,
-                  onTap: () => _openDetail(top),
+                child: Transform.scale(
+                  scale: nextScale,
+                  child: SwipeCard(key: ValueKey<String>(next.id), spot: next),
                 ),
               ),
-            ],
-          ),
+            Positioned.fill(
+              child: _DraggableTop(
+                key: ValueKey<String>(top.id),
+                spot: top,
+                width: width,
+                dragX: _dragX,
+                metrics: metrics,
+                onDragUpdate: (double dx) => setState(() => _dragX = dx),
+                onReaction: _onReaction,
+                onTap: () => _openDetail(top),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -359,8 +406,7 @@ class _DraggableTop extends StatelessWidget {
     required this.spot,
     required this.width,
     required this.dragX,
-    required this.confirmFraction,
-    required this.flingVelocity,
+    required this.metrics,
     required this.onDragUpdate,
     required this.onReaction,
     required this.onTap,
@@ -369,8 +415,7 @@ class _DraggableTop extends StatelessWidget {
   final TouristSpot spot;
   final double width;
   final double dragX;
-  final double confirmFraction;
-  final double flingVelocity;
+  final SwipeCardMetrics metrics;
   final ValueChanged<double> onDragUpdate;
   final ValueChanged<SpotReaction> onReaction;
 
@@ -380,22 +425,21 @@ class _DraggableTop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 변위 비례 회전(최대 ±0.12rad). 카드 폭 절반에서 최대치.
-    final double angle = width == 0
-        ? 0
-        : (dragX / (width / 2)).clamp(-1.0, 1.0) * 0.12;
+    final double angle = SwipeDrag.tilt(dragX, width);
 
     return GestureDetector(
       onTap: onTap,
       onHorizontalDragUpdate: (DragUpdateDetails d) =>
           onDragUpdate(dragX + d.delta.dx),
       onHorizontalDragEnd: (DragEndDetails d) {
-        final double velocity = d.primaryVelocity ?? 0;
-        final bool passedThreshold =
-            dragX.abs() >= width * confirmFraction ||
-            velocity.abs() >= flingVelocity;
-        if (passedThreshold) {
-          final bool like = dragX > 0 || velocity > 0;
-          onReaction(like ? SpotReaction.like : SpotReaction.dislike);
+        // 판정은 순수 함수가 한다 — 같은 계산이 그대로 단위 테스트가 된다(설계 §2.4).
+        final SpotReaction? reaction = SwipeDrag.resolve(
+          dragX: dragX,
+          width: width,
+          velocity: d.primaryVelocity ?? 0,
+        );
+        if (reaction != null) {
+          onReaction(reaction);
         } else {
           onDragUpdate(0); // 스프링백.
         }
@@ -407,7 +451,7 @@ class _DraggableTop extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: <Widget>[
-              SwipeCard(spot: spot),
+              SwipeCard(spot: spot, metrics: metrics),
               DragFeedbackOverlay(dragX: dragX, width: width),
             ],
           ),

@@ -25,8 +25,22 @@ class DiscoverScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     return Scaffold(
+      // **앱바가 사진 위에 겹친다**(SPEC-0025 R14, 사용자 결정 2026-08-17).
+      //
+      // `Scaffold.appBar`는 body를 그만큼 아래로 밀기 때문에, 그 구조 그대로는 카드가
+      // 화면 상단부터 시작할 수 없다(설계 §2.5). `extendBodyBehindAppBar`로 body를
+      // 앱바 뒤까지 넓히고 앱바 자체를 투명하게 둔다 — 카드 높이에서 앱바를 빼지
+      // 않으려면 이 방법이 필요하다(AC R1-2).
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(l10n.navDiscover),
+        // 사진 위에 얹히므로 배경을 지운다. 가독성은 카드 상단 스크림이 받친다.
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        // 사진이 밝든 어둡든 흰 글자가 읽히도록 고정한다 — 테마 색을 그대로 두면
+        // 밝은 사진 위에서 제목이 사라진다.
+        foregroundColor: Colors.white,
         actions: <Widget>[
           // **DM 재진입점이 여기 남았다**(SPEC-0021). 피드 항목의 DM 아이콘이
           // 사라지면서 이미 나눈 대화로 돌아갈 길이 이것뿐이다.
@@ -40,7 +54,11 @@ class DiscoverScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: const SafeArea(child: DiscoverSwipeView()),
+      // **`SafeArea`를 두지 않는다.** 상단을 띄우면 카드가 상태바 아래에서 시작해
+      // 전체화면이 아니게 된다(AC R1-2). 안전 영역은 카드 위에 겹친 요소들이
+      // 각자 감당한다 — 카테고리 바는 스크림 안에서, 하단 정보는 기기 인셋 기준
+      // 여백으로(설계 §2.2).
+      body: const DiscoverSwipeView(),
     );
   }
 }
