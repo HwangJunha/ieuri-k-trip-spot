@@ -141,9 +141,26 @@ component ─▶ provider, model
 
 **Don't write or run tests while developing.** Requirements churn, and tests written alongside get
 rewritten or thrown away twice over. `flutter analyze` is the build check during development.
-**Done means the user said "작업 완료" — not your judgment.** Write tests and run the full suite
-then. One exception: if your change makes an existing test false, fix it on the spot — that is
-cleaning up what you broke, not writing new tests.
+**Done means the user said "작업 완료" — not your judgment.** One exception: if your change makes
+an existing test false, fix it on the spot — that is cleaning up what you broke, not writing new
+tests.
+
+**Write tests and run the full suite exactly once, right before opening the PR.** Not after each
+file, not to check your work as you go, not "one more time to be sure" — `flutter analyze` is the
+during-development check and takes ~4s. The full suite takes ~1m45s, so running it five times
+across a task costs more than the task. If that single run fails, fix and re-run **only what
+failed** (`flutter test <path>`), then run the whole suite once more at the end — not per fix.
+
+**Keep the suite cheap by writing fewer, bigger test files.** `flutter test` spawns an isolated VM
+per file, so **file count — not test count — sets the runtime.** Measured on this repo: 215 view
+tests in 21 files take 33s while 944 tests in 115 files take 37s, and ten small files cost about
+the same as one 69-test file. Put every test for one subject in one file and separate concerns
+with `group()`; splitting `swipe_controller_test` into consume/radius/retry-cap files buys nothing
+and costs ~0.6s each.
+
+Prefer the cheapest layer that can prove the behavior. A widget test that only checks a computed
+string or a request payload belongs in `model`/`provider` — the same assertion at a fraction of
+the cost.
 
 One behavior per test. Minimal mocks. Arrange–Act–Assert.
 

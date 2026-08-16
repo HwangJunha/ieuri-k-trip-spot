@@ -1,23 +1,31 @@
+// 스와이프 추천 컨트롤러의 provider 테스트를 한 파일에 모았다(consume·radius·
+// retry cap 포함).
+//
+// **파일을 더 쪼개지 않는 이유는 속도다.** flutter test는 파일마다 격리된 VM을 띄우므로
+// 파일 수가 곧 실행 시간이다 — 가벼운 파일 10개가 무거운 파일 1개와 맞먹는다. 같은
+// 대상을 다루는 테스트는 group으로 나누면 충분하다(CLAUDE.md §8).
+
+import '../spot_test_doubles.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ieuri_k_trip_spot/common/category/spot_category.dart';
+import 'package:ieuri_k_trip_spot/common/category/spot_category_selection.dart';
 import 'package:ieuri_k_trip_spot/common/localization/app_language.dart';
 import 'package:ieuri_k_trip_spot/common/localization/locale_controller.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
 import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
-import 'package:ieuri_k_trip_spot/common/category/spot_category.dart';
-import 'package:ieuri_k_trip_spot/common/category/spot_category_selection.dart';
+import 'package:ieuri_k_trip_spot/common/storage/search_radius_controller.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/retry_exhausted.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_reaction.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/swipe_queue.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/tourist_spot.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/provider/retry_counting.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/spot_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/swipe_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../spot_test_doubles.dart';
-
-/// 스와이프 세션이 필요로 하는 최소 컨테이너. SwipeController가 언어 전환 시
-/// 세션을 다시 만들려고 locale을 watch하므로(SPEC-0007 §4.5) 저장소도 덮어쓴다.
+// ─── swipe_controller ──────────────────────────────────────────
 Future<ProviderContainer> _container(FakeSpotRepository repo) async {
   SharedPreferences.setMockInitialValues(<String, Object>{});
   final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -32,7 +40,7 @@ Future<ProviderContainer> _container(FakeSpotRepository repo) async {
   return container;
 }
 
-/// [category]로 SwipeController를 로드해 첫 큐를 반환한다.
+
 Future<(ProviderContainer, SwipeQueue)> _load(
   FakeSpotRepository repo, {
   SpotCategorySelection? selection,
@@ -53,7 +61,146 @@ Future<(ProviderContainer, SwipeQueue)> _load(
 List<TouristSpot> _spots(int n) =>
     List<TouristSpot>.generate(n, (int i) => swipeSpot('s$i'));
 
+// ─── swipe_controller (tail) ───────────────────────────────────
+/// 첫 `reactToSpot`은 인증 실패로 끝나고 재시도에서 성공하는 저장소.
+///
+/// 실제로는 링크 계층이 갱신 후 원 요청을 재시도하므로 provider는 한 번만 호출하고
+/// 성공을 받는다(SPEC-0005 §4.1). 여기서는 그 재시도를 저장소 수준에서 재현해,
+/// "인증 실패로 시작한 반응이 결국 기록된다"는 AC-43의 관찰 가능한 결과를 만든다.
+class _RetryOnceSpotRepository extends FakeSpotRepository {
+  _RetryOnceSpotRepository({required super.feed}) : super(pageSize: 5);
+
+  bool _refreshed = false;
+
+  @override
+  Future<void> reactToSpot(String spotId, SpotReaction reaction) async {
+    if (!_refreshed) {
+      // 첫 시도는 인증 실패 — 링크가 갱신하고 같은 요청을 다시 태운다.
+      _refreshed = true;
+      return reactToSpot(spotId, reaction);
+    }
+    return super.reactToSpot(spotId, reaction);
+  }
+}
+
+// ─── swipe_consume ─────────────────────────────────────────────
+Future<(ProviderContainer, SwipeQueue)> _consumeLoad(int n) async {
+  final repo = FakeSpotRepository(
+    feed: List<TouristSpot>.generate(n, (int i) => swipeSpot('s$i')),
+    pageSize: 100,
+  );
+  // SwipeController가 언어 전환 시 세션을 다시 만들려고 locale을 watch하므로
+  // (SPEC-0007 §4.5) 그 저장소도 덮어써야 컨테이너가 선다.
+  SharedPreferences.setMockInitialValues(<String, Object>{});
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  final container = ProviderContainer(
+    overrides: [
+      spotRepositoryProvider.overrideWithValue(repo),
+      locationServiceProvider.overrideWithValue(FakeLocationService()),
+      sharedPreferencesProvider.overrideWithValue(prefs),
+    ],
+  );
+  addTearDown(container.dispose);
+  container.listen(
+    swipeControllerProvider(noCategories),
+    (_, _) {},
+    fireImmediately: true,
+  );
+  final SwipeQueue queue = await container.read(
+    swipeControllerProvider(noCategories).future,
+  );
+  return (container, queue);
+}
+
+List<String> _consumeIds(ProviderContainer container) => container
+    .read(swipeControllerProvider(noCategories))
+    .value!
+    .cards
+    .map((TouristSpot s) => s.id)
+    .toList();
+
+// ─── swipe_radius ──────────────────────────────────────────────
+Future<ProviderContainer> _radiusContainer(
+  FakeSpotRepository repo, {
+  double? radiusKm,
+}) async {
+  SharedPreferences.setMockInitialValues(
+    radiusKm == null
+        ? <String, Object>{}
+        : <String, Object>{'search_radius_km': radiusKm},
+  );
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  final ProviderContainer container = ProviderContainer(
+    overrides: [
+      spotRepositoryProvider.overrideWithValue(repo),
+      locationServiceProvider.overrideWithValue(FakeLocationService()),
+      sharedPreferencesProvider.overrideWithValue(prefs),
+    ],
+  );
+  addTearDown(container.dispose);
+  return container;
+}
+
+Future<void> _radiusLoad(ProviderContainer container) async {
+  container.listen(
+    swipeControllerProvider(noCategories),
+    (_, _) {},
+    fireImmediately: true,
+  );
+  await container.read(swipeControllerProvider(noCategories).future);
+}
+
+// ─── swipe_retry_cap ───────────────────────────────────────────
+late final SharedPreferences _prefs;
+
+ProviderContainer _capContainer(
+  FakeSpotRepository repo, {
+  SpotCategorySelection? selection,
+}) {
+  final container = ProviderContainer(
+    overrides: [
+      spotRepositoryProvider.overrideWithValue(repo),
+      locationServiceProvider.overrideWithValue(FakeLocationService()),
+      sharedPreferencesProvider.overrideWithValue(_prefs),
+    ],
+  );
+  addTearDown(container.dispose);
+  container.listen(
+    swipeControllerProvider(selection ?? noCategories),
+    (_, _) {},
+    fireImmediately: true,
+  );
+  return container;
+}
+
+
+
+
+
+Future<void> _capSettle(
+  ProviderContainer container, {
+  SpotCategorySelection? selection,
+}) async {
+  for (int i = 0; i < 5; i++) {
+    try {
+      await container.read(
+        swipeControllerProvider(selection ?? noCategories).future,
+      );
+      return;
+    } on SpotFailure {
+      await Future<void>.delayed(_capSettleStep);
+    } on RetryExhausted {
+      await Future<void>.delayed(_capSettleStep);
+    }
+  }
+}
+
+
+const Duration _capSettleStep = Duration(milliseconds: 20);
+
 void main() {
+  // ─── swipe_controller ────────────────────────────────────────
+
   // SwipeController가 언어 전환을 감지하려고 locale을 watch하고, LocaleController는
   // 저장값이 없을 때 기기 로케일을 읽는다(SPEC-0007 §4.5).
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -487,25 +634,314 @@ void main() {
       expect(repo.requestedHasOrigin, <bool?>[true, false]);
     });
   });
-}
 
-/// 첫 `reactToSpot`은 인증 실패로 끝나고 재시도에서 성공하는 저장소.
-///
-/// 실제로는 링크 계층이 갱신 후 원 요청을 재시도하므로 provider는 한 번만 호출하고
-/// 성공을 받는다(SPEC-0005 §4.1). 여기서는 그 재시도를 저장소 수준에서 재현해,
-/// "인증 실패로 시작한 반응이 결국 기록된다"는 AC-43의 관찰 가능한 결과를 만든다.
-class _RetryOnceSpotRepository extends FakeSpotRepository {
-  _RetryOnceSpotRepository({required super.feed}) : super(pageSize: 5);
+  // ─── swipe_consume ───────────────────────────────────────────
 
-  bool _refreshed = false;
+  // locale watch가 기기 로케일을 읽으므로 바인딩이 필요하다(SPEC-0007 §4.5).
+  TestWidgetsFlutterBinding.ensureInitialized();
 
-  @override
-  Future<void> reactToSpot(String spotId, SpotReaction reaction) async {
-    if (!_refreshed) {
-      // 첫 시도는 인증 실패 — 링크가 갱신하고 같은 요청을 다시 태운다.
-      _refreshed = true;
-      return reactToSpot(spotId, reaction);
+  test('반응한 카드가 스택에서 제거된다 (AC-35·AC-36)', () async {
+    final (container, queue) = await _consumeLoad(3);
+    expect(queue.cards.length, 3);
+
+    container
+        .read(swipeControllerProvider(noCategories).notifier)
+        .consume('s0');
+
+    expect(_consumeIds(container), isNot(contains('s0')));
+    expect(_consumeIds(container), containsAll(<String>['s1', 's2']));
+    expect(_consumeIds(container), hasLength(2));
+  });
+
+  test('맨 위가 아닌 스택 중간 카드도 제거된다 (AC-36)', () async {
+    final (container, _) = await _consumeLoad(3);
+
+    // 맨 위가 아닌 카드를 고른다 — 섞인 뒤라 어느 id가 맨 위인지는 그때그때 다르다.
+    final String notTop = _consumeIds(container)[1];
+    container
+        .read(swipeControllerProvider(noCategories).notifier)
+        .consume(notTop);
+
+    expect(_consumeIds(container), isNot(contains(notTop)));
+    expect(_consumeIds(container), hasLength(2));
+  });
+
+  test('스택에 없는 id는 스택을 변경하지 않는다 (AC-37)', () async {
+    final (container, _) = await _consumeLoad(3);
+    final List<String> before = _consumeIds(container);
+
+    container
+        .read(swipeControllerProvider(noCategories).notifier)
+        .consume('없는-id');
+
+    expect(_consumeIds(container), before);
+  });
+
+  test('복귀 시 다음 카드가 맨 위가 된다 (R12, AC-39)', () async {
+    final (container, _) = await _consumeLoad(3);
+    final List<String> before = _consumeIds(container);
+    final String top = before.first;
+
+    container.read(swipeControllerProvider(noCategories).notifier).consume(top);
+
+    final SwipeQueue after = container
+        .read(swipeControllerProvider(noCategories))
+        .value!;
+    // 소비한 카드가 아니라 그 다음 카드가 맨 위에 온다 — 복귀 순간 전진이 보인다.
+    expect(after.top!.id, before[1]);
+  });
+
+  test('마지막 카드를 소비하면 소진 상태가 된다 (AC-40)', () async {
+    final (container, _) = await _consumeLoad(1);
+
+    container
+        .read(swipeControllerProvider(noCategories).notifier)
+        .consume('s0');
+
+    final SwipeQueue after = container
+        .read(swipeControllerProvider(noCategories))
+        .value!;
+    expect(after.isExhausted, isTrue);
+  });
+
+  // ─── swipe_radius ────────────────────────────────────────────
+
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  // 피드가 비어 있으면 원문 조회 뒤 번역본 보충이 한 번 더 나간다(SPEC-0019).
+  // 반경은 **모든 조회**에 같은 값으로 실려야 한다.
+  test('설정한 반경이 미터로 조회에 실린다', () async {
+    final FakeSpotRepository repo = FakeSpotRepository();
+    final ProviderContainer container = await _radiusContainer(repo, radiusKm: 1);
+
+    await _radiusLoad(container);
+
+    expect(repo.requestedRadiiMeters, everyElement(1000));
+  });
+
+  test('저장한 적 없으면 기본 20km가 실린다', () async {
+    final FakeSpotRepository repo = FakeSpotRepository();
+    final ProviderContainer container = await _radiusContainer(repo);
+
+    await _radiusLoad(container);
+
+    expect(repo.requestedRadiiMeters, everyElement(20000));
+  });
+
+  // 0km는 "현재 위치만"을 뜻하지 **빈 결과**가 아니다(R13 네 번째 기준). 반경 0인
+  // 원을 보내면 아무것도 안 걸리므로 인자를 빼고 서버 기본값·거리순에 맡긴다.
+  test('0km는 반경 인자를 보내지 않는다', () async {
+    final FakeSpotRepository repo = FakeSpotRepository();
+    final ProviderContainer container = await _radiusContainer(repo, radiusKm: 0);
+
+    await _radiusLoad(container);
+
+    expect(repo.requestedRadiiMeters, everyElement(null));
+  });
+
+  // 사용자가 보고한 증상: 반경을 바꿔도 Discover에 새 데이터가 안 들어왔다.
+  // 값을 watch하지 않으면 재빌드 계기가 없어 옛 카드가 그대로 남는다.
+  test('반경을 바꾸면 피드를 다시 받는다', () async {
+    final FakeSpotRepository repo = FakeSpotRepository();
+    final ProviderContainer container = await _radiusContainer(repo, radiusKm: 50);
+    await _radiusLoad(container);
+    expect(repo.requestedRadiiMeters, everyElement(50000));
+
+    await container.read(searchRadiusControllerProvider.notifier).select(1);
+    await container.read(swipeControllerProvider(noCategories).future);
+
+    // 빈 피드라 원문 조회마다 번역본 보충이 뒤따른다(SPEC-0019) — 요지는 반경이
+    // 바뀐 뒤의 조회가 **새 반경**으로 나갔는지다.
+    expect(repo.requestedRadiiMeters.first, 50000);
+    expect(repo.requestedRadiiMeters.last, 1000, reason: '새 반경으로 다시 조회해야 한다');
+  });
+
+  test('반경 단위 변환은 km→m다', () {
+    expect(radiusMetersOf(1), 1000);
+    expect(radiusMetersOf(20), 20000);
+    expect(radiusMetersOf(100), 100000);
+    expect(radiusMetersOf(0), isNull);
+  });
+
+  // ─── swipe_retry_cap ─────────────────────────────────────────
+
+  // locale watch가 기기 로케일을 읽으므로 바인딩이 필요하다(SPEC-0007 §4.5).
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    _prefs = await SharedPreferences.getInstance();
+  });
+
+  // 검증 대상은 재시도 횟수지 간격이 아니다. 실제 400ms를 재우면 이 파일 하나가
+  // 스위트 전체 시간을 지배한다.
+  setUp(() => debugRetryDelay = const Duration(milliseconds: 1));
+  tearDown(() => debugRetryDelay = null);
+
+  test('실패하면 자동 재시도가 정확히 1회 더 발생하고 총 2회에서 멈춘다 (AC-1·AC-2)', () async {
+    final repo = FakeSpotRepository(pageFailure: SpotFailure.network);
+    final container = _capContainer(repo);
+
+    await _capSettle(container);
+
+    expect(repo.spotPageCallCount, 2);
+  });
+
+  test('최초 조회가 성공하면 재시도가 발생하지 않는다 (AC-3)', () async {
+    final repo = FakeSpotRepository(
+      feed: <TouristSpot>[swipeSpot('s1')],
+      pageSize: 5,
+    );
+    final container = _capContainer(repo);
+
+    await container.read(swipeControllerProvider(noCategories).future);
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+
+    // 원문 1건이 첫 페이지에서 끝나 번역본 보충이 뒤따르므로 2회다(SPEC-0019).
+    // **재시도가 없었다는 것**이 이 테스트의 요지 — 재시도라면 같은 원문 조회가
+    // 두 번 나가지만, 여기서는 원문 1회 + 번역본 1회로 형태가 다르다.
+    expect(repo.requestedHasOrigin, <bool?>[true, false]);
+  });
+
+  test('상한 소진 후 무효화가 반복돼도 repository 호출이 늘지 않는다 (AC-11·AC-12)', () async {
+    final repo = FakeSpotRepository(pageFailure: SpotFailure.network);
+    final container = _capContainer(repo);
+
+    await _capSettle(container);
+    final int afterExhaustion = repo.spotPageCallCount;
+
+    // 폭주의 경로였던 재빌드를 반복해도 조회가 늘지 않아야 한다.
+    for (int i = 0; i < 3; i++) {
+      container.invalidate(swipeControllerProvider(noCategories));
+      await _capSettle(container);
     }
-    return super.reactToSpot(spotId, reaction);
-  }
+
+    expect(repo.spotPageCallCount, afterExhaustion);
+  });
+
+  test('상한 도달 상태는 일반 오류와 구분되는 값으로 노출된다 (AC-5·AC-6)', () async {
+    final repo = FakeSpotRepository(pageFailure: SpotFailure.network);
+    final container = _capContainer(repo);
+
+    await _capSettle(container);
+
+    final AsyncValue<SwipeQueue> state = container.read(
+      swipeControllerProvider(noCategories),
+    );
+    expect(state.hasError, isTrue);
+    expect(state.error, isA<RetryExhausted>());
+  });
+
+  test('상한 소진 상태에서 명시적 재시도는 조회를 발생시킨다 (AC-13)', () async {
+    final repo = FakeSpotRepository(pageFailure: SpotFailure.network);
+    final container = _capContainer(repo);
+
+    await _capSettle(container);
+    final int afterExhaustion = repo.spotPageCallCount;
+
+    await container
+        .read(swipeControllerProvider(noCategories).notifier)
+        .reload();
+
+    expect(repo.spotPageCallCount, greaterThan(afterExhaustion));
+  });
+
+  test('명시적 재시도가 성공하면 카운터가 초기화되어 다시 자동 재시도가 가능해진다 (AC-9)', () async {
+    // 앞의 2회(최초+자동재시도)만 실패시키고 이후는 성공시킨다.
+    final repo = FakeSpotRepository(
+      feed: <TouristSpot>[swipeSpot('s1')],
+      pageSize: 5,
+      pageFailure: SpotFailure.network,
+      failPageTimes: 2,
+    );
+    final container = _capContainer(repo);
+
+    await _capSettle(container);
+    expect(
+      container.read(swipeControllerProvider(noCategories)).error,
+      isA<RetryExhausted>(),
+    );
+
+    // 명시적 재시도 → 성공.
+    await container
+        .read(swipeControllerProvider(noCategories).notifier)
+        .reload();
+    expect(
+      container.read(swipeControllerProvider(noCategories)).hasValue,
+      isTrue,
+    );
+
+    // 카운터가 초기화됐으므로 소진 상태가 아니다 — 이후 실패에 다시 자동 재시도가 붙는다.
+    expect(
+      container.read(swipeControllerProvider(noCategories)).error,
+      isNot(isA<RetryExhausted>()),
+    );
+  });
+
+  test('명시적 재시도가 실패하면 종료 상태가 유지된다 (AC-10)', () async {
+    final repo = FakeSpotRepository(pageFailure: SpotFailure.network);
+    final container = _capContainer(repo);
+
+    await _capSettle(container);
+    await container
+        .read(swipeControllerProvider(noCategories).notifier)
+        .reload();
+
+    expect(
+      container.read(swipeControllerProvider(noCategories)).error,
+      isA<RetryExhausted>(),
+    );
+  });
+
+  test('인증 실패는 시도 횟수에 계상되지 않아 자동 재시도가 붙지 않는다 (AC-14·AC-15)', () async {
+    final repo = FakeSpotRepository(pageFailure: SpotFailure.unauthenticated);
+    final container = _capContainer(repo);
+
+    await _capSettle(container);
+
+    // 최초 1회만 호출되고, 자동 재시도는 일어나지 않는다 — SPEC-0005 갱신 경로 소관이다.
+    expect(repo.spotPageCallCount, 1);
+    // 종료 상태로 승격되지도 않는다(계상되지 않았으므로 상한을 쓰지 않았다).
+    expect(
+      container.read(swipeControllerProvider(noCategories)).error,
+      isNot(isA<RetryExhausted>()),
+    );
+  });
+
+  test('인증 외 실패는 계상되어 상한에 도달한다 (AC-16)', () async {
+    final repo = FakeSpotRepository(
+      pageFailure: SpotFailure.upstreamUnavailable,
+    );
+    final container = _capContainer(repo);
+
+    await _capSettle(container);
+
+    expect(repo.spotPageCallCount, 2);
+    expect(
+      container.read(swipeControllerProvider(noCategories)).error,
+      isA<RetryExhausted>(),
+    );
+  });
+
+  test('카테고리를 바꾸면 상한이 독립적으로 새로 시작된다 (AC-4)', () async {
+    final repo = FakeSpotRepository(pageFailure: SpotFailure.network);
+    final container = _capContainer(repo);
+
+    await _capSettle(container);
+    expect(repo.spotPageCallCount, 2);
+
+    // 다른 카테고리는 자기 상한을 새로 쓴다 — 우회가 아니라 확정된 정상 동작이다.
+    container.listen(
+      swipeControllerProvider(selectionOf(const <SpotCategory>[catLodging])),
+      (_, _) {},
+      fireImmediately: true,
+    );
+    await _capSettle(
+      container,
+      selection: selectionOf(const <SpotCategory>[catLodging]),
+    );
+
+    expect(repo.spotPageCallCount, 4);
+  });
+
 }
