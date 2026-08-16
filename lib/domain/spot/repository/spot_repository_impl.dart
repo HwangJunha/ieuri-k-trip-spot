@@ -39,6 +39,16 @@ class SpotRepositoryImpl implements SpotRepository {
 
   final GraphQLClient _client;
 
+  /// 카테고리를 모른 채 상세를 열 때 `categoryCode`에 채우는 값.
+  ///
+  /// **빈 문자열을 보내면 서버가 예외로 거부하므로** 무엇이든 유효한 코드를 넣어야
+  /// 한다. 틀린 코드에는 서버가 `intro: null`·`infoItems: []`로 답하니 운영정보
+  /// 섹션만 비고 상세 본문은 정상으로 뜬다 — 딥링크처럼 코드를 알 수 없는 진입에서
+  /// 상세를 아예 못 여는 것보다 낫다.
+  ///
+  /// 가장 흔한 분류를 골랐다. 맞으면 운영정보까지 뜨고, 아니어도 손해가 없다.
+  static const String _fallbackCategoryCode = 'TOURIST_SPOT';
+
   // --- Discover 스와이프 피드 (서버) -----------------------------------------
 
   @override
@@ -97,13 +107,24 @@ class SpotRepositoryImpl implements SpotRepository {
   }
 
   @override
-  Future<SpotDetail> fetchSpotDetail(String id) async {
+  Future<SpotDetail> fetchSpotDetail(String id, {String? categoryCode}) async {
     // 언어는 인자로 보내지 않는다 — Accept-Language 헤더로 전달된다(spec §2).
-    // **카테고리 인자는 사라졌다**(SPEC-0020) — intro/infoItems를 서버가 spot 자신의
-    // 카테고리로 해석하므로 호출부가 넘길 값이 없다.
+    //
+    // **카테고리는 서버가 요구한다.** intro/infoItems가 카테고리마다 다른 TourAPI
+    // 응답을 정규화하므로 어떤 카테고리로 읽을지 알아야 한다. 응답의 `category.code`는
+    // 서버가 전 spot에서 null로 주므로 쓸 수 없어, 목록에서 코드를 받은 호출부가 넘긴다.
+    //
+    // 모를 때 빈 문자열을 보내면 서버가 예외로 거부하므로 기본 코드를 채운다. 틀린
+    // 코드에는 `intro: null`·`infoItems: []`로 답하므로 운영정보만 비고 본문은 산다 —
+    // 카테고리를 모른다는 이유로 상세를 못 열게 하지 않는다.
     final Map<String, dynamic> data = await _query(
       documentNodeQuerySpotDetail,
-      Variables$Query$SpotDetail(id: id).toJson(),
+      Variables$Query$SpotDetail(
+        id: id,
+        categoryCode: categoryCode == null || categoryCode.isEmpty
+            ? _fallbackCategoryCode
+            : categoryCode,
+      ).toJson(),
       'spotDetail',
     );
     final Query$SpotDetail$spotDetail result = Query$SpotDetail.fromJson(

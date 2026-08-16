@@ -54,10 +54,15 @@ query AvailableSpotCategories {
 # 생성 타입은 repository 안에서만 쓰이고 도메인 모델(SpotDetail/SpotImage)로 매핑된다
 # (POL-020, AC-32).
 #
-# SPEC-0020: $category 인자가 사라졌다. 예전에는 intro/infoItems가 카테고리를
-# 요구해 호출부가 넘겼으나, 이제 서버가 spot 자신의 카테고리로 해석한다 —
-# 상세를 열 때 카테고리를 알 필요가 없어졌다(라우팅에서도 제거됨).
-query SpotDetail($id: ID!) {
+# **카테고리 인자는 사라지지 않았다.** SPEC-0020이 "서버가 spot 자신의 카테고리로
+# 해석한다"고 보고 인자를 걷어냈으나 서버는 계속 요구하고 있었고, 이름과 타입만
+# `category: SpotCategory!` → `categoryCode: String!`으로 바뀌었다. 커밋된 SDL에도
+# 인자 없이 적혀 있어 codegen이 통과하는 바람에 상세 화면 전체가 검증 오류로 막혀
+# 있었다(MissingFieldArgument).
+#
+# **spotDetail.category.code는 쓸 수 없다** — 서버가 전 spot에서 null을 돌려준다.
+# 그래서 호출부(스와이프·검색·좋아요)가 목록에서 받은 코드를 라우트로 실어 보낸다.
+query SpotDetail($id: ID!, $categoryCode: String!) {
   spotDetail(id: $id) {
     id
     title
@@ -83,7 +88,7 @@ query SpotDetail($id: ID!) {
     likeCount
     # 운영 정보. 카테고리마다 서버가 공통 이름으로 정규화해 주고, 해당 개념이 없는
     # 카테고리에선 필드가 null이다 — 값 있는 행만 렌더한다.
-    intro {
+    intro(categoryCode: $categoryCode) {
       businessHours
       closedDays
       parking
@@ -93,7 +98,11 @@ query SpotDetail($id: ID!) {
       creditCardAccepted
     }
     # 이용안내 항목명/내용 쌍. 비어 있을 수 있다.
-    infoItems {
+    #
+    # **코드가 틀리면 오류가 아니라 빈 값이다** — 서버가 intro는 null, infoItems는
+    # 빈 배열로 준다. 카테고리를 모르고 열어도 상세 본문은 살아 있고 운영정보 섹션만
+    # 비므로, 알 수 없을 때 조회를 막지 않는다.
+    infoItems(categoryCode: $categoryCode) {
       name
       text
     }

@@ -163,6 +163,38 @@ DM이 빌려 쓰던 `feed*` 키 4개를 DM 소유로 옮겼습니다 — `feedUn
 
 스펙의 예상대로 **이미 성립하고 있었습니다.** 직렬화가 처음부터 인용을 제외했고 역직렬화도 알려진 키만 읽습니다. 형식은 한 글자도 바꾸지 않았고, 이관 중에 조용히 깨지지 않도록 실제 `SharedPreferences` 저장소로 확인하는 테스트를 더했습니다 — 기존 캐시 테스트는 메모리 페이크만 쓰고 있어 형식을 전혀 검증하지 않았습니다.
 
+### 범위 밖에서 함께 고친 것 — spotDetail 깨짐
+
+이 스펙과 무관하지만 같은 브랜치에서 고쳤습니다(사용자 요청). 상세 화면이 열리지 않고 있었습니다:
+
+```
+Validation error (MissingFieldArgument@[spotDetail/intro]) : Missing field argument 'categoryCode'
+Validation error (MissingFieldArgument@[spotDetail/infoItems]) : Missing field argument 'categoryCode'
+```
+
+**원인은 SPEC-0020(`fc6f47d`)입니다.** 그 커밋이 "서버가 spot 자신의 카테고리로 해석한다"고 보고 `intro`/`infoItems`의 카테고리 인자를 걷어냈는데, 서버는 계속 요구하고 있었고 이름과 타입만 바뀌었습니다(`category: SpotCategory!` → `categoryCode: String!`). 당시 스냅샷(8월 11일)에도 인자가 남아 있어 근거가 없었습니다.
+
+**codegen이 이것을 잡지 못한 이유**는 커밋된 SDL만 읽기 때문입니다. SDL에도 인자 없이 적혀 있었으니 빌드는 통과하고 런타임에만 터졌습니다. 이 브랜치는 `origin/dev` 최신(`3111e34`)에서 땄고 `spot_operations.graphql`을 건드리지 않았으므로, `dev`를 그대로 받아도 동일하게 재현됩니다.
+
+수정:
+
+- `SpotDetail` 쿼리에 `$categoryCode: String!`을 더하고 `intro`/`infoItems`에 전달합니다. SDL도 서버대로 고쳤습니다
+- **`spotDetail.category.code`로는 채울 수 없습니다** — 서버가 전 spot에서 null을 돌려줍니다(`NullValueInNonNullableField`). 그래서 목록(스와이프·검색·좋아요)이 이미 아는 코드를 `spotCategoryCodes` provider에 적어 두고 상세가 읽습니다
+- **family 키에 넣지 않았습니다.** 카테고리는 같은 spot이면 늘 같아 조회 결과를 가르지 않는데, 키에 넣으면 딥링크 진입(코드 없음)과 목록 진입(코드 있음)이 같은 spot을 두 번 조회합니다
+- 코드를 모르면 repository가 `TOURIST_SPOT`을 채웁니다. **빈 문자열은 서버가 예외로 거부하고, 틀린 코드는 `intro: null`·`infoItems: []`로 조용히 답하기 때문**입니다 — 운영정보 섹션만 비고 상세 본문은 살아납니다
+
+라이브 서버로 확인한 동작(서버가 살아 있는 동안):
+
+| 넘긴 값 | 서버 응답 |
+|---|---|
+| 맞는 코드 | 운영정보 정상 |
+| 틀린 코드 | `intro: null`, `infoItems: []` (오류 아님) |
+| 빈 문자열 | `IllegalArgumentException` |
+
+**전체 오퍼레이션 문서 9개를 라이브 서버에 쏴서 검증했고 수정 후 불일치 0건입니다.** 이 검사를 처음부터 돌렸으면 SPEC-0020 시점에 잡혔을 문제라, 회귀 테스트 2건(`categoryCode`가 실제로 실리는지, 모를 때 빈 문자열이 안 나가는지)을 repository 테스트에 남겼습니다.
+
+남은 것 하나 — 우리 쿼리 원문을 실제 데이터로 끝까지 돌려보는 검증은 서버가 도중에 내려가 못 했습니다. 서버가 다시 뜨면 상세 화면을 직접 열어 운영정보가 뜨는지 확인이 필요합니다.
+
 ### 테스트
 
 라우터 테스트는 **수정 없이 통과했습니다.** 라우트 이름이 유지되고, 착지 검증이 화면 위젯이 아니라 경로 문자열을 보고 있어 스텁 대상이 바뀌지 않았습니다.

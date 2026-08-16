@@ -53,10 +53,19 @@ abstract interface class SpotRepository {
   /// query-level failures surface as a [SpotFailure] the provider translates to a
   /// UI state (SPOT_NOT_FOUND / UPSTREAM_RATE_LIMITED / UPSTREAM_UNAVAILABLE, §6).
   ///
-  /// **카테고리 인자가 없다**(SPEC-0020). 예전에는 `intro`/`infoItems`가 카테고리를
-  /// 요구해 호출부가 이미 가진 값을 넘겼으나, 이제 서버가 spot 자신의 카테고리로
-  /// 해석한다 — 상세를 여는 데 카테고리를 알 필요가 없고, 라우팅에서도 빠졌다.
-  Future<SpotDetail> fetchSpotDetail(String id);
+  /// **[categoryCode]는 서버가 요구한다.** `intro`/`infoItems`가 카테고리마다 다른
+  /// TourAPI 응답을 정규화하므로 어떤 카테고리로 읽을지 알아야 한다. SPEC-0020이 이
+  /// 인자가 사라진 것으로 보고 걷어냈으나 실제로는 이름과 타입만 바뀌었고
+  /// (`category: SpotCategory!` → `categoryCode: String!`), 빠뜨린 동안 상세 화면이
+  /// 검증 오류로 통째로 막혀 있었다.
+  ///
+  /// **응답의 `category.code`로는 채울 수 없다** — 서버가 전 spot에서 null을 준다.
+  /// 그래서 목록에서 코드를 받은 호출부가 넘긴다.
+  ///
+  /// 모르면 null을 넘긴다. 그때는 운영정보 섹션만 비고 상세 본문은 정상이다 —
+  /// 틀린 코드에 서버가 `intro: null`·`infoItems: []`로 답하기 때문이며, 빈 문자열은
+  /// 서버가 예외로 거부하므로 구현이 대신 기본 코드를 채운다.
+  Future<SpotDetail> fetchSpotDetail(String id, {String? categoryCode});
 
   /// The categories the server exposes for the active [language] (spec §5). The
   /// server is the single source of availability — the client renders exactly

@@ -17,6 +17,7 @@ import '../../../common/category/spot_category.dart';
 import '../model/spot_search_state.dart';
 import '../model/tourist_spot.dart';
 import '../provider/recent_searches_providers.dart';
+import '../provider/spot_detail_providers.dart';
 import '../provider/spot_search_providers.dart';
 import 'spot_detail_view.dart';
 
@@ -258,6 +259,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       }
     }
 
+    // 상세가 운영정보를 받으려면 카테고리 코드가 필요하다(상세 응답은 null로 온다).
+    ref
+        .read(spotCategoryCodesProvider.notifier)
+        .remember(spot.id, spot.category?.code);
     context.pushNamed(
       SpotDetailView.routeName,
       pathParameters: <String, String>{'id': spot.id},

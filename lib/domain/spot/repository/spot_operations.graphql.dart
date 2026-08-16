@@ -1489,8 +1489,11 @@ class _CopyWithStubImpl$Query$AvailableSpotCategories$availableSpotCategories<
 }
 
 class Variables$Query$SpotDetail {
-  factory Variables$Query$SpotDetail({required String id}) =>
-      Variables$Query$SpotDetail._({r'id': id});
+  factory Variables$Query$SpotDetail({
+    required String id,
+    required String categoryCode,
+  }) =>
+      Variables$Query$SpotDetail._({r'id': id, r'categoryCode': categoryCode});
 
   Variables$Query$SpotDetail._(this._$data);
 
@@ -1498,6 +1501,8 @@ class Variables$Query$SpotDetail {
     final result$data = <String, dynamic>{};
     final l$id = data['id'];
     result$data['id'] = (l$id as String);
+    final l$categoryCode = data['categoryCode'];
+    result$data['categoryCode'] = (l$categoryCode as String);
     return Variables$Query$SpotDetail._(result$data);
   }
 
@@ -1505,10 +1510,14 @@ class Variables$Query$SpotDetail {
 
   String get id => (_$data['id'] as String);
 
+  String get categoryCode => (_$data['categoryCode'] as String);
+
   Map<String, dynamic> toJson() {
     final result$data = <String, dynamic>{};
     final l$id = id;
     result$data['id'] = l$id;
+    final l$categoryCode = categoryCode;
+    result$data['categoryCode'] = l$categoryCode;
     return result$data;
   }
 
@@ -1529,13 +1538,19 @@ class Variables$Query$SpotDetail {
     if (l$id != lOther$id) {
       return false;
     }
+    final l$categoryCode = categoryCode;
+    final lOther$categoryCode = other.categoryCode;
+    if (l$categoryCode != lOther$categoryCode) {
+      return false;
+    }
     return true;
   }
 
   @override
   int get hashCode {
     final l$id = id;
-    return Object.hashAll([l$id]);
+    final l$categoryCode = categoryCode;
+    return Object.hashAll([l$id, l$categoryCode]);
   }
 }
 
@@ -1548,7 +1563,7 @@ abstract class CopyWith$Variables$Query$SpotDetail<TRes> {
   factory CopyWith$Variables$Query$SpotDetail.stub(TRes res) =
       _CopyWithStubImpl$Variables$Query$SpotDetail;
 
-  TRes call({String? id});
+  TRes call({String? id, String? categoryCode});
 }
 
 class _CopyWithImpl$Variables$Query$SpotDetail<TRes>
@@ -1561,12 +1576,15 @@ class _CopyWithImpl$Variables$Query$SpotDetail<TRes>
 
   static const _undefined = <dynamic, dynamic>{};
 
-  TRes call({Object? id = _undefined}) => _then(
-    Variables$Query$SpotDetail._({
-      ..._instance._$data,
-      if (id != _undefined && id != null) 'id': (id as String),
-    }),
-  );
+  TRes call({Object? id = _undefined, Object? categoryCode = _undefined}) =>
+      _then(
+        Variables$Query$SpotDetail._({
+          ..._instance._$data,
+          if (id != _undefined && id != null) 'id': (id as String),
+          if (categoryCode != _undefined && categoryCode != null)
+            'categoryCode': (categoryCode as String),
+        }),
+      );
 }
 
 class _CopyWithStubImpl$Variables$Query$SpotDetail<TRes>
@@ -1575,7 +1593,7 @@ class _CopyWithStubImpl$Variables$Query$SpotDetail<TRes>
 
   TRes _res;
 
-  call({String? id}) => _res;
+  call({String? id, String? categoryCode}) => _res;
 }
 
 class Query$SpotDetail {
@@ -1688,6 +1706,12 @@ const documentNodeQuerySpotDetail = DocumentNode(
         VariableDefinitionNode(
           variable: VariableNode(name: NameNode(value: 'id')),
           type: NamedTypeNode(name: NameNode(value: 'ID'), isNonNull: true),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'categoryCode')),
+          type: NamedTypeNode(name: NameNode(value: 'String'), isNonNull: true),
           defaultValue: DefaultValueNode(value: null),
           directives: [],
         ),
@@ -1856,7 +1880,14 @@ const documentNodeQuerySpotDetail = DocumentNode(
                 FieldNode(
                   name: NameNode(value: 'intro'),
                   alias: null,
-                  arguments: [],
+                  arguments: [
+                    ArgumentNode(
+                      name: NameNode(value: 'categoryCode'),
+                      value: VariableNode(
+                        name: NameNode(value: 'categoryCode'),
+                      ),
+                    ),
+                  ],
                   directives: [],
                   selectionSet: SelectionSetNode(
                     selections: [
@@ -1915,7 +1946,14 @@ const documentNodeQuerySpotDetail = DocumentNode(
                 FieldNode(
                   name: NameNode(value: 'infoItems'),
                   alias: null,
-                  arguments: [],
+                  arguments: [
+                    ArgumentNode(
+                      name: NameNode(value: 'categoryCode'),
+                      value: VariableNode(
+                        name: NameNode(value: 'categoryCode'),
+                      ),
+                    ),
+                  ],
                   directives: [],
                   selectionSet: SelectionSetNode(
                     selections: [

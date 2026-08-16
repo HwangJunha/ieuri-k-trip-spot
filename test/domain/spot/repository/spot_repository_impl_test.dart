@@ -80,6 +80,31 @@ Map<String, dynamic> _spotItem({
   'mapY': 37.5,
 };
 
+/// `spotDetail` 최소 페이로드. non-null 필드를 빠짐없이 채운다 — 하나라도 null이면
+/// 생성 타입의 캐스팅에서 터져, 정작 검증하려는 것과 무관한 실패가 난다.
+Map<String, dynamic> _spotDetailPayload() => <String, dynamic>{
+  'spotDetail': <String, dynamic>{
+    'id': 'c1',
+    'title': 'Gyeongbokgung',
+    'category': <String, dynamic>{
+      'code': 'TOURIST_SPOT',
+      'label': 'TOURIST_SPOT',
+      'iconUrl': null,
+    },
+    'thumbnailImageUrl': 'https://img/thumb.jpg',
+    'overview': null,
+    'address': null,
+    'homepage': null,
+    'tel': null,
+    'copyright': 'TYPE1',
+    'attributionText': 'KTO',
+    'gallery': <dynamic>[],
+    'likeCount': 0,
+    'intro': null,
+    'infoItems': <dynamic>[],
+  },
+};
+
 /// SPEC-0020 이후 카테고리는 enum이 아니라 값 객체다. 동등성은 `code`만 보므로
 /// 라벨이 달라도 같은 카테고리다.
 const SpotCategory catTouristSpot = SpotCategory(
@@ -342,6 +367,31 @@ void main() {
         ),
       ),
     );
+  });
+
+  // SPEC-0020이 `intro`/`infoItems`의 카테고리 인자를 "사라졌다"고 보고 걷어냈는데
+  // 서버는 계속 요구하고 있었고(이름만 `categoryCode`로 바뀌었다), 커밋된 SDL에도
+  // 인자가 없어 codegen이 통과하는 바람에 상세 화면 전체가 런타임
+  // MissingFieldArgument로 막혔다. 인자가 실제로 실리는지 여기서 못박는다.
+  test('fetchSpotDetail은 categoryCode를 서버로 실어 보낸다', () async {
+    final _FakeLink link = _FakeLink(data: _spotDetailPayload());
+
+    await _repo(link).fetchSpotDetail('c1', categoryCode: 'CULTURAL_FACILITY');
+
+    expect(link.sentVariables?['categoryCode'], 'CULTURAL_FACILITY');
+  });
+
+  // 서버는 빈 문자열을 예외로 거부한다. 카테고리를 모르는 진입(딥링크 등)에서
+  // 상세를 아예 못 여는 것을 막으려면 구현이 유효한 코드를 채워야 한다 — 틀린
+  // 코드에는 운영정보만 비고 본문은 정상으로 온다.
+  test('categoryCode를 모르면 빈 문자열 대신 기본 코드를 채운다', () async {
+    final _FakeLink link = _FakeLink(data: _spotDetailPayload());
+
+    await _repo(link).fetchSpotDetail('c1');
+
+    final Object? sent = link.sentVariables?['categoryCode'];
+    expect(sent, isA<String>());
+    expect(sent, isNotEmpty);
   });
 
   test(
