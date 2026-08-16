@@ -18,8 +18,12 @@ import 'package:ieuri_k_trip_spot/common/model/target_category.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.dart';
 import 'package:ieuri_k_trip_spot/common/media/photo_picker_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/community/view/post_composer_screen.dart';
+import 'package:ieuri_k_trip_spot/common/model/stored_draft.dart';
+import 'package:ieuri_k_trip_spot/common/storage/draft_store.dart';
+import 'package:ieuri_k_trip_spot/common/storage/draft_store_impl.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
 
+import '../../../common/storage/fake_draft_store.dart';
 import '../community_test_doubles.dart';
 
 /// 좌표를 정해 주는 [LocationService]. 장소 선택 시트가 `spots`를 부르려면 좌표가
@@ -53,11 +57,15 @@ Future<void> _pump(
   String? editPostId,
   PhotoPicker? picker,
   Object? locationError,
+  FakeDraftStore? drafts,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         communityRepositoryProvider.overrideWithValue(repo),
+        // 초안 저장소는 **항상 override한다**(SPEC-0022 §8) — 실제 구현은
+        // `shared_preferences`와 파일 시스템을 잡는다.
+        draftStoreProvider.overrideWithValue(drafts ?? FakeDraftStore()),
         locationServiceProvider.overrideWithValue(
           _FakeLocationService(locationError),
         ),
@@ -1364,6 +1372,96 @@ void main() {
       expect(repo.lastSearchQuery, '참숯');
       expect(repo.lastSearchCategory, NearbySpotCategory.restaurant);
       expect(find.text('참숯골'), findsOneWidget);
+    });
+  });
+
+  group('이어쓰기 제안 (SPEC-0022 R5)', () {
+    FakeDraftStore storeWith({DateTime? savedAt}) => FakeDraftStore(
+      loadResult: DraftLoaded(
+        StoredDraft(
+          savedAt: savedAt ?? DateTime.now(),
+          title: '저장된 제목',
+          body: '저장된 본문',
+        ),
+        const <ComposerPhoto>[],
+      ),
+    );
+
+    testWidgets('저장된 초안이 있으면 이어쓰기를 묻는다', (WidgetTester tester) async {
+      await _pump(tester, FakeCommunityRepository(), drafts: storeWith());
+
+      expect(find.text('Continue your draft?'), findsOneWidget);
+    });
+
+    testWidgets('이어쓰기를 고르면 제목·본문이 입력칸에 채워진다', (
+      WidgetTester tester,
+    ) async {
+      await _pump(tester, FakeCommunityRepository(), drafts: storeWith());
+
+      await tester.tap(find.text('Continue writing'));
+      await tester.pumpAndSettle();
+
+      // 컨트롤러까지 맞춰야 한다 — 상태만 채우면 화면에는 빈 칸이 보인다.
+      expect(find.text('저장된 제목'), findsOneWidget);
+      expect(find.text('저장된 본문'), findsOneWidget);
+    });
+
+    testWidgets('새로 쓰기를 고르면 초안이 지워지고 빈 폼으로 시작한다', (
+      WidgetTester tester,
+    ) async {
+      final FakeDraftStore drafts = storeWith();
+      await _pump(tester, FakeCommunityRepository(), drafts: drafts);
+
+      await tester.tap(find.text('Start over'));
+      await tester.pumpAndSettle();
+
+      expect(drafts.clearCount, 1);
+      expect(find.text('저장된 제목'), findsNothing);
+    });
+
+    testWidgets('저장된 초안이 없으면 묻지 않는다', (WidgetTester tester) async {
+      await _pump(tester, FakeCommunityRepository());
+
+      expect(find.text('Continue your draft?'), findsNothing);
+    });
+
+    testWidgets('만료된 초안은 묻지 않는다 (R8)', (WidgetTester tester) async {
+      final FakeDraftStore drafts = storeWith(
+        savedAt: DateTime.now().subtract(const Duration(days: 31)),
+      );
+      await _pump(tester, FakeCommunityRepository(), drafts: drafts);
+
+      expect(find.text('Continue your draft?'), findsNothing);
+      expect(drafts.clearCount, 1);
+    });
+
+    testWidgets('복원 불가는 조용히 빈 폼으로 시작한다 (R10-3)', (
+      WidgetTester tester,
+    ) async {
+      // 사용자가 할 수 있는 일이 없는 오류라 안내하지 않는다.
+      final FakeDraftStore drafts = FakeDraftStore(
+        loadResult: const DraftUnrestorable(
+          DraftUnrestorableReason.missingPhotoFile,
+        ),
+      );
+      await _pump(tester, FakeCommunityRepository(), drafts: drafts);
+
+      expect(find.text('Continue your draft?'), findsNothing);
+      expect(find.byType(SnackBar), findsNothing);
+      expect(drafts.clearCount, 1);
+    });
+
+    testWidgets('수정 모드는 묻지 않는다 (R11)', (WidgetTester tester) async {
+      final FakeDraftStore drafts = storeWith();
+      await _pump(
+        tester,
+        _editRepo(),
+        editPostId: '42',
+        drafts: drafts,
+      );
+
+      expect(find.text('Continue your draft?'), findsNothing);
+      expect(drafts.clearCount, 0, reason: '수정 진입이 초안을 지우지 않는다 (R11-3)');
     });
   });
 }

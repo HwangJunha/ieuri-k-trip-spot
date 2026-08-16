@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../model/community_failure.dart';
 import '../../../common/model/composer_photo.dart';
 import '../model/post_draft.dart';
 import '../../../common/model/post_image_upload.dart';
+import '../../../common/model/stored_draft.dart';
 import '../../../common/model/target_category.dart';
+import '../../../common/storage/draft_store.dart';
+import '../../../common/storage/draft_store_impl.dart';
 import '../repository/community_repository.dart';
 import 'community_providers.dart';
 
@@ -67,8 +72,37 @@ class PhotoUploadResult {
   bool get hasFailures => failedNames.isNotEmpty;
 }
 
-/// 컴포저가 편집 중인 초안. 화면 하나에 속한 상태라 autoDispose(codegen 기본)로
-/// 둔다 — 컴포저를 닫으면 초안이 사라지는 것이 맞다.
+/// 이어쓰기 제안의 상태(SPEC-0022 R5).
+///
+/// **판정이 끝났다는 사실을 상태에 남긴다.** 복원한 초안은 곧바로 다시 저장되므로,
+/// 이 표시가 없으면 "초안 있음" 조건이 계속 참이 되어 저장이 제안을 되살린다(R5-4).
+enum DraftRestorePrompt {
+  /// 아직 판정하지 않았다. 화면이 열리면서 [PostComposer.considerDraft]가 돈다.
+  undecided,
+
+  /// 이어쓸 초안이 있다. 화면이 다이얼로그를 띄운다.
+  offered,
+
+  /// 판정이 끝났다 — 이어썼든 버렸든 없었든. 다시 묻지 않는다.
+  settled,
+}
+
+/// 자동 저장 디바운스 간격(SPEC-0022 §4). 상태가 바뀔 때마다 디스크에 쓰면 타이핑
+/// 한 글자마다 파일 I/O가 일어난다.
+const Duration draftAutosaveDebounce = Duration(seconds: 2);
+
+/// 컴포저가 편집 중인 초안.
+///
+/// **autoDispose(codegen 기본)를 유지하되 초안은 디스크에 남는다**(SPEC-0022 §1).
+/// 예전에는 "컴포저를 닫으면 초안이 사라지는 것이 맞다"고 보았지만 SPEC-0022가 그
+/// 판단을 철회했다. 그렇다고 `keepAlive`로 바꾸지는 않는다 — 프로바이더 수명은 앱
+/// 종료를 견디지 못해 R3를 만족하지 못하고, 화면 밖에서 컴포저 상태가 계속 살아 있는
+/// 부작용만 생긴다. 초안이 살아남는 곳을 **수명이 아니라 디스크로** 옮긴 것이 이
+/// 설계의 요지다.
+///
+/// **수정 모드는 저장도 복원도 하지 않는다**(R11). 서버에 이미 있는 글을 고치는
+/// 중이라 초안이라는 개념이 성립하지 않고, 수정 모드 진입이 새 글 초안을 지우지도
+/// 않는다(R11-3).
 ///
 /// **등록 가능 여부는 [PostDraft.canSubmit]이 판정한다.** 서버 검증을 기다렸다가
 /// 에러를 보여주는 방식이 아니라 화면이 애초에 잘못된 상태를 만들지 못하게 한다
@@ -90,11 +124,181 @@ class PostComposer extends _$PostComposer {
     String? initialSpotTitle,
     TargetCategory? initialCategory,
     bool editing = false,
-  }) => PostDraft(
-    spotId: initialSpotId,
-    spotTitle: initialSpotTitle,
-    category: initialCategory,
-  );
+  }) {
+    // **저장소를 여기서 붙잡아 둔다.** dispose 콜백 안에서는 `ref.read`가 금지돼
+    // 있어(Riverpod 3), 화면이 닫힐 때 마지막 저장을 하려면 참조가 미리 있어야 한다.
+    _storeRef = ref.read(draftStoreProvider);
+
+    // 새 글에서만 자동 저장이 붙는다(R11). 수정 모드는 상태가 바뀌어도 디스크를
+    // 건드리지 않는다.
+    if (!editing) {
+      // 상태 변경 후 디바운스 간격 동안 추가 변경이 없으면 저장한다(§4).
+      listenSelf((PostDraft? previous, PostDraft next) {
+        if (previous == null) return;
+        _scheduleSave();
+      });
+      // 화면이 닫히면 대기 중인 변경을 흘리지 않도록 즉시 쓴다(§4).
+      ref.onDispose(() {
+        _debounce?.cancel();
+        _debounce = null;
+        if (_pendingSave) _writeNow(_lastState ?? state);
+      });
+    }
+    return PostDraft(
+      spotId: initialSpotId,
+      spotTitle: initialSpotTitle,
+      category: initialCategory,
+    );
+  }
+
+  /// [build]에서 붙잡아 둔 저장소. dispose 시점에는 `ref.read`를 쓸 수 없다.
+  /// 매 빌드에서 다시 채우므로 `late final`이 아니다 — 재빌드가 두 번째 대입에서
+  /// 죽는다.
+  DraftStore? _storeRef;
+
+  DraftStore get _store => _storeRef ?? ref.read(draftStoreProvider);
+
+  /// 이어쓰기 제안의 현재 단계. 화면이 이 값으로 다이얼로그를 띄울지 정한다.
+  DraftRestorePrompt get restorePrompt => _restorePrompt;
+  DraftRestorePrompt _restorePrompt = DraftRestorePrompt.undecided;
+
+  Timer? _debounce;
+
+  /// 디바운스 대기 중인 변경이 있는지. dispose 때 흘리지 않기 위해 본다.
+  bool _pendingSave = false;
+
+  /// 마지막으로 관찰한 상태. dispose 시점에는 프로바이더가 이미 내려가 `state`를
+  /// 읽을 수 없으므로 따로 들고 있는다.
+  PostDraft? _lastState;
+
+  /// 이어쓰기 제안을 받아 둔 초안. 사용자가 "이어쓰기"를 고르면 이 값으로 채운다.
+  DraftLoaded? _offered;
+
+  /// 이어쓸 초안의 미리보기. 화면이 다이얼로그에 제목을 보여줄 때 쓴다.
+  StoredDraft? get offeredDraft => _offered?.draft;
+
+  void _scheduleSave() {
+    _lastState = state;
+    _pendingSave = true;
+    _debounce?.cancel();
+    _debounce = Timer(draftAutosaveDebounce, () {
+      _debounce = null;
+      final PostDraft? pending = _lastState;
+      if (pending != null) _writeNow(pending);
+    });
+  }
+
+  /// 대기 중인 변경을 지금 쓴다. 앱이 백그라운드로 갈 때 화면이 부른다 — OS가 그
+  /// 뒤에 앱을 죽여도 마지막 상태가 남는다(§4).
+  void flush() {
+    _debounce?.cancel();
+    _debounce = null;
+    if (_pendingSave) _writeNow(_lastState ?? state);
+  }
+
+  /// 실제로 디스크에 쓴다. **빈 초안은 저장 대신 삭제한다**(R1-3) — 그래야 "다
+  /// 지웠는데도 이어쓰기를 묻는" 상태가 생기지 않는다.
+  ///
+  /// 실패는 [DraftStore]가 삼킨다(R9).
+  void _writeNow(PostDraft draft) {
+    _pendingSave = false;
+    final StoredDraft stored = StoredDraft.fromDraft(
+      savedAt: DateTime.now(),
+      category: draft.category,
+      spotId: draft.spotId,
+      spotTitle: draft.spotTitle,
+      title: draft.title,
+      body: draft.body,
+      tags: draft.tags,
+      photos: draft.photos,
+    );
+    // 저장은 기다리지 않는다 — 실패해도 작성을 막지 않으므로 결과를 볼 이유가 없다.
+    //
+    // **여기서도 한 번 더 삼킨다**(R9). 구현이 예외를 삼키는 것이 계약이지만,
+    // 삼키지 않는 구현이 끼어들어도 타이핑이 죽어서는 안 된다 — 자동 저장의 실패는
+    // 사용자가 원래 겪던 상태(초안이 없는 것)로 돌아가는 것뿐이다.
+    unawaited(
+      (stored.isEmpty ? _store.clear() : _store.save(stored, draft.photos))
+          .onError((Object? _, StackTrace _) {}),
+    );
+  }
+
+  /// 저장된 초안이 있는지 판정한다. **컴포저를 여는 시점에 한 번만** 돈다(§5).
+  ///
+  /// 수정 모드는 이 분기에 아예 들어오지 않는다(R11) — 호출 자체를 화면이 막지만,
+  /// 여기서도 한 번 더 막아 수정 모드가 초안을 건드릴 길을 없앤다.
+  ///
+  /// TTL 초과·복원 불가는 **지우고 빈 상태로 시작한다**(R8·R10). 조용히 넘어가며
+  /// 사용자에게 알리지 않는다 — 할 수 있는 일이 없는 실패다(R10-3).
+  Future<void> considerDraft({DateTime? now}) async {
+    if (editing) return;
+    if (_restorePrompt != DraftRestorePrompt.undecided) return;
+
+    // 읽기 자체가 실패하면 **조용히 빈 상태로 시작한다**(R10-3) — 글을 쓰려고
+    // 화면을 연 사람에게 처리할 수 없는 실패를 알리는 것은 방해다.
+    DraftLoadResult result;
+    try {
+      result = await _store.load();
+    } on Object {
+      _restorePrompt = DraftRestorePrompt.settled;
+      return;
+    }
+
+    switch (result) {
+      case DraftAbsent():
+        _restorePrompt = DraftRestorePrompt.settled;
+      case DraftUnrestorable():
+        await _clearQuietly();
+        _restorePrompt = DraftRestorePrompt.settled;
+      case DraftLoaded(:final StoredDraft draft):
+        if (isDraftExpired(savedAt: draft.savedAt, now: now ?? DateTime.now())) {
+          await _clearQuietly();
+          _restorePrompt = DraftRestorePrompt.settled;
+          return;
+        }
+        _offered = result;
+        _restorePrompt = DraftRestorePrompt.offered;
+    }
+  }
+
+  /// 초안을 지우되 실패를 밖으로 내보내지 않는다(R9).
+  Future<void> _clearQuietly() =>
+      _store.clear().onError((Object? _, StackTrace _) {});
+
+  /// 제안한 초안으로 상태를 채운다(R5). 판정을 끝난 것으로 표시하므로 **복원 직후의
+  /// 저장이 제안을 되살리지 않는다**(R5-4).
+  void restoreDraft() {
+    final DraftLoaded? offered = _offered;
+    _restorePrompt = DraftRestorePrompt.settled;
+    _offered = null;
+    if (offered == null) return;
+    state = PostDraft(
+      // 서버 목록에서 사라진 카테고리는 null로 온다 — 초안 전체를 버리지 않고 그
+      // 값만 비워 사용자가 다시 고르게 한다(§3).
+      category: offered.draft.restoredCategory,
+      spotId: offered.draft.spotId,
+      spotTitle: offered.draft.spotTitle,
+      title: offered.draft.title,
+      body: offered.draft.body,
+      tags: offered.draft.tags,
+      photos: offered.photos,
+    );
+  }
+
+  /// 제안을 닫되 초안은 남긴다. 사용자가 다이얼로그 밖을 눌러 아무 결정도 하지 않은
+  /// 경우다 — 실수로 닫았는데 글이 사라지면 이 기능의 취지가 무너지므로 지우지
+  /// 않는다. 판정만 끝난 것으로 표시해 이후의 저장이 제안을 되살리지 않게 한다(R5-4).
+  void dismissDraftPrompt() {
+    _restorePrompt = DraftRestorePrompt.settled;
+    _offered = null;
+  }
+
+  /// 제안을 버린다 — 저장된 초안을 지우고 빈 상태로 시작한다(R6-3).
+  Future<void> discardDraft() async {
+    _restorePrompt = DraftRestorePrompt.settled;
+    _offered = null;
+    await _clearQuietly();
+  }
 
   /// 수정 모드에서 서버가 채워 준 장소 id. `null`은 두 가지를 함께 뜻할 수 있으므로
   /// ([_seededSpotKnown] 참고) 이 값만으로 판단하지 않는다.
@@ -340,6 +544,14 @@ class PostComposer extends _$PostComposer {
         // 확정된 키만 넘긴다. 못 올린 장은 빠진 채로 등록된다.
         photoKeys: draft.remoteKeys,
       );
+      // **등록에 성공했으므로 초안을 지운다**(R6-1). 대기 중인 디바운스도 함께
+      // 취소한다 — 남겨 두면 방금 지운 초안을 2초 뒤에 되살린다.
+      //
+      // **삭제 실패가 등록 성공을 뒤집지 않는다**(R9) — 글은 이미 서버에 올라갔다.
+      _debounce?.cancel();
+      _debounce = null;
+      _pendingSave = false;
+      await _clearQuietly();
       return ComposerSucceeded(postId, failedPhotoNames: failedNames);
     } on CommunityFailure catch (failure) {
       if (failure.kind == CommunityFailureKind.unauthenticated) {

@@ -7,8 +7,10 @@ import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/community/view/post_composer_screen.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
+import 'package:ieuri_k_trip_spot/common/storage/draft_store_impl.dart';
 import 'package:ieuri_k_trip_spot/router/routes.dart';
 
+import '../common/storage/fake_draft_store.dart';
 import '../domain/community/community_test_doubles.dart';
 import '../domain/spot/spot_test_doubles.dart';
 
@@ -29,6 +31,8 @@ Future<void> _pumpRoute(
           repo ?? FakeCommunityRepository(),
         ),
         locationServiceProvider.overrideWithValue(FakeLocationService()),
+        // 초안 저장소는 항상 override한다 — 실제 구현은 파일 시스템을 잡는다.
+        draftStoreProvider.overrideWithValue(FakeDraftStore()),
       ],
       child: MaterialApp.router(
         localizationsDelegates: const <LocalizationsDelegate<Object>>[
