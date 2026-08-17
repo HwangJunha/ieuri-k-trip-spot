@@ -11,6 +11,7 @@ class SwipeCardMetrics {
     required this.height,
     required this.overlayBottomInset,
     required this.topScrimHeight,
+    required this.photoHeight,
   });
 
   /// [screenWidth]×[screenHeight] 화면에서의 카드 배치를 정한다.
@@ -45,6 +46,16 @@ class SwipeCardMetrics {
       // 호출부가 그 바 높이를 [bottomViewPadding]에 함께 실어 보낸다 — 사진은 바
       // 뒤로 흘러도 되지만 글자가 가리면 읽을 수 없기 때문이다.
       overlayBottomInset: _base + _nonNegative(bottomViewPadding),
+      // **사진은 화면을 다 채우지 않는다**(사용자 결정 2026-08-18).
+      //
+      // 관광공사 원본이 940×705가 최대인데(실측: `_image2_`가 가장 큰 변형이고
+      // `_image3_`은 150×113짜리 축소본이다) 이것을 1206×2622 화면에 `cover`로
+      // 늘리면 세로로 3.7배가 되어 눈에 띄게 깨진다. 상세 화면이 멀쩡해 보이는
+      // 이유는 거기서는 같은 사진을 화면 일부에만 그리기 때문이다.
+      //
+      // 사진 영역을 [_photoFraction]으로 줄이면 확대율이 절반 아래로 떨어져
+      // 선명해지고, 남는 아래쪽은 정보 영역이 된다.
+      photoHeight: height * _photoFraction,
       // 앱바·카테고리 바가 사진 위에 겹치므로 그 영역에 상단 스크림을 깐다(R14).
       // 밝은 사진 위에서 44x44 원형 아이콘이 특히 취약하다(설계 §2.5).
       topScrimHeight:
@@ -53,7 +64,19 @@ class SwipeCardMetrics {
   }
 
   /// 기기와 무관한 기본 하단 여백. 안전 영역 위에 얹는다.
-  static const double _base = 20;
+  ///
+  /// 36인 이유: 20으로 뒀더니 거리("140m") 아래가 살짝 잘렸다(실기기 확인
+  /// 2026-08-18, 사용자 지적). 16을 더해 띄운다.
+  static const double _base = 36;
+
+  /// 사진이 카드 높이에서 차지하는 비율.
+  ///
+  /// 확대율과 정보 공간을 맞바꾼 값이다 — 원본 940×705를 iPhone 17 Pro 기준으로
+  /// 약 2배까지만 늘려(전체화면이면 3.7배) 깨짐을 눈에 띄지 않게 누른다.
+  ///
+  /// 처음에 0.62로 뒀더니 이름·주소·거리 세 줄만 있는 정보 영역 아래가 크게 비어
+  /// 휑했다(실기기 확인 2026-08-18). 사진 쪽에 더 주는 편이 화면이 찬다.
+  static const double _photoFraction = 0.7;
 
   static double _nonNegative(double value) => value < 0 ? 0 : value;
 
@@ -66,8 +89,11 @@ class SwipeCardMetrics {
   /// 하단 오버레이(제목·주소·거리)를 카드 밑변에서 얼마나 띄울지.
   final double overlayBottomInset;
 
-  /// 상단 스크림 높이. 겹쳐 놓인 앱바·카테고리 바의 가독성을 받쳐 준다(R14).
+  /// 상단 스크림 높이. 겹쳐 놓인 카테고리 바의 가독성을 받쳐 준다(R14).
   final double topScrimHeight;
+
+  /// 사진이 차지하는 높이. 나머지는 정보 영역이다.
+  final double photoHeight;
 
   /// 좌우 여백이 없는가(AC R1-1). 전체화면화의 핵심 판정이다.
   bool get fillsWidth => width > 0;

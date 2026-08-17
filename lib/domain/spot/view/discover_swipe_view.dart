@@ -119,11 +119,11 @@ class _OverlayControls extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          // **칩 라벨까지 덮어야 한다.** `black54 → transparent`로는 라벨이 있는
-          // 아래쪽에서 이미 투명해져 "관광지·문화시설"이 건물 사진에 묻혔다
-          // (실기기 확인 2026-08-18). 라벨이 끝나는 지점(0.8)까지 어둠을 끌고 간 뒤
-          // 거기서만 풀어 준다.
-          colors: <Color>[Colors.black87, Colors.black54, Colors.transparent],
+          // **상태바와 칩 라벨을 함께 덮어야 한다.** 처음에는 아래쪽이 일찍 투명해져
+          // 칩 라벨이 묻혔고, 그것을 고치자 이번에는 맨 위 시계가 밝은 사진에
+          // 묻혔다(실기기 확인 2026-08-18). 위를 더 진하게 시작해 라벨이 끝나는
+          // 지점까지 끌고 간 뒤 거기서만 풀어 준다.
+          colors: <Color>[Colors.black, Colors.black54, Colors.transparent],
           stops: <double>[0, 0.8, 1],
         ),
       ),
@@ -402,7 +402,14 @@ class _CardStackState extends ConsumerState<_CardStack> {
               Positioned.fill(
                 child: Transform.scale(
                   scale: nextScale,
-                  child: SwipeCard(key: ValueKey<String>(next.id), spot: next),
+                  // **아래 카드도 같은 배치로 그린다** — 위 카드를 밀어내면 그 아래에서
+                  // 똑같은 모양이 드러나야 한다. 배치를 안 주면 사진만 꽉 찬 다른
+                  // 모양이 비쳐 카드가 바뀌는 순간 화면이 튄다.
+                  child: SwipeCard(
+                    key: ValueKey<String>(next.id),
+                    spot: next,
+                    metrics: metrics,
+                  ),
                 ),
               ),
             Positioned.fill(

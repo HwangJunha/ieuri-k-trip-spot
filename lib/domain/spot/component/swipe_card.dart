@@ -33,19 +33,70 @@ class SwipeCard extends StatelessWidget {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final SwipeCardDisplay display = SwipeCardDisplay.of(spot);
 
-    return Stack(
-      fit: StackFit.expand,
-      children: <Widget>[
-        _CardImage(display: display),
-        // 하단 그라데이션: 밝은 이미지 위에서도 흰 오버레이 텍스트가 읽히도록(R2).
-        const _BottomScrim(),
-        Positioned(
-          left: 16,
-          right: 16,
-          bottom: metrics?.overlayBottomInset ?? 20,
-          child: _Overlay(display: display, l10n: l10n, theme: theme),
-        ),
-      ],
+    // **사진을 화면 위쪽에만 둔다**(사용자 결정 2026-08-18).
+    //
+    // 전체화면으로 늘렸더니 원본(940×705)이 3.7배까지 확대돼 눈에 띄게 깨졌다.
+    // 사진 영역을 줄이면 확대율이 절반 아래로 떨어져 선명해지고, 아래는 정보가
+    // 자기 자리를 갖는다 — 사진 위에 글자를 얹지 않으니 스크림도 필요 없다.
+    final double? photoHeight = metrics?.photoHeight;
+    if (photoHeight == null) {
+      // 배치 수치를 모르는 자리(다음 카드 대기 등)에서는 예전처럼 꽉 채운다.
+      return Stack(
+        fit: StackFit.expand,
+        children: <Widget>[
+          _CardImage(display: display),
+          const _BottomScrim(),
+        ],
+      );
+    }
+
+    return ColoredBox(
+      color: theme.colorScheme.surface,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          // **사진이 밀려나도 좋다.** 화면이 작아 정보가 들어갈 자리가 모자라면
+          // 사진 쪽을 줄인다 — 고정 높이로 두면 작은 기기에서 정보 영역이 넘쳐
+          // 레이아웃이 터진다(테스트 화면 600×800에서 54px 넘침).
+          Flexible(
+            child: SizedBox(
+              height: photoHeight,
+              child: Stack(
+                fit: StackFit.expand,
+                children: <Widget>[
+                  _CardImage(display: display),
+                  // **출처는 사진 위에 둔다** — 밝히는 대상이 사진이므로 붙여 놓는
+                  // 편이 뜻이 분명하고, 아래 정보 영역도 깔끔해진다. 배지 자체가
+                  // 어두운 알약이라 사진 위에서 읽힌다.
+                  if (display.showsAttribution)
+                    Positioned(
+                      left: 12,
+                      right: 12,
+                      bottom: 12,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: CopyrightBadge(
+                          attributionText: display.attributionText!,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          // 정보는 **내용만큼만** 차지한다. `Expanded`로 남는 자리를 다 가져가면
+          // 화면이 작을 때 사진이 밀리기는커녕 이쪽이 넘친다.
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              20,
+              16,
+              20,
+              metrics?.overlayBottomInset ?? 20,
+            ),
+            child: _Overlay(display: display, l10n: l10n, theme: theme),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -157,43 +208,47 @@ class _Overlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 사진 위가 아니라 **카드 배경 위**에 놓이므로 테마 색을 쓴다. 흰색으로 두면
+    // 밝은 배경에서 그대로 사라진다.
+    final ColorScheme scheme = theme.colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        if (display.showsAttribution) ...<Widget>[
-          CopyrightBadge(attributionText: display.attributionText!),
-          const SizedBox(height: 8),
-        ],
+        // 출처 표기는 사진 위에 있다(→[SwipeCard.build]) — 밝히는 대상 옆이 맞다.
         Text(
           display.name,
           style: theme.textTheme.headlineSmall?.copyWith(
-            color: Colors.white,
+            color: scheme.onSurface,
             fontWeight: FontWeight.bold,
           ),
-          maxLines: 1,
+          maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
         if (display.showsAddress) ...<Widget>[
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             display.address!,
-            style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white70),
-            maxLines: 1,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
         ],
         if (display.showsDistance) ...<Widget>[
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              const Icon(Icons.place_outlined, size: 16, color: Colors.white70),
+              Icon(Icons.place_outlined, size: 16, color: scheme.primary),
               const SizedBox(width: 4),
               Text(
                 distanceLabel(l10n, Distance(display.distanceMeters!)),
                 style: theme.textTheme.labelLarge?.copyWith(
-                  color: Colors.white,
+                  color: scheme.primary,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
