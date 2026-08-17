@@ -1166,5 +1166,6 @@
   "errorInvalidInput": "Some of the details you entered aren't valid. Check them and try again.",
   "errorAccountInactive": "This account is inactive. Contact support to restore it.",
   "errorVerificationRateLimited": "Too many verification requests. Try again later.",
-  "errorVerificationNotFound": "That verification has expired. Request a new code."
+  "errorVerificationNotFound": "That verification has expired. Request a new code.",
+  "errorPasswordPolicyViolation": "Your password doesn't meet the requirements. Use at least 8 characters."
 }

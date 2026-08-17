@@ -1,7 +1,77 @@
-# SPEC-0024 · 서버 요청 — 비밀번호 재설정 대상 제한과 오류 코드
+# SPEC-0024 · 서버 요청 — 탈퇴 차단(긴급) · 비밀번호 재설정 대상 제한 · 오류 코드
 
-> 대상: `requestPasswordReset` / `resetPassword`
+> 대상: `requestPasswordReset` / `resetPassword` / `withdrawMember`
 > 확인 환경: `http://localhost:8888/graphql` (2026-08-17, SPEC-0024 서버 PR #89 반영본)
+
+## 처리 결과 (2026-08-17, 서버 회신 반영 후 재검증)
+
+| 항목 | 결과 |
+|---|---|
+| §0 탈퇴 FK 차단 | **서버 수정됨.** `deleteMember`가 FK 자식 5개 중 `password_reset`을 빠뜨리고 있었음. 나머지 4개는 원래 정리되고 있었고, 목록 누락 시 실패하는 테스트가 추가됨 |
+| §1~§3 SNS 재설정 메일 | **제 오진.** 아래 정정 참고 |
+| §4-2 판단 요청 | **(B) 현행 유지로 결정됨.** 인증 없이 부를 수 있는 오퍼레이션이라 코드로 알려 주면 주소만으로 "가입 여부 + 사용 SNS"를 캐낼 수 있다는 판단 |
+| §4-3 비밀번호 사유 | **서버 수정됨.** `PASSWORD_POLICY_VIOLATION` 신설 + `field` 채움 |
+| 부수: DB 예외 원문 노출 | **서버 수정됨.** 탈퇴만이 아니라 매핑되지 않은 모든 예외가 같은 상태였고, 체인 끝을 정제 핸들러로 교체해 `INTERNAL_ERROR`만 나감 |
+
+### 정정 — §1~§3의 "SNS 회원에게 메일이 발송된다"는 **틀렸습니다**
+
+서버 회신 후 같은 주소로 재검증했습니다.
+
+```
+# 카카오로 가입한 주소 (재검증)
+resetPassword(code: "999999") → failureReason: "INVALID_OR_EXPIRED"
+# 확실히 미가입인 주소 (대조군)
+resetPassword(code: "999999") → failureReason: "INVALID_OR_EXPIRED"
+```
+
+둘이 **같습니다.** 어제 `CODE_MISMATCH`를 관찰한 것은 서버 팀 설명대로 그 주소에
+`Provider.EMAIL` 계정이 함께 존재했기 때문이고(R5가 같은 주소의 복수 provider를
+허용), 코드가 발급된 것은 SNS 계정이 아니라 그 EMAIL 계정이었습니다. 실제로
+재검증 시점에는 같은 주소로 `registerEmailMember`가 성공했습니다 — 어제 있던 EMAIL
+계정이 사라졌다는 뜻이고, 이것이 결과가 달라진 이유를 설명합니다.
+
+**`failureReason`의 차이를 "코드 발급 여부"의 근거로 삼은 것이 오류였습니다.**
+그 값은 어느 계정에 코드가 있는지까지 말해 주지 않는데, 조회 대상이 하나뿐이라고
+가정했습니다. 서버는 `provider='EMAIL'`로만 조회하고 있었고 코드 경로는 정상이었습니다.
+
+아래 §1~§3은 **잘못된 진단으로 남겨 둡니다** — 무엇을 어떻게 잘못 읽었는지가 다음
+판단에 쓰이기 때문입니다.
+
+## 0. 【긴급】 비밀번호 재설정을 요청한 회원은 탈퇴할 수 없습니다
+
+**가장 시급한 항목이라 앞에 둡니다.** 비밀번호 재설정을 한 번이라도 요청한 계정은
+`withdrawMember`가 DB 제약에 걸려 **영구히 탈퇴하지 못합니다.**
+
+실기기에서 잡은 응답입니다(회원 id=48, 직전에 비밀번호 재설정을 요청한 계정).
+
+```
+withdrawMember → data: null
+org.springframework.dao.DataIntegrityViolationException:
+  could not execute statement
+  [ERROR: update or delete on table "member" violates foreign key constraint
+   "fk_pr_member" on table "password_reset"
+   Detail: Key (id)=(48) is still referenced from table "password_reset".]
+  [delete from auth.member where id=?]
+```
+
+`member` 삭제 시 `password_reset` 행이 함께 정리되지 않아 FK 제약이 삭제를
+막습니다. 재설정을 요청한 적 없는 계정은 정상 탈퇴되기 때문에 그동안 드러나지
+않았습니다.
+
+**영향이 큽니다.** 탈퇴는 사용자가 자기 데이터를 지울 수 있는 유일한 경로이고,
+막히면 계정을 버릴 수도 쓸 수도 없는 상태가 됩니다. SPEC-0024가 인증 화면의 탈출구로
+탈퇴를 지정하고 있어서(설계 §3, 미인증 상태에서 열리는 두 경로 중 하나), 인증할 수
+없는 주소로 가입한 회원이 여기 걸리면 앱에서 빠져나갈 방법이 사라집니다.
+
+**요청.** `withdrawMember`가 `member`를 지우기 전에 `password_reset`을 함께
+정리하거나, FK에 `ON DELETE CASCADE`를 걸어 주세요. 같은 형태의 참조가 다른
+테이블(인증 코드·토큰 등)에도 있는지 함께 확인해 주시면 좋겠습니다 — 재설정만
+문제일 이유가 없어 보입니다.
+
+**부수 요청.** 이 실패가 DB 예외 원문 그대로 클라이언트까지 옵니다. 스택과 SQL,
+테이블·제약 이름, 회원 id가 노출되므로(POL-013) 서버에서 잡아 일반 오류로 바꿔
+주세요. 앱은 서버 message를 사용자에게 그대로 보여 주지 않지만, 응답에 실려 오는
+것 자체가 문제입니다.
 
 ## 1. 무엇이 문제인가
 
@@ -107,3 +177,21 @@ registerEmailMember(password: "123")
   `VERIFICATION_RATE_LIMITED`, `VERIFICATION_NOT_FOUND`를 문구로 매핑했습니다.
   이전에는 전부 "문제가 발생했습니다"로 떨어져 사용자가 원인을 알 수 없었습니다.
 - 비밀번호 재설정 1단계 안내 문구를 단정형에서 조건형으로 바꿨습니다(4-2 B안).
+
+## 6. 서버 회신 이후 앱이 반영한 것 (2026-08-17)
+
+- **`PASSWORD_POLICY_VIOLATION`** 을 SDL·모델·문구에 추가했습니다. BREAKING이지만
+  `INVALID_INPUT` 분기를 남겨 두어 어느 코드가 와도 안내가 나갑니다.
+- **`field`로 입력칸을 특정합니다.** 서버가 `"input.password"`처럼 **경로**로 주므로
+  마지막 마디만 비교하는 `AuthFailure.pointsAt()`을 두었습니다 — 경로를 그대로
+  비교하면 영원히 일치하지 않아 오류가 어느 칸에도 붙지 않습니다. 가입 화면이 이제
+  비밀번호·이메일 오류를 해당 칸 아래에 붙입니다.
+- **message 매칭 폴백은 남겼습니다.** 서버가 예외를 정제하면서 실질적으로 걸리지
+  않게 됐지만, 구버전 서버를 상대할 가능성이 있는 한 비용 없이 두는 편이 낫다고
+  판단했습니다. 주석에 그 사정을 적었습니다.
+
+### 아직 확인하지 못한 것
+
+- **탈퇴 FK 수정은 재현 검증을 못 했습니다.** 비밀번호 재설정을 요청한 계정으로
+  탈퇴를 시도해야 하는데, 그 상태의 계정을 만들려면 실기기 조작이 필요합니다.
+  다음 실기기 테스트에서 확인 예정입니다.

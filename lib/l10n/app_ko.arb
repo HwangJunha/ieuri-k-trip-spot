@@ -1890,5 +1890,6 @@
   "errorInvalidInput": "입력하신 정보가 올바르지 않습니다. 확인 후 다시 시도해 주세요.",
   "errorAccountInactive": "비활성 상태인 계정입니다. 고객센터에 문의해 주세요.",
   "errorVerificationRateLimited": "인증 요청이 너무 잦습니다. 잠시 후 다시 시도해 주세요.",
-  "errorVerificationNotFound": "인증이 만료되었습니다. 새 코드를 받아 주세요."
+  "errorVerificationNotFound": "인증이 만료되었습니다. 새 코드를 받아 주세요.",
+  "errorPasswordPolicyViolation": "비밀번호가 조건에 맞지 않습니다. 8자 이상으로 설정해 주세요."
 }

@@ -789,5 +789,6 @@
   "errorInvalidInput": "入力された情報が正しくありません。確認して再度お試しください。",
   "errorAccountInactive": "無効な状態のアカウントです。サポートにお問い合わせください。",
   "errorVerificationRateLimited": "認証のリクエストが多すぎます。しばらくしてからお試しください。",
-  "errorVerificationNotFound": "認証の有効期限が切れました。新しいコードを取得してください。"
+  "errorVerificationNotFound": "認証の有効期限が切れました。新しいコードを取得してください。",
+  "errorPasswordPolicyViolation": "パスワードが条件を満たしていません。8文字以上で設定してください。"
 }

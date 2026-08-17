@@ -789,5 +789,6 @@
   "errorInvalidInput": "輸入的資料不正確，請確認後再試一次。",
   "errorAccountInactive": "此帳號已停用，請聯絡客服。",
   "errorVerificationRateLimited": "驗證請求過於頻繁，請稍後再試。",
-  "errorVerificationNotFound": "驗證已過期，請重新取得驗證碼。"
+  "errorVerificationNotFound": "驗證已過期，請重新取得驗證碼。",
+  "errorPasswordPolicyViolation": "密碼不符合條件，請設定 8 個字元以上。"
 }

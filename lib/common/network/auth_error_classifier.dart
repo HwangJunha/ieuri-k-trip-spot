@@ -98,9 +98,13 @@ AuthErrorClass _classifyOne(GraphQLError error) {
     return AuthErrorClass.unauthenticated;
   }
 
-  // 3) 폴백 — 코드가 붙지 않은 경로가 남아 있다. `retargetEmailVerification`의
-  //    미인증 호출이 지금도 코드 없이 `errorType: INTERNAL`로 온다(라이브 확인).
-  //    errorType이 아예 없는 응답도 포함한다(AC-17: null 안전).
+  // 3) 폴백 — 서버가 예외를 정제하기 전 형태(`errorType: INTERNAL` + 예외 클래스명)를
+  //    받아 내던 경로다. 서버가 매핑되지 않은 예외를 전부 `INTERNAL_ERROR`로 바꾸면서
+  //    (2026-08-17) message에 단서가 남지 않아 실질적으로는 걸리지 않는다.
+  //
+  //    **그래도 지운다고 안전해지지 않는다.** 이 폴백이 잡던 것은 "서버가 형태를
+  //    바꾸기 전 응답"이고, 구버전 서버를 상대할 가능성이 남아 있는 한 비용 없이
+  //    남겨 두는 편이 낫다. errorType이 아예 없는 응답도 포함한다(AC-17: null 안전).
   if (errorType == null || errorType == _internalErrorType) {
     final String message = error.message;
     if (_containsAny(message, _refreshRejectedMessageMarkers)) {

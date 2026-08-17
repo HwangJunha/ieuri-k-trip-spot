@@ -417,6 +417,42 @@ void main() {
       );
     });
 
+    test('PASSWORD_POLICY_VIOLATION을 알아본다', () {
+      // 서버가 INVALID_INPUT에서 분리해 새로 낸 코드다(BREAKING).
+      expect(
+        AuthFailure.fromCode('PASSWORD_POLICY_VIOLATION').kind,
+        AuthFailureKind.passwordPolicyViolation,
+      );
+    });
+
+    group('field는 경로로 온다', () {
+      test('마지막 마디만 뽑아 비교한다', () {
+        // 서버가 "input.password"처럼 경로를 준다. 그대로 비교하면 화면의 칸
+        // 이름("password")과 영원히 일치하지 않아 오류가 어디에도 붙지 않는다.
+        const AuthFailure f = AuthFailure(
+          AuthFailureKind.passwordPolicyViolation,
+          field: 'input.password',
+        );
+        expect(f.fieldName, 'password');
+        expect(f.pointsAt('password'), isTrue);
+        expect(f.pointsAt('email'), isFalse);
+      });
+
+      test('점이 없는 값도 그대로 쓴다', () {
+        const AuthFailure f = AuthFailure(
+          AuthFailureKind.invalidInput,
+          field: 'email',
+        );
+        expect(f.pointsAt('email'), isTrue);
+      });
+
+      test('field가 없으면 어느 칸도 가리키지 않는다', () {
+        const AuthFailure f = AuthFailure(AuthFailureKind.unknown);
+        expect(f.fieldName, isNull);
+        expect(f.pointsAt('password'), isFalse);
+      });
+    });
+
     test('가입 실패 코드들이 unknown으로 뭉개지지 않는다 (실기기 회귀)', () {
       // 서버는 정확한 코드를 주는데 앱이 매핑하지 않아 전부 "문제가 발생했습니다"로
       // 떨어졌다 — 사용자는 무엇을 고쳐야 하는지 알 수 없었다.

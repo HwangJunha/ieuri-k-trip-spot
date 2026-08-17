@@ -6,6 +6,7 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../component/agreement_checklist.dart';
 import '../component/auth_failure_message.dart';
 import '../component/auth_text_field.dart';
+import '../model/auth_failure.dart';
 import '../model/email_verification_handle.dart';
 import '../../../common/model/email_format.dart';
 import '../model/password_policy.dart';
@@ -119,7 +120,21 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       );
     } on Object catch (error) {
       if (!mounted) return;
-      setState(() => _serverError = authFailureMessage(l10n, error));
+      // 서버가 어느 입력이 문제인지 `field`로 알려 준다. 그 칸 아래에 붙여야
+      // 사용자가 무엇을 고쳐야 할지 바로 안다 — 상단 배너에만 띄우면 긴 폼에서는
+      // 어느 칸 얘기인지 알 수 없다.
+      final String message = authFailureMessage(l10n, error);
+      setState(() {
+        if (error is AuthFailure && error.pointsAt('password')) {
+          _passwordError = message;
+          _serverError = null;
+        } else if (error is AuthFailure && error.pointsAt('email')) {
+          _emailError = message;
+          _serverError = null;
+        } else {
+          _serverError = message;
+        }
+      });
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

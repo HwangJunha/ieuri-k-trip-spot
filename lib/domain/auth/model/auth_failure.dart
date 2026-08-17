@@ -52,10 +52,15 @@ enum AuthFailureKind {
   /// 결과는 같지만 서버가 가입 경로에서 쓰는 코드가 달라 둘 다 받는다.
   memberAlreadyRegistered,
 
-  /// 입력값이 서버 규칙에 맞지 않다(`INVALID_INPUT`). 비밀번호 길이처럼 **사유가
-  /// 여러 가지**인데 코드는 하나라, 어느 칸이 문제인지 이 값만으로는 알 수 없다.
-  /// 서버가 사유를 코드로 나눠 주기 전까지는 일반 안내를 쓴다.
+  /// 입력값이 서버 규칙에 맞지 않다(`INVALID_INPUT`). 어느 칸이 문제인지는 [field]가
+  /// 있으면 그것으로 알 수 있고, 없으면 일반 안내를 쓴다.
   invalidInput,
+
+  /// 비밀번호가 정책에 맞지 않다(`PASSWORD_POLICY_VIOLATION`).
+  ///
+  /// 서버가 이 코드를 새로 냈다 — 이전에는 [invalidInput]으로 와서 어느 칸이 문제인지
+  /// 알 수 없었다. 이제 비밀번호 칸에 직접 오류를 붙일 수 있다.
+  passwordPolicyViolation,
 
   /// 계정이 비활성 상태다(`ACCOUNT_INACTIVE`).
   accountInactive,
@@ -83,7 +88,25 @@ class AuthFailure implements Exception {
   const AuthFailure(this.kind, {this.field});
 
   final AuthFailureKind kind;
+
+  /// 서버가 지목한 입력 경로. `"input.password"`처럼 **점으로 구분된 경로**로 오므로
+  /// 이름만 비교하려면 [fieldName]을 쓴다.
   final String? field;
+
+  /// [field]의 마지막 마디 — `"input.password"` → `"password"`.
+  ///
+  /// 화면은 자기 입력칸 이름(`email`/`password`)으로 비교하는데 서버는 경로를 준다.
+  /// 앞부분을 그대로 두고 비교하면 영원히 일치하지 않아 오류가 어느 칸에도 붙지
+  /// 않는다.
+  String? get fieldName {
+    final String? raw = field;
+    if (raw == null || raw.isEmpty) return null;
+    final int dot = raw.lastIndexOf('.');
+    return dot == -1 ? raw : raw.substring(dot + 1);
+  }
+
+  /// 이 실패가 [name] 입력칸을 가리키는지.
+  bool pointsAt(String name) => fieldName == name;
 
   /// 서버 `userErrors[].code` 문자열을 도메인 실패로 옮긴다.
   ///
@@ -120,6 +143,11 @@ class AuthFailure implements Exception {
         );
       case 'INVALID_INPUT':
         return AuthFailure(AuthFailureKind.invalidInput, field: field);
+      case 'PASSWORD_POLICY_VIOLATION':
+        return AuthFailure(
+          AuthFailureKind.passwordPolicyViolation,
+          field: field,
+        );
       case 'ACCOUNT_INACTIVE':
         return AuthFailure(AuthFailureKind.accountInactive, field: field);
       case 'VERIFICATION_RATE_LIMITED':

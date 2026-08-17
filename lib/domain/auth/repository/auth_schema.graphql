@@ -297,6 +297,9 @@ type UserError {
 # 깨지지 않도록 UserError.codeValue는 nullable이다.
 enum ErrorCode {
   INVALID_INPUT
+  # 비밀번호가 정책에 맞지 않다. 이전에는 INVALID_INPUT으로 왔다(서버 BREAKING).
+  # 이 코드가 오면 `field`가 어느 입력인지 가리킨다.
+  PASSWORD_POLICY_VIOLATION
   MEMBER_ALREADY_REGISTERED
   EMAIL_ALREADY_IN_USE
   SNS_VERIFICATION_FAILED

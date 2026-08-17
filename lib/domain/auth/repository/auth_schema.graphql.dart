@@ -2199,6 +2199,7 @@ Enum$TermsCode fromJson$Enum$TermsCode(String value) {
 
 enum Enum$ErrorCode {
   INVALID_INPUT,
+  PASSWORD_POLICY_VIOLATION,
   MEMBER_ALREADY_REGISTERED,
   EMAIL_ALREADY_IN_USE,
   SNS_VERIFICATION_FAILED,
@@ -2234,6 +2235,8 @@ String toJson$Enum$ErrorCode(Enum$ErrorCode e) {
   switch (e) {
     case Enum$ErrorCode.INVALID_INPUT:
       return r'INVALID_INPUT';
+    case Enum$ErrorCode.PASSWORD_POLICY_VIOLATION:
+      return r'PASSWORD_POLICY_VIOLATION';
     case Enum$ErrorCode.MEMBER_ALREADY_REGISTERED:
       return r'MEMBER_ALREADY_REGISTERED';
     case Enum$ErrorCode.EMAIL_ALREADY_IN_USE:
@@ -2289,6 +2292,8 @@ Enum$ErrorCode fromJson$Enum$ErrorCode(String value) {
   switch (value) {
     case r'INVALID_INPUT':
       return Enum$ErrorCode.INVALID_INPUT;
+    case r'PASSWORD_POLICY_VIOLATION':
+      return Enum$ErrorCode.PASSWORD_POLICY_VIOLATION;
     case r'MEMBER_ALREADY_REGISTERED':
       return Enum$ErrorCode.MEMBER_ALREADY_REGISTERED;
     case r'EMAIL_ALREADY_IN_USE':

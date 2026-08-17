@@ -47,6 +47,8 @@ String authFailureMessage(AppLocalizations l10n, Object error) {
       return l10n.errorMemberAlreadyRegistered;
     case AuthFailureKind.invalidInput:
       return l10n.errorInvalidInput;
+    case AuthFailureKind.passwordPolicyViolation:
+      return l10n.errorPasswordPolicyViolation;
     case AuthFailureKind.accountInactive:
       return l10n.errorAccountInactive;
     case AuthFailureKind.verificationRateLimited:
