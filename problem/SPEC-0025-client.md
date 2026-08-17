@@ -10,6 +10,7 @@
 |---|---|
 | 스와이프 카드 스택·드래그 | `lib/domain/spot/view/discover_swipe_view.dart` |
 | 스와이프 카드 표현 | `lib/domain/spot/component/swipe_card.dart` |
+| 상세 갤러리 표현(범위 확장) | `lib/domain/spot/component/spot_gallery.dart` |
 | 드래그 방향 표시 | `lib/domain/spot/component/drag_feedback_overlay.dart` |
 | 둘러보기 화면 골격 | `lib/domain/spot/view/discover_screen.dart` |
 | 홈 화면 앱바 | `lib/domain/spot/view/home_screen.dart` |
@@ -332,3 +333,21 @@ SPEC-0002 §4.7이 정한 "`contain` + 블러 배경"이 정답이었습니다. 
 
 블러본은 **원본을 변형하지 않습니다** — 원본은 위에 온전히 얹혀 있고 아래 깔린 것은 배경
 처리입니다. TYPE3 변경금지를 지키면서 화면도 채웁니다.
+
+### 8.3 상세 갤러리도 같은 규칙으로 맞췄습니다 (범위 확장, 사용자 요청)
+
+`spot_gallery.dart`는 주석에 적힌 대로 **저작권 분기 확정 전까지 임시로 `cover`**를 쓰고
+있었습니다("크롭 렌더링은 저작권 유형별 분기(`[TBD-1]`) 확정 전까지 SPEC-0002와 일관되게
+`BoxFit.cover`로 둔다"). 그 분기가 R13으로 확정되면서 여기도 적용했습니다 — 실제로 행사
+포스터의 제목이 상세에서 잘려 나갔습니다(사용자 지적).
+
+**같은 사진이 카드에서는 온전한데 상세에서는 잘리면 안 됩니다.** 두 화면 모두
+`SwipeCardDisplay.fitFor`를 씁니다.
+
+구현상 하나 걸린 것은 **첫 장의 저작권 근거**입니다. 갤러리 첫 장은 리스트에서 넘어온
+썸네일이라 `gallery` 배열에 없을 수 있고, 그러면 이미지별 `copyright`를 얻을 수 없습니다.
+`SpotGallery.fallbackCopyright`로 `SpotDetail.copyright`를 넘겨 받고, 그것도 없으면
+**크롭하지 않는 쪽**으로 떨어집니다.
+
+이 스펙의 원래 범위(§1)는 스와이프 카드였으므로 **범위 확장입니다.** 같은 결함이 두 화면에
+있는데 한쪽만 고치면 사용자가 다시 지적해야 하므로 함께 처리했습니다.
