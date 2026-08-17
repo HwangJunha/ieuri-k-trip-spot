@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 
 import '../../../common/widget/image_placeholder.dart';
@@ -31,14 +33,16 @@ class SwipeCard extends StatelessWidget {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final SwipeCardDisplay display = SwipeCardDisplay.of(spot);
 
-    // **사진을 화면 위쪽에만 둔다**(사용자 결정 2026-08-18).
+    // **사진이 남는 자리를 전부 가져간다.**
     //
-    // 전체화면으로 늘렸더니 원본(940×705)이 3.7배까지 확대돼 눈에 띄게 깨졌다.
-    // 사진 영역을 줄이면 확대율이 절반 아래로 떨어져 선명해지고, 아래는 정보가
-    // 자기 자리를 갖는다 — 사진 위에 글자를 얹지 않으니 스크림도 필요 없다.
-    final double? photoHeight = metrics?.photoHeight;
-    if (photoHeight == null) {
-      // 배치 수치를 모르는 자리(다음 카드 대기 등)에서는 예전처럼 꽉 채운다.
+    // 한동안 사진 높이를 이미지 비율에 맡겼는데, 가로로 넓은 사진이 걸리면 사진이
+    // 납작해지고 화면 아래 절반이 빈 여백으로 남았다 — 장소를 구경하는 화면에서
+    // 정작 장소가 안 보였다(사용자 지적 2026-08-18).
+    //
+    // 순서를 뒤집는다. **정보가 자기 내용만큼만 차지하고 사진이 나머지 전부를
+    // 가져간다.** 빈 공간이 생길 자리가 없어진다.
+    if (metrics == null) {
+      // 배치 수치를 모르는 자리(다음 카드 대기 등)에서는 꽉 채운다.
       return Stack(
         fit: StackFit.expand,
         children: <Widget>[
@@ -52,38 +56,17 @@ class SwipeCard extends StatelessWidget {
       color: theme.colorScheme.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        // **정보를 사진 바로 아래 붙인다.** 남는 자리는 아래에 몰아 둔다 — 가운데로
-        // 흩으면 사진과 글자 사이가 크게 비어 둘이 따로 노는 것으로 보인다.
-        mainAxisAlignment: MainAxisAlignment.start,
-        mainAxisSize: MainAxisSize.max,
         children: <Widget>[
-          // **사진이 밀려나도 좋다.** 화면이 작아 정보가 들어갈 자리가 모자라면
-          // 사진 쪽을 줄인다 — 고정 높이로 두면 작은 기기에서 정보 영역이 넘쳐
-          // 레이아웃이 터진다(테스트 화면 600×800에서 54px 넘침).
-          //
-          // `fit: FlexFit.loose`(기본)이라 **남는 자리를 가져가지 않는다** — 가져가게
-          // 두면 사진이 제 비율보다 커지는 대신 정보가 아래로 밀려 사이가 빈다.
-          // 그러면서도 자리가 **모자라면 줄어든다**(`Flexible`이라서) — 작은 화면에서
-          // 넘치지 않으려면 이 축소가 필요하다(600×800에서 148px 넘쳤다).
-          Flexible(
-            child: _PhotoArea(
-              display: display,
-              maxHeight: photoHeight,
-              // 하한을 두지 않는다. 하한에 걸리면 사진 영역이 실제 사진보다 커지고
-              // 그 안에서 `contain`이 가운데로 놓여 **아래에 빈 띠가 남는다**
-              // (실기기 확인 2026-08-18). 비율대로만 두면 사진이 끝나는 자리에서
-              // 곧바로 정보가 시작된다.
-              minHeight: 0,
-            ),
-          ),
-          // 정보는 **내용만큼만** 차지한다. `Expanded`로 남는 자리를 다 가져가면
-          // 화면이 작을 때 사진이 밀리기는커녕 이쪽이 넘친다.
+          // 사진이 남는 세로를 다 쓴다. 그 안을 채우는 방식만 저작권이 가른다 —
+          // TYPE1은 잘라서 채우고, TYPE3·미지정은 잘리지 않게 넣는다(R13).
+          Expanded(child: _CardImage(display: display, metrics: metrics!)),
+          // 정보는 **내용만큼만** 차지한다.
           Padding(
             padding: EdgeInsets.fromLTRB(
               20,
-              16,
+              14,
               20,
-              metrics?.overlayBottomInset ?? 20,
+              metrics!.overlayBottomInset,
             ),
             child: _Overlay(display: display, l10n: l10n, theme: theme),
           ),
@@ -93,184 +76,23 @@ class SwipeCard extends StatelessWidget {
   }
 }
 
-/// 사진 영역. **높이를 사진 비율에 맞춰 정한다.**
-///
-/// 고정 높이로 두면 가로 사진(4:3)이 세로로 긴 영역에 들어가 아래쪽에 블러 여백이
-/// 크게 남는다 — 화면 4분의 1이 흐릿한 띠가 됐다(실기기 확인 2026-08-18). 사진
-/// 비율대로 높이를 잡으면 그 여백 자체가 생기지 않는다.
-///
-/// [maxHeight]는 상한일 뿐이다. 세로로 긴 포스터는 여기 걸려 그 안에서 `contain`으로
-/// 들어가고(그때는 좌우에 여백이 남는다), 가로 사진은 상한에 닿지 않아 딱 맞게 그려진다.
-class _PhotoArea extends StatelessWidget {
-  const _PhotoArea({
-    required this.display,
-    required this.maxHeight,
-    required this.minHeight,
-  });
-
-  final SwipeCardDisplay display;
-  final double maxHeight;
-
-  /// 사진이 아무리 납작해도 이만큼은 차지한다.
-  ///
-  /// 비율대로만 두면 가로로 넓은 사진이 낮게 깔려 **아래가 크게 빈다**(실기기
-  /// 확인 2026-08-18). 하한을 두면 그런 사진은 좌우가 아니라 위아래로만 살짝
-  /// 여백을 남기고 화면이 찬다.
-  final double minHeight;
-
-  @override
-  Widget build(BuildContext context) {
-    // 크롭이 허용되면 예전처럼 영역을 꽉 채운다 — 여백이 안 생기므로 비율을 잴
-    // 이유가 없다.
-    if (!display.fit.needsBlurBackdrop) {
-      // 부모가 내준 자리가 더 좁으면 그쪽을 따른다 — 작은 화면에서 넘치지 않는다.
-      return LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) => SizedBox(
-          height: constraints.maxHeight.isFinite
-              ? (constraints.maxHeight < maxHeight
-                    ? constraints.maxHeight
-                    : maxHeight)
-              : maxHeight,
-          child: _CardImage(display: display),
-        ),
-      );
-    }
-
-    return _AspectPhoto(
-      display: display,
-      maxHeight: maxHeight,
-      minHeight: minHeight,
-    );
-  }
-}
-
-/// 사진의 실제 비율을 알아내 그만큼만 높이를 차지한다.
-///
-/// 비율은 이미지가 실제로 도착해야 알 수 있으므로 [Image.resolve]로 받아 온다.
-/// 아직 모르는 동안에는 상한 높이를 그대로 쓴다 — 도착하면 제 비율로 줄어든다.
-class _AspectPhoto extends StatefulWidget {
-  const _AspectPhoto({
-    required this.display,
-    required this.maxHeight,
-    required this.minHeight,
-  });
-
-  final SwipeCardDisplay display;
-  final double maxHeight;
-  final double minHeight;
-
-  @override
-  State<_AspectPhoto> createState() => _AspectPhotoState();
-}
-
-class _AspectPhotoState extends State<_AspectPhoto> {
-  /// 사진의 가로/세로 비. 아직 모르면 null.
-  double? _ratio;
-
-  ImageStream? _stream;
-  ImageStreamListener? _listener;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _resolve();
-  }
-
-  @override
-  void didUpdateWidget(_AspectPhoto old) {
-    super.didUpdateWidget(old);
-    if (old.display.imageRef != widget.display.imageRef) {
-      _ratio = null;
-      _resolve();
-    }
-  }
-
-  /// 이미지 비율을 받아 온다. URL이 아니면(목 참조) 잴 것이 없다.
-  void _resolve() {
-    final String ref = widget.display.imageRef;
-    if (!ref.startsWith('http')) return;
-
-    _dropListener();
-
-    final ImageStream stream = NetworkImage(
-      ref,
-    ).resolve(createLocalImageConfiguration(context));
-    final ImageStreamListener listener = ImageStreamListener((
-      ImageInfo info,
-      bool _,
-    ) {
-      final double ratio = info.image.width / info.image.height;
-      info.image.dispose();
-      if (!mounted) return;
-      setState(() => _ratio = ratio);
-      // 사진 하나를 못 재도 카드는 그려져야 한다 — 상한 높이로 떨어진다.
-    }, onError: (Object error, StackTrace? stack) {});
-
-    _stream = stream..addListener(listener);
-    _listener = listener;
-  }
-
-  void _dropListener() {
-    if (_stream != null && _listener != null) {
-      _stream!.removeListener(_listener!);
-    }
-    _stream = null;
-    _listener = null;
-  }
-
-  @override
-  void dispose() {
-    _dropListener();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final double? ratio = _ratio;
-
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        // 상한은 둘 중 작은 쪽이다 — 설계가 정한 [maxHeight]와, 부모가 실제로 내준
-        // 자리. 작은 화면에서는 후자가 더 작고, 그때 사진이 줄어야 정보가 넘치지
-        // 않는다.
-        final double cap = constraints.maxHeight.isFinite
-            ? (constraints.maxHeight < widget.maxHeight
-                  ? constraints.maxHeight
-                  : widget.maxHeight)
-            : widget.maxHeight;
-
-        // 비율을 아직 모르면 상한을 쓴다. 알면 폭에 맞춘 높이를 쓰되 상한을 넘지
-        // 않는다 — 세로로 긴 포스터가 화면을 다 먹으면 정보가 밀린다.
-        final double height = ratio == null
-            ? cap
-            : (constraints.maxWidth / ratio).clamp(
-                widget.minHeight.clamp(0.0, cap),
-                cap,
-              );
-
-        return SizedBox(
-          height: height,
-          child: _CardImage(display: widget.display),
-        );
-      },
-    );
-  }
-}
-
 /// 이미지 렌더. 맞춤 방식은 [SwipeCardDisplay.fit]이 정한다(R13).
 ///
 /// 네트워크 URL이면 [Image.network](로딩 중·실패 시 색블록 플레이스홀더로 폴백),
 /// URL이 아니면 (Home 목 참조 등) 색블록 플레이스홀더를 렌더한다.
 class _CardImage extends StatelessWidget {
-  const _CardImage({required this.display});
+  const _CardImage({required this.display, this.metrics});
 
   final SwipeCardDisplay display;
+
+  /// 배치 수치. 있으면 **카테고리 바에 가리는 만큼 사진을 아래로 민다.**
+  final SwipeCardMetrics? metrics;
 
   bool get _isUrl => display.imageRef.startsWith('http');
 
   @override
   Widget build(BuildContext context) {
-    if (!_isUrl) return ImagePlaceholder(imageRef: display.imageRef);
+    if (!_isUrl) return _inset(ImagePlaceholder(imageRef: display.imageRef));
 
     final bool crops = display.fit == SwipeCardFit.cover;
 
@@ -290,21 +112,70 @@ class _CardImage extends StatelessWidget {
           ImagePlaceholder(imageRef: display.imageRef),
     );
 
-    if (!display.fit.needsBlurBackdrop) return image;
+    if (!display.fit.needsBlurBackdrop) return _inset(image);
 
-    // 크롭이 금지된 이미지는 원본 비율을 지키느라 여백이 생긴다. **그 여백은 카드
-    // 배경색으로 둔다.**
+    // 크롭이 금지된 이미지는 원본 비율을 지키느라 여백이 생긴다. **그 여백을 같은
+    // 사진의 블러본으로 채운다**(SPEC-0002 §4.7이 정한 방식).
     //
-    // 처음에는 같은 사진의 블러본을 깔았는데(SPEC-0002 §4.7이 예로 든 방식), 사진
-    // 높이를 비율에 맞춘 뒤로는 여백이 얇은 띠만 남아 **그 띠만 흐릿하게 도드라졌다**
-    // (실기기 확인 2026-08-18). 배경색과 같게 두면 사진이 끝나는 자리가 아래 정보
-    // 영역으로 그대로 이어진다.
+    // 배경색으로 비워도 봤지만, 사진 비율과 화면 비율이 다르면 그 여백이 화면 절반에
+    // 이른다 — 가로로 넓은 사진(16:9)에서 위아래가 통째로 빈 띠가 됐다(사용자 지적
+    // 2026-08-18). 장소를 구경하는 화면에서 장소가 안 보이면 안 된다.
     //
-    // 어느 쪽이든 **원본을 변형하지 않는다**는 점은 같다 — 원본은 그대로 얹혀 있고
-    // 아래 깔린 것은 배경 처리다.
-    return ColoredBox(
-      color: Theme.of(context).colorScheme.surface,
-      child: image,
+    // **원본을 변형하는 것이 아니다** — 원본은 위에 잘리지 않은 채로 그대로 얹혀
+    // 있고, 아래 깔린 블러본은 배경 처리다. TYPE3 변경금지를 지키면서 화면도 채운다.
+    return Stack(
+      fit: StackFit.expand,
+      children: <Widget>[
+        _BlurBackdrop(imageRef: display.imageRef),
+        _inset(image),
+      ],
+    );
+  }
+
+  /// 카테고리 바가 덮는 만큼 사진을 아래로 민다.
+  ///
+  /// 칩이 사진 **위에 겹쳐** 있으므로(R14) 사진 맨 위는 늘 가려진다 — 그대로 두면
+  /// 사진의 주요 부분이 칩 뒤로 숨는다(사용자 지적 2026-08-18: "사진은 카테고리에
+  /// 다 짤려서 안 보인다").
+  ///
+  /// 겹침 자체는 R14가 정한 것이라 되돌리지 않는다. 대신 사진을 그만큼 내려 **가려도
+  /// 되는 자리**를 위에 만든다 — 그 자리는 배경색이라 칩이 얹혀도 잃는 것이 없다.
+  Widget _inset(Widget child) {
+    final double top = metrics?.topScrimHeight ?? 0;
+    if (top <= 0) return child;
+    return Padding(padding: EdgeInsets.only(top: top), child: child);
+  }
+}
+
+/// `contain`으로 그릴 때 남는 여백을 채우는 블러 배경.
+///
+/// 원본을 확대·블러해 뒤에 깔고 그 위에 원본을 온전히 얹는다 — **원본은 변형되지
+/// 않는다**(TYPE3 변경금지를 지키는 방식, SPEC-0002 §4.7).
+///
+/// 강하게 어둡게 덮지 않는다. 여백이 화면의 상당 부분을 차지하므로 과하게 누르면
+/// 그 자체가 시커먼 띠로 읽힌다 — 원본과 갈릴 만큼만 눌러 준다.
+class _BlurBackdrop extends StatelessWidget {
+  const _BlurBackdrop({required this.imageRef});
+
+  final String imageRef;
+
+  @override
+  Widget build(BuildContext context) {
+    return ImageFiltered(
+      imageFilter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+      child: ColorFiltered(
+        colorFilter: const ColorFilter.mode(Colors.black26, BlendMode.darken),
+        child: Image.network(
+          imageRef,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+          // 배경이 실패해도 카드는 성립한다 — 빈 색으로 떨어뜨린다.
+          errorBuilder:
+              (BuildContext context, Object error, StackTrace? stack) =>
+                  ColoredBox(color: Theme.of(context).colorScheme.surface),
+        ),
+      ),
     );
   }
 }

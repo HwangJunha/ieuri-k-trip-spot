@@ -171,22 +171,6 @@ void main() {
       expect(metricsOf(topPadding: 47).topScrimHeight, 47 + 68);
     });
 
-    /// **사진은 카드를 다 채우지 않는다**(사용자 결정 2026-08-18). 관광공사 원본이
-    /// 940×705가 최대라 전체화면으로 늘리면 3.7배까지 확대돼 깨졌다 — 사진 영역을
-    /// 줄여 확대율을 절반 아래로 눌렀다.
-    test('사진은 카드 높이의 일부만 차지한다', () {
-      final SwipeCardMetrics metrics = metricsOf(height: 800);
-
-      expect(metrics.photoHeight, lessThan(metrics.height));
-      expect(metrics.photoHeight, greaterThan(metrics.height / 2));
-    });
-
-    /// 나머지가 정보 영역이므로 사진이 카드를 다 먹으면 안 된다.
-    test('정보 영역이 남는다', () {
-      final SwipeCardMetrics metrics = metricsOf(height: 800);
-
-      expect(metrics.height - metrics.photoHeight, greaterThan(100));
-    });
   });
 
   group('드래그 판정 (R3·R4)', () {
