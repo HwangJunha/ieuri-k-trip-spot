@@ -26,7 +26,12 @@ class SpotCategoryBar extends StatelessWidget {
     required this.selected,
     required this.onToggle,
     required this.onSelectAll,
+    this.onImage = false,
   });
+
+  /// 사진 위에 얹히는가 — 라벨 색을 가른다(→[CategoryBarEntry.onImage]).
+  /// 둘러보기 전체화면만 참이다.
+  final bool onImage;
 
   /// 서버가 준 가용 카테고리. 비어 있으면 바를 그리지 않는다.
   final List<SpotCategory> available;
@@ -42,6 +47,7 @@ class SpotCategoryBar extends StatelessWidget {
     available: spotCategoryChips(available),
     selectedIds: selected.map((SpotCategory c) => c.code).toSet(),
     allLabel: AppLocalizations.of(context).categoryAll,
+    onImage: onImage,
     onToggle: (String code) => onToggle(
       available.firstWhere(
         (SpotCategory c) => c.code == code,

@@ -41,10 +41,10 @@ class SwipeCardMetrics {
       // **고정 픽셀값을 쓰지 않는다**(설계 §2.2). 정보가 화면 최하단에 붙으므로 기기의
       // 안전 영역을 침범하지 않아야 하는데, 그 높이는 기기마다 다르다.
       //
-      // 하단 탭 바가 카드 아래에 따로 있으면 안전 영역은 그쪽이 이미 감당하므로
-      // 여기서 또 빼지 않는다 — 둘 다 빼면 정보가 화면 중간에 뜬다.
-      overlayBottomInset:
-          _base + (bottomNavHeight > 0 ? 0 : _nonNegative(bottomViewPadding)),
+      // 카드가 하단 내비 바 **아래까지** 그려지는 셸에서는(`extendBody: true`)
+      // 호출부가 그 바 높이를 [bottomViewPadding]에 함께 실어 보낸다 — 사진은 바
+      // 뒤로 흘러도 되지만 글자가 가리면 읽을 수 없기 때문이다.
+      overlayBottomInset: _base + _nonNegative(bottomViewPadding),
       // 앱바·카테고리 바가 사진 위에 겹치므로 그 영역에 상단 스크림을 깐다(R14).
       // 밝은 사진 위에서 44x44 원형 아이콘이 특히 취약하다(설계 §2.5).
       topScrimHeight:

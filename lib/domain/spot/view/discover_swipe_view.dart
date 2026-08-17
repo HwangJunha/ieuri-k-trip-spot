@@ -8,6 +8,7 @@ import '../../../common/permission/model/permission_state.dart';
 import '../../../common/permission/provider/permission_providers.dart';
 import '../../../common/storage/search_radius_controller.dart';
 import '../../../common/widget/failure_notice.dart';
+import '../../../common/widget/floating_bottom_nav_scaffold.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../common/category/spot_category_bar.dart';
 import '../component/drag_feedback_overlay.dart';
@@ -66,7 +67,18 @@ class DiscoverSwipeView extends ConsumerWidget {
           left: 0,
           right: 0,
           child: _OverlayControls(
+            // **대화 목록 진입점을 이 화면에서 뺐다**(사용자 결정 2026-08-18).
+            //
+            // SPEC-0021이 피드를 걷으면서 임시로 둘러보기 앱바에 얹어 둔 것인데,
+            // 관광 추천 화면에 메일 아이콘이 붙어 있는 어색함을 그 스펙도 이미
+            // 인정하고 있었다. 사용자가 "발견에서는 쓰지 않는다"고 정리했다 —
+            // 추후 단체방 기능에서 쓸 자리를 따로 잡는다.
+            //
+            // `MessagesEntryButton`은 지우지 않는다. 컴포넌트는 그대로 두고 이
+            // 화면에서만 걷어낸 것이라, 단체방이 생기면 그 자리에 그대로 쓴다.
             child: SpotCategoryBar(
+              // 사진 위에 얹히므로 라벨을 흰색으로 받는다(R14의 가독성 보조).
+              onImage: true,
               // 스와이프의 선택 상태는 세션에 속하는 keepAlive provider다(탭을
               // 옮겼다 와도 유지된다, AC12.3).
               available:
@@ -97,28 +109,34 @@ class _OverlayControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 앱바가 투명하게 겹쳐 있으므로(→[DiscoverScreen]) 그 아래로 내려 앉힌다 —
-    // 상태바 높이와 앱바 높이를 더한 만큼이 앱바가 실제로 덮는 영역이다.
-    final double appBarInset =
-        MediaQuery.of(context).viewPadding.top + kToolbarHeight;
+    // 앱바가 없으므로(→[DiscoverScreen]) 상태바만 피하면 된다. 예전에는 여기에
+    // `kToolbarHeight`를 더했는데, 그 앱바가 칩과 같은 띠를 두고 다투던 것이
+    // 문제였다.
+    final double topInset = MediaQuery.of(context).viewPadding.top;
 
     return DecoratedBox(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: <Color>[Colors.black54, Colors.transparent],
+          // **칩 라벨까지 덮어야 한다.** `black54 → transparent`로는 라벨이 있는
+          // 아래쪽에서 이미 투명해져 "관광지·문화시설"이 건물 사진에 묻혔다
+          // (실기기 확인 2026-08-18). 라벨이 끝나는 지점(0.8)까지 어둠을 끌고 간 뒤
+          // 거기서만 풀어 준다.
+          colors: <Color>[Colors.black87, Colors.black54, Colors.transparent],
+          stops: <double>[0, 0.8, 1],
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.only(top: appBarInset + 8, bottom: 16),
+        // 아래 여백을 넉넉히 둬야 그라데이션이 칩 아래에서 자연스럽게 사라진다.
+        padding: EdgeInsets.only(top: topInset + 8, bottom: 28),
         child: child,
       ),
     );
   }
 }
 
-/// 겹쳐 놓인 카테고리 바가 차지하는 높이. 카드 위 스크림을 그 높이에 맞춘다.
+/// 겹쳐 놓인 카테고리 칩 줄이 차지하는 높이.
 const double _overlayControlsHeight = 68;
 
 /// 위치 영구거부 상태: SPEC-0001의 [PermissionBlockedNotice]를 재사용해 설정 이동
@@ -358,10 +376,18 @@ class _CardStackState extends ConsumerState<_CardStack> {
         final SwipeCardMetrics metrics = SwipeCardMetrics.fromScreen(
           screenWidth: width,
           screenHeight: constraints.maxHeight,
-          // 카드 스택은 이미 하단 탭 바 위 영역만 받는다 — 여기서 또 빼면 두 번
-          // 빼는 셈이 된다. 안전 영역은 [SwipeCardMetrics]가 감당한다.
+          // **카드는 화면 끝까지 그린다**(AC R1-2) — 셸이 `extendBody: true`라
+          // 떠 있는 내비 바 아래까지 사진이 깔린다. 높이에서 빼지 않는 이유가
+          // 이것이다.
           bottomNavHeight: 0,
-          bottomViewPadding: media.viewPadding.bottom,
+          // 대신 **하단 정보는 그 바를 피해야 한다.** 사진은 바 뒤로 흘러도
+          // 좋지만 글자가 가리면 읽을 수 없다(실기기 확인, 2026-08-18: 출처와
+          // 거리가 내비 바에 묻혔다).
+          //
+          // 값을 여기 복사하지 않고 셸의 상수를 쓴다 — 바 높이가 바뀌면 이
+          // 보정도 함께 따라와야 한다(그 파일의 주석이 명시한 계약이다).
+          bottomViewPadding:
+              media.viewPadding.bottom + FloatingBottomNavScaffold.barExtent,
           topViewPadding: media.viewPadding.top,
           overlayControlsHeight: _overlayControlsHeight,
         );

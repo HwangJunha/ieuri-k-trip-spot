@@ -28,42 +28,46 @@ void main() {
     attributionText: attributionText,
   );
 
-  group('저작권 유형별 이미지 맞춤 (R13)', () {
-    /// AC R13-1: TYPE1은 자유 이용이라 영역을 채운다.
-    test('TYPE1은 영역을 채운다', () {
-      expect(
-        SwipeCardDisplay.fitFor(CopyrightType.type1),
-        SwipeCardFit.cover,
-      );
+  group('이미지 맞춤 — [AMEND] 전 유형 cover (사용자 결정 2026-08-18)', () {
+    /// **R13의 분기가 뒤집혔다.** 원래 TYPE3·미지정은 `contain` + 블러 배경이었으나
+    /// (SPEC-0002 §4.7), 전체화면에서 세로 화면에 가로 사진이 들어오면 블러 여백이
+    /// 화면 대부분을 차지해 사용자가 뒤집었다.
+    ///
+    /// 저작인격권 상 트레이드오프가 있다 — `problem/SPEC-0025-client.md` §7 참조.
+    /// 되돌릴 때는 여기 네 개 테스트가 함께 바뀐다.
+    test('저작권 유형과 무관하게 영역을 채운다', () {
+      for (final CopyrightType? copyright in <CopyrightType?>[
+        CopyrightType.type1,
+        CopyrightType.type3,
+        CopyrightType.unspecified,
+        null,
+      ]) {
+        expect(
+          SwipeCardDisplay.fitFor(copyright),
+          SwipeCardFit.cover,
+          reason: '$copyright도 cover여야 한다',
+        );
+      }
     });
 
-    /// AC R13-2: TYPE3은 변형 금지라 크롭하지 않는다. 전체화면화로 크롭 면적이
-    /// 커졌으므로 이 분기를 빼면 미준수가 악화된다(설계 §2.3).
-    test('TYPE3은 크롭하지 않는다', () {
-      expect(
-        SwipeCardDisplay.fitFor(CopyrightType.type3),
-        SwipeCardFit.contain,
-      );
-    });
-
-    /// AC R13-3: 미지정은 변형 불가로 간주한다 — 변형해도 되는지 모르는 이미지를
-    /// 크롭하는 것보다 여백을 남기는 편이 안전하다.
-    test('미지정은 TYPE3과 같이 다룬다', () {
-      expect(
-        SwipeCardDisplay.fitFor(CopyrightType.unspecified),
-        SwipeCardFit.contain,
-      );
-    });
-
-    /// 저작권 정보 자체가 없는 경우도 같은 이유로 크롭하지 않는다.
-    test('저작권 정보가 없으면 크롭하지 않는다', () {
-      expect(SwipeCardDisplay.fitFor(null), SwipeCardFit.contain);
-    });
-
-    /// AC R13-4: 크롭을 피하면 여백이 생기고, 그 여백은 블러 배경이 메운다.
-    test('크롭을 피할 때만 블러 배경이 필요하다', () {
-      expect(SwipeCardFit.contain.needsBlurBackdrop, isTrue);
+    /// 영역을 채우면 여백이 없으므로 블러 배경도 필요 없다.
+    test('채우기에는 블러 배경이 필요 없다', () {
       expect(SwipeCardFit.cover.needsBlurBackdrop, isFalse);
+    });
+
+    /// `contain` 자체는 남겨 둔다 — 되돌릴 때 쓸 경로이고, 블러 배경 규칙도 함께
+    /// 살아 있어야 한다.
+    test('크롭을 피하는 경로는 여전히 블러 배경을 요구한다', () {
+      expect(SwipeCardFit.contain.needsBlurBackdrop, isTrue);
+    });
+
+    /// 크롭 여부와 별개로 **출처 표기는 계속 지킨다.**
+    test('출처 표기는 유지된다', () {
+      expect(
+        SwipeCardDisplay.of(spotWith(attributionText: '한국관광공사'))
+            .showsAttribution,
+        isTrue,
+      );
     });
   });
 
@@ -143,12 +147,16 @@ void main() {
       expect(wide, greaterThan(narrow));
     });
 
-    /// 하단 탭 바가 카드 아래에 따로 있으면 안전 영역은 그쪽이 감당한다 — 여기서 또
-    /// 빼면 정보가 화면 중간에 떠 보인다.
-    test('하단 탭 바가 있으면 안전 영역을 중복해서 빼지 않는다', () {
+    /// 셸이 `extendBody: true`라 사진은 떠 있는 내비 바 아래까지 깔리지만, **글자는
+    /// 그 바를 피해야 한다**(실기기 확인 2026-08-18: 출처와 거리가 바에 묻혔다).
+    /// 호출부가 바 높이를 안전 영역에 실어 보내므로 여백이 그만큼 커진다.
+    test('내비 바 높이를 실어 보내면 하단 여백이 그만큼 커진다', () {
+      const double barExtent = 96;
+
       expect(
-        metricsOf(bottomNav: 80, bottomPadding: 34).overlayBottomInset,
-        metricsOf(bottomNav: 80, bottomPadding: 0).overlayBottomInset,
+        metricsOf(bottomPadding: 34 + barExtent).overlayBottomInset -
+            metricsOf(bottomPadding: 34).overlayBottomInset,
+        barExtent,
       );
     });
 
