@@ -51,6 +51,15 @@ class AgreementsController extends _$AgreementsController {
     final AsyncValue<AuthState> auth = ref.watch(authControllerProvider);
     if (auth.value?.isAuthenticated != true) return const <AgreementStatus>[];
 
+    // **이메일 인증 전에도 조회하지 않는다**(SPEC-0024 §2). 서버가 미인증 회원의
+    // `agreements`를 `EMAIL_NOT_VERIFIED`로 거절하는데, 이 provider는 위에서
+    // `authControllerProvider`를 watch하므로 그 실패를 계기로 인증 상태를 다시 읽는
+    // 안전망이 돌면 build가 다시 트리거돼 조회가 끝없이 반복된다(실기기 확인).
+    //
+    // 약관 게이트는 어차피 인증을 마친 사용자에게만 의미가 있어서, 여기서 비워 둬도
+    // 잃는 것이 없다 — 인증이 끝나면 watch가 이 provider를 다시 만들어 그때 조회한다.
+    if (!(auth.value?.emailVerified ?? false)) return const <AgreementStatus>[];
+
     return ref.watch(settingsRepositoryProvider).fetchAgreements();
   }
 

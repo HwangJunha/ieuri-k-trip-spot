@@ -56,7 +56,16 @@ Future<SecureStorage> seededSecureStorage({
 class FakeAuthRepository implements AuthRepository {
   FakeAuthRepository({
     this.session,
-    this.me = const Me(id: '7', email: 'a@b.com', nickname: 'Traveler'),
+    // 기본값은 **이메일 인증을 마친** 회원이다(SPEC-0024 R10). 라우터 게이트가
+    // `emailVerified`로 메인 진입을 막으므로, 기본이 미인증이면 인증과 무관한
+    // 테스트까지 전부 인증 화면에 갇힌다. 미인증은 그것을 보려는 테스트가
+    // 명시적으로 넘긴다.
+    this.me = const Me(
+      id: '7',
+      email: 'a@b.com',
+      nickname: 'Traveler',
+      emailVerified: true,
+    ),
     this.failure,
     this.verificationId = 'verify-1',
     this.refreshResult,
@@ -124,11 +133,15 @@ class FakeAuthRepository implements AuthRepository {
     return EmailVerificationHandle(verificationId: verificationId);
   }
 
+  /// verifyEmail 호출을 기록한다 — 빈 verificationId로 나가지 않는지 검증한다.
+  final List<String> verifiedHandles = <String>[];
+
   @override
   Future<void> verifyEmail({
     required String verificationId,
     required String code,
   }) async {
+    verifiedHandles.add(verificationId);
     if (failure != null) throw failure!;
   }
 
@@ -138,6 +151,19 @@ class FakeAuthRepository implements AuthRepository {
   }) async {
     if (failure != null) throw failure!;
     return EmailVerificationHandle(verificationId: this.verificationId);
+  }
+
+  /// 주소 정정 호출을 기록한다(SPEC-0024 R7) — 어떤 주소로 나갔는지 검증한다.
+  final List<String> retargetedEmails = <String>[];
+
+  @override
+  Future<EmailVerificationHandle> retargetEmailVerification({
+    required String newEmail,
+  }) async {
+    retargetedEmails.add(newEmail);
+    if (failure != null) throw failure!;
+    // 서버는 정정 시 **새** 핸들을 낸다 — 이전 코드가 무효화되기 때문이다.
+    return EmailVerificationHandle(verificationId: 'retargeted-$verificationId');
   }
 
   @override
@@ -180,8 +206,12 @@ class FakeAuthRepository implements AuthRepository {
     return snsRegistrationResult;
   }
 
+  /// `fetchMe` 호출 횟수. 안전망이 조회를 되풀이하지 않는지 세는 데 쓴다.
+  int fetchMeCalls = 0;
+
   @override
   Future<Me> fetchMe() async {
+    fetchMeCalls++;
     if (tokenProbe != null) {
       accessTokenAtFetchMe = await tokenProbe!.readAccessToken();
     }
@@ -208,7 +238,11 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> requestPasswordReset({required String email}) async {}
+  Future<void> requestPasswordReset({required String email}) async {
+    // 다른 메서드와 같이 [failure]를 존중한다 — 그러지 않으면 재설정 화면의 실패
+    // 분기를 시험할 수 없다.
+    if (failure != null) throw failure!;
+  }
 
   @override
   Future<void> resetPassword({

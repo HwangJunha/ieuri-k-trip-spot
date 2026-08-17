@@ -32,7 +32,10 @@ class AuthController extends _$AuthController {
   Future<AuthState> build() async {
     // Register the refresh hook so the network layer can renew an expired
     // access token without importing this provider (breaks the cycle, §8).
-    ref.read(tokenRefreshBridgeProvider).refresher = _refreshAccessToken;
+    final TokenRefreshBridge bridge = ref.read(tokenRefreshBridgeProvider);
+    bridge.refresher = _refreshAccessToken;
+    // 같은 이유로 미인증 안전망도 콜백으로 등록한다(SPEC-0024 §2).
+    bridge.emailNotVerifiedHandler = handleEmailNotVerified;
     return _restoreSession();
   }
 
@@ -157,7 +160,19 @@ class AuthController extends _$AuthController {
         // 빠뜨리면 기존 회원이 영영 연동 해제 대상이 되지 못한다.
         authorizationCode: credential.authorizationCode,
       );
-      state = await AsyncValue.guard(() => _establishSession(tokens));
+      // **`guard`로 삼키지 않는다.** 삼키면 `_establishSession`(=`me` 조회) 실패가
+      // error 상태로 남는데, 게이트는 error를 "판정 불가"로 접어 로그인 화면에
+      // 그대로 둔다 — 토큰은 이미 저장됐는데 사용자는 로그인이 안 된 것처럼 보여
+      // 계속 다시 시도하게 된다(실기기에서 구글 로그인이 반복된 원인).
+      //
+      // 던지면 로그인 화면이 오류를 보여 주고, 사용자는 무슨 일이 일어났는지 안다.
+      // 토큰은 저장돼 있으므로 다음 시도나 앱 재시작 때 세션 복원이 이어받는다.
+      try {
+        state = AsyncValue<AuthState>.data(await _establishSession(tokens));
+      } on Object {
+        state = previous;
+        rethrow;
+      }
       return const SnsAuthenticated();
     } on AuthFailure catch (failure) {
       // Not registered yet → route to SNS sign-up. Restore the prior state so
@@ -215,6 +230,14 @@ class AuthController extends _$AuthController {
     required String verificationId,
   }) => _repo.resendVerification(verificationId: verificationId);
 
+  /// 인증 대상 주소를 바꾸고 새 코드를 받는다(SPEC-0024 R7).
+  ///
+  /// `state`를 건드리지 않는다 — 인증 전 상태가 그대로 유지돼야 하고, 주소는
+  /// **인증을 통과할 때** 확정되므로 여기서 `me`를 다시 읽어도 옛 주소가 온다.
+  Future<EmailVerificationHandle> retargetEmailVerification({
+    required String newEmail,
+  }) => _repo.retargetEmailVerification(newEmail: newEmail);
+
   Future<void> requestPasswordReset({required String email}) =>
       _repo.requestPasswordReset(email: email);
 
@@ -253,12 +276,41 @@ class AuthController extends _$AuthController {
     if (current == null || session == null) return;
     try {
       final Me me = await _repo.fetchMe();
+      // **값이 그대로면 대입하지 않는다.** 같은 값이라도 새 AsyncValue를 넣으면
+      // 리스너가 깨어나고, 라우터가 리다이렉트를 다시 평가하면서 화면이 재구독한
+      // provider가 또 조회를 낸다 — 그 응답이 다시 여기로 돌아오면 앱이 서버를
+      // 무한히 두드린다(실기기에서 agreements·me가 끝없이 반복했다).
+      if (session.user == me) return;
       state = AsyncValue<AuthState>.data(
         current.copyWith(session: session.copyWith(user: me)),
       );
     } on Object {
       // 표시값만 옛것으로 남는다 — 다음 조회에서 맞춰진다.
     }
+  }
+
+  /// 서버가 `EMAIL_NOT_VERIFIED`를 최상위 오류로 보냈을 때의 안전망
+  /// (SPEC-0024 §2, 설계 §3).
+  ///
+  /// 라우팅 게이트가 정상 동작하면 이 오류는 원칙적으로 발생하지 않는다. 그래도
+  /// 두는 이유는 두 가지다 — 게이트가 놓친 진입점이 있거나, 인증 상태가 서버에서
+  /// 바뀐 경우다.
+  ///
+  /// **토큰을 지우지 않는다.** 토큰 자체는 유효하고 문제는 인증 상태뿐이라,
+  /// 로그아웃시키면 사용자가 이유 없이 로그인 화면으로 튕긴다. `me`를 다시 읽어
+  /// 세션의 `emailVerified`를 서버 값에 맞추면 게이트가 인증 화면으로 보낸다.
+  ///
+  /// 화면별로 잡지 않고 여기 한 곳에 둔다(설계 §3).
+  ///
+  /// **이미 미인증으로 알고 있으면 아무것도 하지 않는다.** 인증 화면에 머무는 동안
+  /// 화면들이 보내는 요청은 전부 이 오류로 거절되는데, 그때마다 `me`를 다시 읽으면
+  /// 조회가 끝없이 이어진다. 이 안전망이 필요한 경우는 앱이 인증을 마쳤다고
+  /// **잘못 알고 있을 때**뿐이고, 그때만 서버 값을 다시 읽으면 된다.
+  Future<void> handleEmailNotVerified() async {
+    final AuthState? current = state.value;
+    if (current == null || !current.isAuthenticated) return;
+    if (!current.emailVerified) return; // 이미 안다 — 게이트가 처리 중이다.
+    await refreshMe();
   }
 
   /// Marks onboarding done for the current account and updates state so the

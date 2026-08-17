@@ -7,11 +7,28 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 /// 도메인 계층이 볼 수 있는 유일한 값이다.
 enum AuthErrorClass {
   /// 인증 실패 — accessToken이 만료/무효. 갱신을 트리거해야 한다(E1·E2, R4·R5).
+  ///
+  /// 서버의 `UNAUTHENTICATED`와 `INVALID_TOKEN`이 모두 여기로 온다. 둘 다 갱신으로
+  /// 회복될 수 있는 상태이고, 갱신이 실패하면 그때 [refreshRejected]로 넘어간다.
   unauthenticated,
 
-  /// 갱신 거부 — refreshToken 자체가 무효하거나 재사용이 감지됨. 토큰을 제거하고
-  /// 세션을 종료해야 한다(E3·E4, R9·R11).
+  /// 갱신 거부 — refreshToken 자체가 무효하다. 토큰을 제거하고 세션을 종료해야
+  /// 한다(E3, R9·R11).
   refreshRejected,
+
+  /// 재사용 감지 — 회원의 모든 refresh가 폐기됐다(SPEC-0024 §6, E4).
+  ///
+  /// **[refreshRejected]와 나눈다.** 결과는 둘 다 세션 종료지만, 이쪽은 **재발급을
+  /// 시도해서는 안 되는** 상태다. 뭉개 두면 갱신 링크가 회복 불가능한 상태에서
+  /// 갱신을 계속 시도한다. 서버가 이번에 코드를 붙여 주기 전에는 구분할 수 없었다.
+  tokenReuseDetected,
+
+  /// 이메일 인증을 마치지 않은 회원의 비허용 호출(SPEC-0024 §2). 인증 화면으로
+  /// 보내는 신호다 — 토큰은 유효하므로 갱신하거나 지우면 안 된다.
+  emailNotVerified,
+
+  /// 권한 없음. 인증은 됐으나 이 오퍼레이션을 부를 자격이 없다.
+  forbidden,
 
   /// 전송 실패 — 네트워크가 끊겼거나 서버에 닿지 못함. 토큰을 유지한 채 오류만
   /// 전파한다(E5, R10).
@@ -63,17 +80,31 @@ AuthErrorClass classifyGraphqlErrors(List<GraphQLError> errors) {
 
 AuthErrorClass _classifyOne(GraphQLError error) {
   final Map<String, dynamic>? extensions = error.extensions;
+
+  // 1) 정본 — `extensions.code`(SPEC-0024 §6). 서버가 최상위 오류 5종에 코드를
+  //    붙여 주므로 message를 볼 필요가 없다. 이 분기가 아래 문자열 매칭을 대체한다.
+  final Object? codeRaw = extensions?['code'];
+  if (codeRaw is String) {
+    final AuthErrorClass? byCode = _classifyByCode(codeRaw);
+    if (byCode != null) return byCode;
+  }
+
   final Object? errorTypeRaw =
       extensions?['errorType'] ?? extensions?['classification'];
   final String? errorType = errorTypeRaw is String ? errorTypeRaw : null;
 
-  // E2 — errorType이 확정적이면 message를 보지 않는다(AC-15).
+  // 2) E2 — errorType이 확정적이면 message를 보지 않는다(AC-15).
   if (errorType == _unauthenticatedErrorType) {
     return AuthErrorClass.unauthenticated;
   }
 
-  // E1/E3/E4 — 서버가 아직 INTERNAL로 내려보내는 구간의 message 매칭(AC-14).
-  // errorType이 아예 없는 응답도 포함한다(AC-17: null 안전).
+  // 3) 폴백 — 서버가 예외를 정제하기 전 형태(`errorType: INTERNAL` + 예외 클래스명)를
+  //    받아 내던 경로다. 서버가 매핑되지 않은 예외를 전부 `INTERNAL_ERROR`로 바꾸면서
+  //    (2026-08-17) message에 단서가 남지 않아 실질적으로는 걸리지 않는다.
+  //
+  //    **그래도 지운다고 안전해지지 않는다.** 이 폴백이 잡던 것은 "서버가 형태를
+  //    바꾸기 전 응답"이고, 구버전 서버를 상대할 가능성이 남아 있는 한 비용 없이
+  //    남겨 두는 편이 낫다. errorType이 아예 없는 응답도 포함한다(AC-17: null 안전).
   if (errorType == null || errorType == _internalErrorType) {
     final String message = error.message;
     if (_containsAny(message, _refreshRejectedMessageMarkers)) {
@@ -85,6 +116,21 @@ AuthErrorClass _classifyOne(GraphQLError error) {
   }
   return AuthErrorClass.none;
 }
+
+/// 서버의 최상위 오류 코드를 분류로 옮긴다(SPEC-0024 §6의 5종).
+///
+/// 아는 코드가 아니면 `null`을 돌려줘 호출자가 다음 판별로 내려가게 한다 — 여기서
+/// [AuthErrorClass.none]을 반환하면 코드가 붙은 다른 실패까지 삼켜 버린다.
+AuthErrorClass? _classifyByCode(String code) => switch (code) {
+  'UNAUTHENTICATED' => AuthErrorClass.unauthenticated,
+  // 서명·만료·타입 불일치 — 갱신으로 회복될 수 있다.
+  'INVALID_TOKEN' => AuthErrorClass.unauthenticated,
+  // 재사용 감지 — 갱신으로 회복되지 않는다. 반드시 위와 구분한다.
+  'TOKEN_REUSE_DETECTED' => AuthErrorClass.tokenReuseDetected,
+  'EMAIL_NOT_VERIFIED' => AuthErrorClass.emailNotVerified,
+  'FORBIDDEN' => AuthErrorClass.forbidden,
+  _ => null,
+};
 
 bool _containsAny(String message, List<String> markers) =>
     markers.any(message.contains);

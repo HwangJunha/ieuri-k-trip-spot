@@ -147,13 +147,22 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                TextButton(
-                  key: const Key('profile-email-change-button'),
-                  onPressed: () =>
-                      context.pushNamed(EmailChangeScreen.routeName),
-                  child: Text(l10n.profileEditEmailChange),
-                ),
+                // 이메일 변경 진입점은 서버가 준 capability로 가른다
+                // (SPEC-0024 R6). **비활성이 아니라 숨긴다** — 비활성으로 두면
+                // 왜 못 쓰는지 설명해야 하고, SNS 계정의 이메일이 provider 소유라는
+                // 사실은 설정 화면에서 설명할 만한 내용이 아니다.
+                //
+                // provider를 받아 앱이 `== EMAIL`을 판정하지 않는다. 규칙에 조건이
+                // 붙어도 서버만 고치면 된다.
+                if (me?.canChangeEmail ?? false) ...<Widget>[
+                  const SizedBox(width: 8),
+                  TextButton(
+                    key: const Key('profile-email-change-button'),
+                    onPressed: () =>
+                        context.pushNamed(EmailChangeScreen.routeName),
+                    child: Text(l10n.profileEditEmailChange),
+                  ),
+                ],
               ],
             ),
           ],

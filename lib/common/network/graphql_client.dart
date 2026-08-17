@@ -43,6 +43,29 @@ class TokenRefreshBridge {
 
   /// 억제를 해제한다. 갱신 성공 시, 그리고 사용자의 명시적 재시도 시 호출된다.
   void allowRefresh() => suppressed = false;
+
+  /// 서버가 `EMAIL_NOT_VERIFIED`를 최상위 오류로 보냈을 때 불리는 훅
+  /// (SPEC-0024 §2). [refresher]와 같은 이유로 콜백이다 — 네트워크 층이
+  /// 인증 provider를 직접 import하면 provider→client→provider 순환이 생긴다.
+  ///
+  /// 라우팅 게이트가 정상이면 이 경로는 발화하지 않는다. 게이트가 놓친 진입점이나
+  /// 서버에서 인증 상태가 바뀐 경우의 안전망이다.
+  Future<void> Function()? emailNotVerifiedHandler;
+
+  /// 중복 발화를 막는다. 한 화면이 여러 요청을 동시에 보내면 모두 같은 오류를
+  /// 받는데, 그때마다 `me`를 다시 읽으면 요청 수만큼 조회가 나간다.
+  bool _handlingEmailNotVerified = false;
+
+  /// 미인증 오류를 알린다. 처리 중이면 무시한다.
+  void notifyEmailNotVerified() {
+    final Future<void> Function()? handler = emailNotVerifiedHandler;
+    if (handler == null || _handlingEmailNotVerified) return;
+    _handlingEmailNotVerified = true;
+    // 실패해도 삼킨다 — 이건 안전망이라, 여기서 던지면 원래 오류가 가려진다.
+    handler()
+        .catchError((Object _) {})
+        .whenComplete(() => _handlingEmailNotVerified = false);
+  }
 }
 
 @Riverpod(keepAlive: true)
@@ -215,6 +238,14 @@ class _RefreshLink extends Link {
     bool retried = false;
 
     await for (final Response response in next(request)) {
+      // 미인증 회원의 비허용 호출(SPEC-0024 §2). 갱신 대상이 아니다 — 토큰은
+      // 유효하고 인증 상태만 문제라, 여기서 알리기만 하고 응답은 그대로 흘린다.
+      if (_isEmailNotVerified(response)) {
+        _bridge.notifyEmailNotVerified();
+        yield response;
+        continue;
+      }
+
       if (retried || !_shouldRefresh(response)) {
         yield response;
         continue;
@@ -273,5 +304,13 @@ class _RefreshLink extends Link {
     final List<GraphQLError>? errors = response.errors;
     if (errors == null || errors.isEmpty) return false;
     return classifyGraphqlErrors(errors) == AuthErrorClass.unauthenticated;
+  }
+
+  /// 미인증 회원의 비허용 호출인지(SPEC-0024 §2). 판별은 [_isAuthError]와 같은
+  /// 분류 함수 하나에만 의존한다.
+  bool _isEmailNotVerified(Response response) {
+    final List<GraphQLError>? errors = response.errors;
+    if (errors == null || errors.isEmpty) return false;
+    return classifyGraphqlErrors(errors) == AuthErrorClass.emailNotVerified;
   }
 }

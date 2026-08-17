@@ -10,6 +10,7 @@ import '../model/email_verification_handle.dart';
 import '../model/me.dart';
 import '../model/sns_provider.dart';
 import '../model/sns_registration_result.dart';
+import '../model/verification_failure_reason.dart';
 import '../../../common/model/terms_code.dart';
 import 'auth_operations.graphql.dart';
 import 'auth_repository.dart';
@@ -82,7 +83,12 @@ class AuthRepositoryImpl implements AuthRepository {
     final payload = Mutation$VerifyEmail.fromJson(data).verifyEmail;
     _check('verifyEmail', payload.success, payload.userErrors);
     if (payload.verified != true) {
-      throw const AuthFailure(AuthFailureKind.unknown);
+      // **코드가 틀린 것은 오류가 아니라 결과다**(SPEC-0024 §6). success는 "요청이
+      // 정상 처리됐는가"라서 여기까지 오고, 이유는 userErrors가 아니라
+      // failureReason에 있다. 뭉개면 사용자가 만료와 오타를 구분하지 못한다.
+      throw VerificationFailure(
+        VerificationFailureReason.fromRaw(payload.failureReason),
+      );
     }
   }
 
@@ -103,6 +109,34 @@ class AuthRepositoryImpl implements AuthRepository {
     _check('resendVerification', payload.success, payload.userErrors);
     return EmailVerificationHandle(
       verificationId: payload.verificationId ?? verificationId,
+      expiresAt: payload.expiresAt,
+    );
+  }
+
+  @override
+  Future<EmailVerificationHandle> retargetEmailVerification({
+    required String newEmail,
+  }) async {
+    final Map<String, dynamic> data = await _mutate(
+      documentNodeMutationRetargetEmailVerification,
+      Variables$Mutation$RetargetEmailVerification(
+        input: Input$RetargetEmailVerificationInput(newEmail: newEmail),
+      ).toJson(),
+      'retargetEmailVerification',
+    );
+    final payload = Mutation$RetargetEmailVerification.fromJson(
+      data,
+    ).retargetEmailVerification;
+    _check('retargetEmailVerification', payload.success, payload.userErrors);
+    final String? issued = payload.verificationId;
+    if (issued == null) {
+      // 성공했는데 핸들이 없으면 이후 verifyEmail이 부를 대상이 사라진다. 조용히
+      // 옛 핸들로 되돌아가면 사용자는 바뀐 주소로 온 코드를 넣는데 서버는 옛 주소의
+      // 검증을 기대하게 된다.
+      throw const AuthFailure(AuthFailureKind.unknown);
+    }
+    return EmailVerificationHandle(
+      verificationId: issued,
       expiresAt: payload.expiresAt,
     );
   }
@@ -392,6 +426,14 @@ class AuthRepositoryImpl implements AuthRepository {
       throw switch (classifyQueryResult(result)) {
         AuthErrorClass.unauthenticated => AuthFailure.unauthenticated,
         AuthErrorClass.refreshRejected => AuthFailure.refreshRejected,
+        // 재사용 감지는 세션 종료라는 결과가 같아도 **재발급을 시도하면 안 되는**
+        // 상태라 따로 던진다(SPEC-0024 §6).
+        AuthErrorClass.tokenReuseDetected => AuthFailure.tokenReuseDetected,
+        // 토큰은 유효하다 — 갱신하거나 지우지 않고 인증 화면으로 보낼 신호만
+        // 올린다(SPEC-0024 §2).
+        AuthErrorClass.emailNotVerified => AuthFailure.emailNotVerified,
+        // 권한 문제는 인증 계열이 아니다. 토큰을 건드리지 않고 전파한다.
+        AuthErrorClass.forbidden ||
         AuthErrorClass.transport ||
         AuthErrorClass.none => AuthFailure.transportFailure,
       };
@@ -424,12 +466,20 @@ class AuthRepositoryImpl implements AuthRepository {
 
   /// Extracts `code`/`field` from a generated `*$userErrors` payload via its
   /// JSON form, so this stays agnostic of the per-operation generated type.
+  ///
+  /// **`codeValue`(enum)를 먼저 읽고 `code`(문자열)로 폴백한다**(SPEC-0024 §6).
+  /// 서버가 스키마보다 앞선 코드를 내면 `codeValue`만 null이 되고 `code`는 항상
+  /// 채워지므로, 이 순서라야 새 코드가 와도 응답을 잃지 않는다.
+  ///
+  /// 생성 타입의 `toJson()`은 enum을 그 이름 문자열로 직렬화하므로 두 값의 형태가
+  /// 같다 — 그래서 [AuthFailure.fromCode]는 한 가지만 다루면 된다.
   ({String code, String? field}) _userError(Object? error) {
     if (error == null) return (code: '', field: null);
     final Map<String, dynamic> json =
         (error as dynamic).toJson() as Map<String, dynamic>;
+    final String? codeValue = json['codeValue'] as String?;
     return (
-      code: json['code'] as String? ?? '',
+      code: codeValue ?? json['code'] as String? ?? '',
       field: json['field'] as String?,
     );
   }

@@ -6,6 +6,7 @@ import 'package:ieuri_k_trip_spot/domain/auth/model/auth_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/auth_session.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/auth_state.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/email_verification_handle.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/model/me.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/sns_credential.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/sns_provider.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/sns_registration_result.dart';
@@ -415,4 +416,69 @@ void main() {
       expect(result.verificationId, 'v-1');
     },
   );
+
+  group('EMAIL_NOT_VERIFIED 안전망 (실기기 무한 호출 회귀)', () {
+    /// 미인증 세션이 선 컨테이너를 만든다.
+    Future<(ProviderContainer, FakeAuthRepository)> unverifiedSession() async {
+      final MemoryStore store = MemoryStore();
+      final FakeAuthRepository repo = FakeAuthRepository(
+        session: _tokens,
+        me: const Me(
+          id: '7',
+          email: 'a@b.com',
+          nickname: 'Traveler',
+          emailVerified: false,
+        ),
+      );
+      await SecureStorage(
+        store,
+      ).writeTokens(accessToken: 'access', refreshToken: 'refresh');
+      final ProviderContainer c = _container(store, repo: repo);
+      await c.read(authControllerProvider.future);
+      return (c, repo);
+    }
+
+    test('이미 미인증으로 알고 있으면 me를 다시 읽지 않는다', () async {
+      // **이것이 무한 호출의 핵심이었다.** 인증 화면에 머무는 동안 화면들이 보내는
+      // 요청은 전부 EMAIL_NOT_VERIFIED로 거절되는데, 그때마다 me를 다시 읽으면
+      // 그 응답이 상태를 갈아 끼우고 → 라우터가 재평가하고 → 화면이 다시 조회를
+      // 내면서 서버를 끝없이 두드린다.
+      final (ProviderContainer c, FakeAuthRepository repo) =
+          await unverifiedSession();
+      final int before = repo.fetchMeCalls;
+
+      await c.read(authControllerProvider.notifier).handleEmailNotVerified();
+      await c.read(authControllerProvider.notifier).handleEmailNotVerified();
+      await c.read(authControllerProvider.notifier).handleEmailNotVerified();
+
+      expect(repo.fetchMeCalls, before, reason: '추가 조회가 나가면 안 된다');
+    });
+
+    test('미인증 상태에서는 아무것도 하지 않는다', () async {
+      final MemoryStore store = MemoryStore();
+      final FakeAuthRepository repo = FakeAuthRepository();
+      final ProviderContainer c = _container(store, repo: repo);
+      await c.read(authControllerProvider.future);
+      final int before = repo.fetchMeCalls;
+
+      await c.read(authControllerProvider.notifier).handleEmailNotVerified();
+
+      expect(repo.fetchMeCalls, before);
+    });
+
+    test('refreshMe는 값이 그대로면 상태를 갈아끼우지 않는다', () async {
+      // 같은 값이라도 새 AsyncValue를 넣으면 리스너가 깨어나 재평가가 돈다.
+      final (ProviderContainer c, FakeAuthRepository _) =
+          await unverifiedSession();
+      final AsyncValue<AuthState> before = c.read(authControllerProvider);
+
+      await c.read(authControllerProvider.notifier).refreshMe();
+
+      expect(
+        identical(c.read(authControllerProvider), before),
+        isTrue,
+        reason: '같은 값이면 인스턴스도 그대로여야 한다',
+      );
+    });
+  });
 }
