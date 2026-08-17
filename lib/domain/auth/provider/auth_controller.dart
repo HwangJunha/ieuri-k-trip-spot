@@ -276,6 +276,11 @@ class AuthController extends _$AuthController {
     if (current == null || session == null) return;
     try {
       final Me me = await _repo.fetchMe();
+      // **값이 그대로면 대입하지 않는다.** 같은 값이라도 새 AsyncValue를 넣으면
+      // 리스너가 깨어나고, 라우터가 리다이렉트를 다시 평가하면서 화면이 재구독한
+      // provider가 또 조회를 낸다 — 그 응답이 다시 여기로 돌아오면 앱이 서버를
+      // 무한히 두드린다(실기기에서 agreements·me가 끝없이 반복했다).
+      if (session.user == me) return;
       state = AsyncValue<AuthState>.data(
         current.copyWith(session: session.copyWith(user: me)),
       );
@@ -296,7 +301,17 @@ class AuthController extends _$AuthController {
   /// 세션의 `emailVerified`를 서버 값에 맞추면 게이트가 인증 화면으로 보낸다.
   ///
   /// 화면별로 잡지 않고 여기 한 곳에 둔다(설계 §3).
-  Future<void> handleEmailNotVerified() => refreshMe();
+  ///
+  /// **이미 미인증으로 알고 있으면 아무것도 하지 않는다.** 인증 화면에 머무는 동안
+  /// 화면들이 보내는 요청은 전부 이 오류로 거절되는데, 그때마다 `me`를 다시 읽으면
+  /// 조회가 끝없이 이어진다. 이 안전망이 필요한 경우는 앱이 인증을 마쳤다고
+  /// **잘못 알고 있을 때**뿐이고, 그때만 서버 값을 다시 읽으면 된다.
+  Future<void> handleEmailNotVerified() async {
+    final AuthState? current = state.value;
+    if (current == null || !current.isAuthenticated) return;
+    if (!current.emailVerified) return; // 이미 안다 — 게이트가 처리 중이다.
+    await refreshMe();
+  }
 
   /// Marks onboarding done for the current account and updates state so the
   /// router lets the user through to home (spec §4.3-B local fallback).

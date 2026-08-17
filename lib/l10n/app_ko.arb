@@ -345,7 +345,7 @@
   "@passwordResetTitle": {
     "description": "비밀번호 재설정 화면 제목"
   },
-  "passwordResetSubtitle": "가입한 이메일을 입력하면 인증 코드를 보내드립니다.",
+  "passwordResetSubtitle": "가입한 이메일을 입력해 주세요. 비밀번호로 가입한 계정이라면 인증 코드를 보내드립니다.",
   "@passwordResetSubtitle": {
     "description": "비밀번호 재설정 화면 부제"
   },
@@ -353,7 +353,7 @@
   "@passwordResetRequestButton": {
     "description": "비밀번호 재설정 코드 요청 버튼"
   },
-  "passwordResetCodeSent": "인증 코드를 보냈습니다. 이메일을 확인하세요.",
+  "passwordResetCodeSent": "비밀번호로 가입한 계정이라면 인증 코드가 발송됩니다. 카카오·구글·애플로 가입하셨다면 해당 방법으로 로그인해 주세요.",
   "@passwordResetCodeSent": {
     "description": "재설정 코드 발송 안내"
   },
@@ -1885,5 +1885,10 @@
   "emailVerificationNeedsResend": "이전 인증 코드는 더 이상 사용할 수 없습니다. 새 코드를 받아 주세요.",
   "@emailVerificationNeedsResend": {
     "description": "핸들 없이 인증 화면에 도착한 경우의 안내"
-  }
+  },
+  "errorMemberAlreadyRegistered": "이미 가입된 이메일입니다. 로그인해 주세요.",
+  "errorInvalidInput": "입력하신 정보가 올바르지 않습니다. 확인 후 다시 시도해 주세요.",
+  "errorAccountInactive": "비활성 상태인 계정입니다. 고객센터에 문의해 주세요.",
+  "errorVerificationRateLimited": "인증 요청이 너무 잦습니다. 잠시 후 다시 시도해 주세요.",
+  "errorVerificationNotFound": "인증이 만료되었습니다. 새 코드를 받아 주세요."
 }

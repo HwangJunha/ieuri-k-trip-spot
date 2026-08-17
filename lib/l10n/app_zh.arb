@@ -83,9 +83,9 @@
   "agreementViewDetail": "檢視",
   "agreementDetailPlaceholder": "條款全文即將提供。",
   "passwordResetTitle": "重置密碼",
-  "passwordResetSubtitle": "輸入註冊信箱，我們將傳送驗證碼。",
+  "passwordResetSubtitle": "請輸入註冊的電子信箱。若是以密碼註冊的帳號，我們會寄送驗證碼。",
   "passwordResetRequestButton": "傳送驗證碼",
-  "passwordResetCodeSent": "驗證碼已傳送，請查收郵件。",
+  "passwordResetCodeSent": "若該信箱是以密碼註冊的帳號，驗證碼將會寄出。若您以 Kakao、Google 或 Apple 註冊，請改用該方式登入。",
   "passwordResetConfirmButton": "更改密碼",
   "passwordResetDone": "密碼已更改，請登入。",
   "newPasswordLabel": "新密碼",
@@ -784,5 +784,10 @@
   "emailVerificationAddressChanged": "已將新的驗證碼寄到變更後的地址。",
   "emailVerificationResendCountdown": "{seconds} 秒後可重新傳送",
   "commonCancel": "取消",
-  "emailVerificationNeedsResend": "先前的驗證碼已失效，請重新取得新的驗證碼。"
+  "emailVerificationNeedsResend": "先前的驗證碼已失效，請重新取得新的驗證碼。",
+  "errorMemberAlreadyRegistered": "此信箱已註冊，請直接登入。",
+  "errorInvalidInput": "輸入的資料不正確，請確認後再試一次。",
+  "errorAccountInactive": "此帳號已停用，請聯絡客服。",
+  "errorVerificationRateLimited": "驗證請求過於頻繁，請稍後再試。",
+  "errorVerificationNotFound": "驗證已過期，請重新取得驗證碼。"
 }

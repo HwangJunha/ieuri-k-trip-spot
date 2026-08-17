@@ -41,6 +41,18 @@ String authFailureMessage(AppLocalizations l10n, Object error) {
       return l10n.errorNotEmailMember;
     case AuthFailureKind.invalidEmailFormat:
       return l10n.errorInvalidEmailFormat;
+    // 여기부터는 서버가 코드를 주는데도 앱이 매핑하지 않아 "문제가 발생했습니다"로
+    // 떨어지던 것들이다(실기기 확인). 사용자는 무엇을 고쳐야 하는지 알 수 없었다.
+    case AuthFailureKind.memberAlreadyRegistered:
+      return l10n.errorMemberAlreadyRegistered;
+    case AuthFailureKind.invalidInput:
+      return l10n.errorInvalidInput;
+    case AuthFailureKind.accountInactive:
+      return l10n.errorAccountInactive;
+    case AuthFailureKind.verificationRateLimited:
+      return l10n.errorVerificationRateLimited;
+    case AuthFailureKind.verificationNotFound:
+      return l10n.errorVerificationNotFound;
     case AuthFailureKind.transportFailure:
       return l10n.errorNetwork;
     case AuthFailureKind.unknown:

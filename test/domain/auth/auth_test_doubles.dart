@@ -206,8 +206,12 @@ class FakeAuthRepository implements AuthRepository {
     return snsRegistrationResult;
   }
 
+  /// `fetchMe` 호출 횟수. 안전망이 조회를 되풀이하지 않는지 세는 데 쓴다.
+  int fetchMeCalls = 0;
+
   @override
   Future<Me> fetchMe() async {
+    fetchMeCalls++;
     if (tokenProbe != null) {
       accessTokenAtFetchMe = await tokenProbe!.readAccessToken();
     }

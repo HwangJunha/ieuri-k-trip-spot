@@ -105,11 +105,16 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           );
       if (!mounted) return;
       // No tokens on sign-up (§4.2) — go to email verification with the handle.
+      //
+      // 비밀번호를 함께 넘긴다. 인증에 성공하면 그것으로 자동 로그인해서 사용자를
+      // **바로 앱으로** 들여보낸다 — 방금 계정을 만든 사람에게 로그인 화면을 다시
+      // 보여 주고 같은 값을 또 치게 할 이유가 없다. 값은 메모리에만 머문다.
       context.pushNamed(
         EmailVerificationScreen.routeName,
         extra: EmailVerificationArgs(
           verificationId: handle.verificationId,
           email: email,
+          password: _password.text,
         ),
       );
     } on Object catch (error) {

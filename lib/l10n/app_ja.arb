@@ -83,9 +83,9 @@
   "agreementViewDetail": "内容を見る",
   "agreementDetailPlaceholder": "規約の全文は後日提供されます。",
   "passwordResetTitle": "パスワード再設定",
-  "passwordResetSubtitle": "登録したメールアドレスを入力すると認証コードを送ります。",
+  "passwordResetSubtitle": "登録したメールアドレスを入力してください。パスワードで登録したアカウントなら認証コードをお送りします。",
   "passwordResetRequestButton": "認証コードを受け取る",
-  "passwordResetCodeSent": "認証コードを送信しました。メールをご確認ください。",
+  "passwordResetCodeSent": "パスワードで登録したアカウントであれば認証コードが送信されます。カカオ・Google・Appleで登録された場合はその方法でログインしてください。",
   "passwordResetConfirmButton": "パスワードを変更",
   "passwordResetDone": "パスワードを変更しました。ログインしてください。",
   "newPasswordLabel": "新しいパスワード",
@@ -784,5 +784,10 @@
   "emailVerificationAddressChanged": "変更したアドレスに新しいコードを送りました。",
   "emailVerificationResendCountdown": "{seconds}秒後に再送信できます",
   "commonCancel": "キャンセル",
-  "emailVerificationNeedsResend": "以前の認証コードは使用できません。新しいコードを取得してください。"
+  "emailVerificationNeedsResend": "以前の認証コードは使用できません。新しいコードを取得してください。",
+  "errorMemberAlreadyRegistered": "すでに登録されているメールアドレスです。ログインしてください。",
+  "errorInvalidInput": "入力された情報が正しくありません。確認して再度お試しください。",
+  "errorAccountInactive": "無効な状態のアカウントです。サポートにお問い合わせください。",
+  "errorVerificationRateLimited": "認証のリクエストが多すぎます。しばらくしてからお試しください。",
+  "errorVerificationNotFound": "認証の有効期限が切れました。新しいコードを取得してください。"
 }

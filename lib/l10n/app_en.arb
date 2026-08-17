@@ -83,9 +83,9 @@
   "agreementViewDetail": "View",
   "agreementDetailPlaceholder": "Full terms text coming soon.",
   "passwordResetTitle": "Reset password",
-  "passwordResetSubtitle": "Enter your account email and we'll send a verification code.",
+  "passwordResetSubtitle": "Enter your account email. If it's registered with a password, we'll send a verification code.",
   "passwordResetRequestButton": "Send code",
-  "passwordResetCodeSent": "Verification code sent. Check your email.",
+  "passwordResetCodeSent": "If that email has a password account, a code is on its way. Signed up with Kakao, Google, or Apple? Sign in with that instead.",
   "passwordResetConfirmButton": "Change password",
   "passwordResetDone": "Password changed. Please log in.",
   "newPasswordLabel": "New password",
@@ -1161,5 +1161,10 @@
   "emailVerificationAddressChanged": "New code sent to the updated address.",
   "emailVerificationResendCountdown": "Resend available in {seconds}s",
   "commonCancel": "Cancel",
-  "emailVerificationNeedsResend": "Your previous code is no longer valid. Send a new code to continue."
+  "emailVerificationNeedsResend": "Your previous code is no longer valid. Send a new code to continue.",
+  "errorMemberAlreadyRegistered": "This email is already registered. Try signing in instead.",
+  "errorInvalidInput": "Some of the details you entered aren't valid. Check them and try again.",
+  "errorAccountInactive": "This account is inactive. Contact support to restore it.",
+  "errorVerificationRateLimited": "Too many verification requests. Try again later.",
+  "errorVerificationNotFound": "That verification has expired. Request a new code."
 }

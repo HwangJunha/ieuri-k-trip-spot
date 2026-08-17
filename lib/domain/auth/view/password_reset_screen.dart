@@ -5,8 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/auth_failure_message.dart';
 import '../component/auth_text_field.dart';
+import '../component/verification_code_field.dart';
 import '../../../common/model/email_format.dart';
 import '../model/password_policy.dart';
+import '../model/verification_code_input.dart';
 import '../provider/auth_controller.dart';
 import 'login_screen.dart';
 
@@ -27,7 +29,8 @@ enum _Stage { request, confirm }
 
 class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
   final TextEditingController _email = TextEditingController();
-  final TextEditingController _code = TextEditingController();
+  /// 6칸에서 올라온 코드. **문자열로만** 다룬다 — 앞자리 0이 살아야 한다(R11-5).
+  String _code = '';
   final TextEditingController _newPassword = TextEditingController();
 
   _Stage _stage = _Stage.request;
@@ -40,7 +43,6 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
   @override
   void dispose() {
     _email.dispose();
-    _code.dispose();
     _newPassword.dispose();
     super.dispose();
   }
@@ -74,10 +76,12 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
   }
 
   Future<void> _confirmReset(AppLocalizations l10n) async {
-    final String code = _code.text.trim();
+    final String code = _code;
     final String newPassword = _newPassword.text;
     setState(() {
-      _codeError = code.isEmpty ? l10n.validationCodeRequired : null;
+      _codeError = code.length < verificationCodeLength
+          ? l10n.validationCodeRequired
+          : null;
       _passwordError = !PasswordPolicy.isValid(newPassword)
           ? l10n.validationPasswordPolicy
           : null;
@@ -149,13 +153,23 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
               ),
               if (_stage == _Stage.confirm) ...<Widget>[
                 const SizedBox(height: 16),
-                AuthTextField(
-                  controller: _code,
-                  label: l10n.verificationCodeLabel,
-                  keyboardType: TextInputType.number,
-                  textInputAction: TextInputAction.next,
-                  errorText: _codeError,
+                // 인증 화면과 같은 6칸 입력을 쓴다 — 같은 성격의 코드를 두 화면이
+                // 다른 모양으로 받으면 사용자가 매번 형식을 다시 파악해야 한다.
+                Text(
+                  l10n.verificationCodeLabel,
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+                const SizedBox(height: 8),
+                VerificationCodeField(
                   enabled: !_submitting,
+                  errorText: _codeError,
+                  // 여기서는 자동 제출하지 않는다 — 코드 아래 새 비밀번호 칸이
+                  // 남아 있어서, 여섯 칸을 채웠다고 제출하면 빈 비밀번호로 나간다.
+                  autofocus: false,
+                  onChanged: (String code) => setState(() {
+                    _code = code;
+                    _codeError = null;
+                  }),
                 ),
                 const SizedBox(height: 16),
                 AuthTextField(

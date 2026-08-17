@@ -52,16 +52,19 @@ GoRouter goRouter(Ref ref) {
       final String location = state.matchedLocation;
 
       final AsyncValue<AuthState> auth = ref.read(authControllerProvider);
-      final AsyncValue<List<AgreementStatus>> agreements = ref.read(
-        agreementsControllerProvider,
-      );
-
       final AuthGateState authGate = _authGate(auth);
+
       // 약관은 **인증된 사용자에게만 의미가 있다.** 미인증 상태에서 조회를 기다리면
       // 로그인 화면조차 스플래시에 갇힌다 — 인증 전에는 충족으로 보고 인증 게이트가
       // 판정을 가져가게 둔다.
+      //
+      // **`ready`일 때만 읽는다.** 밖에서 미리 읽으면 autoDispose provider가 그때마다
+      // 되살아나 조회를 내는데, 이메일 미인증 상태에서는 서버가 그 요청을 전부
+      // `EMAIL_NOT_VERIFIED`로 거절한다. 값을 쓰지도 않으면서 실패만 만들어 내고,
+      // 그 실패가 안전망을 깨워 리다이렉트를 다시 유발하면 무한 루프가 된다
+      // (실기기에서 agreements·me가 끝없이 반복했다).
       final TermsGateState termsGate = authGate == AuthGateState.ready
-          ? _termsGate(agreements)
+          ? _termsGate(ref.read(agreementsControllerProvider))
           : TermsGateState.satisfied;
 
       // 가입 직후 경로는 `extra`에 서버 핸들을 싣고 들어온다. 그 경우에만 세션 없이

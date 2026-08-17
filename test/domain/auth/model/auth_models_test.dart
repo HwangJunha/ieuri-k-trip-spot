@@ -416,5 +416,30 @@ void main() {
         AuthFailureKind.unknown,
       );
     });
+
+    test('가입 실패 코드들이 unknown으로 뭉개지지 않는다 (실기기 회귀)', () {
+      // 서버는 정확한 코드를 주는데 앱이 매핑하지 않아 전부 "문제가 발생했습니다"로
+      // 떨어졌다 — 사용자는 무엇을 고쳐야 하는지 알 수 없었다.
+      expect(
+        AuthFailure.fromCode('MEMBER_ALREADY_REGISTERED').kind,
+        AuthFailureKind.memberAlreadyRegistered,
+      );
+      expect(
+        AuthFailure.fromCode('INVALID_INPUT').kind,
+        AuthFailureKind.invalidInput,
+      );
+      expect(
+        AuthFailure.fromCode('ACCOUNT_INACTIVE').kind,
+        AuthFailureKind.accountInactive,
+      );
+      expect(
+        AuthFailure.fromCode('VERIFICATION_RATE_LIMITED').kind,
+        AuthFailureKind.verificationRateLimited,
+      );
+      expect(
+        AuthFailure.fromCode('VERIFICATION_NOT_FOUND').kind,
+        AuthFailureKind.verificationNotFound,
+      );
+    });
   });
 }

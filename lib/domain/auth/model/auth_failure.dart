@@ -48,6 +48,25 @@ enum AuthFailureKind {
   /// 이메일 형식이 올바르지 않다고 서버가 판정했다.
   invalidEmailFormat,
 
+  /// 이미 가입된 이메일이다(`MEMBER_ALREADY_REGISTERED`). [emailAlreadyInUse]와
+  /// 결과는 같지만 서버가 가입 경로에서 쓰는 코드가 달라 둘 다 받는다.
+  memberAlreadyRegistered,
+
+  /// 입력값이 서버 규칙에 맞지 않다(`INVALID_INPUT`). 비밀번호 길이처럼 **사유가
+  /// 여러 가지**인데 코드는 하나라, 어느 칸이 문제인지 이 값만으로는 알 수 없다.
+  /// 서버가 사유를 코드로 나눠 주기 전까지는 일반 안내를 쓴다.
+  invalidInput,
+
+  /// 계정이 비활성 상태다(`ACCOUNT_INACTIVE`).
+  accountInactive,
+
+  /// 인증 요청이 너무 잦다(`VERIFICATION_RATE_LIMITED`).
+  verificationRateLimited,
+
+  /// 인증 건을 찾을 수 없다(`VERIFICATION_NOT_FOUND`). 만료돼 정리됐거나 핸들이
+  /// 잘못된 경우다 — 새 코드를 받아야 한다.
+  verificationNotFound,
+
   /// 이메일 인증을 마치지 않은 회원이 허용 목록 밖 오퍼레이션을 불렀다
   /// (SPEC-0024 §2). 최상위 오류로 오며, 인증 화면으로 보내는 신호다.
   emailNotVerified,
@@ -94,6 +113,22 @@ class AuthFailure implements Exception {
         return AuthFailure(AuthFailureKind.notEmailMember, field: field);
       case 'INVALID_EMAIL_FORMAT':
         return AuthFailure(AuthFailureKind.invalidEmailFormat, field: field);
+      case 'MEMBER_ALREADY_REGISTERED':
+        return AuthFailure(
+          AuthFailureKind.memberAlreadyRegistered,
+          field: field,
+        );
+      case 'INVALID_INPUT':
+        return AuthFailure(AuthFailureKind.invalidInput, field: field);
+      case 'ACCOUNT_INACTIVE':
+        return AuthFailure(AuthFailureKind.accountInactive, field: field);
+      case 'VERIFICATION_RATE_LIMITED':
+        return AuthFailure(
+          AuthFailureKind.verificationRateLimited,
+          field: field,
+        );
+      case 'VERIFICATION_NOT_FOUND':
+        return AuthFailure(AuthFailureKind.verificationNotFound, field: field);
       default:
         return AuthFailure(AuthFailureKind.unknown, field: field);
     }

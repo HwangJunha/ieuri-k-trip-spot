@@ -23,10 +23,20 @@ class EmailVerificationArgs {
   const EmailVerificationArgs({
     required this.verificationId,
     required this.email,
+    this.password,
   });
 
   final String verificationId;
   final String email;
+
+  /// 가입 폼에서 넘어온 비밀번호. 인증에 성공하면 이것으로 **자동 로그인**해서
+  /// 사용자를 바로 앱으로 들여보낸다 — 방금 계정을 만든 사람에게 로그인 화면을
+  /// 다시 보여 주고 같은 값을 또 치게 할 이유가 없다.
+  ///
+  /// **메모리에만 머문다.** 저장소에 쓰지 않고 화면이 사라지면 함께 사라진다
+  /// (CLAUDE.md §7 — 비밀번호는 어디에도 남기지 않는다). SNS 가입은 비밀번호가
+  /// 없으므로 null이고, 그 경로는 인증 후 로그인 화면으로 간다.
+  final String? password;
 }
 
 /// 이메일 인증 화면(SPEC-0024 R11 개편).
@@ -42,12 +52,16 @@ class EmailVerificationScreen extends ConsumerStatefulWidget {
     super.key,
     required this.verificationId,
     required this.email,
+    this.password,
   });
 
   static String get routeName => 'emailVerification';
 
   final String verificationId;
   final String email;
+
+  /// 가입 직후 자동 로그인에 쓸 비밀번호. 없으면 인증 후 로그인 화면으로 간다.
+  final String? password;
 
   @override
   ConsumerState<EmailVerificationScreen> createState() =>
@@ -142,19 +156,41 @@ class _EmailVerificationScreenState
           .read(authControllerProvider.notifier)
           .verifyEmail(verificationId: _verificationId, code: _code);
       if (!mounted) return;
-      // 인증 성공 — 메인으로 보내기 전에 서버 상태를 다시 읽는다(설계 §3).
-      // 게이트의 판정 근거가 `me.emailVerified`라, 이 갱신 없이는 방금 인증한
-      // 사용자가 여전히 미인증으로 판정되어 이 화면에 되돌아온다.
-      await ref.read(authControllerProvider.notifier).refreshMe();
-      if (!mounted) return;
 
-      // 세션이 이미 서 있었다면(게이트 경로) 갱신만으로 라우터가 메인으로 보낸다.
-      // 가입 직후 경로는 토큰이 없으므로 로그인 화면으로 넘긴다.
       final bool authenticated =
           ref.read(authControllerProvider).value?.isAuthenticated ?? false;
-      if (!authenticated) {
-        context.goNamed(LoginScreen.routeName, extra: widget.email);
+
+      if (authenticated) {
+        // 게이트 경로 — 세션이 이미 서 있다. 서버 상태를 다시 읽으면
+        // `me.emailVerified`가 참으로 바뀌어 라우터가 메인으로 보낸다(설계 §3).
+        await ref.read(authControllerProvider.notifier).refreshMe();
+        return;
       }
+
+      // 가입 직후 경로 — 토큰이 없다. 비밀번호를 들고 있으면 **자동 로그인해서 바로
+      // 앱으로 들여보낸다.** 방금 계정을 만든 사람에게 로그인 화면을 다시 보여 주고
+      // 같은 값을 또 치게 할 이유가 없다.
+      final String? password = widget.password;
+      if (password != null && password.isNotEmpty) {
+        try {
+          await ref
+              .read(authControllerProvider.notifier)
+              .signIn(email: _targetEmail, password: password);
+          if (!mounted) return;
+          // 성공하면 라우터가 상태 변화를 보고 메인으로 보낸다. 실패했다면 아래
+          // 로그인 화면으로 떨어뜨려 사용자가 직접 시도하게 한다 — 인증 자체는
+          // 이미 끝났으므로 되돌릴 것은 없다.
+          if (ref.read(authControllerProvider).value?.isAuthenticated ?? false) {
+            return;
+          }
+        } on Object {
+          // 자동 로그인 실패는 치명적이지 않다 — 로그인 화면으로 보낸다.
+          if (!mounted) return;
+        }
+      }
+
+      if (!mounted) return;
+      context.goNamed(LoginScreen.routeName, extra: _targetEmail);
     } on Object catch (error) {
       if (!mounted) return;
       setState(() => _serverError = authFailureMessage(l10n, error));
