@@ -790,5 +790,9 @@
   "errorAccountInactive": "無効な状態のアカウントです。サポートにお問い合わせください。",
   "errorVerificationRateLimited": "認証のリクエストが多すぎます。しばらくしてからお試しください。",
   "errorVerificationNotFound": "認証の有効期限が切れました。新しいコードを取得してください。",
-  "errorPasswordPolicyViolation": "パスワードが条件を満たしていません。8文字以上で設定してください。"
+  "errorPasswordPolicyViolation": "パスワードが条件を満たしていません。8文字以上で設定してください。",
+  "passwordResetConfirmSubtitle": "メールでお送りした6桁のコードを入力し、新しいパスワードを設定してください。",
+  "passwordResetSentTo": "コードの送信先",
+  "passwordResetChangeEmail": "別のメールアドレスで受け取る",
+  "passwordResetNoCodeHint": "コードが届かない場合は迷惑メールフォルダをご確認ください。カカオ・Google・Appleで登録したアカウントにはコードが送信されません。"
 }
