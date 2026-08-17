@@ -48,25 +48,28 @@ class SwipeCardDisplay {
     attributionText: spot.attributionText,
   );
 
-  /// 저작권 유형 → 맞춤 방식.
+  /// 저작권 유형 → 맞춤 방식(R13, SPEC-0002 §4.7).
   ///
-  /// ## [AMEND] 전 유형 `cover` 통일 (사용자 결정 2026-08-18)
+  /// **미지정은 TYPE3과 같이 다룬다** — 변형해도 되는지 모르는 이미지를 크롭하는
+  /// 것보다 여백을 남기는 편이 안전하다. 저작권 정보 자체가 없어도(null) 같다.
   ///
-  /// SPEC-0025 R13과 SPEC-0002 §4.7은 TYPE3·미지정을 `contain` + 블러 배경으로
-  /// 그리도록 정했으나, **전체화면화 이후 실기기에서 그 결과를 보고 사용자가 뒤집었다.**
+  /// ## 한 번 `cover`로 뒤집었다가 되돌린 자리다
   ///
-  /// 세로 화면에 가로 사진이 들어오면 위아래 여백이 화면의 대부분을 차지해, 블러가
-  /// 주인공이 되고 사진은 가운데 띠로 남는다. 카드 크기였을 때는 감당할 만했지만
-  /// 전체화면에서는 화면이 망가진다.
+  /// 전체화면화 직후 잠시 전 유형을 `cover`로 통일했었다. 사진이 화면을 100%
+  /// 차지하던 때라 `contain` 여백이 화면 대부분을 먹어 블러가 주인공이 됐기
+  /// 때문이다. 그러나 그 뒤 **포스터가 잘려 제목이 통째로 날아가는 것**을 보고
+  /// 사용자가 다시 뒤집었다(2026-08-18) — 행사 포스터는 세로로 길고 글자가
+  /// 가장자리까지 차 있어 크롭에 가장 취약하다.
   ///
-  /// **이것이 저작인격권 상 트레이드오프라는 점을 분명히 적어 둔다.** TYPE3은
-  /// 원문 규약상 변형 금지이고 크롭은 변형이다. 관광공사 OpenAPI 데이터를 쓰는 이상
-  /// 이 판단은 공모전 심사에서 지적될 수 있다 — 되돌릴 때는 이 주석과
-  /// `problem/SPEC-0025-client.md` §7을 함께 읽을 것.
+  /// 지금은 사진 영역이 카드의 70%뿐이라(→[SwipeCardMetrics]) 여백도 그만큼
+  /// 작다. 처음 `contain`이 흉했던 조건 자체가 사라진 셈이다.
   ///
-  /// 출처 표기([attributionText])는 그대로 유지된다 — 크롭과 별개로 저작권자 표시는
-  /// 계속 지켜야 한다.
-  static SwipeCardFit fitFor(CopyrightType? copyright) => SwipeCardFit.cover;
+  /// 결과적으로 SPEC-0002 §4.7이 정한 원래 규약으로 돌아왔고, TYPE3 변경금지도
+  /// 함께 지켜진다.
+  static SwipeCardFit fitFor(CopyrightType? copyright) =>
+      (copyright?.cropAllowed ?? false)
+      ? SwipeCardFit.cover
+      : SwipeCardFit.contain;
 
   final String name;
   final String imageRef;

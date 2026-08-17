@@ -28,40 +28,46 @@ void main() {
     attributionText: attributionText,
   );
 
-  group('이미지 맞춤 — [AMEND] 전 유형 cover (사용자 결정 2026-08-18)', () {
-    /// **R13의 분기가 뒤집혔다.** 원래 TYPE3·미지정은 `contain` + 블러 배경이었으나
-    /// (SPEC-0002 §4.7), 전체화면에서 세로 화면에 가로 사진이 들어오면 블러 여백이
-    /// 화면 대부분을 차지해 사용자가 뒤집었다.
-    ///
-    /// 저작인격권 상 트레이드오프가 있다 — `problem/SPEC-0025-client.md` §7 참조.
-    /// 되돌릴 때는 여기 네 개 테스트가 함께 바뀐다.
-    test('저작권 유형과 무관하게 영역을 채운다', () {
-      for (final CopyrightType? copyright in <CopyrightType?>[
-        CopyrightType.type1,
-        CopyrightType.type3,
-        CopyrightType.unspecified,
-        null,
-      ]) {
-        expect(
-          SwipeCardDisplay.fitFor(copyright),
-          SwipeCardFit.cover,
-          reason: '$copyright도 cover여야 한다',
-        );
-      }
+  group('저작권 유형별 이미지 맞춤 (R13)', () {
+    /// AC R13-1: TYPE1은 자유 이용이라 영역을 채운다.
+    test('TYPE1은 영역을 채운다', () {
+      expect(SwipeCardDisplay.fitFor(CopyrightType.type1), SwipeCardFit.cover);
     });
 
-    /// 영역을 채우면 여백이 없으므로 블러 배경도 필요 없다.
-    test('채우기에는 블러 배경이 필요 없다', () {
+    /// AC R13-2: TYPE3은 변형 금지라 크롭하지 않는다.
+    ///
+    /// **한 번 뒤집혔다가 되돌아온 규칙이다.** 전체화면화 직후 잠시 `cover`로
+    /// 통일했으나, 행사 포스터가 잘려 제목이 통째로 날아가는 것을 보고 사용자가
+    /// 다시 뒤집었다(2026-08-18) — 포스터는 세로로 길고 글자가 가장자리까지 차
+    /// 있어 크롭에 가장 취약하다.
+    test('TYPE3은 크롭하지 않는다', () {
+      expect(
+        SwipeCardDisplay.fitFor(CopyrightType.type3),
+        SwipeCardFit.contain,
+      );
+    });
+
+    /// AC R13-3: 미지정은 변형 불가로 간주한다 — 변형해도 되는지 모르는 이미지를
+    /// 크롭하는 것보다 여백을 남기는 편이 안전하다.
+    test('미지정은 TYPE3과 같이 다룬다', () {
+      expect(
+        SwipeCardDisplay.fitFor(CopyrightType.unspecified),
+        SwipeCardFit.contain,
+      );
+    });
+
+    /// 저작권 정보 자체가 없는 경우도 같은 이유로 크롭하지 않는다.
+    test('저작권 정보가 없으면 크롭하지 않는다', () {
+      expect(SwipeCardDisplay.fitFor(null), SwipeCardFit.contain);
+    });
+
+    /// AC R13-4: 크롭을 피하면 여백이 생기고, 그 여백은 블러 배경이 메운다.
+    test('크롭을 피할 때만 블러 배경이 필요하다', () {
+      expect(SwipeCardFit.contain.needsBlurBackdrop, isTrue);
       expect(SwipeCardFit.cover.needsBlurBackdrop, isFalse);
     });
 
-    /// `contain` 자체는 남겨 둔다 — 되돌릴 때 쓸 경로이고, 블러 배경 규칙도 함께
-    /// 살아 있어야 한다.
-    test('크롭을 피하는 경로는 여전히 블러 배경을 요구한다', () {
-      expect(SwipeCardFit.contain.needsBlurBackdrop, isTrue);
-    });
-
-    /// 크롭 여부와 별개로 **출처 표기는 계속 지킨다.**
+    /// 맞춤 방식과 별개로 **출처 표기는 언제나 지킨다.**
     test('출처 표기는 유지된다', () {
       expect(
         SwipeCardDisplay.of(spotWith(attributionText: '한국관광공사'))
