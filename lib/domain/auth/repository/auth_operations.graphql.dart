@@ -272,6 +272,13 @@ const documentNodeMutationRegisterEmailMember = DocumentNode(
                         selectionSet: null,
                       ),
                       FieldNode(
+                        name: NameNode(value: 'codeValue'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
                         name: NameNode(value: 'message'),
                         alias: null,
                         arguments: [],
@@ -510,6 +517,7 @@ class _CopyWithStubImpl$Mutation$RegisterEmailMember$registerEmailMember<TRes>
 class Mutation$RegisterEmailMember$registerEmailMember$userErrors {
   Mutation$RegisterEmailMember$registerEmailMember$userErrors({
     required this.code,
+    this.codeValue,
     required this.message,
     this.field,
   });
@@ -518,16 +526,22 @@ class Mutation$RegisterEmailMember$registerEmailMember$userErrors {
     Map<String, dynamic> json,
   ) {
     final l$code = json['code'];
+    final l$codeValue = json['codeValue'];
     final l$message = json['message'];
     final l$field = json['field'];
     return Mutation$RegisterEmailMember$registerEmailMember$userErrors(
       code: (l$code as String),
+      codeValue: l$codeValue == null
+          ? null
+          : fromJson$Enum$ErrorCode((l$codeValue as String)),
       message: (l$message as String),
       field: (l$field as String?),
     );
   }
 
   final String code;
+
+  final Enum$ErrorCode? codeValue;
 
   final String message;
 
@@ -537,6 +551,10 @@ class Mutation$RegisterEmailMember$registerEmailMember$userErrors {
     final _resultData = <String, dynamic>{};
     final l$code = code;
     _resultData['code'] = l$code;
+    final l$codeValue = codeValue;
+    _resultData['codeValue'] = l$codeValue == null
+        ? null
+        : toJson$Enum$ErrorCode(l$codeValue);
     final l$message = message;
     _resultData['message'] = l$message;
     final l$field = field;
@@ -547,9 +565,10 @@ class Mutation$RegisterEmailMember$registerEmailMember$userErrors {
   @override
   int get hashCode {
     final l$code = code;
+    final l$codeValue = codeValue;
     final l$message = message;
     final l$field = field;
-    return Object.hashAll([l$code, l$message, l$field]);
+    return Object.hashAll([l$code, l$codeValue, l$message, l$field]);
   }
 
   @override
@@ -564,6 +583,11 @@ class Mutation$RegisterEmailMember$registerEmailMember$userErrors {
     final l$code = code;
     final lOther$code = other.code;
     if (l$code != lOther$code) {
+      return false;
+    }
+    final l$codeValue = codeValue;
+    final lOther$codeValue = other.codeValue;
+    if (l$codeValue != lOther$codeValue) {
       return false;
     }
     final l$message = message;
@@ -605,7 +629,12 @@ abstract class CopyWith$Mutation$RegisterEmailMember$registerEmailMember$userErr
     TRes res,
   ) = _CopyWithStubImpl$Mutation$RegisterEmailMember$registerEmailMember$userErrors;
 
-  TRes call({String? code, String? message, String? field});
+  TRes call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  });
 }
 
 class _CopyWithImpl$Mutation$RegisterEmailMember$registerEmailMember$userErrors<
@@ -631,6 +660,7 @@ class _CopyWithImpl$Mutation$RegisterEmailMember$registerEmailMember$userErrors<
 
   TRes call({
     Object? code = _undefined,
+    Object? codeValue = _undefined,
     Object? message = _undefined,
     Object? field = _undefined,
   }) => _then(
@@ -638,6 +668,9 @@ class _CopyWithImpl$Mutation$RegisterEmailMember$registerEmailMember$userErrors<
       code: code == _undefined || code == null
           ? _instance.code
           : (code as String),
+      codeValue: codeValue == _undefined
+          ? _instance.codeValue
+          : (codeValue as Enum$ErrorCode?),
       message: message == _undefined || message == null
           ? _instance.message
           : (message as String),
@@ -659,7 +692,12 @@ class _CopyWithStubImpl$Mutation$RegisterEmailMember$registerEmailMember$userErr
 
   TRes _res;
 
-  call({String? code, String? message, String? field}) => _res;
+  call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  }) => _res;
 }
 
 class Variables$Mutation$VerifyEmail {
@@ -911,6 +949,13 @@ const documentNodeMutationVerifyEmail = DocumentNode(
                         selectionSet: null,
                       ),
                       FieldNode(
+                        name: NameNode(value: 'codeValue'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
                         name: NameNode(value: 'message'),
                         alias: null,
                         arguments: [],
@@ -1155,6 +1200,7 @@ class _CopyWithStubImpl$Mutation$VerifyEmail$verifyEmail<TRes>
 class Mutation$VerifyEmail$verifyEmail$userErrors {
   Mutation$VerifyEmail$verifyEmail$userErrors({
     required this.code,
+    this.codeValue,
     required this.message,
     this.field,
   });
@@ -1163,16 +1209,22 @@ class Mutation$VerifyEmail$verifyEmail$userErrors {
     Map<String, dynamic> json,
   ) {
     final l$code = json['code'];
+    final l$codeValue = json['codeValue'];
     final l$message = json['message'];
     final l$field = json['field'];
     return Mutation$VerifyEmail$verifyEmail$userErrors(
       code: (l$code as String),
+      codeValue: l$codeValue == null
+          ? null
+          : fromJson$Enum$ErrorCode((l$codeValue as String)),
       message: (l$message as String),
       field: (l$field as String?),
     );
   }
 
   final String code;
+
+  final Enum$ErrorCode? codeValue;
 
   final String message;
 
@@ -1182,6 +1234,10 @@ class Mutation$VerifyEmail$verifyEmail$userErrors {
     final _resultData = <String, dynamic>{};
     final l$code = code;
     _resultData['code'] = l$code;
+    final l$codeValue = codeValue;
+    _resultData['codeValue'] = l$codeValue == null
+        ? null
+        : toJson$Enum$ErrorCode(l$codeValue);
     final l$message = message;
     _resultData['message'] = l$message;
     final l$field = field;
@@ -1192,9 +1248,10 @@ class Mutation$VerifyEmail$verifyEmail$userErrors {
   @override
   int get hashCode {
     final l$code = code;
+    final l$codeValue = codeValue;
     final l$message = message;
     final l$field = field;
-    return Object.hashAll([l$code, l$message, l$field]);
+    return Object.hashAll([l$code, l$codeValue, l$message, l$field]);
   }
 
   @override
@@ -1209,6 +1266,11 @@ class Mutation$VerifyEmail$verifyEmail$userErrors {
     final l$code = code;
     final lOther$code = other.code;
     if (l$code != lOther$code) {
+      return false;
+    }
+    final l$codeValue = codeValue;
+    final lOther$codeValue = other.codeValue;
+    if (l$codeValue != lOther$codeValue) {
       return false;
     }
     final l$message = message;
@@ -1243,7 +1305,12 @@ abstract class CopyWith$Mutation$VerifyEmail$verifyEmail$userErrors<TRes> {
   factory CopyWith$Mutation$VerifyEmail$verifyEmail$userErrors.stub(TRes res) =
       _CopyWithStubImpl$Mutation$VerifyEmail$verifyEmail$userErrors;
 
-  TRes call({String? code, String? message, String? field});
+  TRes call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  });
 }
 
 class _CopyWithImpl$Mutation$VerifyEmail$verifyEmail$userErrors<TRes>
@@ -1261,6 +1328,7 @@ class _CopyWithImpl$Mutation$VerifyEmail$verifyEmail$userErrors<TRes>
 
   TRes call({
     Object? code = _undefined,
+    Object? codeValue = _undefined,
     Object? message = _undefined,
     Object? field = _undefined,
   }) => _then(
@@ -1268,6 +1336,9 @@ class _CopyWithImpl$Mutation$VerifyEmail$verifyEmail$userErrors<TRes>
       code: code == _undefined || code == null
           ? _instance.code
           : (code as String),
+      codeValue: codeValue == _undefined
+          ? _instance.codeValue
+          : (codeValue as Enum$ErrorCode?),
       message: message == _undefined || message == null
           ? _instance.message
           : (message as String),
@@ -1282,7 +1353,12 @@ class _CopyWithStubImpl$Mutation$VerifyEmail$verifyEmail$userErrors<TRes>
 
   TRes _res;
 
-  call({String? code, String? message, String? field}) => _res;
+  call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  }) => _res;
 }
 
 class Variables$Mutation$ResendVerification {
@@ -1553,6 +1629,13 @@ const documentNodeMutationResendVerification = DocumentNode(
                         selectionSet: null,
                       ),
                       FieldNode(
+                        name: NameNode(value: 'codeValue'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
                         name: NameNode(value: 'message'),
                         alias: null,
                         arguments: [],
@@ -1816,6 +1899,7 @@ class _CopyWithStubImpl$Mutation$ResendVerification$resendVerification<TRes>
 class Mutation$ResendVerification$resendVerification$userErrors {
   Mutation$ResendVerification$resendVerification$userErrors({
     required this.code,
+    this.codeValue,
     required this.message,
     this.field,
   });
@@ -1824,16 +1908,22 @@ class Mutation$ResendVerification$resendVerification$userErrors {
     Map<String, dynamic> json,
   ) {
     final l$code = json['code'];
+    final l$codeValue = json['codeValue'];
     final l$message = json['message'];
     final l$field = json['field'];
     return Mutation$ResendVerification$resendVerification$userErrors(
       code: (l$code as String),
+      codeValue: l$codeValue == null
+          ? null
+          : fromJson$Enum$ErrorCode((l$codeValue as String)),
       message: (l$message as String),
       field: (l$field as String?),
     );
   }
 
   final String code;
+
+  final Enum$ErrorCode? codeValue;
 
   final String message;
 
@@ -1843,6 +1933,10 @@ class Mutation$ResendVerification$resendVerification$userErrors {
     final _resultData = <String, dynamic>{};
     final l$code = code;
     _resultData['code'] = l$code;
+    final l$codeValue = codeValue;
+    _resultData['codeValue'] = l$codeValue == null
+        ? null
+        : toJson$Enum$ErrorCode(l$codeValue);
     final l$message = message;
     _resultData['message'] = l$message;
     final l$field = field;
@@ -1853,9 +1947,10 @@ class Mutation$ResendVerification$resendVerification$userErrors {
   @override
   int get hashCode {
     final l$code = code;
+    final l$codeValue = codeValue;
     final l$message = message;
     final l$field = field;
-    return Object.hashAll([l$code, l$message, l$field]);
+    return Object.hashAll([l$code, l$codeValue, l$message, l$field]);
   }
 
   @override
@@ -1870,6 +1965,11 @@ class Mutation$ResendVerification$resendVerification$userErrors {
     final l$code = code;
     final lOther$code = other.code;
     if (l$code != lOther$code) {
+      return false;
+    }
+    final l$codeValue = codeValue;
+    final lOther$codeValue = other.codeValue;
+    if (l$codeValue != lOther$codeValue) {
       return false;
     }
     final l$message = message;
@@ -1911,7 +2011,12 @@ abstract class CopyWith$Mutation$ResendVerification$resendVerification$userError
     TRes res,
   ) = _CopyWithStubImpl$Mutation$ResendVerification$resendVerification$userErrors;
 
-  TRes call({String? code, String? message, String? field});
+  TRes call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  });
 }
 
 class _CopyWithImpl$Mutation$ResendVerification$resendVerification$userErrors<
@@ -1935,6 +2040,7 @@ class _CopyWithImpl$Mutation$ResendVerification$resendVerification$userErrors<
 
   TRes call({
     Object? code = _undefined,
+    Object? codeValue = _undefined,
     Object? message = _undefined,
     Object? field = _undefined,
   }) => _then(
@@ -1942,6 +2048,9 @@ class _CopyWithImpl$Mutation$ResendVerification$resendVerification$userErrors<
       code: code == _undefined || code == null
           ? _instance.code
           : (code as String),
+      codeValue: codeValue == _undefined
+          ? _instance.codeValue
+          : (codeValue as Enum$ErrorCode?),
       message: message == _undefined || message == null
           ? _instance.message
           : (message as String),
@@ -1963,7 +2072,784 @@ class _CopyWithStubImpl$Mutation$ResendVerification$resendVerification$userError
 
   TRes _res;
 
-  call({String? code, String? message, String? field}) => _res;
+  call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  }) => _res;
+}
+
+class Variables$Mutation$RetargetEmailVerification {
+  factory Variables$Mutation$RetargetEmailVerification({
+    required Input$RetargetEmailVerificationInput input,
+  }) => Variables$Mutation$RetargetEmailVerification._({r'input': input});
+
+  Variables$Mutation$RetargetEmailVerification._(this._$data);
+
+  factory Variables$Mutation$RetargetEmailVerification.fromJson(
+    Map<String, dynamic> data,
+  ) {
+    final result$data = <String, dynamic>{};
+    final l$input = data['input'];
+    result$data['input'] = Input$RetargetEmailVerificationInput.fromJson(
+      (l$input as Map<String, dynamic>),
+    );
+    return Variables$Mutation$RetargetEmailVerification._(result$data);
+  }
+
+  Map<String, dynamic> _$data;
+
+  Input$RetargetEmailVerificationInput get input =>
+      (_$data['input'] as Input$RetargetEmailVerificationInput);
+
+  Map<String, dynamic> toJson() {
+    final result$data = <String, dynamic>{};
+    final l$input = input;
+    result$data['input'] = l$input.toJson();
+    return result$data;
+  }
+
+  CopyWith$Variables$Mutation$RetargetEmailVerification<
+    Variables$Mutation$RetargetEmailVerification
+  >
+  get copyWith =>
+      CopyWith$Variables$Mutation$RetargetEmailVerification(this, (i) => i);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Variables$Mutation$RetargetEmailVerification ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$input = input;
+    final lOther$input = other.input;
+    if (l$input != lOther$input) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    final l$input = input;
+    return Object.hashAll([l$input]);
+  }
+}
+
+abstract class CopyWith$Variables$Mutation$RetargetEmailVerification<TRes> {
+  factory CopyWith$Variables$Mutation$RetargetEmailVerification(
+    Variables$Mutation$RetargetEmailVerification instance,
+    TRes Function(Variables$Mutation$RetargetEmailVerification) then,
+  ) = _CopyWithImpl$Variables$Mutation$RetargetEmailVerification;
+
+  factory CopyWith$Variables$Mutation$RetargetEmailVerification.stub(TRes res) =
+      _CopyWithStubImpl$Variables$Mutation$RetargetEmailVerification;
+
+  TRes call({Input$RetargetEmailVerificationInput? input});
+}
+
+class _CopyWithImpl$Variables$Mutation$RetargetEmailVerification<TRes>
+    implements CopyWith$Variables$Mutation$RetargetEmailVerification<TRes> {
+  _CopyWithImpl$Variables$Mutation$RetargetEmailVerification(
+    this._instance,
+    this._then,
+  );
+
+  final Variables$Mutation$RetargetEmailVerification _instance;
+
+  final TRes Function(Variables$Mutation$RetargetEmailVerification) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? input = _undefined}) => _then(
+    Variables$Mutation$RetargetEmailVerification._({
+      ..._instance._$data,
+      if (input != _undefined && input != null)
+        'input': (input as Input$RetargetEmailVerificationInput),
+    }),
+  );
+}
+
+class _CopyWithStubImpl$Variables$Mutation$RetargetEmailVerification<TRes>
+    implements CopyWith$Variables$Mutation$RetargetEmailVerification<TRes> {
+  _CopyWithStubImpl$Variables$Mutation$RetargetEmailVerification(this._res);
+
+  TRes _res;
+
+  call({Input$RetargetEmailVerificationInput? input}) => _res;
+}
+
+class Mutation$RetargetEmailVerification {
+  Mutation$RetargetEmailVerification({required this.retargetEmailVerification});
+
+  factory Mutation$RetargetEmailVerification.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$retargetEmailVerification = json['retargetEmailVerification'];
+    return Mutation$RetargetEmailVerification(
+      retargetEmailVerification:
+          Mutation$RetargetEmailVerification$retargetEmailVerification.fromJson(
+            (l$retargetEmailVerification as Map<String, dynamic>),
+          ),
+    );
+  }
+
+  final Mutation$RetargetEmailVerification$retargetEmailVerification
+  retargetEmailVerification;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$retargetEmailVerification = retargetEmailVerification;
+    _resultData['retargetEmailVerification'] = l$retargetEmailVerification
+        .toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$retargetEmailVerification = retargetEmailVerification;
+    return Object.hashAll([l$retargetEmailVerification]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$RetargetEmailVerification ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$retargetEmailVerification = retargetEmailVerification;
+    final lOther$retargetEmailVerification = other.retargetEmailVerification;
+    if (l$retargetEmailVerification != lOther$retargetEmailVerification) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$RetargetEmailVerification
+    on Mutation$RetargetEmailVerification {
+  CopyWith$Mutation$RetargetEmailVerification<
+    Mutation$RetargetEmailVerification
+  >
+  get copyWith => CopyWith$Mutation$RetargetEmailVerification(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$RetargetEmailVerification<TRes> {
+  factory CopyWith$Mutation$RetargetEmailVerification(
+    Mutation$RetargetEmailVerification instance,
+    TRes Function(Mutation$RetargetEmailVerification) then,
+  ) = _CopyWithImpl$Mutation$RetargetEmailVerification;
+
+  factory CopyWith$Mutation$RetargetEmailVerification.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$RetargetEmailVerification;
+
+  TRes call({
+    Mutation$RetargetEmailVerification$retargetEmailVerification?
+    retargetEmailVerification,
+  });
+  CopyWith$Mutation$RetargetEmailVerification$retargetEmailVerification<TRes>
+  get retargetEmailVerification;
+}
+
+class _CopyWithImpl$Mutation$RetargetEmailVerification<TRes>
+    implements CopyWith$Mutation$RetargetEmailVerification<TRes> {
+  _CopyWithImpl$Mutation$RetargetEmailVerification(this._instance, this._then);
+
+  final Mutation$RetargetEmailVerification _instance;
+
+  final TRes Function(Mutation$RetargetEmailVerification) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? retargetEmailVerification = _undefined}) => _then(
+    Mutation$RetargetEmailVerification(
+      retargetEmailVerification:
+          retargetEmailVerification == _undefined ||
+              retargetEmailVerification == null
+          ? _instance.retargetEmailVerification
+          : (retargetEmailVerification
+                as Mutation$RetargetEmailVerification$retargetEmailVerification),
+    ),
+  );
+
+  CopyWith$Mutation$RetargetEmailVerification$retargetEmailVerification<TRes>
+  get retargetEmailVerification {
+    final local$retargetEmailVerification = _instance.retargetEmailVerification;
+    return CopyWith$Mutation$RetargetEmailVerification$retargetEmailVerification(
+      local$retargetEmailVerification,
+      (e) => call(retargetEmailVerification: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Mutation$RetargetEmailVerification<TRes>
+    implements CopyWith$Mutation$RetargetEmailVerification<TRes> {
+  _CopyWithStubImpl$Mutation$RetargetEmailVerification(this._res);
+
+  TRes _res;
+
+  call({
+    Mutation$RetargetEmailVerification$retargetEmailVerification?
+    retargetEmailVerification,
+  }) => _res;
+
+  CopyWith$Mutation$RetargetEmailVerification$retargetEmailVerification<TRes>
+  get retargetEmailVerification =>
+      CopyWith$Mutation$RetargetEmailVerification$retargetEmailVerification.stub(
+        _res,
+      );
+}
+
+const documentNodeMutationRetargetEmailVerification = DocumentNode(
+  definitions: [
+    OperationDefinitionNode(
+      type: OperationType.mutation,
+      name: NameNode(value: 'RetargetEmailVerification'),
+      variableDefinitions: [
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'input')),
+          type: NamedTypeNode(
+            name: NameNode(value: 'RetargetEmailVerificationInput'),
+            isNonNull: true,
+          ),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+      ],
+      directives: [],
+      selectionSet: SelectionSetNode(
+        selections: [
+          FieldNode(
+            name: NameNode(value: 'retargetEmailVerification'),
+            alias: null,
+            arguments: [
+              ArgumentNode(
+                name: NameNode(value: 'input'),
+                value: VariableNode(name: NameNode(value: 'input')),
+              ),
+            ],
+            directives: [],
+            selectionSet: SelectionSetNode(
+              selections: [
+                FieldNode(
+                  name: NameNode(value: 'success'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'userErrors'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'code'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'codeValue'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'message'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'field'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
+                FieldNode(
+                  name: NameNode(value: 'verificationId'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'expiresAt'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+);
+
+class Mutation$RetargetEmailVerification$retargetEmailVerification {
+  Mutation$RetargetEmailVerification$retargetEmailVerification({
+    required this.success,
+    required this.userErrors,
+    this.verificationId,
+    this.expiresAt,
+  });
+
+  factory Mutation$RetargetEmailVerification$retargetEmailVerification.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$success = json['success'];
+    final l$userErrors = json['userErrors'];
+    final l$verificationId = json['verificationId'];
+    final l$expiresAt = json['expiresAt'];
+    return Mutation$RetargetEmailVerification$retargetEmailVerification(
+      success: (l$success as bool),
+      userErrors: (l$userErrors as List<dynamic>)
+          .map(
+            (e) =>
+                Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors.fromJson(
+                  (e as Map<String, dynamic>),
+                ),
+          )
+          .toList(),
+      verificationId: (l$verificationId as String?),
+      expiresAt: (l$expiresAt as String?),
+    );
+  }
+
+  final bool success;
+
+  final List<
+    Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors
+  >
+  userErrors;
+
+  final String? verificationId;
+
+  final String? expiresAt;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$success = success;
+    _resultData['success'] = l$success;
+    final l$userErrors = userErrors;
+    _resultData['userErrors'] = l$userErrors.map((e) => e.toJson()).toList();
+    final l$verificationId = verificationId;
+    _resultData['verificationId'] = l$verificationId;
+    final l$expiresAt = expiresAt;
+    _resultData['expiresAt'] = l$expiresAt;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$success = success;
+    final l$userErrors = userErrors;
+    final l$verificationId = verificationId;
+    final l$expiresAt = expiresAt;
+    return Object.hashAll([
+      l$success,
+      Object.hashAll(l$userErrors.map((v) => v)),
+      l$verificationId,
+      l$expiresAt,
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other
+            is! Mutation$RetargetEmailVerification$retargetEmailVerification ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$success = success;
+    final lOther$success = other.success;
+    if (l$success != lOther$success) {
+      return false;
+    }
+    final l$userErrors = userErrors;
+    final lOther$userErrors = other.userErrors;
+    if (l$userErrors.length != lOther$userErrors.length) {
+      return false;
+    }
+    for (int i = 0; i < l$userErrors.length; i++) {
+      final l$userErrors$entry = l$userErrors[i];
+      final lOther$userErrors$entry = lOther$userErrors[i];
+      if (l$userErrors$entry != lOther$userErrors$entry) {
+        return false;
+      }
+    }
+    final l$verificationId = verificationId;
+    final lOther$verificationId = other.verificationId;
+    if (l$verificationId != lOther$verificationId) {
+      return false;
+    }
+    final l$expiresAt = expiresAt;
+    final lOther$expiresAt = other.expiresAt;
+    if (l$expiresAt != lOther$expiresAt) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$RetargetEmailVerification$retargetEmailVerification
+    on Mutation$RetargetEmailVerification$retargetEmailVerification {
+  CopyWith$Mutation$RetargetEmailVerification$retargetEmailVerification<
+    Mutation$RetargetEmailVerification$retargetEmailVerification
+  >
+  get copyWith =>
+      CopyWith$Mutation$RetargetEmailVerification$retargetEmailVerification(
+        this,
+        (i) => i,
+      );
+}
+
+abstract class CopyWith$Mutation$RetargetEmailVerification$retargetEmailVerification<
+  TRes
+> {
+  factory CopyWith$Mutation$RetargetEmailVerification$retargetEmailVerification(
+    Mutation$RetargetEmailVerification$retargetEmailVerification instance,
+    TRes Function(Mutation$RetargetEmailVerification$retargetEmailVerification)
+    then,
+  ) = _CopyWithImpl$Mutation$RetargetEmailVerification$retargetEmailVerification;
+
+  factory CopyWith$Mutation$RetargetEmailVerification$retargetEmailVerification.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Mutation$RetargetEmailVerification$retargetEmailVerification;
+
+  TRes call({
+    bool? success,
+    List<
+      Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors
+    >?
+    userErrors,
+    String? verificationId,
+    String? expiresAt,
+  });
+  TRes userErrors(
+    Iterable<
+      Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors
+    >
+    Function(
+      Iterable<
+        CopyWith$Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors<
+          Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors
+        >
+      >,
+    )
+    _fn,
+  );
+}
+
+class _CopyWithImpl$Mutation$RetargetEmailVerification$retargetEmailVerification<
+  TRes
+>
+    implements
+        CopyWith$Mutation$RetargetEmailVerification$retargetEmailVerification<
+          TRes
+        > {
+  _CopyWithImpl$Mutation$RetargetEmailVerification$retargetEmailVerification(
+    this._instance,
+    this._then,
+  );
+
+  final Mutation$RetargetEmailVerification$retargetEmailVerification _instance;
+
+  final TRes Function(
+    Mutation$RetargetEmailVerification$retargetEmailVerification,
+  )
+  _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? success = _undefined,
+    Object? userErrors = _undefined,
+    Object? verificationId = _undefined,
+    Object? expiresAt = _undefined,
+  }) => _then(
+    Mutation$RetargetEmailVerification$retargetEmailVerification(
+      success: success == _undefined || success == null
+          ? _instance.success
+          : (success as bool),
+      userErrors: userErrors == _undefined || userErrors == null
+          ? _instance.userErrors
+          : (userErrors
+                as List<
+                  Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors
+                >),
+      verificationId: verificationId == _undefined
+          ? _instance.verificationId
+          : (verificationId as String?),
+      expiresAt: expiresAt == _undefined
+          ? _instance.expiresAt
+          : (expiresAt as String?),
+    ),
+  );
+
+  TRes userErrors(
+    Iterable<
+      Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors
+    >
+    Function(
+      Iterable<
+        CopyWith$Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors<
+          Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    userErrors: _fn(
+      _instance.userErrors.map(
+        (e) =>
+            CopyWith$Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors(
+              e,
+              (i) => i,
+            ),
+      ),
+    ).toList(),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$RetargetEmailVerification$retargetEmailVerification<
+  TRes
+>
+    implements
+        CopyWith$Mutation$RetargetEmailVerification$retargetEmailVerification<
+          TRes
+        > {
+  _CopyWithStubImpl$Mutation$RetargetEmailVerification$retargetEmailVerification(
+    this._res,
+  );
+
+  TRes _res;
+
+  call({
+    bool? success,
+    List<
+      Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors
+    >?
+    userErrors,
+    String? verificationId,
+    String? expiresAt,
+  }) => _res;
+
+  userErrors(_fn) => _res;
+}
+
+class Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors {
+  Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors({
+    required this.code,
+    this.codeValue,
+    required this.message,
+    this.field,
+  });
+
+  factory Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$code = json['code'];
+    final l$codeValue = json['codeValue'];
+    final l$message = json['message'];
+    final l$field = json['field'];
+    return Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors(
+      code: (l$code as String),
+      codeValue: l$codeValue == null
+          ? null
+          : fromJson$Enum$ErrorCode((l$codeValue as String)),
+      message: (l$message as String),
+      field: (l$field as String?),
+    );
+  }
+
+  final String code;
+
+  final Enum$ErrorCode? codeValue;
+
+  final String message;
+
+  final String? field;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$codeValue = codeValue;
+    _resultData['codeValue'] = l$codeValue == null
+        ? null
+        : toJson$Enum$ErrorCode(l$codeValue);
+    final l$message = message;
+    _resultData['message'] = l$message;
+    final l$field = field;
+    _resultData['field'] = l$field;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$code = code;
+    final l$codeValue = codeValue;
+    final l$message = message;
+    final l$field = field;
+    return Object.hashAll([l$code, l$codeValue, l$message, l$field]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other
+            is! Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$codeValue = codeValue;
+    final lOther$codeValue = other.codeValue;
+    if (l$codeValue != lOther$codeValue) {
+      return false;
+    }
+    final l$message = message;
+    final lOther$message = other.message;
+    if (l$message != lOther$message) {
+      return false;
+    }
+    final l$field = field;
+    final lOther$field = other.field;
+    if (l$field != lOther$field) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors
+    on Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors {
+  CopyWith$Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors<
+    Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors
+  >
+  get copyWith =>
+      CopyWith$Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors(
+        this,
+        (i) => i,
+      );
+}
+
+abstract class CopyWith$Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors<
+  TRes
+> {
+  factory CopyWith$Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors(
+    Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors
+    instance,
+    TRes Function(
+      Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors,
+    )
+    then,
+  ) = _CopyWithImpl$Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors;
+
+  factory CopyWith$Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors;
+
+  TRes call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  });
+}
+
+class _CopyWithImpl$Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors<
+  TRes
+>
+    implements
+        CopyWith$Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors<
+          TRes
+        > {
+  _CopyWithImpl$Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors(
+    this._instance,
+    this._then,
+  );
+
+  final Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors
+  _instance;
+
+  final TRes Function(
+    Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors,
+  )
+  _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? code = _undefined,
+    Object? codeValue = _undefined,
+    Object? message = _undefined,
+    Object? field = _undefined,
+  }) => _then(
+    Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      codeValue: codeValue == _undefined
+          ? _instance.codeValue
+          : (codeValue as Enum$ErrorCode?),
+      message: message == _undefined || message == null
+          ? _instance.message
+          : (message as String),
+      field: field == _undefined ? _instance.field : (field as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors<
+  TRes
+>
+    implements
+        CopyWith$Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors<
+          TRes
+        > {
+  _CopyWithStubImpl$Mutation$RetargetEmailVerification$retargetEmailVerification$userErrors(
+    this._res,
+  );
+
+  TRes _res;
+
+  call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  }) => _res;
 }
 
 class Variables$Mutation$RegisterSnsMember {
@@ -2229,6 +3115,13 @@ const documentNodeMutationRegisterSnsMember = DocumentNode(
                         selectionSet: null,
                       ),
                       FieldNode(
+                        name: NameNode(value: 'codeValue'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
                         name: NameNode(value: 'message'),
                         alias: null,
                         arguments: [],
@@ -2488,6 +3381,7 @@ class _CopyWithStubImpl$Mutation$RegisterSnsMember$registerSnsMember<TRes>
 class Mutation$RegisterSnsMember$registerSnsMember$userErrors {
   Mutation$RegisterSnsMember$registerSnsMember$userErrors({
     required this.code,
+    this.codeValue,
     required this.message,
     this.field,
   });
@@ -2496,16 +3390,22 @@ class Mutation$RegisterSnsMember$registerSnsMember$userErrors {
     Map<String, dynamic> json,
   ) {
     final l$code = json['code'];
+    final l$codeValue = json['codeValue'];
     final l$message = json['message'];
     final l$field = json['field'];
     return Mutation$RegisterSnsMember$registerSnsMember$userErrors(
       code: (l$code as String),
+      codeValue: l$codeValue == null
+          ? null
+          : fromJson$Enum$ErrorCode((l$codeValue as String)),
       message: (l$message as String),
       field: (l$field as String?),
     );
   }
 
   final String code;
+
+  final Enum$ErrorCode? codeValue;
 
   final String message;
 
@@ -2515,6 +3415,10 @@ class Mutation$RegisterSnsMember$registerSnsMember$userErrors {
     final _resultData = <String, dynamic>{};
     final l$code = code;
     _resultData['code'] = l$code;
+    final l$codeValue = codeValue;
+    _resultData['codeValue'] = l$codeValue == null
+        ? null
+        : toJson$Enum$ErrorCode(l$codeValue);
     final l$message = message;
     _resultData['message'] = l$message;
     final l$field = field;
@@ -2525,9 +3429,10 @@ class Mutation$RegisterSnsMember$registerSnsMember$userErrors {
   @override
   int get hashCode {
     final l$code = code;
+    final l$codeValue = codeValue;
     final l$message = message;
     final l$field = field;
-    return Object.hashAll([l$code, l$message, l$field]);
+    return Object.hashAll([l$code, l$codeValue, l$message, l$field]);
   }
 
   @override
@@ -2542,6 +3447,11 @@ class Mutation$RegisterSnsMember$registerSnsMember$userErrors {
     final l$code = code;
     final lOther$code = other.code;
     if (l$code != lOther$code) {
+      return false;
+    }
+    final l$codeValue = codeValue;
+    final lOther$codeValue = other.codeValue;
+    if (l$codeValue != lOther$codeValue) {
       return false;
     }
     final l$message = message;
@@ -2582,7 +3492,12 @@ abstract class CopyWith$Mutation$RegisterSnsMember$registerSnsMember$userErrors<
     TRes res,
   ) = _CopyWithStubImpl$Mutation$RegisterSnsMember$registerSnsMember$userErrors;
 
-  TRes call({String? code, String? message, String? field});
+  TRes call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  });
 }
 
 class _CopyWithImpl$Mutation$RegisterSnsMember$registerSnsMember$userErrors<
@@ -2604,6 +3519,7 @@ class _CopyWithImpl$Mutation$RegisterSnsMember$registerSnsMember$userErrors<
 
   TRes call({
     Object? code = _undefined,
+    Object? codeValue = _undefined,
     Object? message = _undefined,
     Object? field = _undefined,
   }) => _then(
@@ -2611,6 +3527,9 @@ class _CopyWithImpl$Mutation$RegisterSnsMember$registerSnsMember$userErrors<
       code: code == _undefined || code == null
           ? _instance.code
           : (code as String),
+      codeValue: codeValue == _undefined
+          ? _instance.codeValue
+          : (codeValue as Enum$ErrorCode?),
       message: message == _undefined || message == null
           ? _instance.message
           : (message as String),
@@ -2630,7 +3549,12 @@ class _CopyWithStubImpl$Mutation$RegisterSnsMember$registerSnsMember$userErrors<
 
   TRes _res;
 
-  call({String? code, String? message, String? field}) => _res;
+  call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  }) => _res;
 }
 
 class Variables$Mutation$LoginSns {
@@ -2874,6 +3798,13 @@ const documentNodeMutationLoginSns = DocumentNode(
                     selections: [
                       FieldNode(
                         name: NameNode(value: 'code'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'codeValue'),
                         alias: null,
                         arguments: [],
                         directives: [],
@@ -3204,6 +4135,7 @@ class _CopyWithStubImpl$Mutation$LoginSns$loginSns<TRes>
 class Mutation$LoginSns$loginSns$userErrors {
   Mutation$LoginSns$loginSns$userErrors({
     required this.code,
+    this.codeValue,
     required this.message,
     this.field,
   });
@@ -3212,16 +4144,22 @@ class Mutation$LoginSns$loginSns$userErrors {
     Map<String, dynamic> json,
   ) {
     final l$code = json['code'];
+    final l$codeValue = json['codeValue'];
     final l$message = json['message'];
     final l$field = json['field'];
     return Mutation$LoginSns$loginSns$userErrors(
       code: (l$code as String),
+      codeValue: l$codeValue == null
+          ? null
+          : fromJson$Enum$ErrorCode((l$codeValue as String)),
       message: (l$message as String),
       field: (l$field as String?),
     );
   }
 
   final String code;
+
+  final Enum$ErrorCode? codeValue;
 
   final String message;
 
@@ -3231,6 +4169,10 @@ class Mutation$LoginSns$loginSns$userErrors {
     final _resultData = <String, dynamic>{};
     final l$code = code;
     _resultData['code'] = l$code;
+    final l$codeValue = codeValue;
+    _resultData['codeValue'] = l$codeValue == null
+        ? null
+        : toJson$Enum$ErrorCode(l$codeValue);
     final l$message = message;
     _resultData['message'] = l$message;
     final l$field = field;
@@ -3241,9 +4183,10 @@ class Mutation$LoginSns$loginSns$userErrors {
   @override
   int get hashCode {
     final l$code = code;
+    final l$codeValue = codeValue;
     final l$message = message;
     final l$field = field;
-    return Object.hashAll([l$code, l$message, l$field]);
+    return Object.hashAll([l$code, l$codeValue, l$message, l$field]);
   }
 
   @override
@@ -3258,6 +4201,11 @@ class Mutation$LoginSns$loginSns$userErrors {
     final l$code = code;
     final lOther$code = other.code;
     if (l$code != lOther$code) {
+      return false;
+    }
+    final l$codeValue = codeValue;
+    final lOther$codeValue = other.codeValue;
+    if (l$codeValue != lOther$codeValue) {
       return false;
     }
     final l$message = message;
@@ -3292,7 +4240,12 @@ abstract class CopyWith$Mutation$LoginSns$loginSns$userErrors<TRes> {
   factory CopyWith$Mutation$LoginSns$loginSns$userErrors.stub(TRes res) =
       _CopyWithStubImpl$Mutation$LoginSns$loginSns$userErrors;
 
-  TRes call({String? code, String? message, String? field});
+  TRes call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  });
 }
 
 class _CopyWithImpl$Mutation$LoginSns$loginSns$userErrors<TRes>
@@ -3310,6 +4263,7 @@ class _CopyWithImpl$Mutation$LoginSns$loginSns$userErrors<TRes>
 
   TRes call({
     Object? code = _undefined,
+    Object? codeValue = _undefined,
     Object? message = _undefined,
     Object? field = _undefined,
   }) => _then(
@@ -3317,6 +4271,9 @@ class _CopyWithImpl$Mutation$LoginSns$loginSns$userErrors<TRes>
       code: code == _undefined || code == null
           ? _instance.code
           : (code as String),
+      codeValue: codeValue == _undefined
+          ? _instance.codeValue
+          : (codeValue as Enum$ErrorCode?),
       message: message == _undefined || message == null
           ? _instance.message
           : (message as String),
@@ -3331,7 +4288,12 @@ class _CopyWithStubImpl$Mutation$LoginSns$loginSns$userErrors<TRes>
 
   TRes _res;
 
-  call({String? code, String? message, String? field}) => _res;
+  call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  }) => _res;
 }
 
 class Variables$Mutation$LoginEmail {
@@ -3576,6 +4538,13 @@ const documentNodeMutationLoginEmail = DocumentNode(
                     selections: [
                       FieldNode(
                         name: NameNode(value: 'code'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'codeValue'),
                         alias: null,
                         arguments: [],
                         directives: [],
@@ -3906,6 +4875,7 @@ class _CopyWithStubImpl$Mutation$LoginEmail$loginEmail<TRes>
 class Mutation$LoginEmail$loginEmail$userErrors {
   Mutation$LoginEmail$loginEmail$userErrors({
     required this.code,
+    this.codeValue,
     required this.message,
     this.field,
   });
@@ -3914,16 +4884,22 @@ class Mutation$LoginEmail$loginEmail$userErrors {
     Map<String, dynamic> json,
   ) {
     final l$code = json['code'];
+    final l$codeValue = json['codeValue'];
     final l$message = json['message'];
     final l$field = json['field'];
     return Mutation$LoginEmail$loginEmail$userErrors(
       code: (l$code as String),
+      codeValue: l$codeValue == null
+          ? null
+          : fromJson$Enum$ErrorCode((l$codeValue as String)),
       message: (l$message as String),
       field: (l$field as String?),
     );
   }
 
   final String code;
+
+  final Enum$ErrorCode? codeValue;
 
   final String message;
 
@@ -3933,6 +4909,10 @@ class Mutation$LoginEmail$loginEmail$userErrors {
     final _resultData = <String, dynamic>{};
     final l$code = code;
     _resultData['code'] = l$code;
+    final l$codeValue = codeValue;
+    _resultData['codeValue'] = l$codeValue == null
+        ? null
+        : toJson$Enum$ErrorCode(l$codeValue);
     final l$message = message;
     _resultData['message'] = l$message;
     final l$field = field;
@@ -3943,9 +4923,10 @@ class Mutation$LoginEmail$loginEmail$userErrors {
   @override
   int get hashCode {
     final l$code = code;
+    final l$codeValue = codeValue;
     final l$message = message;
     final l$field = field;
-    return Object.hashAll([l$code, l$message, l$field]);
+    return Object.hashAll([l$code, l$codeValue, l$message, l$field]);
   }
 
   @override
@@ -3960,6 +4941,11 @@ class Mutation$LoginEmail$loginEmail$userErrors {
     final l$code = code;
     final lOther$code = other.code;
     if (l$code != lOther$code) {
+      return false;
+    }
+    final l$codeValue = codeValue;
+    final lOther$codeValue = other.codeValue;
+    if (l$codeValue != lOther$codeValue) {
       return false;
     }
     final l$message = message;
@@ -3994,7 +4980,12 @@ abstract class CopyWith$Mutation$LoginEmail$loginEmail$userErrors<TRes> {
   factory CopyWith$Mutation$LoginEmail$loginEmail$userErrors.stub(TRes res) =
       _CopyWithStubImpl$Mutation$LoginEmail$loginEmail$userErrors;
 
-  TRes call({String? code, String? message, String? field});
+  TRes call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  });
 }
 
 class _CopyWithImpl$Mutation$LoginEmail$loginEmail$userErrors<TRes>
@@ -4012,6 +5003,7 @@ class _CopyWithImpl$Mutation$LoginEmail$loginEmail$userErrors<TRes>
 
   TRes call({
     Object? code = _undefined,
+    Object? codeValue = _undefined,
     Object? message = _undefined,
     Object? field = _undefined,
   }) => _then(
@@ -4019,6 +5011,9 @@ class _CopyWithImpl$Mutation$LoginEmail$loginEmail$userErrors<TRes>
       code: code == _undefined || code == null
           ? _instance.code
           : (code as String),
+      codeValue: codeValue == _undefined
+          ? _instance.codeValue
+          : (codeValue as Enum$ErrorCode?),
       message: message == _undefined || message == null
           ? _instance.message
           : (message as String),
@@ -4033,7 +5028,12 @@ class _CopyWithStubImpl$Mutation$LoginEmail$loginEmail$userErrors<TRes>
 
   TRes _res;
 
-  call({String? code, String? message, String? field}) => _res;
+  call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  }) => _res;
 }
 
 class Variables$Mutation$RefreshToken {
@@ -4279,6 +5279,13 @@ const documentNodeMutationRefreshToken = DocumentNode(
                     selections: [
                       FieldNode(
                         name: NameNode(value: 'code'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'codeValue'),
                         alias: null,
                         arguments: [],
                         directives: [],
@@ -4614,6 +5621,7 @@ class _CopyWithStubImpl$Mutation$RefreshToken$refreshToken<TRes>
 class Mutation$RefreshToken$refreshToken$userErrors {
   Mutation$RefreshToken$refreshToken$userErrors({
     required this.code,
+    this.codeValue,
     required this.message,
     this.field,
   });
@@ -4622,16 +5630,22 @@ class Mutation$RefreshToken$refreshToken$userErrors {
     Map<String, dynamic> json,
   ) {
     final l$code = json['code'];
+    final l$codeValue = json['codeValue'];
     final l$message = json['message'];
     final l$field = json['field'];
     return Mutation$RefreshToken$refreshToken$userErrors(
       code: (l$code as String),
+      codeValue: l$codeValue == null
+          ? null
+          : fromJson$Enum$ErrorCode((l$codeValue as String)),
       message: (l$message as String),
       field: (l$field as String?),
     );
   }
 
   final String code;
+
+  final Enum$ErrorCode? codeValue;
 
   final String message;
 
@@ -4641,6 +5655,10 @@ class Mutation$RefreshToken$refreshToken$userErrors {
     final _resultData = <String, dynamic>{};
     final l$code = code;
     _resultData['code'] = l$code;
+    final l$codeValue = codeValue;
+    _resultData['codeValue'] = l$codeValue == null
+        ? null
+        : toJson$Enum$ErrorCode(l$codeValue);
     final l$message = message;
     _resultData['message'] = l$message;
     final l$field = field;
@@ -4651,9 +5669,10 @@ class Mutation$RefreshToken$refreshToken$userErrors {
   @override
   int get hashCode {
     final l$code = code;
+    final l$codeValue = codeValue;
     final l$message = message;
     final l$field = field;
-    return Object.hashAll([l$code, l$message, l$field]);
+    return Object.hashAll([l$code, l$codeValue, l$message, l$field]);
   }
 
   @override
@@ -4668,6 +5687,11 @@ class Mutation$RefreshToken$refreshToken$userErrors {
     final l$code = code;
     final lOther$code = other.code;
     if (l$code != lOther$code) {
+      return false;
+    }
+    final l$codeValue = codeValue;
+    final lOther$codeValue = other.codeValue;
+    if (l$codeValue != lOther$codeValue) {
       return false;
     }
     final l$message = message;
@@ -4703,7 +5727,12 @@ abstract class CopyWith$Mutation$RefreshToken$refreshToken$userErrors<TRes> {
     TRes res,
   ) = _CopyWithStubImpl$Mutation$RefreshToken$refreshToken$userErrors;
 
-  TRes call({String? code, String? message, String? field});
+  TRes call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  });
 }
 
 class _CopyWithImpl$Mutation$RefreshToken$refreshToken$userErrors<TRes>
@@ -4721,6 +5750,7 @@ class _CopyWithImpl$Mutation$RefreshToken$refreshToken$userErrors<TRes>
 
   TRes call({
     Object? code = _undefined,
+    Object? codeValue = _undefined,
     Object? message = _undefined,
     Object? field = _undefined,
   }) => _then(
@@ -4728,6 +5758,9 @@ class _CopyWithImpl$Mutation$RefreshToken$refreshToken$userErrors<TRes>
       code: code == _undefined || code == null
           ? _instance.code
           : (code as String),
+      codeValue: codeValue == _undefined
+          ? _instance.codeValue
+          : (codeValue as Enum$ErrorCode?),
       message: message == _undefined || message == null
           ? _instance.message
           : (message as String),
@@ -4742,7 +5775,12 @@ class _CopyWithStubImpl$Mutation$RefreshToken$refreshToken$userErrors<TRes>
 
   TRes _res;
 
-  call({String? code, String? message, String? field}) => _res;
+  call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  }) => _res;
 }
 
 class Variables$Mutation$Logout {
@@ -4992,6 +6030,13 @@ const documentNodeMutationLogout = DocumentNode(
                         selectionSet: null,
                       ),
                       FieldNode(
+                        name: NameNode(value: 'codeValue'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
                         name: NameNode(value: 'message'),
                         alias: null,
                         arguments: [],
@@ -5172,6 +6217,7 @@ class _CopyWithStubImpl$Mutation$Logout$logout<TRes>
 class Mutation$Logout$logout$userErrors {
   Mutation$Logout$logout$userErrors({
     required this.code,
+    this.codeValue,
     required this.message,
     this.field,
   });
@@ -5180,16 +6226,22 @@ class Mutation$Logout$logout$userErrors {
     Map<String, dynamic> json,
   ) {
     final l$code = json['code'];
+    final l$codeValue = json['codeValue'];
     final l$message = json['message'];
     final l$field = json['field'];
     return Mutation$Logout$logout$userErrors(
       code: (l$code as String),
+      codeValue: l$codeValue == null
+          ? null
+          : fromJson$Enum$ErrorCode((l$codeValue as String)),
       message: (l$message as String),
       field: (l$field as String?),
     );
   }
 
   final String code;
+
+  final Enum$ErrorCode? codeValue;
 
   final String message;
 
@@ -5199,6 +6251,10 @@ class Mutation$Logout$logout$userErrors {
     final _resultData = <String, dynamic>{};
     final l$code = code;
     _resultData['code'] = l$code;
+    final l$codeValue = codeValue;
+    _resultData['codeValue'] = l$codeValue == null
+        ? null
+        : toJson$Enum$ErrorCode(l$codeValue);
     final l$message = message;
     _resultData['message'] = l$message;
     final l$field = field;
@@ -5209,9 +6265,10 @@ class Mutation$Logout$logout$userErrors {
   @override
   int get hashCode {
     final l$code = code;
+    final l$codeValue = codeValue;
     final l$message = message;
     final l$field = field;
-    return Object.hashAll([l$code, l$message, l$field]);
+    return Object.hashAll([l$code, l$codeValue, l$message, l$field]);
   }
 
   @override
@@ -5226,6 +6283,11 @@ class Mutation$Logout$logout$userErrors {
     final l$code = code;
     final lOther$code = other.code;
     if (l$code != lOther$code) {
+      return false;
+    }
+    final l$codeValue = codeValue;
+    final lOther$codeValue = other.codeValue;
+    if (l$codeValue != lOther$codeValue) {
       return false;
     }
     final l$message = message;
@@ -5257,7 +6319,12 @@ abstract class CopyWith$Mutation$Logout$logout$userErrors<TRes> {
   factory CopyWith$Mutation$Logout$logout$userErrors.stub(TRes res) =
       _CopyWithStubImpl$Mutation$Logout$logout$userErrors;
 
-  TRes call({String? code, String? message, String? field});
+  TRes call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  });
 }
 
 class _CopyWithImpl$Mutation$Logout$logout$userErrors<TRes>
@@ -5272,6 +6339,7 @@ class _CopyWithImpl$Mutation$Logout$logout$userErrors<TRes>
 
   TRes call({
     Object? code = _undefined,
+    Object? codeValue = _undefined,
     Object? message = _undefined,
     Object? field = _undefined,
   }) => _then(
@@ -5279,6 +6347,9 @@ class _CopyWithImpl$Mutation$Logout$logout$userErrors<TRes>
       code: code == _undefined || code == null
           ? _instance.code
           : (code as String),
+      codeValue: codeValue == _undefined
+          ? _instance.codeValue
+          : (codeValue as Enum$ErrorCode?),
       message: message == _undefined || message == null
           ? _instance.message
           : (message as String),
@@ -5293,7 +6364,12 @@ class _CopyWithStubImpl$Mutation$Logout$logout$userErrors<TRes>
 
   TRes _res;
 
-  call({String? code, String? message, String? field}) => _res;
+  call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  }) => _res;
 }
 
 class Variables$Mutation$RequestPasswordReset {
@@ -5565,6 +6641,13 @@ const documentNodeMutationRequestPasswordReset = DocumentNode(
                         selectionSet: null,
                       ),
                       FieldNode(
+                        name: NameNode(value: 'codeValue'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
                         name: NameNode(value: 'message'),
                         alias: null,
                         arguments: [],
@@ -5784,6 +6867,7 @@ class _CopyWithStubImpl$Mutation$RequestPasswordReset$requestPasswordReset<TRes>
 class Mutation$RequestPasswordReset$requestPasswordReset$userErrors {
   Mutation$RequestPasswordReset$requestPasswordReset$userErrors({
     required this.code,
+    this.codeValue,
     required this.message,
     this.field,
   });
@@ -5792,16 +6876,22 @@ class Mutation$RequestPasswordReset$requestPasswordReset$userErrors {
     Map<String, dynamic> json,
   ) {
     final l$code = json['code'];
+    final l$codeValue = json['codeValue'];
     final l$message = json['message'];
     final l$field = json['field'];
     return Mutation$RequestPasswordReset$requestPasswordReset$userErrors(
       code: (l$code as String),
+      codeValue: l$codeValue == null
+          ? null
+          : fromJson$Enum$ErrorCode((l$codeValue as String)),
       message: (l$message as String),
       field: (l$field as String?),
     );
   }
 
   final String code;
+
+  final Enum$ErrorCode? codeValue;
 
   final String message;
 
@@ -5811,6 +6901,10 @@ class Mutation$RequestPasswordReset$requestPasswordReset$userErrors {
     final _resultData = <String, dynamic>{};
     final l$code = code;
     _resultData['code'] = l$code;
+    final l$codeValue = codeValue;
+    _resultData['codeValue'] = l$codeValue == null
+        ? null
+        : toJson$Enum$ErrorCode(l$codeValue);
     final l$message = message;
     _resultData['message'] = l$message;
     final l$field = field;
@@ -5821,9 +6915,10 @@ class Mutation$RequestPasswordReset$requestPasswordReset$userErrors {
   @override
   int get hashCode {
     final l$code = code;
+    final l$codeValue = codeValue;
     final l$message = message;
     final l$field = field;
-    return Object.hashAll([l$code, l$message, l$field]);
+    return Object.hashAll([l$code, l$codeValue, l$message, l$field]);
   }
 
   @override
@@ -5839,6 +6934,11 @@ class Mutation$RequestPasswordReset$requestPasswordReset$userErrors {
     final l$code = code;
     final lOther$code = other.code;
     if (l$code != lOther$code) {
+      return false;
+    }
+    final l$codeValue = codeValue;
+    final lOther$codeValue = other.codeValue;
+    if (l$codeValue != lOther$codeValue) {
       return false;
     }
     final l$message = message;
@@ -5880,7 +6980,12 @@ abstract class CopyWith$Mutation$RequestPasswordReset$requestPasswordReset$userE
     TRes res,
   ) = _CopyWithStubImpl$Mutation$RequestPasswordReset$requestPasswordReset$userErrors;
 
-  TRes call({String? code, String? message, String? field});
+  TRes call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  });
 }
 
 class _CopyWithImpl$Mutation$RequestPasswordReset$requestPasswordReset$userErrors<
@@ -5906,6 +7011,7 @@ class _CopyWithImpl$Mutation$RequestPasswordReset$requestPasswordReset$userError
 
   TRes call({
     Object? code = _undefined,
+    Object? codeValue = _undefined,
     Object? message = _undefined,
     Object? field = _undefined,
   }) => _then(
@@ -5913,6 +7019,9 @@ class _CopyWithImpl$Mutation$RequestPasswordReset$requestPasswordReset$userError
       code: code == _undefined || code == null
           ? _instance.code
           : (code as String),
+      codeValue: codeValue == _undefined
+          ? _instance.codeValue
+          : (codeValue as Enum$ErrorCode?),
       message: message == _undefined || message == null
           ? _instance.message
           : (message as String),
@@ -5934,7 +7043,12 @@ class _CopyWithStubImpl$Mutation$RequestPasswordReset$requestPasswordReset$userE
 
   TRes _res;
 
-  call({String? code, String? message, String? field}) => _res;
+  call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  }) => _res;
 }
 
 class Variables$Mutation$ResetPassword {
@@ -6186,6 +7300,13 @@ const documentNodeMutationResetPassword = DocumentNode(
                         selectionSet: null,
                       ),
                       FieldNode(
+                        name: NameNode(value: 'codeValue'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
                         name: NameNode(value: 'message'),
                         alias: null,
                         arguments: [],
@@ -6413,6 +7534,7 @@ class _CopyWithStubImpl$Mutation$ResetPassword$resetPassword<TRes>
 class Mutation$ResetPassword$resetPassword$userErrors {
   Mutation$ResetPassword$resetPassword$userErrors({
     required this.code,
+    this.codeValue,
     required this.message,
     this.field,
   });
@@ -6421,16 +7543,22 @@ class Mutation$ResetPassword$resetPassword$userErrors {
     Map<String, dynamic> json,
   ) {
     final l$code = json['code'];
+    final l$codeValue = json['codeValue'];
     final l$message = json['message'];
     final l$field = json['field'];
     return Mutation$ResetPassword$resetPassword$userErrors(
       code: (l$code as String),
+      codeValue: l$codeValue == null
+          ? null
+          : fromJson$Enum$ErrorCode((l$codeValue as String)),
       message: (l$message as String),
       field: (l$field as String?),
     );
   }
 
   final String code;
+
+  final Enum$ErrorCode? codeValue;
 
   final String message;
 
@@ -6440,6 +7568,10 @@ class Mutation$ResetPassword$resetPassword$userErrors {
     final _resultData = <String, dynamic>{};
     final l$code = code;
     _resultData['code'] = l$code;
+    final l$codeValue = codeValue;
+    _resultData['codeValue'] = l$codeValue == null
+        ? null
+        : toJson$Enum$ErrorCode(l$codeValue);
     final l$message = message;
     _resultData['message'] = l$message;
     final l$field = field;
@@ -6450,9 +7582,10 @@ class Mutation$ResetPassword$resetPassword$userErrors {
   @override
   int get hashCode {
     final l$code = code;
+    final l$codeValue = codeValue;
     final l$message = message;
     final l$field = field;
-    return Object.hashAll([l$code, l$message, l$field]);
+    return Object.hashAll([l$code, l$codeValue, l$message, l$field]);
   }
 
   @override
@@ -6467,6 +7600,11 @@ class Mutation$ResetPassword$resetPassword$userErrors {
     final l$code = code;
     final lOther$code = other.code;
     if (l$code != lOther$code) {
+      return false;
+    }
+    final l$codeValue = codeValue;
+    final lOther$codeValue = other.codeValue;
+    if (l$codeValue != lOther$codeValue) {
       return false;
     }
     final l$message = message;
@@ -6502,7 +7640,12 @@ abstract class CopyWith$Mutation$ResetPassword$resetPassword$userErrors<TRes> {
     TRes res,
   ) = _CopyWithStubImpl$Mutation$ResetPassword$resetPassword$userErrors;
 
-  TRes call({String? code, String? message, String? field});
+  TRes call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  });
 }
 
 class _CopyWithImpl$Mutation$ResetPassword$resetPassword$userErrors<TRes>
@@ -6520,6 +7663,7 @@ class _CopyWithImpl$Mutation$ResetPassword$resetPassword$userErrors<TRes>
 
   TRes call({
     Object? code = _undefined,
+    Object? codeValue = _undefined,
     Object? message = _undefined,
     Object? field = _undefined,
   }) => _then(
@@ -6527,6 +7671,9 @@ class _CopyWithImpl$Mutation$ResetPassword$resetPassword$userErrors<TRes>
       code: code == _undefined || code == null
           ? _instance.code
           : (code as String),
+      codeValue: codeValue == _undefined
+          ? _instance.codeValue
+          : (codeValue as Enum$ErrorCode?),
       message: message == _undefined || message == null
           ? _instance.message
           : (message as String),
@@ -6541,7 +7688,12 @@ class _CopyWithStubImpl$Mutation$ResetPassword$resetPassword$userErrors<TRes>
 
   TRes _res;
 
-  call({String? code, String? message, String? field}) => _res;
+  call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  }) => _res;
 }
 
 class Query$Me {
@@ -6688,6 +7840,13 @@ const documentNodeQueryMe = DocumentNode(
                   selectionSet: null,
                 ),
                 FieldNode(
+                  name: NameNode(value: 'canChangeEmail'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
                   name: NameNode(value: 'roles'),
                   alias: null,
                   arguments: [],
@@ -6725,6 +7884,7 @@ class Query$Me$me {
     this.profileImageUrl,
     required this.status,
     required this.emailVerified,
+    required this.canChangeEmail,
     required this.roles,
     required this.permissions,
     required this.createdAt,
@@ -6737,6 +7897,7 @@ class Query$Me$me {
     final l$profileImageUrl = json['profileImageUrl'];
     final l$status = json['status'];
     final l$emailVerified = json['emailVerified'];
+    final l$canChangeEmail = json['canChangeEmail'];
     final l$roles = json['roles'];
     final l$permissions = json['permissions'];
     final l$createdAt = json['createdAt'];
@@ -6747,6 +7908,7 @@ class Query$Me$me {
       profileImageUrl: (l$profileImageUrl as String?),
       status: fromJson$Enum$MemberStatus((l$status as String)),
       emailVerified: (l$emailVerified as bool),
+      canChangeEmail: (l$canChangeEmail as bool),
       roles: (l$roles as List<dynamic>).map((e) => (e as String)).toList(),
       permissions: (l$permissions as List<dynamic>)
           .map((e) => (e as String))
@@ -6766,6 +7928,8 @@ class Query$Me$me {
   final Enum$MemberStatus status;
 
   final bool emailVerified;
+
+  final bool canChangeEmail;
 
   final List<String> roles;
 
@@ -6787,6 +7951,8 @@ class Query$Me$me {
     _resultData['status'] = toJson$Enum$MemberStatus(l$status);
     final l$emailVerified = emailVerified;
     _resultData['emailVerified'] = l$emailVerified;
+    final l$canChangeEmail = canChangeEmail;
+    _resultData['canChangeEmail'] = l$canChangeEmail;
     final l$roles = roles;
     _resultData['roles'] = l$roles.map((e) => e).toList();
     final l$permissions = permissions;
@@ -6804,6 +7970,7 @@ class Query$Me$me {
     final l$profileImageUrl = profileImageUrl;
     final l$status = status;
     final l$emailVerified = emailVerified;
+    final l$canChangeEmail = canChangeEmail;
     final l$roles = roles;
     final l$permissions = permissions;
     final l$createdAt = createdAt;
@@ -6814,6 +7981,7 @@ class Query$Me$me {
       l$profileImageUrl,
       l$status,
       l$emailVerified,
+      l$canChangeEmail,
       Object.hashAll(l$roles.map((v) => v)),
       Object.hashAll(l$permissions.map((v) => v)),
       l$createdAt,
@@ -6856,6 +8024,11 @@ class Query$Me$me {
     final l$emailVerified = emailVerified;
     final lOther$emailVerified = other.emailVerified;
     if (l$emailVerified != lOther$emailVerified) {
+      return false;
+    }
+    final l$canChangeEmail = canChangeEmail;
+    final lOther$canChangeEmail = other.canChangeEmail;
+    if (l$canChangeEmail != lOther$canChangeEmail) {
       return false;
     }
     final l$roles = roles;
@@ -6911,6 +8084,7 @@ abstract class CopyWith$Query$Me$me<TRes> {
     String? profileImageUrl,
     Enum$MemberStatus? status,
     bool? emailVerified,
+    bool? canChangeEmail,
     List<String>? roles,
     List<String>? permissions,
     String? createdAt,
@@ -6933,6 +8107,7 @@ class _CopyWithImpl$Query$Me$me<TRes> implements CopyWith$Query$Me$me<TRes> {
     Object? profileImageUrl = _undefined,
     Object? status = _undefined,
     Object? emailVerified = _undefined,
+    Object? canChangeEmail = _undefined,
     Object? roles = _undefined,
     Object? permissions = _undefined,
     Object? createdAt = _undefined,
@@ -6954,6 +8129,9 @@ class _CopyWithImpl$Query$Me$me<TRes> implements CopyWith$Query$Me$me<TRes> {
       emailVerified: emailVerified == _undefined || emailVerified == null
           ? _instance.emailVerified
           : (emailVerified as bool),
+      canChangeEmail: canChangeEmail == _undefined || canChangeEmail == null
+          ? _instance.canChangeEmail
+          : (canChangeEmail as bool),
       roles: roles == _undefined || roles == null
           ? _instance.roles
           : (roles as List<String>),
@@ -6980,6 +8158,7 @@ class _CopyWithStubImpl$Query$Me$me<TRes>
     String? profileImageUrl,
     Enum$MemberStatus? status,
     bool? emailVerified,
+    bool? canChangeEmail,
     List<String>? roles,
     List<String>? permissions,
     String? createdAt,
@@ -7119,6 +8298,13 @@ const documentNodeMutationWithdrawMember = DocumentNode(
                     selections: [
                       FieldNode(
                         name: NameNode(value: 'code'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'codeValue'),
                         alias: null,
                         arguments: [],
                         directives: [],
@@ -7324,6 +8510,7 @@ class _CopyWithStubImpl$Mutation$WithdrawMember$withdrawMember<TRes>
 class Mutation$WithdrawMember$withdrawMember$userErrors {
   Mutation$WithdrawMember$withdrawMember$userErrors({
     required this.code,
+    this.codeValue,
     required this.message,
     this.field,
   });
@@ -7332,16 +8519,22 @@ class Mutation$WithdrawMember$withdrawMember$userErrors {
     Map<String, dynamic> json,
   ) {
     final l$code = json['code'];
+    final l$codeValue = json['codeValue'];
     final l$message = json['message'];
     final l$field = json['field'];
     return Mutation$WithdrawMember$withdrawMember$userErrors(
       code: (l$code as String),
+      codeValue: l$codeValue == null
+          ? null
+          : fromJson$Enum$ErrorCode((l$codeValue as String)),
       message: (l$message as String),
       field: (l$field as String?),
     );
   }
 
   final String code;
+
+  final Enum$ErrorCode? codeValue;
 
   final String message;
 
@@ -7351,6 +8544,10 @@ class Mutation$WithdrawMember$withdrawMember$userErrors {
     final _resultData = <String, dynamic>{};
     final l$code = code;
     _resultData['code'] = l$code;
+    final l$codeValue = codeValue;
+    _resultData['codeValue'] = l$codeValue == null
+        ? null
+        : toJson$Enum$ErrorCode(l$codeValue);
     final l$message = message;
     _resultData['message'] = l$message;
     final l$field = field;
@@ -7361,9 +8558,10 @@ class Mutation$WithdrawMember$withdrawMember$userErrors {
   @override
   int get hashCode {
     final l$code = code;
+    final l$codeValue = codeValue;
     final l$message = message;
     final l$field = field;
-    return Object.hashAll([l$code, l$message, l$field]);
+    return Object.hashAll([l$code, l$codeValue, l$message, l$field]);
   }
 
   @override
@@ -7378,6 +8576,11 @@ class Mutation$WithdrawMember$withdrawMember$userErrors {
     final l$code = code;
     final lOther$code = other.code;
     if (l$code != lOther$code) {
+      return false;
+    }
+    final l$codeValue = codeValue;
+    final lOther$codeValue = other.codeValue;
+    if (l$codeValue != lOther$codeValue) {
       return false;
     }
     final l$message = message;
@@ -7417,7 +8620,12 @@ abstract class CopyWith$Mutation$WithdrawMember$withdrawMember$userErrors<
     TRes res,
   ) = _CopyWithStubImpl$Mutation$WithdrawMember$withdrawMember$userErrors;
 
-  TRes call({String? code, String? message, String? field});
+  TRes call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  });
 }
 
 class _CopyWithImpl$Mutation$WithdrawMember$withdrawMember$userErrors<TRes>
@@ -7436,6 +8644,7 @@ class _CopyWithImpl$Mutation$WithdrawMember$withdrawMember$userErrors<TRes>
 
   TRes call({
     Object? code = _undefined,
+    Object? codeValue = _undefined,
     Object? message = _undefined,
     Object? field = _undefined,
   }) => _then(
@@ -7443,6 +8652,9 @@ class _CopyWithImpl$Mutation$WithdrawMember$withdrawMember$userErrors<TRes>
       code: code == _undefined || code == null
           ? _instance.code
           : (code as String),
+      codeValue: codeValue == _undefined
+          ? _instance.codeValue
+          : (codeValue as Enum$ErrorCode?),
       message: message == _undefined || message == null
           ? _instance.message
           : (message as String),
@@ -7460,5 +8672,10 @@ class _CopyWithStubImpl$Mutation$WithdrawMember$withdrawMember$userErrors<TRes>
 
   TRes _res;
 
-  call({String? code, String? message, String? field}) => _res;
+  call({
+    String? code,
+    Enum$ErrorCode? codeValue,
+    String? message,
+    String? field,
+  }) => _res;
 }

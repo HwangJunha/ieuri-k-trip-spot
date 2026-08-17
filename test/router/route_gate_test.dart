@@ -137,4 +137,103 @@ void main() {
       expect(destinationAfterGate(onboardingPath), discoverPath);
     });
   });
+
+  group('이메일 인증 게이트 (SPEC-0024 R10)', () {
+    const AuthGateState unverified = AuthGateState.emailVerificationRequired;
+
+    test('인증 미완이면 메인이 막히고 인증 화면으로 간다', () {
+      // R10-1·R10-2. 화면을 띄운 뒤 가리는 게 아니라 아예 도달하지 못해야 한다.
+      expect(_gate(discoverPath, auth: unverified), emailVerificationPath);
+      expect(_gate('/home', auth: unverified), emailVerificationPath);
+    });
+
+    test('인증 미완이면 상세·커뮤니티 같은 하위 경로도 막힌다', () {
+      expect(_gate('/spot/123', auth: unverified), emailVerificationPath);
+      expect(_gate('/community', auth: unverified), emailVerificationPath);
+    });
+
+    test('인증 화면 자체는 그대로 둔다', () {
+      expect(_gate(emailVerificationPath, auth: unverified), isNull);
+    });
+
+    test('탈퇴 화면은 열려 있다', () {
+      // 인증할 수 없는 주소로 갇힌 사용자가 계정을 지우고 나갈 유일한 길이다.
+      expect(_gate(deleteAccountPath, auth: unverified), isNull);
+    });
+
+    test('설정 계열의 나머지는 막힌다', () {
+      // 약관 게이트와 다르다 — 미인증 토큰으로는 서버가 프로필 조회를 거부하므로
+      // 열어 줘도 오류 화면만 보게 된다.
+      expect(_gate(settingsPath, auth: unverified), emailVerificationPath);
+      expect(
+        _gate('/settings/profile', auth: unverified),
+        emailVerificationPath,
+      );
+    });
+
+    test('온보딩보다 앞서 판정된다', () {
+      // 서버가 미인증 토큰의 비허용 오퍼레이션을 거부하므로(R9) 온보딩을 먼저
+      // 태우면 그 안의 서버 호출이 실패한다.
+      expect(_gate(onboardingPath, auth: unverified), emailVerificationPath);
+    });
+
+    test('언어 선택이 이메일 인증보다 앞선다', () {
+      expect(
+        _gate(discoverPath, languageChosen: false, auth: unverified),
+        languagePath,
+      );
+    });
+
+    test('인증을 마치면 게이트가 열린다', () {
+      // R10-3. 판정 근거가 참으로 바뀌면 그다음 게이트(온보딩)로 넘어간다.
+      expect(
+        _gate(discoverPath, auth: AuthGateState.onboardingRequired),
+        onboardingPath,
+      );
+      expect(_gate(discoverPath, auth: AuthGateState.ready), isNull);
+    });
+
+    test('인증을 마친 사용자를 인증 화면에 두지 않는다', () {
+      expect(_gate(emailVerificationPath, auth: AuthGateState.ready),
+          discoverPath);
+    });
+  });
+
+  group('인증 화면에서 로그아웃한 뒤 (실기기 교착 회귀)', () {
+    // 로그아웃하면 세션이 사라져 `unauthenticated`가 된다. `/email-verification`이
+    // authPaths에 들어 있다는 이유로 통과시키면 **화면을 빠져나갈 수 없다** —
+    // 실기기에서 로그아웃 버튼이 먹지 않는 교착이 났다.
+    test('핸들이 없으면 로그인 화면으로 내보낸다', () {
+      expect(
+        resolveGate(
+          location: emailVerificationPath,
+          languageChosen: true,
+          auth: AuthGateState.unauthenticated,
+          terms: TermsGateState.satisfied,
+          emailVerificationHoldsHandle: false,
+        ),
+        loginPath,
+      );
+    });
+
+    test('가입 직후 경로는 세션 없이도 머문다', () {
+      // 이쪽은 토큰이 없는 게 정상이다 — 화면이 서버 핸들을 들고 있고, 그것으로
+      // 코드를 검증한 뒤 로그인 화면으로 간다.
+      expect(
+        resolveGate(
+          location: emailVerificationPath,
+          languageChosen: true,
+          auth: AuthGateState.unauthenticated,
+          terms: TermsGateState.satisfied,
+          emailVerificationHoldsHandle: true,
+        ),
+        isNull,
+      );
+    });
+
+    test('다른 인증 경로는 영향을 받지 않는다', () {
+      expect(_gate(loginPath, auth: AuthGateState.unauthenticated), isNull);
+      expect(_gate('/sign-up', auth: AuthGateState.unauthenticated), isNull);
+    });
+  });
 }

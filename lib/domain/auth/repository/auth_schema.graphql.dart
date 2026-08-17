@@ -1350,6 +1350,104 @@ class _CopyWithStubImpl$Input$ResendVerificationInput<TRes>
   call({String? verificationId}) => _res;
 }
 
+class Input$RetargetEmailVerificationInput {
+  factory Input$RetargetEmailVerificationInput({required String newEmail}) =>
+      Input$RetargetEmailVerificationInput._({r'newEmail': newEmail});
+
+  Input$RetargetEmailVerificationInput._(this._$data);
+
+  factory Input$RetargetEmailVerificationInput.fromJson(
+    Map<String, dynamic> data,
+  ) {
+    final result$data = <String, dynamic>{};
+    final l$newEmail = data['newEmail'];
+    result$data['newEmail'] = (l$newEmail as String);
+    return Input$RetargetEmailVerificationInput._(result$data);
+  }
+
+  Map<String, dynamic> _$data;
+
+  String get newEmail => (_$data['newEmail'] as String);
+
+  Map<String, dynamic> toJson() {
+    final result$data = <String, dynamic>{};
+    final l$newEmail = newEmail;
+    result$data['newEmail'] = l$newEmail;
+    return result$data;
+  }
+
+  CopyWith$Input$RetargetEmailVerificationInput<
+    Input$RetargetEmailVerificationInput
+  >
+  get copyWith => CopyWith$Input$RetargetEmailVerificationInput(this, (i) => i);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Input$RetargetEmailVerificationInput ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$newEmail = newEmail;
+    final lOther$newEmail = other.newEmail;
+    if (l$newEmail != lOther$newEmail) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    final l$newEmail = newEmail;
+    return Object.hashAll([l$newEmail]);
+  }
+}
+
+abstract class CopyWith$Input$RetargetEmailVerificationInput<TRes> {
+  factory CopyWith$Input$RetargetEmailVerificationInput(
+    Input$RetargetEmailVerificationInput instance,
+    TRes Function(Input$RetargetEmailVerificationInput) then,
+  ) = _CopyWithImpl$Input$RetargetEmailVerificationInput;
+
+  factory CopyWith$Input$RetargetEmailVerificationInput.stub(TRes res) =
+      _CopyWithStubImpl$Input$RetargetEmailVerificationInput;
+
+  TRes call({String? newEmail});
+}
+
+class _CopyWithImpl$Input$RetargetEmailVerificationInput<TRes>
+    implements CopyWith$Input$RetargetEmailVerificationInput<TRes> {
+  _CopyWithImpl$Input$RetargetEmailVerificationInput(
+    this._instance,
+    this._then,
+  );
+
+  final Input$RetargetEmailVerificationInput _instance;
+
+  final TRes Function(Input$RetargetEmailVerificationInput) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? newEmail = _undefined}) => _then(
+    Input$RetargetEmailVerificationInput._({
+      ..._instance._$data,
+      if (newEmail != _undefined && newEmail != null)
+        'newEmail': (newEmail as String),
+    }),
+  );
+}
+
+class _CopyWithStubImpl$Input$RetargetEmailVerificationInput<TRes>
+    implements CopyWith$Input$RetargetEmailVerificationInput<TRes> {
+  _CopyWithStubImpl$Input$RetargetEmailVerificationInput(this._res);
+
+  TRes _res;
+
+  call({String? newEmail}) => _res;
+}
+
 class Input$ResetPasswordInput {
   factory Input$ResetPasswordInput({
     required String email,
@@ -2096,6 +2194,154 @@ Enum$TermsCode fromJson$Enum$TermsCode(String value) {
       return Enum$TermsCode.MARKETING;
     default:
       return Enum$TermsCode.$unknown;
+  }
+}
+
+enum Enum$ErrorCode {
+  INVALID_INPUT,
+  PASSWORD_POLICY_VIOLATION,
+  MEMBER_ALREADY_REGISTERED,
+  EMAIL_ALREADY_IN_USE,
+  SNS_VERIFICATION_FAILED,
+  INVALID_CREDENTIALS,
+  MEMBER_NOT_FOUND,
+  ACCOUNT_INACTIVE,
+  VERIFICATION_NOT_FOUND,
+  VERIFICATION_RATE_LIMITED,
+  RESEND_COOLDOWN_ACTIVE,
+  ALREADY_VERIFIED,
+  NOT_EMAIL_MEMBER,
+  SAME_AS_CURRENT_EMAIL,
+  INVALID_EMAIL_FORMAT,
+  INVALID_NICKNAME,
+  NICKNAME_ALREADY_TAKEN,
+  UNSUPPORTED_IMAGE_TYPE,
+  IMAGE_TOO_LARGE,
+  OBJECT_KEY_NOT_FOUND,
+  PHOTO_NOT_UPLOADED,
+  TERMS_NOT_FOUND,
+  TERMS_CODE_NOT_REQUIRED,
+  ROLE_NOT_FOUND,
+  SELF_DEMOTION,
+  $unknown;
+
+  factory Enum$ErrorCode.fromJson(String value) =>
+      fromJson$Enum$ErrorCode(value);
+
+  String toJson() => toJson$Enum$ErrorCode(this);
+}
+
+String toJson$Enum$ErrorCode(Enum$ErrorCode e) {
+  switch (e) {
+    case Enum$ErrorCode.INVALID_INPUT:
+      return r'INVALID_INPUT';
+    case Enum$ErrorCode.PASSWORD_POLICY_VIOLATION:
+      return r'PASSWORD_POLICY_VIOLATION';
+    case Enum$ErrorCode.MEMBER_ALREADY_REGISTERED:
+      return r'MEMBER_ALREADY_REGISTERED';
+    case Enum$ErrorCode.EMAIL_ALREADY_IN_USE:
+      return r'EMAIL_ALREADY_IN_USE';
+    case Enum$ErrorCode.SNS_VERIFICATION_FAILED:
+      return r'SNS_VERIFICATION_FAILED';
+    case Enum$ErrorCode.INVALID_CREDENTIALS:
+      return r'INVALID_CREDENTIALS';
+    case Enum$ErrorCode.MEMBER_NOT_FOUND:
+      return r'MEMBER_NOT_FOUND';
+    case Enum$ErrorCode.ACCOUNT_INACTIVE:
+      return r'ACCOUNT_INACTIVE';
+    case Enum$ErrorCode.VERIFICATION_NOT_FOUND:
+      return r'VERIFICATION_NOT_FOUND';
+    case Enum$ErrorCode.VERIFICATION_RATE_LIMITED:
+      return r'VERIFICATION_RATE_LIMITED';
+    case Enum$ErrorCode.RESEND_COOLDOWN_ACTIVE:
+      return r'RESEND_COOLDOWN_ACTIVE';
+    case Enum$ErrorCode.ALREADY_VERIFIED:
+      return r'ALREADY_VERIFIED';
+    case Enum$ErrorCode.NOT_EMAIL_MEMBER:
+      return r'NOT_EMAIL_MEMBER';
+    case Enum$ErrorCode.SAME_AS_CURRENT_EMAIL:
+      return r'SAME_AS_CURRENT_EMAIL';
+    case Enum$ErrorCode.INVALID_EMAIL_FORMAT:
+      return r'INVALID_EMAIL_FORMAT';
+    case Enum$ErrorCode.INVALID_NICKNAME:
+      return r'INVALID_NICKNAME';
+    case Enum$ErrorCode.NICKNAME_ALREADY_TAKEN:
+      return r'NICKNAME_ALREADY_TAKEN';
+    case Enum$ErrorCode.UNSUPPORTED_IMAGE_TYPE:
+      return r'UNSUPPORTED_IMAGE_TYPE';
+    case Enum$ErrorCode.IMAGE_TOO_LARGE:
+      return r'IMAGE_TOO_LARGE';
+    case Enum$ErrorCode.OBJECT_KEY_NOT_FOUND:
+      return r'OBJECT_KEY_NOT_FOUND';
+    case Enum$ErrorCode.PHOTO_NOT_UPLOADED:
+      return r'PHOTO_NOT_UPLOADED';
+    case Enum$ErrorCode.TERMS_NOT_FOUND:
+      return r'TERMS_NOT_FOUND';
+    case Enum$ErrorCode.TERMS_CODE_NOT_REQUIRED:
+      return r'TERMS_CODE_NOT_REQUIRED';
+    case Enum$ErrorCode.ROLE_NOT_FOUND:
+      return r'ROLE_NOT_FOUND';
+    case Enum$ErrorCode.SELF_DEMOTION:
+      return r'SELF_DEMOTION';
+    case Enum$ErrorCode.$unknown:
+      return r'$unknown';
+  }
+}
+
+Enum$ErrorCode fromJson$Enum$ErrorCode(String value) {
+  switch (value) {
+    case r'INVALID_INPUT':
+      return Enum$ErrorCode.INVALID_INPUT;
+    case r'PASSWORD_POLICY_VIOLATION':
+      return Enum$ErrorCode.PASSWORD_POLICY_VIOLATION;
+    case r'MEMBER_ALREADY_REGISTERED':
+      return Enum$ErrorCode.MEMBER_ALREADY_REGISTERED;
+    case r'EMAIL_ALREADY_IN_USE':
+      return Enum$ErrorCode.EMAIL_ALREADY_IN_USE;
+    case r'SNS_VERIFICATION_FAILED':
+      return Enum$ErrorCode.SNS_VERIFICATION_FAILED;
+    case r'INVALID_CREDENTIALS':
+      return Enum$ErrorCode.INVALID_CREDENTIALS;
+    case r'MEMBER_NOT_FOUND':
+      return Enum$ErrorCode.MEMBER_NOT_FOUND;
+    case r'ACCOUNT_INACTIVE':
+      return Enum$ErrorCode.ACCOUNT_INACTIVE;
+    case r'VERIFICATION_NOT_FOUND':
+      return Enum$ErrorCode.VERIFICATION_NOT_FOUND;
+    case r'VERIFICATION_RATE_LIMITED':
+      return Enum$ErrorCode.VERIFICATION_RATE_LIMITED;
+    case r'RESEND_COOLDOWN_ACTIVE':
+      return Enum$ErrorCode.RESEND_COOLDOWN_ACTIVE;
+    case r'ALREADY_VERIFIED':
+      return Enum$ErrorCode.ALREADY_VERIFIED;
+    case r'NOT_EMAIL_MEMBER':
+      return Enum$ErrorCode.NOT_EMAIL_MEMBER;
+    case r'SAME_AS_CURRENT_EMAIL':
+      return Enum$ErrorCode.SAME_AS_CURRENT_EMAIL;
+    case r'INVALID_EMAIL_FORMAT':
+      return Enum$ErrorCode.INVALID_EMAIL_FORMAT;
+    case r'INVALID_NICKNAME':
+      return Enum$ErrorCode.INVALID_NICKNAME;
+    case r'NICKNAME_ALREADY_TAKEN':
+      return Enum$ErrorCode.NICKNAME_ALREADY_TAKEN;
+    case r'UNSUPPORTED_IMAGE_TYPE':
+      return Enum$ErrorCode.UNSUPPORTED_IMAGE_TYPE;
+    case r'IMAGE_TOO_LARGE':
+      return Enum$ErrorCode.IMAGE_TOO_LARGE;
+    case r'OBJECT_KEY_NOT_FOUND':
+      return Enum$ErrorCode.OBJECT_KEY_NOT_FOUND;
+    case r'PHOTO_NOT_UPLOADED':
+      return Enum$ErrorCode.PHOTO_NOT_UPLOADED;
+    case r'TERMS_NOT_FOUND':
+      return Enum$ErrorCode.TERMS_NOT_FOUND;
+    case r'TERMS_CODE_NOT_REQUIRED':
+      return Enum$ErrorCode.TERMS_CODE_NOT_REQUIRED;
+    case r'ROLE_NOT_FOUND':
+      return Enum$ErrorCode.ROLE_NOT_FOUND;
+    case r'SELF_DEMOTION':
+      return Enum$ErrorCode.SELF_DEMOTION;
+    default:
+      return Enum$ErrorCode.$unknown;
   }
 }
 

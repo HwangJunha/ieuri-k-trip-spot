@@ -6,6 +6,7 @@ import '../common/navigation/root_navigator_key.dart';
 import '../common/storage/app_preferences.dart';
 import '../domain/auth/model/auth_state.dart';
 import '../domain/auth/provider/auth_controller.dart';
+import '../domain/auth/view/email_verification_screen.dart';
 import '../domain/settings/model/agreement_status.dart';
 import '../domain/settings/provider/agreements_controller.dart';
 import 'route_gate.dart';
@@ -51,23 +52,34 @@ GoRouter goRouter(Ref ref) {
       final String location = state.matchedLocation;
 
       final AsyncValue<AuthState> auth = ref.read(authControllerProvider);
-      final AsyncValue<List<AgreementStatus>> agreements = ref.read(
-        agreementsControllerProvider,
-      );
-
       final AuthGateState authGate = _authGate(auth);
+
       // 약관은 **인증된 사용자에게만 의미가 있다.** 미인증 상태에서 조회를 기다리면
       // 로그인 화면조차 스플래시에 갇힌다 — 인증 전에는 충족으로 보고 인증 게이트가
       // 판정을 가져가게 둔다.
+      //
+      // **`ready`일 때만 읽는다.** 밖에서 미리 읽으면 autoDispose provider가 그때마다
+      // 되살아나 조회를 내는데, 이메일 미인증 상태에서는 서버가 그 요청을 전부
+      // `EMAIL_NOT_VERIFIED`로 거절한다. 값을 쓰지도 않으면서 실패만 만들어 내고,
+      // 그 실패가 안전망을 깨워 리다이렉트를 다시 유발하면 무한 루프가 된다
+      // (실기기에서 agreements·me가 끝없이 반복했다).
       final TermsGateState termsGate = authGate == AuthGateState.ready
-          ? _termsGate(agreements)
+          ? _termsGate(ref.read(agreementsControllerProvider))
           : TermsGateState.satisfied;
+
+      // 가입 직후 경로는 `extra`에 서버 핸들을 싣고 들어온다. 그 경우에만 세션 없이
+      // 인증 화면에 머물 수 있다 — 게이트로 들어온 세션이 로그아웃하면 핸들이 없어
+      // 로그인 화면으로 나가야 한다(그러지 않으면 빠져나갈 수 없다).
+      final Object? extra = state.extra;
+      final bool holdsHandle =
+          extra is EmailVerificationArgs && extra.verificationId.isNotEmpty;
 
       final String? target = resolveGate(
         location: location,
         languageChosen: ref.read(appPreferencesProvider).savedLanguage != null,
         auth: authGate,
         terms: termsGate,
+        emailVerificationHoldsHandle: holdsHandle,
       );
 
       // 약관 게이트에 막혀 되돌려지는 경우에만 목적지를 보관한다(R12). 다른 게이트는
@@ -94,10 +106,14 @@ GoRouter goRouter(Ref ref) {
 /// loading과 error/null을 **같이 다룬다** — 둘 다 "판정할 수 없음"이고, 그 구간에
 /// 보호 화면을 그리면 provider가 발화한다. `spots`가 토큰 없이도 200에 데이터를
 /// 반환하므로 게이트가 새면 화면이 정상처럼 채워져 결함이 눈에 띄지 않는다.
+/// 이메일 인증 판정(SPEC-0024 R10)은 여기 한 곳에서만 한다. 로그인 직후(R10-1)와
+/// 세션 복원 직후(R10-4)가 모두 `authControllerProvider`를 거쳐 이 함수로 오므로,
+/// 두 경로를 따로 다루면 판정이 갈라진다.
 AuthGateState _authGate(AsyncValue<AuthState> auth) {
   final AuthState? value = auth.value;
   if (auth.isLoading || value == null) return AuthGateState.loading;
   if (!value.isAuthenticated) return AuthGateState.unauthenticated;
+  if (!value.emailVerified) return AuthGateState.emailVerificationRequired;
   if (!value.onboardingCompleted) return AuthGateState.onboardingRequired;
   return AuthGateState.ready;
 }

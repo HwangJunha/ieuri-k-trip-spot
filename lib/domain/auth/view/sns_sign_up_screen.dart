@@ -94,7 +94,8 @@ class _SnsSignUpScreenState extends ConsumerState<SnsSignUpScreen> {
           );
       if (!mounted) return;
       if (result.needsVerification) {
-        // Email edited or provider-unverified → verify with a code (§4).
+        // provider가 이메일을 주지 않아 앱에서 직접 입력한 경우다 — 이메일 가입과
+        // 똑같이 코드 인증을 밟는다(SPEC-0024 §3).
         context.pushNamed(
           EmailVerificationScreen.routeName,
           extra: EmailVerificationArgs(
@@ -103,7 +104,8 @@ class _SnsSignUpScreenState extends ConsumerState<SnsSignUpScreen> {
           ),
         );
       } else {
-        // Already verified → straight to login with the email prefilled.
+        // provider가 이메일을 준 경우 **가입 즉시 인증 완료**이고 verificationId가
+        // null로 온다(SPEC-0024 §3). 인증 화면을 띄우지 않고 로그인으로 보낸다.
         context.goNamed(LoginScreen.routeName, extra: email);
       }
     } on Object catch (error) {

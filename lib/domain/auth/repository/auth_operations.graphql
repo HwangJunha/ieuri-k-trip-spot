@@ -8,6 +8,7 @@ mutation RegisterEmailMember($input: RegisterEmailMemberInput!) {
     success
     userErrors {
       code
+      codeValue
       message
       field
     }
@@ -20,6 +21,7 @@ mutation VerifyEmail($input: VerifyEmailInput!) {
     success
     userErrors {
       code
+      codeValue
       message
       field
     }
@@ -33,6 +35,25 @@ mutation ResendVerification($input: ResendVerificationInput!) {
     success
     userErrors {
       code
+      codeValue
+      message
+      field
+    }
+    verificationId
+    expiresAt
+  }
+}
+
+# 인증 주소 재입력(SPEC-0024 R7). 인증을 마치기 전 상태에서만 쓰며 가입 유형을
+# 가리지 않는다 — 이메일 가입자와 provider 무이메일 SNS 가입자가 함께 쓴다.
+# 성공하면 이전 코드가 무효화되고 새 verificationId가 나오므로 들고 있던 핸들을
+# 갈아 끼워야 한다.
+mutation RetargetEmailVerification($input: RetargetEmailVerificationInput!) {
+  retargetEmailVerification(input: $input) {
+    success
+    userErrors {
+      code
+      codeValue
       message
       field
     }
@@ -46,6 +67,7 @@ mutation RegisterSnsMember($input: RegisterSnsMemberInput!) {
     success
     userErrors {
       code
+      codeValue
       message
       field
     }
@@ -59,6 +81,7 @@ mutation LoginSns($input: LoginSnsInput!) {
     success
     userErrors {
       code
+      codeValue
       message
       field
     }
@@ -75,6 +98,7 @@ mutation LoginEmail($input: LoginEmailInput!) {
     success
     userErrors {
       code
+      codeValue
       message
       field
     }
@@ -91,6 +115,7 @@ mutation RefreshToken($input: RefreshTokenInput!) {
     success
     userErrors {
       code
+      codeValue
       message
       field
     }
@@ -107,6 +132,7 @@ mutation Logout($input: LogoutInput!) {
     success
     userErrors {
       code
+      codeValue
       message
       field
     }
@@ -118,6 +144,7 @@ mutation RequestPasswordReset($input: RequestPasswordResetInput!) {
     success
     userErrors {
       code
+      codeValue
       message
       field
     }
@@ -129,6 +156,7 @@ mutation ResetPassword($input: ResetPasswordInput!) {
     success
     userErrors {
       code
+      codeValue
       message
       field
     }
@@ -144,6 +172,7 @@ query Me {
     profileImageUrl
     status
     emailVerified
+    canChangeEmail
     roles
     permissions
     createdAt
@@ -156,6 +185,7 @@ mutation WithdrawMember {
     success
     userErrors {
       code
+      codeValue
       message
       field
     }

@@ -75,6 +75,7 @@ List<RouteBase> buildRoutes() => <RouteBase>[
       return EmailVerificationScreen(
         verificationId: args.verificationId,
         email: args.email,
+        password: args.password,
       );
     },
   ),

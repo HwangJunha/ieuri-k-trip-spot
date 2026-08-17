@@ -31,6 +31,21 @@ abstract interface class AuthRepository {
     required String verificationId,
   });
 
+  /// 인증 대상 주소를 바꾸고 새 코드를 받는다(SPEC-0024 R7).
+  ///
+  /// 인증을 마치기 전에만 쓸 수 있고 가입 유형을 가리지 않는다. 성공하면 이전
+  /// 코드가 무효화되고 **새 `verificationId`가 나오므로** 호출자는 들고 있던 핸들을
+  /// 갈아 끼워야 한다.
+  ///
+  /// `changeEmail`과 다른 경로다 — 그쪽은 인증을 마친 `Provider.EMAIL` 회원 전용이다.
+  ///
+  /// 실패 시 `AuthFailure`를 던진다. 화면이 분기해야 하는 코드는
+  /// `resendCooldownActive`(재발송과 60초 타이머 공유)와 `emailAlreadyInUse`,
+  /// `alreadyVerified`다.
+  Future<EmailVerificationHandle> retargetEmailVerification({
+    required String newEmail,
+  });
+
   /// Logs in with email/password (spec §5.1/§6.2). On success returns an
   /// [AuthSession] with the token pair and server-provided expiries — but NO
   /// user (login has none); the caller fetches [fetchMe]. Throws `AuthFailure`.
