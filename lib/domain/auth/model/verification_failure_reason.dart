@@ -16,10 +16,17 @@ enum VerificationFailureReason {
   /// 시도 횟수 초과 — 재발송이 필요하다.
   maxAttemptsExceeded,
 
-  /// 코드가 일치하지 않음 — 다시 입력하면 된다. 가장 흔한 경우다.
+  /// 코드가 맞지 않음.
+  ///
+  /// **`resetPassword`에서는 만료도 이 값으로 온다**(서버가 `INVALID_OR_EXPIRED`를
+  /// 없애고 이쪽으로 통일했다, 2026-08-18). 즉 이 값만으로는 오타와 만료를 가릴 수
+  /// 없어서, 안내도 "올바르지 않거나 만료되었습니다"로 둘 다 덮는다.
   codeMismatch,
 
-  /// 무효하거나 만료됨(`resetPassword` 전용). 서버가 두 경우를 구분해 주지 않는다.
+  /// 무효하거나 만료됨.
+  ///
+  /// **서버가 더 이상 보내지 않는다** — [codeMismatch]로 통일됐다. 구버전 서버나
+  /// 다른 오퍼레이션이 보낼 가능성이 남아 매핑은 유지한다.
   invalidOrExpired,
 
   /// 서버가 스키마에 없는 값을 보냈거나 이유를 주지 않았다.
@@ -36,8 +43,11 @@ enum VerificationFailureReason {
     _ => unknown,
   };
 
-  /// 새 코드를 받아야 풀리는 상태인지. 참이면 화면이 재발송을 권해야 하고, 거짓이면
-  /// (오타) 그대로 다시 입력하면 된다.
+  /// 새 코드를 **반드시** 받아야 풀리는 상태인지.
+  ///
+  /// [codeMismatch]는 거짓이다 — 오타일 수도 있어 다시 입력하면 풀린다. 다만
+  /// `resetPassword`에서는 만료도 이 값으로 오므로(서버가 통일함) 화면 문구가 두
+  /// 경우를 함께 안내하고, 재발송 경로는 이 값과 무관하게 항상 열어 둔다.
   bool get needsNewCode => switch (this) {
     expired || consumed || maxAttemptsExceeded || invalidOrExpired => true,
     codeMismatch || unknown => false,

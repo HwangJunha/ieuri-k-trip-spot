@@ -74,8 +74,8 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
       // 가입된 계정이라고 믿고 오지 않을 메일을 기다린다 — 미가입자에게 가장
       // 나쁜 결과다. 오류를 이메일 칸에 붙여 1단계에 머무르게 한다.
       //
-      // 서버가 이 코드들을 주기 전에는 발화하지 않는다(요청 문서 §8). 그때까지는
-      // `success: true`만 오므로 아래 분기는 지나가고 2단계로 넘어간다.
+      // 서버가 (A)로 전환해 이 코드들을 실제로 준다(요청 문서 §8, 라이브 확인) —
+      // 미가입은 MEMBER_NOT_FOUND, SNS 회원은 NOT_EMAIL_MEMBER다.
       final bool notEligible =
           error is AuthFailure &&
           (error.kind == AuthFailureKind.memberNotFound ||
