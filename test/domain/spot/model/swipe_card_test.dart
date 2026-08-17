@@ -171,6 +171,27 @@ void main() {
       expect(metricsOf(topPadding: 47).topScrimHeight, 47 + 68);
     });
 
+    /// **스크림이 실제 칩 높이를 덮어야 한다.**
+    ///
+    /// 사진은 `topScrimHeight`만큼 내려오므로, 이 값이 조작 영역보다 작으면 그
+    /// 차이만큼 **칩 라벨이 사진 위로 삐져나온다** — 68로 어림잡았다가 실제
+    /// 높이(88+패딩)보다 작아 라벨이 사진을 침범했다(사용자 지적 2026-08-18).
+    test('스크림은 조작 영역 높이를 그대로 반영한다', () {
+      const double controls = 124; // CategoryBar(88) + 패딩(8+28)
+
+      expect(
+        SwipeCardMetrics.fromScreen(
+          screenWidth: 400,
+          screenHeight: 800,
+          bottomNavHeight: 0,
+          bottomViewPadding: 34,
+          topViewPadding: 47,
+          overlayControlsHeight: controls,
+        ).topScrimHeight,
+        47 + controls,
+      );
+    });
+
   });
 
   group('드래그 판정 (R3·R4)', () {

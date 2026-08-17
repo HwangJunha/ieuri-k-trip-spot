@@ -228,11 +228,17 @@ class _Overlay extends StatelessWidget {
           CopyrightBadge(attributionText: display.attributionText!),
           const SizedBox(height: 10),
         ],
+        // **`headlineSmall`(24)에서 `titleLarge`(22)로 낮췄다.** 행사 이름은
+        // "2023년 유니버설디자인 공감주간 <모두를 잇다, 있다>"처럼 길어서, 24로 두면
+        // 두 줄을 꽉 채워 답답했다(사용자 지적 2026-08-18).
+        //
+        // 줄 간격도 함께 좁힌다 — 두 줄이 될 때 행간이 벌어지면 더 커 보인다.
         Text(
           display.name,
-          style: theme.textTheme.headlineSmall?.copyWith(
+          style: theme.textTheme.titleLarge?.copyWith(
             color: scheme.onSurface,
             fontWeight: FontWeight.bold,
+            height: 1.25,
           ),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,

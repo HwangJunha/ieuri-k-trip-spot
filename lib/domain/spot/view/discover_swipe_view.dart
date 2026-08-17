@@ -137,7 +137,13 @@ class _OverlayControls extends StatelessWidget {
 }
 
 /// 겹쳐 놓인 카테고리 칩 줄이 차지하는 높이.
-const double _overlayControlsHeight = 68;
+///
+/// **`CategoryBar`의 실제 높이(88)와 위아래 패딩(8+28)을 더한 값이다.** 68로 어림잡았더니
+/// 20px 모자라 **칩 라벨이 사진 위로 삐져나왔다**(사용자 지적 2026-08-18) — 사진은 이
+/// 높이만큼 내려오므로 여기가 작으면 그만큼 라벨이 사진을 침범한다.
+///
+/// `CategoryBar`의 높이를 바꾸면 이 값도 함께 고쳐야 한다.
+const double _overlayControlsHeight = 88 + 8 + 28;
 
 /// 위치 영구거부 상태: SPEC-0001의 [PermissionBlockedNotice]를 재사용해 설정 이동
 /// 경로를 노출한다(중복 구현 없음).
