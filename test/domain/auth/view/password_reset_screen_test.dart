@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/storage/secure_storage.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/component/verification_code_field.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/model/auth_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/provider/auth_repository_provider.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/view/password_reset_screen.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
@@ -62,16 +63,20 @@ void main() {
     expect(find.byKey(const Key('verification-code-box-5')), findsOneWidget);
   });
 
-  testWidgets('2단계에서는 이메일 입력칸 대신 보낸 주소를 보여준다', (tester) async {
+  testWidgets('2단계에서는 이메일 입력칸 대신 안내 문장에 주소를 녹인다', (tester) async {
     await _pump(tester);
     await _requestCode(tester);
 
-    // 이미 확정된 값은 입력칸이 아니라 읽는 정보로 그린다.
+    // 이미 확정된 값은 입력칸이 아니라 읽는 정보다. 별도 배너로 빼면 긴 주소가
+    // 두 줄로 깨져서, 문장 안에 굵게 넣는다.
+    final Finder sentence = find.byKey(const Key('password-reset-sent-to'));
+    expect(sentence, findsOneWidget);
     expect(
-      find.byKey(const Key('password-reset-sent-to')),
-      findsOneWidget,
+      find.textContaining('user@example.com', findRichText: true),
+      findsWidgets,
     );
-    expect(find.text('user@example.com'), findsOneWidget);
+    // 이메일 입력칸은 사라진다 — 비활성 회색 칸이 남으면 미완성 폼처럼 보인다.
+    expect(find.widgetWithText(TextField, 'user@example.com'), findsNothing);
   });
 
   testWidgets('주소를 잘못 넣었으면 1단계로 되돌아갈 수 있다', (tester) async {
@@ -84,6 +89,45 @@ void main() {
     // 되돌아가면 이메일을 다시 입력할 수 있고 코드 단계는 사라진다.
     expect(find.byType(VerificationCodeField), findsNothing);
     expect(find.byKey(const Key('password-reset-sent-to')), findsNothing);
+  });
+
+  group('자격이 없으면 2단계로 넘기지 않는다', () {
+    // 코드 입력칸을 보여 주면 사용자는 가입된 계정이라고 믿고 오지 않을 메일을
+    // 기다린다. 계정이 없는 사람은 애초에 그 화면에 들어오면 안 된다.
+    //
+    // 서버가 아직 이 코드를 주지 않아(요청 문서 §8) 지금은 발화하지 않지만,
+    // 주는 즉시 동작해야 하므로 미리 고정해 둔다.
+    Future<void> pumpWithFailure(
+      WidgetTester tester,
+      AuthFailureKind kind,
+    ) async {
+      await _pump(tester, repo: FakeAuthRepository(failure: AuthFailure(kind)));
+      await tester.enterText(find.byType(TextField).first, 'nobody@example.com');
+      await tester.tap(find.widgetWithText(FilledButton, 'Send code'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('미가입 계정은 1단계에 머문다', (tester) async {
+      await pumpWithFailure(tester, AuthFailureKind.memberNotFound);
+
+      expect(find.byType(VerificationCodeField), findsNothing);
+      expect(
+        find.textContaining('No password account found'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('SNS 회원도 1단계에 머문다', (tester) async {
+      await pumpWithFailure(tester, AuthFailureKind.notEmailMember);
+
+      expect(find.byType(VerificationCodeField), findsNothing);
+    });
+
+    testWidgets('그 밖의 실패는 2단계로 넘기지 않되 배너로 알린다', (tester) async {
+      await pumpWithFailure(tester, AuthFailureKind.transportFailure);
+
+      expect(find.byType(VerificationCodeField), findsNothing);
+    });
   });
 
   testWidgets('코드가 오지 않는 이유를 미리 알려준다', (tester) async {

@@ -238,7 +238,11 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> requestPasswordReset({required String email}) async {}
+  Future<void> requestPasswordReset({required String email}) async {
+    // 다른 메서드와 같이 [failure]를 존중한다 — 그러지 않으면 재설정 화면의 실패
+    // 분기를 시험할 수 없다.
+    if (failure != null) throw failure!;
+  }
 
   @override
   Future<void> resetPassword({

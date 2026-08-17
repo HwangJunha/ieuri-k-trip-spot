@@ -1168,8 +1168,8 @@
   "errorVerificationRateLimited": "Too many verification requests. Try again later.",
   "errorVerificationNotFound": "That verification has expired. Request a new code.",
   "errorPasswordPolicyViolation": "Your password doesn't meet the requirements. Use at least 8 characters.",
-  "passwordResetConfirmSubtitle": "Enter the 6-digit code we sent and choose a new password.",
-  "passwordResetSentTo": "Code sent to",
   "passwordResetChangeEmail": "Use a different email",
-  "passwordResetNoCodeHint": "No code? Check your spam folder, or make sure you signed up with a password rather than Kakao, Google, or Apple."
+  "passwordResetNoCodeHint": "No code? Check your spam folder, or make sure you signed up with a password rather than Kakao, Google, or Apple.",
+  "passwordResetConfirmSubtitleWithEmail": "Enter the 6-digit code sent to {email} and choose a new password.",
+  "errorPasswordResetNoAccount": "No password account found for this email. If you signed up with Kakao, Google, or Apple, sign in with that instead."
 }
