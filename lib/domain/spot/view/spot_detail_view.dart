@@ -208,6 +208,9 @@ class _DetailBody extends ConsumerWidget {
             // 응답의 썸네일로 갈아끼우면 로딩 화면에서 본문으로 넘어가는 순간
             // 이미지가 바뀐다. 직접 진입이면 응답 값이 첫 장이다(AC-25).
             fallbackImageUrl: initialThumbnailUrl ?? detail.thumbnailImageUrl,
+            // 그 썸네일이 갤러리에 없을 수 있으므로 맞춤 판단 근거를 함께 넘긴다
+            // (R13) — 없으면 크롭하지 않는 쪽으로 떨어진다.
+            fallbackCopyright: detail.copyright,
           ),
           Padding(
             padding: const EdgeInsets.all(16),

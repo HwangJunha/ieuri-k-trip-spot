@@ -35,7 +35,11 @@ class CategoryBar extends StatelessWidget {
     required this.allLabel,
     required this.onToggle,
     required this.onSelectAll,
+    this.onImage = false,
   });
+
+  /// 사진 위에 얹히는가 — 라벨 색을 가른다(→[CategoryBarEntry.onImage]).
+  final bool onImage;
 
   /// 그릴 카테고리. 비어 있으면 바 자체를 그리지 않는다 — 목록이 아직 오지 않았거나
   /// 조회에 실패한 상태이며, 그때 "전체" 하나만 남은 바는 자리만 차지한다.
@@ -72,6 +76,7 @@ class CategoryBar extends StatelessWidget {
             label: allLabel,
             selected: selectedIds.isEmpty,
             onTap: onSelectAll,
+            onImage: onImage,
           ),
           for (final CategoryChipData chip in ordered)
             CategoryBarEntry(
@@ -79,6 +84,7 @@ class CategoryBar extends StatelessWidget {
               label: chip.label,
               selected: selectedIds.contains(chip.id),
               onTap: () => onToggle(chip.id),
+              onImage: onImage,
             ),
         ],
       ),
@@ -100,12 +106,23 @@ class CategoryBarEntry extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.onImage = false,
   });
 
   final IconData icon;
   final String label;
   final bool selected;
   final VoidCallback onTap;
+
+  /// 사진 위에 얹히는가.
+  ///
+  /// 참이면 라벨을 흰색으로 그린다. 원형 아이콘은 자기 배경색이 있어 사진 위에서도
+  /// 버티지만, **라벨은 배경 없는 글자라 밝은 사진에서 그대로 사라진다**(실기기 확인
+  /// 2026-08-18: 둘러보기 전체화면에서 "관광지·문화시설"이 건물 사진에 묻혔다).
+  ///
+  /// 기본값이 거짓인 이유는 이 바를 쓰는 네 화면 중 셋(좋아요·검색·지도)은 평범한
+  /// 배경 위에 있어 테마 색이 맞기 때문이다 — 흰색으로 고정하면 그쪽이 사라진다.
+  final bool onImage;
 
   @override
   Widget build(BuildContext context) {
@@ -149,9 +166,11 @@ class CategoryBarEntry extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: selected
-                        ? theme.colorScheme.onSurface
-                        : theme.colorScheme.onSurfaceVariant,
+                    color: onImage
+                        ? Colors.white
+                        : (selected
+                              ? theme.colorScheme.onSurface
+                              : theme.colorScheme.onSurfaceVariant),
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                   ),
                 ),

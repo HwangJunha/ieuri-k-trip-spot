@@ -40,15 +40,10 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l10n.appTitle, style: theme.textTheme.titleLarge),
         actions: <Widget>[
-          // Favorites has no destination yet (spec §2.2) — inert affordance
-          // that shows a SnackBar rather than wiring a real route.
-          IconButton(
-            icon: const Icon(Icons.favorite_border),
-            tooltip: l10n.homeFavoritesTooltip,
-            onPressed: () => ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(l10n.comingSoon))),
-          ),
+          // **즐겨찾기 아이콘이 사라졌다**(SPEC-0025 R6). 라우팅 없이 "준비 중"
+          // 스낵바만 띄우던 버튼이라, 없애도 도달 불가가 되는 화면이 없다 —
+          // 좋아요 목록은 하단 탭이 유일하고 정상적인 진입점이다(R7).
+          //
           // 설정 진입점(SPEC-0011 R1). 하단 탭 5개는 SPEC-0008에서 고정됐으므로
           // 설정은 탭이 아니라 여기서 들어간다. 로그아웃은 설정 안으로 옮겨갔다
           // (R15) — 그 자리를 이 아이콘이 대신한다.
