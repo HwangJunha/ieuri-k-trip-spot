@@ -149,6 +149,19 @@ class FakeAuthRepository implements AuthRepository {
     return EmailVerificationHandle(verificationId: this.verificationId);
   }
 
+  /// 주소 정정 호출을 기록한다(SPEC-0024 R7) — 어떤 주소로 나갔는지 검증한다.
+  final List<String> retargetedEmails = <String>[];
+
+  @override
+  Future<EmailVerificationHandle> retargetEmailVerification({
+    required String newEmail,
+  }) async {
+    retargetedEmails.add(newEmail);
+    if (failure != null) throw failure!;
+    // 서버는 정정 시 **새** 핸들을 낸다 — 이전 코드가 무효화되기 때문이다.
+    return EmailVerificationHandle(verificationId: 'retargeted-$verificationId');
+  }
+
   @override
   Future<AuthSession> loginEmail({
     required String email,

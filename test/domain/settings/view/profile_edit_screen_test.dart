@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/storage/secure_storage.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/model/me.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/provider/auth_repository_provider.dart';
 import 'package:ieuri_k_trip_spot/domain/settings/model/settings_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/settings/provider/profile_edit_controller.dart';
@@ -14,13 +15,34 @@ import '../profile_test_doubles.dart';
 
 /// 프로필 수정 화면(SPEC-0011 R4~R6) — 사용자가 무엇을 보는지만 본다.
 
-Future<void> _pump(WidgetTester tester, FakeProfileRepository repo) async {
+Future<void> _pump(
+  WidgetTester tester,
+  FakeProfileRepository repo, {
+  /// 이메일 변경 진입점은 서버가 준 capability로 갈린다(SPEC-0024 R6).
+  bool canChangeEmail = true,
+}) async {
+  // 화면이 **세션에 실린** `me`를 읽으므로(진입 지연을 피하려 재조회하지 않는다)
+  // 저장소에 토큰을 심어 세션이 실제로 서게 해야 한다.
+  final SecureStorage secure = await seededSecureStorage(
+    authenticated: true,
+    onboarded: true,
+  );
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         profileRepositoryProvider.overrideWithValue(repo),
-        secureStorageProvider.overrideWithValue(SecureStorage(MemoryStore())),
-        authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
+        secureStorageProvider.overrideWithValue(secure),
+        authRepositoryProvider.overrideWithValue(
+          FakeAuthRepository(
+            me: Me(
+              id: '7',
+              email: 'a@b.com',
+              nickname: 'Traveler',
+              emailVerified: true,
+              canChangeEmail: canChangeEmail,
+            ),
+          ),
+        ),
       ],
       child: const MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -80,6 +102,19 @@ void main() {
     expect(email.enabled, isFalse);
     // 서버 계약(changeEmail)이 생겨 목적지가 있다 — 예전에는 갈 곳이 없어 뺐었다.
     expect(find.widgetWithText(TextButton, 'Change'), findsOneWidget);
+  });
+
+  testWidgets('canChangeEmail이 거짓이면 변경 진입점을 숨긴다 (SPEC-0024 R6)', (
+    WidgetTester tester,
+  ) async {
+    await _pump(tester, FakeProfileRepository(), canChangeEmail: false);
+
+    // **비활성이 아니라 없어야 한다** — 비활성으로 두면 왜 못 쓰는지 설명해야
+    // 하는데, SNS 계정의 이메일이 provider 소유라는 사실은 설정 화면에서 설명할
+    // 내용이 아니다.
+    expect(find.byKey(const Key('profile-email-change-button')), findsNothing);
+    // 이메일 자체는 여전히 보인다 — 어느 주소로 가입했는지는 확인할 수 있어야 한다.
+    expect(find.byKey(const Key('profile-email-field')), findsOneWidget);
   });
 
   testWidgets('사진 변경 진입점이 있다 (R6)', (WidgetTester tester) async {

@@ -9,6 +9,8 @@ import 'package:ieuri_k_trip_spot/domain/auth/model/auth_session.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/auth_state.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/me.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/password_policy.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/model/resend_cooldown.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/model/verification_failure_reason.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/sns_credential.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/sns_provider.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/sns_registration_result.dart';
@@ -280,6 +282,139 @@ void main() {
 
     test('미인증 상태에서도 참이다 — 인증 게이트가 판정을 가져간다', () {
       expect(AuthState.unauthenticated.emailVerified, isTrue);
+    });
+  });
+
+  group('재발송·주소정정 공유 쿨다운 (SPEC-0024 R7)', () {
+    final DateTime t0 = DateTime(2026, 8, 17, 12);
+
+    test('한 번도 보내지 않았으면 즉시 가능하다', () {
+      expect(ResendCooldown.idle.canSendAt(t0), isTrue);
+      expect(ResendCooldown.idle.remainingSecondsAt(t0), 0);
+    });
+
+    test('보낸 직후에는 60초를 기다린다', () {
+      final ResendCooldown c = ResendCooldown.idle.markSent(t0);
+      expect(c.canSendAt(t0), isFalse);
+      expect(c.remainingSecondsAt(t0), 60);
+    });
+
+    test('60초가 지나면 다시 가능하다', () {
+      final ResendCooldown c = ResendCooldown.idle.markSent(t0);
+      expect(c.canSendAt(t0.add(const Duration(seconds: 60))), isTrue);
+      expect(c.canSendAt(t0.add(const Duration(seconds: 61))), isTrue);
+    });
+
+    test('남은 초는 올림한다', () {
+      // 0.2초 남았을 때 "0초"라고 쓰면 버튼이 잠겨 있는데 열린 것처럼 보인다.
+      final ResendCooldown c = ResendCooldown.idle.markSent(t0);
+      final DateTime almost = t0.add(const Duration(milliseconds: 59800));
+      expect(c.remainingSecondsAt(almost), 1);
+      expect(c.canSendAt(almost), isFalse);
+    });
+
+    test('두 동작이 같은 타이머를 쓴다', () {
+      // 재발송으로 시작한 쿨다운이 주소 정정에도 그대로 적용돼야 한다 — 서버가
+      // 하나의 타이머를 쓰므로 앱이 따로 세면 눌렀을 때 실패한다.
+      final ResendCooldown afterResend = ResendCooldown.idle.markSent(t0);
+      final DateTime later = t0.add(const Duration(seconds: 30));
+      expect(afterResend.canSendAt(later), isFalse);
+      expect(afterResend.remainingSecondsAt(later), 30);
+    });
+
+    test('기기 시계가 뒤로 가도 즉시 열리지 않는다', () {
+      final ResendCooldown c = ResendCooldown.idle.markSent(t0);
+      final DateTime backwards = t0.subtract(const Duration(minutes: 5));
+      expect(c.canSendAt(backwards), isFalse);
+    });
+  });
+
+  group('코드 검증 실패 이유 (SPEC-0024 §6)', () {
+    test('서버 문자열을 도메인 값으로 옮긴다', () {
+      expect(
+        VerificationFailureReason.fromRaw('CODE_MISMATCH'),
+        VerificationFailureReason.codeMismatch,
+      );
+      expect(
+        VerificationFailureReason.fromRaw('EXPIRED'),
+        VerificationFailureReason.expired,
+      );
+      expect(
+        VerificationFailureReason.fromRaw('MAX_ATTEMPTS_EXCEEDED'),
+        VerificationFailureReason.maxAttemptsExceeded,
+      );
+    });
+
+    test('모르는 값과 null은 unknown이다', () {
+      // 서버가 새 이유를 추가해도 앱이 깨지면 안 된다.
+      expect(
+        VerificationFailureReason.fromRaw('SOMETHING_NEW'),
+        VerificationFailureReason.unknown,
+      );
+      expect(
+        VerificationFailureReason.fromRaw(null),
+        VerificationFailureReason.unknown,
+      );
+    });
+
+    test('새 코드가 필요한 이유와 다시 입력하면 되는 이유를 가른다', () {
+      // 뭉개면 사용자가 재발송을 눌러야 할 때 같은 코드를 계속 다시 넣는다.
+      expect(VerificationFailureReason.expired.needsNewCode, isTrue);
+      expect(VerificationFailureReason.consumed.needsNewCode, isTrue);
+      expect(
+        VerificationFailureReason.maxAttemptsExceeded.needsNewCode,
+        isTrue,
+      );
+      expect(VerificationFailureReason.codeMismatch.needsNewCode, isFalse);
+    });
+  });
+
+  group('Me.canChangeEmail (SPEC-0024 R6)', () {
+    test('서버 값을 그대로 읽는다', () {
+      final Me me = Me.fromJson(<String, dynamic>{
+        'id': '1',
+        'email': 'a@b.com',
+        'nickname': 'n',
+        'canChangeEmail': true,
+      });
+      expect(me.canChangeEmail, isTrue);
+    });
+
+    test('필드가 없으면 거짓이다 — 진입점을 숨기는 쪽이 안전하다', () {
+      final Me me = Me.fromJson(<String, dynamic>{
+        'id': '1',
+        'email': 'a@b.com',
+        'nickname': 'n',
+      });
+      expect(me.canChangeEmail, isFalse);
+    });
+  });
+
+  group('AuthFailure.fromCode — SPEC-0024가 추가한 코드', () {
+    test('쿨다운과 이미 인증됨을 각각 구분한다', () {
+      // 화면이 분기해야 하는 코드다 — 안내가 서로 다르다.
+      expect(
+        AuthFailure.fromCode('RESEND_COOLDOWN_ACTIVE').kind,
+        AuthFailureKind.resendCooldownActive,
+      );
+      expect(
+        AuthFailure.fromCode('ALREADY_VERIFIED').kind,
+        AuthFailureKind.alreadyVerified,
+      );
+    });
+
+    test('SNS 회원의 이메일 변경 거절을 구분한다', () {
+      expect(
+        AuthFailure.fromCode('NOT_EMAIL_MEMBER').kind,
+        AuthFailureKind.notEmailMember,
+      );
+    });
+
+    test('모르는 코드는 unknown이다', () {
+      expect(
+        AuthFailure.fromCode('BRAND_NEW_CODE').kind,
+        AuthFailureKind.unknown,
+      );
     });
   });
 }

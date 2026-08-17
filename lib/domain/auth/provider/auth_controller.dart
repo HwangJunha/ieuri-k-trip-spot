@@ -32,7 +32,10 @@ class AuthController extends _$AuthController {
   Future<AuthState> build() async {
     // Register the refresh hook so the network layer can renew an expired
     // access token without importing this provider (breaks the cycle, §8).
-    ref.read(tokenRefreshBridgeProvider).refresher = _refreshAccessToken;
+    final TokenRefreshBridge bridge = ref.read(tokenRefreshBridgeProvider);
+    bridge.refresher = _refreshAccessToken;
+    // 같은 이유로 미인증 안전망도 콜백으로 등록한다(SPEC-0024 §2).
+    bridge.emailNotVerifiedHandler = handleEmailNotVerified;
     return _restoreSession();
   }
 
@@ -215,6 +218,14 @@ class AuthController extends _$AuthController {
     required String verificationId,
   }) => _repo.resendVerification(verificationId: verificationId);
 
+  /// 인증 대상 주소를 바꾸고 새 코드를 받는다(SPEC-0024 R7).
+  ///
+  /// `state`를 건드리지 않는다 — 인증 전 상태가 그대로 유지돼야 하고, 주소는
+  /// **인증을 통과할 때** 확정되므로 여기서 `me`를 다시 읽어도 옛 주소가 온다.
+  Future<EmailVerificationHandle> retargetEmailVerification({
+    required String newEmail,
+  }) => _repo.retargetEmailVerification(newEmail: newEmail);
+
   Future<void> requestPasswordReset({required String email}) =>
       _repo.requestPasswordReset(email: email);
 
@@ -260,6 +271,20 @@ class AuthController extends _$AuthController {
       // 표시값만 옛것으로 남는다 — 다음 조회에서 맞춰진다.
     }
   }
+
+  /// 서버가 `EMAIL_NOT_VERIFIED`를 최상위 오류로 보냈을 때의 안전망
+  /// (SPEC-0024 §2, 설계 §3).
+  ///
+  /// 라우팅 게이트가 정상 동작하면 이 오류는 원칙적으로 발생하지 않는다. 그래도
+  /// 두는 이유는 두 가지다 — 게이트가 놓친 진입점이 있거나, 인증 상태가 서버에서
+  /// 바뀐 경우다.
+  ///
+  /// **토큰을 지우지 않는다.** 토큰 자체는 유효하고 문제는 인증 상태뿐이라,
+  /// 로그아웃시키면 사용자가 이유 없이 로그인 화면으로 튕긴다. `me`를 다시 읽어
+  /// 세션의 `emailVerified`를 서버 값에 맞추면 게이트가 인증 화면으로 보낸다.
+  ///
+  /// 화면별로 잡지 않고 여기 한 곳에 둔다(설계 §3).
+  Future<void> handleEmailNotVerified() => refreshMe();
 
   /// Marks onboarding done for the current account and updates state so the
   /// router lets the user through to home (spec §4.3-B local fallback).

@@ -33,6 +33,30 @@ enum AuthFailureKind {
   /// 위반되므로 [refreshRejected]와 반드시 구분한다.
   transportFailure,
 
+  /// 재발송·주소 정정의 60초 쿨다운에 걸렸다(SPEC-0024 R7). 두 버튼이 **하나의**
+  /// 타이머를 공유하므로 재발송 직후 주소 정정도 이 코드로 막힌다.
+  resendCooldownActive,
+
+  /// 이미 인증을 마친 회원이 주소 정정을 시도했다(SPEC-0024 R7). 그쪽은
+  /// `changeEmail`의 몫이다.
+  alreadyVerified,
+
+  /// SNS 회원이 이메일 변경을 시도했다(SPEC-0024 R6). SNS 이메일은 provider에
+  /// 종속된 값이라 앱에서 바꿀 수 없다.
+  notEmailMember,
+
+  /// 이메일 형식이 올바르지 않다고 서버가 판정했다.
+  invalidEmailFormat,
+
+  /// 이메일 인증을 마치지 않은 회원이 허용 목록 밖 오퍼레이션을 불렀다
+  /// (SPEC-0024 §2). 최상위 오류로 오며, 인증 화면으로 보내는 신호다.
+  emailNotVerified,
+
+  /// refresh 재사용이 감지돼 회원의 모든 refresh가 폐기됐다(SPEC-0024 §6).
+  /// **재발급으로 회복되지 않는다** — [refreshRejected]와 달리 재로그인이 유일한
+  /// 복구다. 둘을 뭉개면 앱이 회복 불가능한 상태에서 갱신을 반복한다.
+  tokenReuseDetected,
+
   unknown,
 }
 
@@ -42,16 +66,15 @@ class AuthFailure implements Exception {
   final AuthFailureKind kind;
   final String? field;
 
-  /// Maps a server `userErrors[].code` string to a domain failure kind.
+  /// 서버 `userErrors[].code` 문자열을 도메인 실패로 옮긴다.
   ///
-  /// `UserError.code` is a `String` in the schema (not an enum), so the exact
-  /// constants aren't discoverable statically. The candidates below are the
-  /// common ones; unknown codes fall back to [AuthFailureKind.unknown].
+  /// **문자열을 받는다.** 스키마에 `ErrorCode` enum이 생겼지만(SPEC-0024 §6)
+  /// 정본은 여전히 `code: String!`이고, `codeValue`는 서버가 스키마보다 앞선 코드를
+  /// 낼 때 null이 된다. repository가 `codeValue?.name ?? code`로 접어서 넘기므로
+  /// 이 함수는 한 가지 형태만 다루면 된다.
   ///
-  /// TODO(runtime): confirm the real code constants by exercising the live
-  /// server (bad login, duplicate email, wrong verification code). The repo's
-  /// `GraphqlDebugLog.userErrors` logs code/field in debug so they can be
-  /// collected and this mapping finalized (spec §6.4).
+  /// 모르는 코드는 [AuthFailureKind.unknown]이다 — 서버가 코드를 추가해도 앱이
+  /// 깨지지 않아야 한다.
   factory AuthFailure.fromCode(String? code, {String? field}) {
     switch (code) {
       case 'INVALID_CREDENTIALS':
@@ -63,6 +86,14 @@ class AuthFailure implements Exception {
         return AuthFailure(AuthFailureKind.memberNotFound, field: field);
       case 'SNS_VERIFICATION_FAILED':
         return AuthFailure(AuthFailureKind.snsVerificationFailed, field: field);
+      case 'RESEND_COOLDOWN_ACTIVE':
+        return AuthFailure(AuthFailureKind.resendCooldownActive, field: field);
+      case 'ALREADY_VERIFIED':
+        return AuthFailure(AuthFailureKind.alreadyVerified, field: field);
+      case 'NOT_EMAIL_MEMBER':
+        return AuthFailure(AuthFailureKind.notEmailMember, field: field);
+      case 'INVALID_EMAIL_FORMAT':
+        return AuthFailure(AuthFailureKind.invalidEmailFormat, field: field);
       default:
         return AuthFailure(AuthFailureKind.unknown, field: field);
     }
@@ -81,6 +112,16 @@ class AuthFailure implements Exception {
   /// 네트워크/서버 도달 실패 — 토큰 유지, 오류만 전파(E5).
   static const AuthFailure transportFailure = AuthFailure(
     AuthFailureKind.transportFailure,
+  );
+
+  /// 미인증 회원의 비허용 오퍼레이션 호출 — 인증 화면으로 보낸다(SPEC-0024 §2).
+  static const AuthFailure emailNotVerified = AuthFailure(
+    AuthFailureKind.emailNotVerified,
+  );
+
+  /// refresh 재사용 감지 — 재발급 불가, 재로그인만이 복구다(SPEC-0024 §6).
+  static const AuthFailure tokenReuseDetected = AuthFailure(
+    AuthFailureKind.tokenReuseDetected,
   );
 
   @override

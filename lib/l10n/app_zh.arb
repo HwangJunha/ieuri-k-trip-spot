@@ -767,5 +767,21 @@
   "dmSelectMessagesAction": "選擇訊息",
   "dmSelectionCount": "已選擇 {count} 則",
   "dmSelectionCancel": "取消選擇",
-  "dmReportSelectedAction": "檢舉"
+  "dmReportSelectedAction": "檢舉",
+  "errorResendCooldownActive": "請稍後再試。",
+  "errorAlreadyVerified": "此信箱已完成驗證。",
+  "errorNotEmailMember": "社群帳號的信箱無法變更。",
+  "errorInvalidEmailFormat": "請輸入有效的電子信箱。",
+  "errorEmailNotVerified": "請先完成信箱驗證再繼續。",
+  "errorSessionExpiredSignInAgain": "為了安全，工作階段已結束，請重新登入。",
+  "verificationCodeExpired": "驗證碼已過期，請重新取得。",
+  "verificationCodeConsumed": "此驗證碼已使用，請重新取得。",
+  "verificationMaxAttempts": "嘗試次數過多，請重新取得驗證碼。",
+  "verificationCodeMismatch": "驗證碼不正確，請確認後重新輸入。",
+  "emailVerificationChangeAddress": "地址有誤嗎？",
+  "emailVerificationChangeAddressTitle": "變更電子信箱",
+  "emailVerificationChangeAddressBody": "我們會將新的驗證碼寄到這個地址，先前的驗證碼將失效。",
+  "emailVerificationAddressChanged": "已將新的驗證碼寄到變更後的地址。",
+  "emailVerificationResendCountdown": "{seconds} 秒後可重新傳送",
+  "commonCancel": "取消"
 }

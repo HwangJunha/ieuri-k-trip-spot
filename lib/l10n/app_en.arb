@@ -1144,5 +1144,21 @@
   "dmSelectMessagesAction": "Select messages",
   "dmSelectionCount": "{count} selected",
   "dmSelectionCancel": "Cancel selection",
-  "dmReportSelectedAction": "Report"
+  "dmReportSelectedAction": "Report",
+  "errorResendCooldownActive": "Please wait a minute before requesting another code.",
+  "errorAlreadyVerified": "This email is already verified.",
+  "errorNotEmailMember": "This account's email is managed by your social provider.",
+  "errorInvalidEmailFormat": "Enter a valid email address.",
+  "errorEmailNotVerified": "Verify your email to continue.",
+  "errorSessionExpiredSignInAgain": "Your session ended for security reasons. Please sign in again.",
+  "verificationCodeExpired": "That code expired. Request a new one.",
+  "verificationCodeConsumed": "That code was already used. Request a new one.",
+  "verificationMaxAttempts": "Too many attempts. Request a new code.",
+  "verificationCodeMismatch": "That code is incorrect. Check it and try again.",
+  "emailVerificationChangeAddress": "Wrong address?",
+  "emailVerificationChangeAddressTitle": "Change email address",
+  "emailVerificationChangeAddressBody": "We'll send a new code to this address. Your previous code stops working.",
+  "emailVerificationAddressChanged": "New code sent to the updated address.",
+  "emailVerificationResendCountdown": "Resend available in {seconds}s",
+  "commonCancel": "Cancel"
 }

@@ -6,6 +6,7 @@ import 'package:ieuri_k_trip_spot/domain/auth/model/email_verification_handle.da
 import 'package:ieuri_k_trip_spot/domain/auth/model/me.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/sns_provider.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/model/sns_registration_result.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/model/verification_failure_reason.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/repository/auth_repository_impl.dart';
 
 /// A link that returns one canned [Response] (or throws a link exception),
@@ -127,6 +128,7 @@ void main() {
             'profileImageUrl': null,
             'status': 'ACTIVE',
             'emailVerified': true,
+            'canChangeEmail': true,
             'roles': <dynamic>['USER'],
             'permissions': <dynamic>[],
             'createdAt': '2026-01-01',
@@ -140,6 +142,8 @@ void main() {
     expect(me.id, '7');
     expect(me.nickname, 'Traveler');
     expect(me.status, MemberStatus.active);
+    // 설정 화면의 이메일 변경 진입점이 이 값으로 갈린다(SPEC-0024 R6).
+    expect(me.canChangeEmail, isTrue);
   });
 
   test('verifyEmail succeeds when verified is true', () async {
@@ -162,7 +166,10 @@ void main() {
     );
   });
 
-  test('verifyEmail fails when verified is false', () async {
+  test('verifyEmail surfaces the failureReason, not a generic failure', () async {
+    // **코드가 틀린 것은 오류가 아니라 결과다**(SPEC-0024 §6). success는 참이고
+    // userErrors는 비어 있으며, 이유는 failureReason에만 있다. 이걸 뭉개면
+    // 사용자가 만료와 오타를 구분하지 못한다.
     final AuthRepositoryImpl repo = _repo(
       _FakeLink(
         data: <String, dynamic>{
@@ -170,7 +177,7 @@ void main() {
             'success': true,
             'userErrors': <dynamic>[],
             'verified': false,
-            'failureReason': 'expired',
+            'failureReason': 'CODE_MISMATCH',
           },
         },
       ),
@@ -178,7 +185,94 @@ void main() {
 
     await expectLater(
       repo.verifyEmail(verificationId: 'v', code: 'bad'),
-      throwsA(isA<AuthFailure>()),
+      throwsA(
+        isA<VerificationFailure>().having(
+          (VerificationFailure f) => f.reason,
+          'reason',
+          VerificationFailureReason.codeMismatch,
+        ),
+      ),
+    );
+  });
+
+  test('verifyEmail의 만료는 새 코드가 필요한 이유로 전달된다', () async {
+    final AuthRepositoryImpl repo = _repo(
+      _FakeLink(
+        data: <String, dynamic>{
+          'verifyEmail': <String, dynamic>{
+            'success': true,
+            'userErrors': <dynamic>[],
+            'verified': false,
+            'failureReason': 'EXPIRED',
+          },
+        },
+      ),
+    );
+
+    await expectLater(
+      repo.verifyEmail(verificationId: 'v', code: '000000'),
+      throwsA(
+        isA<VerificationFailure>().having(
+          (VerificationFailure f) => f.reason.needsNewCode,
+          'needsNewCode',
+          isTrue,
+        ),
+      ),
+    );
+  });
+
+  test('retargetEmailVerification returns the new handle', () async {
+    // 정정하면 이전 코드가 무효화되고 **새** verificationId가 나온다(R7).
+    final AuthRepositoryImpl repo = _repo(
+      _FakeLink(
+        data: <String, dynamic>{
+          'retargetEmailVerification': <String, dynamic>{
+            'success': true,
+            'userErrors': <dynamic>[],
+            'verificationId': 'v-new',
+            'expiresAt': '2026-08-17T12:00:00Z',
+          },
+        },
+      ),
+    );
+
+    final EmailVerificationHandle handle = await repo
+        .retargetEmailVerification(newEmail: 'right@example.com');
+
+    expect(handle.verificationId, 'v-new');
+  });
+
+  test('retargetEmailVerification의 쿨다운은 codeValue로 분기된다', () async {
+    // 재발송과 60초 타이머를 공유하므로 화면이 이 코드를 알아봐야 한다.
+    final AuthRepositoryImpl repo = _repo(
+      _FakeLink(
+        data: <String, dynamic>{
+          'retargetEmailVerification': <String, dynamic>{
+            'success': false,
+            'userErrors': <dynamic>[
+              <String, dynamic>{
+                'code': 'RESEND_COOLDOWN_ACTIVE',
+                'codeValue': 'RESEND_COOLDOWN_ACTIVE',
+                'message': 'wait',
+                'field': null,
+              },
+            ],
+            'verificationId': null,
+            'expiresAt': null,
+          },
+        },
+      ),
+    );
+
+    await expectLater(
+      repo.retargetEmailVerification(newEmail: 'a@b.com'),
+      throwsA(
+        isA<AuthFailure>().having(
+          (AuthFailure f) => f.kind,
+          'kind',
+          AuthFailureKind.resendCooldownActive,
+        ),
+      ),
     );
   });
 

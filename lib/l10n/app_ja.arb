@@ -767,5 +767,21 @@
   "dmSelectMessagesAction": "メッセージを選択",
   "dmSelectionCount": "{count}件選択中",
   "dmSelectionCancel": "選択を取消",
-  "dmReportSelectedAction": "報告"
+  "dmReportSelectedAction": "報告",
+  "errorResendCooldownActive": "しばらくしてからもう一度お試しください。",
+  "errorAlreadyVerified": "このメールアドレスは認証済みです。",
+  "errorNotEmailMember": "ソーシャルアカウントのメールアドレスは変更できません。",
+  "errorInvalidEmailFormat": "正しいメールアドレスを入力してください。",
+  "errorEmailNotVerified": "続けるにはメール認証を完了してください。",
+  "errorSessionExpiredSignInAgain": "セキュリティのためセッションを終了しました。もう一度ログインしてください。",
+  "verificationCodeExpired": "コードの有効期限が切れています。新しいコードを取得してください。",
+  "verificationCodeConsumed": "このコードは使用済みです。新しいコードを取得してください。",
+  "verificationMaxAttempts": "試行回数を超えました。新しいコードを取得してください。",
+  "verificationCodeMismatch": "コードが正しくありません。確認して入力し直してください。",
+  "emailVerificationChangeAddress": "アドレスが違いますか？",
+  "emailVerificationChangeAddressTitle": "メールアドレスの変更",
+  "emailVerificationChangeAddressBody": "新しいアドレスに認証コードを送ります。以前のコードは使えなくなります。",
+  "emailVerificationAddressChanged": "変更したアドレスに新しいコードを送りました。",
+  "emailVerificationResendCountdown": "{seconds}秒後に再送信できます",
+  "commonCancel": "キャンセル"
 }
