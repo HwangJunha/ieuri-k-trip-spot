@@ -87,11 +87,15 @@ enum TermsGateState {
 /// [languageChosen]은 로컬 저장값, [auth]는 인증 provider, [terms]는 약관 provider에서
 /// 온다. 셋 다 `ref.read`로 동기적으로 읽을 수 있는 값이라 리다이렉트가 네트워크를
 /// 기다리지 않는다.
+/// [emailVerificationHoldsHandle]은 인증 화면이 서버 `verificationId`를 들고 있는지다
+/// — 가입 직후 경로로 들어왔다는 뜻이며, 그때만 세션 없이 이 화면에 머물 수 있다.
+/// 라우터는 `extra`를 판정에 쓰지 않으므로 호출부가 값으로 넘긴다.
 String? resolveGate({
   required String location,
   required bool languageChosen,
   required AuthGateState auth,
   required TermsGateState terms,
+  bool emailVerificationHoldsHandle = false,
 }) {
   // 스플래시는 자기 초기 내비게이션을 스스로 몬다.
   if (location == splashPath) return null;
@@ -111,6 +115,17 @@ String? resolveGate({
 
   // 3) 미인증은 인증 경로에 고정한다(§10.2).
   if (auth == AuthGateState.unauthenticated) {
+    // **인증 화면은 예외다.** 이 경로는 두 역할을 겸한다 — 가입 직후(토큰 없음)와
+    // 게이트에 걸린 미인증 세션(토큰 있음). 뒤쪽에서 로그아웃하면 세션이 사라져
+    // 여기 조건에 걸리는데, `authPaths`에 들어 있다는 이유로 통과시키면 사용자가
+    // **화면을 빠져나갈 수 없다** — 실제로 로그아웃 버튼이 먹지 않는 교착이 났다.
+    //
+    // 세션 없이 이 화면에 머물 수 있는 것은 가입 직후 경로뿐이고, 그때는 화면이
+    // `verificationId`를 들고 있다. 라우터는 그 값을 볼 수 없으므로 화면이
+    // [emailVerificationHoldsHandle]로 알려 준다.
+    if (location == emailVerificationPath) {
+      return emailVerificationHoldsHandle ? null : loginPath;
+    }
     return authPaths.contains(location) ? null : loginPath;
   }
 

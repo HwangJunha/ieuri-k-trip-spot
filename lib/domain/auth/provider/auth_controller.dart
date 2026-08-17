@@ -160,7 +160,19 @@ class AuthController extends _$AuthController {
         // 빠뜨리면 기존 회원이 영영 연동 해제 대상이 되지 못한다.
         authorizationCode: credential.authorizationCode,
       );
-      state = await AsyncValue.guard(() => _establishSession(tokens));
+      // **`guard`로 삼키지 않는다.** 삼키면 `_establishSession`(=`me` 조회) 실패가
+      // error 상태로 남는데, 게이트는 error를 "판정 불가"로 접어 로그인 화면에
+      // 그대로 둔다 — 토큰은 이미 저장됐는데 사용자는 로그인이 안 된 것처럼 보여
+      // 계속 다시 시도하게 된다(실기기에서 구글 로그인이 반복된 원인).
+      //
+      // 던지면 로그인 화면이 오류를 보여 주고, 사용자는 무슨 일이 일어났는지 안다.
+      // 토큰은 저장돼 있으므로 다음 시도나 앱 재시작 때 세션 복원이 이어받는다.
+      try {
+        state = AsyncValue<AuthState>.data(await _establishSession(tokens));
+      } on Object {
+        state = previous;
+        rethrow;
+      }
       return const SnsAuthenticated();
     } on AuthFailure catch (failure) {
       // Not registered yet → route to SNS sign-up. Restore the prior state so

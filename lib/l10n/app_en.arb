@@ -1160,5 +1160,6 @@
   "emailVerificationChangeAddressBody": "We'll send a new code to this address. Your previous code stops working.",
   "emailVerificationAddressChanged": "New code sent to the updated address.",
   "emailVerificationResendCountdown": "Resend available in {seconds}s",
-  "commonCancel": "Cancel"
+  "commonCancel": "Cancel",
+  "emailVerificationNeedsResend": "Your previous code is no longer valid. Send a new code to continue."
 }

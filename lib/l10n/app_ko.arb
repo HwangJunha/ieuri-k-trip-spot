@@ -1881,5 +1881,9 @@
   "commonCancel": "취소",
   "@commonCancel": {
     "description": "다이얼로그 공용 취소"
+  },
+  "emailVerificationNeedsResend": "이전 인증 코드는 더 이상 사용할 수 없습니다. 새 코드를 받아 주세요.",
+  "@emailVerificationNeedsResend": {
+    "description": "핸들 없이 인증 화면에 도착한 경우의 안내"
   }
 }

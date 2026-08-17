@@ -133,11 +133,15 @@ class FakeAuthRepository implements AuthRepository {
     return EmailVerificationHandle(verificationId: verificationId);
   }
 
+  /// verifyEmail 호출을 기록한다 — 빈 verificationId로 나가지 않는지 검증한다.
+  final List<String> verifiedHandles = <String>[];
+
   @override
   Future<void> verifyEmail({
     required String verificationId,
     required String code,
   }) async {
+    verifiedHandles.add(verificationId);
     if (failure != null) throw failure!;
   }
 

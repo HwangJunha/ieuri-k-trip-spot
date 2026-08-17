@@ -198,4 +198,42 @@ void main() {
           discoverPath);
     });
   });
+
+  group('인증 화면에서 로그아웃한 뒤 (실기기 교착 회귀)', () {
+    // 로그아웃하면 세션이 사라져 `unauthenticated`가 된다. `/email-verification`이
+    // authPaths에 들어 있다는 이유로 통과시키면 **화면을 빠져나갈 수 없다** —
+    // 실기기에서 로그아웃 버튼이 먹지 않는 교착이 났다.
+    test('핸들이 없으면 로그인 화면으로 내보낸다', () {
+      expect(
+        resolveGate(
+          location: emailVerificationPath,
+          languageChosen: true,
+          auth: AuthGateState.unauthenticated,
+          terms: TermsGateState.satisfied,
+          emailVerificationHoldsHandle: false,
+        ),
+        loginPath,
+      );
+    });
+
+    test('가입 직후 경로는 세션 없이도 머문다', () {
+      // 이쪽은 토큰이 없는 게 정상이다 — 화면이 서버 핸들을 들고 있고, 그것으로
+      // 코드를 검증한 뒤 로그인 화면으로 간다.
+      expect(
+        resolveGate(
+          location: emailVerificationPath,
+          languageChosen: true,
+          auth: AuthGateState.unauthenticated,
+          terms: TermsGateState.satisfied,
+          emailVerificationHoldsHandle: true,
+        ),
+        isNull,
+      );
+    });
+
+    test('다른 인증 경로는 영향을 받지 않는다', () {
+      expect(_gate(loginPath, auth: AuthGateState.unauthenticated), isNull);
+      expect(_gate('/sign-up', auth: AuthGateState.unauthenticated), isNull);
+    });
+  });
 }

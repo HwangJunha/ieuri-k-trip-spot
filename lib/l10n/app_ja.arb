@@ -783,5 +783,6 @@
   "emailVerificationChangeAddressBody": "新しいアドレスに認証コードを送ります。以前のコードは使えなくなります。",
   "emailVerificationAddressChanged": "変更したアドレスに新しいコードを送りました。",
   "emailVerificationResendCountdown": "{seconds}秒後に再送信できます",
-  "commonCancel": "キャンセル"
+  "commonCancel": "キャンセル",
+  "emailVerificationNeedsResend": "以前の認証コードは使用できません。新しいコードを取得してください。"
 }

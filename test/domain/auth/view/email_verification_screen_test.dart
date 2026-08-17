@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ieuri_k_trip_spot/common/storage/secure_storage.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/model/me.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/provider/auth_repository_provider.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/view/email_verification_screen.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
@@ -165,7 +166,98 @@ void main() {
     expect(retarget.onPressed, isNull);
   });
 
-  testWidgets('게이트로 진입해 핸들이 없으면 재발송을 숨기고 주소정정만 남긴다', (tester) async {
+  group('핸들 없이 도착한 경우 (실기기 회귀)', () {
+    /// 세션 복원 경로 — verificationId 없이 인증 화면에 선 상태를 만든다.
+    Future<FakeAuthRepository> pumpGateEntry(WidgetTester tester) async {
+      final SecureStorage storage = await seededSecureStorage(
+        authenticated: true,
+        onboarded: true,
+      );
+      final FakeAuthRepository repo = FakeAuthRepository(
+        me: const Me(
+          id: '7',
+          email: 'gate@example.com',
+          nickname: 'Traveler',
+          emailVerified: false,
+        ),
+      );
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            secureStorageProvider.overrideWithValue(storage),
+            authRepositoryProvider.overrideWithValue(repo),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: const Locale('en'),
+            home: const EmailVerificationScreen(
+              verificationId: '',
+              email: '',
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      return repo;
+    }
+
+    testWidgets('발송 주소를 me.email로 보여준다', (tester) async {
+      // 어느 주소로 코드가 갔는지 모르면 어느 메일함을 봐야 할지 알 수 없다.
+      await pumpGateEntry(tester);
+
+      expect(find.text('gate@example.com'), findsOneWidget);
+    });
+
+    testWidgets('빈 verificationId로 verifyEmail을 부르지 않는다', (tester) async {
+      // **이것이 핵심 회귀다.** 빈 핸들로 보내면 서버가 `Invalid UUID string`으로
+      // 거절하는데, 버튼이 열려 있으면 누를 때마다 요청만 나간다.
+      final FakeAuthRepository repo = await pumpGateEntry(tester);
+
+      final FilledButton verify = tester.widget<FilledButton>(
+        find.byType(FilledButton),
+      );
+      expect(verify.onPressed, isNull, reason: '인증 버튼이 잠겨 있어야 한다');
+
+      // 자동 제출 경로로도 나가지 않는다.
+      expect(repo.verifiedHandles, isEmpty);
+    });
+
+    testWidgets('왜 코드를 넣을 수 없는지 안내한다', (tester) async {
+      // 안내 없이 잠긴 입력만 보이면 고장으로 읽힌다.
+      await pumpGateEntry(tester);
+
+      expect(
+        find.byKey(const Key('email-verification-needs-resend')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('재발송이 가능하고 같은 주소로 나간다', (tester) async {
+      // 핸들이 없으면 resendVerification을 못 쓰므로 retarget으로 같은 주소에
+      // 새 코드를 받는다 — 사용자에겐 둘 다 "재발송"이다.
+      final FakeAuthRepository repo = await pumpGateEntry(tester);
+
+      await tester.tap(find.byKey(const Key('email-verification-resend')));
+      await tester.pumpAndSettle();
+
+      expect(repo.retargetedEmails, <String>['gate@example.com']);
+    });
+
+    testWidgets('재발송 뒤에는 코드를 입력할 수 있다', (tester) async {
+      await pumpGateEntry(tester);
+
+      await tester.tap(find.byKey(const Key('email-verification-resend')));
+      await tester.pumpAndSettle();
+
+      final FilledButton verify = tester.widget<FilledButton>(
+        find.byType(FilledButton),
+      );
+      expect(verify.onPressed, isNotNull, reason: '핸들이 생겼으니 열려야 한다');
+    });
+  });
+
+  testWidgets('게이트로 진입해도 재발송·주소정정·로그아웃 세 출구가 모두 있다', (tester) async {
     // 세션 복원 경로(R10-4)다. verificationId가 없어 재발송은 부를 수 없지만,
     // 주소 정정은 토큰만으로 새 코드를 받아 낼 수 있어 **유일한 길**이다.
     final SecureStorage storage = await seededSecureStorage(
@@ -188,7 +280,13 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('email-verification-resend')), findsNothing);
+    // 핸들이 없어도 세션이 있으면 재발송이 열려 있어야 한다 — retarget으로 같은
+    // 주소에 새 코드를 받는다. 예전엔 숨겼는데, 그러면 사용자가 코드를 받을 길이
+    // 주소 정정뿐이라 "주소는 맞는데 코드가 안 온다"는 상황에서 막혔다.
+    expect(
+      find.byKey(const Key('email-verification-resend')),
+      findsOneWidget,
+    );
     expect(
       find.byKey(const Key('email-verification-retarget')),
       findsOneWidget,

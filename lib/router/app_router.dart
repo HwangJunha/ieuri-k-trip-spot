@@ -6,6 +6,7 @@ import '../common/navigation/root_navigator_key.dart';
 import '../common/storage/app_preferences.dart';
 import '../domain/auth/model/auth_state.dart';
 import '../domain/auth/provider/auth_controller.dart';
+import '../domain/auth/view/email_verification_screen.dart';
 import '../domain/settings/model/agreement_status.dart';
 import '../domain/settings/provider/agreements_controller.dart';
 import 'route_gate.dart';
@@ -63,11 +64,19 @@ GoRouter goRouter(Ref ref) {
           ? _termsGate(agreements)
           : TermsGateState.satisfied;
 
+      // 가입 직후 경로는 `extra`에 서버 핸들을 싣고 들어온다. 그 경우에만 세션 없이
+      // 인증 화면에 머물 수 있다 — 게이트로 들어온 세션이 로그아웃하면 핸들이 없어
+      // 로그인 화면으로 나가야 한다(그러지 않으면 빠져나갈 수 없다).
+      final Object? extra = state.extra;
+      final bool holdsHandle =
+          extra is EmailVerificationArgs && extra.verificationId.isNotEmpty;
+
       final String? target = resolveGate(
         location: location,
         languageChosen: ref.read(appPreferencesProvider).savedLanguage != null,
         auth: authGate,
         terms: termsGate,
+        emailVerificationHoldsHandle: holdsHandle,
       );
 
       // 약관 게이트에 막혀 되돌려지는 경우에만 목적지를 보관한다(R12). 다른 게이트는

@@ -81,11 +81,22 @@ class _EmailVerificationScreenState
   /// 카운트다운 표시를 1초마다 다시 그리는 타이머. 쿨다운 중에만 돈다.
   Timer? _ticker;
 
-  /// 재발송 가능 여부. 게이트로 진입해 핸들이 없으면 서버를 부를 수 없다.
-  bool get _canResend => _verificationId.isNotEmpty;
+  /// 서버 핸들을 들고 있는지. 없으면 `verifyEmail`도 `resendVerification`도 부를 수
+  /// 없다 — 둘 다 `verificationId`를 필수로 요구한다.
+  bool get _hasHandle => _verificationId.isNotEmpty;
 
   int get _cooldownSeconds => _cooldown.remainingSecondsAt(DateTime.now());
   bool get _coolingDown => _cooldownSeconds > 0;
+
+  /// 화면에 보여 줄 발송 주소.
+  ///
+  /// 인자로 받은 값이 우선이고(가입 직후 경로), 없으면 세션의 `me.email`을 쓴다
+  /// (게이트 진입 경로). 어느 주소로 코드가 갔는지 모르면 사용자는 어느 메일함을
+  /// 봐야 할지 알 수 없다.
+  String _resolvedEmail(WidgetRef ref) {
+    if (_targetEmail.isNotEmpty) return _targetEmail;
+    return ref.read(authControllerProvider).value?.session?.user?.email ?? '';
+  }
 
   /// 코드를 보낸 직후 호출한다. 쿨다운을 시작하고 카운트다운을 돌린다.
   void _startCooldown() {
@@ -103,6 +114,20 @@ class _EmailVerificationScreenState
 
   Future<void> _verify(AppLocalizations l10n) async {
     if (_submitting) return;
+
+    // **핸들이 없으면 서버를 부르지 않는다.** 빈 verificationId로 보내면 서버가
+    // `Invalid UUID string`으로 거절하는데(실기기 확인), 그 오류로는 사용자가 무엇을
+    // 해야 하는지 알 수 없고 누를 때마다 요청만 나간다. 이 상태에서 필요한 것은
+    // 코드 입력이 아니라 **재발송**이다 — 코드에는 유효기간이 있어 옛 코드는
+    // 어차피 쓸 수 없다.
+    if (!_hasHandle) {
+      setState(() {
+        _codeError = null;
+        _serverError = l10n.emailVerificationNeedsResend;
+      });
+      return;
+    }
+
     setState(() {
       _codeError = _code.length < verificationCodeLength
           ? l10n.validationCodeRequired
@@ -144,17 +169,37 @@ class _EmailVerificationScreenState
     super.dispose();
   }
 
+  /// 코드 재발송.
+  ///
+  /// 핸들이 있으면 `resendVerification`을, 없으면(게이트 진입 경로) 같은 주소로
+  /// `retargetEmailVerification`을 부른다. 후자는 토큰만으로 새 코드를 발급하므로
+  /// **핸들 없이 코드를 다시 받을 수 있는 유일한 길**이다. 사용자에게는 둘 다
+  /// "재발송"이며 구분할 이유가 없다.
   Future<void> _resend(AppLocalizations l10n) async {
+    final String fallbackEmail = _resolvedEmail(ref);
+    if (!_hasHandle && fallbackEmail.isEmpty) {
+      // 보낼 주소조차 모르는 상태 — 주소 정정으로 직접 받아야 한다.
+      setState(() => _serverError = l10n.errorUnknown);
+      return;
+    }
+
     setState(() {
       _submitting = true;
       _serverError = null;
     });
     try {
-      final handle = await ref
-          .read(authControllerProvider.notifier)
-          .resendVerification(verificationId: _verificationId);
+      final handle = _hasHandle
+          ? await ref
+                .read(authControllerProvider.notifier)
+                .resendVerification(verificationId: _verificationId)
+          : await ref
+                .read(authControllerProvider.notifier)
+                .retargetEmailVerification(newEmail: fallbackEmail);
       if (!mounted) return;
-      setState(() => _verificationId = handle.verificationId);
+      setState(() {
+        _verificationId = handle.verificationId;
+        if (_targetEmail.isEmpty) _targetEmail = fallbackEmail;
+      });
       _startCooldown();
       ScaffoldMessenger.of(
         context,
@@ -218,7 +263,12 @@ class _EmailVerificationScreenState
   /// 둔다.
   Future<void> _signOut() async {
     await ref.read(authControllerProvider.notifier).signOut();
-    // 라우터가 미인증을 보고 로그인 화면으로 되돌린다.
+    if (!mounted) return;
+    // **명시적으로 이동한다.** 게이트가 이 화면을 미인증 허용 경로로 두고 있어서
+    // 상태 변화만으로는 리다이렉트가 `null`을 돌려주고 화면이 그대로 남았다 —
+    // 실기기에서 로그아웃이 먹지 않는 교착이 났다. 게이트도 함께 고쳤지만, 화면이
+    // 자기 출구를 스스로 아는 편이 안전하다(`_verify`도 같은 이유로 그렇게 한다).
+    context.goNamed(LoginScreen.routeName);
   }
 
   @override
@@ -231,6 +281,12 @@ class _EmailVerificationScreenState
         (AsyncValue<AuthState> value) => value.value?.isAuthenticated ?? false,
       ),
     );
+    // 세션의 이메일까지 감안한 발송 주소. 게이트로 진입하면 인자가 비어 있어
+    // `me.email`이 유일한 근거다.
+    final String shownEmail = _resolvedEmail(ref);
+    // 핸들이 없으면 코드를 넣어도 서버가 거절한다. 입력 자체를 막아 사용자가
+    // 헛되이 여섯 자리를 치지 않게 한다.
+    final bool codeUsable = _hasHandle;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.emailVerificationTitle)),
@@ -246,13 +302,25 @@ class _EmailVerificationScreenState
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-              if (_targetEmail.isNotEmpty) ...<Widget>[
+              if (shownEmail.isNotEmpty) ...<Widget>[
                 const SizedBox(height: 8),
                 Text(
-                  _targetEmail,
+                  shownEmail,
                   key: const Key('email-verification-target'),
                   style: theme.textTheme.bodyLarge?.copyWith(
                     fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+              // 핸들 없이 도착했으면(앱 재시작 등) 왜 코드를 넣을 수 없는지 먼저
+              // 말해 준다 — 안내 없이 잠긴 입력만 보이면 고장으로 읽힌다.
+              if (!codeUsable) ...<Widget>[
+                const SizedBox(height: 16),
+                Text(
+                  l10n.emailVerificationNeedsResend,
+                  key: const Key('email-verification-needs-resend'),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -268,7 +336,8 @@ class _EmailVerificationScreenState
                   ),
                 ),
               VerificationCodeField(
-                enabled: !_submitting,
+                enabled: !_submitting && codeUsable,
+                autofocus: codeUsable,
                 errorText: _codeError,
                 onChanged: (String code) => setState(() {
                   _code = code;
@@ -280,7 +349,11 @@ class _EmailVerificationScreenState
               ),
               const SizedBox(height: 24),
               FilledButton(
-                onPressed: _submitting ? null : () => _verify(l10n),
+                // 핸들이 없으면 잠근다. 열어 두면 누를 때마다 빈 verificationId가
+                // 서버로 나가 `Invalid UUID string`만 돌아온다.
+                onPressed: _submitting || !codeUsable
+                    ? null
+                    : () => _verify(l10n),
                 child: _submitting
                     ? const SizedBox(
                         height: 20,
@@ -289,7 +362,13 @@ class _EmailVerificationScreenState
                       )
                     : Text(l10n.emailVerificationButton),
               ),
-              if (_canResend) ...<Widget>[
+              // 재발송은 **핸들이 없을 때 오히려 더 필요하다** — 그 상태에서 코드를
+              // 다시 받는 유일한 길이다. 핸들이 있으면 resendVerification을,
+              // 없으면 같은 주소로 retarget을 부른다(둘 다 사용자에겐 "재발송"이다).
+              //
+              // 세션이 없고 핸들도 없으면 어느 오퍼레이션도 부를 수 없어 숨긴다 —
+              // 이 조합은 라우터 게이트가 로그인 화면으로 돌려보내는 상태다.
+              if (_hasHandle || authenticated) ...<Widget>[
                 const SizedBox(height: 8),
                 TextButton(
                   key: const Key('email-verification-resend'),
@@ -308,11 +387,8 @@ class _EmailVerificationScreenState
                 ),
               ],
               // 주소 정정(SPEC-0024 R7). 로그인 상태에서만 부를 수 있는
-              // 오퍼레이션이라 세션이 선 경우에만 보인다.
-              //
-              // **게이트로 진입해 핸들이 없는 사용자에게는 이것이 유일한 길이다** —
-              // 재발송은 verificationId를 요구해 못 쓰지만, 이쪽은 토큰만으로
-              // 새 코드를 받아 낼 수 있다.
+              // 오퍼레이션이라 세션이 선 경우에만 보인다. 재발송과 60초 타이머를
+              // 공유한다.
               if (authenticated) ...<Widget>[
                 const SizedBox(height: 8),
                 TextButton(
@@ -320,13 +396,7 @@ class _EmailVerificationScreenState
                   onPressed: _submitting || _coolingDown
                       ? null
                       : () => _retarget(l10n),
-                  child: Text(
-                    _coolingDown && !_canResend
-                        ? l10n.emailVerificationResendCountdown(
-                            _cooldownSeconds,
-                          )
-                        : l10n.emailVerificationChangeAddress,
-                  ),
+                  child: Text(l10n.emailVerificationChangeAddress),
                 ),
                 const SizedBox(height: 8),
                 TextButton(

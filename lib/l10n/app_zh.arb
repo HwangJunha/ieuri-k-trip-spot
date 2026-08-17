@@ -783,5 +783,6 @@
   "emailVerificationChangeAddressBody": "我們會將新的驗證碼寄到這個地址，先前的驗證碼將失效。",
   "emailVerificationAddressChanged": "已將新的驗證碼寄到變更後的地址。",
   "emailVerificationResendCountdown": "{seconds} 秒後可重新傳送",
-  "commonCancel": "取消"
+  "commonCancel": "取消",
+  "emailVerificationNeedsResend": "先前的驗證碼已失效，請重新取得新的驗證碼。"
 }
