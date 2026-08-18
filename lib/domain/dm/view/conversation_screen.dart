@@ -34,9 +34,21 @@ import '../provider/viewer_providers.dart';
 /// 첫 프레임부터 캐시된 대화가 그려진다. 화면은 캐시 유무에 따라 다른 스켈레톤을
 /// 그리지 않는다.
 class ConversationScreen extends ConsumerStatefulWidget {
-  const ConversationScreen({super.key, required this.conversationId});
+  const ConversationScreen({
+    super.key,
+    required this.conversationId,
+    this.fromQuestionId,
+    this.fromSpotTitle,
+  });
 
   final String conversationId;
+
+  /// 방금 어느 질문에서 들어왔는지(SPEC-0026). **대화 목록·알림에서 들어오면 null**
+  /// 이고 그때는 프리필이 없다.
+  final String? fromQuestionId;
+
+  /// 그 질문의 장소명. 프리필 문구에 들어간다.
+  final String? fromSpotTitle;
 
   static String get routeName => 'conversation';
 
@@ -154,6 +166,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
             if (!selection.active)
               MessageInputBar(
                 onSend: _send,
+                initialText: _prefill(origin),
                 onChanged: () => ref
                     .read(typingSignalProvider(widget.conversationId).notifier)
                     .notify(),
@@ -181,6 +194,30 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
   Future<void> _retrySync() => ref
       .read(conversationControllerProvider(widget.conversationId).notifier)
       .sync();
+
+  /// 입력창에 미리 채워 둘 문장. 채울 것이 없으면 null이다.
+  ///
+  /// **다른 질문에서 기존 대화로 들어왔을 때만 채운다.**
+  ///
+  /// 대화는 상대별로 하나인데 서버가 남기는 출처는 최초 하나뿐이고 갱신되지 않는다
+  /// (AC-13.3). 그래서 A 질문으로 대화를 튼 뒤 B 질문에서 같은 사람에게 말을 걸면,
+  /// 상단 카드는 계속 A를 가리킨다 — 사용자는 B를 보고 왔는데 화면은 A를 말한다.
+  ///
+  /// 카드를 B로 갈아끼우는 방법도 있지만 그러면 A가 사라진다(Airbnb가 그렇게 해서
+  /// 호스트들이 다른 예약을 놓친다). 대신 **맥락을 메시지로 실어 보낸다** — 보내는
+  /// 순간 양쪽 대화 기록에 시간순으로 남고, 덮이지도 사라지지도 않는다. Etsy가 상품별
+  /// 스레드를 사람별로 합치면서 택한 방법과 같다.
+  ///
+  /// **채워만 두고 보내지 않는다.** 사용자가 지우고 자기 말로 쓸 수 있어야 한다.
+  String? _prefill(SpotQaOrigin? origin) {
+    final String? spot = widget.fromSpotTitle;
+    final String? question = widget.fromQuestionId;
+    // 목록·알림에서 들어왔으면 채울 맥락이 없다.
+    if (spot == null || spot.isEmpty || question == null) return null;
+    // 카드가 이미 같은 질문을 말하고 있으면 중복이다.
+    if (origin != null && origin.questionId == question) return null;
+    return AppLocalizations.of(context).spotQaDmPrefill(spot);
+  }
 
   /// 메시지를 보낸다. **낙관적 말풍선을 그리려면 발신자 정보가 필요하다** — 서버
   /// 응답 전에 아바타·닉네임을 그려야 하기 때문이며, 그 값은 세션에서 온다.

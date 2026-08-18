@@ -274,7 +274,13 @@ List<RouteBase> buildRoutes() => <RouteBase>[
         path: ':id',
         name: ConversationScreen.routeName,
         builder: (_, GoRouterState state) =>
-            ConversationScreen(conversationId: state.pathParameters['id']!),
+            ConversationScreen(
+              conversationId: state.pathParameters['id']!,
+              // 어느 질문에서 들어왔는지(SPEC-0026). **표시용 힌트라 없어도 된다** —
+              // 대화 목록이나 알림에서 들어오면 비어 있고, 그때는 프리필이 없다.
+              fromQuestionId: state.uri.queryParameters['fromQuestion'],
+              fromSpotTitle: state.uri.queryParameters['fromSpot'],
+            ),
       ),
     ],
   ),

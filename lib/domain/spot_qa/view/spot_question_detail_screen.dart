@@ -289,6 +289,7 @@ class _Body extends ConsumerWidget {
               ),
               _ => _AnswerRow(
                 questionId: question.id,
+                spotTitle: question.spot.title,
                 answer: items[index - _headerCount],
                 now: now,
                 replyTargetId: replyTargetId,
@@ -362,6 +363,7 @@ class _AnswersHeader extends StatelessWidget {
 class _AnswerRow extends ConsumerWidget {
   const _AnswerRow({
     required this.questionId,
+    required this.spotTitle,
     required this.answer,
     required this.now,
     required this.replyTargetId,
@@ -369,6 +371,10 @@ class _AnswerRow extends ConsumerWidget {
   });
 
   final String questionId;
+
+  /// DM 프리필에 실을 장소명 — 어느 질문에서 말을 걸었는지 상대도 알아야 한다.
+  final String spotTitle;
+
   final SpotAnswer answer;
   final DateTime now;
   final String? replyTargetId;
@@ -385,6 +391,8 @@ class _AnswerRow extends ConsumerWidget {
             ref,
             counterpartMemberId: answer.author.id,
             sourceAnswerId: answer.id,
+            questionId: questionId,
+            spotTitle: spotTitle,
           ),
     onReport: answer.ownedByViewer
         ? null
@@ -418,6 +426,8 @@ class _AnswerRow extends ConsumerWidget {
             ref,
             counterpartMemberId: reply.author.id,
             sourceAnswerId: answer.id,
+            questionId: questionId,
+            spotTitle: spotTitle,
           ),
     onReplyReport: (SpotAnswerReply reply) => reply.ownedByViewer
         ? null

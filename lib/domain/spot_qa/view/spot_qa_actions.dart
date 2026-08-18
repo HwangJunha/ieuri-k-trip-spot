@@ -66,6 +66,8 @@ Future<void> runSpotQaDirectMessage(
   WidgetRef ref, {
   required String counterpartMemberId,
   required String sourceAnswerId,
+  required String questionId,
+  required String spotTitle,
 }) async {
   final AppLocalizations l10n = AppLocalizations.of(context);
   final String? conversationId = await ref
@@ -77,9 +79,21 @@ Future<void> runSpotQaDirectMessage(
     _toast(context, l10n.spotQaDmFailed);
     return;
   }
+  // **어느 질문에서 들어왔는지 대화 화면에 넘긴다.**
+  //
+  // 대화는 상대별로 하나인데 서버가 남기는 출처는 최초 하나뿐이라(AC-13.3 — 기존
+  // 대화의 출처는 바뀌지 않는다), 두 번째로 다른 질문에서 들어오면 상단 카드가 계속
+  // 첫 질문을 가리킨다. 그 어긋남을 화면이 알아채려면 "지금 들어온 질문"을 알아야 한다.
+  //
+  // 쿼리 파라미터로 넘기는 이유는 **표시용 힌트**이기 때문이다(장소 상세의 `thumb`과
+  // 같은 성격) — 없어도 대화는 정상이고, 프리필만 안 채워진다.
   context.pushNamed(
     ConversationScreen.routeName,
     pathParameters: <String, String>{'id': conversationId},
+    queryParameters: <String, String>{
+      'fromQuestion': questionId,
+      'fromSpot': spotTitle,
+    },
   );
 }
 

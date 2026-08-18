@@ -1923,7 +1923,7 @@
   "spotQaDeleteFailed": "삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.",
   "spotQaDmAction": "메시지 보내기",
   "spotQaDmFailed": "대화를 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.",
-  "spotQaOriginCardTitle": "이 질문에서 시작된 대화",
+  "spotQaOriginCardTitle": "이 질문에서 시작된 대화예요",
   "@spotQaOriginCardTitle": {
     "description": "DM 상단 맥락 카드. 출처 없는 대화에는 그리지 않는다"
   },
@@ -2000,5 +2000,14 @@
     }
   },
   "spotQaUnresolveAction": "미해결",
-  "spotQaUnresolveFailed": "되돌리지 못했습니다. 잠시 후 다시 시도해 주세요."
+  "spotQaUnresolveFailed": "되돌리지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  "spotQaDmPrefill": "'{spot}' 질문 관련해서 문의드려요. ",
+  "@spotQaDmPrefill": {
+    "description": "다른 질문에서 기존 대화로 들어왔을 때 입력창 프리필. 대화는 상대별 1개인데 출처는 최초 하나만 남아, 맥락을 메시지로 실어 보낸다(Etsy와 같은 방식)",
+    "placeholders": {
+      "spot": {
+        "type": "String"
+      }
+    }
+  }
 }

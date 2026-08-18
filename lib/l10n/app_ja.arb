@@ -818,7 +818,7 @@
   "spotQaDeleteFailed": "削除できませんでした。しばらくしてからお試しください。",
   "spotQaDmAction": "メッセージを送る",
   "spotQaDmFailed": "会話を開始できませんでした。しばらくしてからお試しください。",
-  "spotQaOriginCardTitle": "この質問から始まった会話",
+  "spotQaOriginCardTitle": "この質問から始まった会話です",
   "spotQaAnswerCount": "{count, plural, =0{回答なし} =1{回答1件} other{回答{count}件}}",
   "spotQaMyQuestionsTitle": "自分の質問",
   "spotQaMyQuestionsEntry": "自分の質問",
@@ -843,5 +843,6 @@
   "spotQaMyQuestionsSignInBody": "ログインすると、自分の質問と回答を確認できます。",
   "spotQaPhotoUploadFailed": "{count, plural, =1{写真1枚をアップロードできませんでした。} other{写真{count}枚をアップロードできませんでした。}}",
   "spotQaUnresolveAction": "未解決",
-  "spotQaUnresolveFailed": "戻せませんでした。しばらくしてからお試しください。"
+  "spotQaUnresolveFailed": "戻せませんでした。しばらくしてからお試しください。",
+  "spotQaDmPrefill": "「{spot}」の質問についてお伺いします。"
 }
