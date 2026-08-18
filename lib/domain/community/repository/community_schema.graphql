@@ -176,6 +176,11 @@ enum ReportTargetType {
   # SPEC-0017에서 서버가 추가했다(가산적 변경). 피드 신고가 이 값을 쓴다 —
   # DM 신고는 다건이라 이 열거형이 아니라 `reportMessages` 뮤테이션을 쓴다.
   FEED_ITEM
+  # SPEC-0026에서 서버가 추가했다(가산적 변경). 장소 질문/답변/답글 신고가 쓴다 —
+  # 새 신고 뮤테이션을 만들지 않고 `reportContent`를 그대로 재사용한다(R11).
+  SPOT_QUESTION
+  SPOT_ANSWER
+  SPOT_ANSWER_REPLY
 }
 
 input BlockUserInput {

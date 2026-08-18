@@ -3,10 +3,13 @@
 import '../../community/repository/community_schema.graphql.dart';
 
 class Input$StartConversationInput {
-  factory Input$StartConversationInput({required String counterpartMemberId}) =>
-      Input$StartConversationInput._({
-        r'counterpartMemberId': counterpartMemberId,
-      });
+  factory Input$StartConversationInput({
+    required String counterpartMemberId,
+    String? sourceAnswerId,
+  }) => Input$StartConversationInput._({
+    r'counterpartMemberId': counterpartMemberId,
+    if (sourceAnswerId != null) r'sourceAnswerId': sourceAnswerId,
+  });
 
   Input$StartConversationInput._(this._$data);
 
@@ -14,6 +17,10 @@ class Input$StartConversationInput {
     final result$data = <String, dynamic>{};
     final l$counterpartMemberId = data['counterpartMemberId'];
     result$data['counterpartMemberId'] = (l$counterpartMemberId as String);
+    if (data.containsKey('sourceAnswerId')) {
+      final l$sourceAnswerId = data['sourceAnswerId'];
+      result$data['sourceAnswerId'] = (l$sourceAnswerId as String?);
+    }
     return Input$StartConversationInput._(result$data);
   }
 
@@ -21,10 +28,16 @@ class Input$StartConversationInput {
 
   String get counterpartMemberId => (_$data['counterpartMemberId'] as String);
 
+  String? get sourceAnswerId => (_$data['sourceAnswerId'] as String?);
+
   Map<String, dynamic> toJson() {
     final result$data = <String, dynamic>{};
     final l$counterpartMemberId = counterpartMemberId;
     result$data['counterpartMemberId'] = l$counterpartMemberId;
+    if (_$data.containsKey('sourceAnswerId')) {
+      final l$sourceAnswerId = sourceAnswerId;
+      result$data['sourceAnswerId'] = l$sourceAnswerId;
+    }
     return result$data;
   }
 
@@ -45,13 +58,26 @@ class Input$StartConversationInput {
     if (l$counterpartMemberId != lOther$counterpartMemberId) {
       return false;
     }
+    final l$sourceAnswerId = sourceAnswerId;
+    final lOther$sourceAnswerId = other.sourceAnswerId;
+    if (_$data.containsKey('sourceAnswerId') !=
+        other._$data.containsKey('sourceAnswerId')) {
+      return false;
+    }
+    if (l$sourceAnswerId != lOther$sourceAnswerId) {
+      return false;
+    }
     return true;
   }
 
   @override
   int get hashCode {
     final l$counterpartMemberId = counterpartMemberId;
-    return Object.hashAll([l$counterpartMemberId]);
+    final l$sourceAnswerId = sourceAnswerId;
+    return Object.hashAll([
+      l$counterpartMemberId,
+      _$data.containsKey('sourceAnswerId') ? l$sourceAnswerId : const {},
+    ]);
   }
 }
 
@@ -64,7 +90,7 @@ abstract class CopyWith$Input$StartConversationInput<TRes> {
   factory CopyWith$Input$StartConversationInput.stub(TRes res) =
       _CopyWithStubImpl$Input$StartConversationInput;
 
-  TRes call({String? counterpartMemberId});
+  TRes call({String? counterpartMemberId, String? sourceAnswerId});
 }
 
 class _CopyWithImpl$Input$StartConversationInput<TRes>
@@ -77,11 +103,16 @@ class _CopyWithImpl$Input$StartConversationInput<TRes>
 
   static const _undefined = <dynamic, dynamic>{};
 
-  TRes call({Object? counterpartMemberId = _undefined}) => _then(
+  TRes call({
+    Object? counterpartMemberId = _undefined,
+    Object? sourceAnswerId = _undefined,
+  }) => _then(
     Input$StartConversationInput._({
       ..._instance._$data,
       if (counterpartMemberId != _undefined && counterpartMemberId != null)
         'counterpartMemberId': (counterpartMemberId as String),
+      if (sourceAnswerId != _undefined)
+        'sourceAnswerId': (sourceAnswerId as String?),
     }),
   );
 }
@@ -92,7 +123,7 @@ class _CopyWithStubImpl$Input$StartConversationInput<TRes>
 
   TRes _res;
 
-  call({String? counterpartMemberId}) => _res;
+  call({String? counterpartMemberId, String? sourceAnswerId}) => _res;
 }
 
 class Input$SendMessageInput {

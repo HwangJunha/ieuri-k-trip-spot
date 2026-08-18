@@ -30,6 +30,16 @@ fragment ConversationParts on Conversation {
   }
   unreadCount
   updatedAt
+  # SPEC-0026 R13·R14. **기존 대화는 전부 null이다** — 이 필드가 없어도 대화 화면은
+  # 지금과 똑같이 동작해야 한다. 원본이 삭제돼도 값이 남도록 서버가 스냅샷을 복사해 둔다.
+  spotQaOrigin {
+    catalogId
+    spotTitle
+    questionId
+    questionBodySnapshot
+    answerId
+    answerBodySnapshot
+  }
 }
 
 query Conversations($first: Int, $after: String) {
@@ -68,8 +78,16 @@ query ConversationMessages($conversationId: ID!, $first: Int, $after: String) {
 }
 
 # 회원을 직접 지정한다(SPEC-0021 R11) — 피드 항목을 거치던 간접 지정이 사라졌다.
-mutation StartConversation($counterpartMemberId: ID!) {
-  startConversation(input: { counterpartMemberId: $counterpartMemberId }) {
+# `sourceAnswerId`는 **선택이다**(SPEC-0026 R13). 주면 출처 스냅샷이 대화에 남고,
+# 생략하면 지금까지의 일반 DM 시작과 똑같이 동작한다. 가리키는 답변이 이미 삭제됐으면
+# 서버가 무시하고 출처 없이 대화를 연다 — 오류가 아니다(AC-13.4).
+mutation StartConversation($counterpartMemberId: ID!, $sourceAnswerId: ID) {
+  startConversation(
+    input: {
+      counterpartMemberId: $counterpartMemberId
+      sourceAnswerId: $sourceAnswerId
+    }
+  ) {
     success
     userErrors {
       code

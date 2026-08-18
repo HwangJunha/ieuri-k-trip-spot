@@ -2062,6 +2062,9 @@ enum Enum$ReportTargetType {
   COMMENT,
   MEMBER,
   FEED_ITEM,
+  SPOT_QUESTION,
+  SPOT_ANSWER,
+  SPOT_ANSWER_REPLY,
   $unknown;
 
   factory Enum$ReportTargetType.fromJson(String value) =>
@@ -2080,6 +2083,12 @@ String toJson$Enum$ReportTargetType(Enum$ReportTargetType e) {
       return r'MEMBER';
     case Enum$ReportTargetType.FEED_ITEM:
       return r'FEED_ITEM';
+    case Enum$ReportTargetType.SPOT_QUESTION:
+      return r'SPOT_QUESTION';
+    case Enum$ReportTargetType.SPOT_ANSWER:
+      return r'SPOT_ANSWER';
+    case Enum$ReportTargetType.SPOT_ANSWER_REPLY:
+      return r'SPOT_ANSWER_REPLY';
     case Enum$ReportTargetType.$unknown:
       return r'$unknown';
   }
@@ -2095,6 +2104,12 @@ Enum$ReportTargetType fromJson$Enum$ReportTargetType(String value) {
       return Enum$ReportTargetType.MEMBER;
     case r'FEED_ITEM':
       return Enum$ReportTargetType.FEED_ITEM;
+    case r'SPOT_QUESTION':
+      return Enum$ReportTargetType.SPOT_QUESTION;
+    case r'SPOT_ANSWER':
+      return Enum$ReportTargetType.SPOT_ANSWER;
+    case r'SPOT_ANSWER_REPLY':
+      return Enum$ReportTargetType.SPOT_ANSWER_REPLY;
     default:
       return Enum$ReportTargetType.$unknown;
   }

@@ -1847,6 +1847,13 @@ const documentNodeQuerySpotDetail = DocumentNode(
                   selectionSet: null,
                 ),
                 FieldNode(
+                  name: NameNode(value: 'viewerReaction'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
                   name: NameNode(value: 'intro'),
                   alias: null,
                   arguments: [
@@ -1965,6 +1972,7 @@ class Query$SpotDetail$spotDetail {
     required this.attributionText,
     this.gallery,
     required this.likeCount,
+    this.viewerReaction,
     this.intro,
     this.infoItems,
   });
@@ -1981,6 +1989,7 @@ class Query$SpotDetail$spotDetail {
     final l$attributionText = json['attributionText'];
     final l$gallery = json['gallery'];
     final l$likeCount = json['likeCount'];
+    final l$viewerReaction = json['viewerReaction'];
     final l$intro = json['intro'];
     final l$infoItems = json['infoItems'];
     return Query$SpotDetail$spotDetail(
@@ -2001,6 +2010,9 @@ class Query$SpotDetail$spotDetail {
           )
           .toList(),
       likeCount: (l$likeCount as int),
+      viewerReaction: l$viewerReaction == null
+          ? null
+          : fromJson$Enum$SpotReaction((l$viewerReaction as String)),
       intro: l$intro == null
           ? null
           : Query$SpotDetail$spotDetail$intro.fromJson(
@@ -2038,6 +2050,8 @@ class Query$SpotDetail$spotDetail {
 
   final int likeCount;
 
+  final Enum$SpotReaction? viewerReaction;
+
   final Query$SpotDetail$spotDetail$intro? intro;
 
   final List<Query$SpotDetail$spotDetail$infoItems>? infoItems;
@@ -2066,6 +2080,10 @@ class Query$SpotDetail$spotDetail {
     _resultData['gallery'] = l$gallery?.map((e) => e.toJson()).toList();
     final l$likeCount = likeCount;
     _resultData['likeCount'] = l$likeCount;
+    final l$viewerReaction = viewerReaction;
+    _resultData['viewerReaction'] = l$viewerReaction == null
+        ? null
+        : toJson$Enum$SpotReaction(l$viewerReaction);
     final l$intro = intro;
     _resultData['intro'] = l$intro?.toJson();
     final l$infoItems = infoItems;
@@ -2086,6 +2104,7 @@ class Query$SpotDetail$spotDetail {
     final l$attributionText = attributionText;
     final l$gallery = gallery;
     final l$likeCount = likeCount;
+    final l$viewerReaction = viewerReaction;
     final l$intro = intro;
     final l$infoItems = infoItems;
     return Object.hashAll([
@@ -2100,6 +2119,7 @@ class Query$SpotDetail$spotDetail {
       l$attributionText,
       l$gallery == null ? null : Object.hashAll(l$gallery.map((v) => v)),
       l$likeCount,
+      l$viewerReaction,
       l$intro,
       l$infoItems == null ? null : Object.hashAll(l$infoItems.map((v) => v)),
     ]);
@@ -2180,6 +2200,11 @@ class Query$SpotDetail$spotDetail {
     if (l$likeCount != lOther$likeCount) {
       return false;
     }
+    final l$viewerReaction = viewerReaction;
+    final lOther$viewerReaction = other.viewerReaction;
+    if (l$viewerReaction != lOther$viewerReaction) {
+      return false;
+    }
     final l$intro = intro;
     final lOther$intro = other.intro;
     if (l$intro != lOther$intro) {
@@ -2232,6 +2257,7 @@ abstract class CopyWith$Query$SpotDetail$spotDetail<TRes> {
     String? attributionText,
     List<Query$SpotDetail$spotDetail$gallery>? gallery,
     int? likeCount,
+    Enum$SpotReaction? viewerReaction,
     Query$SpotDetail$spotDetail$intro? intro,
     List<Query$SpotDetail$spotDetail$infoItems>? infoItems,
   });
@@ -2280,6 +2306,7 @@ class _CopyWithImpl$Query$SpotDetail$spotDetail<TRes>
     Object? attributionText = _undefined,
     Object? gallery = _undefined,
     Object? likeCount = _undefined,
+    Object? viewerReaction = _undefined,
     Object? intro = _undefined,
     Object? infoItems = _undefined,
   }) => _then(
@@ -2312,6 +2339,9 @@ class _CopyWithImpl$Query$SpotDetail$spotDetail<TRes>
       likeCount: likeCount == _undefined || likeCount == null
           ? _instance.likeCount
           : (likeCount as int),
+      viewerReaction: viewerReaction == _undefined
+          ? _instance.viewerReaction
+          : (viewerReaction as Enum$SpotReaction?),
       intro: intro == _undefined
           ? _instance.intro
           : (intro as Query$SpotDetail$spotDetail$intro?),
@@ -2384,6 +2414,7 @@ class _CopyWithStubImpl$Query$SpotDetail$spotDetail<TRes>
     String? attributionText,
     List<Query$SpotDetail$spotDetail$gallery>? gallery,
     int? likeCount,
+    Enum$SpotReaction? viewerReaction,
     Query$SpotDetail$spotDetail$intro? intro,
     List<Query$SpotDetail$spotDetail$infoItems>? infoItems,
   }) => _res;

@@ -6,6 +6,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../common/model/composer_photo.dart';
 import '../../../common/model/post_author.dart';
 import '../../../common/model/post_image_upload.dart';
+import '../../../common/model/spot_qa_origin.dart';
 import '../../../common/network/graphql_debug_log.dart';
 import '../../../common/network/graphql_failure.dart';
 import '../../../common/pagination/page.dart';
@@ -156,11 +157,14 @@ class DmRepositoryImpl implements DmRepository {
   // ------------------------------------------------------------------ DM
 
   @override
-  Future<DmMutationResult<String>> startConversation(String counterpartMemberId) =>
-      _mutateResult(
+  Future<DmMutationResult<String>> startConversation(
+    String counterpartMemberId, {
+    String? sourceAnswerId,
+  }) => _mutateResult(
         documentNodeMutationStartConversation,
         Variables$Mutation$StartConversation(
           counterpartMemberId: counterpartMemberId,
+          sourceAnswerId: sourceAnswerId,
         ).toJson(),
         'startConversation',
         (Map<String, dynamic> data) {
@@ -393,7 +397,23 @@ class DmRepositoryImpl implements DmRepository {
     lastMessage: node.lastMessage == null ? null : _message(node.lastMessage!),
     unreadCount: node.unreadCount,
     updatedAt: _parseTime(node.updatedAt),
+    spotQaOrigin: _spotQaOrigin(node.spotQaOrigin),
   );
+
+  /// 출처 스냅샷(SPEC-0026 R14). **없는 것이 정상이다** — 기존 대화와 일반 DM은 전부
+  /// null이며, 그 경우 대화 화면은 맥락 카드 없이 지금과 같이 표시한다.
+  SpotQaOrigin? _spotQaOrigin(
+    Fragment$ConversationParts$spotQaOrigin? origin,
+  ) => origin == null
+      ? null
+      : SpotQaOrigin(
+          catalogId: origin.catalogId,
+          spotTitle: origin.spotTitle,
+          questionId: origin.questionId,
+          questionBodySnapshot: origin.questionBodySnapshot,
+          answerId: origin.answerId,
+          answerBodySnapshot: origin.answerBodySnapshot,
+        );
 
   PostAuthor _author(Fragment$DmAuthorParts a) => PostAuthor(
     id: a.id,

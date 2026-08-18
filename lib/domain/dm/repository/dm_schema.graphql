@@ -17,6 +17,30 @@ type Conversation {
   # 실제로 센다. `markConversationRead`를 불러야 줄어든다.
   unreadCount: Int!
   updatedAt: String!
+  # SPEC-0026 R13/R14. 질문/답변에서 시작된 대화면 그 출처 스냅샷, 일반 DM이면 null.
+  #
+  # **기존 대화는 전부 null이다** — non-null로 가정하면 지금 있는 대화가 전부 깨진다.
+  spotQaOrigin: ConversationSpotQaOrigin
+}
+
+# DM이 어느 장소의 어느 질문/답변에서 시작됐는지의 스냅샷(SPEC-0026 R14).
+#
+# 원본을 가리키는 링크가 아니라 **값을 복사해 둔 것**이다 — 원본 질문·답변이 삭제돼도
+# 맥락이 남아야 하기 때문이다. 따라서 questionId·answerId는 삭제 후에도 값이 있지만
+# 그 id로 다시 조회하면 없을 수 있다. 참고용 식별자이지 살아있는 참조가 아니다.
+#
+# catalogId는 예외로 항상 유효하다(장소는 삭제되지 않는다) — 맥락 카드를 눌러 장소
+# 상세로 보내는 근거가 이것이다.
+type ConversationSpotQaOrigin {
+  catalogId: ID!
+  # 스냅샷 시점의 장소명. 이후 장소명이 바뀌어도 이 값은 고정이다.
+  spotTitle: String!
+  questionId: ID!
+  # 질문 본문 앞부분(최대 100자). 맥락 카드 한 줄 표시용이다.
+  questionBodySnapshot: String!
+  answerId: ID!
+  # 답변 본문 앞부분(최대 100자).
+  answerBodySnapshot: String!
 }
 
 type ConversationEdge {
@@ -63,6 +87,13 @@ type TypingEvent {
 # **회원을 직접 지정한다**(SPEC-0021 R11) — 피드 항목을 거치던 간접 지정이 사라졌다.
 input StartConversationInput {
   counterpartMemberId: ID!
+  # SPEC-0026 R13. 이 대화를 시작시킨 답변. 주면 출처 스냅샷이 대화에 남는다.
+  # 생략하면 지금까지의 일반 DM 시작과 똑같이 동작한다.
+  #
+  # 이미 같은 상대와 대화가 있으면 기존 대화를 돌려주며, 이 값을 줘도 **소급해 붙이지
+  # 않는다.** 가리키는 답변이 이미 삭제됐으면 서버가 이 값을 무시하고 출처 없이 대화를
+  # 연다 — 오류가 아니다(AC-13.4). 대화가 열린 것이 본질이고 출처는 그 맥락이다.
+  sourceAnswerId: ID
 }
 
 type StartConversationPayload {

@@ -41,9 +41,18 @@ abstract interface class DmRepository {
   /// 이 경계의 인자명도 그대로 따른다. 이미 대화가 있으면 새로 만들지 않고 기존
   /// 대화를 돌려준다(AC7-2).
   ///
-  /// **지금 이것을 부르는 화면이 없다.** 상대를 고르는 화면은 이 스펙의 범위 밖이라
-  /// ([TBD-2]) 후속 채팅 스펙이 만든다 — 그때 쓰려고 남겨 둔다.
-  Future<DmMutationResult<String>> startConversation(String counterpartMemberId);
+  /// [sourceAnswerId]를 주면 그 답변에서 시작된 대화로 출처 스냅샷이 남는다
+  /// (SPEC-0026 R13). 생략하면 지금까지의 일반 DM 시작과 똑같다 — 기존 호출부를
+  /// 깨지 않는다.
+  ///
+  /// **이미 대화가 있으면 출처를 소급해 붙이지 않는다.** 기존 대화를 그대로 돌려주며,
+  /// 최초 시작 시점의 맥락만 남긴다. 가리키는 답변이 이미 삭제됐으면 서버가 이 값을
+  /// 무시하고 출처 없이 대화를 연다 — **오류로 다루지 않는다**(AC-13.4). 대화는
+  /// 정상적으로 열린 것이다.
+  Future<DmMutationResult<String>> startConversation(
+    String counterpartMemberId, {
+    String? sourceAnswerId,
+  });
 
   /// 내가 참여한 대화 목록. 최근 활동순이다.
   Future<CursorPage<Conversation>> fetchConversations({

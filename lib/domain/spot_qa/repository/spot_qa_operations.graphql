@@ -1,0 +1,202 @@
+# SPEC-0026 장소 질문/답변 오퍼레이션. 생성 타입은 이 repository 밖으로 나가지
+# 않는다(POL-020).
+#
+# 사진 첨부는 서버에 업로드 뮤테이션이 없어 이번 범위에서 빠졌다(스키마 조각 상단 참고).
+# 작성 뮤테이션의 `photoKeys`는 실재하는 인자라 그대로 두고 빈 목록을 보낸다 — 서버가
+# 업로드를 구현하면 오퍼레이션은 손대지 않고 값만 채우면 된다.
+
+fragment SpotQaAuthorParts on PostAuthor {
+  id
+  nickname
+  profileImageUrl
+}
+
+fragment SpotQaSpotParts on PostSpot {
+  id
+  title
+  thumbnailImageUrl
+  category
+}
+
+fragment SpotQuestionParts on SpotQuestion {
+  id
+  spot {
+    ...SpotQaSpotParts
+  }
+  body
+  author {
+    ...SpotQaAuthorParts
+  }
+  photoKeys
+  resolved
+  answerCount
+  ownedByViewer
+  hidden
+  createdAt
+}
+
+# 답글에는 `replies`가 없다 — 답글에 답글을 달 수 없다는 R7의 타입 수준 표현이다.
+fragment SpotAnswerReplyParts on SpotAnswerReply {
+  id
+  answerId
+  body
+  author {
+    ...SpotQaAuthorParts
+  }
+  photoKeys
+  ownedByViewer
+  hidden
+  createdAt
+}
+
+fragment SpotAnswerParts on SpotAnswer {
+  id
+  questionId
+  body
+  author {
+    ...SpotQaAuthorParts
+  }
+  photoKeys
+  ownedByViewer
+  hidden
+  createdAt
+  replies {
+    ...SpotAnswerReplyParts
+  }
+}
+
+# 정렬 인자가 없다 — 미해결 우선·최신순은 서버가 고정한다(R2).
+query SpotQuestions($catalogId: ID!, $first: Int, $after: String) {
+  spotQuestions(catalogId: $catalogId, first: $first, after: $after) {
+    edges {
+      cursor
+      node {
+        ...SpotQuestionParts
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+query SpotAnswers($questionId: ID!, $first: Int, $after: String) {
+  spotAnswers(questionId: $questionId, first: $first, after: $after) {
+    edges {
+      cursor
+      node {
+        ...SpotAnswerParts
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+# 자격 없음은 `userErrors`의 NOT_ELIGIBLE_TO_ASK로 온다 — 최상위 errors가 아니다.
+# 화면을 닫지 않고 안내만 띄워 입력을 보존한다.
+mutation CreateSpotQuestion(
+  $catalogId: ID!
+  $body: String!
+  $photoKeys: [String!]!
+) {
+  createSpotQuestion(
+    input: { catalogId: $catalogId, body: $body, photoKeys: $photoKeys }
+  ) {
+    success
+    userErrors {
+      code
+      field
+      message
+    }
+    questionId
+  }
+}
+
+mutation DeleteSpotQuestion($questionId: ID!) {
+  deleteSpotQuestion(input: { questionId: $questionId }) {
+    success
+    userErrors {
+      code
+      field
+      message
+    }
+  }
+}
+
+# 멱등이다 — 이미 해결된 질문에 다시 불러도 오류가 아니다.
+mutation ResolveSpotQuestion($questionId: ID!) {
+  resolveSpotQuestion(input: { questionId: $questionId }) {
+    success
+    userErrors {
+      code
+      field
+      message
+    }
+  }
+}
+
+mutation CreateSpotAnswer(
+  $questionId: ID!
+  $body: String!
+  $photoKeys: [String!]!
+) {
+  createSpotAnswer(
+    input: { questionId: $questionId, body: $body, photoKeys: $photoKeys }
+  ) {
+    success
+    userErrors {
+      code
+      field
+      message
+    }
+    answerId
+  }
+}
+
+mutation DeleteSpotAnswer($answerId: ID!) {
+  deleteSpotAnswer(input: { answerId: $answerId }) {
+    success
+    userErrors {
+      code
+      field
+      message
+    }
+  }
+}
+
+mutation CreateSpotAnswerReply(
+  $parentAnswerId: ID!
+  $body: String!
+  $photoKeys: [String!]!
+) {
+  createSpotAnswerReply(
+    input: {
+      parentAnswerId: $parentAnswerId
+      body: $body
+      photoKeys: $photoKeys
+    }
+  ) {
+    success
+    userErrors {
+      code
+      field
+      message
+    }
+    replyId
+  }
+}
+
+mutation DeleteSpotAnswerReply($replyId: ID!) {
+  deleteSpotAnswerReply(input: { replyId: $replyId }) {
+    success
+    userErrors {
+      code
+      field
+      message
+    }
+  }
+}
