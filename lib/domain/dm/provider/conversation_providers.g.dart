@@ -127,7 +127,7 @@ final class ConversationControllerProvider
 }
 
 String _$conversationControllerHash() =>
-    r'da27ebfc5c5911838d0b788d2507f6ee847707ea';
+    r'84ad8d1058d18f66047531f1ed48a9eec285e4ec';
 
 /// 한 대화의 메시지(R8·R9·R18).
 ///

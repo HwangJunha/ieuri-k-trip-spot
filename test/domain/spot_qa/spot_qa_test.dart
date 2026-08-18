@@ -1,3 +1,7 @@
+import 'package:ieuri_k_trip_spot/domain/auth/model/auth_state.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/model/auth_session.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/model/me.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/provider/auth_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -38,16 +42,33 @@ ProviderContainer _container(FakeSpotQaRepository repo) {
 /// 끼운다 — SharedPreferences를 세우지 않기 위해서다.
 ProviderContainer _myQuestionsContainer(
   FakeSpotQaRepository repo,
-  SeenAnswerCountsStore store,
-) {
+  SeenAnswerCountsStore store, {
+  // 배지 provider가 인증을 확인한다 — 비로그인이면 조회 자체를 하지 않는다.
+  bool authenticated = true,
+}) {
   final ProviderContainer container = ProviderContainer(
     overrides: [
       spotQaRepositoryProvider.overrideWithValue(repo),
       seenAnswerCountsStoreProvider.overrideWithValue(store),
+      if (authenticated)
+        authControllerProvider.overrideWith(_AuthedController.new),
     ],
   );
   addTearDown(container.dispose);
   return container;
+}
+
+/// 로그인 상태만 흉내 내는 최소 컨트롤러. 세션 저장소를 세우지 않는다 —
+/// 여기서 검증하는 것은 인증 흐름이 아니라 배지 계산이다.
+class _AuthedController extends AuthController {
+  @override
+  Future<AuthState> build() async => AuthState(
+    session: AuthSession(
+      accessToken: 'a',
+      refreshToken: 'r',
+      user: const Me(id: 'me', nickname: '나', email: 'me@example.com'),
+    ),
+  );
 }
 
 /// 「내 질문」 화면을 영어 로케일로 띄운다 — 화면에 보이는 문구로 검증한다.
@@ -933,9 +954,27 @@ void main() {
         ),
         FakeSeenAnswerCountsStore(),
       );
+      // 배지가 인증을 확인하므로 그것도 해소돼야 한다 — 오버라이드가 비동기다.
+      await container.read(authControllerProvider.future);
       await container.read(myQuestionsControllerProvider.future);
 
       expect(container.read(myQuestionsUnseenCountProvider), 1);
+    });
+
+    // 배지가 홈 상단에 있어 앱을 열면 늘 계산된다 — 비로그인일 때 조회가 나가면
+    // 반드시 실패하는 왕복이 매번 생긴다.
+    test('비로그인이면 조회하지 않고 0이다', () async {
+      final FakeSpotQaRepository repo = FakeSpotQaRepository(
+        myQuestions: <SpotQuestion>[fakeQuestion(answerCount: 3)],
+      );
+      final ProviderContainer container = _myQuestionsContainer(
+        repo,
+        FakeSeenAnswerCountsStore(),
+        authenticated: false,
+      );
+
+      expect(container.read(myQuestionsUnseenCountProvider), 0);
+      expect(repo.myQuestionFetches, 0, reason: '서버를 부르지 않는다');
     });
 
     testWidgets('새 답변이 있으면 목록에서 배지가 보인다', (WidgetTester tester) async {

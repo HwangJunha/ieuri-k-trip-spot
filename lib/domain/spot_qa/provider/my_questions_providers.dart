@@ -1,3 +1,5 @@
+import '../../auth/provider/auth_controller.dart';
+import '../../auth/model/auth_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/pagination/page.dart';
@@ -83,18 +85,20 @@ class MyQuestionsController extends _$MyQuestionsController {
 
 /// 못 본 답변이 있는 질문 수. 진입점 배지가 이것만 구독한다.
 ///
-/// **이 provider는 조회를 시작시키지 않는다.** [myQuestionsControllerProvider]가 이미
-/// 살아 있을 때만 그 값을 읽고, 아니면 0이다 — 설정 화면에 배지 하나 그리려고 들어가는
-/// 순간 질문 목록을 서버에서 받아 오는 것은 과하고, 비로그인이면 매번 실패한다.
+/// **로그인 상태에서만 목록을 조회한다.** 서버에 알림이 없어 이 배지가 "답이 달렸다"를
+/// 알리는 유일한 채널이라, 사용자가 「내 질문」을 열기 전에도 떠야 한다 — 답변을
+/// 확인하려고 여는 화면이 배지의 전제 조건이면 알림 역할을 못 한다.
 ///
-/// 그래서 배지는 **「내 질문」을 한 번 열어 본 뒤부터** 뜬다. 부가 정보라 그 정도면
-/// 충분하고, 못 본 답변의 진짜 확인 지점은 그 화면 자체다.
+/// 예전에는 `ref.exists`로 걸러 이미 살아 있을 때만 읽었는데, 그러면 화면을 한 번
+/// 열어 본 뒤부터만 배지가 떴다. 홈이 앱을 열면 늘 지나는 화면이라 여기서 한 번
+/// 받아 두는 편이 낫다(DM 배지와 같은 판단).
 ///
-/// 조회 실패·비로그인이면 0이다 — 배지가 오류를 끌고 다니지 않는다.
+/// **비로그인이면 조회하지 않는다** — 인증이 필요한 조회라 반드시 실패하고, 홈에서
+/// 매번 그 왕복이 나가면 낭비다. 실패해도 0이라 배지가 오류를 끌고 다니지 않는다.
 @riverpod
 int myQuestionsUnseenCount(Ref ref) {
-  // `exists`로 먼저 거른다 — 없는 provider를 watch하면 그 자리에서 조회가 시작된다.
-  if (!ref.exists(myQuestionsControllerProvider)) return 0;
+  final AuthState? auth = ref.watch(authControllerProvider).value;
+  if (auth == null || !auth.isAuthenticated) return 0;
   return ref
           .watch(myQuestionsControllerProvider)
           .value

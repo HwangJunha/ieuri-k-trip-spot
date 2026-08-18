@@ -1,3 +1,6 @@
+import 'package:ieuri_k_trip_spot/domain/spot_qa/provider/spot_qa_providers.dart';
+import 'package:ieuri_k_trip_spot/domain/spot_qa/provider/seen_answer_counts_providers.dart';
+import '../../spot_qa/spot_qa_test_doubles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -25,6 +28,10 @@ Future<void> _pump(WidgetTester tester) async {
       sharedPreferencesProvider.overrideWithValue(prefs),
       secureStorageProvider.overrideWithValue(secure),
       authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
+      // SPEC-0026: 「내 질문」 배지가 로그인 상태에서 목록을 받는다. 오버라이드가
+      // 없으면 실제 GraphQL 클라이언트로 나가 타이머가 남는다.
+      spotQaRepositoryProvider.overrideWithValue(FakeSpotQaRepository()),
+      seenAnswerCountsStoreProvider.overrideWithValue(FakeSeenAnswerCountsStore()),
     ],
   );
   addTearDown(container.dispose);

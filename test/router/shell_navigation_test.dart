@@ -1,3 +1,6 @@
+import 'package:ieuri_k_trip_spot/domain/spot_qa/provider/spot_qa_providers.dart';
+import 'package:ieuri_k_trip_spot/domain/spot_qa/provider/seen_answer_counts_providers.dart';
+import '../domain/spot_qa/spot_qa_test_doubles.dart';
 import 'package:ieuri_k_trip_spot/domain/dm/provider/dm_providers.dart';
 import '../domain/dm/dm_test_doubles.dart';
 import 'package:flutter/material.dart';
@@ -37,6 +40,12 @@ Future<ProviderContainer> _homeContainer() async {
       sharedPreferencesProvider.overrideWithValue(prefs),
       secureStorageProvider.overrideWithValue(secure),
       authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
+        // SPEC-0026: 홈 상단 「내 질문」 배지가 로그인 상태에서 목록을 받는다.
+        // 오버라이드가 없으면 실제 GraphQL 클라이언트로 나가 타이머가 남는다.
+        spotQaRepositoryProvider.overrideWithValue(FakeSpotQaRepository()),
+        seenAnswerCountsStoreProvider.overrideWithValue(
+          FakeSeenAnswerCountsStore(),
+        ),
       spotRepositoryProvider.overrideWithValue(FakeSpotRepository()),
       eventRepositoryProvider.overrideWithValue(FakeEventRepository()),
       // SPEC-0010: 커뮤니티 탭이 실제 화면이 되면서 repository와 좌표가 필요해졌다.
