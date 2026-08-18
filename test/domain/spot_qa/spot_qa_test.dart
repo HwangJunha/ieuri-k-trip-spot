@@ -20,6 +20,7 @@ import 'package:ieuri_k_trip_spot/domain/spot_qa/provider/spot_questions_provide
 import 'package:ieuri_k_trip_spot/domain/spot_qa/repository/seen_answer_counts_store.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/repository/spot_qa_repository_impl.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/view/my_questions_screen.dart';
+import 'package:ieuri_k_trip_spot/domain/spot_qa/view/spot_question_detail_screen.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
 
 import 'spot_qa_test_doubles.dart';
@@ -484,6 +485,130 @@ void main() {
       expect(find.text('2 questions'), findsOneWidget);
       await tester.tap(find.byIcon(Icons.forum_outlined));
       expect(opened, isTrue);
+    });
+  });
+
+  group('질문 상세 — 해결 표시', () {
+    Future<void> pumpDetail(
+      WidgetTester tester,
+      FakeSpotQaRepository repo,
+    ) async {
+      final ProviderContainer container = _container(repo);
+      addTearDown(container.dispose);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: Locale('en'),
+            home: SpotQuestionDetailScreen(catalogId: 'c1', questionId: 'q1'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    FakeSpotQaRepository repoWith(SpotQuestion question) =>
+        FakeSpotQaRepository(
+          questionPages: <CursorPage<SpotQuestion>>[
+            CursorPage<SpotQuestion>(
+              items: <SpotQuestion>[question],
+              hasNextPage: false,
+            ),
+          ],
+        );
+
+    // 본문 아래에 두었더니 바로 위 「해결됨」 배지와 자리·아이콘이 같아 버튼이
+    // 아니라 상태 표시로 읽혔다. 본문 옆으로 되돌아오면 여기서 잡힌다.
+    testWidgets('해결 표시가 본문 옆이 아니라 ⋮ 메뉴 안에 있다', (WidgetTester tester) async {
+      await pumpDetail(tester, repoWith(fakeQuestion(ownedByViewer: true)));
+
+      // 메뉴를 열기 전에는 화면 어디에도 없다.
+      expect(find.text('Mark as resolved'), findsNothing);
+
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      expect(find.text('Mark as resolved'), findsOneWidget);
+    });
+
+    test('이미 해결된 질문에는 해결 표시를 다시 보내지 않는다', () async {
+      // 되돌릴 수단이 없어 메뉴 항목 자체가 사라진다 — 컨트롤러도 같은 전제다.
+      final FakeSpotQaRepository repo = repoWith(
+        fakeQuestion(ownedByViewer: true, resolved: true),
+      );
+      final ProviderContainer container = _container(repo);
+      await container.read(spotQuestionsControllerProvider('c1').future);
+
+      expect(
+        container
+            .read(spotQuestionsControllerProvider('c1'))
+            .value!
+            .items
+            .single
+            .resolved,
+        isTrue,
+      );
+      expect(repo.lastResolved, isNull);
+    });
+
+    testWidgets('남의 질문에는 해결 표시가 없고 신고만 있다', (WidgetTester tester) async {
+      await pumpDetail(tester, repoWith(fakeQuestion()));
+
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Mark as resolved'), findsNothing);
+      expect(find.text('Report'), findsOneWidget);
+    });
+
+    // 되돌릴 수 없는 동작이라 한 번 묻는다. 취소하면 아무것도 보내지 않는다.
+    testWidgets('취소하면 해결 표시를 보내지 않는다', (WidgetTester tester) async {
+      final FakeSpotQaRepository repo = repoWith(
+        fakeQuestion(ownedByViewer: true),
+      );
+      await pumpDetail(tester, repo);
+
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Mark as resolved'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Mark as resolved?'), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(repo.lastResolved, isNull);
+    });
+
+    testWidgets('확인하면 해결 표시를 보낸다', (WidgetTester tester) async {
+      final FakeSpotQaRepository repo = repoWith(
+        fakeQuestion(ownedByViewer: true),
+      );
+      await pumpDetail(tester, repo);
+
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Mark as resolved'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Mark'));
+      await tester.pumpAndSettle();
+
+      expect(repo.lastResolved, 'q1');
+    });
+
+    // 답변이 달렸는지 보러 다시 들어오는 화면이라 갱신 수단이 있어야 한다.
+    testWidgets('당겨서 새로고침하면 질문과 답변을 다시 받는다', (WidgetTester tester) async {
+      final FakeSpotQaRepository repo = repoWith(fakeQuestion());
+      await pumpDetail(tester, repo);
+      final int questionsBefore = repo.questionFetches;
+      final int answersBefore = repo.answerFetches;
+
+      await tester.fling(find.byType(ListView), const Offset(0, 300), 1000);
+      await tester.pumpAndSettle();
+
+      expect(repo.questionFetches, greaterThan(questionsBefore));
+      expect(repo.answerFetches, greaterThan(answersBefore));
     });
   });
 

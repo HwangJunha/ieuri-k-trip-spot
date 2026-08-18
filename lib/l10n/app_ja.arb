@@ -841,5 +841,8 @@
   "spotQaFillHours": "今は開いていますか？",
   "spotQaMyQuestionsFailed": "質問を読み込めませんでした。",
   "spotQaMyQuestionsSignInBody": "ログインすると、自分の質問と回答を確認できます。",
-  "spotQaPhotoUploadFailed": "{count, plural, =1{写真1枚をアップロードできませんでした。} other{写真{count}枚をアップロードできませんでした。}}"
+  "spotQaPhotoUploadFailed": "{count, plural, =1{写真1枚をアップロードできませんでした。} other{写真{count}枚をアップロードできませんでした。}}",
+  "spotQaResolveConfirmTitle": "解決済みにしますか？",
+  "spotQaResolveConfirmBody": "元に戻せません。回答は引き続き受け取れます。",
+  "spotQaResolveConfirmAction": "する"
 }

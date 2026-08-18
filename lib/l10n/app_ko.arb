@@ -1998,5 +1998,11 @@
         "type": "int"
       }
     }
-  }
+  },
+  "spotQaResolveConfirmTitle": "해결됨으로 표시할까요?",
+  "spotQaResolveConfirmBody": "표시하면 되돌릴 수 없습니다. 답변은 계속 받을 수 있습니다.",
+  "@spotQaResolveConfirmBody": {
+    "description": "되돌릴 수 없다는 사실과, 해결 표시가 답변을 막지 않는다는 것(AC-4.4)을 함께 알린다"
+  },
+  "spotQaResolveConfirmAction": "표시"
 }

@@ -841,5 +841,8 @@
   "spotQaFillHours": "现在开放吗？",
   "spotQaMyQuestionsFailed": "无法加载你的提问。",
   "spotQaMyQuestionsSignInBody": "登录后即可查看你的提问和回答。",
-  "spotQaPhotoUploadFailed": "{count, plural, =1{有 1 张照片上传失败。} other{有 {count} 张照片上传失败。}}"
+  "spotQaPhotoUploadFailed": "{count, plural, =1{有 1 张照片上传失败。} other{有 {count} 张照片上传失败。}}",
+  "spotQaResolveConfirmTitle": "标记为已解决？",
+  "spotQaResolveConfirmBody": "标记后无法撤销。你仍可继续收到回答。",
+  "spotQaResolveConfirmAction": "标记"
 }

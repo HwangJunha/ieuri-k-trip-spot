@@ -108,17 +108,39 @@ class _SpotQuestionDetailScreenState
       appBar: AppBar(
         title: Text(l10n.spotQaQuestionsTitle),
         actions: <Widget>[
-          // 내 질문에는 신고를 두지 않는다 — 자기 글 신고는 의미가 없다.
-          if (question != null && !question.ownedByViewer)
-            IconButton(
-              icon: const Icon(Icons.flag_outlined),
-              tooltip: l10n.communityReportAction,
-              onPressed: () => runSpotQaReport(
-                context,
-                ref,
-                targetType: ReportTargetType.spotQuestion,
-                targetId: question.id,
-              ),
+          // 「이 질문에 대한 조치」를 한군데 모은다 — 해결 표시와 신고는 서로 배타적
+          // (내 질문이냐 아니냐)이라 각각 아이콘을 두면 자리만 차지한다.
+          //
+          // **해결 표시를 본문 옆이 아니라 여기 두는 이유**: 질문당 한 번뿐이고
+          // 되돌릴 수 없는 동작인데, 본문 아래 왼쪽에 두었더니 해결됨 배지와 같은
+          // 자리·같은 아이콘이라 **상태 표시로 읽혔다.**
+          if (question != null)
+            PopupMenuButton<_QuestionAction>(
+              onSelected: (_QuestionAction action) => switch (action) {
+                _QuestionAction.resolve => _confirmResolve(question),
+                _QuestionAction.report => runSpotQaReport(
+                  context,
+                  ref,
+                  targetType: ReportTargetType.spotQuestion,
+                  targetId: question.id,
+                ),
+              },
+              itemBuilder: (BuildContext context) =>
+                  <PopupMenuEntry<_QuestionAction>>[
+                    // 되돌릴 수단이 없어(서버에 뮤테이션 자체가 없다) 이미 해결된
+                    // 질문에는 항목이 아예 없다.
+                    if (question.ownedByViewer && !question.resolved)
+                      PopupMenuItem<_QuestionAction>(
+                        value: _QuestionAction.resolve,
+                        child: Text(l10n.spotQaResolveAction),
+                      ),
+                    // 내 질문에는 신고를 두지 않는다 — 자기 글 신고는 의미가 없다.
+                    if (!question.ownedByViewer)
+                      PopupMenuItem<_QuestionAction>(
+                        value: _QuestionAction.report,
+                        child: Text(l10n.communityReportAction),
+                      ),
+                  ],
             ),
         ],
       ),
@@ -148,6 +170,46 @@ class _SpotQuestionDetailScreenState
         },
       ),
     );
+  }
+
+  /// 해결 표시를 확인받고 보낸다.
+  ///
+  /// **되돌릴 수 없어 한 번 묻는다** — 서버에 취소 뮤테이션이 없다. 안내에 "답변은
+  /// 계속 받을 수 있다"를 함께 적는 이유는, 해결 표시가 답변을 막는다고 오해하면
+  /// 질문자가 누르기를 주저하기 때문이다(AC-4.4는 막지 않는다고 못 박았다).
+  Future<void> _confirmResolve(SpotQuestion question) async {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+
+    final bool? ok = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: Text(l10n.spotQaResolveConfirmTitle),
+        content: Text(l10n.spotQaResolveConfirmBody),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.spotQaResolveConfirmAction),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+
+    try {
+      final SpotQaMutationResult<void> result = await ref
+          .read(spotQuestionsControllerProvider(widget.catalogId).notifier)
+          .resolve(question.id);
+      if (!mounted || result.succeeded) return;
+      messenger.showSnackBar(SnackBar(content: Text(l10n.spotQaResolveFailed)));
+    } on Object {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(l10n.spotQaResolveFailed)));
+    }
   }
 
   /// 이 질문을 "본 것"으로 기록해 「새 답변」 배지를 끈다.
@@ -206,6 +268,19 @@ class _Body extends ConsumerWidget {
             onLoadMore: () => ref
                 .read(spotAnswersControllerProvider(question.id).notifier)
                 .loadMore(),
+            // 당겨서 새로고침 — **질문과 답변을 함께 다시 받는다.** 답변이 달렸는지
+            // 보러 다시 들어오는 화면이라 갱신 수단이 있어야 하고, 답변만 받으면
+            // 해결 여부·답변 수 같은 질문 쪽 값이 낡은 채로 남는다.
+            //
+            // 질문의 출처는 둘이라(목록 캐시 또는 id 조회) 양쪽을 다 무효화한다 —
+            // 어느 쪽에서 왔든 눌렀을 때 새 값이 와야 한다.
+            onRefresh: () async {
+              ref.invalidate(spotAnswersControllerProvider(question.id));
+              ref.invalidate(spotQuestionByIdProvider(question.id));
+              await ref
+                  .read(spotQuestionsControllerProvider(catalogId).notifier)
+                  .refresh();
+            },
             itemBuilder: (BuildContext context, int index) => switch (index) {
               0 => _QuestionBlock(
                 catalogId: catalogId,
@@ -363,6 +438,9 @@ class _AnswerRow extends ConsumerWidget {
 }
 
 /// 질문 본문 블록. 해결 표시 버튼은 **내 질문이고 아직 미해결일 때만** 보인다.
+/// 상단바 ⋮ 메뉴의 항목. 내 질문이면 해결 표시가, 남의 질문이면 신고가 나온다.
+enum _QuestionAction { resolve, report }
+
 class _QuestionBlock extends ConsumerWidget {
   const _QuestionBlock({
     required this.catalogId,
@@ -421,39 +499,12 @@ class _QuestionBlock extends ConsumerWidget {
               ],
             ),
           ],
-          // **되돌릴 수단이 없다**(서버에 뮤테이션 자체가 없다) — 성공하면 버튼이
-          // 사라지고 다시 나타나지 않는다.
-          if (question.ownedByViewer && !question.resolved)
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: TextButton.icon(
-                onPressed: () => _resolve(context, ref),
-                icon: const Icon(Icons.check_circle_outline, size: 18),
-                label: Text(l10n.spotQaResolveAction),
-              ),
-            ),
+          // 해결 표시 버튼은 여기 없다 — 상단바 ⋮ 메뉴로 옮겼다. 본문 아래 왼쪽에
+          // 두었더니 바로 위 「해결됨」 배지와 자리·아이콘이 같아 **버튼이 아니라
+          // 상태 표시로 읽혔다.**
         ],
       ),
     );
-  }
-
-  /// 해결 표시. **낙관적으로 반영된다**(컨트롤러가 즉시 상태를 바꾼다) — 실패하면
-  /// 컨트롤러가 되돌리고 화면은 안내만 띄운다.
-  Future<void> _resolve(BuildContext context, WidgetRef ref) async {
-    final AppLocalizations l10n = AppLocalizations.of(context);
-    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
-    SpotQaMutationResult<void> result;
-    try {
-      result = await ref
-          .read(spotQuestionsControllerProvider(catalogId).notifier)
-          .resolve(question.id);
-    } on Object {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.spotQaResolveFailed)));
-      return;
-    }
-    if (!result.succeeded) {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.spotQaResolveFailed)));
-    }
   }
 }
 
