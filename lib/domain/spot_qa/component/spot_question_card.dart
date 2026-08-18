@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/spot_question.dart';
 import 'spot_qa_author_line.dart';
+import 'spot_qa_resolution_badge.dart';
 
 /// 질문 목록의 카드 한 장(디자인 §1).
 ///
@@ -88,8 +89,9 @@ class SpotQuestionCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                 ],
-                if (question.resolved)
-                  _ResolvedBadge(label: l10n.spotQaResolvedLabel),
+                // 해결/미해결을 같은 자리에서 그린다 — 미해결은 강조색으로 떠서
+                // 답을 기다리는 질문이 눈에 띈다(`SpotQaResolutionBadge`).
+                SpotQaResolutionBadge(resolved: question.resolved),
               ],
             ),
           ],
@@ -100,30 +102,3 @@ class SpotQuestionCard extends StatelessWidget {
 }
 
 /// "해결됨" 배지. 체크 아이콘 + 라벨이며 낮은 명도다.
-class _ResolvedBadge extends StatelessWidget {
-  const _ResolvedBadge({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        Icon(
-          Icons.check_circle_outline,
-          size: 14,
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ],
-    );
-  }
-}

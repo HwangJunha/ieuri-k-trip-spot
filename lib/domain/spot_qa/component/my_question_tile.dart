@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../common/widget/post_labels.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../provider/my_questions_providers.dart';
+import 'spot_qa_resolution_badge.dart';
+import '../../../common/widget/spot_thumbnail.dart';
 
 /// 「내 질문」 목록의 한 줄.
 ///
@@ -43,57 +45,80 @@ class MyQuestionTile extends StatelessWidget {
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-        child: Column(
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelLarge,
-                  ),
+            // 장소 썸네일. **어느 장소에 물었는지 글자보다 먼저 알아본다** — 목록이
+            // 장소를 가로지르므로 여기서 구분이 가장 빨리 된다.
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: SizedBox(
+                width: 56,
+                height: 56,
+                child: SpotThumbnail(
+                  imageRef: item.question.spot.thumbnailImageUrl,
                 ),
-                if (item.hasNewAnswers) ...<Widget>[
-                  const SizedBox(width: 8),
-                  _NewAnswerBadge(
-                    label: l10n.spotQaNewAnswerBadge(item.newAnswerCount),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelLarge,
+                        ),
+                      ),
+                      if (item.hasNewAnswers) ...<Widget>[
+                        const SizedBox(width: 8),
+                        _NewAnswerBadge(
+                          label: l10n.spotQaNewAnswerBadge(item.newAnswerCount),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    item.question.body,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: <Widget>[
+                      Icon(
+                        Icons.mode_comment_outlined,
+                        size: 14,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        l10n.spotQaAnswerCount(item.question.answerCount),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        relativePostTime(l10n, item.question.createdAt, now),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const Spacer(),
+                      // 해결 여부를 오른쪽 끝에 붙인다 — 미해결이 눈에 띄어야 한다.
+                      SpotQaResolutionBadge(resolved: item.question.resolved),
+                    ],
                   ),
                 ],
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              item.question.body,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 6),
-            Row(
-              children: <Widget>[
-                Icon(
-                  Icons.mode_comment_outlined,
-                  size: 14,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  l10n.spotQaAnswerCount(item.question.answerCount),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  relativePostTime(l10n, item.question.createdAt, now),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
+              ),
             ),
           ],
         ),

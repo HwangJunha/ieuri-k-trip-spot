@@ -18,6 +18,7 @@ import '../provider/spot_qa_composer_providers.dart';
 import '../provider/spot_question_by_id_providers.dart';
 import '../provider/spot_questions_providers.dart';
 import 'spot_qa_actions.dart';
+import '../component/spot_qa_resolution_badge.dart';
 
 /// 질문 상세(R7, 디자인 §2).
 ///
@@ -471,29 +472,19 @@ class _QuestionBlock extends ConsumerWidget {
               ),
             ),
           ],
-          if (question.resolved) ...<Widget>[
-            const SizedBox(height: 8),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Icon(
-                  Icons.check_circle_outline,
-                  size: 16,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  l10n.spotQaResolvedLabel,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ],
-          // 해결 표시 버튼은 여기 없다 — 상단바 ⋮ 메뉴로 옮겼다. 본문 아래 왼쪽에
-          // 두었더니 바로 위 「해결됨」 배지와 자리·아이콘이 같아 **버튼이 아니라
-          // 상태 표시로 읽혔다.**
+          // 해결 여부는 **오른쪽 끝**에 붙인다. 본문 아래 왼쪽은 읽는 눈이 먼저
+          // 닿는 자리라, 거기 두면 본문의 일부처럼 읽힌다.
+          //
+          // 미해결은 강조색으로 끌어올린다 — 답을 기다리는 질문이 눈에 띄어야
+          // 이 기능이 돈다(`SpotQaResolutionBadge` 참고).
+          const SizedBox(height: 8),
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: SpotQaResolutionBadge(resolved: question.resolved),
+          ),
+          // 해결 토글 버튼은 여기 없다 — 상단바 ⋮ 메뉴로 옮겼다. 본문 아래 왼쪽에
+          // 두었더니 바로 위 배지와 자리·아이콘이 같아 **버튼이 아니라 상태 표시로
+          // 읽혔다.**
         ],
       ),
     );

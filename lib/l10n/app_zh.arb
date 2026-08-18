@@ -802,7 +802,7 @@
   "spotQaAnswersEmpty": "还没有回答。如果你了解这里，请分享。",
   "spotQaResolvedLabel": "已解决",
   "spotQaUnresolvedLabel": "未解决",
-  "spotQaResolveAction": "标记为已解决",
+  "spotQaResolveAction": "解决",
   "spotQaResolveFailed": "无法标记为已解决，请稍后再试。",
   "spotQaAskAction": "提问",
   "spotQaAnswerAction": "回答",
@@ -842,6 +842,6 @@
   "spotQaMyQuestionsFailed": "无法加载你的提问。",
   "spotQaMyQuestionsSignInBody": "登录后即可查看你的提问和回答。",
   "spotQaPhotoUploadFailed": "{count, plural, =1{有 1 张照片上传失败。} other{有 {count} 张照片上传失败。}}",
-  "spotQaUnresolveAction": "标记为未解决",
+  "spotQaUnresolveAction": "未解决",
   "spotQaUnresolveFailed": "撤销失败，请稍后再试。"
 }

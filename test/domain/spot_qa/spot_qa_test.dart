@@ -6,6 +6,7 @@ import 'package:ieuri_k_trip_spot/common/model/composer_photo.dart';
 import 'package:ieuri_k_trip_spot/common/model/spot_qa_origin.dart';
 import 'package:ieuri_k_trip_spot/common/pagination/page.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/component/spot_qa_entry_button.dart';
+import 'package:ieuri_k_trip_spot/domain/spot_qa/component/spot_qa_resolution_badge.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/model/spot_answer.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/model/spot_answer_reply.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/model/spot_qa_failure.dart';
@@ -525,11 +526,11 @@ void main() {
       await pumpDetail(tester, repoWith(fakeQuestion(ownedByViewer: true)));
 
       // 메뉴를 열기 전에는 화면 어디에도 없다.
-      expect(find.text('Mark as resolved'), findsNothing);
+      expect(find.text('Resolve'), findsNothing);
 
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
-      expect(find.text('Mark as resolved'), findsOneWidget);
+      expect(find.text('Resolve'), findsOneWidget);
     });
 
     // 2026-08-18 서버가 `resolved` 인자를 열어 되돌리기가 가능해졌다.
@@ -542,8 +543,8 @@ void main() {
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
 
-      expect(find.text('Mark as unresolved'), findsOneWidget);
-      expect(find.text('Mark as resolved'), findsNothing);
+      expect(find.text('Unresolve'), findsOneWidget);
+      expect(find.text('Resolve'), findsNothing);
     });
 
     testWidgets('되돌리기를 누르면 resolved: false로 보낸다', (WidgetTester tester) async {
@@ -554,7 +555,7 @@ void main() {
 
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Mark as unresolved'));
+      await tester.tap(find.text('Unresolve'));
       await tester.pumpAndSettle();
 
       expect(repo.lastResolved, 'q1');
@@ -567,7 +568,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
 
-      expect(find.text('Mark as resolved'), findsNothing);
+      expect(find.text('Resolve'), findsNothing);
       expect(find.text('Report'), findsOneWidget);
     });
 
@@ -580,7 +581,7 @@ void main() {
 
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Mark as resolved'));
+      await tester.tap(find.text('Resolve'));
       await tester.pumpAndSettle();
 
       expect(repo.lastResolved, 'q1');
@@ -768,6 +769,36 @@ void main() {
 
       expect(a, b);
       expect(a.hashCode, b.hashCode);
+    });
+  });
+
+  group('해결 여부 배지', () {
+    Future<void> pumpBadge(WidgetTester tester, {required bool resolved}) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('en'),
+          home: Scaffold(
+            body: SpotQaResolutionBadge(resolved: resolved),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    // 답을 기다리는 질문이 눈에 띄어야 이 기능이 돈다 — 미해결을 안 그리면
+    // 해결된 것과 구분이 안 된다.
+    testWidgets('미해결이면 미해결 배지를 그린다', (WidgetTester tester) async {
+      await pumpBadge(tester, resolved: false);
+      expect(find.text('Open'), findsOneWidget);
+      expect(find.text('Resolved'), findsNothing);
+    });
+
+    testWidgets('해결이면 해결됨 배지를 그린다', (WidgetTester tester) async {
+      await pumpBadge(tester, resolved: true);
+      expect(find.text('Resolved'), findsOneWidget);
+      expect(find.text('Open'), findsNothing);
     });
   });
 

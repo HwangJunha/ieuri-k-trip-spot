@@ -1179,7 +1179,7 @@
   "spotQaAnswersEmpty": "No answers yet. Share what you know about this place.",
   "spotQaResolvedLabel": "Resolved",
   "spotQaUnresolvedLabel": "Open",
-  "spotQaResolveAction": "Mark as resolved",
+  "spotQaResolveAction": "Resolve",
   "spotQaResolveFailed": "Couldn't mark it as resolved. Please try again.",
   "spotQaAskAction": "Ask a question",
   "spotQaAnswerAction": "Answer",
@@ -1219,6 +1219,6 @@
   "spotQaMyQuestionsFailed": "Couldn't load your questions.",
   "spotQaMyQuestionsSignInBody": "Sign in to see the questions you've asked and their answers.",
   "spotQaPhotoUploadFailed": "{count, plural, =1{Couldn't upload 1 photo.} other{Couldn't upload {count} photos.}}",
-  "spotQaUnresolveAction": "Mark as unresolved",
+  "spotQaUnresolveAction": "Unresolve",
   "spotQaUnresolveFailed": "Couldn't undo it. Please try again."
 }

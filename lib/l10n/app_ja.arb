@@ -802,7 +802,7 @@
   "spotQaAnswersEmpty": "まだ回答がありません。ご存じのことを教えてください。",
   "spotQaResolvedLabel": "解決済み",
   "spotQaUnresolvedLabel": "未解決",
-  "spotQaResolveAction": "解決済みにする",
+  "spotQaResolveAction": "解決",
   "spotQaResolveFailed": "解決済みにできませんでした。しばらくしてからお試しください。",
   "spotQaAskAction": "質問する",
   "spotQaAnswerAction": "回答する",
@@ -842,6 +842,6 @@
   "spotQaMyQuestionsFailed": "質問を読み込めませんでした。",
   "spotQaMyQuestionsSignInBody": "ログインすると、自分の質問と回答を確認できます。",
   "spotQaPhotoUploadFailed": "{count, plural, =1{写真1枚をアップロードできませんでした。} other{写真{count}枚をアップロードできませんでした。}}",
-  "spotQaUnresolveAction": "未解決に戻す",
+  "spotQaUnresolveAction": "未解決",
   "spotQaUnresolveFailed": "戻せませんでした。しばらくしてからお試しください。"
 }

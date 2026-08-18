@@ -1907,7 +1907,7 @@
   "spotQaAnswersEmpty": "아직 답변이 없습니다. 이 장소를 아신다면 알려주세요.",
   "spotQaResolvedLabel": "해결됨",
   "spotQaUnresolvedLabel": "미해결",
-  "spotQaResolveAction": "해결됨으로 표시",
+  "spotQaResolveAction": "해결",
   "spotQaResolveFailed": "해결 표시를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.",
   "spotQaAskAction": "질문하기",
   "spotQaAnswerAction": "답변하기",
@@ -1999,6 +1999,6 @@
       }
     }
   },
-  "spotQaUnresolveAction": "미해결로 되돌리기",
+  "spotQaUnresolveAction": "미해결",
   "spotQaUnresolveFailed": "되돌리지 못했습니다. 잠시 후 다시 시도해 주세요."
 }
