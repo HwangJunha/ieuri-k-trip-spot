@@ -295,8 +295,10 @@ class _DetailBody extends ConsumerWidget {
                   imageAttributions: detail.distinctImageAttributions,
                 ),
 
-                // 「지금 여기 어때?」 진입점(SPEC-0026). **자격도 없고 질문도 없으면
-                // 버튼 자체가 사라진다** — 판정은 `SpotQaEntryButton`이 한다.
+                // 「지금 여기 어때?」 진입점(SPEC-0026). **좋아요 여부와 무관하게
+                // 항상 보인다** — 가기 전에 묻는 질문이라 좋아요를 조건으로 걸면
+                // 질문이 가장 필요한 사람을 막는다(게이팅 폐지 근거는
+                // `spot_qa_eligibility.dart`).
                 //
                 // 질문이 있으면 목록으로, 없으면 **빈 목록을 거치지 않고 바로 작성**
                 // 으로 보낸다(설계 §진입점) — 빈 화면을 보여주고 다시 누르게 하면
@@ -304,14 +306,28 @@ class _DetailBody extends ConsumerWidget {
                 const SizedBox(height: 24),
                 SpotQaEntryButton(
                   catalogId: contentId,
-                  viewerLikedSpot: detail.likedByViewer,
                   onOpenList: () => context.pushNamed(
                     spotQuestionsRouteName,
                     pathParameters: <String, String>{'spotId': contentId},
                   ),
+                  // 장소명은 **표시용 힌트**로만 넘긴다(썸네일과 같은 성격) —
+                  // 「내 질문」 목록에 적어 둘 이름이며, 없어도 작성은 그대로 된다.
                   onCompose: () => context.pushNamed(
                     spotQaComposerRouteName,
                     pathParameters: <String, String>{'spotId': contentId},
+                    queryParameters: <String, String>{'spot': detail.title},
+                  ),
+                ),
+
+                // 「내 질문」 보조 진입점. 답변 알림이 없어 사용자가 자기 질문을
+                // 되찾아 갈 길이 필요하다 — 여기서 물었으니 여기서 답을 확인하러
+                // 돌아온다. 주 동작(질문하기)과 구분되게 TextButton이다.
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton.icon(
+                    onPressed: () => context.pushNamed(myQuestionsRouteName),
+                    icon: const Icon(Icons.question_answer_outlined, size: 18),
+                    label: Text(l10n.spotQaMyQuestionsEntry),
                   ),
                 ),
 

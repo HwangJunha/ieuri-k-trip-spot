@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../common/navigation/dm_routes.dart';
 import '../../../common/pagination/pagination_list_view.dart';
 import '../../../common/widget/failure_notice.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -18,7 +19,7 @@ import 'conversation_screen.dart';
 class ConversationListScreen extends ConsumerWidget {
   const ConversationListScreen({super.key});
 
-  static String get routeName => 'conversations';
+  static String get routeName => conversationsRouteName;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

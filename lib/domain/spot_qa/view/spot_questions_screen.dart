@@ -75,9 +75,22 @@ class SpotQuestionsScreen extends ConsumerWidget {
   /// 작성 화면을 연다. **성공하면 목록을 다시 받는다** — 작성은 낙관적으로 넣지
   /// 않으므로(설계 §상태 관리) 서버 응답 뒤의 재조회가 유일한 반영 경로다.
   Future<void> _compose(BuildContext context, WidgetRef ref) async {
+    // 장소명은 「내 질문」 목록에 적어 둘 **표시용 힌트**다. 이미 받아 둔 질문이
+    // 있으면 거기 실린 장소명을 쓰고, 없으면 빈 값으로 둔다 — 이 값 때문에 작성이
+    // 막히지 않는다(목록이 나중에 서버 조회로 채운다).
+    final String spotTitle =
+        ref
+            .read(spotQuestionsControllerProvider(catalogId))
+            .value
+            ?.items
+            .firstOrNull
+            ?.spot
+            .title ??
+        '';
     final bool? created = await context.pushNamed<bool>(
       SpotQaComposerScreen.routeName,
       pathParameters: <String, String>{'spotId': catalogId},
+      queryParameters: <String, String>{'spot': spotTitle},
     );
     if (created ?? false) {
       await ref

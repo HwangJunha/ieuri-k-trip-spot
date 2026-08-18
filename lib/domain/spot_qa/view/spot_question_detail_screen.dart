@@ -8,10 +8,12 @@ import '../../community/model/report_reason.dart';
 import '../component/spot_answer_tile.dart';
 import '../component/spot_qa_author_line.dart';
 import '../component/spot_qa_inline_composer.dart';
+import '../model/my_question_ref.dart';
 import '../model/spot_answer.dart';
 import '../model/spot_answer_reply.dart';
 import '../model/spot_qa_failure.dart';
 import '../model/spot_question.dart';
+import '../provider/my_questions_providers.dart';
 import '../provider/spot_answers_providers.dart';
 import '../provider/spot_qa_composer_providers.dart';
 import '../provider/spot_questions_providers.dart';
@@ -61,6 +63,10 @@ class _SpotQuestionDetailScreenState
   /// 알 필요가 없고, 상세를 떠나면 사라지는 것이 맞다.
   String? _replyTargetId;
 
+  /// 이 화면에서 마지막으로 "본 것"으로 기록한 답변 수. 같은 값을 두 번 쓰지 않기
+  /// 위한 것이며, 컨트롤러도 변화가 없으면 저장하지 않는다.
+  int? _markedAnswerCount;
+
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
@@ -70,6 +76,20 @@ class _SpotQuestionDetailScreenState
     final SpotQuestion? question = questions.value?.items
         .where((SpotQuestion q) => q.id == widget.questionId)
         .firstOrNull;
+
+    // **열어 본 시점의 답변 수를 기록해 「내 질문」의 새 답변 배지를 끈다.** 알림이
+    // 없어 그 배지가 유일한 신호라, 읽은 뒤에도 남아 있으면 신호가 무의미해진다.
+    //
+    // 빌드 중이 아니라 프레임 뒤에 부른다 — 기록이 provider 상태를 바꾸므로
+    // 빌드 도중 호출하면 같은 프레임에서 다시 그리게 된다.
+    if (question != null && _markedAnswerCount != question.answerCount) {
+      final int seen = question.answerCount;
+      _markedAnswerCount = seen;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _markSeen(seen);
+      });
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -114,6 +134,27 @@ class _SpotQuestionDetailScreenState
         },
       ),
     );
+  }
+
+  /// 이 질문을 "본 것"으로 기록한다.
+  ///
+  /// **로컬 기록에 없는 질문이면 아무것도 하지 않는다** — 남의 질문을 열었을 뿐인데
+  /// 「내 질문」 컨트롤러를 깨우면 기억해 둔 모든 장소를 서버에서 다시 조회하게 된다.
+  /// 저장소는 동기 읽기라 그 확인 자체는 공짜다.
+  Future<void> _markSeen(int answerCount) async {
+    final bool remembered = ref
+        .read(myQuestionsStoreProvider)
+        .read()
+        .any((MyQuestionRef r) => r.questionId == widget.questionId);
+    if (!remembered) return;
+
+    try {
+      await ref
+          .read(myQuestionsControllerProvider.notifier)
+          .markSeen(widget.questionId, answerCount);
+    } on Object {
+      // 저장 실패는 배지가 안 꺼지는 것으로 끝난다 — 읽던 화면을 방해하지 않는다.
+    }
   }
 }
 

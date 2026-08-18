@@ -1,16 +1,22 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/model/spot_qa_origin.dart';
 import 'package:ieuri_k_trip_spot/common/pagination/page.dart';
+import 'package:ieuri_k_trip_spot/domain/spot_qa/model/my_question_ref.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/model/spot_answer.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/model/spot_answer_reply.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/model/spot_qa_eligibility.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/model/spot_qa_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/model/spot_question.dart';
+import 'package:ieuri_k_trip_spot/domain/spot_qa/provider/my_questions_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/provider/spot_answers_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/provider/spot_qa_composer_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/provider/spot_qa_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/provider/spot_questions_providers.dart';
+import 'package:ieuri_k_trip_spot/domain/spot_qa/repository/my_questions_store.dart';
+import 'package:ieuri_k_trip_spot/domain/spot_qa/view/my_questions_screen.dart';
+import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
 
 import 'spot_qa_test_doubles.dart';
 
@@ -20,6 +26,41 @@ ProviderContainer _container(FakeSpotQaRepository repo) {
   );
   addTearDown(container.dispose);
   return container;
+}
+
+/// 「내 질문」 컨트롤러용 컨테이너. 로컬 저장소도 함께 갈아 끼운다 —
+/// SharedPreferences를 세우지 않기 위해서다.
+ProviderContainer _myQuestionsContainer(
+  FakeSpotQaRepository repo,
+  MyQuestionsStore store,
+) {
+  final ProviderContainer container = ProviderContainer(
+    overrides: [
+      spotQaRepositoryProvider.overrideWithValue(repo),
+      myQuestionsStoreProvider.overrideWithValue(store),
+    ],
+  );
+  addTearDown(container.dispose);
+  return container;
+}
+
+/// 「내 질문」 화면을 영어 로케일로 띄운다 — 화면에 보이는 문구로 검증한다.
+Future<void> _pumpMyQuestions(
+  WidgetTester tester,
+  ProviderContainer container,
+) async {
+  await tester.pumpWidget(
+    UncontrolledProviderScope(
+      container: container,
+      child: const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: Locale('en'),
+        home: MyQuestionsScreen(),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
 }
 
 void main() {
@@ -81,11 +122,10 @@ void main() {
       final SpotQuestionsState state = container
           .read(spotQuestionsControllerProvider('c1'))
           .value!;
-      expect(
-        state.items.map((SpotQuestion q) => q.id),
-        <String>['q1', 'q2'],
-        reason: '앞 페이지를 덮어쓰지 않고 이어 붙인다',
-      );
+      expect(state.items.map((SpotQuestion q) => q.id), <String>[
+        'q1',
+        'q2',
+      ], reason: '앞 페이지를 덮어쓰지 않고 이어 붙인다');
       expect(state.hasMore, isFalse);
       expect(repo.questionCursors, <String?>[null, 'cur1']);
     });
@@ -371,33 +411,12 @@ void main() {
     });
   });
 
-  group('작성 자격 판정', () {
-    test('좋아요한 경우에만 쓸 수 있다', () {
-      expect(canWriteSpotQa(viewerLikedSpot: true), isTrue);
-      // 반응 없음과 DISLIKE는 둘 다 자격 없음이라 호출부가 false로 접어 넘긴다.
-      expect(canWriteSpotQa(viewerLikedSpot: false), isFalse);
-    });
-
-    test('자격이 없고 질문도 없으면 진입점을 숨긴다', () {
-      expect(
-        showSpotQaEntry(viewerLikedSpot: false, hasQuestions: false),
-        isFalse,
-      );
-    });
-
-    test('질문이 있으면 자격과 무관하게 진입점을 보인다', () {
-      // 읽기는 비로그인 포함 누구에게나 열려 있다(AC-1.4).
-      expect(
-        showSpotQaEntry(viewerLikedSpot: false, hasQuestions: true),
-        isTrue,
-      );
-    });
-
-    test('자격이 있으면 질문이 없어도 진입점을 보인다', () {
-      expect(
-        showSpotQaEntry(viewerLikedSpot: true, hasQuestions: false),
-        isTrue,
-      );
+  group('작성 진입점 노출', () {
+    // 좋아요 게이팅은 폐지됐다(2026-08-18 사용자 결정 —
+    // `spot_qa_eligibility.dart`). 「지금 여기 어때?」는 가기 전에 나오는 질문이라
+    // 좋아요를 조건으로 걸면 질문이 가장 필요한 사람을 막는다.
+    test('자격과 질문 유무에 관계없이 진입점을 보인다', () {
+      expect(showSpotQaEntry(), isTrue);
     });
   });
 
@@ -423,6 +442,310 @@ void main() {
 
       expect(a, b);
       expect(a.hashCode, b.hashCode);
+    });
+  });
+
+  group('MyQuestionRef', () {
+    test('인코딩한 뒤 다시 읽으면 같은 값이다', () {
+      final MyQuestionRef ref = fakeQuestionRef(seenAnswerCount: 3);
+
+      expect(MyQuestionRef.decode(ref.encode()), ref);
+    });
+
+    test('형식이 깨진 항목은 null이다', () {
+      // 목록 전체를 잃지 않기 위해 항목 단위로 버린다.
+      expect(MyQuestionRef.decode('{'), isNull);
+      expect(MyQuestionRef.decode('{"c":"c1"}'), isNull);
+    });
+
+    test('장소명이 유실돼도 질문 자체는 살린다', () {
+      final MyQuestionRef? ref = MyQuestionRef.decode(
+        '{"c":"c1","q":"q1","a":"2026-08-18T00:00:00.000Z"}',
+      );
+
+      expect(ref?.questionId, 'q1');
+      expect(ref?.spotTitle, isEmpty);
+    });
+  });
+
+  group('MyQuestionsController', () {
+    test('장소가 같은 질문은 한 번만 조회한다', () async {
+      final FakeSpotQaRepository repo = FakeSpotQaRepository(
+        questionsByCatalog: <String, List<SpotQuestion>>{
+          'c1': <SpotQuestion>[fakeQuestion(id: 'q1'), fakeQuestion(id: 'q2')],
+        },
+      );
+      final ProviderContainer container = _myQuestionsContainer(
+        repo,
+        FakeMyQuestionsStore(<MyQuestionRef>[
+          fakeQuestionRef(questionId: 'q1'),
+          fakeQuestionRef(questionId: 'q2'),
+        ]),
+      );
+
+      final List<MyQuestionItem> items = await container.read(
+        myQuestionsControllerProvider.future,
+      );
+
+      expect(items, hasLength(2));
+      expect(repo.fetchedCatalogs, <String>['c1']);
+    });
+
+    test('한 장소 조회가 실패해도 나머지는 남는다', () async {
+      final ProviderContainer container = _myQuestionsContainer(
+        FakeSpotQaRepository(
+          questionsByCatalog: <String, List<SpotQuestion>>{
+            'c2': <SpotQuestion>[fakeQuestion(id: 'q2', catalogId: 'c2')],
+          },
+          failingCatalogs: const <String>{'c1'},
+        ),
+        FakeMyQuestionsStore(<MyQuestionRef>[
+          fakeQuestionRef(questionId: 'q1'),
+          fakeQuestionRef(catalogId: 'c2', questionId: 'q2'),
+        ]),
+      );
+
+      final List<MyQuestionItem> items = await container.read(
+        myQuestionsControllerProvider.future,
+      );
+
+      // 실패한 장소의 질문도 목록에서 지우지 않는다 — 본문만 비어 있다.
+      expect(items, hasLength(2));
+      expect(items.first.question, isNull);
+      expect(items.last.question?.id, 'q2');
+    });
+
+    test('서버에서 못 찾은 질문에는 새 답변 배지를 달지 않는다', () async {
+      final ProviderContainer container = _myQuestionsContainer(
+        FakeSpotQaRepository(
+          questionsByCatalog: const <String, List<SpotQuestion>>{},
+        ),
+        FakeMyQuestionsStore(<MyQuestionRef>[fakeQuestionRef()]),
+      );
+
+      final List<MyQuestionItem> items = await container.read(
+        myQuestionsControllerProvider.future,
+      );
+
+      expect(items.single.hasNewAnswers, isFalse);
+      expect(items.single.newAnswerCount, 0);
+    });
+
+    test('마지막으로 본 뒤 늘어난 답변 수를 센다', () async {
+      final ProviderContainer container = _myQuestionsContainer(
+        FakeSpotQaRepository(
+          questionsByCatalog: <String, List<SpotQuestion>>{
+            'c1': <SpotQuestion>[fakeQuestion(answerCount: 4)],
+          },
+        ),
+        FakeMyQuestionsStore(<MyQuestionRef>[
+          fakeQuestionRef(seenAnswerCount: 1),
+        ]),
+      );
+
+      final List<MyQuestionItem> items = await container.read(
+        myQuestionsControllerProvider.future,
+      );
+
+      expect(items.single.hasNewAnswers, isTrue);
+      expect(items.single.newAnswerCount, 3);
+    });
+
+    test('새로 올린 질문이 목록 맨 앞에 붙는다', () async {
+      final FakeMyQuestionsStore store = FakeMyQuestionsStore(<MyQuestionRef>[
+        fakeQuestionRef(questionId: 'old'),
+      ]);
+      final ProviderContainer container = _myQuestionsContainer(
+        FakeSpotQaRepository(
+          questionsByCatalog: const <String, List<SpotQuestion>>{},
+        ),
+        store,
+      );
+      await container.read(myQuestionsControllerProvider.future);
+
+      await container
+          .read(myQuestionsControllerProvider.notifier)
+          .remember(
+            catalogId: 'c9',
+            questionId: 'new',
+            spotTitle: '남산',
+            askedAt: DateTime.utc(2026, 8, 19),
+          );
+
+      expect(store.read().map((MyQuestionRef r) => r.questionId), <String>[
+        'new',
+        'old',
+      ]);
+    });
+
+    test('같은 질문을 두 번 기록해도 하나만 남는다', () async {
+      final FakeMyQuestionsStore store = FakeMyQuestionsStore();
+      final ProviderContainer container = _myQuestionsContainer(
+        FakeSpotQaRepository(
+          questionsByCatalog: const <String, List<SpotQuestion>>{},
+        ),
+        store,
+      );
+      await container.read(myQuestionsControllerProvider.future);
+
+      final MyQuestionsController controller = container.read(
+        myQuestionsControllerProvider.notifier,
+      );
+      for (int i = 0; i < 2; i++) {
+        await controller.remember(
+          catalogId: 'c1',
+          questionId: 'q1',
+          spotTitle: '경복궁',
+          askedAt: DateTime.utc(2026, 8, 19),
+        );
+      }
+
+      expect(store.read(), hasLength(1));
+    });
+
+    test('상한을 넘으면 오래된 기록을 버린다', () async {
+      final FakeMyQuestionsStore store = FakeMyQuestionsStore(<MyQuestionRef>[
+        for (int i = 0; i < myQuestionsLimit; i++)
+          fakeQuestionRef(questionId: 'q$i'),
+      ]);
+      final ProviderContainer container = _myQuestionsContainer(
+        FakeSpotQaRepository(
+          questionsByCatalog: const <String, List<SpotQuestion>>{},
+        ),
+        store,
+      );
+      await container.read(myQuestionsControllerProvider.future);
+
+      await container
+          .read(myQuestionsControllerProvider.notifier)
+          .remember(
+            catalogId: 'c1',
+            questionId: 'newest',
+            spotTitle: '경복궁',
+            askedAt: DateTime.utc(2026, 8, 19),
+          );
+
+      expect(store.read(), hasLength(myQuestionsLimit));
+      expect(store.read().first.questionId, 'newest');
+      expect(
+        store.read().map((MyQuestionRef r) => r.questionId),
+        isNot(contains('q${myQuestionsLimit - 1}')),
+      );
+    });
+
+    test('본 것으로 기록하면 새 답변 배지가 꺼진다', () async {
+      final ProviderContainer container = _myQuestionsContainer(
+        FakeSpotQaRepository(
+          questionsByCatalog: <String, List<SpotQuestion>>{
+            'c1': <SpotQuestion>[fakeQuestion(answerCount: 2)],
+          },
+        ),
+        FakeMyQuestionsStore(<MyQuestionRef>[fakeQuestionRef()]),
+      );
+      final List<MyQuestionItem> before = await container.read(
+        myQuestionsControllerProvider.future,
+      );
+      expect(before.single.hasNewAnswers, isTrue);
+
+      await container
+          .read(myQuestionsControllerProvider.notifier)
+          .markSeen('q1', 2);
+      final List<MyQuestionItem> after = await container.read(
+        myQuestionsControllerProvider.future,
+      );
+
+      expect(after.single.hasNewAnswers, isFalse);
+    });
+
+    test('바뀐 것이 없으면 저장하지 않는다', () async {
+      final FakeMyQuestionsStore store = FakeMyQuestionsStore(<MyQuestionRef>[
+        fakeQuestionRef(seenAnswerCount: 2),
+      ]);
+      final ProviderContainer container = _myQuestionsContainer(
+        FakeSpotQaRepository(
+          questionsByCatalog: const <String, List<SpotQuestion>>{},
+        ),
+        store,
+      );
+      await container.read(myQuestionsControllerProvider.future);
+
+      await container
+          .read(myQuestionsControllerProvider.notifier)
+          .markSeen('q1', 2);
+
+      expect(store.writes, 0);
+    });
+
+    testWidgets('새 답변이 있으면 목록에서 배지가 보인다', (WidgetTester tester) async {
+      final ProviderContainer container = _myQuestionsContainer(
+        FakeSpotQaRepository(
+          questionsByCatalog: <String, List<SpotQuestion>>{
+            'c1': <SpotQuestion>[fakeQuestion(answerCount: 2)],
+          },
+        ),
+        FakeMyQuestionsStore(<MyQuestionRef>[fakeQuestionRef()]),
+      );
+
+      await _pumpMyQuestions(tester, container);
+
+      // 알림이 없어 이 배지가 "답이 달렸다"를 알리는 유일한 신호다.
+      expect(find.text('2 new answers'), findsOneWidget);
+      expect(find.text('지금 사람 많나요?'), findsOneWidget);
+    });
+
+    testWidgets('서버에서 못 찾은 질문도 목록에 남는다', (WidgetTester tester) async {
+      final ProviderContainer container = _myQuestionsContainer(
+        FakeSpotQaRepository(
+          questionsByCatalog: const <String, List<SpotQuestion>>{},
+        ),
+        FakeMyQuestionsStore(<MyQuestionRef>[fakeQuestionRef()]),
+      );
+
+      await _pumpMyQuestions(tester, container);
+
+      expect(find.text('경복궁'), findsOneWidget);
+      expect(
+        find.text(
+          "Couldn't find this question. It may have been deleted or hidden.",
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('기록이 없으면 빈 상태와 로컬 저장 안내를 보여준다', (WidgetTester tester) async {
+      final ProviderContainer container = _myQuestionsContainer(
+        FakeSpotQaRepository(),
+        FakeMyQuestionsStore(),
+      );
+
+      await _pumpMyQuestions(tester, container);
+
+      expect(find.text("You haven't asked anything yet"), findsOneWidget);
+      // 기기를 바꾸면 사라지는 목록임을 숨기지 않는다.
+      expect(
+        find.text('This list is saved on this device only.'),
+        findsOneWidget,
+      );
+    });
+
+    test('못 본 답변이 있는 질문 수를 센다', () async {
+      final ProviderContainer container = _myQuestionsContainer(
+        FakeSpotQaRepository(
+          questionsByCatalog: <String, List<SpotQuestion>>{
+            'c1': <SpotQuestion>[
+              fakeQuestion(id: 'q1', answerCount: 1),
+              fakeQuestion(id: 'q2', answerCount: 0),
+            ],
+          },
+        ),
+        FakeMyQuestionsStore(<MyQuestionRef>[
+          fakeQuestionRef(questionId: 'q1'),
+          fakeQuestionRef(questionId: 'q2'),
+        ]),
+      );
+      await container.read(myQuestionsControllerProvider.future);
+
+      expect(container.read(myQuestionsUnseenCountProvider), 1);
     });
   });
 }

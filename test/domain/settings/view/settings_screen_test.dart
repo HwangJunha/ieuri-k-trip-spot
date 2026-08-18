@@ -59,6 +59,20 @@ void main() {
     expect(find.text('My Posts'), findsOneWidget);
   });
 
+  // 서버에 답변 알림이 없어 사용자가 자기 질문을 되찾아 갈 길이 여기뿐이다.
+  testWidgets('활동 항목에 내 질문 진입점이 있다', (WidgetTester tester) async {
+    await _pump(tester);
+
+    expect(find.text('My questions'), findsOneWidget);
+  });
+
+  // 대화 목록 화면은 있었지만 진입점이 앱 어디에도 없었다.
+  testWidgets('활동 항목에 메시지 진입점이 있다', (WidgetTester tester) async {
+    await _pump(tester);
+
+    expect(find.text('Messages'), findsOneWidget);
+  });
+
   testWidgets('약관 관리 진입점이 있다', (WidgetTester tester) async {
     await _pump(tester);
 

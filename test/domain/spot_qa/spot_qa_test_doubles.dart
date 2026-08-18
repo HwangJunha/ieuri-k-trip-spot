@@ -3,8 +3,10 @@ import 'package:ieuri_k_trip_spot/common/model/post_spot.dart';
 import 'package:ieuri_k_trip_spot/common/pagination/page.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/model/spot_answer.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/model/spot_answer_reply.dart';
+import 'package:ieuri_k_trip_spot/domain/spot_qa/model/my_question_ref.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/model/spot_qa_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/model/spot_question.dart';
+import 'package:ieuri_k_trip_spot/domain/spot_qa/repository/my_questions_store.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/repository/spot_qa_repository.dart';
 
 /// SPEC-0026 테스트 더블. repository는 스텁한다 — 실제 GraphQL 전송을 세우지
@@ -16,11 +18,13 @@ SpotQuestion fakeQuestion({
   bool resolved = false,
   int answerCount = 0,
   bool ownedByViewer = false,
+  String catalogId = 'c1',
+  String spotTitle = '경복궁',
 }) => SpotQuestion(
   id: id,
-  spot: const PostSpot(
-    id: 'c1',
-    title: '경복궁',
+  spot: PostSpot(
+    id: catalogId,
+    title: spotTitle,
     thumbnailImageUrl: 'https://example.com/t.jpg',
   ),
   body: body,
@@ -61,6 +65,8 @@ class FakeSpotQaRepository implements SpotQaRepository {
   FakeSpotQaRepository({
     this.questionPages = const <CursorPage<SpotQuestion>>[],
     this.answerPages = const <CursorPage<SpotAnswer>>[],
+    this.questionsByCatalog,
+    this.failingCatalogs = const <String>{},
     this.questionsError,
     this.answersError,
     this.createResult,
@@ -68,6 +74,16 @@ class FakeSpotQaRepository implements SpotQaRepository {
     this.createThrows,
     this.resolveThrows,
   });
+
+  /// 장소별 질문. 「내 질문」처럼 여러 장소를 조회하는 흐름에서 쓴다. null이면
+  /// [questionPages]로 떨어진다(기존 테스트의 동작).
+  final Map<String, List<SpotQuestion>>? questionsByCatalog;
+
+  /// 조회가 실패하는 장소. 한 장소가 죽어도 나머지가 남는지 보기 위한 것이다.
+  final Set<String> failingCatalogs;
+
+  /// 조회된 장소 id를 순서대로 기록한다 — 같은 장소를 두 번 부르지 않는지 본다.
+  final List<String> fetchedCatalogs = <String>[];
 
   /// 호출 순서대로 돌려줄 질문 페이지. 다 쓰면 마지막 페이지를 반복한다.
   final List<CursorPage<SpotQuestion>> questionPages;
@@ -107,7 +123,18 @@ class FakeSpotQaRepository implements SpotQaRepository {
     String? after,
   }) async {
     if (questionsError != null) throw questionsError!;
+    fetchedCatalogs.add(catalogId);
+    if (failingCatalogs.contains(catalogId)) {
+      throw StateError('catalog $catalogId unavailable');
+    }
     questionCursors.add(after);
+    if (questionsByCatalog != null) {
+      questionFetches++;
+      return CursorPage<SpotQuestion>(
+        items: questionsByCatalog![catalogId] ?? const <SpotQuestion>[],
+        hasNextPage: false,
+      );
+    }
     return _page(questionPages, questionFetches++);
   }
 
@@ -144,11 +171,7 @@ class FakeSpotQaRepository implements SpotQaRepository {
     List<String> photoKeys = const <String>[],
   }) async {
     if (createThrows != null) throw createThrows!;
-    lastCreateAnswer = (
-      targetId: questionId,
-      body: body,
-      photoKeys: photoKeys,
-    );
+    lastCreateAnswer = (targetId: questionId, body: body, photoKeys: photoKeys);
     return createResult ?? const SpotQaMutationResult<String>.success('a-new');
   }
 
@@ -188,3 +211,36 @@ class FakeSpotQaRepository implements SpotQaRepository {
   Future<SpotQaMutationResult<void>> deleteReply(String replyId) async =>
       const SpotQaMutationResult<void>.success(null);
 }
+
+/// 「내 질문」 로컬 기록의 인메모리 구현. SharedPreferences를 세우지 않는다 —
+/// 저장소 인터페이스가 있는 이유가 이 교체다.
+class FakeMyQuestionsStore implements MyQuestionsStore {
+  FakeMyQuestionsStore([List<MyQuestionRef> initial = const <MyQuestionRef>[]])
+    : _refs = List<MyQuestionRef>.of(initial);
+
+  List<MyQuestionRef> _refs;
+
+  int writes = 0;
+
+  @override
+  List<MyQuestionRef> read() => List<MyQuestionRef>.unmodifiable(_refs);
+
+  @override
+  Future<void> write(List<MyQuestionRef> refs) async {
+    writes++;
+    _refs = List<MyQuestionRef>.of(refs);
+  }
+}
+
+MyQuestionRef fakeQuestionRef({
+  String catalogId = 'c1',
+  String questionId = 'q1',
+  String spotTitle = '경복궁',
+  int seenAnswerCount = 0,
+}) => MyQuestionRef(
+  catalogId: catalogId,
+  questionId: questionId,
+  spotTitle: spotTitle,
+  askedAt: DateTime.utc(2026, 8, 18),
+  seenAnswerCount: seenAnswerCount,
+);

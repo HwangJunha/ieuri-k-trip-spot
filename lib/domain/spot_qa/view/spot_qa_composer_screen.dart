@@ -5,6 +5,7 @@ import '../../../common/navigation/spot_qa_routes.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/spot_qa_eligibility_banner.dart';
 import '../model/spot_qa_failure.dart';
+import '../provider/my_questions_providers.dart';
 import '../provider/spot_qa_composer_providers.dart';
 
 /// 질문 작성 화면(R3, 디자인 §3, Stitch `af479788e45e42658cd54ead6f7027ac`).
@@ -24,13 +25,26 @@ import '../provider/spot_qa_composer_providers.dart';
 /// §사진 첨부) — 카메라·갤러리 아이콘도, 사진 그리드도 그리지 않는다.
 ///
 /// 성공하면 `true`를 돌려주고 닫힌다 — 호출한 목록이 그 값으로 재조회한다.
+///
+/// **성공한 질문은 로컬에 기록한다**(`MyQuestionsController.remember`). 서버에
+/// `myQuestions`가 없어 여기서 적어 두지 않으면 사용자가 자기 질문에 달린 답변을
+/// 영영 볼 수 없다 — 「내 질문」 화면의 유일한 출처다.
 class SpotQaComposerScreen extends ConsumerStatefulWidget {
-  const SpotQaComposerScreen({super.key, required this.catalogId});
+  const SpotQaComposerScreen({
+    super.key,
+    required this.catalogId,
+    this.spotTitle = '',
+  });
 
   static String get routeName => spotQaComposerRouteName;
 
   /// 질문을 다는 장소(`/spot/:spotId/qa/compose`의 경로 파라미터).
   final String catalogId;
+
+  /// 「내 질문」 목록에 적어 둘 장소명. **표시용이라 없어도 된다** — 딥링크로 들어와
+  /// 비어 있으면 목록이 서버 조회로 장소명을 채운다. 이 값 때문에 작성이 실패하는
+  /// 일은 없어야 한다.
+  final String spotTitle;
 
   @override
   ConsumerState<SpotQaComposerScreen> createState() =>
@@ -141,6 +155,27 @@ class _SpotQaComposerScreenState extends ConsumerState<SpotQaComposerScreen> {
         );
       }
       return;
+    }
+
+    // **성공한 질문만 로컬에 적는다.** 서버에 `myQuestions`가 없어 이 기록이
+    // 「내 질문」의 유일한 출처다(설계 후속 결정). id가 없으면(계약상 성공이면 항상
+    // 오지만) 적을 것이 없으므로 건너뛴다.
+    //
+    // 기록 실패가 작성 성공을 되돌리게 두지 않는다 — 질문은 이미 서버에 올라갔다.
+    final String? questionId = result.value;
+    if (questionId != null) {
+      try {
+        await ref
+            .read(myQuestionsControllerProvider.notifier)
+            .remember(
+              catalogId: widget.catalogId,
+              questionId: questionId,
+              spotTitle: widget.spotTitle,
+              askedAt: DateTime.now(),
+            );
+      } on Object {
+        // 기록에 실패해도 화면은 성공으로 닫는다. 다음 화면에서 안 보일 뿐이다.
+      }
     }
 
     // 성공만 목록 재조회를 부른다.

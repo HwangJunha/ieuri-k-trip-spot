@@ -1198,5 +1198,13 @@
   "spotQaDmAction": "Send a message",
   "spotQaDmFailed": "Couldn't start the conversation. Please try again.",
   "spotQaOriginCardTitle": "Started from this question",
-  "spotQaAnswerCount": "{count, plural, =0{No answers} =1{1 answer} other{{count} answers}}"
+  "spotQaAnswerCount": "{count, plural, =0{No answers} =1{1 answer} other{{count} answers}}",
+  "spotQaMyQuestionsTitle": "My questions",
+  "spotQaMyQuestionsEntry": "My questions",
+  "spotQaMyQuestionsEmptyTitle": "You haven't asked anything yet",
+  "spotQaMyQuestionsEmptyBody": "Ask about a place from its detail page.",
+  "spotQaMyQuestionsUnavailable": "Couldn't find this question. It may have been deleted or hidden.",
+  "spotQaNewAnswerBadge": "{count, plural, =1{1 new answer} other{{count} new answers}}",
+  "spotQaLocalOnlyNotice": "This list is saved on this device only.",
+  "spotQaDmEntry": "Messages"
 }

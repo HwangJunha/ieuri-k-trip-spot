@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../common/localization/app_language.dart';
 import '../../../common/localization/locale_controller.dart';
+import '../../../common/navigation/dm_routes.dart';
 import '../../../common/navigation/settings_routes.dart';
 import '../../../common/network/media_cdn.dart';
 import '../../../common/storage/app_preferences.dart';
@@ -11,6 +12,9 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/model/auth_state.dart';
 import '../../auth/model/me.dart';
 import '../../auth/provider/auth_controller.dart';
+// 「내 질문」 행은 `spot_qa`가 소유한다 — 못 본 답변 배지가 그 기능의 provider를
+// 보기 때문이다. 설정은 자리만 내준다(설정→auth와 같은 방식의 진입점 의존).
+import '../../spot_qa/component/my_questions_entry_tile.dart';
 import '../component/settings_tile.dart';
 import '../../../common/storage/search_radius_controller.dart';
 import 'account_deletion_screen.dart';
@@ -74,6 +78,17 @@ class SettingsScreen extends ConsumerWidget {
               icon: Icons.article_outlined,
               title: l10n.settingsMyPosts,
               onTap: () => context.pushNamed(MyPostsScreen.routeName),
+            ),
+            // 「내 질문」(SPEC-0026 후속). **답변 알림이 없어서 여기 있다** — 질문을
+            // 올린 사용자가 답을 확인하러 돌아올 길이 앱에 이것뿐이다. 못 본 답변이
+            // 있으면 행에 개수를 달아 목록을 열기 전에도 보이게 한다.
+            const MyQuestionsEntryTile(),
+            // 메시지(DM). 대화 목록 화면은 예전부터 있었으나 **앱 어디에도 진입점이
+            // 없었다** — 질문/답변에서 시작한 대화를 다시 열 자리가 필요하다.
+            SettingsTile(
+              icon: Icons.chat_bubble_outline,
+              title: l10n.spotQaDmEntry,
+              onTap: () => context.pushNamed(conversationsRouteName),
             ),
 
             SettingsSectionHeader(l10n.settingsSectionAccount),

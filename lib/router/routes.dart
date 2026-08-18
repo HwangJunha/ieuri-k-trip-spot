@@ -37,6 +37,7 @@ import '../domain/spot/view/home_screen.dart';
 import '../domain/spot/view/liked_spots_screen.dart';
 import '../domain/spot/view/search_screen.dart';
 import '../domain/spot/view/spot_detail_view.dart';
+import '../domain/spot_qa/view/my_questions_screen.dart';
 import '../domain/spot_qa/view/spot_qa_composer_screen.dart';
 import '../domain/spot_qa/view/spot_question_detail_screen.dart';
 import '../domain/spot_qa/view/spot_questions_screen.dart';
@@ -151,8 +152,13 @@ List<RouteBase> buildRoutes() => <RouteBase>[
   GoRoute(
     path: '/spot/:spotId/qa/compose',
     name: SpotQaComposerScreen.routeName,
-    builder: (_, GoRouterState state) =>
-        SpotQaComposerScreen(catalogId: state.pathParameters['spotId']!),
+    // `spot`은 **표시용 힌트**다(장소 상세의 `thumb`와 같은 성격) — 질문을 올린 뒤
+    // 「내 질문」 목록에 장소명을 적어 두는 데만 쓴다. 없으면(딥링크) 빈 문자열이며,
+    // 그때는 서버 조회가 장소명을 채운다. 작성 자체는 이 값에 의존하지 않는다.
+    builder: (_, GoRouterState state) => SpotQaComposerScreen(
+      catalogId: state.pathParameters['spotId']!,
+      spotTitle: state.uri.queryParameters['spot'] ?? '',
+    ),
   ),
   GoRoute(
     path: '/spot/:spotId/qa',
@@ -271,6 +277,16 @@ List<RouteBase> buildRoutes() => <RouteBase>[
             ConversationScreen(conversationId: state.pathParameters['id']!),
       ),
     ],
+  ),
+  // 「내 질문」(SPEC-0026 후속). **설정의 자식이 아니라 최상위다** — 설정과 장소 상세
+  // 양쪽에서 진입하는데 설정 아래에 두면 장소 상세에서 열었을 때 뒤로 가기가 설정
+  // 홈으로 빠진다(내가 쓴 글과 다른 점이다).
+  //
+  // 인자가 없다 — 목록의 출처가 로컬 기록이라 장소에 종속되지 않는다.
+  GoRoute(
+    path: '/my/questions',
+    name: MyQuestionsScreen.routeName,
+    builder: (_, _) => const MyQuestionsScreen(),
   ),
   // 차단한 사용자 목록(가이드 §6). 커뮤니티 앱바에서 진입하며 셸 밖이라 탭을 덮는다.
   GoRoute(

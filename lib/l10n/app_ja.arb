@@ -821,5 +821,13 @@
   "spotQaDmAction": "メッセージを送る",
   "spotQaDmFailed": "会話を開始できませんでした。しばらくしてからお試しください。",
   "spotQaOriginCardTitle": "この質問から始まった会話",
-  "spotQaAnswerCount": "{count, plural, =0{回答なし} =1{回答1件} other{回答{count}件}}"
+  "spotQaAnswerCount": "{count, plural, =0{回答なし} =1{回答1件} other{回答{count}件}}",
+  "spotQaMyQuestionsTitle": "自分の質問",
+  "spotQaMyQuestionsEntry": "自分の質問",
+  "spotQaMyQuestionsEmptyTitle": "まだ質問がありません",
+  "spotQaMyQuestionsEmptyBody": "場所の詳細から気になることを質問してみましょう。",
+  "spotQaMyQuestionsUnavailable": "この質問が見つかりませんでした。削除または非表示になった可能性があります。",
+  "spotQaNewAnswerBadge": "{count, plural, =1{新しい回答1件} other{新しい回答{count}件}}",
+  "spotQaLocalOnlyNotice": "この一覧はこの端末にのみ保存されます。",
+  "spotQaDmEntry": "メッセージ"
 }

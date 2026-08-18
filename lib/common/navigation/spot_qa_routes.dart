@@ -13,3 +13,9 @@ const String spotQuestionDetailRouteName = 'spotQuestionDetail';
 
 /// 질문 작성.
 const String spotQaComposerRouteName = 'spotQaComposer';
+
+/// 내가 올린 질문 목록(`/my/questions`).
+///
+/// **장소에 종속되지 않는 유일한 spot_qa 화면**이라 경로가 `/spot/:spotId/qa` 아래가
+/// 아니다 — 설정(`domain/settings`)과 장소 상세(`domain/spot`) 양쪽에서 진입한다.
+const String myQuestionsRouteName = 'myQuestions';

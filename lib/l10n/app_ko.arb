@@ -1943,5 +1943,27 @@
         "type": "int"
       }
     }
-  }
+  },
+  "spotQaMyQuestionsTitle": "내 질문",
+  "spotQaMyQuestionsEntry": "내 질문",
+  "spotQaMyQuestionsEmptyTitle": "아직 올린 질문이 없습니다",
+  "spotQaMyQuestionsEmptyBody": "장소 상세에서 궁금한 것을 물어보세요.",
+  "spotQaMyQuestionsUnavailable": "질문을 찾지 못했습니다. 삭제되었거나 가려졌을 수 있습니다.",
+  "@spotQaMyQuestionsUnavailable": {
+    "description": "로컬 기록에는 있으나 서버에서 못 찾은 질문(삭제·숨김·페이지 밖)"
+  },
+  "spotQaNewAnswerBadge": "{count, plural, =1{새 답변 1개} other{새 답변 {count}개}}",
+  "@spotQaNewAnswerBadge": {
+    "description": "내 질문에 못 본 답변이 있을 때의 배지. 서버에 알림이 없어 이것이 유일한 신호다",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "spotQaLocalOnlyNotice": "이 목록은 이 기기에만 저장됩니다.",
+  "@spotQaLocalOnlyNotice": {
+    "description": "서버에 myQuestions가 없어 로컬에만 쌓인다는 안내. 계약이 생기면 이 문구를 지운다"
+  },
+  "spotQaDmEntry": "메시지"
 }
