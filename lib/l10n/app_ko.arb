@@ -1894,5 +1894,54 @@
       }
     }
   },
-  "errorPasswordResetNoAccount": "이 이메일로 가입된 계정이 없습니다. 카카오·구글·애플로 가입하셨다면 해당 방법으로 로그인해 주세요."
+  "errorPasswordResetNoAccount": "이 이메일로 가입된 계정이 없습니다. 카카오·구글·애플로 가입하셨다면 해당 방법으로 로그인해 주세요.",
+  "spotQaEntryAction": "지금 여기 어때?",
+  "@spotQaEntryAction": {
+    "description": "장소 상세의 질문/답변 진입점. 좋아요 자격이 없고 질문도 없으면 숨긴다"
+  },
+  "spotQaQuestionsTitle": "장소 질문",
+  "spotQaQuestionsEmptyTitle": "아직 질문이 없습니다",
+  "spotQaQuestionsEmptyBody": "이 장소에 대해 궁금한 것을 먼저 물어보세요.",
+  "spotQaQuestionsUnavailable": "질문을 불러오지 못했습니다.",
+  "spotQaAnswersUnavailable": "답변을 불러오지 못했습니다.",
+  "spotQaAnswersEmpty": "아직 답변이 없습니다. 이 장소를 아신다면 알려주세요.",
+  "spotQaResolvedLabel": "해결됨",
+  "spotQaUnresolvedLabel": "미해결",
+  "spotQaResolveAction": "해결됨으로 표시",
+  "spotQaResolveFailed": "해결 표시를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  "spotQaAskAction": "질문하기",
+  "spotQaAnswerAction": "답변하기",
+  "spotQaReplyAction": "답글 달기",
+  "spotQaAskTitle": "질문 작성",
+  "spotQaAnswerTitle": "답변 작성",
+  "spotQaReplyTitle": "답글 작성",
+  "spotQaBodyHint": "궁금한 점을 적어 주세요.",
+  "spotQaAnswerBodyHint": "아는 것을 알려주세요.",
+  "spotQaSubmitAction": "올리기",
+  "spotQaSubmitFailed": "올리지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  "spotQaNotEligibleToAsk": "이 장소를 좋아요하면 질문할 수 있습니다.",
+  "@spotQaNotEligibleToAsk": {
+    "description": "NOT_ELIGIBLE_TO_ASK 안내 — 다음 행동을 알려주는 문구여야 한다"
+  },
+  "spotQaNotEligibleToAnswer": "이 장소를 좋아요하면 답변할 수 있습니다.",
+  "@spotQaNotEligibleToAnswer": {
+    "description": "NOT_ELIGIBLE_TO_ANSWER 안내"
+  },
+  "spotQaDeleteAction": "삭제",
+  "spotQaDeleteFailed": "삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  "spotQaDmAction": "메시지 보내기",
+  "spotQaDmFailed": "대화를 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  "spotQaOriginCardTitle": "이 질문에서 시작된 대화",
+  "@spotQaOriginCardTitle": {
+    "description": "DM 상단 맥락 카드. 출처 없는 대화에는 그리지 않는다"
+  },
+  "spotQaAnswerCount": "{count, plural, =0{답변 없음} =1{답변 1개} other{답변 {count}개}}",
+  "@spotQaAnswerCount": {
+    "description": "질문 카드의 답변 수",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

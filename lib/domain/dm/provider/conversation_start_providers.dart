@@ -13,8 +13,7 @@ part 'conversation_start_providers.g.dart';
 /// 대화"라는 간접 지정이 성립하지 않는다. 이미 대화가 있으면 서버가 새로 만들지 않고
 /// 기존 대화를 돌려주므로(AC7-2) 클라이언트가 중복을 확인할 필요가 없다.
 ///
-/// **지금 이것을 부르는 화면이 없다.** 상대를 고르는 화면은 이 스펙의 범위 밖이고
-/// ([TBD-2]) 후속 채팅 스펙이 만든다 — 그때 쓰려고 남겨 둔다.
+/// SPEC-0026의 질문/답변 화면이 첫 호출부다 — 답변·답글 작성자에게 DM을 건다.
 ///
 /// 상태를 들지 않는 한 번짜리 동작이라 notifier가 아니라 함수 provider다 — 화면은
 /// 돌려받은 conversationId로 대화 화면을 열고, null이면 실패를 알린다.
@@ -29,10 +28,21 @@ class ConversationStarter {
 
   final DmRepository _repository;
 
-  Future<String?> start(String counterpartMemberId) async {
+  /// [sourceAnswerId]를 주면 그 답변에서 시작된 대화로 출처가 남는다(SPEC-0026 R13).
+  ///
+  /// **출처를 만들지 못해도 실패가 아니다** — 답변이 이미 삭제됐으면 서버가 출처 없이
+  /// 대화를 연다(AC-13.4). 대화가 열린 것이 본질이므로 화면은 이것을 오류로 다루지
+  /// 않는다.
+  Future<String?> start(
+    String counterpartMemberId, {
+    String? sourceAnswerId,
+  }) async {
     try {
       final DmMutationResult<String> result = await _repository
-          .startConversation(counterpartMemberId);
+          .startConversation(
+            counterpartMemberId,
+            sourceAnswerId: sourceAnswerId,
+          );
       if (!result.succeeded) {
         developer.log(
           'startConversation rejected: ${result.errorCode}',
