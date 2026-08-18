@@ -129,19 +129,17 @@ class FakeDmRepository implements DmRepository {
 
   @override
   Future<DmMutationResult<String>> startConversation(
-    String counterpartMemberId, {
-    String? sourceAnswerId,
-  }) async {
+    String counterpartMemberId,
+  ) async {
     startedMemberIds.add(counterpartMemberId);
-    startedSourceAnswerIds.add(sourceAnswerId);
     return const DmMutationResult<String>.success('c1');
   }
 
   /// `startConversation`에 실린 회원 id들.
   final List<String> startedMemberIds = <String>[];
 
-  /// 함께 실린 출처 답변 id들(SPEC-0026 R13). 일반 DM이면 null이다.
-  final List<String?> startedSourceAnswerIds = <String?>[];
+  /// `sendMessage`에 실린 인용 답변 id들(SPEC-0026). 인용 없이 보내면 null이다.
+  final List<String?> sentSourceAnswerIds = <String?>[];
 
   @override
   Future<CursorPage<Conversation>> fetchConversations({
@@ -167,9 +165,11 @@ class FakeDmRepository implements DmRepository {
     required String conversationId,
     required String body,
     String? photoKey,
+    String? sourceAnswerId,
   }) async {
     sentBodies.add(body);
     sentPhotoKeys.add(photoKey);
+    sentSourceAnswerIds.add(sourceAnswerId);
     final Object? error = sendMessageThrows;
     if (error != null) throw error;
     final String? code = sendErrorCode;

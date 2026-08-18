@@ -1,5 +1,4 @@
 import '../../../common/model/post_author.dart';
-import '../../../common/model/spot_qa_origin.dart';
 import 'message.dart';
 
 /// 1:1 대화 하나(서버 `Conversation`). 그룹 대화는 비범위다.
@@ -12,7 +11,6 @@ class Conversation {
     required this.updatedAt,
     this.lastMessage,
     this.unreadCount = 0,
-    this.spotQaOrigin,
   });
 
   final String id;
@@ -35,13 +33,6 @@ class Conversation {
   /// 정렬 기준. 최근 메시지 시각이며, 메시지가 없으면 대화 생성 시각이다.
   final DateTime updatedAt;
 
-  /// 질문/답변에서 시작된 대화면 그 출처 스냅샷, 일반 DM이면 null(SPEC-0026 R13·R14).
-  ///
-  /// **기존 대화는 전부 null이다.** non-null로 가정하는 코드를 쓰면 지금 있는 대화가
-  /// 전부 깨진다 — 이 필드가 없어도 대화 화면은 지금과 똑같이 동작해야 한다.
-  ///
-  /// 대화 생성 시점에 고정된다. 이후 원본이 삭제되거나 장소명이 바뀌어도 값은 그대로다.
-  final SpotQaOrigin? spotQaOrigin;
 
   Conversation copyWith({
     Message? lastMessage,
@@ -53,8 +44,6 @@ class Conversation {
     updatedAt: updatedAt ?? this.updatedAt,
     lastMessage: lastMessage ?? this.lastMessage,
     unreadCount: unreadCount ?? this.unreadCount,
-    // 출처는 대화 생성 시점에 고정이라 copyWith로 바꾸지 않는다.
-    spotQaOrigin: spotQaOrigin,
   );
 
   @override
@@ -64,16 +53,9 @@ class Conversation {
       other.counterpart == counterpart &&
       other.lastMessage == lastMessage &&
       other.unreadCount == unreadCount &&
-      other.updatedAt == updatedAt &&
-      other.spotQaOrigin == spotQaOrigin;
+      other.updatedAt == updatedAt;
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    counterpart,
-    lastMessage,
-    unreadCount,
-    updatedAt,
-    spotQaOrigin,
-  );
+  int get hashCode =>
+      Object.hash(id, counterpart, lastMessage, unreadCount, updatedAt);
 }

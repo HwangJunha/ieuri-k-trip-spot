@@ -7,8 +7,9 @@ fragment DmAuthorParts on PostAuthor {
   profileImageUrl
 }
 
-# 인용 필드가 없다(SPEC-0021 R4) — 피드가 사라지면서 서버가 걷어냈다. 본문도 사진도
-# 없이 내려오는 과거 메시지가 생기므로 표시 계층이 "내용 없음"을 그린다.
+# 피드 인용은 SPEC-0021에서 걷혔고, SPEC-0026이 **질문/답변 인용**을 메시지 단위로
+# 다시 들여왔다. 본문도 사진도 인용도 없이 내려오는 과거 메시지가 있으므로 표시 계층이
+# "내용 없음"을 그린다.
 fragment MessageParts on Message {
   id
   body
@@ -18,6 +19,19 @@ fragment MessageParts on Message {
   }
   ownedByViewer
   createdAt
+  # 이 메시지가 인용한 질문/답변(SPEC-0026). **대화가 아니라 메시지에 붙는다**
+  # (2026-08-18 서버 변경) — 한 대화에서 몇 번이든 다른 질문을 인용할 수 있다.
+  #
+  # 인용 없이 보낸 메시지는 null이고, 인용을 만들지 못한 경우(답변 삭제 등)도
+  # null이다 — 서버가 거절하지 않고 조용히 일반 메시지로 보낸다.
+  spotQaOrigin {
+    catalogId
+    spotTitle
+    questionId
+    questionBodySnapshot
+    answerId
+    answerBodySnapshot
+  }
 }
 
 fragment ConversationParts on Conversation {
@@ -30,16 +44,6 @@ fragment ConversationParts on Conversation {
   }
   unreadCount
   updatedAt
-  # SPEC-0026 R13·R14. **기존 대화는 전부 null이다** — 이 필드가 없어도 대화 화면은
-  # 지금과 똑같이 동작해야 한다. 원본이 삭제돼도 값이 남도록 서버가 스냅샷을 복사해 둔다.
-  spotQaOrigin {
-    catalogId
-    spotTitle
-    questionId
-    questionBodySnapshot
-    answerId
-    answerBodySnapshot
-  }
 }
 
 query Conversations($first: Int, $after: String) {
@@ -78,16 +82,10 @@ query ConversationMessages($conversationId: ID!, $first: Int, $after: String) {
 }
 
 # 회원을 직접 지정한다(SPEC-0021 R11) — 피드 항목을 거치던 간접 지정이 사라졌다.
-# `sourceAnswerId`는 **선택이다**(SPEC-0026 R13). 주면 출처 스냅샷이 대화에 남고,
-# 생략하면 지금까지의 일반 DM 시작과 똑같이 동작한다. 가리키는 답변이 이미 삭제됐으면
-# 서버가 무시하고 출처 없이 대화를 연다 — 오류가 아니다(AC-13.4).
-mutation StartConversation($counterpartMemberId: ID!, $sourceAnswerId: ID) {
-  startConversation(
-    input: {
-      counterpartMemberId: $counterpartMemberId
-      sourceAnswerId: $sourceAnswerId
-    }
-  ) {
+# **인용 인자가 빠졌다**(2026-08-18). 대화를 여는 것과 인용을 붙이는 것이 분리돼,
+# 인용은 `SendMessage`가 받는다.
+mutation StartConversation($counterpartMemberId: ID!) {
+  startConversation(input: { counterpartMemberId: $counterpartMemberId }) {
     success
     userErrors {
       code
@@ -98,12 +96,20 @@ mutation StartConversation($counterpartMemberId: ID!, $sourceAnswerId: ID) {
   }
 }
 
-mutation SendMessage($conversationId: ID!, $body: String!, $photoKey: String) {
+# `sourceAnswerId`를 주면 그 질문/답변 스냅샷이 **이 메시지에** 남는다(SPEC-0026).
+# 본문 없이 인용만 보낼 수 있다(`body: ""`).
+mutation SendMessage(
+  $conversationId: ID!
+  $body: String!
+  $photoKey: String
+  $sourceAnswerId: ID
+) {
   sendMessage(
     input: {
       conversationId: $conversationId
       body: $body
       photoKey: $photoKey
+      sourceAnswerId: $sourceAnswerId
     }
   ) {
     success

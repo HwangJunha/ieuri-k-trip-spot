@@ -28,21 +28,12 @@ class ConversationStarter {
 
   final DmRepository _repository;
 
-  /// [sourceAnswerId]를 주면 그 답변에서 시작된 대화로 출처가 남는다(SPEC-0026 R13).
-  ///
-  /// **출처를 만들지 못해도 실패가 아니다** — 답변이 이미 삭제됐으면 서버가 출처 없이
-  /// 대화를 연다(AC-13.4). 대화가 열린 것이 본질이므로 화면은 이것을 오류로 다루지
-  /// 않는다.
-  Future<String?> start(
-    String counterpartMemberId, {
-    String? sourceAnswerId,
-  }) async {
+  /// **인용을 받지 않는다**(2026-08-18 서버가 옮겼다). 대화를 여는 것과 인용을 붙이는
+  /// 것이 분리돼, 인용은 첫 메시지를 보낼 때 실린다.
+  Future<String?> start(String counterpartMemberId) async {
     try {
       final DmMutationResult<String> result = await _repository
-          .startConversation(
-            counterpartMemberId,
-            sourceAnswerId: sourceAnswerId,
-          );
+          .startConversation(counterpartMemberId);
       if (!result.succeeded) {
         developer.log(
           'startConversation rejected: ${result.errorCode}',

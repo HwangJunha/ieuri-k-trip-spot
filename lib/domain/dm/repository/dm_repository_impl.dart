@@ -158,13 +158,11 @@ class DmRepositoryImpl implements DmRepository {
 
   @override
   Future<DmMutationResult<String>> startConversation(
-    String counterpartMemberId, {
-    String? sourceAnswerId,
-  }) => _mutateResult(
+    String counterpartMemberId,
+  ) => _mutateResult(
         documentNodeMutationStartConversation,
         Variables$Mutation$StartConversation(
           counterpartMemberId: counterpartMemberId,
-          sourceAnswerId: sourceAnswerId,
         ).toJson(),
         'startConversation',
         (Map<String, dynamic> data) {
@@ -231,14 +229,16 @@ class DmRepositoryImpl implements DmRepository {
     required String conversationId,
     required String body,
     String? photoKey,
+    String? sourceAnswerId,
   }) => _mutateResult(
     documentNodeMutationSendMessage,
     Variables$Mutation$SendMessage(
       conversationId: conversationId,
-      // `body`는 non-null이다 — 사진만 보낼 때도 빈 문자열이 실린다. 생략하면
+      // `body`는 non-null이다 — 사진·인용만 보낼 때도 빈 문자열이 실린다. 생략하면
       // GraphQL 검증 단계에서 실패한다.
       body: body,
       photoKey: photoKey,
+      sourceAnswerId: sourceAnswerId,
     ).toJson(),
     'sendMessage',
     (Map<String, dynamic> data) {
@@ -389,6 +389,7 @@ class DmRepositoryImpl implements DmRepository {
     createdAt: _parseTime(node.createdAt),
     ownedByViewer: node.ownedByViewer,
     photoKey: node.photoKey,
+    spotQaOrigin: _spotQaOrigin(node.spotQaOrigin),
   );
 
   Conversation _conversation(Fragment$ConversationParts node) => Conversation(
@@ -397,13 +398,13 @@ class DmRepositoryImpl implements DmRepository {
     lastMessage: node.lastMessage == null ? null : _message(node.lastMessage!),
     unreadCount: node.unreadCount,
     updatedAt: _parseTime(node.updatedAt),
-    spotQaOrigin: _spotQaOrigin(node.spotQaOrigin),
   );
 
-  /// 출처 스냅샷(SPEC-0026 R14). **없는 것이 정상이다** — 기존 대화와 일반 DM은 전부
-  /// null이며, 그 경우 대화 화면은 맥락 카드 없이 지금과 같이 표시한다.
+  /// 메시지가 인용한 질문/답변(SPEC-0026). **없는 것이 정상이다** — 인용 없이 보낸
+  /// 메시지가 대부분이고, 인용을 만들지 못한 경우(답변 삭제 등)도 서버가 거절 대신
+  /// null로 답한다.
   SpotQaOrigin? _spotQaOrigin(
-    Fragment$ConversationParts$spotQaOrigin? origin,
+    Fragment$MessageParts$spotQaOrigin? origin,
   ) => origin == null
       ? null
       : SpotQaOrigin(

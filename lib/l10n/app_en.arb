@@ -1195,7 +1195,7 @@
   "spotQaDeleteFailed": "Couldn't delete it. Please try again.",
   "spotQaDmAction": "Send a message",
   "spotQaDmFailed": "Couldn't start the conversation. Please try again.",
-  "spotQaOriginCardTitle": "This chat started from this question",
+  "spotQaOriginCardTitle": "Quoted question",
   "spotQaAnswerCount": "{count, plural, =0{No answers} =1{1 answer} other{{count} answers}}",
   "spotQaMyQuestionsTitle": "My questions",
   "spotQaMyQuestionsEntry": "My questions",
@@ -1220,6 +1220,5 @@
   "spotQaMyQuestionsSignInBody": "Sign in to see the questions you've asked and their answers.",
   "spotQaPhotoUploadFailed": "{count, plural, =1{Couldn't upload 1 photo.} other{Couldn't upload {count} photos.}}",
   "spotQaUnresolveAction": "Unresolve",
-  "spotQaUnresolveFailed": "Couldn't undo it. Please try again.",
-  "spotQaDmPrefill": "I'm asking about your answer on '{spot}'. "
+  "spotQaUnresolveFailed": "Couldn't undo it. Please try again."
 }

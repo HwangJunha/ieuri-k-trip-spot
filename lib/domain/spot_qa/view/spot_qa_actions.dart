@@ -1,3 +1,7 @@
+import 'dart:async';
+import '../../../common/model/post_author.dart';
+import '../../dm/provider/conversation_providers.dart';
+import '../../dm/provider/viewer_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -55,45 +59,56 @@ Future<void> runSpotQaReport(
 
 /// 답변·답글 작성자에게 DM을 연다(R13).
 ///
-/// [sourceAnswerId]는 **답변의 id**다 — 답글에서 시작해도 출처는 그 답글이 달린
-/// 답변이며(계약이 답변만 출처로 받는다), 그래야 대화 화면의 맥락 카드가 질문·답변
-/// 스냅샷을 갖춘다.
+/// [sourceAnswerId]는 **답변의 id**다 — 답글에서 시작해도 인용은 그 답글이 달린
+/// 답변이다(계약이 답변만 인용 대상으로 받는다).
 ///
-/// **출처를 만들지 못해도 실패가 아니다**(AC-13.4) — 답변이 이미 삭제됐으면 서버가
-/// 출처 없이 대화를 연다. 대화가 열린 것이 본질이라 화면은 이것을 오류로 다루지 않는다.
+/// **대화를 연 뒤 인용을 첫 메시지로 보낸다**(2026-08-18 서버 변경). 예전에는 대화를
+/// 열 때 인용을 붙였는데, 그러면 대화당 하나뿐이라 나중에 다른 질문에서 말을 걸어도
+/// 첫 인용이 계속 남아 화면이 거짓말을 했다. 이제 인용이 메시지에 붙어 **몇 번이든,
+/// 서로 다른 질문을 인용할 수 있고 앞선 인용은 그대로 보존된다.**
+///
+/// **본문 없이 인용만 보낸다**(`body: ''`). 사용자가 아직 할 말을 쓰지 않았는데 문장을
+/// 지어 보내는 것은 월권이다 — 인용만 먼저 놓고 무슨 말을 할지는 사용자가 정한다.
+///
+/// **인용을 만들지 못해도 실패가 아니다** — 답변이 삭제됐거나 작성자가 대화 상대가
+/// 아니면 서버가 조용히 무시하고 일반 메시지로 보낸다. 대화가 열린 것이 본질이다.
 Future<void> runSpotQaDirectMessage(
   BuildContext context,
   WidgetRef ref, {
   required String counterpartMemberId,
   required String sourceAnswerId,
-  required String questionId,
-  required String spotTitle,
 }) async {
   final AppLocalizations l10n = AppLocalizations.of(context);
   final String? conversationId = await ref
       .read(conversationStarterProvider)
-      .start(counterpartMemberId, sourceAnswerId: sourceAnswerId);
+      .start(counterpartMemberId);
   if (!context.mounted) return;
 
   if (conversationId == null) {
     _toast(context, l10n.spotQaDmFailed);
     return;
   }
-  // **어느 질문에서 들어왔는지 대화 화면에 넘긴다.**
+
+  // 인용 메시지를 보낸다. **화면으로 이동하기 전에 건다** — 낙관적 말풍선이 이미
+  // 목록에 있어야 대화가 열리는 순간 인용이 보인다.
   //
-  // 대화는 상대별로 하나인데 서버가 남기는 출처는 최초 하나뿐이라(AC-13.3 — 기존
-  // 대화의 출처는 바뀌지 않는다), 두 번째로 다른 질문에서 들어오면 상단 카드가 계속
-  // 첫 질문을 가리킨다. 그 어긋남을 화면이 알아채려면 "지금 들어온 질문"을 알아야 한다.
-  //
-  // 쿼리 파라미터로 넘기는 이유는 **표시용 힌트**이기 때문이다(장소 상세의 `thumb`과
-  // 같은 성격) — 없어도 대화는 정상이고, 프리필만 안 채워진다.
+  // 발신자 정보가 없으면(비로그인) 보내지 않는다. 여기까지 온 이상 드문 경우이며,
+  // 그때는 대화만 열리고 사용자가 직접 말을 건다.
+  final PostAuthor? me = ref.read(viewerAuthorProvider);
+  if (me != null) {
+    // 낙관적 스냅샷을 만들지 않는다 — 스냅샷의 출처는 서버이고, 여기서 지어내면
+    // 서버가 인용을 만들지 못했을 때(답변 삭제) 없는 인용이 잠깐 보인다.
+    // 서버 응답이 오면 그때 인용이 붙는다.
+    unawaited(
+      ref
+          .read(conversationControllerProvider(conversationId).notifier)
+          .send(me: me, sourceAnswerId: sourceAnswerId),
+    );
+  }
+
   context.pushNamed(
     ConversationScreen.routeName,
     pathParameters: <String, String>{'id': conversationId},
-    queryParameters: <String, String>{
-      'fromQuestion': questionId,
-      'fromSpot': spotTitle,
-    },
   );
 }
 

@@ -41,18 +41,9 @@ abstract interface class DmRepository {
   /// 이 경계의 인자명도 그대로 따른다. 이미 대화가 있으면 새로 만들지 않고 기존
   /// 대화를 돌려준다(AC7-2).
   ///
-  /// [sourceAnswerId]를 주면 그 답변에서 시작된 대화로 출처 스냅샷이 남는다
-  /// (SPEC-0026 R13). 생략하면 지금까지의 일반 DM 시작과 똑같다 — 기존 호출부를
-  /// 깨지 않는다.
-  ///
-  /// **이미 대화가 있으면 출처를 소급해 붙이지 않는다.** 기존 대화를 그대로 돌려주며,
-  /// 최초 시작 시점의 맥락만 남긴다. 가리키는 답변이 이미 삭제됐으면 서버가 이 값을
-  /// 무시하고 출처 없이 대화를 연다 — **오류로 다루지 않는다**(AC-13.4). 대화는
-  /// 정상적으로 열린 것이다.
-  Future<DmMutationResult<String>> startConversation(
-    String counterpartMemberId, {
-    String? sourceAnswerId,
-  });
+  /// **인용 인자를 받지 않는다**(2026-08-18 서버가 옮겼다). 대화를 여는 것과 인용을
+  /// 붙이는 것이 분리됐고, 인용은 [sendMessage]가 받는다.
+  Future<DmMutationResult<String>> startConversation(String counterpartMemberId);
 
   /// 내가 참여한 대화 목록. 최근 활동순이다.
   Future<CursorPage<Conversation>> fetchConversations({
@@ -70,15 +61,26 @@ abstract interface class DmRepository {
 
   /// 메시지 전송(R9).
   ///
-  /// **[body]는 non-null이라 사진만 보낼 때도 빈 문자열을 넘긴다** — 생략하면
-  /// GraphQL 검증에서 실패한다. 다만 [body]와 [photoKey]가 **둘 다** 비면 서버가
-  /// 거부한다.
+  /// **[body]는 non-null이라 사진·인용만 보낼 때도 빈 문자열을 넘긴다** — 생략하면
+  /// GraphQL 검증에서 실패한다. 다만 [body]·[photoKey]·[sourceAnswerId]가 **모두**
+  /// 비면 서버가 거부한다.
   ///
   /// [photoKey]는 `confirmImageUploads`가 확정한 키다 — DM 전용 업로드 경로는 없다.
+  ///
+  /// [sourceAnswerId]를 주면 그 질문/답변 스냅샷이 **이 메시지에** 남는다
+  /// (SPEC-0026). 한 대화에서 몇 번이든, 서로 다른 질문을 인용할 수 있고 앞선 인용은
+  /// 덮이지 않는다.
+  ///
+  /// **인용을 만들지 못해도 메시지는 간다** — 답변이 삭제됐거나 작성자가 대화 상대가
+  /// 아니면 서버가 조용히 무시하고 일반 메시지로 보낸다. 거절이 아니므로 호출부는
+  /// `Message.spotQaOrigin`이 null인 경우를 처리해야 한다.
+  ///
+  /// 본문 없이 인용만 보낼 수 있다(`body: ''`).
   Future<DmMutationResult<String>> sendMessage({
     required String conversationId,
     required String body,
     String? photoKey,
+    String? sourceAnswerId,
   });
 
   /// 대화를 읽음 처리한다.

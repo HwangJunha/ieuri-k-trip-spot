@@ -13,6 +13,7 @@ import '../repository/dm_repository.dart';
 import '../repository/message_cache_store.dart';
 import 'dm_providers.dart';
 import 'typing_providers.dart';
+import '../../../common/model/spot_qa_origin.dart';
 
 part 'conversation_providers.g.dart';
 
@@ -296,15 +297,21 @@ class ConversationController extends _$ConversationController {
   /// 조용히 사라지지 않는다.
   /// [photoKey]는 확정된 키여야 한다.
   ///
-  /// **본문과 사진이 둘 다 비면 보내지 않는다** — 서버가 거부할 요청이다. 반대로
-  /// 사진만 보내는 것은 정상이며, 그때 본문은 빈 문자열로 나간다.
+  /// **본문·사진·인용이 모두 비면 보내지 않는다** — 서버가 거부할 요청이다. 반대로
+  /// 사진만, 또는 인용만 보내는 것은 정상이며 그때 본문은 빈 문자열로 나간다.
+  ///
+  /// [sourceAnswerId]를 주면 그 질문/답변 스냅샷이 **이 메시지에** 남는다(SPEC-0026).
+  /// 서버가 인용을 만들지 못해도(답변 삭제 등) 거절하지 않고 일반 메시지로 보낸다 —
+  /// 그때 돌아오는 메시지의 `spotQaOrigin`은 null이다.
   Future<void> send({
     required PostAuthor me,
     String body = '',
     String? photoKey,
+    String? sourceAnswerId,
+    SpotQaOrigin? optimisticOrigin,
   }) async {
     final String trimmed = body.trim();
-    if (trimmed.isEmpty && photoKey == null) return;
+    if (trimmed.isEmpty && photoKey == null && sourceAnswerId == null) return;
 
     final String localId =
         'local-${ref.read(typingClockProvider)().microsecondsSinceEpoch}';
@@ -317,10 +324,13 @@ class ConversationController extends _$ConversationController {
       photoKey: photoKey,
       status: MessageDeliveryStatus.sending,
       localId: true,
+      // 낙관적 말풍선에도 인용을 실어 **보내는 즉시 보이게** 한다. 서버 응답이
+      // 오면 그쪽 스냅샷으로 대체되며, 인용이 만들어지지 않았다면 null로 바뀐다.
+      spotQaOrigin: optimisticOrigin,
     );
 
     _insert(pending);
-    await _deliver(pending);
+    await _deliver(pending, sourceAnswerId: sourceAnswerId);
   }
 
   /// 실패한 메시지를 다시 보낸다.
@@ -347,13 +357,19 @@ class ConversationController extends _$ConversationController {
   }
 
   /// 전송을 시도하고 결과에 따라 말풍선 상태를 옮긴다.
-  Future<void> _deliver(Message pending) async {
+  /// [sourceAnswerId]를 별도로 받는 이유: 낙관 말풍선에는 스냅샷을 지어 넣지 않기
+  /// 때문이다(스냅샷의 출처는 서버다). 그 값이 없으면 인용 id도 사라져 서버에 인용이
+  /// 전달되지 않는다 — 실제로 그렇게 새어 나갔다.
+  Future<void> _deliver(Message pending, {String? sourceAnswerId}) async {
     try {
       final DmMutationResult<String> result = await _repository.sendMessage(
         conversationId: conversationId,
-        // 사진만 보낼 때도 빈 문자열이 실린다 — non-null이라 생략할 수 없다.
+        // 사진·인용만 보낼 때도 빈 문자열이 실린다 — non-null이라 생략할 수 없다.
         body: pending.body,
         photoKey: pending.photoKey,
+        // 재전송에서도 같은 질문을 가리킨다 — 서버가 준 스냅샷이 이미 붙어 있으면
+        // 그쪽에서, 아니면 처음 넘겨받은 id에서 온다.
+        sourceAnswerId: sourceAnswerId ?? pending.spotQaOrigin?.answerId,
       );
       if (!result.succeeded) {
         developer.log(

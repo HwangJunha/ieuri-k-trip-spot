@@ -170,6 +170,7 @@ class Fragment$MessageParts {
     required this.sender,
     required this.ownedByViewer,
     required this.createdAt,
+    this.spotQaOrigin,
   });
 
   factory Fragment$MessageParts.fromJson(Map<String, dynamic> json) {
@@ -179,6 +180,7 @@ class Fragment$MessageParts {
     final l$sender = json['sender'];
     final l$ownedByViewer = json['ownedByViewer'];
     final l$createdAt = json['createdAt'];
+    final l$spotQaOrigin = json['spotQaOrigin'];
     return Fragment$MessageParts(
       id: (l$id as String),
       body: (l$body as String),
@@ -188,6 +190,11 @@ class Fragment$MessageParts {
       ),
       ownedByViewer: (l$ownedByViewer as bool),
       createdAt: (l$createdAt as String),
+      spotQaOrigin: l$spotQaOrigin == null
+          ? null
+          : Fragment$MessageParts$spotQaOrigin.fromJson(
+              (l$spotQaOrigin as Map<String, dynamic>),
+            ),
     );
   }
 
@@ -203,6 +210,8 @@ class Fragment$MessageParts {
 
   final String createdAt;
 
+  final Fragment$MessageParts$spotQaOrigin? spotQaOrigin;
+
   Map<String, dynamic> toJson() {
     final _resultData = <String, dynamic>{};
     final l$id = id;
@@ -217,6 +226,8 @@ class Fragment$MessageParts {
     _resultData['ownedByViewer'] = l$ownedByViewer;
     final l$createdAt = createdAt;
     _resultData['createdAt'] = l$createdAt;
+    final l$spotQaOrigin = spotQaOrigin;
+    _resultData['spotQaOrigin'] = l$spotQaOrigin?.toJson();
     return _resultData;
   }
 
@@ -228,6 +239,7 @@ class Fragment$MessageParts {
     final l$sender = sender;
     final l$ownedByViewer = ownedByViewer;
     final l$createdAt = createdAt;
+    final l$spotQaOrigin = spotQaOrigin;
     return Object.hashAll([
       l$id,
       l$body,
@@ -235,6 +247,7 @@ class Fragment$MessageParts {
       l$sender,
       l$ownedByViewer,
       l$createdAt,
+      l$spotQaOrigin,
     ]);
   }
 
@@ -276,6 +289,11 @@ class Fragment$MessageParts {
     if (l$createdAt != lOther$createdAt) {
       return false;
     }
+    final l$spotQaOrigin = spotQaOrigin;
+    final lOther$spotQaOrigin = other.spotQaOrigin;
+    if (l$spotQaOrigin != lOther$spotQaOrigin) {
+      return false;
+    }
     return true;
   }
 }
@@ -301,8 +319,10 @@ abstract class CopyWith$Fragment$MessageParts<TRes> {
     Fragment$DmAuthorParts? sender,
     bool? ownedByViewer,
     String? createdAt,
+    Fragment$MessageParts$spotQaOrigin? spotQaOrigin,
   });
   CopyWith$Fragment$DmAuthorParts<TRes> get sender;
+  CopyWith$Fragment$MessageParts$spotQaOrigin<TRes> get spotQaOrigin;
 }
 
 class _CopyWithImpl$Fragment$MessageParts<TRes>
@@ -322,6 +342,7 @@ class _CopyWithImpl$Fragment$MessageParts<TRes>
     Object? sender = _undefined,
     Object? ownedByViewer = _undefined,
     Object? createdAt = _undefined,
+    Object? spotQaOrigin = _undefined,
   }) => _then(
     Fragment$MessageParts(
       id: id == _undefined || id == null ? _instance.id : (id as String),
@@ -340,6 +361,9 @@ class _CopyWithImpl$Fragment$MessageParts<TRes>
       createdAt: createdAt == _undefined || createdAt == null
           ? _instance.createdAt
           : (createdAt as String),
+      spotQaOrigin: spotQaOrigin == _undefined
+          ? _instance.spotQaOrigin
+          : (spotQaOrigin as Fragment$MessageParts$spotQaOrigin?),
     ),
   );
 
@@ -349,6 +373,16 @@ class _CopyWithImpl$Fragment$MessageParts<TRes>
       local$sender,
       (e) => call(sender: e),
     );
+  }
+
+  CopyWith$Fragment$MessageParts$spotQaOrigin<TRes> get spotQaOrigin {
+    final local$spotQaOrigin = _instance.spotQaOrigin;
+    return local$spotQaOrigin == null
+        ? CopyWith$Fragment$MessageParts$spotQaOrigin.stub(_then(_instance))
+        : CopyWith$Fragment$MessageParts$spotQaOrigin(
+            local$spotQaOrigin,
+            (e) => call(spotQaOrigin: e),
+          );
   }
 }
 
@@ -365,10 +399,14 @@ class _CopyWithStubImpl$Fragment$MessageParts<TRes>
     Fragment$DmAuthorParts? sender,
     bool? ownedByViewer,
     String? createdAt,
+    Fragment$MessageParts$spotQaOrigin? spotQaOrigin,
   }) => _res;
 
   CopyWith$Fragment$DmAuthorParts<TRes> get sender =>
       CopyWith$Fragment$DmAuthorParts.stub(_res);
+
+  CopyWith$Fragment$MessageParts$spotQaOrigin<TRes> get spotQaOrigin =>
+      CopyWith$Fragment$MessageParts$spotQaOrigin.stub(_res);
 }
 
 const fragmentDefinitionMessageParts = FragmentDefinitionNode(
@@ -423,322 +461,6 @@ const fragmentDefinitionMessageParts = FragmentDefinitionNode(
       ),
       FieldNode(
         name: NameNode(value: 'createdAt'),
-        alias: null,
-        arguments: [],
-        directives: [],
-        selectionSet: null,
-      ),
-    ],
-  ),
-);
-const documentNodeFragmentMessageParts = DocumentNode(
-  definitions: [
-    fragmentDefinitionMessageParts,
-    fragmentDefinitionDmAuthorParts,
-  ],
-);
-
-class Fragment$ConversationParts {
-  Fragment$ConversationParts({
-    required this.id,
-    required this.counterpart,
-    this.lastMessage,
-    required this.unreadCount,
-    required this.updatedAt,
-    this.spotQaOrigin,
-  });
-
-  factory Fragment$ConversationParts.fromJson(Map<String, dynamic> json) {
-    final l$id = json['id'];
-    final l$counterpart = json['counterpart'];
-    final l$lastMessage = json['lastMessage'];
-    final l$unreadCount = json['unreadCount'];
-    final l$updatedAt = json['updatedAt'];
-    final l$spotQaOrigin = json['spotQaOrigin'];
-    return Fragment$ConversationParts(
-      id: (l$id as String),
-      counterpart: Fragment$DmAuthorParts.fromJson(
-        (l$counterpart as Map<String, dynamic>),
-      ),
-      lastMessage: l$lastMessage == null
-          ? null
-          : Fragment$MessageParts.fromJson(
-              (l$lastMessage as Map<String, dynamic>),
-            ),
-      unreadCount: (l$unreadCount as int),
-      updatedAt: (l$updatedAt as String),
-      spotQaOrigin: l$spotQaOrigin == null
-          ? null
-          : Fragment$ConversationParts$spotQaOrigin.fromJson(
-              (l$spotQaOrigin as Map<String, dynamic>),
-            ),
-    );
-  }
-
-  final String id;
-
-  final Fragment$DmAuthorParts counterpart;
-
-  final Fragment$MessageParts? lastMessage;
-
-  final int unreadCount;
-
-  final String updatedAt;
-
-  final Fragment$ConversationParts$spotQaOrigin? spotQaOrigin;
-
-  Map<String, dynamic> toJson() {
-    final _resultData = <String, dynamic>{};
-    final l$id = id;
-    _resultData['id'] = l$id;
-    final l$counterpart = counterpart;
-    _resultData['counterpart'] = l$counterpart.toJson();
-    final l$lastMessage = lastMessage;
-    _resultData['lastMessage'] = l$lastMessage?.toJson();
-    final l$unreadCount = unreadCount;
-    _resultData['unreadCount'] = l$unreadCount;
-    final l$updatedAt = updatedAt;
-    _resultData['updatedAt'] = l$updatedAt;
-    final l$spotQaOrigin = spotQaOrigin;
-    _resultData['spotQaOrigin'] = l$spotQaOrigin?.toJson();
-    return _resultData;
-  }
-
-  @override
-  int get hashCode {
-    final l$id = id;
-    final l$counterpart = counterpart;
-    final l$lastMessage = lastMessage;
-    final l$unreadCount = unreadCount;
-    final l$updatedAt = updatedAt;
-    final l$spotQaOrigin = spotQaOrigin;
-    return Object.hashAll([
-      l$id,
-      l$counterpart,
-      l$lastMessage,
-      l$unreadCount,
-      l$updatedAt,
-      l$spotQaOrigin,
-    ]);
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) {
-      return true;
-    }
-    if (other is! Fragment$ConversationParts ||
-        runtimeType != other.runtimeType) {
-      return false;
-    }
-    final l$id = id;
-    final lOther$id = other.id;
-    if (l$id != lOther$id) {
-      return false;
-    }
-    final l$counterpart = counterpart;
-    final lOther$counterpart = other.counterpart;
-    if (l$counterpart != lOther$counterpart) {
-      return false;
-    }
-    final l$lastMessage = lastMessage;
-    final lOther$lastMessage = other.lastMessage;
-    if (l$lastMessage != lOther$lastMessage) {
-      return false;
-    }
-    final l$unreadCount = unreadCount;
-    final lOther$unreadCount = other.unreadCount;
-    if (l$unreadCount != lOther$unreadCount) {
-      return false;
-    }
-    final l$updatedAt = updatedAt;
-    final lOther$updatedAt = other.updatedAt;
-    if (l$updatedAt != lOther$updatedAt) {
-      return false;
-    }
-    final l$spotQaOrigin = spotQaOrigin;
-    final lOther$spotQaOrigin = other.spotQaOrigin;
-    if (l$spotQaOrigin != lOther$spotQaOrigin) {
-      return false;
-    }
-    return true;
-  }
-}
-
-extension UtilityExtension$Fragment$ConversationParts
-    on Fragment$ConversationParts {
-  CopyWith$Fragment$ConversationParts<Fragment$ConversationParts>
-  get copyWith => CopyWith$Fragment$ConversationParts(this, (i) => i);
-}
-
-abstract class CopyWith$Fragment$ConversationParts<TRes> {
-  factory CopyWith$Fragment$ConversationParts(
-    Fragment$ConversationParts instance,
-    TRes Function(Fragment$ConversationParts) then,
-  ) = _CopyWithImpl$Fragment$ConversationParts;
-
-  factory CopyWith$Fragment$ConversationParts.stub(TRes res) =
-      _CopyWithStubImpl$Fragment$ConversationParts;
-
-  TRes call({
-    String? id,
-    Fragment$DmAuthorParts? counterpart,
-    Fragment$MessageParts? lastMessage,
-    int? unreadCount,
-    String? updatedAt,
-    Fragment$ConversationParts$spotQaOrigin? spotQaOrigin,
-  });
-  CopyWith$Fragment$DmAuthorParts<TRes> get counterpart;
-  CopyWith$Fragment$MessageParts<TRes> get lastMessage;
-  CopyWith$Fragment$ConversationParts$spotQaOrigin<TRes> get spotQaOrigin;
-}
-
-class _CopyWithImpl$Fragment$ConversationParts<TRes>
-    implements CopyWith$Fragment$ConversationParts<TRes> {
-  _CopyWithImpl$Fragment$ConversationParts(this._instance, this._then);
-
-  final Fragment$ConversationParts _instance;
-
-  final TRes Function(Fragment$ConversationParts) _then;
-
-  static const _undefined = <dynamic, dynamic>{};
-
-  TRes call({
-    Object? id = _undefined,
-    Object? counterpart = _undefined,
-    Object? lastMessage = _undefined,
-    Object? unreadCount = _undefined,
-    Object? updatedAt = _undefined,
-    Object? spotQaOrigin = _undefined,
-  }) => _then(
-    Fragment$ConversationParts(
-      id: id == _undefined || id == null ? _instance.id : (id as String),
-      counterpart: counterpart == _undefined || counterpart == null
-          ? _instance.counterpart
-          : (counterpart as Fragment$DmAuthorParts),
-      lastMessage: lastMessage == _undefined
-          ? _instance.lastMessage
-          : (lastMessage as Fragment$MessageParts?),
-      unreadCount: unreadCount == _undefined || unreadCount == null
-          ? _instance.unreadCount
-          : (unreadCount as int),
-      updatedAt: updatedAt == _undefined || updatedAt == null
-          ? _instance.updatedAt
-          : (updatedAt as String),
-      spotQaOrigin: spotQaOrigin == _undefined
-          ? _instance.spotQaOrigin
-          : (spotQaOrigin as Fragment$ConversationParts$spotQaOrigin?),
-    ),
-  );
-
-  CopyWith$Fragment$DmAuthorParts<TRes> get counterpart {
-    final local$counterpart = _instance.counterpart;
-    return CopyWith$Fragment$DmAuthorParts(
-      local$counterpart,
-      (e) => call(counterpart: e),
-    );
-  }
-
-  CopyWith$Fragment$MessageParts<TRes> get lastMessage {
-    final local$lastMessage = _instance.lastMessage;
-    return local$lastMessage == null
-        ? CopyWith$Fragment$MessageParts.stub(_then(_instance))
-        : CopyWith$Fragment$MessageParts(
-            local$lastMessage,
-            (e) => call(lastMessage: e),
-          );
-  }
-
-  CopyWith$Fragment$ConversationParts$spotQaOrigin<TRes> get spotQaOrigin {
-    final local$spotQaOrigin = _instance.spotQaOrigin;
-    return local$spotQaOrigin == null
-        ? CopyWith$Fragment$ConversationParts$spotQaOrigin.stub(
-            _then(_instance),
-          )
-        : CopyWith$Fragment$ConversationParts$spotQaOrigin(
-            local$spotQaOrigin,
-            (e) => call(spotQaOrigin: e),
-          );
-  }
-}
-
-class _CopyWithStubImpl$Fragment$ConversationParts<TRes>
-    implements CopyWith$Fragment$ConversationParts<TRes> {
-  _CopyWithStubImpl$Fragment$ConversationParts(this._res);
-
-  TRes _res;
-
-  call({
-    String? id,
-    Fragment$DmAuthorParts? counterpart,
-    Fragment$MessageParts? lastMessage,
-    int? unreadCount,
-    String? updatedAt,
-    Fragment$ConversationParts$spotQaOrigin? spotQaOrigin,
-  }) => _res;
-
-  CopyWith$Fragment$DmAuthorParts<TRes> get counterpart =>
-      CopyWith$Fragment$DmAuthorParts.stub(_res);
-
-  CopyWith$Fragment$MessageParts<TRes> get lastMessage =>
-      CopyWith$Fragment$MessageParts.stub(_res);
-
-  CopyWith$Fragment$ConversationParts$spotQaOrigin<TRes> get spotQaOrigin =>
-      CopyWith$Fragment$ConversationParts$spotQaOrigin.stub(_res);
-}
-
-const fragmentDefinitionConversationParts = FragmentDefinitionNode(
-  name: NameNode(value: 'ConversationParts'),
-  typeCondition: TypeConditionNode(
-    on: NamedTypeNode(name: NameNode(value: 'Conversation'), isNonNull: false),
-  ),
-  directives: [],
-  selectionSet: SelectionSetNode(
-    selections: [
-      FieldNode(
-        name: NameNode(value: 'id'),
-        alias: null,
-        arguments: [],
-        directives: [],
-        selectionSet: null,
-      ),
-      FieldNode(
-        name: NameNode(value: 'counterpart'),
-        alias: null,
-        arguments: [],
-        directives: [],
-        selectionSet: SelectionSetNode(
-          selections: [
-            FragmentSpreadNode(
-              name: NameNode(value: 'DmAuthorParts'),
-              directives: [],
-            ),
-          ],
-        ),
-      ),
-      FieldNode(
-        name: NameNode(value: 'lastMessage'),
-        alias: null,
-        arguments: [],
-        directives: [],
-        selectionSet: SelectionSetNode(
-          selections: [
-            FragmentSpreadNode(
-              name: NameNode(value: 'MessageParts'),
-              directives: [],
-            ),
-          ],
-        ),
-      ),
-      FieldNode(
-        name: NameNode(value: 'unreadCount'),
-        alias: null,
-        arguments: [],
-        directives: [],
-        selectionSet: null,
-      ),
-      FieldNode(
-        name: NameNode(value: 'updatedAt'),
         alias: null,
         arguments: [],
         directives: [],
@@ -799,16 +521,15 @@ const fragmentDefinitionConversationParts = FragmentDefinitionNode(
     ],
   ),
 );
-const documentNodeFragmentConversationParts = DocumentNode(
+const documentNodeFragmentMessageParts = DocumentNode(
   definitions: [
-    fragmentDefinitionConversationParts,
-    fragmentDefinitionDmAuthorParts,
     fragmentDefinitionMessageParts,
+    fragmentDefinitionDmAuthorParts,
   ],
 );
 
-class Fragment$ConversationParts$spotQaOrigin {
-  Fragment$ConversationParts$spotQaOrigin({
+class Fragment$MessageParts$spotQaOrigin {
+  Fragment$MessageParts$spotQaOrigin({
     required this.catalogId,
     required this.spotTitle,
     required this.questionId,
@@ -817,7 +538,7 @@ class Fragment$ConversationParts$spotQaOrigin {
     required this.answerBodySnapshot,
   });
 
-  factory Fragment$ConversationParts$spotQaOrigin.fromJson(
+  factory Fragment$MessageParts$spotQaOrigin.fromJson(
     Map<String, dynamic> json,
   ) {
     final l$catalogId = json['catalogId'];
@@ -826,7 +547,7 @@ class Fragment$ConversationParts$spotQaOrigin {
     final l$questionBodySnapshot = json['questionBodySnapshot'];
     final l$answerId = json['answerId'];
     final l$answerBodySnapshot = json['answerBodySnapshot'];
-    return Fragment$ConversationParts$spotQaOrigin(
+    return Fragment$MessageParts$spotQaOrigin(
       catalogId: (l$catalogId as String),
       spotTitle: (l$spotTitle as String),
       questionId: (l$questionId as String),
@@ -888,7 +609,7 @@ class Fragment$ConversationParts$spotQaOrigin {
     if (identical(this, other)) {
       return true;
     }
-    if (other is! Fragment$ConversationParts$spotQaOrigin ||
+    if (other is! Fragment$MessageParts$spotQaOrigin ||
         runtimeType != other.runtimeType) {
       return false;
     }
@@ -926,23 +647,22 @@ class Fragment$ConversationParts$spotQaOrigin {
   }
 }
 
-extension UtilityExtension$Fragment$ConversationParts$spotQaOrigin
-    on Fragment$ConversationParts$spotQaOrigin {
-  CopyWith$Fragment$ConversationParts$spotQaOrigin<
-    Fragment$ConversationParts$spotQaOrigin
+extension UtilityExtension$Fragment$MessageParts$spotQaOrigin
+    on Fragment$MessageParts$spotQaOrigin {
+  CopyWith$Fragment$MessageParts$spotQaOrigin<
+    Fragment$MessageParts$spotQaOrigin
   >
-  get copyWith =>
-      CopyWith$Fragment$ConversationParts$spotQaOrigin(this, (i) => i);
+  get copyWith => CopyWith$Fragment$MessageParts$spotQaOrigin(this, (i) => i);
 }
 
-abstract class CopyWith$Fragment$ConversationParts$spotQaOrigin<TRes> {
-  factory CopyWith$Fragment$ConversationParts$spotQaOrigin(
-    Fragment$ConversationParts$spotQaOrigin instance,
-    TRes Function(Fragment$ConversationParts$spotQaOrigin) then,
-  ) = _CopyWithImpl$Fragment$ConversationParts$spotQaOrigin;
+abstract class CopyWith$Fragment$MessageParts$spotQaOrigin<TRes> {
+  factory CopyWith$Fragment$MessageParts$spotQaOrigin(
+    Fragment$MessageParts$spotQaOrigin instance,
+    TRes Function(Fragment$MessageParts$spotQaOrigin) then,
+  ) = _CopyWithImpl$Fragment$MessageParts$spotQaOrigin;
 
-  factory CopyWith$Fragment$ConversationParts$spotQaOrigin.stub(TRes res) =
-      _CopyWithStubImpl$Fragment$ConversationParts$spotQaOrigin;
+  factory CopyWith$Fragment$MessageParts$spotQaOrigin.stub(TRes res) =
+      _CopyWithStubImpl$Fragment$MessageParts$spotQaOrigin;
 
   TRes call({
     String? catalogId,
@@ -954,16 +674,13 @@ abstract class CopyWith$Fragment$ConversationParts$spotQaOrigin<TRes> {
   });
 }
 
-class _CopyWithImpl$Fragment$ConversationParts$spotQaOrigin<TRes>
-    implements CopyWith$Fragment$ConversationParts$spotQaOrigin<TRes> {
-  _CopyWithImpl$Fragment$ConversationParts$spotQaOrigin(
-    this._instance,
-    this._then,
-  );
+class _CopyWithImpl$Fragment$MessageParts$spotQaOrigin<TRes>
+    implements CopyWith$Fragment$MessageParts$spotQaOrigin<TRes> {
+  _CopyWithImpl$Fragment$MessageParts$spotQaOrigin(this._instance, this._then);
 
-  final Fragment$ConversationParts$spotQaOrigin _instance;
+  final Fragment$MessageParts$spotQaOrigin _instance;
 
-  final TRes Function(Fragment$ConversationParts$spotQaOrigin) _then;
+  final TRes Function(Fragment$MessageParts$spotQaOrigin) _then;
 
   static const _undefined = <dynamic, dynamic>{};
 
@@ -975,7 +692,7 @@ class _CopyWithImpl$Fragment$ConversationParts$spotQaOrigin<TRes>
     Object? answerId = _undefined,
     Object? answerBodySnapshot = _undefined,
   }) => _then(
-    Fragment$ConversationParts$spotQaOrigin(
+    Fragment$MessageParts$spotQaOrigin(
       catalogId: catalogId == _undefined || catalogId == null
           ? _instance.catalogId
           : (catalogId as String),
@@ -1000,9 +717,9 @@ class _CopyWithImpl$Fragment$ConversationParts$spotQaOrigin<TRes>
   );
 }
 
-class _CopyWithStubImpl$Fragment$ConversationParts$spotQaOrigin<TRes>
-    implements CopyWith$Fragment$ConversationParts$spotQaOrigin<TRes> {
-  _CopyWithStubImpl$Fragment$ConversationParts$spotQaOrigin(this._res);
+class _CopyWithStubImpl$Fragment$MessageParts$spotQaOrigin<TRes>
+    implements CopyWith$Fragment$MessageParts$spotQaOrigin<TRes> {
+  _CopyWithStubImpl$Fragment$MessageParts$spotQaOrigin(this._res);
 
   TRes _res;
 
@@ -1015,6 +732,283 @@ class _CopyWithStubImpl$Fragment$ConversationParts$spotQaOrigin<TRes>
     String? answerBodySnapshot,
   }) => _res;
 }
+
+class Fragment$ConversationParts {
+  Fragment$ConversationParts({
+    required this.id,
+    required this.counterpart,
+    this.lastMessage,
+    required this.unreadCount,
+    required this.updatedAt,
+  });
+
+  factory Fragment$ConversationParts.fromJson(Map<String, dynamic> json) {
+    final l$id = json['id'];
+    final l$counterpart = json['counterpart'];
+    final l$lastMessage = json['lastMessage'];
+    final l$unreadCount = json['unreadCount'];
+    final l$updatedAt = json['updatedAt'];
+    return Fragment$ConversationParts(
+      id: (l$id as String),
+      counterpart: Fragment$DmAuthorParts.fromJson(
+        (l$counterpart as Map<String, dynamic>),
+      ),
+      lastMessage: l$lastMessage == null
+          ? null
+          : Fragment$MessageParts.fromJson(
+              (l$lastMessage as Map<String, dynamic>),
+            ),
+      unreadCount: (l$unreadCount as int),
+      updatedAt: (l$updatedAt as String),
+    );
+  }
+
+  final String id;
+
+  final Fragment$DmAuthorParts counterpart;
+
+  final Fragment$MessageParts? lastMessage;
+
+  final int unreadCount;
+
+  final String updatedAt;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$id = id;
+    _resultData['id'] = l$id;
+    final l$counterpart = counterpart;
+    _resultData['counterpart'] = l$counterpart.toJson();
+    final l$lastMessage = lastMessage;
+    _resultData['lastMessage'] = l$lastMessage?.toJson();
+    final l$unreadCount = unreadCount;
+    _resultData['unreadCount'] = l$unreadCount;
+    final l$updatedAt = updatedAt;
+    _resultData['updatedAt'] = l$updatedAt;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$id = id;
+    final l$counterpart = counterpart;
+    final l$lastMessage = lastMessage;
+    final l$unreadCount = unreadCount;
+    final l$updatedAt = updatedAt;
+    return Object.hashAll([
+      l$id,
+      l$counterpart,
+      l$lastMessage,
+      l$unreadCount,
+      l$updatedAt,
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Fragment$ConversationParts ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$id = id;
+    final lOther$id = other.id;
+    if (l$id != lOther$id) {
+      return false;
+    }
+    final l$counterpart = counterpart;
+    final lOther$counterpart = other.counterpart;
+    if (l$counterpart != lOther$counterpart) {
+      return false;
+    }
+    final l$lastMessage = lastMessage;
+    final lOther$lastMessage = other.lastMessage;
+    if (l$lastMessage != lOther$lastMessage) {
+      return false;
+    }
+    final l$unreadCount = unreadCount;
+    final lOther$unreadCount = other.unreadCount;
+    if (l$unreadCount != lOther$unreadCount) {
+      return false;
+    }
+    final l$updatedAt = updatedAt;
+    final lOther$updatedAt = other.updatedAt;
+    if (l$updatedAt != lOther$updatedAt) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Fragment$ConversationParts
+    on Fragment$ConversationParts {
+  CopyWith$Fragment$ConversationParts<Fragment$ConversationParts>
+  get copyWith => CopyWith$Fragment$ConversationParts(this, (i) => i);
+}
+
+abstract class CopyWith$Fragment$ConversationParts<TRes> {
+  factory CopyWith$Fragment$ConversationParts(
+    Fragment$ConversationParts instance,
+    TRes Function(Fragment$ConversationParts) then,
+  ) = _CopyWithImpl$Fragment$ConversationParts;
+
+  factory CopyWith$Fragment$ConversationParts.stub(TRes res) =
+      _CopyWithStubImpl$Fragment$ConversationParts;
+
+  TRes call({
+    String? id,
+    Fragment$DmAuthorParts? counterpart,
+    Fragment$MessageParts? lastMessage,
+    int? unreadCount,
+    String? updatedAt,
+  });
+  CopyWith$Fragment$DmAuthorParts<TRes> get counterpart;
+  CopyWith$Fragment$MessageParts<TRes> get lastMessage;
+}
+
+class _CopyWithImpl$Fragment$ConversationParts<TRes>
+    implements CopyWith$Fragment$ConversationParts<TRes> {
+  _CopyWithImpl$Fragment$ConversationParts(this._instance, this._then);
+
+  final Fragment$ConversationParts _instance;
+
+  final TRes Function(Fragment$ConversationParts) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? id = _undefined,
+    Object? counterpart = _undefined,
+    Object? lastMessage = _undefined,
+    Object? unreadCount = _undefined,
+    Object? updatedAt = _undefined,
+  }) => _then(
+    Fragment$ConversationParts(
+      id: id == _undefined || id == null ? _instance.id : (id as String),
+      counterpart: counterpart == _undefined || counterpart == null
+          ? _instance.counterpart
+          : (counterpart as Fragment$DmAuthorParts),
+      lastMessage: lastMessage == _undefined
+          ? _instance.lastMessage
+          : (lastMessage as Fragment$MessageParts?),
+      unreadCount: unreadCount == _undefined || unreadCount == null
+          ? _instance.unreadCount
+          : (unreadCount as int),
+      updatedAt: updatedAt == _undefined || updatedAt == null
+          ? _instance.updatedAt
+          : (updatedAt as String),
+    ),
+  );
+
+  CopyWith$Fragment$DmAuthorParts<TRes> get counterpart {
+    final local$counterpart = _instance.counterpart;
+    return CopyWith$Fragment$DmAuthorParts(
+      local$counterpart,
+      (e) => call(counterpart: e),
+    );
+  }
+
+  CopyWith$Fragment$MessageParts<TRes> get lastMessage {
+    final local$lastMessage = _instance.lastMessage;
+    return local$lastMessage == null
+        ? CopyWith$Fragment$MessageParts.stub(_then(_instance))
+        : CopyWith$Fragment$MessageParts(
+            local$lastMessage,
+            (e) => call(lastMessage: e),
+          );
+  }
+}
+
+class _CopyWithStubImpl$Fragment$ConversationParts<TRes>
+    implements CopyWith$Fragment$ConversationParts<TRes> {
+  _CopyWithStubImpl$Fragment$ConversationParts(this._res);
+
+  TRes _res;
+
+  call({
+    String? id,
+    Fragment$DmAuthorParts? counterpart,
+    Fragment$MessageParts? lastMessage,
+    int? unreadCount,
+    String? updatedAt,
+  }) => _res;
+
+  CopyWith$Fragment$DmAuthorParts<TRes> get counterpart =>
+      CopyWith$Fragment$DmAuthorParts.stub(_res);
+
+  CopyWith$Fragment$MessageParts<TRes> get lastMessage =>
+      CopyWith$Fragment$MessageParts.stub(_res);
+}
+
+const fragmentDefinitionConversationParts = FragmentDefinitionNode(
+  name: NameNode(value: 'ConversationParts'),
+  typeCondition: TypeConditionNode(
+    on: NamedTypeNode(name: NameNode(value: 'Conversation'), isNonNull: false),
+  ),
+  directives: [],
+  selectionSet: SelectionSetNode(
+    selections: [
+      FieldNode(
+        name: NameNode(value: 'id'),
+        alias: null,
+        arguments: [],
+        directives: [],
+        selectionSet: null,
+      ),
+      FieldNode(
+        name: NameNode(value: 'counterpart'),
+        alias: null,
+        arguments: [],
+        directives: [],
+        selectionSet: SelectionSetNode(
+          selections: [
+            FragmentSpreadNode(
+              name: NameNode(value: 'DmAuthorParts'),
+              directives: [],
+            ),
+          ],
+        ),
+      ),
+      FieldNode(
+        name: NameNode(value: 'lastMessage'),
+        alias: null,
+        arguments: [],
+        directives: [],
+        selectionSet: SelectionSetNode(
+          selections: [
+            FragmentSpreadNode(
+              name: NameNode(value: 'MessageParts'),
+              directives: [],
+            ),
+          ],
+        ),
+      ),
+      FieldNode(
+        name: NameNode(value: 'unreadCount'),
+        alias: null,
+        arguments: [],
+        directives: [],
+        selectionSet: null,
+      ),
+      FieldNode(
+        name: NameNode(value: 'updatedAt'),
+        alias: null,
+        arguments: [],
+        directives: [],
+        selectionSet: null,
+      ),
+    ],
+  ),
+);
+const documentNodeFragmentConversationParts = DocumentNode(
+  definitions: [
+    fragmentDefinitionConversationParts,
+    fragmentDefinitionDmAuthorParts,
+    fragmentDefinitionMessageParts,
+  ],
+);
 
 class Variables$Query$Conversations {
   factory Variables$Query$Conversations({int? first, String? after}) =>
@@ -2621,10 +2615,8 @@ class _CopyWithStubImpl$Query$ConversationMessages$conversationMessages$pageInfo
 class Variables$Mutation$StartConversation {
   factory Variables$Mutation$StartConversation({
     required String counterpartMemberId,
-    String? sourceAnswerId,
   }) => Variables$Mutation$StartConversation._({
     r'counterpartMemberId': counterpartMemberId,
-    if (sourceAnswerId != null) r'sourceAnswerId': sourceAnswerId,
   });
 
   Variables$Mutation$StartConversation._(this._$data);
@@ -2635,10 +2627,6 @@ class Variables$Mutation$StartConversation {
     final result$data = <String, dynamic>{};
     final l$counterpartMemberId = data['counterpartMemberId'];
     result$data['counterpartMemberId'] = (l$counterpartMemberId as String);
-    if (data.containsKey('sourceAnswerId')) {
-      final l$sourceAnswerId = data['sourceAnswerId'];
-      result$data['sourceAnswerId'] = (l$sourceAnswerId as String?);
-    }
     return Variables$Mutation$StartConversation._(result$data);
   }
 
@@ -2646,16 +2634,10 @@ class Variables$Mutation$StartConversation {
 
   String get counterpartMemberId => (_$data['counterpartMemberId'] as String);
 
-  String? get sourceAnswerId => (_$data['sourceAnswerId'] as String?);
-
   Map<String, dynamic> toJson() {
     final result$data = <String, dynamic>{};
     final l$counterpartMemberId = counterpartMemberId;
     result$data['counterpartMemberId'] = l$counterpartMemberId;
-    if (_$data.containsKey('sourceAnswerId')) {
-      final l$sourceAnswerId = sourceAnswerId;
-      result$data['sourceAnswerId'] = l$sourceAnswerId;
-    }
     return result$data;
   }
 
@@ -2678,26 +2660,13 @@ class Variables$Mutation$StartConversation {
     if (l$counterpartMemberId != lOther$counterpartMemberId) {
       return false;
     }
-    final l$sourceAnswerId = sourceAnswerId;
-    final lOther$sourceAnswerId = other.sourceAnswerId;
-    if (_$data.containsKey('sourceAnswerId') !=
-        other._$data.containsKey('sourceAnswerId')) {
-      return false;
-    }
-    if (l$sourceAnswerId != lOther$sourceAnswerId) {
-      return false;
-    }
     return true;
   }
 
   @override
   int get hashCode {
     final l$counterpartMemberId = counterpartMemberId;
-    final l$sourceAnswerId = sourceAnswerId;
-    return Object.hashAll([
-      l$counterpartMemberId,
-      _$data.containsKey('sourceAnswerId') ? l$sourceAnswerId : const {},
-    ]);
+    return Object.hashAll([l$counterpartMemberId]);
   }
 }
 
@@ -2710,7 +2679,7 @@ abstract class CopyWith$Variables$Mutation$StartConversation<TRes> {
   factory CopyWith$Variables$Mutation$StartConversation.stub(TRes res) =
       _CopyWithStubImpl$Variables$Mutation$StartConversation;
 
-  TRes call({String? counterpartMemberId, String? sourceAnswerId});
+  TRes call({String? counterpartMemberId});
 }
 
 class _CopyWithImpl$Variables$Mutation$StartConversation<TRes>
@@ -2726,16 +2695,11 @@ class _CopyWithImpl$Variables$Mutation$StartConversation<TRes>
 
   static const _undefined = <dynamic, dynamic>{};
 
-  TRes call({
-    Object? counterpartMemberId = _undefined,
-    Object? sourceAnswerId = _undefined,
-  }) => _then(
+  TRes call({Object? counterpartMemberId = _undefined}) => _then(
     Variables$Mutation$StartConversation._({
       ..._instance._$data,
       if (counterpartMemberId != _undefined && counterpartMemberId != null)
         'counterpartMemberId': (counterpartMemberId as String),
-      if (sourceAnswerId != _undefined)
-        'sourceAnswerId': (sourceAnswerId as String?),
     }),
   );
 }
@@ -2746,7 +2710,7 @@ class _CopyWithStubImpl$Variables$Mutation$StartConversation<TRes>
 
   TRes _res;
 
-  call({String? counterpartMemberId, String? sourceAnswerId}) => _res;
+  call({String? counterpartMemberId}) => _res;
 }
 
 class Mutation$StartConversation {
@@ -2869,12 +2833,6 @@ const documentNodeMutationStartConversation = DocumentNode(
           defaultValue: DefaultValueNode(value: null),
           directives: [],
         ),
-        VariableDefinitionNode(
-          variable: VariableNode(name: NameNode(value: 'sourceAnswerId')),
-          type: NamedTypeNode(name: NameNode(value: 'ID'), isNonNull: false),
-          defaultValue: DefaultValueNode(value: null),
-          directives: [],
-        ),
       ],
       directives: [],
       selectionSet: SelectionSetNode(
@@ -2891,12 +2849,6 @@ const documentNodeMutationStartConversation = DocumentNode(
                       name: NameNode(value: 'counterpartMemberId'),
                       value: VariableNode(
                         name: NameNode(value: 'counterpartMemberId'),
-                      ),
-                    ),
-                    ObjectFieldNode(
-                      name: NameNode(value: 'sourceAnswerId'),
-                      value: VariableNode(
-                        name: NameNode(value: 'sourceAnswerId'),
                       ),
                     ),
                   ],
@@ -3310,10 +3262,12 @@ class Variables$Mutation$SendMessage {
     required String conversationId,
     required String body,
     String? photoKey,
+    String? sourceAnswerId,
   }) => Variables$Mutation$SendMessage._({
     r'conversationId': conversationId,
     r'body': body,
     if (photoKey != null) r'photoKey': photoKey,
+    if (sourceAnswerId != null) r'sourceAnswerId': sourceAnswerId,
   });
 
   Variables$Mutation$SendMessage._(this._$data);
@@ -3328,6 +3282,10 @@ class Variables$Mutation$SendMessage {
       final l$photoKey = data['photoKey'];
       result$data['photoKey'] = (l$photoKey as String?);
     }
+    if (data.containsKey('sourceAnswerId')) {
+      final l$sourceAnswerId = data['sourceAnswerId'];
+      result$data['sourceAnswerId'] = (l$sourceAnswerId as String?);
+    }
     return Variables$Mutation$SendMessage._(result$data);
   }
 
@@ -3339,6 +3297,8 @@ class Variables$Mutation$SendMessage {
 
   String? get photoKey => (_$data['photoKey'] as String?);
 
+  String? get sourceAnswerId => (_$data['sourceAnswerId'] as String?);
+
   Map<String, dynamic> toJson() {
     final result$data = <String, dynamic>{};
     final l$conversationId = conversationId;
@@ -3348,6 +3308,10 @@ class Variables$Mutation$SendMessage {
     if (_$data.containsKey('photoKey')) {
       final l$photoKey = photoKey;
       result$data['photoKey'] = l$photoKey;
+    }
+    if (_$data.containsKey('sourceAnswerId')) {
+      final l$sourceAnswerId = sourceAnswerId;
+      result$data['sourceAnswerId'] = l$sourceAnswerId;
     }
     return result$data;
   }
@@ -3383,6 +3347,15 @@ class Variables$Mutation$SendMessage {
     if (l$photoKey != lOther$photoKey) {
       return false;
     }
+    final l$sourceAnswerId = sourceAnswerId;
+    final lOther$sourceAnswerId = other.sourceAnswerId;
+    if (_$data.containsKey('sourceAnswerId') !=
+        other._$data.containsKey('sourceAnswerId')) {
+      return false;
+    }
+    if (l$sourceAnswerId != lOther$sourceAnswerId) {
+      return false;
+    }
     return true;
   }
 
@@ -3391,10 +3364,12 @@ class Variables$Mutation$SendMessage {
     final l$conversationId = conversationId;
     final l$body = body;
     final l$photoKey = photoKey;
+    final l$sourceAnswerId = sourceAnswerId;
     return Object.hashAll([
       l$conversationId,
       l$body,
       _$data.containsKey('photoKey') ? l$photoKey : const {},
+      _$data.containsKey('sourceAnswerId') ? l$sourceAnswerId : const {},
     ]);
   }
 }
@@ -3408,7 +3383,12 @@ abstract class CopyWith$Variables$Mutation$SendMessage<TRes> {
   factory CopyWith$Variables$Mutation$SendMessage.stub(TRes res) =
       _CopyWithStubImpl$Variables$Mutation$SendMessage;
 
-  TRes call({String? conversationId, String? body, String? photoKey});
+  TRes call({
+    String? conversationId,
+    String? body,
+    String? photoKey,
+    String? sourceAnswerId,
+  });
 }
 
 class _CopyWithImpl$Variables$Mutation$SendMessage<TRes>
@@ -3425,6 +3405,7 @@ class _CopyWithImpl$Variables$Mutation$SendMessage<TRes>
     Object? conversationId = _undefined,
     Object? body = _undefined,
     Object? photoKey = _undefined,
+    Object? sourceAnswerId = _undefined,
   }) => _then(
     Variables$Mutation$SendMessage._({
       ..._instance._$data,
@@ -3432,6 +3413,8 @@ class _CopyWithImpl$Variables$Mutation$SendMessage<TRes>
         'conversationId': (conversationId as String),
       if (body != _undefined && body != null) 'body': (body as String),
       if (photoKey != _undefined) 'photoKey': (photoKey as String?),
+      if (sourceAnswerId != _undefined)
+        'sourceAnswerId': (sourceAnswerId as String?),
     }),
   );
 }
@@ -3442,7 +3425,12 @@ class _CopyWithStubImpl$Variables$Mutation$SendMessage<TRes>
 
   TRes _res;
 
-  call({String? conversationId, String? body, String? photoKey}) => _res;
+  call({
+    String? conversationId,
+    String? body,
+    String? photoKey,
+    String? sourceAnswerId,
+  }) => _res;
 }
 
 class Mutation$SendMessage {
@@ -3573,6 +3561,12 @@ const documentNodeMutationSendMessage = DocumentNode(
           defaultValue: DefaultValueNode(value: null),
           directives: [],
         ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'sourceAnswerId')),
+          type: NamedTypeNode(name: NameNode(value: 'ID'), isNonNull: false),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
       ],
       directives: [],
       selectionSet: SelectionSetNode(
@@ -3598,6 +3592,12 @@ const documentNodeMutationSendMessage = DocumentNode(
                     ObjectFieldNode(
                       name: NameNode(value: 'photoKey'),
                       value: VariableNode(name: NameNode(value: 'photoKey')),
+                    ),
+                    ObjectFieldNode(
+                      name: NameNode(value: 'sourceAnswerId'),
+                      value: VariableNode(
+                        name: NameNode(value: 'sourceAnswerId'),
+                      ),
                     ),
                   ],
                 ),

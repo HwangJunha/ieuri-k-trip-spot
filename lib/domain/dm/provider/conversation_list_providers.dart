@@ -5,7 +5,6 @@ import '../../auth/provider/auth_controller.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/model/list_equality.dart';
-import '../../../common/model/spot_qa_origin.dart';
 import '../../../common/pagination/page.dart';
 import '../model/conversation.dart';
 import '../repository/dm_repository.dart';
@@ -85,24 +84,6 @@ class ConversationListState {
   int get hashCode =>
       Object.hash(Object.hashAll(items), hasMore, endCursor, isLoadingMore);
 }
-
-/// 대화 하나의 질문/답변 출처(SPEC-0026 R14). 없으면 null이다.
-///
-/// **서버에 대화 단건 조회가 없어** 목록에서 되짚는다(계약 §Query — `conversations`
-/// 뿐이다). 대화 화면은 `conversationId`만 들고 있으므로(CLAUDE.md §6) 이 provider가
-/// 그 id로 목록에서 찾아 준다.
-///
-/// **null이 정상값이다.** 기존 DM은 전부 출처가 없고, 목록이 아직 오지 않았거나 조회에
-/// 실패했을 때도 null이다 — 그때 맥락 카드만 안 그리고 대화는 지금과 똑같이 동작한다.
-/// 출처가 없다고 대화를 오류로 만들지 않는다.
-@riverpod
-SpotQaOrigin? conversationSpotQaOrigin(Ref ref, String conversationId) => ref
-    .watch(conversationListControllerProvider)
-    .value
-    ?.items
-    .where((Conversation c) => c.id == conversationId)
-    .firstOrNull
-    ?.spotQaOrigin;
 
 /// 홈의 메시지 배지가 보는 값. **로그인했을 때만 목록을 한 번 받아 플래그를 채운다.**
 ///
