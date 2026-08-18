@@ -289,12 +289,6 @@ class _DetailBody extends ConsumerWidget {
                   ),
                 ],
 
-                const SizedBox(height: 24),
-                AttributionBlock(
-                  attributionText: detail.attributionText,
-                  imageAttributions: detail.distinctImageAttributions,
-                ),
-
                 // 「지금 여기 어때?」 진입점(SPEC-0026). **좋아요 여부와 무관하게
                 // 항상 보인다** — 가기 전에 묻는 질문이라 좋아요를 조건으로 걸면
                 // 질문이 가장 필요한 사람을 막는다. 서버도 2026-08-18에 게이팅을
@@ -303,6 +297,9 @@ class _DetailBody extends ConsumerWidget {
                 // 질문이 있으면 목록으로, 없으면 **빈 목록을 거치지 않고 바로 작성**
                 // 으로 보낸다(설계 §진입점) — 빈 화면을 보여주고 다시 누르게 하면
                 // 진입 장벽만 높아진다.
+                //
+                // **출처(AttributionBlock) 위에 둔다.** 출처는 법적 고지라 본문 맨
+                // 끝이 자리이고, 그 아래에 있는 행동 버튼은 부록처럼 읽힌다.
                 const SizedBox(height: 24),
                 SpotQaEntryButton(
                   catalogId: contentId,
@@ -317,6 +314,12 @@ class _DetailBody extends ConsumerWidget {
                     pathParameters: <String, String>{'spotId': contentId},
                     queryParameters: <String, String>{'spot': detail.title},
                   ),
+                ),
+
+                const SizedBox(height: 24),
+                AttributionBlock(
+                  attributionText: detail.attributionText,
+                  imageAttributions: detail.distinctImageAttributions,
                 ),
 
                 // 「내 질문」은 여기 두지 않는다 — 상세는 *이 장소*를 보는 화면이고

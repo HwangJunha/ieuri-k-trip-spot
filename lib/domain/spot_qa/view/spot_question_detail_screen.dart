@@ -19,6 +19,7 @@ import '../provider/spot_question_by_id_providers.dart';
 import '../provider/spot_questions_providers.dart';
 import 'spot_qa_actions.dart';
 import '../component/spot_qa_resolution_badge.dart';
+import '../component/spot_qa_photos.dart';
 
 /// 질문 상세(R7, 디자인 §2).
 ///
@@ -464,6 +465,8 @@ class _QuestionBlock extends ConsumerWidget {
           const SizedBox(height: 8),
           // 상세에서는 **자르지 않는다**(디자인 §2).
           Text(question.body, style: theme.textTheme.bodyLarge),
+          // 첨부 사진(R9). 서버가 처음부터 키를 주고 있었는데 그리지 않고 있었다.
+          SpotQaPhotos(photoKeys: question.photoKeys),
           if (question.hidden) ...<Widget>[
             const SizedBox(height: 8),
             Text(

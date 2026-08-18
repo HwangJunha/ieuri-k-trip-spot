@@ -4,6 +4,7 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../model/spot_answer_reply.dart';
 import 'spot_qa_action_row.dart';
 import 'spot_qa_author_line.dart';
+import 'spot_qa_photos.dart';
 
 /// 답변에 딸린 답글 한 줄(디자인 §2).
 ///
@@ -51,6 +52,8 @@ class SpotAnswerReplyTile extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(reply.body, style: theme.textTheme.bodyMedium),
+          // 첨부 사진(R9). 들여쓴 자리라 낮게 그린다.
+          SpotQaPhotos(photoKeys: reply.photoKeys, compact: true),
           // 숨김은 작성자 본인에게만 온다(모델 주석).
           if (reply.hidden) ...<Widget>[
             const SizedBox(height: 4),

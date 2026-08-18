@@ -11,6 +11,7 @@ import '../model/spot_qa_failure.dart';
 import '../component/spot_qa_photo_strip.dart';
 import '../provider/my_questions_providers.dart';
 import '../provider/spot_qa_composer_providers.dart';
+import '../provider/spot_questions_providers.dart';
 
 /// 질문 작성 화면(R3, 디자인 §3, Stitch `af479788e45e42658cd54ead6f7027ac`).
 ///
@@ -270,6 +271,14 @@ class _SpotQaComposerScreenState extends ConsumerState<SpotQaComposerScreen> {
     // 방금 올린 질문이 그 목록에 보이도록 캐시만 비운다. 실패해도 화면은 성공으로
     // 닫는다 — 질문은 이미 서버에 올라갔고, 목록은 다음에 열 때 받으면 된다.
     ref.invalidate(myQuestionsControllerProvider);
+
+    // **이 장소의 질문 목록도 다시 받는다.** 이것이 없으면 상세로 돌아왔을 때
+    // 진입점이 여전히 "질문 없음"으로 보이고, 방금 올린 질문이 목록에도 없다 —
+    // 첫 질문을 올린 사용자에게는 글이 사라진 것처럼 보인다.
+    //
+    // 호출부가 아니라 여기서 무효화하는 이유: 작성 진입이 상세·목록 두 곳이라
+    // 각자 처리하면 한쪽이 빠진다.
+    ref.invalidate(spotQuestionsControllerProvider(widget.catalogId));
 
     // 성공만 목록 재조회를 부른다.
     navigator.pop(true);

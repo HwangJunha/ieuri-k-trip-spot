@@ -6,6 +6,7 @@ import '../model/spot_answer_reply.dart';
 import 'spot_qa_action_row.dart';
 import 'spot_qa_author_line.dart';
 import 'spot_answer_reply_tile.dart';
+import 'spot_qa_photos.dart';
 
 /// 답변 하나와 거기 딸린 답글들(디자인 §2).
 ///
@@ -77,6 +78,8 @@ class SpotAnswerTile extends StatelessWidget {
           const SizedBox(height: 6),
           // 답변은 목록이 아니라 상세라 **자르지 않는다**(디자인 §2).
           Text(answer.body, style: theme.textTheme.bodyMedium),
+          // 첨부 사진(R9). 들여쓴 자리라 낮게 그린다.
+          SpotQaPhotos(photoKeys: answer.photoKeys, compact: true),
           if (answer.hidden) ...<Widget>[
             const SizedBox(height: 4),
             Text(

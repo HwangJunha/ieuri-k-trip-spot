@@ -4,6 +4,7 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../model/spot_question.dart';
 import 'spot_qa_author_line.dart';
 import 'spot_qa_resolution_badge.dart';
+import 'spot_qa_photos.dart';
 
 /// 질문 목록의 카드 한 장(디자인 §1).
 ///
@@ -62,6 +63,13 @@ class SpotQuestionCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodyMedium?.copyWith(color: bodyColor),
             ),
+            // 첨부가 있으면 **첫 장만** 보여준다 — 목록에서는 "사진이 있다"가 정보이고,
+            // 전부 그리면 카드가 길어져 다음 질문이 밀린다. 나머지는 상세에 있다.
+            if (question.photoKeys.isNotEmpty)
+              SpotQaPhotos(
+                photoKeys: question.photoKeys.take(1).toList(growable: false),
+                compact: true,
+              ),
             const SizedBox(height: 8),
             Row(
               children: <Widget>[
