@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../common/navigation/spot_qa_routes.dart';
 import '../../../l10n/gen/app_localizations.dart';
-import '../component/spot_qa_eligibility_banner.dart';
 import '../model/spot_qa_failure.dart';
 import '../provider/my_questions_providers.dart';
 import '../provider/spot_qa_composer_providers.dart';
@@ -12,14 +11,17 @@ import '../provider/spot_qa_composer_providers.dart';
 ///
 /// ```
 /// 상단바  ✕ · "질문 작성" · [올리기](본문 비면 비활성)
-/// (자격 거부 시) 인라인 배너
+/// 장소 헤더  📍 어디에 묻는지 (장소명 없으면 생략)
 /// 테두리 없는 멀티라인 입력 — 남은 공간 전부
+/// 예시 칩  본문이 비었을 때만
 /// 하단 우측  글자수 카운터(90% 근접부터)
 /// ```
 ///
-/// **서버가 `NOT_ELIGIBLE_TO_ASK`로 거부해도 화면을 닫지 않는다**(설계 §작성 자격
-/// 표시). 배너를 띄우고 입력한 본문은 그대로 남긴다 — 진입 시점엔 자격 있는 사용자만
-/// 왔겠지만 다른 기기에서 좋아요가 풀린 경우를 반드시 처리한다.
+/// **거절돼도 화면을 닫지 않는다.** 안내만 띄우고 입력한 본문은 그대로 남긴다 —
+/// 사용자가 쓴 글을 서버 사정으로 날리지 않는다.
+///
+/// 좋아요 자격 게이팅은 **없다**(2026-08-18 서버가 걷어냈다). 반응 없음·싫어요를
+/// 포함해 누구나 쓸 수 있다.
 ///
 /// **사진 첨부 UI가 없다.** 서버에 업로드 뮤테이션이 없어 이번 범위에서 빠졌다(설계
 /// §사진 첨부) — 카메라·갤러리 아이콘도, 사진 그리드도 그리지 않는다.
@@ -97,11 +99,6 @@ class _SpotQaComposerScreenState extends ConsumerState<SpotQaComposerScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            // 배너가 떠도 **아래 입력의 텍스트는 그대로 유지된다**(디자인 §3).
-            if (state.notEligible)
-              const SpotQaEligibilityBanner(
-                target: SpotQaComposerTarget.question,
-              ),
             // 어느 장소에 묻는지. **비어 있으면 줄째로 생략한다** — 딥링크로 들어오면
             // 장소명이 없고, 빈 라벨을 그리면 값이 없다는 사실만 드러난다.
             if (widget.spotTitle.isNotEmpty)
@@ -190,12 +187,9 @@ class _SpotQaComposerScreenState extends ConsumerState<SpotQaComposerScreen> {
     if (!mounted) return;
 
     if (!result.succeeded) {
-      // 자격 없음은 배너가 이미 말한다 — 스낵바를 겹치면 같은 말을 두 번 한다.
-      if (!result.notEligible) {
-        messenger.showSnackBar(
-          SnackBar(content: Text(l10n.spotQaSubmitFailed)),
-        );
-      }
+      // **입력은 그대로 남는다**(provider가 본문을 지우지 않는다) — 안내만 띄우고
+      // 화면을 유지해 사용자가 고쳐서 다시 낼 수 있게 한다.
+      messenger.showSnackBar(SnackBar(content: Text(l10n.spotQaSubmitFailed)));
       return;
     }
 

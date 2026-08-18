@@ -6,8 +6,8 @@
 ///  - `userErrors[]` — 도메인 규칙 위반. **폼 상태를 유지한 채 분기해야 하므로**
 ///    예외가 아니라 값으로 돌려준다([SpotQaMutationResult])
 ///
-/// 자격 실패(`NOT_ELIGIBLE_TO_ASK`/`NOT_ELIGIBLE_TO_ANSWER`)가 후자에 속하는 것이
-/// 중요하다 — 작성 화면을 닫지 않고 안내만 띄워 사용자가 쓴 글을 지키기 때문이다.
+/// 어느 쪽이든 **작성 화면은 닫지 않는다** — 사용자가 쓴 글을 서버 사정으로 날리지
+/// 않는다.
 class SpotQaFailure implements Exception {
   const SpotQaFailure(this.kind, {this.code});
 
@@ -79,16 +79,14 @@ class SpotQaMutationResult<T> {
   /// 성공 시의 반환값(생성된 질문·답변·답글 id). 없을 수 있다.
   final T? value;
 
-  /// 실패 사유 코드. `NOT_ELIGIBLE_TO_ASK`·`NOT_ELIGIBLE_TO_ANSWER`·
-  /// `REPLY_TO_REPLY_NOT_ALLOWED`·`NOT_QUESTION_OWNER` 등.
+  /// 실패 사유 코드. `REPLY_TO_REPLY_NOT_ALLOWED`·`NOT_QUESTION_OWNER`·
+  /// `INVALID_INPUT` 등.
   ///
   /// **문자열로 둔다** — 계약이 가산적이라 서버가 새 코드를 더할 수 있고, 열거형으로
   /// 전수 분기하면 그 시점에 깨진다.
+  ///
+  /// `NOT_ELIGIBLE_TO_ASK`/`NOT_ELIGIBLE_TO_ANSWER`는 **더 이상 오지 않는다**(2026-08-18
+  /// 서버가 좋아요 게이팅을 걷어냈다). 그 분기는 지웠다 — 서버가 보내지 않는 코드를
+  /// 검사하는 죽은 가지는, 나중에 읽는 사람에게 그 규칙이 아직 있다고 알린다.
   final String? errorCode;
-
-  /// 좋아요 자격이 없어 거절된 것인지. **작성 화면을 닫지 않고 안내만 띄우는** 분기가
-  /// 이 값을 본다.
-  bool get notEligible =>
-      errorCode == 'NOT_ELIGIBLE_TO_ASK' ||
-      errorCode == 'NOT_ELIGIBLE_TO_ANSWER';
 }

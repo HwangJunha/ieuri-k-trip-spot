@@ -3,7 +3,17 @@
 > 대상: `createSpotQuestion` / `createSpotAnswer` / `createSpotAnswerReply`(R3·R4·R5 판정),
 > 신규 `myQuestions` · 관련 수용 기준: AC-3.2·AC-3.3·AC-3.6·AC-4.2
 > 확인 환경: `http://localhost:8888/graphql` (2026-08-18 라이브 introspection)
-> 근거: `feature/SPEC-0026-spot-qa` 구현 후 사용성 점검 · **상태: 요청 중**
+> 근거: `feature/SPEC-0026-spot-qa` 구현 후 사용성 점검
+
+> ## 상태 (2026-08-18 갱신)
+>
+> | 요청 | 상태 |
+> |---|---|
+> | ① 좋아요 게이팅 제거 | **해소됨** — 서버가 R3·R4·R5를 걷어냈고 `NOT_ELIGIBLE_*`를 보내지 않는다. 클라이언트 정리 완료 |
+> | ② `myQuestions` 조회 신설 | **요청 중** — 라이브에서 여전히 `FieldUndefined`. 로컬 기록으로 버티는 중이다 |
+>
+> ②가 반영되면 `MyQuestionRef`·`MyQuestionsStore`와 그 provider를 삭제하고 서버 조회
+> 하나로 대체한다.
 
 > **이 문서는 작업 중 기록이다.** 정책으로 승격할 사안이 정리되면 그때
 > `ieuri-recorder`로 올린다(CLAUDE.md §10).

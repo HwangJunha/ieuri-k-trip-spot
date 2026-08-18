@@ -814,8 +814,6 @@
   "spotQaAnswerBodyHint": "分享你了解的信息。",
   "spotQaSubmitAction": "发布",
   "spotQaSubmitFailed": "发布失败，请稍后再试。",
-  "spotQaNotEligibleToAsk": "点赞该地点后即可提问。",
-  "spotQaNotEligibleToAnswer": "点赞该地点后即可回答。",
   "spotQaDeleteAction": "删除",
   "spotQaDeleteFailed": "删除失败，请稍后再试。",
   "spotQaDmAction": "发送私信",

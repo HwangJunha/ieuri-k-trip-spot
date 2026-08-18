@@ -39,9 +39,8 @@ abstract interface class SpotQaRepository {
 
   /// 질문을 작성하고 새 질문 id를 돌려준다.
   ///
-  /// 자격이 없으면 `NOT_ELIGIBLE_TO_ASK`가 **값으로** 온다 — 서버가 커맨드 시점에
-  /// 다시 판정하므로(R5) 화면에서 버튼을 숨겼더라도 이 분기를 생략하면 안 된다.
-  /// 좋아요 상태가 다른 기기에서 바뀐 사용자가 원인 모를 실패를 겪는다.
+  /// **좋아요 자격을 요구하지 않는다**(2026-08-18 서버가 게이팅을 걷어냈다). 반응
+  /// 없음·싫어요를 포함해 로그인한 회원이면 쓸 수 있다.
   Future<SpotQaMutationResult<String>> createQuestion({
     required String catalogId,
     required String body,
@@ -55,7 +54,7 @@ abstract interface class SpotQaRepository {
   /// 없다) — 그래서 낙관적 갱신을 적용해도 되돌리기 UI를 만들 필요가 없다.
   Future<SpotQaMutationResult<void>> resolveQuestion(String questionId);
 
-  /// 답변을 작성하고 새 답변 id를 돌려준다. 자격 없으면 `NOT_ELIGIBLE_TO_ANSWER`.
+  /// 답변을 작성하고 새 답변 id를 돌려준다.
   /// **해결됨으로 표시된 질문에도 답변할 수 있다.**
   Future<SpotQaMutationResult<String>> createAnswer({
     required String questionId,

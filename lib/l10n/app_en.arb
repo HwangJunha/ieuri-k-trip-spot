@@ -1191,8 +1191,6 @@
   "spotQaAnswerBodyHint": "Share what you know.",
   "spotQaSubmitAction": "Post",
   "spotQaSubmitFailed": "Couldn't post it. Please try again.",
-  "spotQaNotEligibleToAsk": "Like this place to ask a question.",
-  "spotQaNotEligibleToAnswer": "Like this place to answer.",
   "spotQaDeleteAction": "Delete",
   "spotQaDeleteFailed": "Couldn't delete it. Please try again.",
   "spotQaDmAction": "Send a message",

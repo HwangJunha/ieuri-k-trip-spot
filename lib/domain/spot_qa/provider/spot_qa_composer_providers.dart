@@ -9,23 +9,22 @@ part 'spot_qa_composer_providers.g.dart';
 /// 본문 최대 길이(계약 — 1~500자, 서버가 앞뒤 공백을 제거한 뒤 판정한다).
 const int kSpotQaBodyMaxLength = 500;
 
-/// 무엇을 쓰는 중인지. 대상에 따라 부르는 뮤테이션과 자격 오류 코드가 다르다.
+/// 무엇을 쓰는 중인지. 대상에 따라 부르는 뮤테이션이 다르다.
 enum SpotQaComposerTarget {
-  /// 장소에 질문하기 — `NOT_ELIGIBLE_TO_ASK`.
+  /// 장소에 질문하기.
   question,
 
-  /// 질문에 답변하기 — `NOT_ELIGIBLE_TO_ANSWER`.
+  /// 질문에 답변하기.
   answer,
 
-  /// 답변에 답글 달기 — 답변과 같은 자격을 요구한다(우회 참여를 막기 위해서다).
+  /// 답변에 답글 달기(1단계만).
   reply,
 }
 
 /// 작성 폼 상태.
 ///
-/// **제출 실패가 [body]를 지우지 않는다.** 자격 없음으로 거절돼도 화면을 닫지 않고
-/// 안내만 띄우기 때문이다(설계 §작성 자격 표시) — 사용자가 쓴 글을 자격 문제로
-/// 날리는 것은 과하다.
+/// **제출 실패가 [body]를 지우지 않는다.** 무엇 때문에 거절됐든 화면을 닫지 않고
+/// 안내만 띄운다 — 사용자가 쓴 글을 서버 사정으로 날리는 것은 과하다.
 class SpotQaComposerState {
   const SpotQaComposerState({
     this.body = '',
@@ -46,12 +45,6 @@ class SpotQaComposerState {
       !isSubmitting &&
       trimmedBody.isNotEmpty &&
       trimmedBody.length <= kSpotQaBodyMaxLength;
-
-  /// 자격이 없어 거절됐는지. 화면은 이 값으로 "좋아요하면 질문할 수 있습니다" 안내를
-  /// 띄운다 — 다음 행동을 알려주는 문구여야 한다(설계 §i18n).
-  bool get notEligible =>
-      errorCode == 'NOT_ELIGIBLE_TO_ASK' ||
-      errorCode == 'NOT_ELIGIBLE_TO_ANSWER';
 
   SpotQaComposerState copyWith({
     String? body,

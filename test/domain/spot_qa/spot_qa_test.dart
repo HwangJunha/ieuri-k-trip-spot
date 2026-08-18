@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/model/spot_qa_origin.dart';
 import 'package:ieuri_k_trip_spot/common/pagination/page.dart';
+import 'package:ieuri_k_trip_spot/domain/spot_qa/component/spot_qa_entry_button.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/model/my_question_ref.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/model/spot_answer.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/model/spot_answer_reply.dart';
-import 'package:ieuri_k_trip_spot/domain/spot_qa/model/spot_qa_eligibility.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/model/spot_qa_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/model/spot_question.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/provider/my_questions_providers.dart';
@@ -322,12 +322,13 @@ void main() {
       );
     });
 
-    // 설계 §작성 자격 표시 — 사용자가 쓴 글을 자격 문제로 날리지 않는다.
-    test('자격 없음으로 거절돼도 입력을 보존한다', () async {
+    // 서버가 거절해도 쓴 글을 날리지 않는다. 좋아요 게이팅은 사라졌지만
+    // (2026-08-18) 본문 검증 같은 다른 거절은 남아 있어 이 보존 규칙은 그대로다.
+    test('서버가 거절해도 입력을 보존한다', () async {
       final ProviderContainer container = _container(
         FakeSpotQaRepository(
           createResult: const SpotQaMutationResult<String>.failure(
-            'NOT_ELIGIBLE_TO_ASK',
+            'INVALID_INPUT',
           ),
         ),
       );
@@ -343,7 +344,7 @@ void main() {
         spotQaComposerProvider(SpotQaComposerTarget.question, 'c1'),
       );
       expect(state.body, '지금 붐비나요?', reason: '쓴 글을 잃지 않는다');
-      expect(state.notEligible, isTrue);
+      expect(state.errorCode, 'INVALID_INPUT');
       expect(state.isSubmitting, isFalse);
     });
 
@@ -411,12 +412,74 @@ void main() {
     });
   });
 
-  group('작성 진입점 노출', () {
-    // 좋아요 게이팅은 폐지됐다(2026-08-18 사용자 결정 —
-    // `spot_qa_eligibility.dart`). 「지금 여기 어때?」는 가기 전에 나오는 질문이라
-    // 좋아요를 조건으로 걸면 질문이 가장 필요한 사람을 막는다.
-    test('자격과 질문 유무에 관계없이 진입점을 보인다', () {
-      expect(showSpotQaEntry(), isTrue);
+  group('SpotQaEntryButton', () {
+    // 좋아요 게이팅은 서버에서도 폐지됐다(2026-08-18). 진입점을 조건부로 가리는
+    // 코드가 되살아나면 여기서 잡힌다 — 「지금 여기 어때?」는 가기 전에 나오는
+    // 질문이라 좋아요를 조건으로 걸면 질문이 가장 필요한 사람을 막는다.
+    testWidgets('질문이 없어도 진입점을 보이고 작성으로 보낸다', (WidgetTester tester) async {
+      final ProviderContainer container = _container(FakeSpotQaRepository());
+      bool composed = false;
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: const Locale('en'),
+            home: Scaffold(
+              body: SpotQaEntryButton(
+                catalogId: 'c1',
+                onOpenList: () {},
+                onCompose: () => composed = true,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.forum_outlined), findsOneWidget);
+      await tester.tap(find.byIcon(Icons.forum_outlined));
+      // 질문이 하나도 없으면 빈 목록을 거치지 않고 곧장 작성으로 간다.
+      expect(composed, isTrue);
+    });
+
+    testWidgets('질문이 있으면 개수를 보이고 목록으로 보낸다', (WidgetTester tester) async {
+      final ProviderContainer container = _container(
+        FakeSpotQaRepository(
+          questionsByCatalog: <String, List<SpotQuestion>>{
+            'c1': <SpotQuestion>[
+              fakeQuestion(id: 'q1'),
+              fakeQuestion(id: 'q2'),
+            ],
+          },
+        ),
+      );
+      bool opened = false;
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: const Locale('en'),
+            home: Scaffold(
+              body: SpotQaEntryButton(
+                catalogId: 'c1',
+                onOpenList: () => opened = true,
+                onCompose: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('2 questions'), findsOneWidget);
+      await tester.tap(find.byIcon(Icons.forum_outlined));
+      expect(opened, isTrue);
     });
   });
 

@@ -814,8 +814,6 @@
   "spotQaAnswerBodyHint": "ご存じのことを教えてください。",
   "spotQaSubmitAction": "投稿",
   "spotQaSubmitFailed": "投稿できませんでした。しばらくしてからお試しください。",
-  "spotQaNotEligibleToAsk": "この場所をいいねすると質問できます。",
-  "spotQaNotEligibleToAnswer": "この場所をいいねすると回答できます。",
   "spotQaDeleteAction": "削除",
   "spotQaDeleteFailed": "削除できませんでした。しばらくしてからお試しください。",
   "spotQaDmAction": "メッセージを送る",

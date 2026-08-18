@@ -4,21 +4,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/spot_qa_failure.dart';
 import '../provider/spot_qa_composer_providers.dart';
-import 'spot_qa_eligibility_banner.dart';
 
 /// 답변·답글 인라인 컴포저(디자인 §4).
 ///
 /// ```
-/// (자격 거부 시) 배너
 /// [ 둥근 입력칸 ................. ] [전송]
 /// ```
 ///
 /// **낙관적 갱신이 없다**(설계 §상태 관리) — 서버 응답을 기다린 뒤 [onSubmitted]로
-/// 목록 갱신을 호출부에 맡긴다. 서버가 자격을 판정하므로 낙관적으로 넣으면 거부 시
-/// 롤백해야 하고, 그 사이 사용자가 자기 글을 이미 본 상태가 된다.
+/// 목록 갱신을 호출부에 맡긴다. 낙관적으로 넣으면 거부 시 롤백해야 하고, 그 사이
+/// 사용자가 자기 글을 이미 본 상태가 된다.
 ///
-/// **거부돼도 입력을 지우지 않는다.** 자격 없음이면 배너만 띄우고 컴포저를 접지
-/// 않는다 — 사용자가 쓴 글을 자격 문제로 날리는 것은 과하다(설계 §작성 자격 표시).
+/// **거부돼도 입력을 지우지 않는다.** 안내만 띄우고 컴포저를 접지 않는다 — 사용자가
+/// 쓴 글을 서버 사정으로 날리는 것은 과하다.
 ///
 /// **사진 첨부가 없다.** 서버에 업로드 뮤테이션이 없어 이번 범위에서 빠졌다(설계
 /// §사진 첨부) — 카메라·갤러리 아이콘을 그리지 않는다.
@@ -68,8 +66,6 @@ class _SpotQaInlineComposerState extends ConsumerState<SpotQaInlineComposer> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        // 자격 거부는 컴포저를 접지 않고 여기 안내만 얹는다(디자인 §4).
-        if (state.notEligible) SpotQaEligibilityBanner(target: widget.target),
         Row(
           children: <Widget>[
             Expanded(
@@ -126,12 +122,8 @@ class _SpotQaInlineComposerState extends ConsumerState<SpotQaInlineComposer> {
     if (!mounted) return;
 
     if (!result.succeeded) {
-      // 자격 없음은 배너가 이미 말한다 — 스낵바를 겹치면 같은 말을 두 번 한다.
-      if (!result.notEligible) {
-        messenger.showSnackBar(
-          SnackBar(content: Text(l10n.spotQaSubmitFailed)),
-        );
-      }
+      // **입력은 그대로 남는다** — 컴포저를 접지 않고 안내만 띄운다.
+      messenger.showSnackBar(SnackBar(content: Text(l10n.spotQaSubmitFailed)));
       return;
     }
 
