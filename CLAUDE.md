@@ -448,6 +448,22 @@ Run it **once, before the PR**, alongside the test suite (§8) — not per edit.
 down, say so and mark the contract as unverified in the spec doc; do not let a green build imply
 a checked contract.
 
+**The sweep does not catch a newly-required input field.** It sends `variables: {}`, so a missing
+required argument comes back as `coerced Null` — exactly what you are told to ignore as noise. A
+server that adds `resolved: Boolean!` to an existing input passes the sweep and fails at runtime.
+That is how SPEC-0026 shipped a `resolveSpotQuestion` that could never succeed.
+
+So after a clean sweep, **hand-send one payload per mutation whose input you touched** — literal
+arguments, not `{}`. `UNAUTHENTICATED` means the shape passed; `WrongType … is missing required
+fields '[x]'` means the input grew an argument you do not send:
+
+```sh
+jq -n '{query:"mutation P { resolveSpotQuestion(input:{questionId:\"1\"}) { success } }",variables:{}}' \
+  | curl -s -m 15 -X POST "$URL" -H 'Content-Type: application/json' -d @-
+```
+
+Only the operations you changed — the sweep covers the rest.
+
 > **Note (2026-08-16):** `require-fresh-schema.sh` and `require-feature-branch.sh` are referenced
 > here and in §12 as hook-enforced, but **neither file exists and neither is registered** in
 > `.claude/settings.json` — only `block-sensitive-paths.sh` and `block-insecure-storage.sh` run.

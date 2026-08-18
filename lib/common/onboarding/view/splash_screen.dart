@@ -87,41 +87,64 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       backgroundColor: AppColors.primary,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 72),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          // 가로 여백을 화면 폭에 비례시킨다. 72로 고정하면 좁은 기기에서 문구가
+          // 과하게 접히고, 넓은 기기에서는 상대적으로 좁아 보인다.
+          padding: EdgeInsets.symmetric(
+            horizontal: MediaQuery.sizeOf(context).width * 0.12,
+          ),
+          child: Stack(
             children: <Widget>[
-              const Spacer(flex: 3),
-              SvgPicture.asset(AppAssets.appIconSplash, width: 150),
-              const SizedBox(height: 28),
-              Text(
-                _brand,
-                textAlign: TextAlign.center,
-                style: text.headlineMedium?.copyWith(
-                  color: onCoral,
-                  fontWeight: FontWeight.w700,
+              // **로고·브랜드·진행 표시를 한 덩어리로 묶어 가운데 둔다.**
+              //
+              // 예전에는 `Spacer`를 3:2:2로 깔았는데, 그러면 세로가 긴 기기에서
+              // 그 비율만큼 빈 공간이 커져 요소들이 화면 전체에 흩어졌다 —
+              // iPhone Max에서 로고는 위쪽, 진행 표시는 한참 아래에 떨어져 보였다.
+              // 고정 간격으로 묶으면 화면 크기와 무관하게 같은 덩어리로 보인다.
+              Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    SvgPicture.asset(AppAssets.appIconSplash, width: 150),
+                    const SizedBox(height: 28),
+                    Text(
+                      _brand,
+                      textAlign: TextAlign.center,
+                      style: text.headlineMedium?.copyWith(
+                        color: onCoral,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      l10n.splashTagline,
+                      textAlign: TextAlign.center,
+                      style: text.bodyLarge?.copyWith(
+                        color: onCoral,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 48),
+                    // 위치는 필수: 허용을 기다리는 동안엔 로딩 바를, 영구거부됐으면
+                    // 무한 대기 대신 설정 경로를 제공한다 (R5).
+                    if (locationBlocked)
+                      _LocationBlocked(onCoral: onCoral)
+                    else
+                      _Loading(onCoral: onCoral),
+                  ],
                 ),
               ),
-              const SizedBox(height: 12),
-              Text(
-                l10n.splashTagline,
-                textAlign: TextAlign.center,
-                style: text.bodyLarge?.copyWith(color: onCoral, fontSize: 14),
+              // 하단 문구는 바닥에 붙인다 — 가운데 덩어리와 섞이지 않는다.
+              PositionedDirectional(
+                start: 0,
+                end: 0,
+                bottom: 16,
+                child: Text(
+                  l10n.splashSubTagline,
+                  textAlign: TextAlign.center,
+                  style: text.bodySmall?.copyWith(color: Colors.white70),
+                ),
               ),
-              const Spacer(flex: 2),
-              // 위치는 필수: 허용을 기다리는 동안엔 로딩 바를, 영구거부됐으면 무한 대기
-              // 대신 설정 경로를 제공한다 (R5).
-              if (locationBlocked)
-                _LocationBlocked(onCoral: onCoral)
-              else
-                _Loading(onCoral: onCoral),
-              const Spacer(flex: 2),
-              Text(
-                l10n.splashSubTagline,
-                textAlign: TextAlign.center,
-                style: text.bodySmall?.copyWith(color: Colors.white70),
-              ),
-              const SizedBox(height: 16),
             ],
           ),
         ),

@@ -22,8 +22,8 @@ import 'spot_qa_actions.dart';
 /// 질문 상세(R7, 디자인 §2).
 ///
 /// ```
-/// AppBar        "질문 작성" 아닌 질문 보기 · 우측 신고
-/// 질문 블록      작성자 · 본문 전문 · 해결 배지 · [해결됨으로 표시]
+/// AppBar        제목 · 우측 ⋮(해결 토글 / 신고)
+/// 질문 블록      작성자 · 본문 전문 · 해결 배지
 /// "답변 · N"
 /// SpotAnswerTile × N (답글 포함, 커서 페이지네이션)
 /// 하단 고정      답변 컴포저
@@ -108,16 +108,16 @@ class _SpotQuestionDetailScreenState
       appBar: AppBar(
         title: Text(l10n.spotQaQuestionsTitle),
         actions: <Widget>[
-          // 「이 질문에 대한 조치」를 한군데 모은다 — 해결 표시와 신고는 서로 배타적
+          // 「이 질문에 대한 조치」를 한군데 모은다 — 해결 토글과 신고는 서로 배타적
           // (내 질문이냐 아니냐)이라 각각 아이콘을 두면 자리만 차지한다.
           //
-          // **해결 표시를 본문 옆이 아니라 여기 두는 이유**: 질문당 한 번뿐이고
-          // 되돌릴 수 없는 동작인데, 본문 아래 왼쪽에 두었더니 해결됨 배지와 같은
-          // 자리·같은 아이콘이라 **상태 표시로 읽혔다.**
+          // **해결 토글을 본문 옆이 아니라 여기 두는 이유**: 본문 아래 왼쪽에
+          // 두었더니 바로 위 「해결됨」 배지와 자리·아이콘이 같아 **버튼이 아니라
+          // 상태 표시로 읽혔다.**
           if (question != null)
             PopupMenuButton<_QuestionAction>(
               onSelected: (_QuestionAction action) => switch (action) {
-                _QuestionAction.resolve => _confirmResolve(question),
+                _QuestionAction.resolve => _toggleResolved(question),
                 _QuestionAction.report => runSpotQaReport(
                   context,
                   ref,
@@ -127,12 +127,16 @@ class _SpotQuestionDetailScreenState
               },
               itemBuilder: (BuildContext context) =>
                   <PopupMenuEntry<_QuestionAction>>[
-                    // 되돌릴 수단이 없어(서버에 뮤테이션 자체가 없다) 이미 해결된
-                    // 질문에는 항목이 아예 없다.
-                    if (question.ownedByViewer && !question.resolved)
+                    // **되돌릴 수 있다**(2026-08-18 서버가 토글을 열었다) — 해결된
+                    // 질문에는 「미해결로 되돌리기」가 나온다.
+                    if (question.ownedByViewer)
                       PopupMenuItem<_QuestionAction>(
                         value: _QuestionAction.resolve,
-                        child: Text(l10n.spotQaResolveAction),
+                        child: Text(
+                          question.resolved
+                              ? l10n.spotQaUnresolveAction
+                              : l10n.spotQaResolveAction,
+                        ),
                       ),
                     // 내 질문에는 신고를 두지 않는다 — 자기 글 신고는 의미가 없다.
                     if (!question.ownedByViewer)
@@ -172,43 +176,31 @@ class _SpotQuestionDetailScreenState
     );
   }
 
-  /// 해결 표시를 확인받고 보낸다.
+  /// 해결 여부를 뒤집는다.
   ///
-  /// **되돌릴 수 없어 한 번 묻는다** — 서버에 취소 뮤테이션이 없다. 안내에 "답변은
-  /// 계속 받을 수 있다"를 함께 적는 이유는, 해결 표시가 답변을 막는다고 오해하면
-  /// 질문자가 누르기를 주저하기 때문이다(AC-4.4는 막지 않는다고 못 박았다).
-  Future<void> _confirmResolve(SpotQuestion question) async {
+  /// **확인을 묻지 않는다** — 되돌릴 수 있게 되어(서버가 `resolved` 인자를 열었다)
+  /// 잘못 눌러도 한 번 더 누르면 그만이다. 되돌릴 수 없던 시절에는 다이얼로그로 한 번
+  /// 막았지만, 지금은 그 물음이 사용자를 붙잡을 뿐이다.
+  ///
+  /// 낙관적으로 먼저 반영되고(컨트롤러가 즉시 상태를 바꾼다) 실패하면 되돌아온다.
+  Future<void> _toggleResolved(SpotQuestion question) async {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
-
-    final bool? ok = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) => AlertDialog(
-        title: Text(l10n.spotQaResolveConfirmTitle),
-        content: Text(l10n.spotQaResolveConfirmBody),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.commonCancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.spotQaResolveConfirmAction),
-          ),
-        ],
-      ),
-    );
-    if (ok != true || !mounted) return;
+    final bool next = !question.resolved;
+    // 실패 문구가 방향에 따라 다르다 — "표시하지 못함"과 "되돌리지 못함"은 다른 말이다.
+    final String failedText = next
+        ? l10n.spotQaResolveFailed
+        : l10n.spotQaUnresolveFailed;
 
     try {
       final SpotQaMutationResult<void> result = await ref
           .read(spotQuestionsControllerProvider(widget.catalogId).notifier)
-          .resolve(question.id);
+          .resolve(question.id, resolved: next);
       if (!mounted || result.succeeded) return;
-      messenger.showSnackBar(SnackBar(content: Text(l10n.spotQaResolveFailed)));
+      messenger.showSnackBar(SnackBar(content: Text(failedText)));
     } on Object {
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text(l10n.spotQaResolveFailed)));
+      messenger.showSnackBar(SnackBar(content: Text(failedText)));
     }
   }
 
@@ -438,7 +430,7 @@ class _AnswerRow extends ConsumerWidget {
 }
 
 /// 질문 본문 블록. 해결 표시 버튼은 **내 질문이고 아직 미해결일 때만** 보인다.
-/// 상단바 ⋮ 메뉴의 항목. 내 질문이면 해결 표시가, 남의 질문이면 신고가 나온다.
+/// 상단바 ⋮ 메뉴의 항목. 내 질문이면 해결 토글이, 남의 질문이면 신고가 나온다.
 enum _QuestionAction { resolve, report }
 
 class _QuestionBlock extends ConsumerWidget {

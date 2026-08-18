@@ -83,7 +83,7 @@ final class SpotQuestionsControllerProvider
 }
 
 String _$spotQuestionsControllerHash() =>
-    r'aa6ec3fe4f53332bbdd444efa6a5d4896b99a8ea';
+    r'0f509dc1117676c1d7981584a1d7317f025e7830';
 
 /// 장소 하나의 질문 목록(R1·R2·R16). [catalogId]별 패밀리 — id를 인자로 두면
 /// codegen이 family를 만든다(CLAUDE.md §5).

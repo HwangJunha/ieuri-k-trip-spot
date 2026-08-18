@@ -124,6 +124,9 @@ class FakeSpotQaRepository implements SpotQaRepository {
   CreateCall? lastCreateAnswer;
   CreateCall? lastCreateReply;
   String? lastResolved;
+
+  /// 마지막 해결 토글에 실린 값. 되돌리기(false)까지 검증하기 위해 기록한다.
+  bool? lastResolvedValue;
   final List<String> deletedQuestions = <String>[];
 
   CursorPage<T> _page<T>(List<CursorPage<T>> pages, int index) {
@@ -230,9 +233,13 @@ class FakeSpotQaRepository implements SpotQaRepository {
   }
 
   @override
-  Future<SpotQaMutationResult<void>> resolveQuestion(String questionId) async {
+  Future<SpotQaMutationResult<void>> resolveQuestion(
+    String questionId, {
+    required bool resolved,
+  }) async {
     if (resolveThrows != null) throw resolveThrows!;
     lastResolved = questionId;
+    lastResolvedValue = resolved;
     return resolveResult ?? const SpotQaMutationResult<void>.success(null);
   }
 

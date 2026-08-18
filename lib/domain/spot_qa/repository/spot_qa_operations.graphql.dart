@@ -5989,7 +5989,11 @@ class _CopyWithStubImpl$Mutation$DeleteSpotQuestion$deleteSpotQuestion$userError
 class Variables$Mutation$ResolveSpotQuestion {
   factory Variables$Mutation$ResolveSpotQuestion({
     required String questionId,
-  }) => Variables$Mutation$ResolveSpotQuestion._({r'questionId': questionId});
+    required bool resolved,
+  }) => Variables$Mutation$ResolveSpotQuestion._({
+    r'questionId': questionId,
+    r'resolved': resolved,
+  });
 
   Variables$Mutation$ResolveSpotQuestion._(this._$data);
 
@@ -5999,6 +6003,8 @@ class Variables$Mutation$ResolveSpotQuestion {
     final result$data = <String, dynamic>{};
     final l$questionId = data['questionId'];
     result$data['questionId'] = (l$questionId as String);
+    final l$resolved = data['resolved'];
+    result$data['resolved'] = (l$resolved as bool);
     return Variables$Mutation$ResolveSpotQuestion._(result$data);
   }
 
@@ -6006,10 +6012,14 @@ class Variables$Mutation$ResolveSpotQuestion {
 
   String get questionId => (_$data['questionId'] as String);
 
+  bool get resolved => (_$data['resolved'] as bool);
+
   Map<String, dynamic> toJson() {
     final result$data = <String, dynamic>{};
     final l$questionId = questionId;
     result$data['questionId'] = l$questionId;
+    final l$resolved = resolved;
+    result$data['resolved'] = l$resolved;
     return result$data;
   }
 
@@ -6033,13 +6043,19 @@ class Variables$Mutation$ResolveSpotQuestion {
     if (l$questionId != lOther$questionId) {
       return false;
     }
+    final l$resolved = resolved;
+    final lOther$resolved = other.resolved;
+    if (l$resolved != lOther$resolved) {
+      return false;
+    }
     return true;
   }
 
   @override
   int get hashCode {
     final l$questionId = questionId;
-    return Object.hashAll([l$questionId]);
+    final l$resolved = resolved;
+    return Object.hashAll([l$questionId, l$resolved]);
   }
 }
 
@@ -6052,7 +6068,7 @@ abstract class CopyWith$Variables$Mutation$ResolveSpotQuestion<TRes> {
   factory CopyWith$Variables$Mutation$ResolveSpotQuestion.stub(TRes res) =
       _CopyWithStubImpl$Variables$Mutation$ResolveSpotQuestion;
 
-  TRes call({String? questionId});
+  TRes call({String? questionId, bool? resolved});
 }
 
 class _CopyWithImpl$Variables$Mutation$ResolveSpotQuestion<TRes>
@@ -6068,13 +6084,16 @@ class _CopyWithImpl$Variables$Mutation$ResolveSpotQuestion<TRes>
 
   static const _undefined = <dynamic, dynamic>{};
 
-  TRes call({Object? questionId = _undefined}) => _then(
-    Variables$Mutation$ResolveSpotQuestion._({
-      ..._instance._$data,
-      if (questionId != _undefined && questionId != null)
-        'questionId': (questionId as String),
-    }),
-  );
+  TRes call({Object? questionId = _undefined, Object? resolved = _undefined}) =>
+      _then(
+        Variables$Mutation$ResolveSpotQuestion._({
+          ..._instance._$data,
+          if (questionId != _undefined && questionId != null)
+            'questionId': (questionId as String),
+          if (resolved != _undefined && resolved != null)
+            'resolved': (resolved as bool),
+        }),
+      );
 }
 
 class _CopyWithStubImpl$Variables$Mutation$ResolveSpotQuestion<TRes>
@@ -6083,7 +6102,7 @@ class _CopyWithStubImpl$Variables$Mutation$ResolveSpotQuestion<TRes>
 
   TRes _res;
 
-  call({String? questionId}) => _res;
+  call({String? questionId, bool? resolved}) => _res;
 }
 
 class Mutation$ResolveSpotQuestion {
@@ -6211,6 +6230,15 @@ const documentNodeMutationResolveSpotQuestion = DocumentNode(
           defaultValue: DefaultValueNode(value: null),
           directives: [],
         ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'resolved')),
+          type: NamedTypeNode(
+            name: NameNode(value: 'Boolean'),
+            isNonNull: true,
+          ),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
       ],
       directives: [],
       selectionSet: SelectionSetNode(
@@ -6226,6 +6254,10 @@ const documentNodeMutationResolveSpotQuestion = DocumentNode(
                     ObjectFieldNode(
                       name: NameNode(value: 'questionId'),
                       value: VariableNode(name: NameNode(value: 'questionId')),
+                    ),
+                    ObjectFieldNode(
+                      name: NameNode(value: 'resolved'),
+                      value: VariableNode(name: NameNode(value: 'resolved')),
                     ),
                   ],
                 ),

@@ -1,3 +1,5 @@
+import 'package:ieuri_k_trip_spot/domain/dm/provider/dm_providers.dart';
+import '../domain/dm/dm_test_doubles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -48,6 +50,9 @@ Future<ProviderContainer> _homeContainer() async {
       // GraphQL 클라이언트로 나가 상태가 loading에 머물고, 게이트가 사용자를
       // 스플래시에 묶어 탭 자체가 렌더링되지 않는다.
       settingsRepositoryProvider.overrideWithValue(FakeSettingsRepository()),
+      // SPEC-0026: 홈 상단의 메시지 배지가 대화 목록을 받는다. 오버라이드가 없으면
+      // 실제 GraphQL 클라이언트로 나가 타이머가 남는다.
+      dmRepositoryProvider.overrideWithValue(FakeDmRepository()),
     ],
   );
   addTearDown(container.dispose);

@@ -55,6 +55,61 @@ class _StaleAccessTokenRepository extends FakeAuthRepository {
 }
 
 void main() {
+  // 사용자가 아무 조작도 안 했는데 로그인 화면으로 튕기던 문제의 회귀 방지.
+  //
+  // 예전 판정은 "`transportFailure`가 아니면 전부 세션 종료"였다. 서버가 앱이 모르는
+  // 코드를 하나만 내려도(`fromCode`가 `unknown`으로 접는다) 즉시 로그아웃됐고, 갱신은
+  // 화면을 보는 중에 조용히 도는 것이라 "보고 있는데 갑자기 로그아웃"으로 나타났다.
+  group('갱신 실패가 세션을 끝내는 기준 (회귀)', () {
+    test('모르는 서버 코드로는 로그아웃되지 않는다', () async {
+      final SecureStorage storage = await _storedTokens();
+      final ProviderContainer c = _container(
+        storage,
+        repo: _StaleAccessTokenRepository(
+          // 서버가 새 코드를 내면 `fromCode`가 여기로 접는다.
+          refreshFailure: const AuthFailure(AuthFailureKind.unknown),
+        ),
+      );
+
+      await c.read(authControllerProvider.future);
+
+      // **토큰이 남아 있어야 한다** — 이번 갱신을 못 했을 뿐이다. 정말 만료됐다면
+      // 다음 요청에서 서버가 refreshRejected로 다시 거부하고 그때 로그아웃된다.
+      expect(await storage.readRefreshToken(), isNotNull);
+    });
+
+    test('회전 토큰 재사용이 감지되면 세션을 끝낸다', () async {
+      final SecureStorage storage = await _storedTokens();
+      final ProviderContainer c = _container(
+        storage,
+        repo: _StaleAccessTokenRepository(
+          refreshFailure: AuthFailure.tokenReuseDetected,
+        ),
+      );
+
+      final AuthState state = await c.read(authControllerProvider.future);
+
+      // 재발급으로 회복되지 않는다 — 재로그인이 유일한 복구다.
+      expect(state.isAuthenticated, isFalse);
+      expect(await storage.readRefreshToken(), isNull);
+    });
+
+    test('비활성 계정이면 세션을 끝낸다', () async {
+      final SecureStorage storage = await _storedTokens();
+      final ProviderContainer c = _container(
+        storage,
+        repo: _StaleAccessTokenRepository(
+          refreshFailure: const AuthFailure(AuthFailureKind.accountInactive),
+        ),
+      );
+
+      final AuthState state = await c.read(authControllerProvider.future);
+
+      expect(state.isAuthenticated, isFalse);
+      expect(await storage.readRefreshToken(), isNull);
+    });
+  });
+
   group('부팅 시 갱신 (R13, §2.6)', () {
     test('갱신 거부면 토큰을 지우고 미인증이 된다 (R9·R11)', () async {
       final SecureStorage storage = await _storedTokens();

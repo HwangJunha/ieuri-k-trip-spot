@@ -101,15 +101,17 @@ class SpotQuestionsController extends _$SpotQuestionsController {
     }
   }
 
-  /// 질문을 해결됨으로 표시한다(R8).
+  /// 질문의 해결 여부를 바꾼다(R8).
   ///
-  /// **여기만 낙관적으로 갱신한다**(설계 §상태 관리). 되돌리는 뮤테이션이 서버에
-  /// 없어 사용자가 취소할 수단이 없고, 멱등이라 실패 확률도 낮기 때문이다. 작성은
-  /// 낙관적으로 처리하지 않는다 — 서버가 자격을 판정하므로 거부 시 롤백해야 하는데,
-  /// 그 사이 사용자가 자기 글을 이미 본 상태가 된다.
+  /// **여기만 낙관적으로 갱신한다**(설계 §상태 관리) — 결과가 눈에 바로 보여야 하고,
+  /// 실패하면 그대로 되돌리면 된다. 작성은 낙관적으로 처리하지 않는다: 서버가 거부하면
+  /// 롤백해야 하는데 그 사이 사용자가 자기 글을 이미 본 상태가 되기 때문이다.
   ///
-  /// 실패하면 낙관 반영 직전 상태를 그대로 되돌린다.
-  Future<SpotQaMutationResult<void>> resolve(String questionId) async {
+  /// [resolved]가 false면 미해결로 되돌린다(2026-08-18 서버가 토글을 열었다).
+  Future<SpotQaMutationResult<void>> resolve(
+    String questionId, {
+    required bool resolved,
+  }) async {
     final SpotQuestionsState? current = state.value;
     if (current == null) {
       return const SpotQaMutationResult<void>.failure(null);
@@ -120,7 +122,7 @@ class SpotQuestionsController extends _$SpotQuestionsController {
         items: current.items
             .map(
               (SpotQuestion q) =>
-                  q.id == questionId ? q.copyWith(resolved: true) : q,
+                  q.id == questionId ? q.copyWith(resolved: resolved) : q,
             )
             .toList(growable: false),
       ),
@@ -128,7 +130,10 @@ class SpotQuestionsController extends _$SpotQuestionsController {
 
     late final SpotQaMutationResult<void> result;
     try {
-      result = await _repository.resolveQuestion(questionId);
+      result = await _repository.resolveQuestion(
+        questionId,
+        resolved: resolved,
+      );
     } on Object {
       // 전송·인증 실패는 예외로 온다. 목록을 지우지 않고 표시만 되돌린다.
       state = AsyncData<SpotQuestionsState>(current);

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../common/navigation/spot_detail_route.dart';
 import '../../../common/widget/home_section.dart';
+import '../../dm/component/messages_button.dart';
 import '../../../common/widget/settings_button.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../event/component/happening_now_section.dart';
@@ -47,6 +48,9 @@ class HomeScreen extends ConsumerWidget {
           // 설정 진입점(SPEC-0011 R1). 하단 탭 5개는 SPEC-0008에서 고정됐으므로
           // 설정은 탭이 아니라 여기서 들어간다. 로그아웃은 설정 안으로 옮겨갔다
           // (R15) — 그 자리를 이 아이콘이 대신한다.
+          // DM 진입 + 안 읽음 표시(2026-08-18). 예전에는 설정 안에서만 대화 목록에
+          // 들어갈 수 있어, 메시지가 와도 설정을 열어 봐야 알았다.
+          const MessagesButton(),
           const SettingsButton(),
         ],
       ),

@@ -169,7 +169,7 @@ void main() {
 
       await container
           .read(spotQuestionsControllerProvider('c1').notifier)
-          .resolve('q1');
+          .resolve('q1', resolved: true);
 
       expect(
         container
@@ -201,7 +201,7 @@ void main() {
 
       final SpotQaMutationResult<void> result = await container
           .read(spotQuestionsControllerProvider('c1').notifier)
-          .resolve('q1');
+          .resolve('q1', resolved: true);
 
       expect(result.succeeded, isFalse);
       expect(
@@ -233,7 +233,7 @@ void main() {
       await expectLater(
         container
             .read(spotQuestionsControllerProvider('c1').notifier)
-            .resolve('q1'),
+            .resolve('q1', resolved: true),
         throwsA(isA<SpotQaFailure>()),
       );
       expect(
@@ -532,24 +532,33 @@ void main() {
       expect(find.text('Mark as resolved'), findsOneWidget);
     });
 
-    test('이미 해결된 질문에는 해결 표시를 다시 보내지 않는다', () async {
-      // 되돌릴 수단이 없어 메뉴 항목 자체가 사라진다 — 컨트롤러도 같은 전제다.
+    // 2026-08-18 서버가 `resolved` 인자를 열어 되돌리기가 가능해졌다.
+    testWidgets('이미 해결된 질문에는 되돌리기가 나온다', (WidgetTester tester) async {
+      await pumpDetail(
+        tester,
+        repoWith(fakeQuestion(ownedByViewer: true, resolved: true)),
+      );
+
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Mark as unresolved'), findsOneWidget);
+      expect(find.text('Mark as resolved'), findsNothing);
+    });
+
+    testWidgets('되돌리기를 누르면 resolved: false로 보낸다', (WidgetTester tester) async {
       final FakeSpotQaRepository repo = repoWith(
         fakeQuestion(ownedByViewer: true, resolved: true),
       );
-      final ProviderContainer container = _container(repo);
-      await container.read(spotQuestionsControllerProvider('c1').future);
+      await pumpDetail(tester, repo);
 
-      expect(
-        container
-            .read(spotQuestionsControllerProvider('c1'))
-            .value!
-            .items
-            .single
-            .resolved,
-        isTrue,
-      );
-      expect(repo.lastResolved, isNull);
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Mark as unresolved'));
+      await tester.pumpAndSettle();
+
+      expect(repo.lastResolved, 'q1');
+      expect(repo.lastResolvedValue, isFalse);
     });
 
     testWidgets('남의 질문에는 해결 표시가 없고 신고만 있다', (WidgetTester tester) async {
@@ -562,8 +571,8 @@ void main() {
       expect(find.text('Report'), findsOneWidget);
     });
 
-    // 되돌릴 수 없는 동작이라 한 번 묻는다. 취소하면 아무것도 보내지 않는다.
-    testWidgets('취소하면 해결 표시를 보내지 않는다', (WidgetTester tester) async {
+    // 되돌릴 수 있게 되어 확인 다이얼로그를 없앴다 — 누르면 곧장 나간다.
+    testWidgets('해결 표시를 누르면 resolved: true로 보낸다', (WidgetTester tester) async {
       final FakeSpotQaRepository repo = repoWith(
         fakeQuestion(ownedByViewer: true),
       );
@@ -572,29 +581,10 @@ void main() {
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Mark as resolved'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Mark as resolved?'), findsOneWidget);
-      await tester.tap(find.text('Cancel'));
-      await tester.pumpAndSettle();
-
-      expect(repo.lastResolved, isNull);
-    });
-
-    testWidgets('확인하면 해결 표시를 보낸다', (WidgetTester tester) async {
-      final FakeSpotQaRepository repo = repoWith(
-        fakeQuestion(ownedByViewer: true),
-      );
-      await pumpDetail(tester, repo);
-
-      await tester.tap(find.byIcon(Icons.more_vert));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Mark as resolved'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Mark'));
       await tester.pumpAndSettle();
 
       expect(repo.lastResolved, 'q1');
+      expect(repo.lastResolvedValue, isTrue);
     });
 
     // 답변이 달렸는지 보러 다시 들어오는 화면이라 갱신 수단이 있어야 한다.

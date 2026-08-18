@@ -300,10 +300,15 @@ class SpotQaRepositoryImpl implements SpotQaRepository {
       );
 
   @override
-  Future<SpotQaMutationResult<void>> resolveQuestion(String questionId) =>
-      _mutateResult<void>(
+  Future<SpotQaMutationResult<void>> resolveQuestion(
+    String questionId, {
+    required bool resolved,
+  }) => _mutateResult<void>(
         documentNodeMutationResolveSpotQuestion,
-        Variables$Mutation$ResolveSpotQuestion(questionId: questionId).toJson(),
+        Variables$Mutation$ResolveSpotQuestion(
+          questionId: questionId,
+          resolved: resolved,
+        ).toJson(),
         'resolveSpotQuestion',
         (Map<String, dynamic> data) {
           final payload = Mutation$ResolveSpotQuestion.fromJson(

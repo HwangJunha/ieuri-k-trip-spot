@@ -168,9 +168,9 @@ mutation DeleteSpotQuestion($questionId: ID!) {
   }
 }
 
-# 멱등이다 — 이미 해결된 질문에 다시 불러도 오류가 아니다.
-mutation ResolveSpotQuestion($questionId: ID!) {
-  resolveSpotQuestion(input: { questionId: $questionId }) {
+# 해결 여부를 바꾼다. **되돌릴 수 있다** — `resolved: false`로 미해결로 돌린다.
+mutation ResolveSpotQuestion($questionId: ID!, $resolved: Boolean!) {
+  resolveSpotQuestion(input: { questionId: $questionId, resolved: $resolved }) {
     success
     userErrors {
       code

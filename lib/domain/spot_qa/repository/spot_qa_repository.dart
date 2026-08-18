@@ -103,9 +103,14 @@ abstract interface class SpotQaRepository {
   /// 본인 질문 삭제. 타인 질문은 `NOT_QUESTION_OWNER`. 딸린 답변·답글도 함께 삭제된다.
   Future<SpotQaMutationResult<void>> deleteQuestion(String questionId);
 
-  /// 질문을 해결됨으로 표시한다. **멱등이며 되돌리는 수단이 없다**(서버에 뮤테이션이
-  /// 없다) — 그래서 낙관적 갱신을 적용해도 되돌리기 UI를 만들 필요가 없다.
-  Future<SpotQaMutationResult<void>> resolveQuestion(String questionId);
+  /// 질문의 해결 여부를 바꾼다. **되돌릴 수 있다**(2026-08-18 서버가 `resolved`를
+  /// 필수 인자로 추가했다) — 예전에는 표시만 되고 취소가 없었다.
+  ///
+  /// 해결됨으로 표시해도 답변은 계속 받는다(AC-4.4).
+  Future<SpotQaMutationResult<void>> resolveQuestion(
+    String questionId, {
+    required bool resolved,
+  });
 
   /// 답변을 작성하고 새 답변 id를 돌려준다.
   /// **해결됨으로 표시된 질문에도 답변할 수 있다.**

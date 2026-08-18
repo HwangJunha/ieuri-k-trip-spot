@@ -1219,7 +1219,6 @@
   "spotQaMyQuestionsFailed": "Couldn't load your questions.",
   "spotQaMyQuestionsSignInBody": "Sign in to see the questions you've asked and their answers.",
   "spotQaPhotoUploadFailed": "{count, plural, =1{Couldn't upload 1 photo.} other{Couldn't upload {count} photos.}}",
-  "spotQaResolveConfirmTitle": "Mark as resolved?",
-  "spotQaResolveConfirmBody": "This can't be undone. You'll still receive answers.",
-  "spotQaResolveConfirmAction": "Mark"
+  "spotQaUnresolveAction": "Mark as unresolved",
+  "spotQaUnresolveFailed": "Couldn't undo it. Please try again."
 }
