@@ -8,7 +8,7 @@ import 'dart:convert';
 /// 영영 알 수 없다** — 답변이 달려도 확인할 경로가 없다.
 ///
 /// 계약 변경을 요청해 두었고
-/// (`ieuri-recorder/problem/SPEC-0026-POLICY-질문자격-게이팅과-내질문-조회.md`),
+/// (`problem/SPEC-0026-SERVER-question-eligibility-and-my-questions.md`),
 /// `myQuestions`가 생기면 이 저장소는 **삭제한다.** 서버가 정답을 주는데 클라이언트가
 /// 따로 기록을 쥐고 있으면 둘이 어긋날 때 판단 근거가 없다.
 ///

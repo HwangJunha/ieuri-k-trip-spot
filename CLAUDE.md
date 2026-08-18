@@ -273,16 +273,39 @@ the worst outcome — the next person trusts the doc and reverts you.
 
 `Specs/SPEC-XXXX/spec.md` (Obsidian vault) stays read-only; a hook blocks it.
 
-### When a policy blocks you
+### Asking the server or a policy for something
 
-Policies (`POL-*` in `Specs/`) are shared across apps, so never fork one locally. **After the user
-says the task is done** — implementation is what separates a real conflict from a misreading —
-file a request at `ieuri-recorder/problem/SPEC-XXXX-POLICY-<topic>.md`, spec id first so one
-spec's documents sort together across repos. Cover four things: which policy (number and wording),
-where it bit (which spec, which requirement), why the current policy can't work, and a proposal
-with its cost. If another harness already filed on the same spec, cite it instead of re-deriving,
-and withdraw yours if theirs is weaker-superseded — two competing proposals leave the recorder
-unable to decide.
+**Two destinations, and the deciding factor is whether the work is finished.**
+
+| Destination | When | What goes there |
+|---|---|---|
+| `problem/SPEC-XXXX-SERVER-<topic>.md` (this repo) | **while working** — the default | Anything you need from the server: a missing field, a wrong argument, a rule that doesn't fit |
+| `ieuri-recorder/problem/SPEC-XXXX-POLICY-<topic>.md` | **only after the user says the task is done** | Cross-app policy changes (`POL-*`) that survived the whole implementation |
+
+**Never write to `ieuri-recorder` mid-task.** It collects settled policy, not work in progress.
+A request written halfway through is a guess: the next hour of implementation routinely
+dissolves it, narrows it, or reveals that the real problem was elsewhere. Filing early means the
+recorder arbitrates something that no longer exists, and withdrawing it costs more than waiting.
+
+So while you are building, put every server-facing request in **this repo's `problem/`**, named
+`SPEC-XXXX-SERVER-<topic>.md` (spec id first, so one spec's documents sort together). Commit it
+with the code like any other design doc (§10) — a reviewer who can't see the request can't see
+why the client works around something.
+
+Head the file with the target operations, the environment you verified against, and a status line
+(`상태: 요청 중` / `해소됨(날짜, 서버 PR)`). When the server resolves it, update that line in place
+rather than deleting the file — the workaround in the code points at this document.
+
+**Promoting to a policy request comes last.** After the user says 작업 완료, re-read what you
+filed: if it turned out to be one spec's server gap, it stays here and nothing goes to the
+recorder. Only a conflict with a shared `POL-*` — one that implementation confirmed rather than
+merely suggested — becomes `ieuri-recorder/problem/SPEC-XXXX-POLICY-<topic>.md`.
+
+Policies are shared across apps, so never fork one locally. A policy request covers four things:
+which policy (number and wording), where it bit (which spec, which requirement), why the current
+policy can't work, and a proposal with its cost. If another harness already filed on the same
+spec, cite it instead of re-deriving, and withdraw yours if theirs is weaker-superseded — two
+competing proposals leave the recorder unable to decide.
 ---
 
 ## 11. Subagent pipeline

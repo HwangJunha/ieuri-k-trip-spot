@@ -13,7 +13,7 @@
 /// 게이팅을 풀면 답변 모집단이 "좋아요한 회원"에서 "그 장소를 아는 회원"으로 넓어진다.
 ///
 /// **서버는 아직 게이팅을 강제한다.** 계약 변경을 요청해 두었고
-/// (`ieuri-recorder/problem/SPEC-0026-POLICY-질문자격-게이팅과-내질문-조회.md`),
+/// (`problem/SPEC-0026-SERVER-question-eligibility-and-my-questions.md`),
 /// 그때까지 클라이언트는 `NOT_ELIGIBLE_TO_ASK`/`NOT_ELIGIBLE_TO_ANSWER`를 계속
 /// 처리한다 — 진입점만 열고 오류 분기를 지우면 사용자가 다 쓰고 나서 거절당한다.
 ///
