@@ -829,5 +829,17 @@
   "spotQaMyQuestionsUnavailable": "この質問が見つかりませんでした。削除または非表示になった可能性があります。",
   "spotQaNewAnswerBadge": "{count, plural, =1{新しい回答1件} other{新しい回答{count}件}}",
   "spotQaLocalOnlyNotice": "この一覧はこの端末にのみ保存されます。",
-  "spotQaDmEntry": "メッセージ"
+  "spotQaDmEntry": "メッセージ",
+  "spotQaEntryQuestionCount": "{count, plural, =0{まだ質問がありません} =1{質問1件} other{質問{count}件}}",
+  "spotQaComposeContext": "{spot}について質問",
+  "spotQaSuggestTitle": "こんなことを聞いてみましょう",
+  "spotQaSuggestCrowd": "混雑",
+  "spotQaSuggestParking": "駐車",
+  "spotQaSuggestWeather": "雨の日",
+  "spotQaSuggestHours": "営業状況",
+  "spotQaBodyHintExample": "例：今は混んでいますか？駐車はしやすいですか？",
+  "spotQaFillCrowd": "今は混んでいますか？",
+  "spotQaFillParking": "駐車できますか？",
+  "spotQaFillWeather": "雨でも楽しめますか？",
+  "spotQaFillHours": "今は開いていますか？"
 }

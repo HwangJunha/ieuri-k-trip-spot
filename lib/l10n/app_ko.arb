@@ -1965,5 +1965,36 @@
   "@spotQaLocalOnlyNotice": {
     "description": "서버에 myQuestions가 없어 로컬에만 쌓인다는 안내. 계약이 생기면 이 문구를 지운다"
   },
-  "spotQaDmEntry": "메시지"
+  "spotQaDmEntry": "메시지",
+  "spotQaEntryQuestionCount": "{count, plural, =0{아직 질문이 없어요} =1{질문 1개} other{질문 {count}개}}",
+  "@spotQaEntryQuestionCount": {
+    "description": "장소 상세 진입점 한 줄에 붙는 질문 수",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "spotQaComposeContext": "{spot}에 묻기",
+  "@spotQaComposeContext": {
+    "description": "작성 화면 상단에 어느 장소에 묻는지 표시. 장소명이 비면 이 줄을 생략한다",
+    "placeholders": {
+      "spot": {
+        "type": "String"
+      }
+    }
+  },
+  "spotQaSuggestTitle": "이런 걸 물어보세요",
+  "@spotQaSuggestTitle": {
+    "description": "예시 질문 칩의 머리말. 신규 장소는 질문이 0개라 무엇을 물어도 되는지 모른다(cold start)"
+  },
+  "spotQaSuggestCrowd": "혼잡도",
+  "spotQaSuggestParking": "주차",
+  "spotQaSuggestWeather": "우천 시",
+  "spotQaSuggestHours": "운영 여부",
+  "spotQaBodyHintExample": "예: 지금 사람 많은가요? 주차는 편한가요?",
+  "spotQaFillCrowd": "지금 붐비나요?",
+  "spotQaFillParking": "주차할 수 있나요?",
+  "spotQaFillWeather": "비 와도 볼만한가요?",
+  "spotQaFillHours": "지금 문 열었나요?"
 }

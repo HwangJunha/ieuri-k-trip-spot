@@ -1206,5 +1206,17 @@
   "spotQaMyQuestionsUnavailable": "Couldn't find this question. It may have been deleted or hidden.",
   "spotQaNewAnswerBadge": "{count, plural, =1{1 new answer} other{{count} new answers}}",
   "spotQaLocalOnlyNotice": "This list is saved on this device only.",
-  "spotQaDmEntry": "Messages"
+  "spotQaDmEntry": "Messages",
+  "spotQaEntryQuestionCount": "{count, plural, =0{No questions yet} =1{1 question} other{{count} questions}}",
+  "spotQaComposeContext": "Asking about {spot}",
+  "spotQaSuggestTitle": "Not sure what to ask?",
+  "spotQaSuggestCrowd": "Crowds",
+  "spotQaSuggestParking": "Parking",
+  "spotQaSuggestWeather": "Rainy day",
+  "spotQaSuggestHours": "Open now",
+  "spotQaBodyHintExample": "e.g. How busy is it right now? Is parking easy?",
+  "spotQaFillCrowd": "Is it crowded right now?",
+  "spotQaFillParking": "Is parking available?",
+  "spotQaFillWeather": "Is it worth visiting in the rain?",
+  "spotQaFillHours": "Is it open right now?"
 }

@@ -829,5 +829,17 @@
   "spotQaMyQuestionsUnavailable": "找不到该提问，可能已被删除或隐藏。",
   "spotQaNewAnswerBadge": "{count, plural, =1{1 条新回答} other{{count} 条新回答}}",
   "spotQaLocalOnlyNotice": "该列表仅保存在本机。",
-  "spotQaDmEntry": "私信"
+  "spotQaDmEntry": "私信",
+  "spotQaEntryQuestionCount": "{count, plural, =0{还没有提问} =1{1 条提问} other{{count} 条提问}}",
+  "spotQaComposeContext": "向「{spot}」提问",
+  "spotQaSuggestTitle": "可以这样问",
+  "spotQaSuggestCrowd": "拥挤程度",
+  "spotQaSuggestParking": "停车",
+  "spotQaSuggestWeather": "雨天",
+  "spotQaSuggestHours": "是否开放",
+  "spotQaBodyHintExample": "例如：现在人多吗？停车方便吗？",
+  "spotQaFillCrowd": "现在人多吗？",
+  "spotQaFillParking": "可以停车吗？",
+  "spotQaFillWeather": "下雨天也值得去吗？",
+  "spotQaFillHours": "现在开放吗？"
 }

@@ -43,7 +43,19 @@ class SpotQuestionsScreen extends ConsumerWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.spotQaQuestionsTitle)),
+      appBar: AppBar(
+        title: Text(l10n.spotQaQuestionsTitle),
+        actions: <Widget>[
+          // 「내 질문」은 장소를 가로지르는 목록이라 장소 상세가 아니라 여기 둔다 —
+          // 질문을 보러 온 사람이 "그런데 내가 물었던 건?"으로 이어지는 자리다.
+          // 답변 알림이 없어 사용자가 자기 질문을 되찾아 갈 길이 필요하다.
+          IconButton(
+            icon: const Icon(Icons.assignment_ind_outlined),
+            tooltip: l10n.spotQaMyQuestionsEntry,
+            onPressed: () => context.pushNamed(myQuestionsRouteName),
+          ),
+        ],
+      ),
       // 셸 밖의 최상위 라우트라 하단 내비 바가 없다 — 바 높이 보정이 필요 없다.
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _compose(context, ref),

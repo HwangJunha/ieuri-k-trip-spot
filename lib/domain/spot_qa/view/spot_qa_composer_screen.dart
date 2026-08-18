@@ -102,6 +102,32 @@ class _SpotQaComposerScreenState extends ConsumerState<SpotQaComposerScreen> {
               const SpotQaEligibilityBanner(
                 target: SpotQaComposerTarget.question,
               ),
+            // 어느 장소에 묻는지. **비어 있으면 줄째로 생략한다** — 딥링크로 들어오면
+            // 장소명이 없고, 빈 라벨을 그리면 값이 없다는 사실만 드러난다.
+            if (widget.spotTitle.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                child: Row(
+                  children: <Widget>[
+                    Icon(
+                      Icons.place_outlined,
+                      size: 16,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        l10n.spotQaComposeContext(widget.spotTitle),
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -115,7 +141,8 @@ class _SpotQaComposerScreenState extends ConsumerState<SpotQaComposerScreen> {
                   // **테두리 없는 전면 입력**이다 — 글쓰기 화면에서 가장 큰 면적을
                   // 차지해야 하는 것은 본문이고, 테두리는 그 면적을 잘라 먹는다.
                   decoration: InputDecoration(
-                    hintText: l10n.spotQaBodyHint,
+                    // 동어반복("질문을 입력하세요") 대신 실제 예시를 보여준다.
+                    hintText: l10n.spotQaBodyHintExample,
                     border: InputBorder.none,
                   ),
                   style: theme.textTheme.bodyLarge,
@@ -124,11 +151,26 @@ class _SpotQaComposerScreenState extends ConsumerState<SpotQaComposerScreen> {
                 ),
               ),
             ),
+            // 예시 칩은 **본문이 비었을 때만** 나온다 — 쓰기 시작하면 방해다.
+            if (state.body.isEmpty) _Suggestions(onPick: _fill),
             _Counter(body: state.body),
           ],
         ),
       ),
     );
+  }
+
+  /// 예시 칩을 고르면 입력창을 채우고 **커서를 끝에 둔다.**
+  ///
+  /// 곧바로 제출하지 않는 것이 핵심이다 — 예시는 출발점이지 완성된 질문이 아니고,
+  /// 사용자가 자기 상황에 맞게 고칠 여지를 남겨야 한다. 빈 화면에서 문장을 짓는 것보다
+  /// 있는 문장을 고치는 편이 쉽다.
+  void _fill(String text) {
+    _controller.value = TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+    ref.read(_provider.notifier).updateBody(text);
   }
 
   Future<void> _submit() async {
@@ -180,6 +222,77 @@ class _SpotQaComposerScreenState extends ConsumerState<SpotQaComposerScreen> {
 
     // 성공만 목록 재조회를 부른다.
     navigator.pop(true);
+  }
+}
+
+/// 예시 질문 칩.
+///
+/// **왜 두는가.** 질문이 하나도 없는 장소가 대부분이라(신규 장소는 항상 0개) 사용자는
+/// 여기서 무엇을 물어도 되는지 알 수 없다. 빈 입력창은 "무엇이든 쓰세요"가 아니라
+/// "무엇을 써야 할지 모르겠다"로 읽힌다 — 칩은 이 기능의 범위를 보여주는 가장 싼
+/// 수단이다.
+///
+/// 부수 효과가 더 중요하다: **답변 가능한 질문으로 수렴시킨다.** 혼잡·주차·날씨·운영
+/// 여부는 그 장소에 가 본 사람이면 바로 답할 수 있다. 답이 안 달리는 질문이 쌓이면
+/// 기능 자체가 죽는데(구글 지도가 커뮤니티 Q&A를 접은 이유가 그것이다), 무엇을 묻게
+/// 하느냐가 그 갈림길이다.
+///
+/// **카테고리가 아니다.** 고르면 입력창을 채우고 사라질 뿐, 질문에 꼬리표로 남지
+/// 않는다 — 서버 계약에 그런 개념이 없고, 칩을 분류로 승격시키면 없는 필드를 만들게
+/// 된다.
+class _Suggestions extends StatelessWidget {
+  const _Suggestions({required this.onPick});
+
+  final ValueChanged<String> onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final AppLocalizations l10n = AppLocalizations.of(context);
+
+    // **칩 라벨은 주제어, 채워지는 것은 완성된 질문이다.** 문장을 그대로 칩에 넣었더니
+    // 하나가 한 줄씩 차지해 화면 아래 1/3을 먹었다(렌더로 확인). 라벨을 주제어로
+    // 줄이면 네 개가 한두 줄에 들어가고, 탭했을 때 입력창에는 여전히 온전한 질문이
+    // 들어간다 — 사용자가 고쳐 쓸 출발점이어야 하므로 문장이어야 한다.
+    final List<({String label, String fill})> examples =
+        <({String label, String fill})>[
+          (label: l10n.spotQaSuggestCrowd, fill: l10n.spotQaFillCrowd),
+          (label: l10n.spotQaSuggestHours, fill: l10n.spotQaFillHours),
+          (label: l10n.spotQaSuggestParking, fill: l10n.spotQaFillParking),
+          (label: l10n.spotQaSuggestWeather, fill: l10n.spotQaFillWeather),
+        ];
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Text(
+            l10n.spotQaSuggestTitle,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          // **가로 스크롤 한 줄이 아니라 Wrap이다.** 4개 언어의 길이가 제각각이라
+          // 한 줄에 담기는 개수가 언어마다 다르다 — 넘치면 다음 줄로 접는다.
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: examples
+                .map(
+                  (({String label, String fill}) e) => ActionChip(
+                    label: Text(e.label),
+                    onPressed: () => onPick(e.fill),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        ],
+      ),
+    );
   }
 }
 

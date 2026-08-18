@@ -319,18 +319,9 @@ class _DetailBody extends ConsumerWidget {
                   ),
                 ),
 
-                // 「내 질문」 보조 진입점. 답변 알림이 없어 사용자가 자기 질문을
-                // 되찾아 갈 길이 필요하다 — 여기서 물었으니 여기서 답을 확인하러
-                // 돌아온다. 주 동작(질문하기)과 구분되게 TextButton이다.
-                Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: TextButton.icon(
-                    onPressed: () => context.pushNamed(myQuestionsRouteName),
-                    icon: const Icon(Icons.question_answer_outlined, size: 18),
-                    label: Text(l10n.spotQaMyQuestionsEntry),
-                  ),
-                ),
-
+                // 「내 질문」은 여기 두지 않는다 — 상세는 *이 장소*를 보는 화면이고
+                // 내 질문은 장소를 가로지르는 목록이라 성격이 다르다. 질문 목록 화면
+                // 상단과 마이페이지에 둔다(둘 다 "내" 맥락이다).
                 const SizedBox(height: 24),
                 DetailReactionBar(
                   onReaction: (SpotReaction reaction) =>
