@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:ieuri_k_trip_spot/common/model/composer_photo.dart';
 import 'package:ieuri_k_trip_spot/common/model/spot_qa_origin.dart';
 import 'package:ieuri_k_trip_spot/common/pagination/page.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/component/spot_qa_entry_button.dart';
@@ -483,6 +484,150 @@ void main() {
       expect(find.text('2 questions'), findsOneWidget);
       await tester.tap(find.byIcon(Icons.forum_outlined));
       expect(opened, isTrue);
+    });
+  });
+
+  group('사진 첨부', () {
+    SpotQaComposer composerOf(ProviderContainer c) => c.read(
+      spotQaComposerProvider(SpotQaComposerTarget.question, 'c1').notifier,
+    );
+    SpotQaComposerState stateOf(ProviderContainer c) =>
+        c.read(spotQaComposerProvider(SpotQaComposerTarget.question, 'c1'));
+
+    test('상한을 넘겨 고르면 넘치는 만큼 버린다', () {
+      final ProviderContainer container = _container(FakeSpotQaRepository());
+      final SpotQaComposer notifier = composerOf(container);
+
+      notifier.addPhotos(<LocalPhoto>[
+        for (int i = 0; i < 7; i++) fakeLocalPhoto(name: 'p$i.jpg'),
+      ]);
+
+      expect(stateOf(container).photos, hasLength(kSpotQaMaxPhotos));
+      expect(stateOf(container).remainingPhotoSlots, 0);
+    });
+
+    // 고르는 즉시 올리면 질문을 안 쓰고 나간 사용자의 사진이 고아로 남는다.
+    test('고르기만 해서는 업로드가 일어나지 않는다', () {
+      final FakeSpotQaRepository repo = FakeSpotQaRepository();
+      final ProviderContainer container = _container(repo);
+
+      composerOf(container).addPhotos(<LocalPhoto>[fakeLocalPhoto()]);
+
+      expect(repo.uploadRequests, isEmpty);
+      expect(repo.uploadedNames, isEmpty);
+    });
+
+    test('제출하면 확정 키가 작성 뮤테이션에 실린다', () async {
+      final FakeSpotQaRepository repo = FakeSpotQaRepository()
+        ..issuedKeys = <String>['pending/a', 'pending/b'];
+      final ProviderContainer container = _container(repo);
+      final SpotQaComposer notifier = composerOf(container);
+      notifier.updateBody('붐비나요?');
+      notifier.addPhotos(<LocalPhoto>[
+        fakeLocalPhoto(name: 'a.jpg'),
+        fakeLocalPhoto(name: 'b.jpg'),
+      ]);
+
+      await notifier.submit();
+
+      expect(repo.lastCreateQuestion?.photoKeys, <String>[
+        'images/a',
+        'images/b',
+      ]);
+    });
+
+    // 설계 §사진 첨부 — 부분 성공이 정상이다.
+    test('일부만 실패하면 나머지로 올리고 실패한 이름을 남긴다', () async {
+      final FakeSpotQaRepository repo = FakeSpotQaRepository()
+        ..issuedKeys = <String>['pending/a', 'pending/b']
+        ..failingUploadNames = <String>{'b.jpg'};
+      final ProviderContainer container = _container(repo);
+      final SpotQaComposer notifier = composerOf(container);
+      notifier.updateBody('붐비나요?');
+      notifier.addPhotos(<LocalPhoto>[
+        fakeLocalPhoto(name: 'a.jpg'),
+        fakeLocalPhoto(name: 'b.jpg'),
+      ]);
+
+      final SpotQaMutationResult<String> result = await notifier.submit();
+
+      // 사진 한 장이 실패해도 질문 자체는 올라간다.
+      expect(result.succeeded, isTrue);
+      expect(repo.lastCreateQuestion?.photoKeys, <String>['images/a']);
+      expect(notifier.lastPhotoUpload?.failedNames, <String>['b.jpg']);
+    });
+
+    test('확정에 실패한 장도 이름으로 알린다', () async {
+      final FakeSpotQaRepository repo = FakeSpotQaRepository()
+        ..issuedKeys = <String>['pending/a', 'pending/b']
+        ..failingConfirmKeys = <String>{'pending/b'};
+      final ProviderContainer container = _container(repo);
+      final SpotQaComposer notifier = composerOf(container);
+      notifier.updateBody('붐비나요?');
+      notifier.addPhotos(<LocalPhoto>[
+        fakeLocalPhoto(name: 'a.jpg'),
+        fakeLocalPhoto(name: 'b.jpg'),
+      ]);
+
+      await notifier.submit();
+
+      expect(repo.lastCreateQuestion?.photoKeys, <String>['images/a']);
+      expect(notifier.lastPhotoUpload?.failedNames, <String>['b.jpg']);
+    });
+
+    // 발급은 전부 아니면 전무다 — 빈 목록이 곧 "전부 거부"다.
+    test('URL 발급이 전부 거부되면 사진 없이 올라간다', () async {
+      final FakeSpotQaRepository repo = FakeSpotQaRepository();
+      final ProviderContainer container = _container(repo);
+      final SpotQaComposer notifier = composerOf(container);
+      notifier.updateBody('붐비나요?');
+      notifier.addPhotos(<LocalPhoto>[fakeLocalPhoto()]);
+
+      final SpotQaMutationResult<String> result = await notifier.submit();
+
+      expect(result.succeeded, isTrue);
+      expect(repo.lastCreateQuestion?.photoKeys, isEmpty);
+      expect(notifier.lastPhotoUpload?.hasFailures, isTrue);
+    });
+
+    // 제출이 거부돼 다시 눌렀을 때 이미 올라간 장을 또 올리면 중복이 쌓인다.
+    test('확정된 장은 다시 제출해도 재업로드하지 않는다', () async {
+      final FakeSpotQaRepository repo = FakeSpotQaRepository()
+        ..issuedKeys = <String>['pending/a'];
+      final ProviderContainer container = _container(repo);
+      final SpotQaComposer notifier = composerOf(container);
+      notifier.updateBody('붐비나요?');
+      notifier.addPhotos(<LocalPhoto>[fakeLocalPhoto(name: 'a.jpg')]);
+
+      await notifier.submit();
+      await notifier.uploadPending();
+
+      expect(repo.uploadedNames, <String>['a.jpg'], reason: '두 번 올리지 않는다');
+    });
+
+    test('취소하면 확정한 키를 지운다', () async {
+      final FakeSpotQaRepository repo = FakeSpotQaRepository()
+        ..issuedKeys = <String>['pending/a'];
+      final ProviderContainer container = _container(repo);
+      final SpotQaComposer notifier = composerOf(container);
+      notifier.addPhotos(<LocalPhoto>[fakeLocalPhoto(name: 'a.jpg')]);
+      await notifier.uploadPending();
+
+      await notifier.discardUploaded();
+
+      expect(repo.deletedKeys, <String>['images/a']);
+    });
+
+    test('올리지 않은 장을 빼면 네트워크를 타지 않는다', () {
+      final FakeSpotQaRepository repo = FakeSpotQaRepository();
+      final ProviderContainer container = _container(repo);
+      final SpotQaComposer notifier = composerOf(container);
+      notifier.addPhotos(<LocalPhoto>[fakeLocalPhoto(name: 'a.jpg')]);
+
+      notifier.removePhoto('local-a.jpg');
+
+      expect(stateOf(container).photos, isEmpty);
+      expect(repo.deletedKeys, isEmpty);
     });
   });
 

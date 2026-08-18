@@ -1217,5 +1217,6 @@
   "spotQaFillWeather": "Is it worth visiting in the rain?",
   "spotQaFillHours": "Is it open right now?",
   "spotQaMyQuestionsFailed": "Couldn't load your questions.",
-  "spotQaMyQuestionsSignInBody": "Sign in to see the questions you've asked and their answers."
+  "spotQaMyQuestionsSignInBody": "Sign in to see the questions you've asked and their answers.",
+  "spotQaPhotoUploadFailed": "{count, plural, =1{Couldn't upload 1 photo.} other{Couldn't upload {count} photos.}}"
 }

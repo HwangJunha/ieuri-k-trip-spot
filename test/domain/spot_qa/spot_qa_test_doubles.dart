@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:ieuri_k_trip_spot/common/model/composer_photo.dart';
 import 'package:ieuri_k_trip_spot/common/model/post_author.dart';
 import 'package:ieuri_k_trip_spot/common/model/post_image_upload.dart';
@@ -249,28 +251,85 @@ class FakeSpotQaRepository implements SpotQaRepository {
       const SpotQaMutationResult<void>.success(null);
 
   // ------------------------------------------------------ 사진 업로드(3단계)
-  // 사진을 다루지 않는 테스트를 위한 최소 스텁이다 — 업로드 흐름을 검증하는
-  // 테스트는 하위 클래스에서 필요한 것만 덮어쓴다.
+
+  /// 1단계가 돌려줄 임시 키. 비우면 "전부 거부"(부분 발급이 없다).
+  List<String> issuedKeys = const <String>[];
+
+  /// PUT이 실패할 사진 이름. 스토리지 실패는 GraphQL 응답에 안 나온다.
+  Set<String> failingUploadNames = const <String>{};
+
+  /// 3단계에서 확정에 실패할 임시 키.
+  Set<String> failingConfirmKeys = const <String>{};
+
+  final List<PostImageUploadRequest> uploadRequests =
+      <PostImageUploadRequest>[];
+  final List<String> uploadedNames = <String>[];
+  final List<String> confirmedKeys = <String>[];
+  final List<String> deletedKeys = <String>[];
 
   @override
   Future<List<PostImageUploadUrl>> createImageUploadUrls(
     List<PostImageUploadRequest> images,
-  ) async => const <PostImageUploadUrl>[];
+  ) async {
+    uploadRequests.addAll(images);
+    if (issuedKeys.isEmpty) return const <PostImageUploadUrl>[];
+    // 요청 수만큼만 돌려준다 — 서버가 요청과 같은 순서로 준다는 계약을 흉내 낸다.
+    return issuedKeys
+        .take(images.length)
+        .map(
+          (String key) => PostImageUploadUrl(
+            uploadUrl: 'https://storage.example/$key',
+            objectKey: key,
+            expiresAt: '2026-08-18T00:00:00Z',
+          ),
+        )
+        .toList(growable: false);
+  }
 
   @override
   Future<void> uploadImage({
     required String uploadUrl,
     required LocalPhoto photo,
-  }) async {}
+  }) async {
+    if (failingUploadNames.contains(photo.name)) {
+      throw StateError('upload failed: ${photo.name}');
+    }
+    uploadedNames.add(photo.name);
+  }
 
   @override
   Future<PostImageConfirmation> confirmImageUploads(
     List<String> objectKeys,
-  ) async => PostImageConfirmation(confirmed: objectKeys);
+  ) async {
+    confirmedKeys.addAll(objectKeys);
+    final List<String> ok = objectKeys
+        .where((String k) => !failingConfirmKeys.contains(k))
+        .toList(growable: false);
+    return PostImageConfirmation(
+      // 확정 키는 임시 키와 다른 값이다(`pending/` → `images/`).
+      confirmed: ok.map((String k) => k.replaceFirst('pending/', 'images/')).toList(growable: false),
+      failed: objectKeys
+          .where(failingConfirmKeys.contains)
+          .map(
+            (String k) =>
+                PostImageUploadFailure(objectKey: k, code: 'PHOTO_NOT_UPLOADED'),
+          )
+          .toList(growable: false),
+    );
+  }
 
   @override
-  Future<void> deleteImage(String objectKey) async {}
+  Future<void> deleteImage(String objectKey) async => deletedKeys.add(objectKey);
 }
+
+/// 테스트용 사진 한 장. 바이트는 내용이 중요하지 않아 길이만 맞춘다.
+LocalPhoto fakeLocalPhoto({String name = 'a.jpg', int bytes = 10}) =>
+    LocalPhoto(
+      id: 'local-$name',
+      bytes: Uint8List.fromList(List<int>.filled(bytes, 0)),
+      contentType: 'image/jpeg',
+      name: name,
+    );
 
 /// 「마지막에 본 답변 수」 저장소의 인메모리 구현. SharedPreferences를 세우지
 /// 않는다 — 저장소 인터페이스가 있는 이유가 이 교체다.

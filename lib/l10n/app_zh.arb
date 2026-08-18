@@ -840,5 +840,6 @@
   "spotQaFillWeather": "下雨天也值得去吗？",
   "spotQaFillHours": "现在开放吗？",
   "spotQaMyQuestionsFailed": "无法加载你的提问。",
-  "spotQaMyQuestionsSignInBody": "登录后即可查看你的提问和回答。"
+  "spotQaMyQuestionsSignInBody": "登录后即可查看你的提问和回答。",
+  "spotQaPhotoUploadFailed": "{count, plural, =1{有 1 张照片上传失败。} other{有 {count} 张照片上传失败。}}"
 }

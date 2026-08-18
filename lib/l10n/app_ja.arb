@@ -840,5 +840,6 @@
   "spotQaFillWeather": "雨でも楽しめますか？",
   "spotQaFillHours": "今は開いていますか？",
   "spotQaMyQuestionsFailed": "質問を読み込めませんでした。",
-  "spotQaMyQuestionsSignInBody": "ログインすると、自分の質問と回答を確認できます。"
+  "spotQaMyQuestionsSignInBody": "ログインすると、自分の質問と回答を確認できます。",
+  "spotQaPhotoUploadFailed": "{count, plural, =1{写真1枚をアップロードできませんでした。} other{写真{count}枚をアップロードできませんでした。}}"
 }

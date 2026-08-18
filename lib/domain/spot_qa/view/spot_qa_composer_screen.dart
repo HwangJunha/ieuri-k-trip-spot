@@ -1,9 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../common/media/photo_picker_providers.dart';
+import '../../../common/model/composer_photo.dart';
 import '../../../common/navigation/spot_qa_routes.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/spot_qa_failure.dart';
+import '../component/spot_qa_photo_strip.dart';
 import '../provider/my_questions_providers.dart';
 import '../provider/spot_qa_composer_providers.dart';
 
@@ -13,7 +18,8 @@ import '../provider/spot_qa_composer_providers.dart';
 /// 상단바  ✕ · "질문 작성" · [올리기](본문 비면 비활성)
 /// 장소 헤더  📍 어디에 묻는지 (장소명 없으면 생략)
 /// 테두리 없는 멀티라인 입력 — 남은 공간 전부
-/// 예시 칩  본문이 비었을 때만
+/// 예시 칩  본문·사진이 모두 비었을 때만
+/// 사진 줄  [사진][사진][＋] 최대 5장
 /// 하단 우측  글자수 카운터(90% 근접부터)
 /// ```
 ///
@@ -23,14 +29,14 @@ import '../provider/spot_qa_composer_providers.dart';
 /// 좋아요 자격 게이팅은 **없다**(2026-08-18 서버가 걷어냈다). 반응 없음·싫어요를
 /// 포함해 누구나 쓸 수 있다.
 ///
-/// **사진 첨부 UI가 없다.** 서버에 업로드 뮤테이션이 없어 이번 범위에서 빠졌다(설계
-/// §사진 첨부) — 카메라·갤러리 아이콘도, 사진 그리드도 그리지 않는다.
+/// **사진은 제출 시점에 올라간다.** 고르는 즉시 올리면 질문을 쓰지 않고 나간 사용자의
+/// 사진이 고아로 남는다 — 붙였다 뺐다를 반복하면 그만큼 쌓인다. 업로드 뮤테이션은
+/// 커뮤니티 것을 그대로 쓴다(설계 §사진 첨부).
+///
+/// **사진 일부가 실패해도 질문은 올라간다.** 실패한 장수만 알린다 — 사진 한 장 때문에
+/// 사용자가 쓴 글을 통째로 버리게 하지 않는다.
 ///
 /// 성공하면 `true`를 돌려주고 닫힌다 — 호출한 목록이 그 값으로 재조회한다.
-///
-/// **성공한 질문은 로컬에 기록한다**(`MyQuestionsController.remember`). 서버에
-/// `myQuestions`가 없어 여기서 적어 두지 않으면 사용자가 자기 질문에 달린 답변을
-/// 영영 볼 수 없다 — 「내 질문」 화면의 유일한 출처다.
 class SpotQaComposerScreen extends ConsumerStatefulWidget {
   const SpotQaComposerScreen({
     super.key,
@@ -75,7 +81,7 @@ class _SpotQaComposerScreenState extends ConsumerState<SpotQaComposerScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).maybePop(),
+          onPressed: _close,
         ),
         title: Text(l10n.spotQaAskTitle),
         actions: <Widget>[
@@ -149,7 +155,16 @@ class _SpotQaComposerScreenState extends ConsumerState<SpotQaComposerScreen> {
               ),
             ),
             // 예시 칩은 **본문이 비었을 때만** 나온다 — 쓰기 시작하면 방해다.
-            if (state.body.isEmpty) _Suggestions(onPick: _fill),
+            // 사진을 붙였다면 그것이 이미 단서라 칩을 접는다.
+            if (state.body.isEmpty && state.photos.isEmpty)
+              _Suggestions(onPick: _fill),
+            const SizedBox(height: 8),
+            SpotQaPhotoStrip(
+              photos: state.photos,
+              onAdd: _pickPhotos,
+              onRemove: (String id) =>
+                  ref.read(_provider.notifier).removePhoto(id),
+            ),
             _Counter(body: state.body),
           ],
         ),
@@ -168,6 +183,48 @@ class _SpotQaComposerScreenState extends ConsumerState<SpotQaComposerScreen> {
       selection: TextSelection.collapsed(offset: text.length),
     );
     ref.read(_provider.notifier).updateBody(text);
+  }
+
+  /// 작성을 접는다.
+  ///
+  /// **이미 확정한 사진 키를 지우고 나간다**(설계 §사진 첨부). 제출이 서버에 거부돼
+  /// 사진만 올라간 상태로 나가는 경우가 있는데, 정리하지 않으면 어떤 질문에도 붙지
+  /// 않은 오브젝트가 서버에 남는다.
+  ///
+  /// **정리를 기다리지 않고 닫는다.** 화면을 떠나는 길을 네트워크에 묶을 이유가 없다 —
+  /// 실패하면 남은 오브젝트는 서버 lifecycle의 몫이다.
+  void _close() {
+    unawaited(ref.read(_provider.notifier).discardUploaded());
+    Navigator.of(context).maybePop();
+  }
+
+  /// 갤러리를 열어 사진을 붙인다.
+  ///
+  /// **크기 상한을 여기서 거른다.** 사전 서명 URL 발급은 하나만 어긋나도 전부
+  /// 거부하므로(부분 발급 없음), 큰 장 하나가 나머지를 같이 죽이지 않도록 고른
+  /// 직후에 뺀다. 걸러진 장은 안내로 알린다 — 조용히 사라지면 왜 안 붙었는지 모른다.
+  Future<void> _pickPhotos() async {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+    final int room = ref.read(_provider).remainingPhotoSlots;
+    if (room <= 0) return;
+
+    final List<LocalPhoto>? picked = await ref.read(photoPickerProvider)(
+      limit: room,
+    );
+    if (picked == null || !mounted) return;
+
+    final List<LocalPhoto> withinLimit = picked
+        .where((LocalPhoto p) => p.contentLength <= maxComposerPhotoBytes)
+        .toList(growable: false);
+    final int tooLarge = picked.length - withinLimit.length;
+
+    ref.read(_provider.notifier).addPhotos(withinLimit);
+    if (tooLarge > 0) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.communityComposePhotoTooLarge(tooLarge))),
+      );
+    }
   }
 
   Future<void> _submit() async {
@@ -191,6 +248,19 @@ class _SpotQaComposerScreenState extends ConsumerState<SpotQaComposerScreen> {
       // 화면을 유지해 사용자가 고쳐서 다시 낼 수 있게 한다.
       messenger.showSnackBar(SnackBar(content: Text(l10n.spotQaSubmitFailed)));
       return;
+    }
+
+    // **사진 일부가 실패해도 질문은 올라갔다.** 실패한 장수만 알린다 — 사진 한 장
+    // 때문에 사용자가 쓴 글을 통째로 버리게 하지 않는다(설계 §사진 첨부).
+    final SpotQaPhotoUploadResult? upload = ref
+        .read(_provider.notifier)
+        .lastPhotoUpload;
+    if (upload != null && upload.hasFailures) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.spotQaPhotoUploadFailed(upload.failedNames.length)),
+        ),
+      );
     }
 
     // **로컬에 적어 둘 것이 없다.** 서버가 `spotQuestions(mine:)`으로 내 질문을
