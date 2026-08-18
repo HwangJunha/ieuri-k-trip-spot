@@ -129,14 +129,19 @@ class FakeDmRepository implements DmRepository {
 
   @override
   Future<DmMutationResult<String>> startConversation(
-    String counterpartMemberId,
-  ) async {
+    String counterpartMemberId, {
+    String? sourceAnswerId,
+  }) async {
     startedMemberIds.add(counterpartMemberId);
+    startedSourceAnswerIds.add(sourceAnswerId);
     return const DmMutationResult<String>.success('c1');
   }
 
   /// `startConversation`에 실린 회원 id들.
   final List<String> startedMemberIds = <String>[];
+
+  /// 함께 실린 출처 답변 id들(SPEC-0026 R13). 일반 DM이면 null이다.
+  final List<String?> startedSourceAnswerIds = <String?>[];
 
   @override
   Future<CursorPage<Conversation>> fetchConversations({
