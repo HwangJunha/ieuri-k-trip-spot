@@ -1894,5 +1894,111 @@
       }
     }
   },
-  "errorPasswordResetNoAccount": "이 이메일로 가입된 계정이 없습니다. 카카오·구글·애플로 가입하셨다면 해당 방법으로 로그인해 주세요."
+  "errorPasswordResetNoAccount": "이 이메일로 가입된 계정이 없습니다. 카카오·구글·애플로 가입하셨다면 해당 방법으로 로그인해 주세요.",
+  "spotQaEntryAction": "지금 여기 어때?",
+  "@spotQaEntryAction": {
+    "description": "장소 상세의 질문/답변 진입점. 좋아요 자격이 없고 질문도 없으면 숨긴다"
+  },
+  "spotQaQuestionsTitle": "장소 질문",
+  "spotQaQuestionsEmptyTitle": "아직 질문이 없습니다",
+  "spotQaQuestionsEmptyBody": "이 장소에 대해 궁금한 것을 먼저 물어보세요.",
+  "spotQaQuestionsUnavailable": "질문을 불러오지 못했습니다.",
+  "spotQaAnswersUnavailable": "답변을 불러오지 못했습니다.",
+  "spotQaAnswersEmpty": "아직 답변이 없습니다. 이 장소를 아신다면 알려주세요.",
+  "spotQaResolvedLabel": "해결됨",
+  "spotQaUnresolvedLabel": "미해결",
+  "spotQaResolveAction": "해결",
+  "spotQaResolveFailed": "해결 표시를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  "spotQaAskAction": "질문하기",
+  "spotQaAnswerAction": "답변하기",
+  "spotQaReplyAction": "답글 달기",
+  "spotQaAskTitle": "질문 작성",
+  "spotQaAnswerTitle": "답변 작성",
+  "spotQaReplyTitle": "답글 작성",
+  "spotQaBodyHint": "궁금한 점을 적어 주세요.",
+  "spotQaAnswerBodyHint": "아는 것을 알려주세요.",
+  "spotQaSubmitAction": "올리기",
+  "spotQaSubmitFailed": "올리지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  "spotQaDeleteAction": "삭제",
+  "spotQaDeleteFailed": "삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  "spotQaDmAction": "메시지 보내기",
+  "spotQaDmFailed": "대화를 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  "spotQaOriginCardTitle": "질문 인용",
+  "@spotQaOriginCardTitle": {
+    "description": "DM 상단 맥락 카드. 출처 없는 대화에는 그리지 않는다"
+  },
+  "spotQaAnswerCount": "{count, plural, =0{답변 없음} =1{답변 1개} other{답변 {count}개}}",
+  "@spotQaAnswerCount": {
+    "description": "질문 카드의 답변 수",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "spotQaMyQuestionsTitle": "내 질문",
+  "spotQaMyQuestionsEntry": "내 질문",
+  "spotQaMyQuestionsEmptyTitle": "아직 올린 질문이 없습니다",
+  "spotQaMyQuestionsEmptyBody": "장소 상세에서 궁금한 것을 물어보세요.",
+  "spotQaMyQuestionsUnavailable": "질문을 찾지 못했습니다. 삭제되었거나 가려졌을 수 있습니다.",
+  "@spotQaMyQuestionsUnavailable": {
+    "description": "로컬 기록에는 있으나 서버에서 못 찾은 질문(삭제·숨김·페이지 밖)"
+  },
+  "spotQaNewAnswerBadge": "{count, plural, =1{새 답변 1개} other{새 답변 {count}개}}",
+  "@spotQaNewAnswerBadge": {
+    "description": "내 질문에 못 본 답변이 있을 때의 배지. 서버에 알림이 없어 이것이 유일한 신호다",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "spotQaDmEntry": "메시지",
+  "spotQaEntryQuestionCount": "{count, plural, =0{아직 질문이 없어요} =1{질문 1개} other{질문 {count}개}}",
+  "@spotQaEntryQuestionCount": {
+    "description": "장소 상세 진입점 한 줄에 붙는 질문 수",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "spotQaComposeContext": "{spot}에 묻기",
+  "@spotQaComposeContext": {
+    "description": "작성 화면 상단에 어느 장소에 묻는지 표시. 장소명이 비면 이 줄을 생략한다",
+    "placeholders": {
+      "spot": {
+        "type": "String"
+      }
+    }
+  },
+  "spotQaSuggestTitle": "이런 걸 물어보세요",
+  "@spotQaSuggestTitle": {
+    "description": "예시 질문 칩의 머리말. 신규 장소는 질문이 0개라 무엇을 물어도 되는지 모른다(cold start)"
+  },
+  "spotQaSuggestCrowd": "혼잡도",
+  "spotQaSuggestParking": "주차",
+  "spotQaSuggestWeather": "우천 시",
+  "spotQaSuggestHours": "운영 여부",
+  "spotQaBodyHintExample": "예: 지금 사람 많은가요? 주차는 편한가요?",
+  "spotQaFillCrowd": "지금 붐비나요?",
+  "spotQaFillParking": "주차할 수 있나요?",
+  "spotQaFillWeather": "비 와도 볼만한가요?",
+  "spotQaFillHours": "지금 문 열었나요?",
+  "spotQaMyQuestionsFailed": "질문을 불러오지 못했습니다.",
+  "spotQaMyQuestionsSignInBody": "로그인하면 내가 올린 질문과 답변을 볼 수 있습니다.",
+  "@spotQaMyQuestionsSignInBody": {
+    "description": "비로그인으로 「내 질문」에 들어왔을 때. 빈 목록으로 접으면 '쓴 적 없음'으로 오해된다"
+  },
+  "spotQaPhotoUploadFailed": "{count, plural, =1{사진 1장을 올리지 못했습니다.} other{사진 {count}장을 올리지 못했습니다.}}",
+  "@spotQaPhotoUploadFailed": {
+    "description": "일부 사진만 실패했을 때. 질문 자체는 올라간다 — 사진 한 장 때문에 쓴 글을 버리게 하지 않는다",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "spotQaUnresolveAction": "미해결",
+  "spotQaUnresolveFailed": "되돌리지 못했습니다. 잠시 후 다시 시도해 주세요."
 }

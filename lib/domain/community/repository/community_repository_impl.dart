@@ -1026,6 +1026,11 @@ class CommunityRepositoryImpl implements CommunityRepository {
         ReportTargetType.post => Enum$ReportTargetType.POST,
         ReportTargetType.comment => Enum$ReportTargetType.COMMENT,
         ReportTargetType.member => Enum$ReportTargetType.MEMBER,
+        // SPEC-0026이 더한 세 값. 서버가 `reportContent`를 그대로 재사용한다(R11).
+        ReportTargetType.spotQuestion => Enum$ReportTargetType.SPOT_QUESTION,
+        ReportTargetType.spotAnswer => Enum$ReportTargetType.SPOT_ANSWER,
+        ReportTargetType.spotAnswerReply =>
+          Enum$ReportTargetType.SPOT_ANSWER_REPLY,
       };
 
   // --- 전송/실행 (spot repository와 동일한 2단계 실패 검사) -------------------

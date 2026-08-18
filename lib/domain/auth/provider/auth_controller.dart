@@ -384,9 +384,26 @@ class AuthController extends _$AuthController {
       if (refreshed == null) return const RefreshRejected();
       return RefreshSucceeded(refreshed);
     } on AuthFailure catch (failure) {
-      return failure.kind == AuthFailureKind.transportFailure
-          ? const RefreshUnavailable()
-          : const RefreshRejected();
+      // **세션을 끝내는 사유를 나열하고, 나머지는 세션을 지킨다.**
+      //
+      // 예전에는 반대였다 — `transportFailure`가 아니면 전부 `RefreshRejected`로
+      // 보내 로그아웃시켰다. 그러면 서버가 앱이 모르는 코드를 하나만 내려도
+      // (`fromCode`가 `unknown`으로 접는다) 즉시 로그인 화면으로 튕긴다. 갱신은
+      // 사용자가 화면을 보는 중에 조용히 도는 것이라, 그 순간 아무 조작도 안 했는데
+      // 로그아웃되는 것으로 나타난다.
+      //
+      // 판정을 뒤집으면 모르는 코드는 "이번 갱신을 못 했다"로 끝나고 토큰이 남는다.
+      // 정말 만료됐다면 다음 요청에서 서버가 다시 거부하고, 그때는 아래 목록에 있는
+      // 코드로 오므로 제때 로그아웃된다 — 늦어질 뿐 놓치지 않는다.
+      return switch (failure.kind) {
+        // 서버가 refreshToken 자체를 거부했다. 재발급으로 회복되지 않는다.
+        AuthFailureKind.refreshRejected ||
+        // 회전 토큰 재사용 감지 — 재로그인만이 복구다.
+        AuthFailureKind.tokenReuseDetected ||
+        // 계정이 비활성이라 갱신해도 쓸 수 없다.
+        AuthFailureKind.accountInactive => const RefreshRejected(),
+        _ => const RefreshUnavailable(),
+      };
     }
   }
 

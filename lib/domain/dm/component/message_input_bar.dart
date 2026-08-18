@@ -14,7 +14,15 @@ class MessageInputBar extends StatefulWidget {
     super.key,
     required this.onSend,
     required this.onChanged,
+    this.initialText,
   });
+
+  /// 처음 한 번만 입력창에 채워 둘 문장(SPEC-0026). 다른 질문에서 기존 대화로
+  /// 들어왔을 때 어느 질문 얘기인지를 **메시지로** 남기기 위한 것이다 — 상단 카드는
+  /// 최초 출처 하나만 담고 갱신되지 않아서, 카드로는 두 번째 맥락을 표현할 수 없다.
+  ///
+  /// **채워만 두고 보내지 않는다.** 사용자가 지우거나 고쳐 쓸 수 있어야 한다.
+  final String? initialText;
 
   /// 보낼 본문. 공백만 남은 입력은 이 위젯이 먼저 거른다.
   final ValueChanged<String> onSend;
@@ -43,6 +51,15 @@ class _MessageInputBarState extends State<MessageInputBar> {
     // **컨트롤러를 직접 듣는다.** `onChanged`만으로는 한글 조합 중(IME composing)
     // 변화를 놓쳐 글자를 넣었는데도 전송 버튼이 꺼진 채로 남았다 — 실제로 그랬다.
     _controller.addListener(_syncFromController);
+
+    // 프리필은 **처음 한 번만**이다. 커서를 끝에 두어 이어 쓰기 좋게 한다.
+    final String? initial = widget.initialText;
+    if (initial != null && initial.isNotEmpty) {
+      _controller.value = TextEditingValue(
+        text: initial,
+        selection: TextSelection.collapsed(offset: initial.length),
+      );
+    }
   }
 
   @override

@@ -1,5 +1,7 @@
 import 'dart:developer' as developer;
 
+import '../../auth/model/auth_state.dart';
+import '../../auth/provider/auth_controller.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/model/list_equality.dart';
@@ -81,6 +83,31 @@ class ConversationListState {
   @override
   int get hashCode =>
       Object.hash(Object.hashAll(items), hasMore, endCursor, isLoadingMore);
+}
+
+/// 홈의 메시지 배지가 보는 값. **로그인했을 때만 목록을 한 번 받아 플래그를 채운다.**
+///
+/// [UnreadConversationsFlag]만으로는 부족했다 — 그건 대화 목록 화면이 갱신해 주는
+/// 값이라 **한 번도 안 들어갔으면 영원히 false**다. DM이 와도 사용자가 모른다는 문제가
+/// 정확히 거기서 나왔다. 홈은 앱을 열면 늘 지나는 화면이라 여기서 한 번 받아 둔다.
+///
+/// **비로그인이면 조회하지 않는다.** 대화 조회는 인증이 필요해 반드시 실패하는데,
+/// 홈에서 매번 그 왕복이 나가면 낭비이고 로그 노이즈다.
+///
+/// 실패해도 false다 — 배지는 부가 정보라 오류를 끌고 다니지 않는다.
+@riverpod
+bool hasUnreadConversations(Ref ref) {
+  final AuthState? auth = ref.watch(authControllerProvider).value;
+  if (auth == null || !auth.isAuthenticated) return false;
+
+  // 이미 목록을 받아 둔 상태면 그 값이 가장 정확하다.
+  final ConversationListState? list = ref
+      .watch(conversationListControllerProvider)
+      .value;
+  if (list != null) return list.hasUnread;
+
+  // 아직 안 받았으면 대화 목록 화면이 남긴 플래그를 쓴다(조회가 끝나면 위로 넘어간다).
+  return ref.watch(unreadConversationsFlagProvider);
 }
 
 /// 내가 참여한 대화 목록(R8).

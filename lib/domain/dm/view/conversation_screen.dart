@@ -30,9 +30,13 @@ import '../provider/viewer_providers.dart';
 /// 첫 프레임부터 캐시된 대화가 그려진다. 화면은 캐시 유무에 따라 다른 스켈레톤을
 /// 그리지 않는다.
 class ConversationScreen extends ConsumerStatefulWidget {
-  const ConversationScreen({super.key, required this.conversationId});
+  const ConversationScreen({
+    super.key,
+    required this.conversationId,
+  });
 
   final String conversationId;
+
 
   static String get routeName => 'conversation';
 
@@ -91,7 +95,6 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     final TypingIndicator? typing = ref.watch(
       typingIndicatorControllerProvider(widget.conversationId),
     );
-
     return Scaffold(
       appBar: selection.active
           ? ConversationSelectionAppBar(
@@ -118,6 +121,9 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
       body: SafeArea(
         child: Column(
           children: <Widget>[
+            // **상단 고정 카드가 없다**(2026-08-18). 인용이 대화가 아니라 메시지에
+            // 붙게 되면서 말풍선 안으로 들어갔다 — 카드 하나로는 두 번째 인용을
+            // 표현할 수 없었고, 갈아끼우면 첫 인용이 사라졌다.
             // 서버 조회가 실패해도 **화면을 비우지 않는다**(AC18-4) — 캐시된 대화는
             // 그대로 두고 조용한 배너만 얹는다.
             if (state.syncFailed) _SyncFailedBanner(onRetry: _retrySync),
@@ -201,9 +207,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          succeeded ? l10n.dmReportSubmitted : l10n.dmReportFailed,
-        ),
+        content: Text(succeeded ? l10n.dmReportSubmitted : l10n.dmReportFailed),
       ),
     );
   }

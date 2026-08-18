@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../common/navigation/spot_detail_route.dart';
 import '../../../common/widget/home_section.dart';
+import '../../spot_qa/component/my_questions_button.dart';
+import '../../dm/component/messages_button.dart';
 import '../../../common/widget/settings_button.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../event/component/happening_now_section.dart';
@@ -47,6 +49,15 @@ class HomeScreen extends ConsumerWidget {
           // 설정 진입점(SPEC-0011 R1). 하단 탭 5개는 SPEC-0008에서 고정됐으므로
           // 설정은 탭이 아니라 여기서 들어간다. 로그아웃은 설정 안으로 옮겨갔다
           // (R15) — 그 자리를 이 아이콘이 대신한다.
+          // DM 진입 + 안 읽음 표시(2026-08-18). 예전에는 설정 안에서만 대화 목록에
+          // 들어갈 수 있어, 메시지가 와도 설정을 열어 봐야 알았다.
+          // 「내 질문」(SPEC-0026). **서버에 알림이 없어 이 배지가 답변 도착을 알리는
+          // 유일한 채널이다** — 앱을 열면 보이는 자리여야 알림 역할을 한다. 설정
+          // 2뎁스 안에도 있지만 그건 찾아 들어가는 경로다.
+          //
+          // 메시지 옆인 이유: 둘 다 "내가 보낸 것에 대한 응답을 기다리는 인박스"다.
+          const MyQuestionsButton(),
+          const MessagesButton(),
           const SettingsButton(),
         ],
       ),

@@ -1,0 +1,229 @@
+# SPEC-0026 장소 질문/답변. 라이브 서버(localhost:8888) introspection으로 대조한
+# committed codegen 입력이며, gitignore된 스냅샷을 codegen이 직접 읽지 않는다(CLAUDE.md §13).
+#
+# `PostAuthor`·`PostSpot`은 `common/network/shared_schema.graphql`이, `PageInfo`·`UserError`는
+# auth 조각이, `SpotReaction`은 spot 조각이 이미 선언한다. codegen이 모든 조각을 한
+# 네임스페이스로 합치므로 여기서 다시 선언하면 중복이다 — 참조만 한다.
+#
+# **사진 업로드 3종은 여기 없다.** 계약 초안(`Specs/SPEC-0026/contract.graphql`)에는
+# `createSpotQaImageUploadUrls`·`confirmSpotQaImageUploads`·`deleteSpotQaImage`가 있으나
+# 2026-08-18 기준 서버에 구현되지 않았다(`FieldUndefined`). 작성 뮤테이션의 `photoKeys`
+# 인자는 실재하므로 빈 목록을 보낸다. 서버가 3종을 구현하면 그때 추가한다.
+
+extend type Query {
+  # 질문 목록. **정렬은 서버가 고정한다** — 미해결 우선, 그 안에서 최신순.
+  # 정렬을 바꾸는 인자가 없으므로 클라이언트도 정렬 UI를 두지 않는다(R2).
+  #
+  # 차단 관계 작성자의 질문과 신고 누적으로 숨겨진 질문은 서버가 뺀다. 앱이 다시
+  # 거르지 않는다 — 이중 필터링은 서버 규칙이 바뀔 때 어긋난다.
+  #
+  # **필터 셋은 독립이며 조합된다**(2026-08-18 서버 변경). 서버가 `myQuestions`·
+  # `spotQuestion(id:)` 같은 새 루트를 만들지 않고 이 하나에 필터를 얹었다 — 루트를
+  # 나누면 정렬·커서·차단 규칙이 두 벌이 되어 갈라지기 때문이다.
+  #
+  #   catalogId  그 장소의 질문. **필수에서 선택으로 바뀌었다**(`ID!` → `ID`)
+  #   mine       내가 쓴 질문만. **인증 필수** — 비로그인이면 최상위 errors로 실패한다.
+  #              빈 목록으로 접지 않는 것이 중요하다: 조용히 비우면 "쓴 적 없음"으로
+  #              오해된다. 회원 id 인자는 없다 — 호출자를 서버가 토큰에서 정한다
+  #   ids        지정한 id들만. 딥링크·알림 진입의 단건 조회가 이것을 쓴다
+  #
+  # 셋 다 생략하면 전체 질문이다.
+  #
+  # **`ids: []`는 "결과 없음"이지 "전체"가 아니다**(라이브 확인). 빈 배열을 넘기면
+  # 빈 목록이 온다 — 필터를 걷으려면 인자를 생략해야 한다.
+  #
+  # 가려진(차단·숨김·삭제) id는 결과에서 빠진다. **요청한 수보다 적게 오는 것이
+  # 정상이고, 비어 오면 "없거나 볼 수 없음"이지 오류가 아니다.**
+  #
+  # `mine`을 빼면 **인증 없이 조회된다**(AC-1.4). 기본 20, 상한 50.
+  spotQuestions(
+    catalogId: ID
+    mine: Boolean
+    ids: [ID!]
+    first: Int = 20
+    after: String
+  ): SpotQuestionConnection!
+
+  # 질문 하나의 답변 목록. 최신순. 답글은 `SpotAnswer.replies`로 함께 내려온다.
+  # 기본 20, 상한 50.
+  spotAnswers(questionId: ID!, first: Int = 20, after: String): SpotAnswerConnection!
+}
+
+extend type Mutation {
+  # 판정 시점의 최신 반응이 LIKE인 회원만 가능하다 — 아니면 NOT_ELIGIBLE_TO_ASK.
+  # 반응 없음과 DISLIKE를 **둘 다** 자격 없음으로 본다. 작성 뒤 반응이 바뀌어도 이미
+  # 쓴 질문은 유지된다(R6).
+  createSpotQuestion(input: CreateSpotQuestionInput!): CreateSpotQuestionPayload!
+
+  # 본인 질문만. 타인 질문은 NOT_QUESTION_OWNER. 딸린 답변·답글도 함께 삭제된다.
+  deleteSpotQuestion(input: DeleteSpotQuestionInput!): DeleteSpotQuestionPayload!
+
+  # 질문 작성자가 해결 여부를 바꾼다. **되돌릴 수 있다**(2026-08-18 서버가 `resolved`
+  # 인자를 필수로 추가했다) — 예전에는 표시만 가능하고 취소가 없었다.
+  #
+  # resolved는 "이 답이 정답"이 아니라 "질문자가 충분히 알게 되었다"는 뜻이다.
+  # 해결됨으로 표시해도 답변은 계속 받을 수 있다(AC-4.4).
+  resolveSpotQuestion(input: ResolveSpotQuestionInput!): ResolveSpotQuestionPayload!
+
+  # 그 장소를 좋아요한 회원만 — 아니면 NOT_ELIGIBLE_TO_ANSWER.
+  # 해결됨으로 표시된 질문에도 답변할 수 있다.
+  createSpotAnswer(input: CreateSpotAnswerInput!): CreateSpotAnswerPayload!
+
+  deleteSpotAnswer(input: DeleteSpotAnswerInput!): DeleteSpotAnswerPayload!
+
+  # 1단계만. parentAnswerId가 이미 답글이면 REPLY_TO_REPLY_NOT_ALLOWED.
+  # 답변과 같은 좋아요 자격을 요구한다 — 답글로 우회하면 게이팅이 무의미해지기 때문이다.
+  createSpotAnswerReply(input: CreateSpotAnswerReplyInput!): CreateSpotAnswerReplyPayload!
+
+  deleteSpotAnswerReply(input: DeleteSpotAnswerReplyInput!): DeleteSpotAnswerReplyPayload!
+}
+
+# 질문 하나. 답변은 별도 커넥션(`spotAnswers`)으로 조회하며 여기 중첩하지 않는다.
+type SpotQuestion {
+  id: ID!
+  # 질문은 항상 장소에 종속된다 — `Post.spot`과 달리 nullable이 아니다.
+  spot: PostSpot!
+  # 1~500자. 앞뒤 공백은 제거된 뒤 판정한다.
+  body: String!
+  author: PostAuthor!
+  # 확정된 오브젝트 키. 최대 5개, 첨부 순서대로.
+  photoKeys: [String!]!
+  resolved: Boolean!
+  # 숨겨진 답변은 제외한 수. 모든 호출자에게 같은 값이다.
+  answerCount: Int!
+  ownedByViewer: Boolean!
+  # 신고 누적 자동 숨김 여부. **작성자 본인만 자기 질문에서 true를 본다.**
+  hidden: Boolean!
+  # ISO-8601. 정렬 기준(해결 여부 다음).
+  createdAt: String!
+}
+
+type SpotQuestionEdge {
+  cursor: String!
+  node: SpotQuestion!
+}
+
+type SpotQuestionConnection {
+  edges: [SpotQuestionEdge!]!
+  pageInfo: PageInfo!
+}
+
+# 답변 하나. 답글은 `replies`로 내려간다(1단계, Comment와 같은 구조).
+type SpotAnswer {
+  id: ID!
+  questionId: ID!
+  # 1~500자.
+  body: String!
+  author: PostAuthor!
+  photoKeys: [String!]!
+  ownedByViewer: Boolean!
+  # 이 답변 **자체가** 숨겨졌는지. 질문이 숨겨져 답변이 함께 가려지는 경우 이 값은
+  # 바뀌지 않는다 — 질문이 복구되면 답변도 함께 돌아와야 하기 때문이다. 그래서
+  # 클라이언트는 이 필드만으로 노출을 판단하지 않는다. 가려진 답변은 애초에 목록에 없다.
+  hidden: Boolean!
+  createdAt: String!
+  # 오래된 순, 페이지네이션 없음 — 깊이가 2단계라 화면을 넘길 만큼 커지지 않는다.
+  replies: [SpotAnswerReply!]!
+}
+
+type SpotAnswerEdge {
+  cursor: String!
+  node: SpotAnswer!
+}
+
+type SpotAnswerConnection {
+  edges: [SpotAnswerEdge!]!
+  pageInfo: PageInfo!
+}
+
+# 답변에 달린 답글. **답글에는 답글을 달 수 없다**(R7) — 이 타입에 `replies`가 없는 것이
+# 그 표현이다. 그래서 답글 타일에는 답글 액션을 노출하지 않는다.
+type SpotAnswerReply {
+  id: ID!
+  answerId: ID!
+  # 1~500자.
+  body: String!
+  author: PostAuthor!
+  photoKeys: [String!]!
+  ownedByViewer: Boolean!
+  hidden: Boolean!
+  createdAt: String!
+}
+
+input CreateSpotQuestionInput {
+  catalogId: ID!
+  # 1~500자. 앞뒤 공백은 제거된 뒤 판정한다.
+  body: String!
+  # 확정 키. 최대 5개, 빈 목록도 유효하다. 업로드 뮤테이션이 서버에 없는 동안은
+  # 항상 빈 목록을 보낸다(파일 상단 참고).
+  photoKeys: [String!]!
+}
+
+type CreateSpotQuestionPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  questionId: ID
+}
+
+input DeleteSpotQuestionInput {
+  questionId: ID!
+}
+
+type DeleteSpotQuestionPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+input ResolveSpotQuestionInput {
+  questionId: ID!
+  # **필수다.** true면 해결됨, false면 미해결로 되돌린다.
+  resolved: Boolean!
+}
+
+type ResolveSpotQuestionPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+input CreateSpotAnswerInput {
+  questionId: ID!
+  body: String!
+  photoKeys: [String!]!
+}
+
+type CreateSpotAnswerPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  answerId: ID
+}
+
+input DeleteSpotAnswerInput {
+  answerId: ID!
+}
+
+type DeleteSpotAnswerPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+input CreateSpotAnswerReplyInput {
+  # 답글을 달 대상 답변. 이 답변이 이미 답글이면 REPLY_TO_REPLY_NOT_ALLOWED.
+  parentAnswerId: ID!
+  body: String!
+  photoKeys: [String!]!
+}
+
+type CreateSpotAnswerReplyPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  replyId: ID
+}
+
+input DeleteSpotAnswerReplyInput {
+  replyId: ID!
+}
+
+type DeleteSpotAnswerReplyPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}

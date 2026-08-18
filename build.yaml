@@ -44,3 +44,7 @@ targets:
           # 여기가 최초다.
           - lib/domain/dm/repository/dm_operations.graphql
           - lib/domain/dm/repository/dm_schema.graphql
+          # SPEC-0026 장소 질문/답변. PostAuthor·PostSpot·PageInfo·UserError·SpotReaction은
+          # 다른 조각이 이미 선언하므로 참조만 한다.
+          - lib/domain/spot_qa/repository/spot_qa_operations.graphql
+          - lib/domain/spot_qa/repository/spot_qa_schema.graphql

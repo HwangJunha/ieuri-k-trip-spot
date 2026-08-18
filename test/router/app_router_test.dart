@@ -1,3 +1,6 @@
+import 'package:ieuri_k_trip_spot/domain/spot_qa/provider/spot_qa_providers.dart';
+import 'package:ieuri_k_trip_spot/domain/spot_qa/provider/seen_answer_counts_providers.dart';
+import '../domain/spot_qa/spot_qa_test_doubles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -37,6 +40,12 @@ Future<ProviderContainer> _container({
       sharedPreferencesProvider.overrideWithValue(prefs),
       secureStorageProvider.overrideWithValue(secure),
       authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
+        // SPEC-0026: 홈 상단 「내 질문」 배지가 로그인 상태에서 목록을 받는다.
+        // 오버라이드가 없으면 실제 GraphQL 클라이언트로 나가 타이머가 남는다.
+        spotQaRepositoryProvider.overrideWithValue(FakeSpotQaRepository()),
+        seenAnswerCountsStoreProvider.overrideWithValue(
+          FakeSeenAnswerCountsStore(),
+        ),
       // 착지점이 Discover라 스팟 조회가 실제로 돈다 — 네트워크 없이 끝나도록 스텁.
       spotRepositoryProvider.overrideWithValue(FakeSpotRepository()),
       // 게이트가 필수 약관 상태를 읽는다(SPEC-0011 R11) — 기본은 충족 상태여야

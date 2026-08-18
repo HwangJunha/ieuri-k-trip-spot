@@ -33,6 +33,7 @@ class Conversation {
   /// 정렬 기준. 최근 메시지 시각이며, 메시지가 없으면 대화 생성 시각이다.
   final DateTime updatedAt;
 
+
   Conversation copyWith({
     Message? lastMessage,
     int? unreadCount,

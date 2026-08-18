@@ -1,3 +1,8 @@
+import 'package:ieuri_k_trip_spot/domain/spot_qa/provider/spot_qa_providers.dart';
+import 'package:ieuri_k_trip_spot/domain/spot_qa/provider/seen_answer_counts_providers.dart';
+import '../domain/spot_qa/spot_qa_test_doubles.dart';
+import 'package:ieuri_k_trip_spot/domain/dm/provider/dm_providers.dart';
+import '../domain/dm/dm_test_doubles.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -75,6 +80,15 @@ void main() {
         sharedPreferencesProvider.overrideWithValue(prefs),
         secureStorageProvider.overrideWithValue(secure),
         authRepositoryProvider.overrideWithValue(repo),
+        // SPEC-0026: 홈 상단 「내 질문」 배지가 로그인 상태에서 목록을 받는다.
+        // 오버라이드가 없으면 실제 GraphQL 클라이언트로 나가 타이머가 남는다.
+        spotQaRepositoryProvider.overrideWithValue(FakeSpotQaRepository()),
+        seenAnswerCountsStoreProvider.overrideWithValue(
+          FakeSeenAnswerCountsStore(),
+        ),
+        // SPEC-0026: 홈 상단의 메시지 배지가 대화 목록을 받는다. 오버라이드가
+        // 없으면 실제 GraphQL 클라이언트로 나가 타이머가 남는다.
+        dmRepositoryProvider.overrideWithValue(FakeDmRepository()),
       ],
     );
     addTearDown(container.dispose);
@@ -121,6 +135,15 @@ void main() {
         sharedPreferencesProvider.overrideWithValue(prefs),
         secureStorageProvider.overrideWithValue(secure),
         authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
+        // SPEC-0026: 홈 상단 「내 질문」 배지가 로그인 상태에서 목록을 받는다.
+        // 오버라이드가 없으면 실제 GraphQL 클라이언트로 나가 타이머가 남는다.
+        spotQaRepositoryProvider.overrideWithValue(FakeSpotQaRepository()),
+        seenAnswerCountsStoreProvider.overrideWithValue(
+          FakeSeenAnswerCountsStore(),
+        ),
+        // SPEC-0026: 홈 상단의 메시지 배지가 대화 목록을 받는다. 오버라이드가
+        // 없으면 실제 GraphQL 클라이언트로 나가 타이머가 남는다.
+        dmRepositoryProvider.overrideWithValue(FakeDmRepository()),
       ],
     );
     addTearDown(container.dispose);
@@ -146,6 +169,15 @@ void main() {
         sharedPreferencesProvider.overrideWithValue(prefs),
         secureStorageProvider.overrideWithValue(secure),
         authRepositoryProvider.overrideWithValue(repo),
+        // SPEC-0026: 홈 상단 「내 질문」 배지가 로그인 상태에서 목록을 받는다.
+        // 오버라이드가 없으면 실제 GraphQL 클라이언트로 나가 타이머가 남는다.
+        spotQaRepositoryProvider.overrideWithValue(FakeSpotQaRepository()),
+        seenAnswerCountsStoreProvider.overrideWithValue(
+          FakeSeenAnswerCountsStore(),
+        ),
+        // SPEC-0026: 홈 상단의 메시지 배지가 대화 목록을 받는다. 오버라이드가
+        // 없으면 실제 GraphQL 클라이언트로 나가 타이머가 남는다.
+        dmRepositoryProvider.overrideWithValue(FakeDmRepository()),
       ],
     );
     addTearDown(container.dispose);

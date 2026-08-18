@@ -96,6 +96,80 @@ abstract class _$UnreadConversationsFlag extends $Notifier<bool> {
   }
 }
 
+/// 홈의 메시지 배지가 보는 값. **로그인했을 때만 목록을 한 번 받아 플래그를 채운다.**
+///
+/// [UnreadConversationsFlag]만으로는 부족했다 — 그건 대화 목록 화면이 갱신해 주는
+/// 값이라 **한 번도 안 들어갔으면 영원히 false**다. DM이 와도 사용자가 모른다는 문제가
+/// 정확히 거기서 나왔다. 홈은 앱을 열면 늘 지나는 화면이라 여기서 한 번 받아 둔다.
+///
+/// **비로그인이면 조회하지 않는다.** 대화 조회는 인증이 필요해 반드시 실패하는데,
+/// 홈에서 매번 그 왕복이 나가면 낭비이고 로그 노이즈다.
+///
+/// 실패해도 false다 — 배지는 부가 정보라 오류를 끌고 다니지 않는다.
+
+@ProviderFor(hasUnreadConversations)
+const hasUnreadConversationsProvider = HasUnreadConversationsProvider._();
+
+/// 홈의 메시지 배지가 보는 값. **로그인했을 때만 목록을 한 번 받아 플래그를 채운다.**
+///
+/// [UnreadConversationsFlag]만으로는 부족했다 — 그건 대화 목록 화면이 갱신해 주는
+/// 값이라 **한 번도 안 들어갔으면 영원히 false**다. DM이 와도 사용자가 모른다는 문제가
+/// 정확히 거기서 나왔다. 홈은 앱을 열면 늘 지나는 화면이라 여기서 한 번 받아 둔다.
+///
+/// **비로그인이면 조회하지 않는다.** 대화 조회는 인증이 필요해 반드시 실패하는데,
+/// 홈에서 매번 그 왕복이 나가면 낭비이고 로그 노이즈다.
+///
+/// 실패해도 false다 — 배지는 부가 정보라 오류를 끌고 다니지 않는다.
+
+final class HasUnreadConversationsProvider
+    extends $FunctionalProvider<bool, bool, bool>
+    with $Provider<bool> {
+  /// 홈의 메시지 배지가 보는 값. **로그인했을 때만 목록을 한 번 받아 플래그를 채운다.**
+  ///
+  /// [UnreadConversationsFlag]만으로는 부족했다 — 그건 대화 목록 화면이 갱신해 주는
+  /// 값이라 **한 번도 안 들어갔으면 영원히 false**다. DM이 와도 사용자가 모른다는 문제가
+  /// 정확히 거기서 나왔다. 홈은 앱을 열면 늘 지나는 화면이라 여기서 한 번 받아 둔다.
+  ///
+  /// **비로그인이면 조회하지 않는다.** 대화 조회는 인증이 필요해 반드시 실패하는데,
+  /// 홈에서 매번 그 왕복이 나가면 낭비이고 로그 노이즈다.
+  ///
+  /// 실패해도 false다 — 배지는 부가 정보라 오류를 끌고 다니지 않는다.
+  const HasUnreadConversationsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'hasUnreadConversationsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$hasUnreadConversationsHash();
+
+  @$internal
+  @override
+  $ProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  bool create(Ref ref) {
+    return hasUnreadConversations(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$hasUnreadConversationsHash() =>
+    r'7ad0378169b864c561c82cd4240d24ddeee11408';
+
 /// 내가 참여한 대화 목록(R8).
 ///
 /// **keepAlive가 아니다.** 대화 목록은 열 때마다 최신이어야 하고, 읽음 처리·새

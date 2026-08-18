@@ -4,6 +4,7 @@ import '../../../common/network/media_cdn.dart';
 import '../../../common/widget/image_placeholder.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/message.dart';
+import 'message_quote_card.dart';
 
 /// 메시지 말풍선 하나.
 ///
@@ -77,6 +78,16 @@ class MessageBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
+          // 인용은 **맨 위**다. 이 메시지가 무엇에 대한 말인지 먼저 읽혀야 한다 —
+          // 인스타 스토리 답장이 같은 구조다.
+          //
+          // 대화당 하나였던 상단 고정 카드를 대체한다(2026-08-18). 카드 하나로는
+          // 두 번째 인용을 표현할 수 없었고, 갈아끼우면 첫 인용이 사라졌다.
+          if (message.spotQaOrigin != null)
+            MessageQuoteCard(
+              origin: message.spotQaOrigin!,
+              onMine: message.ownedByViewer,
+            ),
           if (message.photoKey != null)
             _MessagePhoto(photoKey: message.photoKey!),
           // 본문이 비면 이 줄만 생략한다 — 말풍선 자체는 남는다.

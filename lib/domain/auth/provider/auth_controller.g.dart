@@ -54,7 +54,7 @@ final class AuthControllerProvider
   AuthController create() => AuthController();
 }
 
-String _$authControllerHash() => r'49b111176414e91a8554c2ba7d1c85bf4993a2f7';
+String _$authControllerHash() => r'216a8a836097436260c5a285c2cd40e04544ab75';
 
 /// Owns the app-global authentication state (spec §7). Restores the session
 /// from secure storage on build, then exposes `AsyncValue<AuthState>` to the UI

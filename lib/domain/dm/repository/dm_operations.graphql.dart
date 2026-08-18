@@ -170,6 +170,7 @@ class Fragment$MessageParts {
     required this.sender,
     required this.ownedByViewer,
     required this.createdAt,
+    this.spotQaOrigin,
   });
 
   factory Fragment$MessageParts.fromJson(Map<String, dynamic> json) {
@@ -179,6 +180,7 @@ class Fragment$MessageParts {
     final l$sender = json['sender'];
     final l$ownedByViewer = json['ownedByViewer'];
     final l$createdAt = json['createdAt'];
+    final l$spotQaOrigin = json['spotQaOrigin'];
     return Fragment$MessageParts(
       id: (l$id as String),
       body: (l$body as String),
@@ -188,6 +190,11 @@ class Fragment$MessageParts {
       ),
       ownedByViewer: (l$ownedByViewer as bool),
       createdAt: (l$createdAt as String),
+      spotQaOrigin: l$spotQaOrigin == null
+          ? null
+          : Fragment$MessageParts$spotQaOrigin.fromJson(
+              (l$spotQaOrigin as Map<String, dynamic>),
+            ),
     );
   }
 
@@ -203,6 +210,8 @@ class Fragment$MessageParts {
 
   final String createdAt;
 
+  final Fragment$MessageParts$spotQaOrigin? spotQaOrigin;
+
   Map<String, dynamic> toJson() {
     final _resultData = <String, dynamic>{};
     final l$id = id;
@@ -217,6 +226,8 @@ class Fragment$MessageParts {
     _resultData['ownedByViewer'] = l$ownedByViewer;
     final l$createdAt = createdAt;
     _resultData['createdAt'] = l$createdAt;
+    final l$spotQaOrigin = spotQaOrigin;
+    _resultData['spotQaOrigin'] = l$spotQaOrigin?.toJson();
     return _resultData;
   }
 
@@ -228,6 +239,7 @@ class Fragment$MessageParts {
     final l$sender = sender;
     final l$ownedByViewer = ownedByViewer;
     final l$createdAt = createdAt;
+    final l$spotQaOrigin = spotQaOrigin;
     return Object.hashAll([
       l$id,
       l$body,
@@ -235,6 +247,7 @@ class Fragment$MessageParts {
       l$sender,
       l$ownedByViewer,
       l$createdAt,
+      l$spotQaOrigin,
     ]);
   }
 
@@ -276,6 +289,11 @@ class Fragment$MessageParts {
     if (l$createdAt != lOther$createdAt) {
       return false;
     }
+    final l$spotQaOrigin = spotQaOrigin;
+    final lOther$spotQaOrigin = other.spotQaOrigin;
+    if (l$spotQaOrigin != lOther$spotQaOrigin) {
+      return false;
+    }
     return true;
   }
 }
@@ -301,8 +319,10 @@ abstract class CopyWith$Fragment$MessageParts<TRes> {
     Fragment$DmAuthorParts? sender,
     bool? ownedByViewer,
     String? createdAt,
+    Fragment$MessageParts$spotQaOrigin? spotQaOrigin,
   });
   CopyWith$Fragment$DmAuthorParts<TRes> get sender;
+  CopyWith$Fragment$MessageParts$spotQaOrigin<TRes> get spotQaOrigin;
 }
 
 class _CopyWithImpl$Fragment$MessageParts<TRes>
@@ -322,6 +342,7 @@ class _CopyWithImpl$Fragment$MessageParts<TRes>
     Object? sender = _undefined,
     Object? ownedByViewer = _undefined,
     Object? createdAt = _undefined,
+    Object? spotQaOrigin = _undefined,
   }) => _then(
     Fragment$MessageParts(
       id: id == _undefined || id == null ? _instance.id : (id as String),
@@ -340,6 +361,9 @@ class _CopyWithImpl$Fragment$MessageParts<TRes>
       createdAt: createdAt == _undefined || createdAt == null
           ? _instance.createdAt
           : (createdAt as String),
+      spotQaOrigin: spotQaOrigin == _undefined
+          ? _instance.spotQaOrigin
+          : (spotQaOrigin as Fragment$MessageParts$spotQaOrigin?),
     ),
   );
 
@@ -349,6 +373,16 @@ class _CopyWithImpl$Fragment$MessageParts<TRes>
       local$sender,
       (e) => call(sender: e),
     );
+  }
+
+  CopyWith$Fragment$MessageParts$spotQaOrigin<TRes> get spotQaOrigin {
+    final local$spotQaOrigin = _instance.spotQaOrigin;
+    return local$spotQaOrigin == null
+        ? CopyWith$Fragment$MessageParts$spotQaOrigin.stub(_then(_instance))
+        : CopyWith$Fragment$MessageParts$spotQaOrigin(
+            local$spotQaOrigin,
+            (e) => call(spotQaOrigin: e),
+          );
   }
 }
 
@@ -365,10 +399,14 @@ class _CopyWithStubImpl$Fragment$MessageParts<TRes>
     Fragment$DmAuthorParts? sender,
     bool? ownedByViewer,
     String? createdAt,
+    Fragment$MessageParts$spotQaOrigin? spotQaOrigin,
   }) => _res;
 
   CopyWith$Fragment$DmAuthorParts<TRes> get sender =>
       CopyWith$Fragment$DmAuthorParts.stub(_res);
+
+  CopyWith$Fragment$MessageParts$spotQaOrigin<TRes> get spotQaOrigin =>
+      CopyWith$Fragment$MessageParts$spotQaOrigin.stub(_res);
 }
 
 const fragmentDefinitionMessageParts = FragmentDefinitionNode(
@@ -428,6 +466,58 @@ const fragmentDefinitionMessageParts = FragmentDefinitionNode(
         directives: [],
         selectionSet: null,
       ),
+      FieldNode(
+        name: NameNode(value: 'spotQaOrigin'),
+        alias: null,
+        arguments: [],
+        directives: [],
+        selectionSet: SelectionSetNode(
+          selections: [
+            FieldNode(
+              name: NameNode(value: 'catalogId'),
+              alias: null,
+              arguments: [],
+              directives: [],
+              selectionSet: null,
+            ),
+            FieldNode(
+              name: NameNode(value: 'spotTitle'),
+              alias: null,
+              arguments: [],
+              directives: [],
+              selectionSet: null,
+            ),
+            FieldNode(
+              name: NameNode(value: 'questionId'),
+              alias: null,
+              arguments: [],
+              directives: [],
+              selectionSet: null,
+            ),
+            FieldNode(
+              name: NameNode(value: 'questionBodySnapshot'),
+              alias: null,
+              arguments: [],
+              directives: [],
+              selectionSet: null,
+            ),
+            FieldNode(
+              name: NameNode(value: 'answerId'),
+              alias: null,
+              arguments: [],
+              directives: [],
+              selectionSet: null,
+            ),
+            FieldNode(
+              name: NameNode(value: 'answerBodySnapshot'),
+              alias: null,
+              arguments: [],
+              directives: [],
+              selectionSet: null,
+            ),
+          ],
+        ),
+      ),
     ],
   ),
 );
@@ -437,6 +527,211 @@ const documentNodeFragmentMessageParts = DocumentNode(
     fragmentDefinitionDmAuthorParts,
   ],
 );
+
+class Fragment$MessageParts$spotQaOrigin {
+  Fragment$MessageParts$spotQaOrigin({
+    required this.catalogId,
+    required this.spotTitle,
+    required this.questionId,
+    required this.questionBodySnapshot,
+    required this.answerId,
+    required this.answerBodySnapshot,
+  });
+
+  factory Fragment$MessageParts$spotQaOrigin.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$catalogId = json['catalogId'];
+    final l$spotTitle = json['spotTitle'];
+    final l$questionId = json['questionId'];
+    final l$questionBodySnapshot = json['questionBodySnapshot'];
+    final l$answerId = json['answerId'];
+    final l$answerBodySnapshot = json['answerBodySnapshot'];
+    return Fragment$MessageParts$spotQaOrigin(
+      catalogId: (l$catalogId as String),
+      spotTitle: (l$spotTitle as String),
+      questionId: (l$questionId as String),
+      questionBodySnapshot: (l$questionBodySnapshot as String),
+      answerId: (l$answerId as String),
+      answerBodySnapshot: (l$answerBodySnapshot as String),
+    );
+  }
+
+  final String catalogId;
+
+  final String spotTitle;
+
+  final String questionId;
+
+  final String questionBodySnapshot;
+
+  final String answerId;
+
+  final String answerBodySnapshot;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$catalogId = catalogId;
+    _resultData['catalogId'] = l$catalogId;
+    final l$spotTitle = spotTitle;
+    _resultData['spotTitle'] = l$spotTitle;
+    final l$questionId = questionId;
+    _resultData['questionId'] = l$questionId;
+    final l$questionBodySnapshot = questionBodySnapshot;
+    _resultData['questionBodySnapshot'] = l$questionBodySnapshot;
+    final l$answerId = answerId;
+    _resultData['answerId'] = l$answerId;
+    final l$answerBodySnapshot = answerBodySnapshot;
+    _resultData['answerBodySnapshot'] = l$answerBodySnapshot;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$catalogId = catalogId;
+    final l$spotTitle = spotTitle;
+    final l$questionId = questionId;
+    final l$questionBodySnapshot = questionBodySnapshot;
+    final l$answerId = answerId;
+    final l$answerBodySnapshot = answerBodySnapshot;
+    return Object.hashAll([
+      l$catalogId,
+      l$spotTitle,
+      l$questionId,
+      l$questionBodySnapshot,
+      l$answerId,
+      l$answerBodySnapshot,
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Fragment$MessageParts$spotQaOrigin ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$catalogId = catalogId;
+    final lOther$catalogId = other.catalogId;
+    if (l$catalogId != lOther$catalogId) {
+      return false;
+    }
+    final l$spotTitle = spotTitle;
+    final lOther$spotTitle = other.spotTitle;
+    if (l$spotTitle != lOther$spotTitle) {
+      return false;
+    }
+    final l$questionId = questionId;
+    final lOther$questionId = other.questionId;
+    if (l$questionId != lOther$questionId) {
+      return false;
+    }
+    final l$questionBodySnapshot = questionBodySnapshot;
+    final lOther$questionBodySnapshot = other.questionBodySnapshot;
+    if (l$questionBodySnapshot != lOther$questionBodySnapshot) {
+      return false;
+    }
+    final l$answerId = answerId;
+    final lOther$answerId = other.answerId;
+    if (l$answerId != lOther$answerId) {
+      return false;
+    }
+    final l$answerBodySnapshot = answerBodySnapshot;
+    final lOther$answerBodySnapshot = other.answerBodySnapshot;
+    if (l$answerBodySnapshot != lOther$answerBodySnapshot) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Fragment$MessageParts$spotQaOrigin
+    on Fragment$MessageParts$spotQaOrigin {
+  CopyWith$Fragment$MessageParts$spotQaOrigin<
+    Fragment$MessageParts$spotQaOrigin
+  >
+  get copyWith => CopyWith$Fragment$MessageParts$spotQaOrigin(this, (i) => i);
+}
+
+abstract class CopyWith$Fragment$MessageParts$spotQaOrigin<TRes> {
+  factory CopyWith$Fragment$MessageParts$spotQaOrigin(
+    Fragment$MessageParts$spotQaOrigin instance,
+    TRes Function(Fragment$MessageParts$spotQaOrigin) then,
+  ) = _CopyWithImpl$Fragment$MessageParts$spotQaOrigin;
+
+  factory CopyWith$Fragment$MessageParts$spotQaOrigin.stub(TRes res) =
+      _CopyWithStubImpl$Fragment$MessageParts$spotQaOrigin;
+
+  TRes call({
+    String? catalogId,
+    String? spotTitle,
+    String? questionId,
+    String? questionBodySnapshot,
+    String? answerId,
+    String? answerBodySnapshot,
+  });
+}
+
+class _CopyWithImpl$Fragment$MessageParts$spotQaOrigin<TRes>
+    implements CopyWith$Fragment$MessageParts$spotQaOrigin<TRes> {
+  _CopyWithImpl$Fragment$MessageParts$spotQaOrigin(this._instance, this._then);
+
+  final Fragment$MessageParts$spotQaOrigin _instance;
+
+  final TRes Function(Fragment$MessageParts$spotQaOrigin) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? catalogId = _undefined,
+    Object? spotTitle = _undefined,
+    Object? questionId = _undefined,
+    Object? questionBodySnapshot = _undefined,
+    Object? answerId = _undefined,
+    Object? answerBodySnapshot = _undefined,
+  }) => _then(
+    Fragment$MessageParts$spotQaOrigin(
+      catalogId: catalogId == _undefined || catalogId == null
+          ? _instance.catalogId
+          : (catalogId as String),
+      spotTitle: spotTitle == _undefined || spotTitle == null
+          ? _instance.spotTitle
+          : (spotTitle as String),
+      questionId: questionId == _undefined || questionId == null
+          ? _instance.questionId
+          : (questionId as String),
+      questionBodySnapshot:
+          questionBodySnapshot == _undefined || questionBodySnapshot == null
+          ? _instance.questionBodySnapshot
+          : (questionBodySnapshot as String),
+      answerId: answerId == _undefined || answerId == null
+          ? _instance.answerId
+          : (answerId as String),
+      answerBodySnapshot:
+          answerBodySnapshot == _undefined || answerBodySnapshot == null
+          ? _instance.answerBodySnapshot
+          : (answerBodySnapshot as String),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Fragment$MessageParts$spotQaOrigin<TRes>
+    implements CopyWith$Fragment$MessageParts$spotQaOrigin<TRes> {
+  _CopyWithStubImpl$Fragment$MessageParts$spotQaOrigin(this._res);
+
+  TRes _res;
+
+  call({
+    String? catalogId,
+    String? spotTitle,
+    String? questionId,
+    String? questionBodySnapshot,
+    String? answerId,
+    String? answerBodySnapshot,
+  }) => _res;
+}
 
 class Fragment$ConversationParts {
   Fragment$ConversationParts({
@@ -2967,10 +3262,12 @@ class Variables$Mutation$SendMessage {
     required String conversationId,
     required String body,
     String? photoKey,
+    String? sourceAnswerId,
   }) => Variables$Mutation$SendMessage._({
     r'conversationId': conversationId,
     r'body': body,
     if (photoKey != null) r'photoKey': photoKey,
+    if (sourceAnswerId != null) r'sourceAnswerId': sourceAnswerId,
   });
 
   Variables$Mutation$SendMessage._(this._$data);
@@ -2985,6 +3282,10 @@ class Variables$Mutation$SendMessage {
       final l$photoKey = data['photoKey'];
       result$data['photoKey'] = (l$photoKey as String?);
     }
+    if (data.containsKey('sourceAnswerId')) {
+      final l$sourceAnswerId = data['sourceAnswerId'];
+      result$data['sourceAnswerId'] = (l$sourceAnswerId as String?);
+    }
     return Variables$Mutation$SendMessage._(result$data);
   }
 
@@ -2996,6 +3297,8 @@ class Variables$Mutation$SendMessage {
 
   String? get photoKey => (_$data['photoKey'] as String?);
 
+  String? get sourceAnswerId => (_$data['sourceAnswerId'] as String?);
+
   Map<String, dynamic> toJson() {
     final result$data = <String, dynamic>{};
     final l$conversationId = conversationId;
@@ -3005,6 +3308,10 @@ class Variables$Mutation$SendMessage {
     if (_$data.containsKey('photoKey')) {
       final l$photoKey = photoKey;
       result$data['photoKey'] = l$photoKey;
+    }
+    if (_$data.containsKey('sourceAnswerId')) {
+      final l$sourceAnswerId = sourceAnswerId;
+      result$data['sourceAnswerId'] = l$sourceAnswerId;
     }
     return result$data;
   }
@@ -3040,6 +3347,15 @@ class Variables$Mutation$SendMessage {
     if (l$photoKey != lOther$photoKey) {
       return false;
     }
+    final l$sourceAnswerId = sourceAnswerId;
+    final lOther$sourceAnswerId = other.sourceAnswerId;
+    if (_$data.containsKey('sourceAnswerId') !=
+        other._$data.containsKey('sourceAnswerId')) {
+      return false;
+    }
+    if (l$sourceAnswerId != lOther$sourceAnswerId) {
+      return false;
+    }
     return true;
   }
 
@@ -3048,10 +3364,12 @@ class Variables$Mutation$SendMessage {
     final l$conversationId = conversationId;
     final l$body = body;
     final l$photoKey = photoKey;
+    final l$sourceAnswerId = sourceAnswerId;
     return Object.hashAll([
       l$conversationId,
       l$body,
       _$data.containsKey('photoKey') ? l$photoKey : const {},
+      _$data.containsKey('sourceAnswerId') ? l$sourceAnswerId : const {},
     ]);
   }
 }
@@ -3065,7 +3383,12 @@ abstract class CopyWith$Variables$Mutation$SendMessage<TRes> {
   factory CopyWith$Variables$Mutation$SendMessage.stub(TRes res) =
       _CopyWithStubImpl$Variables$Mutation$SendMessage;
 
-  TRes call({String? conversationId, String? body, String? photoKey});
+  TRes call({
+    String? conversationId,
+    String? body,
+    String? photoKey,
+    String? sourceAnswerId,
+  });
 }
 
 class _CopyWithImpl$Variables$Mutation$SendMessage<TRes>
@@ -3082,6 +3405,7 @@ class _CopyWithImpl$Variables$Mutation$SendMessage<TRes>
     Object? conversationId = _undefined,
     Object? body = _undefined,
     Object? photoKey = _undefined,
+    Object? sourceAnswerId = _undefined,
   }) => _then(
     Variables$Mutation$SendMessage._({
       ..._instance._$data,
@@ -3089,6 +3413,8 @@ class _CopyWithImpl$Variables$Mutation$SendMessage<TRes>
         'conversationId': (conversationId as String),
       if (body != _undefined && body != null) 'body': (body as String),
       if (photoKey != _undefined) 'photoKey': (photoKey as String?),
+      if (sourceAnswerId != _undefined)
+        'sourceAnswerId': (sourceAnswerId as String?),
     }),
   );
 }
@@ -3099,7 +3425,12 @@ class _CopyWithStubImpl$Variables$Mutation$SendMessage<TRes>
 
   TRes _res;
 
-  call({String? conversationId, String? body, String? photoKey}) => _res;
+  call({
+    String? conversationId,
+    String? body,
+    String? photoKey,
+    String? sourceAnswerId,
+  }) => _res;
 }
 
 class Mutation$SendMessage {
@@ -3230,6 +3561,12 @@ const documentNodeMutationSendMessage = DocumentNode(
           defaultValue: DefaultValueNode(value: null),
           directives: [],
         ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'sourceAnswerId')),
+          type: NamedTypeNode(name: NameNode(value: 'ID'), isNonNull: false),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
       ],
       directives: [],
       selectionSet: SelectionSetNode(
@@ -3255,6 +3592,12 @@ const documentNodeMutationSendMessage = DocumentNode(
                     ObjectFieldNode(
                       name: NameNode(value: 'photoKey'),
                       value: VariableNode(name: NameNode(value: 'photoKey')),
+                    ),
+                    ObjectFieldNode(
+                      name: NameNode(value: 'sourceAnswerId'),
+                      value: VariableNode(
+                        name: NameNode(value: 'sourceAnswerId'),
+                      ),
                     ),
                   ],
                 ),

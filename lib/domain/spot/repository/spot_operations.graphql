@@ -88,6 +88,10 @@ query SpotDetail($id: ID!, $categoryCode: String!) {
       attributionText
     }
     likeCount
+    # SPEC-0026 R3·R4. 호출자가 이 장소에 남긴 최신 반응이며 **비인증이면 null이다.**
+    # 질문/답변 진입점을 LIKE일 때만 노출하는 데 쓴다 — null과 DISLIKE는 둘 다 자격
+    # 없음이다. 표시용이지 서버 판정을 대체하지 않는다(서버가 커맨드 시점에 다시 본다).
+    viewerReaction
     # 운영 정보. 카테고리마다 서버가 공통 이름으로 정규화해 주고, 해당 개념이 없는
     # 카테고리에선 필드가 null이다 — 값 있는 행만 렌더한다.
     intro(categoryCode: $categoryCode) {

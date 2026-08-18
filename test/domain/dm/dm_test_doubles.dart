@@ -138,6 +138,9 @@ class FakeDmRepository implements DmRepository {
   /// `startConversation`에 실린 회원 id들.
   final List<String> startedMemberIds = <String>[];
 
+  /// `sendMessage`에 실린 인용 답변 id들(SPEC-0026). 인용 없이 보내면 null이다.
+  final List<String?> sentSourceAnswerIds = <String?>[];
+
   @override
   Future<CursorPage<Conversation>> fetchConversations({
     int? first,
@@ -162,9 +165,11 @@ class FakeDmRepository implements DmRepository {
     required String conversationId,
     required String body,
     String? photoKey,
+    String? sourceAnswerId,
   }) async {
     sentBodies.add(body);
     sentPhotoKeys.add(photoKey);
+    sentSourceAnswerIds.add(sourceAnswerId);
     final Object? error = sendMessageThrows;
     if (error != null) throw error;
     final String? code = sendErrorCode;

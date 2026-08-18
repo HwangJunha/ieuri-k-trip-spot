@@ -1,4 +1,5 @@
 import '../../../common/model/post_author.dart';
+import '../../../common/model/spot_qa_origin.dart';
 
 /// 메시지 한 건의 전송 상태.
 ///
@@ -33,6 +34,7 @@ class Message {
     this.status = MessageDeliveryStatus.sent,
     this.localId = false,
     this.retryCount = 0,
+    this.spotQaOrigin,
   });
 
   final String id;
@@ -68,6 +70,16 @@ class Message {
   /// (POL-040) — 근거 없는 시간 수치를 박지 않는다.
   final int retryCount;
 
+  /// 이 메시지가 인용한 질문/답변(SPEC-0026). 인용 없이 보냈으면 null이다.
+  ///
+  /// **대화가 아니라 메시지에 붙는다**(2026-08-18 서버가 옮겼다). 예전에는 대화당
+  /// 하나뿐이라 두 번째 질문에서 말을 걸면 첫 인용이 계속 남아 화면이 거짓말을 했다.
+  /// 이제 몇 번이든 인용할 수 있고 앞선 인용은 그대로 보존된다.
+  ///
+  /// **인용을 만들지 못해도 메시지는 간다** — 답변이 삭제됐거나 작성자가 대화 상대가
+  /// 아니면 서버가 조용히 무시하고 일반 메시지로 보낸다. null이 정상값이다.
+  final SpotQaOrigin? spotQaOrigin;
+
   /// 신고 대상이 될 수 있는지. 자기 메시지는 제외하고(AC15-5), 아직 서버에 없는
   /// 메시지도 제외한다 — 서버가 id로 지목할 수 없기 때문이다.
   bool get reportable => !ownedByViewer && !localId;
@@ -75,8 +87,12 @@ class Message {
   /// 본문 글자가 있는지. 없으면 첨부(사진)만 그린다.
   bool get hasBody => body.isNotEmpty;
 
-  /// 보낼 내용이 하나라도 있는지. **둘 다 비면 서버가 거부한다.**
-  bool get hasContent => body.isNotEmpty || photoKey != null;
+  /// 보낼 내용이 하나라도 있는지. **셋 다 비면 서버가 거부한다.**
+  ///
+  /// 인용도 내용이다 — 본문 없이 질문만 인용해 보낼 수 있고(SPEC-0026), 그때 말풍선은
+  /// 인용 카드만 담는다. 여기 빠뜨리면 그 메시지가 "내용 없음"으로 그려진다.
+  bool get hasContent =>
+      body.isNotEmpty || photoKey != null || spotQaOrigin != null;
 
   /// 그릴 내용이 하나도 없는 메시지인지(SPEC-0021 R4).
   ///
@@ -105,6 +121,8 @@ class Message {
     status: status ?? this.status,
     localId: localId ?? this.localId,
     retryCount: retryCount ?? this.retryCount,
+    // 인용은 보낼 때 정해져 이후 바뀌지 않는다 — 재전송해도 같은 질문을 가리킨다.
+    spotQaOrigin: spotQaOrigin,
   );
 
   @override
@@ -118,7 +136,8 @@ class Message {
       other.photoKey == photoKey &&
       other.status == status &&
       other.localId == localId &&
-      other.retryCount == retryCount;
+      other.retryCount == retryCount &&
+      other.spotQaOrigin == spotQaOrigin;
 
   @override
   int get hashCode => Object.hash(
@@ -131,5 +150,6 @@ class Message {
     status,
     localId,
     retryCount,
+    spotQaOrigin,
   );
 }

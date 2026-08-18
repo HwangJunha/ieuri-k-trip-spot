@@ -60,8 +60,12 @@ class SpotCategoryCodes extends _$SpotCategoryCodes {
 class SpotDetailController extends _$SpotDetailController {
   SpotRepository get _repository => ref.read(spotRepositoryProvider);
 
-  /// 이 세션에서 사용자가 이 상세에 마지막으로 보낸 반응(null=아직 없음). 낙관적
-  /// 델타 계산의 기준 — 서버 왕복 없이 덮어쓰기 순변화를 구하려고 로컬로 들고 있다.
+  /// 사용자가 이 상세에 남긴 마지막 반응(null=아직 없음). 낙관적 델타 계산의 기준 —
+  /// 서버 왕복 없이 덮어쓰기 순변화를 구하려고 로컬로 들고 있다.
+  ///
+  /// **초기값은 서버의 `viewerReaction`이다**(SPEC-0026). 예전에는 세션 로컬 값만
+  /// 들고 있어 "이미 좋아요한 장소를 다시 열면 반응 없음"으로 시작했는데, 그러면
+  /// 첫 반응의 델타가 어긋나고 질문/답변 진입점도 잘못 감춰진다.
   SpotReaction? _myReaction;
 
   /// 이 상세의 재시도 예산(SPEC-0006 R4). 스와이프와 같은 이유로 컨트롤러 바깥의
@@ -88,10 +92,14 @@ class SpotDetailController extends _$SpotDetailController {
     try {
       // 목록이 적어 둔 코드를 쓴다. 없으면(딥링크 등) repository가 기본값을 채우고,
       // 그때는 운영정보 섹션만 비고 본문은 정상이다.
-      return await _repository.fetchSpotDetail(
+      final SpotDetail detail = await _repository.fetchSpotDetail(
         contentId,
         categoryCode: ref.read(spotCategoryCodesProvider)[contentId],
       );
+      // 서버가 아는 내 반응을 델타 계산의 기준으로 삼는다(SPEC-0026) — 이미 좋아요한
+      // 장소를 다시 열었을 때 "반응 없음"에서 시작하면 첫 반응의 순변화가 어긋난다.
+      _myReaction = detail.viewerReaction;
+      return detail;
     } catch (error) {
       // 축제가 종료돼 서버에서 삭제된 경우(SPEC-0007 AC-43). 이 화면은 오류 상태를
       // 그대로 그리지만(사용자가 직접 연 화면이라 조용히 넘기면 더 혼란스럽다),
@@ -140,10 +148,15 @@ class SpotDetailController extends _$SpotDetailController {
     final SpotReaction? previousReaction = _myReaction;
     final int delta = _likeDelta(previousReaction, reaction);
 
-    // 낙관적: 개수와 내 반응을 먼저 반영한다.
+    // 낙관적: 개수와 내 반응을 먼저 반영한다. 반응을 모델에도 넣는 이유는 질문/답변
+    // 진입점의 노출 여부가 이 값을 보기 때문이다(SPEC-0026) — 수치만 갱신하면
+    // 좋아요 직후에도 진입점이 감춰진 채로 남는다.
     _myReaction = reaction;
     state = AsyncData<SpotDetail>(
-      current.copyWithLikeCount(current.likeCount + delta),
+      current.copyWithLikeCount(
+        current.likeCount + delta,
+        viewerReaction: reaction,
+      ),
     );
 
     try {

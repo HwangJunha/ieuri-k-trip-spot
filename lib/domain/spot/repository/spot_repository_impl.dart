@@ -444,7 +444,16 @@ class SpotRepositoryImpl implements SpotRepository {
     infoItems:
         r.infoItems?.map(_infoItemFrom).toList(growable: false) ??
         const <SpotInfoItem>[],
+    viewerReaction: _reactionFrom(r.viewerReaction),
   );
+
+  /// 내 최신 반응(SPEC-0026). **비인증이거나 반응한 적 없으면 null이다** — 서버가
+  /// 새 값을 더해도 질문/답변 진입점만 안 보일 뿐 상세가 깨지지 않도록 null로 접는다.
+  SpotReaction? _reactionFrom(Enum$SpotReaction? value) => switch (value) {
+    Enum$SpotReaction.LIKE => SpotReaction.like,
+    Enum$SpotReaction.DISLIKE => SpotReaction.dislike,
+    Enum$SpotReaction.$unknown || null => null,
+  };
 
   /// 운영 정보 매핑. 서버가 카테고리별 필드를 공통 이름으로 정규화해 주므로
   /// 카테고리 분기 없이 그대로 옮긴다 — 값 없는 항목의 숨김 판단은 모델이 한다.

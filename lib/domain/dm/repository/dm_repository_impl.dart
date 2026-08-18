@@ -6,6 +6,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../common/model/composer_photo.dart';
 import '../../../common/model/post_author.dart';
 import '../../../common/model/post_image_upload.dart';
+import '../../../common/model/spot_qa_origin.dart';
 import '../../../common/network/graphql_debug_log.dart';
 import '../../../common/network/graphql_failure.dart';
 import '../../../common/pagination/page.dart';
@@ -156,8 +157,9 @@ class DmRepositoryImpl implements DmRepository {
   // ------------------------------------------------------------------ DM
 
   @override
-  Future<DmMutationResult<String>> startConversation(String counterpartMemberId) =>
-      _mutateResult(
+  Future<DmMutationResult<String>> startConversation(
+    String counterpartMemberId,
+  ) => _mutateResult(
         documentNodeMutationStartConversation,
         Variables$Mutation$StartConversation(
           counterpartMemberId: counterpartMemberId,
@@ -227,14 +229,16 @@ class DmRepositoryImpl implements DmRepository {
     required String conversationId,
     required String body,
     String? photoKey,
+    String? sourceAnswerId,
   }) => _mutateResult(
     documentNodeMutationSendMessage,
     Variables$Mutation$SendMessage(
       conversationId: conversationId,
-      // `body`는 non-null이다 — 사진만 보낼 때도 빈 문자열이 실린다. 생략하면
+      // `body`는 non-null이다 — 사진·인용만 보낼 때도 빈 문자열이 실린다. 생략하면
       // GraphQL 검증 단계에서 실패한다.
       body: body,
       photoKey: photoKey,
+      sourceAnswerId: sourceAnswerId,
     ).toJson(),
     'sendMessage',
     (Map<String, dynamic> data) {
@@ -385,6 +389,7 @@ class DmRepositoryImpl implements DmRepository {
     createdAt: _parseTime(node.createdAt),
     ownedByViewer: node.ownedByViewer,
     photoKey: node.photoKey,
+    spotQaOrigin: _spotQaOrigin(node.spotQaOrigin),
   );
 
   Conversation _conversation(Fragment$ConversationParts node) => Conversation(
@@ -394,6 +399,22 @@ class DmRepositoryImpl implements DmRepository {
     unreadCount: node.unreadCount,
     updatedAt: _parseTime(node.updatedAt),
   );
+
+  /// 메시지가 인용한 질문/답변(SPEC-0026). **없는 것이 정상이다** — 인용 없이 보낸
+  /// 메시지가 대부분이고, 인용을 만들지 못한 경우(답변 삭제 등)도 서버가 거절 대신
+  /// null로 답한다.
+  SpotQaOrigin? _spotQaOrigin(
+    Fragment$MessageParts$spotQaOrigin? origin,
+  ) => origin == null
+      ? null
+      : SpotQaOrigin(
+          catalogId: origin.catalogId,
+          spotTitle: origin.spotTitle,
+          questionId: origin.questionId,
+          questionBodySnapshot: origin.questionBodySnapshot,
+          answerId: origin.answerId,
+          answerBodySnapshot: origin.answerBodySnapshot,
+        );
 
   PostAuthor _author(Fragment$DmAuthorParts a) => PostAuthor(
     id: a.id,
