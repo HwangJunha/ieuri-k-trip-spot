@@ -1536,11 +1536,11 @@ const documentNodeFragmentSpotAnswerParts = DocumentNode(
 
 class Variables$Query$SpotQuestions {
   factory Variables$Query$SpotQuestions({
-    required String catalogId,
+    String? catalogId,
     int? first,
     String? after,
   }) => Variables$Query$SpotQuestions._({
-    r'catalogId': catalogId,
+    if (catalogId != null) r'catalogId': catalogId,
     if (first != null) r'first': first,
     if (after != null) r'after': after,
   });
@@ -1549,8 +1549,10 @@ class Variables$Query$SpotQuestions {
 
   factory Variables$Query$SpotQuestions.fromJson(Map<String, dynamic> data) {
     final result$data = <String, dynamic>{};
-    final l$catalogId = data['catalogId'];
-    result$data['catalogId'] = (l$catalogId as String);
+    if (data.containsKey('catalogId')) {
+      final l$catalogId = data['catalogId'];
+      result$data['catalogId'] = (l$catalogId as String?);
+    }
     if (data.containsKey('first')) {
       final l$first = data['first'];
       result$data['first'] = (l$first as int?);
@@ -1564,7 +1566,7 @@ class Variables$Query$SpotQuestions {
 
   Map<String, dynamic> _$data;
 
-  String get catalogId => (_$data['catalogId'] as String);
+  String? get catalogId => (_$data['catalogId'] as String?);
 
   int? get first => (_$data['first'] as int?);
 
@@ -1572,8 +1574,10 @@ class Variables$Query$SpotQuestions {
 
   Map<String, dynamic> toJson() {
     final result$data = <String, dynamic>{};
-    final l$catalogId = catalogId;
-    result$data['catalogId'] = l$catalogId;
+    if (_$data.containsKey('catalogId')) {
+      final l$catalogId = catalogId;
+      result$data['catalogId'] = l$catalogId;
+    }
     if (_$data.containsKey('first')) {
       final l$first = first;
       result$data['first'] = l$first;
@@ -1599,6 +1603,10 @@ class Variables$Query$SpotQuestions {
     }
     final l$catalogId = catalogId;
     final lOther$catalogId = other.catalogId;
+    if (_$data.containsKey('catalogId') !=
+        other._$data.containsKey('catalogId')) {
+      return false;
+    }
     if (l$catalogId != lOther$catalogId) {
       return false;
     }
@@ -1627,7 +1635,7 @@ class Variables$Query$SpotQuestions {
     final l$first = first;
     final l$after = after;
     return Object.hashAll([
-      l$catalogId,
+      _$data.containsKey('catalogId') ? l$catalogId : const {},
       _$data.containsKey('first') ? l$first : const {},
       _$data.containsKey('after') ? l$after : const {},
     ]);
@@ -1663,8 +1671,7 @@ class _CopyWithImpl$Variables$Query$SpotQuestions<TRes>
   }) => _then(
     Variables$Query$SpotQuestions._({
       ..._instance._$data,
-      if (catalogId != _undefined && catalogId != null)
-        'catalogId': (catalogId as String),
+      if (catalogId != _undefined) 'catalogId': (catalogId as String?),
       if (first != _undefined) 'first': (first as int?),
       if (after != _undefined) 'after': (after as String?),
     }),
@@ -1789,7 +1796,7 @@ const documentNodeQuerySpotQuestions = DocumentNode(
       variableDefinitions: [
         VariableDefinitionNode(
           variable: VariableNode(name: NameNode(value: 'catalogId')),
-          type: NamedTypeNode(name: NameNode(value: 'ID'), isNonNull: true),
+          type: NamedTypeNode(name: NameNode(value: 'ID'), isNonNull: false),
           defaultValue: DefaultValueNode(value: null),
           directives: [],
         ),
@@ -2312,6 +2319,1541 @@ class _CopyWithImpl$Query$SpotQuestions$spotQuestions$pageInfo<TRes>
 class _CopyWithStubImpl$Query$SpotQuestions$spotQuestions$pageInfo<TRes>
     implements CopyWith$Query$SpotQuestions$spotQuestions$pageInfo<TRes> {
   _CopyWithStubImpl$Query$SpotQuestions$spotQuestions$pageInfo(this._res);
+
+  TRes _res;
+
+  call({bool? hasNextPage, String? endCursor}) => _res;
+}
+
+class Variables$Query$MyQuestions {
+  factory Variables$Query$MyQuestions({int? first, String? after}) =>
+      Variables$Query$MyQuestions._({
+        if (first != null) r'first': first,
+        if (after != null) r'after': after,
+      });
+
+  Variables$Query$MyQuestions._(this._$data);
+
+  factory Variables$Query$MyQuestions.fromJson(Map<String, dynamic> data) {
+    final result$data = <String, dynamic>{};
+    if (data.containsKey('first')) {
+      final l$first = data['first'];
+      result$data['first'] = (l$first as int?);
+    }
+    if (data.containsKey('after')) {
+      final l$after = data['after'];
+      result$data['after'] = (l$after as String?);
+    }
+    return Variables$Query$MyQuestions._(result$data);
+  }
+
+  Map<String, dynamic> _$data;
+
+  int? get first => (_$data['first'] as int?);
+
+  String? get after => (_$data['after'] as String?);
+
+  Map<String, dynamic> toJson() {
+    final result$data = <String, dynamic>{};
+    if (_$data.containsKey('first')) {
+      final l$first = first;
+      result$data['first'] = l$first;
+    }
+    if (_$data.containsKey('after')) {
+      final l$after = after;
+      result$data['after'] = l$after;
+    }
+    return result$data;
+  }
+
+  CopyWith$Variables$Query$MyQuestions<Variables$Query$MyQuestions>
+  get copyWith => CopyWith$Variables$Query$MyQuestions(this, (i) => i);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Variables$Query$MyQuestions ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$first = first;
+    final lOther$first = other.first;
+    if (_$data.containsKey('first') != other._$data.containsKey('first')) {
+      return false;
+    }
+    if (l$first != lOther$first) {
+      return false;
+    }
+    final l$after = after;
+    final lOther$after = other.after;
+    if (_$data.containsKey('after') != other._$data.containsKey('after')) {
+      return false;
+    }
+    if (l$after != lOther$after) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    final l$first = first;
+    final l$after = after;
+    return Object.hashAll([
+      _$data.containsKey('first') ? l$first : const {},
+      _$data.containsKey('after') ? l$after : const {},
+    ]);
+  }
+}
+
+abstract class CopyWith$Variables$Query$MyQuestions<TRes> {
+  factory CopyWith$Variables$Query$MyQuestions(
+    Variables$Query$MyQuestions instance,
+    TRes Function(Variables$Query$MyQuestions) then,
+  ) = _CopyWithImpl$Variables$Query$MyQuestions;
+
+  factory CopyWith$Variables$Query$MyQuestions.stub(TRes res) =
+      _CopyWithStubImpl$Variables$Query$MyQuestions;
+
+  TRes call({int? first, String? after});
+}
+
+class _CopyWithImpl$Variables$Query$MyQuestions<TRes>
+    implements CopyWith$Variables$Query$MyQuestions<TRes> {
+  _CopyWithImpl$Variables$Query$MyQuestions(this._instance, this._then);
+
+  final Variables$Query$MyQuestions _instance;
+
+  final TRes Function(Variables$Query$MyQuestions) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? first = _undefined, Object? after = _undefined}) => _then(
+    Variables$Query$MyQuestions._({
+      ..._instance._$data,
+      if (first != _undefined) 'first': (first as int?),
+      if (after != _undefined) 'after': (after as String?),
+    }),
+  );
+}
+
+class _CopyWithStubImpl$Variables$Query$MyQuestions<TRes>
+    implements CopyWith$Variables$Query$MyQuestions<TRes> {
+  _CopyWithStubImpl$Variables$Query$MyQuestions(this._res);
+
+  TRes _res;
+
+  call({int? first, String? after}) => _res;
+}
+
+class Query$MyQuestions {
+  Query$MyQuestions({required this.spotQuestions});
+
+  factory Query$MyQuestions.fromJson(Map<String, dynamic> json) {
+    final l$spotQuestions = json['spotQuestions'];
+    return Query$MyQuestions(
+      spotQuestions: Query$MyQuestions$spotQuestions.fromJson(
+        (l$spotQuestions as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final Query$MyQuestions$spotQuestions spotQuestions;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$spotQuestions = spotQuestions;
+    _resultData['spotQuestions'] = l$spotQuestions.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$spotQuestions = spotQuestions;
+    return Object.hashAll([l$spotQuestions]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$MyQuestions || runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$spotQuestions = spotQuestions;
+    final lOther$spotQuestions = other.spotQuestions;
+    if (l$spotQuestions != lOther$spotQuestions) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$MyQuestions on Query$MyQuestions {
+  CopyWith$Query$MyQuestions<Query$MyQuestions> get copyWith =>
+      CopyWith$Query$MyQuestions(this, (i) => i);
+}
+
+abstract class CopyWith$Query$MyQuestions<TRes> {
+  factory CopyWith$Query$MyQuestions(
+    Query$MyQuestions instance,
+    TRes Function(Query$MyQuestions) then,
+  ) = _CopyWithImpl$Query$MyQuestions;
+
+  factory CopyWith$Query$MyQuestions.stub(TRes res) =
+      _CopyWithStubImpl$Query$MyQuestions;
+
+  TRes call({Query$MyQuestions$spotQuestions? spotQuestions});
+  CopyWith$Query$MyQuestions$spotQuestions<TRes> get spotQuestions;
+}
+
+class _CopyWithImpl$Query$MyQuestions<TRes>
+    implements CopyWith$Query$MyQuestions<TRes> {
+  _CopyWithImpl$Query$MyQuestions(this._instance, this._then);
+
+  final Query$MyQuestions _instance;
+
+  final TRes Function(Query$MyQuestions) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? spotQuestions = _undefined}) => _then(
+    Query$MyQuestions(
+      spotQuestions: spotQuestions == _undefined || spotQuestions == null
+          ? _instance.spotQuestions
+          : (spotQuestions as Query$MyQuestions$spotQuestions),
+    ),
+  );
+
+  CopyWith$Query$MyQuestions$spotQuestions<TRes> get spotQuestions {
+    final local$spotQuestions = _instance.spotQuestions;
+    return CopyWith$Query$MyQuestions$spotQuestions(
+      local$spotQuestions,
+      (e) => call(spotQuestions: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Query$MyQuestions<TRes>
+    implements CopyWith$Query$MyQuestions<TRes> {
+  _CopyWithStubImpl$Query$MyQuestions(this._res);
+
+  TRes _res;
+
+  call({Query$MyQuestions$spotQuestions? spotQuestions}) => _res;
+
+  CopyWith$Query$MyQuestions$spotQuestions<TRes> get spotQuestions =>
+      CopyWith$Query$MyQuestions$spotQuestions.stub(_res);
+}
+
+const documentNodeQueryMyQuestions = DocumentNode(
+  definitions: [
+    OperationDefinitionNode(
+      type: OperationType.query,
+      name: NameNode(value: 'MyQuestions'),
+      variableDefinitions: [
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'first')),
+          type: NamedTypeNode(name: NameNode(value: 'Int'), isNonNull: false),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'after')),
+          type: NamedTypeNode(
+            name: NameNode(value: 'String'),
+            isNonNull: false,
+          ),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+      ],
+      directives: [],
+      selectionSet: SelectionSetNode(
+        selections: [
+          FieldNode(
+            name: NameNode(value: 'spotQuestions'),
+            alias: null,
+            arguments: [
+              ArgumentNode(
+                name: NameNode(value: 'mine'),
+                value: BooleanValueNode(value: true),
+              ),
+              ArgumentNode(
+                name: NameNode(value: 'first'),
+                value: VariableNode(name: NameNode(value: 'first')),
+              ),
+              ArgumentNode(
+                name: NameNode(value: 'after'),
+                value: VariableNode(name: NameNode(value: 'after')),
+              ),
+            ],
+            directives: [],
+            selectionSet: SelectionSetNode(
+              selections: [
+                FieldNode(
+                  name: NameNode(value: 'edges'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'cursor'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'node'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: SelectionSetNode(
+                          selections: [
+                            FragmentSpreadNode(
+                              name: NameNode(value: 'SpotQuestionParts'),
+                              directives: [],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                FieldNode(
+                  name: NameNode(value: 'pageInfo'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'hasNextPage'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'endCursor'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+    fragmentDefinitionSpotQuestionParts,
+    fragmentDefinitionSpotQaSpotParts,
+    fragmentDefinitionSpotQaAuthorParts,
+  ],
+);
+
+class Query$MyQuestions$spotQuestions {
+  Query$MyQuestions$spotQuestions({
+    required this.edges,
+    required this.pageInfo,
+  });
+
+  factory Query$MyQuestions$spotQuestions.fromJson(Map<String, dynamic> json) {
+    final l$edges = json['edges'];
+    final l$pageInfo = json['pageInfo'];
+    return Query$MyQuestions$spotQuestions(
+      edges: (l$edges as List<dynamic>)
+          .map(
+            (e) => Query$MyQuestions$spotQuestions$edges.fromJson(
+              (e as Map<String, dynamic>),
+            ),
+          )
+          .toList(),
+      pageInfo: Query$MyQuestions$spotQuestions$pageInfo.fromJson(
+        (l$pageInfo as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final List<Query$MyQuestions$spotQuestions$edges> edges;
+
+  final Query$MyQuestions$spotQuestions$pageInfo pageInfo;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$edges = edges;
+    _resultData['edges'] = l$edges.map((e) => e.toJson()).toList();
+    final l$pageInfo = pageInfo;
+    _resultData['pageInfo'] = l$pageInfo.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$edges = edges;
+    final l$pageInfo = pageInfo;
+    return Object.hashAll([Object.hashAll(l$edges.map((v) => v)), l$pageInfo]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$MyQuestions$spotQuestions ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$edges = edges;
+    final lOther$edges = other.edges;
+    if (l$edges.length != lOther$edges.length) {
+      return false;
+    }
+    for (int i = 0; i < l$edges.length; i++) {
+      final l$edges$entry = l$edges[i];
+      final lOther$edges$entry = lOther$edges[i];
+      if (l$edges$entry != lOther$edges$entry) {
+        return false;
+      }
+    }
+    final l$pageInfo = pageInfo;
+    final lOther$pageInfo = other.pageInfo;
+    if (l$pageInfo != lOther$pageInfo) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$MyQuestions$spotQuestions
+    on Query$MyQuestions$spotQuestions {
+  CopyWith$Query$MyQuestions$spotQuestions<Query$MyQuestions$spotQuestions>
+  get copyWith => CopyWith$Query$MyQuestions$spotQuestions(this, (i) => i);
+}
+
+abstract class CopyWith$Query$MyQuestions$spotQuestions<TRes> {
+  factory CopyWith$Query$MyQuestions$spotQuestions(
+    Query$MyQuestions$spotQuestions instance,
+    TRes Function(Query$MyQuestions$spotQuestions) then,
+  ) = _CopyWithImpl$Query$MyQuestions$spotQuestions;
+
+  factory CopyWith$Query$MyQuestions$spotQuestions.stub(TRes res) =
+      _CopyWithStubImpl$Query$MyQuestions$spotQuestions;
+
+  TRes call({
+    List<Query$MyQuestions$spotQuestions$edges>? edges,
+    Query$MyQuestions$spotQuestions$pageInfo? pageInfo,
+  });
+  TRes edges(
+    Iterable<Query$MyQuestions$spotQuestions$edges> Function(
+      Iterable<
+        CopyWith$Query$MyQuestions$spotQuestions$edges<
+          Query$MyQuestions$spotQuestions$edges
+        >
+      >,
+    )
+    _fn,
+  );
+  CopyWith$Query$MyQuestions$spotQuestions$pageInfo<TRes> get pageInfo;
+}
+
+class _CopyWithImpl$Query$MyQuestions$spotQuestions<TRes>
+    implements CopyWith$Query$MyQuestions$spotQuestions<TRes> {
+  _CopyWithImpl$Query$MyQuestions$spotQuestions(this._instance, this._then);
+
+  final Query$MyQuestions$spotQuestions _instance;
+
+  final TRes Function(Query$MyQuestions$spotQuestions) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? edges = _undefined, Object? pageInfo = _undefined}) =>
+      _then(
+        Query$MyQuestions$spotQuestions(
+          edges: edges == _undefined || edges == null
+              ? _instance.edges
+              : (edges as List<Query$MyQuestions$spotQuestions$edges>),
+          pageInfo: pageInfo == _undefined || pageInfo == null
+              ? _instance.pageInfo
+              : (pageInfo as Query$MyQuestions$spotQuestions$pageInfo),
+        ),
+      );
+
+  TRes edges(
+    Iterable<Query$MyQuestions$spotQuestions$edges> Function(
+      Iterable<
+        CopyWith$Query$MyQuestions$spotQuestions$edges<
+          Query$MyQuestions$spotQuestions$edges
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    edges: _fn(
+      _instance.edges.map(
+        (e) => CopyWith$Query$MyQuestions$spotQuestions$edges(e, (i) => i),
+      ),
+    ).toList(),
+  );
+
+  CopyWith$Query$MyQuestions$spotQuestions$pageInfo<TRes> get pageInfo {
+    final local$pageInfo = _instance.pageInfo;
+    return CopyWith$Query$MyQuestions$spotQuestions$pageInfo(
+      local$pageInfo,
+      (e) => call(pageInfo: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Query$MyQuestions$spotQuestions<TRes>
+    implements CopyWith$Query$MyQuestions$spotQuestions<TRes> {
+  _CopyWithStubImpl$Query$MyQuestions$spotQuestions(this._res);
+
+  TRes _res;
+
+  call({
+    List<Query$MyQuestions$spotQuestions$edges>? edges,
+    Query$MyQuestions$spotQuestions$pageInfo? pageInfo,
+  }) => _res;
+
+  edges(_fn) => _res;
+
+  CopyWith$Query$MyQuestions$spotQuestions$pageInfo<TRes> get pageInfo =>
+      CopyWith$Query$MyQuestions$spotQuestions$pageInfo.stub(_res);
+}
+
+class Query$MyQuestions$spotQuestions$edges {
+  Query$MyQuestions$spotQuestions$edges({
+    required this.cursor,
+    required this.node,
+  });
+
+  factory Query$MyQuestions$spotQuestions$edges.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$cursor = json['cursor'];
+    final l$node = json['node'];
+    return Query$MyQuestions$spotQuestions$edges(
+      cursor: (l$cursor as String),
+      node: Fragment$SpotQuestionParts.fromJson(
+        (l$node as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final String cursor;
+
+  final Fragment$SpotQuestionParts node;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$cursor = cursor;
+    _resultData['cursor'] = l$cursor;
+    final l$node = node;
+    _resultData['node'] = l$node.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$cursor = cursor;
+    final l$node = node;
+    return Object.hashAll([l$cursor, l$node]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$MyQuestions$spotQuestions$edges ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$cursor = cursor;
+    final lOther$cursor = other.cursor;
+    if (l$cursor != lOther$cursor) {
+      return false;
+    }
+    final l$node = node;
+    final lOther$node = other.node;
+    if (l$node != lOther$node) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$MyQuestions$spotQuestions$edges
+    on Query$MyQuestions$spotQuestions$edges {
+  CopyWith$Query$MyQuestions$spotQuestions$edges<
+    Query$MyQuestions$spotQuestions$edges
+  >
+  get copyWith =>
+      CopyWith$Query$MyQuestions$spotQuestions$edges(this, (i) => i);
+}
+
+abstract class CopyWith$Query$MyQuestions$spotQuestions$edges<TRes> {
+  factory CopyWith$Query$MyQuestions$spotQuestions$edges(
+    Query$MyQuestions$spotQuestions$edges instance,
+    TRes Function(Query$MyQuestions$spotQuestions$edges) then,
+  ) = _CopyWithImpl$Query$MyQuestions$spotQuestions$edges;
+
+  factory CopyWith$Query$MyQuestions$spotQuestions$edges.stub(TRes res) =
+      _CopyWithStubImpl$Query$MyQuestions$spotQuestions$edges;
+
+  TRes call({String? cursor, Fragment$SpotQuestionParts? node});
+  CopyWith$Fragment$SpotQuestionParts<TRes> get node;
+}
+
+class _CopyWithImpl$Query$MyQuestions$spotQuestions$edges<TRes>
+    implements CopyWith$Query$MyQuestions$spotQuestions$edges<TRes> {
+  _CopyWithImpl$Query$MyQuestions$spotQuestions$edges(
+    this._instance,
+    this._then,
+  );
+
+  final Query$MyQuestions$spotQuestions$edges _instance;
+
+  final TRes Function(Query$MyQuestions$spotQuestions$edges) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? cursor = _undefined, Object? node = _undefined}) => _then(
+    Query$MyQuestions$spotQuestions$edges(
+      cursor: cursor == _undefined || cursor == null
+          ? _instance.cursor
+          : (cursor as String),
+      node: node == _undefined || node == null
+          ? _instance.node
+          : (node as Fragment$SpotQuestionParts),
+    ),
+  );
+
+  CopyWith$Fragment$SpotQuestionParts<TRes> get node {
+    final local$node = _instance.node;
+    return CopyWith$Fragment$SpotQuestionParts(
+      local$node,
+      (e) => call(node: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Query$MyQuestions$spotQuestions$edges<TRes>
+    implements CopyWith$Query$MyQuestions$spotQuestions$edges<TRes> {
+  _CopyWithStubImpl$Query$MyQuestions$spotQuestions$edges(this._res);
+
+  TRes _res;
+
+  call({String? cursor, Fragment$SpotQuestionParts? node}) => _res;
+
+  CopyWith$Fragment$SpotQuestionParts<TRes> get node =>
+      CopyWith$Fragment$SpotQuestionParts.stub(_res);
+}
+
+class Query$MyQuestions$spotQuestions$pageInfo {
+  Query$MyQuestions$spotQuestions$pageInfo({
+    required this.hasNextPage,
+    this.endCursor,
+  });
+
+  factory Query$MyQuestions$spotQuestions$pageInfo.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$hasNextPage = json['hasNextPage'];
+    final l$endCursor = json['endCursor'];
+    return Query$MyQuestions$spotQuestions$pageInfo(
+      hasNextPage: (l$hasNextPage as bool),
+      endCursor: (l$endCursor as String?),
+    );
+  }
+
+  final bool hasNextPage;
+
+  final String? endCursor;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$hasNextPage = hasNextPage;
+    _resultData['hasNextPage'] = l$hasNextPage;
+    final l$endCursor = endCursor;
+    _resultData['endCursor'] = l$endCursor;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$hasNextPage = hasNextPage;
+    final l$endCursor = endCursor;
+    return Object.hashAll([l$hasNextPage, l$endCursor]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$MyQuestions$spotQuestions$pageInfo ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$hasNextPage = hasNextPage;
+    final lOther$hasNextPage = other.hasNextPage;
+    if (l$hasNextPage != lOther$hasNextPage) {
+      return false;
+    }
+    final l$endCursor = endCursor;
+    final lOther$endCursor = other.endCursor;
+    if (l$endCursor != lOther$endCursor) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$MyQuestions$spotQuestions$pageInfo
+    on Query$MyQuestions$spotQuestions$pageInfo {
+  CopyWith$Query$MyQuestions$spotQuestions$pageInfo<
+    Query$MyQuestions$spotQuestions$pageInfo
+  >
+  get copyWith =>
+      CopyWith$Query$MyQuestions$spotQuestions$pageInfo(this, (i) => i);
+}
+
+abstract class CopyWith$Query$MyQuestions$spotQuestions$pageInfo<TRes> {
+  factory CopyWith$Query$MyQuestions$spotQuestions$pageInfo(
+    Query$MyQuestions$spotQuestions$pageInfo instance,
+    TRes Function(Query$MyQuestions$spotQuestions$pageInfo) then,
+  ) = _CopyWithImpl$Query$MyQuestions$spotQuestions$pageInfo;
+
+  factory CopyWith$Query$MyQuestions$spotQuestions$pageInfo.stub(TRes res) =
+      _CopyWithStubImpl$Query$MyQuestions$spotQuestions$pageInfo;
+
+  TRes call({bool? hasNextPage, String? endCursor});
+}
+
+class _CopyWithImpl$Query$MyQuestions$spotQuestions$pageInfo<TRes>
+    implements CopyWith$Query$MyQuestions$spotQuestions$pageInfo<TRes> {
+  _CopyWithImpl$Query$MyQuestions$spotQuestions$pageInfo(
+    this._instance,
+    this._then,
+  );
+
+  final Query$MyQuestions$spotQuestions$pageInfo _instance;
+
+  final TRes Function(Query$MyQuestions$spotQuestions$pageInfo) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? hasNextPage = _undefined,
+    Object? endCursor = _undefined,
+  }) => _then(
+    Query$MyQuestions$spotQuestions$pageInfo(
+      hasNextPage: hasNextPage == _undefined || hasNextPage == null
+          ? _instance.hasNextPage
+          : (hasNextPage as bool),
+      endCursor: endCursor == _undefined
+          ? _instance.endCursor
+          : (endCursor as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$MyQuestions$spotQuestions$pageInfo<TRes>
+    implements CopyWith$Query$MyQuestions$spotQuestions$pageInfo<TRes> {
+  _CopyWithStubImpl$Query$MyQuestions$spotQuestions$pageInfo(this._res);
+
+  TRes _res;
+
+  call({bool? hasNextPage, String? endCursor}) => _res;
+}
+
+class Variables$Query$SpotQuestionsByIds {
+  factory Variables$Query$SpotQuestionsByIds({List<String>? ids, int? first}) =>
+      Variables$Query$SpotQuestionsByIds._({
+        if (ids != null) r'ids': ids,
+        if (first != null) r'first': first,
+      });
+
+  Variables$Query$SpotQuestionsByIds._(this._$data);
+
+  factory Variables$Query$SpotQuestionsByIds.fromJson(
+    Map<String, dynamic> data,
+  ) {
+    final result$data = <String, dynamic>{};
+    if (data.containsKey('ids')) {
+      final l$ids = data['ids'];
+      result$data['ids'] = (l$ids as List<dynamic>?)
+          ?.map((e) => (e as String))
+          .toList();
+    }
+    if (data.containsKey('first')) {
+      final l$first = data['first'];
+      result$data['first'] = (l$first as int?);
+    }
+    return Variables$Query$SpotQuestionsByIds._(result$data);
+  }
+
+  Map<String, dynamic> _$data;
+
+  List<String>? get ids => (_$data['ids'] as List<String>?);
+
+  int? get first => (_$data['first'] as int?);
+
+  Map<String, dynamic> toJson() {
+    final result$data = <String, dynamic>{};
+    if (_$data.containsKey('ids')) {
+      final l$ids = ids;
+      result$data['ids'] = l$ids?.map((e) => e).toList();
+    }
+    if (_$data.containsKey('first')) {
+      final l$first = first;
+      result$data['first'] = l$first;
+    }
+    return result$data;
+  }
+
+  CopyWith$Variables$Query$SpotQuestionsByIds<
+    Variables$Query$SpotQuestionsByIds
+  >
+  get copyWith => CopyWith$Variables$Query$SpotQuestionsByIds(this, (i) => i);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Variables$Query$SpotQuestionsByIds ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$ids = ids;
+    final lOther$ids = other.ids;
+    if (_$data.containsKey('ids') != other._$data.containsKey('ids')) {
+      return false;
+    }
+    if (l$ids != null && lOther$ids != null) {
+      if (l$ids.length != lOther$ids.length) {
+        return false;
+      }
+      for (int i = 0; i < l$ids.length; i++) {
+        final l$ids$entry = l$ids[i];
+        final lOther$ids$entry = lOther$ids[i];
+        if (l$ids$entry != lOther$ids$entry) {
+          return false;
+        }
+      }
+    } else if (l$ids != lOther$ids) {
+      return false;
+    }
+    final l$first = first;
+    final lOther$first = other.first;
+    if (_$data.containsKey('first') != other._$data.containsKey('first')) {
+      return false;
+    }
+    if (l$first != lOther$first) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    final l$ids = ids;
+    final l$first = first;
+    return Object.hashAll([
+      _$data.containsKey('ids')
+          ? l$ids == null
+                ? null
+                : Object.hashAll(l$ids.map((v) => v))
+          : const {},
+      _$data.containsKey('first') ? l$first : const {},
+    ]);
+  }
+}
+
+abstract class CopyWith$Variables$Query$SpotQuestionsByIds<TRes> {
+  factory CopyWith$Variables$Query$SpotQuestionsByIds(
+    Variables$Query$SpotQuestionsByIds instance,
+    TRes Function(Variables$Query$SpotQuestionsByIds) then,
+  ) = _CopyWithImpl$Variables$Query$SpotQuestionsByIds;
+
+  factory CopyWith$Variables$Query$SpotQuestionsByIds.stub(TRes res) =
+      _CopyWithStubImpl$Variables$Query$SpotQuestionsByIds;
+
+  TRes call({List<String>? ids, int? first});
+}
+
+class _CopyWithImpl$Variables$Query$SpotQuestionsByIds<TRes>
+    implements CopyWith$Variables$Query$SpotQuestionsByIds<TRes> {
+  _CopyWithImpl$Variables$Query$SpotQuestionsByIds(this._instance, this._then);
+
+  final Variables$Query$SpotQuestionsByIds _instance;
+
+  final TRes Function(Variables$Query$SpotQuestionsByIds) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? ids = _undefined, Object? first = _undefined}) => _then(
+    Variables$Query$SpotQuestionsByIds._({
+      ..._instance._$data,
+      if (ids != _undefined) 'ids': (ids as List<String>?),
+      if (first != _undefined) 'first': (first as int?),
+    }),
+  );
+}
+
+class _CopyWithStubImpl$Variables$Query$SpotQuestionsByIds<TRes>
+    implements CopyWith$Variables$Query$SpotQuestionsByIds<TRes> {
+  _CopyWithStubImpl$Variables$Query$SpotQuestionsByIds(this._res);
+
+  TRes _res;
+
+  call({List<String>? ids, int? first}) => _res;
+}
+
+class Query$SpotQuestionsByIds {
+  Query$SpotQuestionsByIds({required this.spotQuestions});
+
+  factory Query$SpotQuestionsByIds.fromJson(Map<String, dynamic> json) {
+    final l$spotQuestions = json['spotQuestions'];
+    return Query$SpotQuestionsByIds(
+      spotQuestions: Query$SpotQuestionsByIds$spotQuestions.fromJson(
+        (l$spotQuestions as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final Query$SpotQuestionsByIds$spotQuestions spotQuestions;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$spotQuestions = spotQuestions;
+    _resultData['spotQuestions'] = l$spotQuestions.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$spotQuestions = spotQuestions;
+    return Object.hashAll([l$spotQuestions]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$SpotQuestionsByIds ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$spotQuestions = spotQuestions;
+    final lOther$spotQuestions = other.spotQuestions;
+    if (l$spotQuestions != lOther$spotQuestions) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$SpotQuestionsByIds
+    on Query$SpotQuestionsByIds {
+  CopyWith$Query$SpotQuestionsByIds<Query$SpotQuestionsByIds> get copyWith =>
+      CopyWith$Query$SpotQuestionsByIds(this, (i) => i);
+}
+
+abstract class CopyWith$Query$SpotQuestionsByIds<TRes> {
+  factory CopyWith$Query$SpotQuestionsByIds(
+    Query$SpotQuestionsByIds instance,
+    TRes Function(Query$SpotQuestionsByIds) then,
+  ) = _CopyWithImpl$Query$SpotQuestionsByIds;
+
+  factory CopyWith$Query$SpotQuestionsByIds.stub(TRes res) =
+      _CopyWithStubImpl$Query$SpotQuestionsByIds;
+
+  TRes call({Query$SpotQuestionsByIds$spotQuestions? spotQuestions});
+  CopyWith$Query$SpotQuestionsByIds$spotQuestions<TRes> get spotQuestions;
+}
+
+class _CopyWithImpl$Query$SpotQuestionsByIds<TRes>
+    implements CopyWith$Query$SpotQuestionsByIds<TRes> {
+  _CopyWithImpl$Query$SpotQuestionsByIds(this._instance, this._then);
+
+  final Query$SpotQuestionsByIds _instance;
+
+  final TRes Function(Query$SpotQuestionsByIds) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? spotQuestions = _undefined}) => _then(
+    Query$SpotQuestionsByIds(
+      spotQuestions: spotQuestions == _undefined || spotQuestions == null
+          ? _instance.spotQuestions
+          : (spotQuestions as Query$SpotQuestionsByIds$spotQuestions),
+    ),
+  );
+
+  CopyWith$Query$SpotQuestionsByIds$spotQuestions<TRes> get spotQuestions {
+    final local$spotQuestions = _instance.spotQuestions;
+    return CopyWith$Query$SpotQuestionsByIds$spotQuestions(
+      local$spotQuestions,
+      (e) => call(spotQuestions: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Query$SpotQuestionsByIds<TRes>
+    implements CopyWith$Query$SpotQuestionsByIds<TRes> {
+  _CopyWithStubImpl$Query$SpotQuestionsByIds(this._res);
+
+  TRes _res;
+
+  call({Query$SpotQuestionsByIds$spotQuestions? spotQuestions}) => _res;
+
+  CopyWith$Query$SpotQuestionsByIds$spotQuestions<TRes> get spotQuestions =>
+      CopyWith$Query$SpotQuestionsByIds$spotQuestions.stub(_res);
+}
+
+const documentNodeQuerySpotQuestionsByIds = DocumentNode(
+  definitions: [
+    OperationDefinitionNode(
+      type: OperationType.query,
+      name: NameNode(value: 'SpotQuestionsByIds'),
+      variableDefinitions: [
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'ids')),
+          type: ListTypeNode(
+            type: NamedTypeNode(name: NameNode(value: 'ID'), isNonNull: true),
+            isNonNull: false,
+          ),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'first')),
+          type: NamedTypeNode(name: NameNode(value: 'Int'), isNonNull: false),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+      ],
+      directives: [],
+      selectionSet: SelectionSetNode(
+        selections: [
+          FieldNode(
+            name: NameNode(value: 'spotQuestions'),
+            alias: null,
+            arguments: [
+              ArgumentNode(
+                name: NameNode(value: 'ids'),
+                value: VariableNode(name: NameNode(value: 'ids')),
+              ),
+              ArgumentNode(
+                name: NameNode(value: 'first'),
+                value: VariableNode(name: NameNode(value: 'first')),
+              ),
+            ],
+            directives: [],
+            selectionSet: SelectionSetNode(
+              selections: [
+                FieldNode(
+                  name: NameNode(value: 'edges'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'cursor'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'node'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: SelectionSetNode(
+                          selections: [
+                            FragmentSpreadNode(
+                              name: NameNode(value: 'SpotQuestionParts'),
+                              directives: [],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                FieldNode(
+                  name: NameNode(value: 'pageInfo'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'hasNextPage'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'endCursor'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+    fragmentDefinitionSpotQuestionParts,
+    fragmentDefinitionSpotQaSpotParts,
+    fragmentDefinitionSpotQaAuthorParts,
+  ],
+);
+
+class Query$SpotQuestionsByIds$spotQuestions {
+  Query$SpotQuestionsByIds$spotQuestions({
+    required this.edges,
+    required this.pageInfo,
+  });
+
+  factory Query$SpotQuestionsByIds$spotQuestions.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$edges = json['edges'];
+    final l$pageInfo = json['pageInfo'];
+    return Query$SpotQuestionsByIds$spotQuestions(
+      edges: (l$edges as List<dynamic>)
+          .map(
+            (e) => Query$SpotQuestionsByIds$spotQuestions$edges.fromJson(
+              (e as Map<String, dynamic>),
+            ),
+          )
+          .toList(),
+      pageInfo: Query$SpotQuestionsByIds$spotQuestions$pageInfo.fromJson(
+        (l$pageInfo as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final List<Query$SpotQuestionsByIds$spotQuestions$edges> edges;
+
+  final Query$SpotQuestionsByIds$spotQuestions$pageInfo pageInfo;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$edges = edges;
+    _resultData['edges'] = l$edges.map((e) => e.toJson()).toList();
+    final l$pageInfo = pageInfo;
+    _resultData['pageInfo'] = l$pageInfo.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$edges = edges;
+    final l$pageInfo = pageInfo;
+    return Object.hashAll([Object.hashAll(l$edges.map((v) => v)), l$pageInfo]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$SpotQuestionsByIds$spotQuestions ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$edges = edges;
+    final lOther$edges = other.edges;
+    if (l$edges.length != lOther$edges.length) {
+      return false;
+    }
+    for (int i = 0; i < l$edges.length; i++) {
+      final l$edges$entry = l$edges[i];
+      final lOther$edges$entry = lOther$edges[i];
+      if (l$edges$entry != lOther$edges$entry) {
+        return false;
+      }
+    }
+    final l$pageInfo = pageInfo;
+    final lOther$pageInfo = other.pageInfo;
+    if (l$pageInfo != lOther$pageInfo) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$SpotQuestionsByIds$spotQuestions
+    on Query$SpotQuestionsByIds$spotQuestions {
+  CopyWith$Query$SpotQuestionsByIds$spotQuestions<
+    Query$SpotQuestionsByIds$spotQuestions
+  >
+  get copyWith =>
+      CopyWith$Query$SpotQuestionsByIds$spotQuestions(this, (i) => i);
+}
+
+abstract class CopyWith$Query$SpotQuestionsByIds$spotQuestions<TRes> {
+  factory CopyWith$Query$SpotQuestionsByIds$spotQuestions(
+    Query$SpotQuestionsByIds$spotQuestions instance,
+    TRes Function(Query$SpotQuestionsByIds$spotQuestions) then,
+  ) = _CopyWithImpl$Query$SpotQuestionsByIds$spotQuestions;
+
+  factory CopyWith$Query$SpotQuestionsByIds$spotQuestions.stub(TRes res) =
+      _CopyWithStubImpl$Query$SpotQuestionsByIds$spotQuestions;
+
+  TRes call({
+    List<Query$SpotQuestionsByIds$spotQuestions$edges>? edges,
+    Query$SpotQuestionsByIds$spotQuestions$pageInfo? pageInfo,
+  });
+  TRes edges(
+    Iterable<Query$SpotQuestionsByIds$spotQuestions$edges> Function(
+      Iterable<
+        CopyWith$Query$SpotQuestionsByIds$spotQuestions$edges<
+          Query$SpotQuestionsByIds$spotQuestions$edges
+        >
+      >,
+    )
+    _fn,
+  );
+  CopyWith$Query$SpotQuestionsByIds$spotQuestions$pageInfo<TRes> get pageInfo;
+}
+
+class _CopyWithImpl$Query$SpotQuestionsByIds$spotQuestions<TRes>
+    implements CopyWith$Query$SpotQuestionsByIds$spotQuestions<TRes> {
+  _CopyWithImpl$Query$SpotQuestionsByIds$spotQuestions(
+    this._instance,
+    this._then,
+  );
+
+  final Query$SpotQuestionsByIds$spotQuestions _instance;
+
+  final TRes Function(Query$SpotQuestionsByIds$spotQuestions) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? edges = _undefined, Object? pageInfo = _undefined}) =>
+      _then(
+        Query$SpotQuestionsByIds$spotQuestions(
+          edges: edges == _undefined || edges == null
+              ? _instance.edges
+              : (edges as List<Query$SpotQuestionsByIds$spotQuestions$edges>),
+          pageInfo: pageInfo == _undefined || pageInfo == null
+              ? _instance.pageInfo
+              : (pageInfo as Query$SpotQuestionsByIds$spotQuestions$pageInfo),
+        ),
+      );
+
+  TRes edges(
+    Iterable<Query$SpotQuestionsByIds$spotQuestions$edges> Function(
+      Iterable<
+        CopyWith$Query$SpotQuestionsByIds$spotQuestions$edges<
+          Query$SpotQuestionsByIds$spotQuestions$edges
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    edges: _fn(
+      _instance.edges.map(
+        (e) =>
+            CopyWith$Query$SpotQuestionsByIds$spotQuestions$edges(e, (i) => i),
+      ),
+    ).toList(),
+  );
+
+  CopyWith$Query$SpotQuestionsByIds$spotQuestions$pageInfo<TRes> get pageInfo {
+    final local$pageInfo = _instance.pageInfo;
+    return CopyWith$Query$SpotQuestionsByIds$spotQuestions$pageInfo(
+      local$pageInfo,
+      (e) => call(pageInfo: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Query$SpotQuestionsByIds$spotQuestions<TRes>
+    implements CopyWith$Query$SpotQuestionsByIds$spotQuestions<TRes> {
+  _CopyWithStubImpl$Query$SpotQuestionsByIds$spotQuestions(this._res);
+
+  TRes _res;
+
+  call({
+    List<Query$SpotQuestionsByIds$spotQuestions$edges>? edges,
+    Query$SpotQuestionsByIds$spotQuestions$pageInfo? pageInfo,
+  }) => _res;
+
+  edges(_fn) => _res;
+
+  CopyWith$Query$SpotQuestionsByIds$spotQuestions$pageInfo<TRes> get pageInfo =>
+      CopyWith$Query$SpotQuestionsByIds$spotQuestions$pageInfo.stub(_res);
+}
+
+class Query$SpotQuestionsByIds$spotQuestions$edges {
+  Query$SpotQuestionsByIds$spotQuestions$edges({
+    required this.cursor,
+    required this.node,
+  });
+
+  factory Query$SpotQuestionsByIds$spotQuestions$edges.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$cursor = json['cursor'];
+    final l$node = json['node'];
+    return Query$SpotQuestionsByIds$spotQuestions$edges(
+      cursor: (l$cursor as String),
+      node: Fragment$SpotQuestionParts.fromJson(
+        (l$node as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final String cursor;
+
+  final Fragment$SpotQuestionParts node;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$cursor = cursor;
+    _resultData['cursor'] = l$cursor;
+    final l$node = node;
+    _resultData['node'] = l$node.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$cursor = cursor;
+    final l$node = node;
+    return Object.hashAll([l$cursor, l$node]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$SpotQuestionsByIds$spotQuestions$edges ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$cursor = cursor;
+    final lOther$cursor = other.cursor;
+    if (l$cursor != lOther$cursor) {
+      return false;
+    }
+    final l$node = node;
+    final lOther$node = other.node;
+    if (l$node != lOther$node) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$SpotQuestionsByIds$spotQuestions$edges
+    on Query$SpotQuestionsByIds$spotQuestions$edges {
+  CopyWith$Query$SpotQuestionsByIds$spotQuestions$edges<
+    Query$SpotQuestionsByIds$spotQuestions$edges
+  >
+  get copyWith =>
+      CopyWith$Query$SpotQuestionsByIds$spotQuestions$edges(this, (i) => i);
+}
+
+abstract class CopyWith$Query$SpotQuestionsByIds$spotQuestions$edges<TRes> {
+  factory CopyWith$Query$SpotQuestionsByIds$spotQuestions$edges(
+    Query$SpotQuestionsByIds$spotQuestions$edges instance,
+    TRes Function(Query$SpotQuestionsByIds$spotQuestions$edges) then,
+  ) = _CopyWithImpl$Query$SpotQuestionsByIds$spotQuestions$edges;
+
+  factory CopyWith$Query$SpotQuestionsByIds$spotQuestions$edges.stub(TRes res) =
+      _CopyWithStubImpl$Query$SpotQuestionsByIds$spotQuestions$edges;
+
+  TRes call({String? cursor, Fragment$SpotQuestionParts? node});
+  CopyWith$Fragment$SpotQuestionParts<TRes> get node;
+}
+
+class _CopyWithImpl$Query$SpotQuestionsByIds$spotQuestions$edges<TRes>
+    implements CopyWith$Query$SpotQuestionsByIds$spotQuestions$edges<TRes> {
+  _CopyWithImpl$Query$SpotQuestionsByIds$spotQuestions$edges(
+    this._instance,
+    this._then,
+  );
+
+  final Query$SpotQuestionsByIds$spotQuestions$edges _instance;
+
+  final TRes Function(Query$SpotQuestionsByIds$spotQuestions$edges) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? cursor = _undefined, Object? node = _undefined}) => _then(
+    Query$SpotQuestionsByIds$spotQuestions$edges(
+      cursor: cursor == _undefined || cursor == null
+          ? _instance.cursor
+          : (cursor as String),
+      node: node == _undefined || node == null
+          ? _instance.node
+          : (node as Fragment$SpotQuestionParts),
+    ),
+  );
+
+  CopyWith$Fragment$SpotQuestionParts<TRes> get node {
+    final local$node = _instance.node;
+    return CopyWith$Fragment$SpotQuestionParts(
+      local$node,
+      (e) => call(node: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Query$SpotQuestionsByIds$spotQuestions$edges<TRes>
+    implements CopyWith$Query$SpotQuestionsByIds$spotQuestions$edges<TRes> {
+  _CopyWithStubImpl$Query$SpotQuestionsByIds$spotQuestions$edges(this._res);
+
+  TRes _res;
+
+  call({String? cursor, Fragment$SpotQuestionParts? node}) => _res;
+
+  CopyWith$Fragment$SpotQuestionParts<TRes> get node =>
+      CopyWith$Fragment$SpotQuestionParts.stub(_res);
+}
+
+class Query$SpotQuestionsByIds$spotQuestions$pageInfo {
+  Query$SpotQuestionsByIds$spotQuestions$pageInfo({
+    required this.hasNextPage,
+    this.endCursor,
+  });
+
+  factory Query$SpotQuestionsByIds$spotQuestions$pageInfo.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$hasNextPage = json['hasNextPage'];
+    final l$endCursor = json['endCursor'];
+    return Query$SpotQuestionsByIds$spotQuestions$pageInfo(
+      hasNextPage: (l$hasNextPage as bool),
+      endCursor: (l$endCursor as String?),
+    );
+  }
+
+  final bool hasNextPage;
+
+  final String? endCursor;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$hasNextPage = hasNextPage;
+    _resultData['hasNextPage'] = l$hasNextPage;
+    final l$endCursor = endCursor;
+    _resultData['endCursor'] = l$endCursor;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$hasNextPage = hasNextPage;
+    final l$endCursor = endCursor;
+    return Object.hashAll([l$hasNextPage, l$endCursor]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$SpotQuestionsByIds$spotQuestions$pageInfo ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$hasNextPage = hasNextPage;
+    final lOther$hasNextPage = other.hasNextPage;
+    if (l$hasNextPage != lOther$hasNextPage) {
+      return false;
+    }
+    final l$endCursor = endCursor;
+    final lOther$endCursor = other.endCursor;
+    if (l$endCursor != lOther$endCursor) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$SpotQuestionsByIds$spotQuestions$pageInfo
+    on Query$SpotQuestionsByIds$spotQuestions$pageInfo {
+  CopyWith$Query$SpotQuestionsByIds$spotQuestions$pageInfo<
+    Query$SpotQuestionsByIds$spotQuestions$pageInfo
+  >
+  get copyWith =>
+      CopyWith$Query$SpotQuestionsByIds$spotQuestions$pageInfo(this, (i) => i);
+}
+
+abstract class CopyWith$Query$SpotQuestionsByIds$spotQuestions$pageInfo<TRes> {
+  factory CopyWith$Query$SpotQuestionsByIds$spotQuestions$pageInfo(
+    Query$SpotQuestionsByIds$spotQuestions$pageInfo instance,
+    TRes Function(Query$SpotQuestionsByIds$spotQuestions$pageInfo) then,
+  ) = _CopyWithImpl$Query$SpotQuestionsByIds$spotQuestions$pageInfo;
+
+  factory CopyWith$Query$SpotQuestionsByIds$spotQuestions$pageInfo.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Query$SpotQuestionsByIds$spotQuestions$pageInfo;
+
+  TRes call({bool? hasNextPage, String? endCursor});
+}
+
+class _CopyWithImpl$Query$SpotQuestionsByIds$spotQuestions$pageInfo<TRes>
+    implements CopyWith$Query$SpotQuestionsByIds$spotQuestions$pageInfo<TRes> {
+  _CopyWithImpl$Query$SpotQuestionsByIds$spotQuestions$pageInfo(
+    this._instance,
+    this._then,
+  );
+
+  final Query$SpotQuestionsByIds$spotQuestions$pageInfo _instance;
+
+  final TRes Function(Query$SpotQuestionsByIds$spotQuestions$pageInfo) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? hasNextPage = _undefined,
+    Object? endCursor = _undefined,
+  }) => _then(
+    Query$SpotQuestionsByIds$spotQuestions$pageInfo(
+      hasNextPage: hasNextPage == _undefined || hasNextPage == null
+          ? _instance.hasNextPage
+          : (hasNextPage as bool),
+      endCursor: endCursor == _undefined
+          ? _instance.endCursor
+          : (endCursor as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$SpotQuestionsByIds$spotQuestions$pageInfo<TRes>
+    implements CopyWith$Query$SpotQuestionsByIds$spotQuestions$pageInfo<TRes> {
+  _CopyWithStubImpl$Query$SpotQuestionsByIds$spotQuestions$pageInfo(this._res);
 
   TRes _res;
 

@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:gql/ast.dart' show DocumentNode;
 import 'package:graphql_flutter/graphql_flutter.dart';
 
+import '../../../common/model/composer_photo.dart';
 import '../../../common/model/post_author.dart';
+import '../../../common/model/post_image_upload.dart';
 import '../../../common/model/post_spot.dart';
 import '../../../common/model/target_category.dart';
 import '../../../common/network/graphql_debug_log.dart';
@@ -9,6 +13,12 @@ import '../../../common/network/graphql_failure.dart';
 // `Enum$TargetCategory`는 공용 조각이 선언한다 — codegen이 모든 조각을 한 네임스페이스로
 // 합치므로 생성 타입의 집은 하나뿐이고, 그 집이 공용 자리에 있어야 기능 간 의존이 안 생긴다.
 import '../../../common/network/shared_schema.graphql.dart';
+// 업로드 프로토콜(createPostImageUploadUrls·confirmPostImageUploads·deletePostImage)은
+// 커뮤니티 오퍼레이션이 이미 선언했고 spot_qa 전용 뮤테이션은 서버에 없다(POL-042).
+// 같은 오퍼레이션을 다시 선언하면 codegen이 중복으로 깨진다. 이 타입들은 repository
+// 밖으로 나가지 않는다(CLAUDE.md §3, POL-020).
+import '../../community/repository/community_operations.graphql.dart';
+import '../../community/repository/community_schema.graphql.dart';
 import '../../../common/pagination/page.dart';
 import '../model/spot_answer.dart';
 import '../model/spot_answer_reply.dart';
@@ -25,9 +35,131 @@ import 'spot_qa_repository.dart';
 ///  - 뮤테이션 payload의 `userErrors[]` — **예외가 아니라 값으로 돌려준다**
 ///    ([SpotQaMutationResult]) — 작성 화면이 폼 상태를 유지한 채 분기해야 하기 때문이다
 class SpotQaRepositoryImpl implements SpotQaRepository {
-  SpotQaRepositoryImpl(this._client);
+  SpotQaRepositoryImpl(this._client, {HttpClient? httpClient})
+    : _httpClient = httpClient,
+      // 우리가 만든 클라이언트만 닫는다 — 주입받은 것은 호출부 소유다.
+      _ownsHttpClient = httpClient == null;
 
   final GraphQLClient _client;
+
+  /// 스토리지 PUT 전용. 커뮤니티·DM과 같은 이유로 `dart:io`의 [HttpClient]를 쓴다 —
+  /// presigned URL은 GraphQL이 아니라 스토리지로 직접 나간다.
+  final HttpClient? _httpClient;
+  final bool _ownsHttpClient;
+
+  // ------------------------------------------------------------ 사진 업로드
+  //
+  // **커뮤니티와 같은 오퍼레이션을 쓴다**(POL-042). spot_qa 전용 업로드 뮤테이션은
+  // 서버에 없고, 오브젝트 키 검증이 회원 소유 기준이라 질문/답변 사진도 이 흐름을
+  // 그대로 통과한다. 전용 경로를 새로 만들면 같은 로직의 복사본이 된다.
+
+  @override
+  Future<List<PostImageUploadUrl>> createImageUploadUrls(
+    List<PostImageUploadRequest> images,
+  ) async {
+    final Map<String, dynamic> data = await _mutate(
+      documentNodeMutationCreatePostImageUploadUrls,
+      Variables$Mutation$CreatePostImageUploadUrls(
+        images: images
+            .map(
+              (PostImageUploadRequest r) => Input$PostImageUploadRequest(
+                contentType: r.contentType,
+                contentLength: r.contentLength,
+              ),
+            )
+            .toList(growable: false),
+      ).toJson(),
+      'createPostImageUploadUrls',
+    );
+    final payload = Mutation$CreatePostImageUploadUrls.fromJson(
+      data,
+    ).createPostImageUploadUrls;
+    // 발급은 전부 아니면 전무다 — 실패하면 빈 목록이 오고 호출부가 그것으로 판단한다.
+    if (!payload.success) return const <PostImageUploadUrl>[];
+    return payload.uploadUrls
+        .map(
+          (e) => PostImageUploadUrl(
+            uploadUrl: e.uploadUrl,
+            objectKey: e.objectKey,
+            expiresAt: e.expiresAt,
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  @override
+  Future<void> uploadImage({
+    required String uploadUrl,
+    required LocalPhoto photo,
+  }) async {
+    final HttpClient client = _httpClient ?? HttpClient();
+    try {
+      final HttpClientRequest request = await client.putUrl(
+        Uri.parse(uploadUrl),
+      );
+      // 두 헤더가 1단계 선언과 정확히 같아야 한다 — 서명에 들어 있어 다르면 403이다.
+      // `contentType` 대신 `set`을 쓰는 이유: HttpHeaders.contentType은 charset을
+      // 덧붙일 수 있고 그러면 서명이 깨진다.
+      request.headers.set(HttpHeaders.contentTypeHeader, photo.contentType);
+      request.headers.contentLength = photo.contentLength;
+      // 압축이 걸리면 Content-Length가 바뀌어 서명이 깨진다.
+      request.headers.set(HttpHeaders.acceptEncodingHeader, 'identity');
+      // **인증 헤더를 붙이지 않는다** — 서명이 이미 URL에 들어 있다.
+      request.add(photo.bytes);
+
+      final HttpClientResponse response = await request.close();
+      await response.drain<void>();
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        GraphqlDebugLog.clientThrew(
+          'uploadImage',
+          HttpException('status ${response.statusCode}'),
+        );
+        throw SpotQaFailure.network;
+      }
+    } on SpotQaFailure {
+      rethrow;
+    } on Exception catch (error) {
+      GraphqlDebugLog.clientThrew('uploadImage', error);
+      throw SpotQaFailure.network;
+    } finally {
+      if (_ownsHttpClient) client.close();
+    }
+  }
+
+  @override
+  Future<PostImageConfirmation> confirmImageUploads(
+    List<String> objectKeys,
+  ) async {
+    final Map<String, dynamic> data = await _mutate(
+      documentNodeMutationConfirmPostImageUploads,
+      Variables$Mutation$ConfirmPostImageUploads(
+        objectKeys: objectKeys,
+      ).toJson(),
+      'confirmPostImageUploads',
+    );
+    final payload = Mutation$ConfirmPostImageUploads.fromJson(
+      data,
+    ).confirmPostImageUploads;
+    // **장별로 성패가 갈리므로 던지지 않고 값으로 돌려준다** — 실패한 장만 다시
+    // 올리게 하고 나머지는 살린다.
+    return PostImageConfirmation(
+      confirmed: payload.confirmed,
+      failed: payload.failed
+          .map(
+            (e) => PostImageUploadFailure(objectKey: e.objectKey, code: e.code),
+          )
+          .toList(growable: false),
+    );
+  }
+
+  @override
+  Future<void> deleteImage(String objectKey) async {
+    await _mutate(
+      documentNodeMutationDeletePostImage,
+      Variables$Mutation$DeletePostImage(objectKey: objectKey).toJson(),
+      'deletePostImage',
+    );
+  }
 
   // ------------------------------------------------------------------ 조회
 
@@ -47,6 +179,49 @@ class SpotQaRepositoryImpl implements SpotQaRepository {
       'spotQuestions',
     );
     final result = Query$SpotQuestions.fromJson(data).spotQuestions;
+    return CursorPage<SpotQuestion>(
+      items: result.edges.map((e) => _question(e.node)).toList(growable: false),
+      hasNextPage: result.pageInfo.hasNextPage,
+      endCursor: result.pageInfo.endCursor,
+    );
+  }
+
+  @override
+  Future<CursorPage<SpotQuestion>> fetchMyQuestions({
+    int? first,
+    String? after,
+  }) async {
+    final Map<String, dynamic> data = await _query(
+      documentNodeQueryMyQuestions,
+      Variables$Query$MyQuestions(first: first, after: after).toJson(),
+      'spotQuestions',
+    );
+    final result = Query$MyQuestions.fromJson(data).spotQuestions;
+    return CursorPage<SpotQuestion>(
+      items: result.edges.map((e) => _question(e.node)).toList(growable: false),
+      hasNextPage: result.pageInfo.hasNextPage,
+      endCursor: result.pageInfo.endCursor,
+    );
+  }
+
+  @override
+  Future<CursorPage<SpotQuestion>> fetchQuestionsByIds(
+    List<String> ids, {
+    int? first,
+  }) async {
+    // 빈 목록이면 부를 이유가 없다. 서버도 `ids: []`를 "결과 없음"으로 답하므로
+    // 결과는 같지만, 왕복 한 번을 아낀다.
+    if (ids.isEmpty) return CursorPage.empty<SpotQuestion>();
+
+    final Map<String, dynamic> data = await _query(
+      documentNodeQuerySpotQuestionsByIds,
+      Variables$Query$SpotQuestionsByIds(
+        ids: ids,
+        first: first ?? ids.length,
+      ).toJson(),
+      'spotQuestions',
+    );
+    final result = Query$SpotQuestionsByIds.fromJson(data).spotQuestions;
     return CursorPage<SpotQuestion>(
       items: result.edges.map((e) => _question(e.node)).toList(growable: false),
       hasNextPage: result.pageInfo.hasNextPage,
@@ -306,6 +481,20 @@ class SpotQaRepositoryImpl implements SpotQaRepository {
       DateTime.fromMillisecondsSinceEpoch(0);
 
   // ------------------------------------------------------------------ 전송
+
+  /// 결과를 그대로 돌려주는 뮤테이션(업로드 3종). `userErrors`를 값으로 접는
+  /// [_mutateResult]와 달리 payload를 호출부가 직접 읽는다.
+  Future<Map<String, dynamic>> _mutate(
+    DocumentNode document,
+    Map<String, dynamic> variables,
+    String operation,
+  ) => _run(
+    () => _client.mutate(
+      MutationOptions(document: document, variables: variables),
+    ),
+    operation,
+    variables,
+  );
 
   Future<Map<String, dynamic>> _query(
     DocumentNode document,

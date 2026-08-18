@@ -1,12 +1,13 @@
+import 'package:ieuri_k_trip_spot/common/model/composer_photo.dart';
 import 'package:ieuri_k_trip_spot/common/model/post_author.dart';
+import 'package:ieuri_k_trip_spot/common/model/post_image_upload.dart';
 import 'package:ieuri_k_trip_spot/common/model/post_spot.dart';
 import 'package:ieuri_k_trip_spot/common/pagination/page.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/model/spot_answer.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/model/spot_answer_reply.dart';
-import 'package:ieuri_k_trip_spot/domain/spot_qa/model/my_question_ref.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/model/spot_qa_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/model/spot_question.dart';
-import 'package:ieuri_k_trip_spot/domain/spot_qa/repository/my_questions_store.dart';
+import 'package:ieuri_k_trip_spot/domain/spot_qa/repository/seen_answer_counts_store.dart';
 import 'package:ieuri_k_trip_spot/domain/spot_qa/repository/spot_qa_repository.dart';
 
 /// SPEC-0026 테스트 더블. repository는 스텁한다 — 실제 GraphQL 전송을 세우지
@@ -66,24 +67,29 @@ class FakeSpotQaRepository implements SpotQaRepository {
     this.questionPages = const <CursorPage<SpotQuestion>>[],
     this.answerPages = const <CursorPage<SpotAnswer>>[],
     this.questionsByCatalog,
-    this.failingCatalogs = const <String>{},
     this.questionsError,
     this.answersError,
+    this.myQuestions = const <SpotQuestion>[],
+    this.myQuestionsError,
+    this.questionsByIdResult,
     this.createResult,
     this.resolveResult,
     this.createThrows,
     this.resolveThrows,
   });
 
-  /// 장소별 질문. 「내 질문」처럼 여러 장소를 조회하는 흐름에서 쓴다. null이면
-  /// [questionPages]로 떨어진다(기존 테스트의 동작).
+  /// 장소별 질문. null이면 [questionPages]로 떨어진다(기존 테스트의 동작).
   final Map<String, List<SpotQuestion>>? questionsByCatalog;
 
-  /// 조회가 실패하는 장소. 한 장소가 죽어도 나머지가 남는지 보기 위한 것이다.
-  final Set<String> failingCatalogs;
+  /// 서버가 돌려줄 「내 질문」 목록.
+  final List<SpotQuestion> myQuestions;
 
-  /// 조회된 장소 id를 순서대로 기록한다 — 같은 장소를 두 번 부르지 않는지 본다.
-  final List<String> fetchedCatalogs = <String>[];
+  /// 「내 질문」 조회 실패(비로그인 등). 던지면 컨트롤러가 오류로 떠야 한다 —
+  /// 빈 목록으로 접으면 "쓴 적 없음"으로 오해된다.
+  final Object? myQuestionsError;
+
+  /// id 조회가 돌려줄 질문. null이면 [myQuestions]에서 id로 골라낸다.
+  final List<SpotQuestion>? questionsByIdResult;
 
   /// 호출 순서대로 돌려줄 질문 페이지. 다 쓰면 마지막 페이지를 반복한다.
   final List<CursorPage<SpotQuestion>> questionPages;
@@ -105,6 +111,13 @@ class FakeSpotQaRepository implements SpotQaRepository {
   final List<String?> questionCursors = <String?>[];
   final List<String?> answerCursors = <String?>[];
 
+  /// 「내 질문」 조회 횟수. 목록을 몇 번 다시 받는지 본다.
+  int myQuestionFetches = 0;
+
+  /// id 조회에 넘어간 id 목록을 호출 순서대로 기록한다 — 빈 목록일 때 아예
+  /// 부르지 않는지까지 여기서 갈린다.
+  final List<List<String>> fetchedIds = <List<String>>[];
+
   CreateCall? lastCreateQuestion;
   CreateCall? lastCreateAnswer;
   CreateCall? lastCreateReply;
@@ -123,10 +136,6 @@ class FakeSpotQaRepository implements SpotQaRepository {
     String? after,
   }) async {
     if (questionsError != null) throw questionsError!;
-    fetchedCatalogs.add(catalogId);
-    if (failingCatalogs.contains(catalogId)) {
-      throw StateError('catalog $catalogId unavailable');
-    }
     questionCursors.add(after);
     if (questionsByCatalog != null) {
       questionFetches++;
@@ -136,6 +145,34 @@ class FakeSpotQaRepository implements SpotQaRepository {
       );
     }
     return _page(questionPages, questionFetches++);
+  }
+
+  @override
+  Future<CursorPage<SpotQuestion>> fetchMyQuestions({
+    int? first,
+    String? after,
+  }) async {
+    myQuestionFetches++;
+    if (myQuestionsError != null) throw myQuestionsError!;
+    return CursorPage<SpotQuestion>(items: myQuestions, hasNextPage: false);
+  }
+
+  @override
+  Future<CursorPage<SpotQuestion>> fetchQuestionsByIds(
+    List<String> ids, {
+    int? first,
+  }) async {
+    // 구현체와 같은 단축이다 — 빈 목록이면 서버를 부르지 않는다. 여기서 기록까지
+    // 건너뛰어야 "부르지 않았다"를 테스트가 볼 수 있다.
+    if (ids.isEmpty) return CursorPage.empty<SpotQuestion>();
+
+    fetchedIds.add(List<String>.of(ids));
+    final List<SpotQuestion> found =
+        questionsByIdResult ??
+        myQuestions
+            .where((SpotQuestion q) => ids.contains(q.id))
+            .toList(growable: false);
+    return CursorPage<SpotQuestion>(items: found, hasNextPage: false);
   }
 
   @override
@@ -210,37 +247,48 @@ class FakeSpotQaRepository implements SpotQaRepository {
   @override
   Future<SpotQaMutationResult<void>> deleteReply(String replyId) async =>
       const SpotQaMutationResult<void>.success(null);
+
+  // ------------------------------------------------------ 사진 업로드(3단계)
+  // 사진을 다루지 않는 테스트를 위한 최소 스텁이다 — 업로드 흐름을 검증하는
+  // 테스트는 하위 클래스에서 필요한 것만 덮어쓴다.
+
+  @override
+  Future<List<PostImageUploadUrl>> createImageUploadUrls(
+    List<PostImageUploadRequest> images,
+  ) async => const <PostImageUploadUrl>[];
+
+  @override
+  Future<void> uploadImage({
+    required String uploadUrl,
+    required LocalPhoto photo,
+  }) async {}
+
+  @override
+  Future<PostImageConfirmation> confirmImageUploads(
+    List<String> objectKeys,
+  ) async => PostImageConfirmation(confirmed: objectKeys);
+
+  @override
+  Future<void> deleteImage(String objectKey) async {}
 }
 
-/// 「내 질문」 로컬 기록의 인메모리 구현. SharedPreferences를 세우지 않는다 —
-/// 저장소 인터페이스가 있는 이유가 이 교체다.
-class FakeMyQuestionsStore implements MyQuestionsStore {
-  FakeMyQuestionsStore([List<MyQuestionRef> initial = const <MyQuestionRef>[]])
-    : _refs = List<MyQuestionRef>.of(initial);
+/// 「마지막에 본 답변 수」 저장소의 인메모리 구현. SharedPreferences를 세우지
+/// 않는다 — 저장소 인터페이스가 있는 이유가 이 교체다.
+class FakeSeenAnswerCountsStore implements SeenAnswerCountsStore {
+  FakeSeenAnswerCountsStore([Map<String, int> initial = const <String, int>{}])
+    : _counts = Map<String, int>.of(initial);
 
-  List<MyQuestionRef> _refs;
+  Map<String, int> _counts;
 
+  /// 저장 횟수. 바뀐 것이 없을 때 쓰지 않는지를 이것으로 본다.
   int writes = 0;
 
   @override
-  List<MyQuestionRef> read() => List<MyQuestionRef>.unmodifiable(_refs);
+  Map<String, int> read() => Map<String, int>.unmodifiable(_counts);
 
   @override
-  Future<void> write(List<MyQuestionRef> refs) async {
+  Future<void> write(Map<String, int> counts) async {
     writes++;
-    _refs = List<MyQuestionRef>.of(refs);
+    _counts = Map<String, int>.of(counts);
   }
 }
-
-MyQuestionRef fakeQuestionRef({
-  String catalogId = 'c1',
-  String questionId = 'q1',
-  String spotTitle = '경복궁',
-  int seenAnswerCount = 0,
-}) => MyQuestionRef(
-  catalogId: catalogId,
-  questionId: questionId,
-  spotTitle: spotTitle,
-  askedAt: DateTime.utc(2026, 8, 18),
-  seenAnswerCount: seenAnswerCount,
-);

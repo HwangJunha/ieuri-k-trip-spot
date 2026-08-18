@@ -11,19 +11,18 @@ import '../provider/my_questions_providers.dart';
 ///
 /// ```
 /// AppBar  "내 질문"
-/// 안내     이 목록은 이 기기에만 저장됩니다
 /// 목록     MyQuestionTile × N (새 답변 배지)
 /// ```
 ///
-/// **서버에 `myQuestions`도 알림도 없어서 존재한다.** 로컬 기록으로 되짚는 임시
-/// 방편이며(`MyQuestionRef` 주석), 그래서 화면에 "이 기기에만 저장된다"는 안내를
-/// 한 번 띄운다 — 기기를 바꾸면 사라지는 목록임을 숨기지 않는다.
+/// **목록은 서버가 준다**(`spotQuestions(mine: true)`) — 기기를 바꿔도 그대로 보인다.
 ///
-/// **페이지네이션이 없다.** 로컬 기록은 상한(`myQuestionsLimit`)이 걸린 짧은 목록이라
-/// 한 번에 다 그린다 — 공용 [PaginationListView]는 커서를 가진 서버 목록의 도구다.
+/// **조회 실패를 빈 목록으로 접지 않는다.** 비로그인이면 바로 이 경로로 들어오는데,
+/// "아직 올린 질문이 없습니다"로 그리면 정확히 반대로 알려주는 셈이다 — 실제로는
+/// "로그인하면 보인다"이다. 그래서 오류와 빈 목록을 화면이 구분한다.
 ///
-/// 서버에서 못 찾은 항목도 **지우지 않고** 안내와 함께 남긴다: 조회 실패를 삭제로
-/// 해석하면 일시적인 네트워크 오류에 내 기록이 사라진다.
+/// **페이지네이션이 없다.** 첫 20건만 보여준다 — 못 본 답변을 확인하러 오는 화면이라
+/// 최신 것이 위에 있고, 그보다 옛 질문을 훑는 용도가 아니다. 더 필요해지면 공용
+/// [PaginationListView]로 바꾼다.
 class MyQuestionsScreen extends ConsumerWidget {
   const MyQuestionsScreen({super.key});
 
@@ -46,7 +45,11 @@ class MyQuestionsScreen extends ConsumerWidget {
               when value.isNotEmpty =>
             _List(items: value),
           AsyncValue<List<MyQuestionItem>>(hasValue: true) => const _Empty(),
-          AsyncError<List<MyQuestionItem>>() => const _Empty(),
+          // **오류를 빈 목록으로 접지 않는다.** 비로그인이 이 경로로 들어오는데
+          // "쓴 적 없음"으로 그리면 정반대를 알려주게 된다.
+          AsyncError<List<MyQuestionItem>>() => _Failed(
+            onRetry: () => ref.invalidate(myQuestionsControllerProvider),
+          ),
           _ => const Center(child: CircularProgressIndicator()),
         },
       ),
@@ -69,20 +72,18 @@ class _List extends ConsumerWidget {
       child: ListView.separated(
         // 항목이 적어도 당겨서 새로고침이 되도록 항상 스크롤을 허용한다.
         physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: items.length + 1,
+        itemCount: items.length,
         separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (BuildContext context, int index) {
-          // 0번은 "이 기기에만 저장됩니다" 안내 — 목록 맨 위에 한 번만 나온다.
-          if (index == 0) return const _LocalOnlyNotice();
-          final MyQuestionItem item = items[index - 1];
+          final MyQuestionItem item = items[index];
           return MyQuestionTile(
             item: item,
             now: now,
             onTap: () => context.pushNamed(
               spotQuestionDetailRouteName,
               pathParameters: <String, String>{
-                'spotId': item.ref.catalogId,
-                'questionId': item.ref.questionId,
+                'spotId': item.question.spot.id,
+                'questionId': item.question.id,
               },
             ),
           );
@@ -92,42 +93,54 @@ class _List extends ConsumerWidget {
   }
 }
 
-/// 로컬 저장 안내. 목록이 비었을 때도 같은 문구를 쓴다.
-class _LocalOnlyNotice extends StatelessWidget {
-  const _LocalOnlyNotice();
+/// 조회 실패.
+///
+/// **비로그인이 이 경로로 온다.** `mine: true`는 인증을 요구하므로 로그인하지 않은
+/// 사용자에게는 목록이 아니라 실패가 돌아온다. 그래서 안내 문구가 "불러오지 못했다"와
+/// "로그인하면 보인다" 두 줄이다 — 전자만 쓰면 왜 안 보이는지 알 수 없고, 빈 목록으로
+/// 접으면 "쓴 적 없음"이라는 정반대 사실을 알려주게 된다.
+///
+/// 두 경우를 코드로 가르지 않는 이유는 클라이언트가 그 구분을 확실히 할 수 없어서다 —
+/// 인증 실패든 네트워크 실패든 사용자가 할 일(로그인 확인, 재시도)은 같다.
+class _Failed extends StatelessWidget {
+  const _Failed({required this.onRetry});
+
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    return Container(
-      width: double.infinity,
-      color: theme.colorScheme.surfaceContainerHighest,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Row(
-        children: <Widget>[
-          Icon(
-            Icons.phone_iphone,
-            size: 16,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              AppLocalizations.of(context).spotQaLocalOnlyNotice,
-              style: theme.textTheme.labelSmall?.copyWith(
+    final AppLocalizations l10n = AppLocalizations.of(context);
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text(
+              l10n.spotQaMyQuestionsFailed,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l10n.spotQaMyQuestionsSignInBody,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            TextButton(onPressed: onRetry, child: Text(l10n.communityRetry)),
+          ],
+        ),
       ),
     );
   }
 }
 
-/// 빈 목록. **조회 실패도 여기로 온다** — 로컬 기록이 비면 서버 조회 자체가 없고,
-/// 기록이 있는데 조회가 실패하면 컨트롤러가 그 장소만 접고 나머지를 돌려주므로
-/// 사용자에게는 "아직 없다"와 구분되지 않는다.
+/// 정말 질문이 하나도 없을 때. **조회 실패는 여기로 오지 않는다** — 그건 [_Failed]다.
 class _Empty extends StatelessWidget {
   const _Empty();
 
@@ -138,7 +151,6 @@ class _Empty extends StatelessWidget {
 
     return Column(
       children: <Widget>[
-        const _LocalOnlyNotice(),
         Expanded(
           child: Center(
             child: Padding(

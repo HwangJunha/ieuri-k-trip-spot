@@ -193,26 +193,13 @@ class _SpotQaComposerScreenState extends ConsumerState<SpotQaComposerScreen> {
       return;
     }
 
-    // **성공한 질문만 로컬에 적는다.** 서버에 `myQuestions`가 없어 이 기록이
-    // 「내 질문」의 유일한 출처다(설계 후속 결정). id가 없으면(계약상 성공이면 항상
-    // 오지만) 적을 것이 없으므로 건너뛴다.
+    // **로컬에 적어 둘 것이 없다.** 서버가 `spotQuestions(mine:)`으로 내 질문을
+    // 돌려주므로(2026-08-18) 「내 질문」 목록은 서버가 소스다 — 예전에는 여기서
+    // catalogId·questionId를 로컬에 쌓아야 했다.
     //
-    // 기록 실패가 작성 성공을 되돌리게 두지 않는다 — 질문은 이미 서버에 올라갔다.
-    final String? questionId = result.value;
-    if (questionId != null) {
-      try {
-        await ref
-            .read(myQuestionsControllerProvider.notifier)
-            .remember(
-              catalogId: widget.catalogId,
-              questionId: questionId,
-              spotTitle: widget.spotTitle,
-              askedAt: DateTime.now(),
-            );
-      } on Object {
-        // 기록에 실패해도 화면은 성공으로 닫는다. 다음 화면에서 안 보일 뿐이다.
-      }
-    }
+    // 방금 올린 질문이 그 목록에 보이도록 캐시만 비운다. 실패해도 화면은 성공으로
+    // 닫는다 — 질문은 이미 서버에 올라갔고, 목록은 다음에 열 때 받으면 된다.
+    ref.invalidate(myQuestionsControllerProvider);
 
     // 성공만 목록 재조회를 부른다.
     navigator.pop(true);

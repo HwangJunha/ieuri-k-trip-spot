@@ -66,8 +66,49 @@ fragment SpotAnswerParts on SpotAnswer {
 }
 
 # 정렬 인자가 없다 — 미해결 우선·최신순은 서버가 고정한다(R2).
-query SpotQuestions($catalogId: ID!, $first: Int, $after: String) {
+query SpotQuestions($catalogId: ID, $first: Int, $after: String) {
   spotQuestions(catalogId: $catalogId, first: $first, after: $after) {
+    edges {
+      cursor
+      node {
+        ...SpotQuestionParts
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+# 내가 쓴 질문(2026-08-18 서버가 `mine` 필터를 더했다 — 새 루트를 만들지 않았다).
+#
+# **인증 필수다.** 비로그인이면 최상위 errors로 실패하며 빈 목록이 아니다 — 조용히
+# 비우면 "쓴 적 없음"으로 오해된다.
+query MyQuestions($first: Int, $after: String) {
+  spotQuestions(mine: true, first: $first, after: $after) {
+    edges {
+      cursor
+      node {
+        ...SpotQuestionParts
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+# id로 집어 오는 조회(딥링크·알림 진입). 단건 루트 대신 `ids` 필터를 쓴다.
+#
+# **가려진 id는 빠진다** — 차단·숨김·삭제면 결과에 없다. 요청한 수보다 적게 오는 것이
+# 정상이고, 비어 오면 "없거나 볼 수 없음"이지 오류가 아니다.
+#
+# `ids: []`를 넘기면 "결과 없음"이다(전체가 아니다) — 호출부가 빈 목록을 넘기지 않도록
+# 주의한다.
+query SpotQuestionsByIds($ids: [ID!], $first: Int) {
+  spotQuestions(ids: $ids, first: $first) {
     edges {
       cursor
       node {

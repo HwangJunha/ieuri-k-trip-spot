@@ -8,7 +8,6 @@ import '../../community/model/report_reason.dart';
 import '../component/spot_answer_tile.dart';
 import '../component/spot_qa_author_line.dart';
 import '../component/spot_qa_inline_composer.dart';
-import '../model/my_question_ref.dart';
 import '../model/spot_answer.dart';
 import '../model/spot_answer_reply.dart';
 import '../model/spot_qa_failure.dart';
@@ -16,6 +15,7 @@ import '../model/spot_question.dart';
 import '../provider/my_questions_providers.dart';
 import '../provider/spot_answers_providers.dart';
 import '../provider/spot_qa_composer_providers.dart';
+import '../provider/spot_question_by_id_providers.dart';
 import '../provider/spot_questions_providers.dart';
 import 'spot_qa_actions.dart';
 
@@ -29,15 +29,15 @@ import 'spot_qa_actions.dart';
 /// 하단 고정      답변 컴포저
 /// ```
 ///
-/// **질문 본문은 목록 provider에서 온다.** 서버에 `spotQuestion(id:)` 단건 조회가
-/// 없어(스키마 §Query) 목록이 유일한 출처다 — 목록 화면에서 들어오므로 그 provider가
-/// 살아 있고, 해결 표시도 같은 컨트롤러가 낙관적으로 갱신한다. 아직 받지 못한 페이지의
-/// 질문(딥링크 등)이면 안내를 띄운다.
+/// **질문 본문의 출처가 둘이다.** 목록에서 들어온 보통의 경우에는 목록 provider가
+/// 이미 받아 둔 항목을 쓰고 — 해결 표시의 낙관적 갱신을 그 컨트롤러가 쥐고 있어 즉시
+/// 반영된다 — 목록에 없으면 `ids` 필터로 직접 조회한다(딥링크·알림 진입, 아직 못 받은
+/// 페이지). 예전에는 후자가 그냥 "불러오지 못했습니다"로 끝났다.
 ///
 /// **질문과 답변이 서로 다른 provider다** — 답변 조회가 실패해도 질문 본문은 그대로
 /// 뜬다(디자인 §2 상태 표).
 ///
-/// 읽기는 로그인 여부와 무관하다(AC-1.4). 쓰기만 서버가 자격을 판정한다.
+/// 읽기는 로그인 여부와 무관하다(AC-1.4).
 class SpotQuestionDetailScreen extends ConsumerStatefulWidget {
   const SpotQuestionDetailScreen({
     super.key,
@@ -73,16 +73,29 @@ class _SpotQuestionDetailScreenState
     final AsyncValue<SpotQuestionsState> questions = ref.watch(
       spotQuestionsControllerProvider(widget.catalogId),
     );
-    final SpotQuestion? question = questions.value?.items
+    // 목록이 이미 받아 둔 항목을 먼저 본다 — 목록에서 들어온 보통의 경우이며,
+    // 해결 표시의 낙관적 갱신도 그 컨트롤러가 쥐고 있어 즉시 반영된다.
+    final SpotQuestion? fromList = questions.value?.items
         .where((SpotQuestion q) => q.id == widget.questionId)
         .firstOrNull;
+
+    // 목록에 없으면 id로 직접 조회한다(딥링크·알림 진입, 아직 못 받은 페이지).
+    // **목록에 있으면 이 provider를 깨우지 않는다** — 같은 질문을 두 번 받을 이유가
+    // 없다.
+    final AsyncValue<SpotQuestion?> byId = fromList == null
+        ? ref.watch(spotQuestionByIdProvider(widget.questionId))
+        : const AsyncValue<SpotQuestion?>.data(null);
+
+    final SpotQuestion? question = fromList ?? byId.value;
 
     // **열어 본 시점의 답변 수를 기록해 「내 질문」의 새 답변 배지를 끈다.** 알림이
     // 없어 그 배지가 유일한 신호라, 읽은 뒤에도 남아 있으면 신호가 무의미해진다.
     //
     // 빌드 중이 아니라 프레임 뒤에 부른다 — 기록이 provider 상태를 바꾸므로
     // 빌드 도중 호출하면 같은 프레임에서 다시 그리게 된다.
-    if (question != null && _markedAnswerCount != question.answerCount) {
+    if (question != null &&
+        question.ownedByViewer &&
+        _markedAnswerCount != question.answerCount) {
       final int seen = question.answerCount;
       _markedAnswerCount = seen;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -113,41 +126,37 @@ class _SpotQuestionDetailScreenState
       // 상태)에도 스피너로 덮지 않는다 — 답변을 하나 달 때마다 질문 본문이 깜빡이면
       // 읽던 자리를 잃는다.
       body: SafeArea(
-        child: switch ((question, questions)) {
+        child: switch ((question, byId)) {
           (final SpotQuestion found, _) => _Body(
             catalogId: widget.catalogId,
             question: found,
             replyTargetId: _replyTargetId,
             onReplyTarget: (String? id) => setState(() => _replyTargetId = id),
           ),
-          (null, AsyncError<SpotQuestionsState>()) => _Notice(
-            message: l10n.spotQaQuestionsUnavailable,
-            onRetry: () => ref.invalidate(
-              spotQuestionsControllerProvider(widget.catalogId),
-            ),
-          ),
-          (null, AsyncValue<SpotQuestionsState>(hasValue: false)) =>
+          // 목록에도 없고 id 조회도 아직인 상태.
+          (null, AsyncLoading<SpotQuestion?>()) =>
             const Center(child: CircularProgressIndicator()),
-          // 받아 둔 페이지에 없는 질문 — 다시 조회해도 같은 페이지가 오므로 재시도를
-          // 권하지 않는다(딥링크로 뒤쪽 페이지의 질문에 들어온 경우다).
+          // id 조회가 전송 실패한 것이라 재시도가 의미 있다.
+          (null, AsyncError<SpotQuestion?>()) => _Notice(
+            message: l10n.spotQaQuestionsUnavailable,
+            onRetry: () =>
+                ref.invalidate(spotQuestionByIdProvider(widget.questionId)),
+          ),
+          // 서버가 "그런 질문 없음"으로 답했다 — 삭제됐거나 차단·숨김으로 가려진
+          // 경우이며, 다시 물어도 같은 답이 온다. 재시도를 권하지 않는다.
           (null, _) => _Notice(message: l10n.spotQaQuestionsUnavailable),
         },
       ),
     );
   }
 
-  /// 이 질문을 "본 것"으로 기록한다.
+  /// 이 질문을 "본 것"으로 기록해 「새 답변」 배지를 끈다.
   ///
-  /// **로컬 기록에 없는 질문이면 아무것도 하지 않는다** — 남의 질문을 열었을 뿐인데
-  /// 「내 질문」 컨트롤러를 깨우면 기억해 둔 모든 장소를 서버에서 다시 조회하게 된다.
-  /// 저장소는 동기 읽기라 그 확인 자체는 공짜다.
+  /// **내 질문일 때만 부른다.** 남의 질문을 열었을 뿐인데 「내 질문」 컨트롤러를
+  /// 깨우면 서버 조회가 한 번 더 나간다. 판정 근거는 서버가 준 `ownedByViewer`다 —
+  /// 예전에는 로컬 기록에 있는지로 갈랐는데, 그 방식은 기기를 바꾸면 내 질문인데도
+  /// 아니라고 답했다.
   Future<void> _markSeen(int answerCount) async {
-    final bool remembered = ref
-        .read(myQuestionsStoreProvider)
-        .read()
-        .any((MyQuestionRef r) => r.questionId == widget.questionId);
-    if (!remembered) return;
-
     try {
       await ref
           .read(myQuestionsControllerProvider.notifier)
