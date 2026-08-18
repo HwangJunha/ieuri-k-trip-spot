@@ -2,16 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../common/model/post_author.dart';
+import '../../../common/model/spot_qa_origin.dart';
+import '../../../common/navigation/spot_detail_route.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../community/component/post_moderation_sheet.dart';
 import '../component/conversation_selection_app_bar.dart';
 import '../component/report_reason_code.dart';
 import '../component/message_bubble.dart';
 import '../component/message_input_bar.dart';
+import '../component/spot_qa_origin_card.dart';
 import '../component/typing_indicator_bar.dart';
 import '../model/message.dart';
 import '../model/message_report_selection.dart';
 import '../model/typing_indicator.dart';
+import '../provider/conversation_list_providers.dart';
 import '../provider/conversation_providers.dart';
 import '../provider/message_report_providers.dart';
 import '../provider/typing_providers.dart';
@@ -91,6 +95,12 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     final TypingIndicator? typing = ref.watch(
       typingIndicatorControllerProvider(widget.conversationId),
     );
+    // 질문/답변에서 시작된 대화면 상단에 맥락 카드를 얹는다(SPEC-0026 R14).
+    // **null이 정상값이다** — 기존 DM은 전부 출처가 없고, 그때 이 화면은 지금과
+    // 똑같이 동작한다.
+    final SpotQaOrigin? origin = ref.watch(
+      conversationSpotQaOriginProvider(widget.conversationId),
+    );
 
     return Scaffold(
       appBar: selection.active
@@ -118,6 +128,13 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
       body: SafeArea(
         child: Column(
           children: <Widget>[
+            // 카드를 누르면 그 장소 상세로 간다 — `catalogId`는 스냅샷에 있고
+            // 장소는 삭제되지 않으므로 항상 유효하다.
+            if (origin != null)
+              SpotQaOriginCard(
+                origin: origin,
+                onTap: () => openSpotDetail(context, id: origin.catalogId),
+              ),
             // 서버 조회가 실패해도 **화면을 비우지 않는다**(AC18-4) — 캐시된 대화는
             // 그대로 두고 조용한 배너만 얹는다.
             if (state.syncFailed) _SyncFailedBanner(onRetry: _retrySync),
@@ -201,9 +218,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          succeeded ? l10n.dmReportSubmitted : l10n.dmReportFailed,
-        ),
+        content: Text(succeeded ? l10n.dmReportSubmitted : l10n.dmReportFailed),
       ),
     );
   }

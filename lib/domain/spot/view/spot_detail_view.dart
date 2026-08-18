@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../common/navigation/spot_qa_routes.dart';
 import '../../../common/widget/failure_notice.dart';
+import '../../spot_qa/component/spot_qa_entry_button.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/attribution_block.dart';
 import '../component/detail_reaction_bar.dart';
@@ -290,6 +293,26 @@ class _DetailBody extends ConsumerWidget {
                 AttributionBlock(
                   attributionText: detail.attributionText,
                   imageAttributions: detail.distinctImageAttributions,
+                ),
+
+                // 「지금 여기 어때?」 진입점(SPEC-0026). **자격도 없고 질문도 없으면
+                // 버튼 자체가 사라진다** — 판정은 `SpotQaEntryButton`이 한다.
+                //
+                // 질문이 있으면 목록으로, 없으면 **빈 목록을 거치지 않고 바로 작성**
+                // 으로 보낸다(설계 §진입점) — 빈 화면을 보여주고 다시 누르게 하면
+                // 진입 장벽만 높아진다.
+                const SizedBox(height: 24),
+                SpotQaEntryButton(
+                  catalogId: contentId,
+                  viewerLikedSpot: detail.likedByViewer,
+                  onOpenList: () => context.pushNamed(
+                    spotQuestionsRouteName,
+                    pathParameters: <String, String>{'spotId': contentId},
+                  ),
+                  onCompose: () => context.pushNamed(
+                    spotQaComposerRouteName,
+                    pathParameters: <String, String>{'spotId': contentId},
+                  ),
                 ),
 
                 const SizedBox(height: 24),

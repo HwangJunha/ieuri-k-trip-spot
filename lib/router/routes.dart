@@ -37,6 +37,9 @@ import '../domain/spot/view/home_screen.dart';
 import '../domain/spot/view/liked_spots_screen.dart';
 import '../domain/spot/view/search_screen.dart';
 import '../domain/spot/view/spot_detail_view.dart';
+import '../domain/spot_qa/view/spot_qa_composer_screen.dart';
+import '../domain/spot_qa/view/spot_question_detail_screen.dart';
+import '../domain/spot_qa/view/spot_questions_screen.dart';
 
 /// The app's flat route table. Each screen owns its `routeName`; navigation is
 /// by name (`context.goNamed(Screen.routeName)`), so no path strings leak into
@@ -130,6 +133,42 @@ List<RouteBase> buildRoutes() => <RouteBase>[
       reverseTransitionDuration: const Duration(milliseconds: 250),
       transitionsBuilder: _slideUpFromBottom,
     ),
+  ),
+  // 장소 질문/답변(SPEC-0026). 셸 밖의 최상위 라우트라 하단 탭을 덮는다 — 관광지
+  // 상세·글 상세와 같은 성격이다.
+  //
+  // **경로 파라미터는 id뿐이다**(CLAUDE.md §6). 질문 상세는 `spotId`로 목록
+  // provider를 찾아 그 안에서 `questionId`를 집는다 — 서버에 질문 단건 조회가 없어
+  // 목록이 유일한 출처이기 때문이다(스키마 §Query).
+  //
+  // **작성은 목록의 자식이 아니라 최상위다.** 자식으로 두면 GoRouter가 부모까지
+  // 함께 쌓아, 장소 상세에서 곧장 작성으로 보냈을 때 뒤에 빈 목록이 깔린다 —
+  // "빈 목록을 거치지 않고 바로 작성으로"(설계 §진입점)가 깨진다. 질문 상세는
+  // 반대로 자식이 맞다: 목록에서만 들어오고 뒤로 가기가 목록이어야 한다.
+  //
+  // 최상위 두 경로의 선언 순서상 `/spot/:spotId/qa/compose`가 `:questionId`보다
+  // 먼저 와야 한다 — 뒤에 두면 `compose`가 questionId로 먹힌다.
+  GoRoute(
+    path: '/spot/:spotId/qa/compose',
+    name: SpotQaComposerScreen.routeName,
+    builder: (_, GoRouterState state) =>
+        SpotQaComposerScreen(catalogId: state.pathParameters['spotId']!),
+  ),
+  GoRoute(
+    path: '/spot/:spotId/qa',
+    name: SpotQuestionsScreen.routeName,
+    builder: (_, GoRouterState state) =>
+        SpotQuestionsScreen(catalogId: state.pathParameters['spotId']!),
+    routes: <RouteBase>[
+      GoRoute(
+        path: ':questionId',
+        name: SpotQuestionDetailScreen.routeName,
+        builder: (_, GoRouterState state) => SpotQuestionDetailScreen(
+          catalogId: state.pathParameters['spotId']!,
+          questionId: state.pathParameters['questionId']!,
+        ),
+      ),
+    ],
   ),
   // 검색 페이지(SPEC-0013 R10). **셸 밖의 최상위 라우트**라 루트 내비게이터에
   // push되어 하단 탭을 덮는다 — 검색은 탭 전환이 아니라 홈에서 밀고 올라오는
