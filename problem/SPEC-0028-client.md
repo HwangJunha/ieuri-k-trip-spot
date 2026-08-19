@@ -232,18 +232,29 @@ FCM 플러그인·OS 권한 다이얼로그·실제 알림 표시는 인프라�
 
 이 절은 구현하며 내린 결정과 **확인하지 못한 것**을 남긴다.
 
-### 확인하지 못한 것
+### 서버 계약 — 검증 완료(2026-08-19, 2차)
 
-- **서버 계약을 라이브로 검증하지 못했다.** 작업 내내 `localhost:8888`이 응답하지
-  않아(§13의 sweep이 `http_code=000`) `registerDeviceToken`·`deleteDeviceToken`·
-  `updateNotificationPreference`·`me.notificationPreferences` 네 연산이 실제 서버에
-  존재하는지, 인자 이름이 맞는지 **확인되지 않았다.** codegen이 통과한 것은 커밋된
-  SDL 조각(`alarm_schema.graphql`)에 대한 검증일 뿐이며, 그 조각은 계약 초안을 보고
-  손으로 쓴 것이다(§13의 경고 그대로다). 서버가 뜨면 sweep을 먼저 돌려야 한다.
-- 스펙의 전달 순서상 S1(서버 토큰 계약)이 먼저인데, 그것이 실제로 배포됐는지도
-  같은 이유로 확인하지 못했다.
+서버 S1·S3가 배포되어(ieuri-server#95) 라이브로 확인했다.
+
+- **§13 sweep 통과** — 모든 오퍼레이션 문서에 validation error 없음
+- **뮤테이션 3종 + `me.notificationPreferences`를 리터럴 인자로 직접 발사** → 전부
+  `UNAUTHENTICATED`. 인증만 걸렸다는 뜻이므로 **입력 형태가 통과했다.** sweep이 못
+  잡는 "새로 생긴 필수 필드"도 이 방법으로 없음을 확인했다(§13의 SPEC-0026 선례)
+- **introspection으로 대조** — `Locale`(EN·KO·JA·ZH), `DevicePlatform`(IOS·ANDROID),
+  `RegisterDeviceTokenInput`의 네 필드(`deviceId`·`fcmToken`·`language`·`platform`,
+  전부 NON_NULL)가 `alarm_schema.graphql`과 정확히 일치
+
+`problem/SPEC-0028-SERVER-device-token-contract.md`의 상태를 해소됨으로 바꿨다.
+
+### 여전히 확인하지 못한 것
+
+- **실제 발송·수신은 검증되지 않았다.** 서버도 "기기 토큰이 없어 보낼 대상이 없었고
+  포트 스텁 수준까지만 확인했다"고 적었다. 실기기에 Firebase 설정 파일을 넣고 토큰이
+  등록된 뒤에야 양쪽이 함께 확인할 수 있다
 - 포그라운드에서 배너가 실제로 안 뜨는지(R15)는 OS 동작이라 단위 테스트로 확인할 수
-  없다(§10에 이미 적힌 대로 테스트를 만들지 않았다).
+  없다(§10에 이미 적힌 대로 테스트를 만들지 않았다)
+- Android 채널 2개가 실제로 생기는지, 딥링크가 실제 알림 탭으로 도는지도 실기기
+  확인이 필요하다
 
 ### 계약과 다르게 쓴 곳
 
@@ -291,24 +302,54 @@ FCM 플러그인·OS 권한 다이얼로그·실제 알림 표시는 인프라�
   최초 시퀀스에서 "허용 안 함"을 한 번 누른 상태가 정확히 그것이고 그때도 알림은
   오지 않는다. `OsPermissionNotice`가 `granted`가 아닌 모든 상태를 다룬다.
 
-### Firebase가 아직 없어서 생긴 구조
+### Firebase 설정 파일이 없어도 빌드된다 — 조건부 적용
 
-`google-services.json`·`GoogleService-Info.plist`가 저장소에 없고(§11), 그 상태에서
-`firebase_messaging`을 추가하면 Android 빌드가 Gradle 단계에서 깨진다 — 지도 SDK 키처럼
-조용히 건너뛰어지지 않는다. 그래서 **플러그인 의존을 아직 추가하지 않고**
-`PushMessagingService` 포트만 뒀다.
+`google-services.json`·`GoogleService-Info.plist`는 **환경마다 값이 달라 커밋하지
+않는다**(.gitignore 317~320줄, "keep local only"). SNS 클라이언트 id를 `.env`로 빼둔
+것과 같은 취급이다. 그래서 **파일이 없는 상태가 정상적으로 일어난다.**
 
-- 현재 구현체는 `UnavailablePushMessagingService`로, 토큰을 돌려주지 않아 등록이
-  일어나지 않는다. 그 상태는 사용자가 권한을 거부했을 때와 **같은 경로**를 탄다(R14) —
-  앱은 알림 없이 정상 동작한다
-- 설정 파일과 `firebase_core`·`firebase_messaging`이 들어오면 바뀌는 곳은 셋뿐이다:
-  `PushInitializer.ensureInitialized()`, `pushMessagingServiceProvider`가 돌려주는
-  구현체, 그리고 `PushInitializer.isReady`
-- 그 구현체가 채워야 할 계약은 `push_messaging_service.dart`의 인터페이스에 적혀
-  있다(채널 2개 생성·포그라운드 억제·탭 스트림·cold start 목적지)
-- **아직 하지 않은 것:** Android 채널 2개의 실제 생성, 포그라운드 억제의 실제 배선,
-  `Runner.entitlements`의 `aps-environment` 키 추가. 전부 플러그인이 있어야 의미가
-  있어 함께 미뤘다
+문제는 Gradle의 `google-services` 플러그인이 파일을 못 찾으면 **Android 빌드를 통째로
+실패시킨다**는 것이다. 지도 SDK 키처럼 조용히 넘어가지 않는다. 이 기능의 원칙이
+"알림을 못 받는 것이 앱을 막을 이유가 되지 않는다"(설계 §9 · R14)인데 빌드 차단은
+그보다 훨씬 강한 차단이라, **파일이 있을 때만 플러그인을 붙인다.**
+
+- `android/settings.gradle.kts`는 버전만 선언한다(`apply false`)
+- `android/app/build.gradle.kts`가 `file("google-services.json").exists()`로 검사해
+  있을 때만 `apply(plugin=)` 한다. 없으면 안내 한 줄을 찍고 넘어간다
+- Dart 쪽은 `PushInitializer`가 `Firebase.initializeApp()` 실패를 삼키고 `isReady`를
+  거짓으로 둔다. 그러면 `pushMessagingServiceProvider`가
+  `UnavailablePushMessagingService`를 골라 토큰을 발급하지 않고, 앱은 사용자가 알림
+  권한을 거부했을 때와 **같은 경로**를 탄다
+
+**양쪽 다 실제로 확인했다.** 파일 없이 `flutter build apk --debug` 성공, 더미 파일을
+넣으면 `processDebugGoogleServices`가 돌아 `google_app_id`가 병합 리소스에 주입되는
+것까지 확인한 뒤 더미를 지웠다.
+
+CI에서는 빌드 전에 시크릿에서 복원하면 그대로 붙는다(`.env`와 같은 방식):
+
+```sh
+echo "$GOOGLE_SERVICES_JSON" | base64 -d > android/app/google-services.json
+echo "$GOOGLE_SERVICE_INFO_PLIST" | base64 -d > ios/Runner/GoogleService-Info.plist
+```
+
+현재 이 저장소에는 CI가 없어(`.github/` 부재) 로컬 빌드가 곧 배포 빌드다.
+
+### 서버 안내 문서(2026-08-19) 반영
+
+- **기동 시 등록은 `force: true`다.** 서버가 FCM `UNREGISTERED` 응답을 보고 토큰 행을
+  **조용히 지울 수 있는데** 클라이언트는 알 방법이 없다(안내 §5-8). 지문만 믿으면
+  "안 바뀌었으니 건너뛴다"가 영원히 반복되어 그 계정은 알림을 영영 못 받는다. 기동당
+  왕복 한 번이 그 위험보다 싸다. 포그라운드 복귀는 훨씬 잦아 지문을 그대로 쓴다
+- **`onTokenRefresh`를 구독한다**(안내 §2의 재등록 시점). 새 토큰이 오면 지문이 달라져
+  재등록이 실제로 나간다
+- **알림 채널은 클라이언트가 만든다** — 서버가 채널을 지정하지 않는다(안내 §1).
+  메시지(high)와 질문·답변(default) 둘이며, `pushNotificationSetup`이 기동 시 한 번
+  만든다. 인증과 무관하다
+- **`deleteDeviceToken`의 `success: true`는 삭제를 뜻하지 않는다**(안내 §3 — 없었거나
+  남의 기기여도 참이다). 해제 경로가 이미 응답을 믿지 않고 지문을 무조건 지우므로
+  동작은 그대로다
+- **세 뮤테이션이 이메일 인증 게이트에 걸린다**(안내 §7). 등록은 `emailVerified &&
+  onboardingCompleted` 이후에만 시도하며, `me`와 한 문서로 묶지 않는다(배치 금지)
 
 ## 11. 플랫폼 설정 파일
 
@@ -316,11 +357,12 @@ FCM 플러그인·OS 권한 다이얼로그·실제 알림 표시는 인프라�
 
 | 파일 | 상태 |
 |---|---|
-| `android/app/google-services.json` | 없음 — 추가 필요 |
-| `ios/Runner/GoogleService-Info.plist` | 없음 — 추가 필요 |
-| `ios/Runner/Runner.entitlements` | 있음. `aps-environment` 키가 없어 **추가 필요** |
+| `android/app/google-services.json` | **커밋하지 않는다**(.gitignore 318). 각 빌드 머신에 두거나 CI 시크릿에서 복원. 없으면 FCM만 빠지고 빌드는 된다 |
+| `ios/Runner/GoogleService-Info.plist` | 같음(.gitignore 319) |
+| `ios/Runner/Runner.entitlements` | **`aps-environment: development` 추가함.** 배포 시 Xcode가 `production`으로 바꿔 서명한다 |
 
-현재 `Runner.entitlements`에는 `com.apple.developer.applesignin`만 있다.
+`Runner.entitlements`에는 이제 `com.apple.developer.applesignin`과 `aps-environment`가
+있다.
 
 APNs `.p8` 키는 Firebase 콘솔에 업로드하는 것이고 **이 저장소에 넣지 않는다.** 앱은 FCM
 토큰만 다루며 APNs를 직접 알지 않는다.

@@ -1,34 +1,41 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
-/// Firebase 초기화 자리(SPEC-0028 §3.1).
+/// Firebase 초기화(SPEC-0028 §3.1).
 ///
 /// **`MapSdkInitializer`와 같은 규칙을 따른다: 설정이 없으면 조용히 건너뛰고 앱 기동을
-/// 막지 않는다.** 알림을 못 받는 것은 앱을 막을 이유가 되지 않는다(설계 §9).
+/// 막지 않는다.** 알림을 못 받는 것은 앱을 막을 이유가 되지 않는다(설계 §9 · R14).
 ///
-/// **지금은 아무것도 하지 않는다.** `android/app/google-services.json`과
-/// `ios/Runner/GoogleService-Info.plist`가 아직 저장소에 없기 때문이다(설계 §11).
-/// 두 파일과 `firebase_core`·`firebase_messaging` 의존이 들어오면 여기서
-/// `Firebase.initializeApp()`을 부르고, [isReady]가 참이 되며,
-/// `pushMessagingServiceProvider`가 실제 구현으로 바뀐다.
+/// 설정 파일(`android/app/google-services.json` ·
+/// `ios/Runner/GoogleService-Info.plist`)은 환경마다 값이 달라 커밋하지 않는다
+/// (.gitignore — SNS 설정·`.env`와 같은 취급). 그래서 **파일이 없는 상태가 정상적으로
+/// 일어날 수 있고**, 그때 [initializeApp]은 던진다.
 ///
-/// 그때까지 앱은 `UnavailablePushMessagingService`를 써서 토큰을 발급받지 못하고,
-/// 그 상태는 사용자가 알림 권한을 거부했을 때와 정확히 같은 경로를 탄다(R14).
+/// - Android: 파일이 없으면 Gradle 플러그인 자체가 붙지 않아(`app/build.gradle.kts`)
+///   네이티브 설정이 비고, 초기화가 실패한다
+/// - iOS: 파일이 없으면 초기화가 실패한다
+///
+/// 두 경우 모두 여기서 예외를 삼키고 [isReady]가 거짓으로 남는다. 그러면
+/// `pushMessagingServiceProvider`가 스텁 구현을 골라 토큰을 발급하지 않고, 앱은 사용자가
+/// 알림 권한을 거부했을 때와 **같은 경로**를 탄다.
 abstract final class PushInitializer {
-  /// 설정 파일이 저장소에 있는지(설계 §11).
-  ///
-  /// 지금은 상수 `false`다 — 두 파일이 아직 없다. 파일과 `firebase_core` 의존이
-  /// 들어오면 이 값이 실제 초기화 결과를 반영하게 바뀐다.
-  static const bool isReady = false;
+  /// Firebase가 실제로 초기화됐는지. 설정 파일이 없으면 거짓이다.
+  static bool get isReady => _isReady;
+  static bool _isReady = false;
 
-  /// 설정 파일이 들어오면 이 자리에서 `Firebase.initializeApp()`을 부르고, 실패는
-  /// `try/on Exception`으로 삼킨다 — 초기화 실패가 앱 기동을 막으면 안 된다
-  /// (설계 §3.1, `MapSdkInitializer`와 같은 규칙).
   static Future<void> ensureInitialized() async {
-    if (kDebugMode) {
-      debugPrint(
-        '[Alarm] Firebase 설정 파일이 없어 푸시 초기화를 건너뛴다 — '
-        '앱은 알림 없이 정상 동작한다(설계 §11)',
-      );
+    if (_isReady) return;
+    try {
+      await Firebase.initializeApp();
+      _isReady = true;
+    } on Object catch (error) {
+      // 앱 기동을 막지 않는다. 알림만 빠지고 나머지는 그대로 동작한다(설계 §3.1).
+      if (kDebugMode) {
+        debugPrint(
+          '[Alarm] Firebase 초기화를 건너뛴다 — 설정 파일이 없거나 잘못됐다. '
+          '앱은 알림 없이 정상 동작한다(설계 §11): $error',
+        );
+      }
     }
   }
 }

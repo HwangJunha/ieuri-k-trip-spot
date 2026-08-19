@@ -58,14 +58,26 @@ final class AlarmRepositoryProvider
 
 String _$alarmRepositoryHash() => r'aa939525f2c35106e939f9155df9ce32f6265bd8';
 
-/// FCM 플러그인 경계. Firebase 설정이 들어오면 이 provider 하나만 갈아 끼운다
-/// (`push_messaging_service.dart` 참조).
+/// FCM 플러그인 경계.
+///
+/// **Firebase 초기화 여부로 구현체가 갈린다.** 설정 파일이 없으면 초기화가 실패하고
+/// (`PushInitializer`가 삼킨다) 스텁이 선택되어 토큰을 발급하지 않는다 — 그 상태는
+/// 사용자가 알림 권한을 거부했을 때와 같은 경로를 탄다(R14).
+///
+/// 초기화가 끝나기 전에 이 provider가 먼저 읽히면 스텁이 굳어 버리므로, `main()`이
+/// `PushInitializer.ensureInitialized()`를 `runApp` 전에 기다린다.
 
 @ProviderFor(pushMessagingService)
 const pushMessagingServiceProvider = PushMessagingServiceProvider._();
 
-/// FCM 플러그인 경계. Firebase 설정이 들어오면 이 provider 하나만 갈아 끼운다
-/// (`push_messaging_service.dart` 참조).
+/// FCM 플러그인 경계.
+///
+/// **Firebase 초기화 여부로 구현체가 갈린다.** 설정 파일이 없으면 초기화가 실패하고
+/// (`PushInitializer`가 삼킨다) 스텁이 선택되어 토큰을 발급하지 않는다 — 그 상태는
+/// 사용자가 알림 권한을 거부했을 때와 같은 경로를 탄다(R14).
+///
+/// 초기화가 끝나기 전에 이 provider가 먼저 읽히면 스텁이 굳어 버리므로, `main()`이
+/// `PushInitializer.ensureInitialized()`를 `runApp` 전에 기다린다.
 
 final class PushMessagingServiceProvider
     extends
@@ -75,8 +87,14 @@ final class PushMessagingServiceProvider
           PushMessagingService
         >
     with $Provider<PushMessagingService> {
-  /// FCM 플러그인 경계. Firebase 설정이 들어오면 이 provider 하나만 갈아 끼운다
-  /// (`push_messaging_service.dart` 참조).
+  /// FCM 플러그인 경계.
+  ///
+  /// **Firebase 초기화 여부로 구현체가 갈린다.** 설정 파일이 없으면 초기화가 실패하고
+  /// (`PushInitializer`가 삼킨다) 스텁이 선택되어 토큰을 발급하지 않는다 — 그 상태는
+  /// 사용자가 알림 권한을 거부했을 때와 같은 경로를 탄다(R14).
+  ///
+  /// 초기화가 끝나기 전에 이 provider가 먼저 읽히면 스텁이 굳어 버리므로, `main()`이
+  /// `PushInitializer.ensureInitialized()`를 `runApp` 전에 기다린다.
   const PushMessagingServiceProvider._()
     : super(
         from: null,
@@ -112,7 +130,7 @@ final class PushMessagingServiceProvider
 }
 
 String _$pushMessagingServiceHash() =>
-    r'f351a14ec334ee879d2e234fb09b61718e431873';
+    r'3bf2afbc1aa6379c6d0f665d3dcb5528ba45be7b';
 
 /// 기기 OS 언어 코드. 앱 언어 설정이 아니다 — 알림은 앱 밖에서 표시되므로 사용자가
 /// 그 순간 읽는 언어는 OS 언어다(설계 §8).

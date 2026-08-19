@@ -6,9 +6,23 @@
 - `Mutation.updateNotificationPreference(input: UpdateNotificationPreferenceInput!)`
 - `Me.notificationPreferences: [NotificationPreference!]!`
 
-검증 환경: `http://localhost:8888/graphql` — **작업 내내 응답 없음(`http_code=000`)**
+검증 환경: `http://localhost:8888/graphql`
 
-상태: 요청 중
+상태: **해소됨(2026-08-19, 서버 PR ieuri-server#95)**
+
+## 해소 내역
+
+서버가 배포된 뒤 라이브로 확인했고 **불일치가 없었다.**
+
+- §13 sweep — 모든 오퍼레이션 문서에 validation error 없음
+- 뮤테이션 3종 + `me.notificationPreferences`를 리터럴 인자로 발사 → 전부
+  `UNAUTHENTICATED`(형태 통과). 새로 생긴 필수 필드도 없음
+- introspection 대조 — `Locale`(EN·KO·JA·ZH), `DevicePlatform`(IOS·ANDROID),
+  `RegisterDeviceTokenInput` 네 필드가 `alarm_schema.graphql`과 일치
+
+아래 원문은 요청 당시의 기록으로 남긴다.
+
+---
 
 ## 무엇을 확인하지 못했나
 

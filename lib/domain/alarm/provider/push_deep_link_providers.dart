@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../model/push_destination.dart';
+import '../repository/push_messaging_service.dart';
 import 'push_registration_controller.dart';
 
 part 'push_deep_link_providers.g.dart';
@@ -33,6 +34,34 @@ class PushTapStream {
 PushTapStream pushNotificationTaps(Ref ref) => PushTapStream(
   ref.watch(pushMessagingServiceProvider).notificationTaps(),
 );
+
+/// 토큰 로테이션 스트림을 감싸 값으로 넘긴다([PushTapStream]과 같은 이유).
+class PushTokenRefreshStream {
+  const PushTokenRefreshStream(this.stream);
+
+  final Stream<String> stream;
+}
+
+/// FCM이 토큰을 새로 발급했을 때 흐른다(서버 안내 §2 — 재등록 시점 중 하나).
+@Riverpod(keepAlive: true)
+PushTokenRefreshStream pushTokenRefreshes(Ref ref) => PushTokenRefreshStream(
+  ref.watch(pushMessagingServiceProvider).tokenRefreshes(),
+);
+
+/// 앱 전체에 한 번 하는 알림 준비 — Android 채널 2개 생성과 포그라운드 표시 억제
+/// (설계 §5·§6).
+///
+/// **인증과 무관하다.** 로그인하지 않아도 채널은 있어야 하고, 배너를 띄우지 않는 것은
+/// 앱 전체 설정이다. 그래서 등록 흐름(R1)이 아니라 별도 provider로 둔다.
+///
+/// 실패는 서비스 구현이 이미 삼킨다 — 채널이 없으면 Android에서 알림이 표시되지 않을
+/// 뿐 앱은 정상 동작한다.
+@Riverpod(keepAlive: true)
+Future<void> pushNotificationSetup(Ref ref) async {
+  final PushMessagingService service = ref.watch(pushMessagingServiceProvider);
+  await service.ensureChannels();
+  await service.suppressForegroundBanners();
+}
 
 /// 앱이 **종료 상태**에서 알림 탭으로 기동된 경우의 목적지(R17). 그런 경우가 아니면
 /// null이다.

@@ -50,6 +50,40 @@ CI에서는 `.env`가 없으므로 값을 시크릿에서 직접 넘긴다:
       --dart-define=KAKAO_NATIVE_APP_KEY=${{ secrets.KAKAO_NATIVE_APP_KEY }}
 ```
 
+## 푸시 알림 설정 (선택 — 없으면 알림만 빠진다)
+
+FCM 푸시(SPEC-0028)는 Firebase 설정 파일 두 개를 요구한다. `.env`와 같은 이유로
+**커밋하지 않는다** — 환경마다 값이 다르다.
+
+```
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+```
+
+Firebase 콘솔 → 프로젝트 설정 → 내 앱에서 받는다. 패키지·번들 id는
+`kr.ieuri.ktripspot`이며, 다른 앱 것을 받으면 FCM이 `SENDER_ID_MISMATCH`를 낸다.
+
+**두 파일은 비밀값이 아니다.** 앱 바이너리에 그대로 박혀 배포되는 공개 식별자라
+유출 개념이 없고, 서버의 서비스 계정 키와는 성격이 다르다. 커밋하지 않는 것은
+값이 환경마다 달라서다.
+
+**없어도 빌드된다.** Gradle이 파일 존재를 검사해 있을 때만 `google-services`
+플러그인을 붙이고(`android/app/build.gradle.kts`), Dart 쪽은 `Firebase.initializeApp()`
+실패를 삼킨다. 그 상태의 앱은 **알림만 오지 않고 나머지는 정상 동작한다** — 사용자가
+알림 권한을 거부했을 때와 같은 경로다. 알림이 안 올 때 이 파일들의 부재를 먼저
+의심하면 된다.
+
+CI에서는 빌드 전에 시크릿에서 복원한다:
+
+```yaml
+- run: |
+    echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > android/app/google-services.json
+    echo "${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}" | base64 -d > ios/Runner/GoogleService-Info.plist
+```
+
+시크릿 값은 로컬에서 `base64 -i <파일>`로 만든다. plist가 여러 줄 XML이라 base64를
+거치지 않으면 개행이 깨진다.
+
 ### 실기기로 로컬 서버에 붙기
 
 기본 엔드포인트는 **시뮬레이터/에뮬레이터 전용**이다(iOS는 `localhost`,

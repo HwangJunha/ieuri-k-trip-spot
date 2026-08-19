@@ -61,6 +61,16 @@ dependencies:
   image_picker: ^1.2.3
   kakao_map_sdk: ^1.2.6
 
+  # FCM 푸시 알림(SPEC-0028). **설정 파일이 없어도 앱은 기동된다** — Android는
+  # google-services.json이 있을 때만 Gradle 플러그인이 붙고(android/app/build.gradle.kts),
+  # 초기화가 실패하면 `PushInitializer`가 삼켜 알림만 빠진다. 알림을 못 받는 것이
+  # 앱을 막을 이유가 되지 않는다(설계 §9 · R14).
+  firebase_core: ^3.8.0
+  firebase_messaging: ^15.1.5
+  # Android 알림 채널 2개와 포그라운드 표시 억제(설계 §5·§6). 서버가 채널을 지정하지
+  # 않으므로 클라이언트가 만든다(서버 안내 §1).
+  flutter_local_notifications: ^18.0.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

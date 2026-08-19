@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/config/push_initializer.dart';
 import '../../../common/network/graphql_client.dart';
 import '../../../common/permission/model/permission_kind.dart';
 import '../../../common/permission/model/permission_state.dart';
@@ -8,6 +9,7 @@ import '../../../common/permission/provider/permission_providers.dart';
 import '../model/device_registration.dart';
 import '../repository/alarm_repository.dart';
 import '../repository/alarm_repository_impl.dart';
+import '../repository/fcm_messaging_service.dart';
 import '../repository/push_messaging_service.dart';
 import '../repository/sent_registration_store.dart';
 import 'alarm_store_providers.dart';
@@ -20,11 +22,19 @@ part 'push_registration_controller.g.dart';
 AlarmRepository alarmRepository(Ref ref) =>
     AlarmRepositoryImpl(ref.watch(graphqlClientProvider));
 
-/// FCM 플러그인 경계. Firebase 설정이 들어오면 이 provider 하나만 갈아 끼운다
-/// (`push_messaging_service.dart` 참조).
+/// FCM 플러그인 경계.
+///
+/// **Firebase 초기화 여부로 구현체가 갈린다.** 설정 파일이 없으면 초기화가 실패하고
+/// (`PushInitializer`가 삼킨다) 스텁이 선택되어 토큰을 발급하지 않는다 — 그 상태는
+/// 사용자가 알림 권한을 거부했을 때와 같은 경로를 탄다(R14).
+///
+/// 초기화가 끝나기 전에 이 provider가 먼저 읽히면 스텁이 굳어 버리므로, `main()`이
+/// `PushInitializer.ensureInitialized()`를 `runApp` 전에 기다린다.
 @Riverpod(keepAlive: true)
 PushMessagingService pushMessagingService(Ref ref) =>
-    const UnavailablePushMessagingService();
+    PushInitializer.isReady
+    ? FcmMessagingService()
+    : const UnavailablePushMessagingService();
 
 /// 기기 OS 언어 코드. 앱 언어 설정이 아니다 — 알림은 앱 밖에서 표시되므로 사용자가
 /// 그 순간 읽는 언어는 OS 언어다(설계 §8).
