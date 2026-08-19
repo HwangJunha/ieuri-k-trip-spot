@@ -48,3 +48,8 @@ targets:
           # 다른 조각이 이미 선언하므로 참조만 한다.
           - lib/domain/spot_qa/repository/spot_qa_operations.graphql
           - lib/domain/spot_qa/repository/spot_qa_schema.graphql
+          # SPEC-0028 FCM 푸시. UserError·Me는 auth 조각이 이미 선언하므로 참조·확장만
+          # 한다. `Locale` enum은 여기가 최초다 — 지금까지 언어는 `Accept-Language`
+          # 헤더로만 갔고 GraphQL 인자로 보낸 적이 없다.
+          - lib/domain/alarm/repository/alarm_operations.graphql
+          - lib/domain/alarm/repository/alarm_schema.graphql

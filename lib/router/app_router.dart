@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../common/navigation/pending_destination.dart';
 import '../common/navigation/root_navigator_key.dart';
 import '../common/storage/app_preferences.dart';
 import '../domain/auth/model/auth_state.dart';
@@ -14,33 +15,19 @@ import 'routes.dart';
 
 part 'app_router.g.dart';
 
-/// 필수 약관 게이트에 막히기 직전의 목적지(SPEC-0011 R12 — 해제 후 원래 가려던 곳으로
-/// 복귀). 리다이렉트는 순수 판정이라 상태를 갖지 않으므로, 보관은 여기서 한다.
+/// 보관해 둔 목적지를 꺼내 **실제로 보낼 경로**로 바꾼다(SPEC-0011 R12 · SPEC-0028 R17).
 ///
-/// **provider가 아니라 평범한 클래스인 이유가 핵심이다.** 리다이렉트는 위젯 트리가
-/// 빌드되는 중에 돌기 때문에, 여기서 provider의 state를 쓰면 Riverpod이
-/// `Tried to modify a provider while the widget tree was building`으로 즉시 던진다.
-/// 이 값은 UI가 그리는 것도 아니고(화면은 읽지 않는다) 다시 그릴 필요도 없으므로
-/// provider일 이유가 없다 — 라우터가 자기 수명 동안 들고 있는 지역 상태다.
-class PendingDestination {
-  String? _location;
-
-  void remember(String location) => _location = location;
-
-  /// 보관한 목적지를 꺼내고 비운다. 한 번 쓰면 사라져야 다음 게이트가 옛 목적지로
-  /// 잘못 보내지 않는다.
-  String take() {
-    final String destination = destinationAfterGate(_location);
-    _location = null;
-    return destination;
-  }
-}
+/// 보관 자체는 `common/navigation/pending_destination.dart`가 하고, 여기서는 경로
+/// 상수를 아는 라우터만 할 수 있는 마지막 판정을 얹는다 — 보관된 것이 진입 전
+/// 화면이거나 아무것도 없으면 기본 착지점으로 떨어뜨린다.
+String _takeDestination(PendingDestination pending) =>
+    destinationAfterGate(pending.takeLocation());
 
 @Riverpod(keepAlive: true)
 GoRouter goRouter(Ref ref) {
-  // 라우터와 수명을 같이하는 지역 상태 — 리다이렉트가 빌드 중에 쓰므로 provider가
-  // 아니어야 한다(위 주석).
-  final PendingDestination pending = PendingDestination();
+  // 라우터와 수명을 같이하는 지역 상태 — 리다이렉트가 빌드 중에 쓰므로 state를 가진
+  // provider가 아니어야 한다(위 주석). 푸시가 값을 넣을 수 있게 인스턴스만 공유한다.
+  final PendingDestination pending = ref.read(pendingDestinationProvider);
   return GoRouter(
     initialLocation: splashPath,
     navigatorKey: rootNavigatorKey,
@@ -84,8 +71,11 @@ GoRouter goRouter(Ref ref) {
 
       // 약관 게이트에 막혀 되돌려지는 경우에만 목적지를 보관한다(R12). 다른 게이트는
       // 각자 복귀 규칙이 이미 있다.
+      //
+      // **이미 값이 있으면 덮어쓰지 않는다**(SPEC-0028 §3.3). 푸시로 열린 경우 목적지가
+      // 게이트보다 먼저 들어와 있고, 그것이 곧 "막히지 않았다면 갔을 곳"이다.
       if (target == requiredTermsPath && location != requiredTermsPath) {
-        pending.remember(location);
+        pending.rememberIfAbsent(location);
       }
 
       // 게이트가 풀린 직후 동의 화면에서 나갈 때는 **보관해 둔 목적지로 돌려보낸다**
@@ -93,7 +83,30 @@ GoRouter goRouter(Ref ref) {
       // 모르고 기본 착지점을 주므로, 그 값을 여기서 갈아 끼운다. 보관한 것이 없으면
       // `take()`가 기본 착지점을 그대로 돌려준다.
       if (location == requiredTermsPath && target == discoverPath) {
-        return pending.take();
+        return _takeDestination(pending);
+      }
+
+      // 푸시로 보관된 목적지는 약관 화면을 거치지 않는다 — 인증만 끝나면 되는 경우가
+      // 대부분이다(SPEC-0028 §3.3). 게이트가 전부 통과시키는 시점에 보관된 값이
+      // 있으면 그때 꺼낸다(AC17.2).
+      //
+      // **`target == null`만으로는 안 된다.** 그 값은 세 가지 다른 상황에서 나온다.
+      //   - 스플래시(`location == splashPath`)는 판정 전에 무조건 null이다 — 여기서
+      //     꺼내면 인증을 기다리지 않고 이동해 AC17.1을 어긴다
+      //   - 미인증 상태의 로그인·가입 화면도 null이다(`authPaths`) — 여기서 꺼내면
+      //     로그인하던 사용자를 목적지로 끌어내 로그인을 마칠 수 없다
+      //   - 게이트를 전부 통과한 경우 — **이때만 꺼내야 한다**
+      //
+      // 그래서 인증이 `ready`인지를 함께 본다. 미인증으로 판정된 동안에는 꺼내지
+      // 않고 두었다가, 로그인을 마치면 그때 소비된다. 끝내 로그인하지 않으면 앱이
+      // 끝날 때 라우터와 함께 사라진다(AC17.3).
+      if (target == null &&
+          authGate == AuthGateState.ready &&
+          location != splashPath &&
+          pending.hasDestination) {
+        final String destination = _takeDestination(pending);
+        // 이미 그 자리면 다시 보내지 않는다 — 같은 곳으로의 리다이렉트는 루프다.
+        return destination == location ? null : destination;
       }
       return target;
     },

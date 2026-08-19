@@ -1,0 +1,95 @@
+# SPEC-0028 FCM 앱 푸시 알림이 쓰는 서버 스키마 조각(committed codegen 입력).
+# `schema/schema.introspection.json` 스냅샷에서 손으로 추린 안정 빌드 입력이며,
+# gitignore된 스냅샷을 codegen이 직접 읽지 않는다(CLAUDE.md §13).
+#
+# `UserError`·`ErrorCode`·`Me`·루트 `Query`/`Mutation`은 **여기서 다시 선언하지 않는다** —
+# auth 조각이 이미 선언했고 codegen이 모든 조각을 한 이름공간에 합치므로 중복 정의가
+# 되면 빌드가 깨진다.
+#
+# **`Locale`은 여기서 선언한다.** 서버는 이 enum을 tourism 스키마에서 이미 갖고 있으나
+# (계약 §재사용), 클라이언트 조각 중에는 선언한 곳이 없다 — 앱의 다국어는 지금까지
+# `Accept-Language` 헤더로만 처리해 GraphQL 인자로 언어를 보낸 적이 없기 때문이다.
+# 다른 기능이 이 enum을 쓰게 되면 `common/network/shared_schema.graphql`로 올린다(§4).
+#
+# 계약이 payload에 `implements BaseResponse`를 달아 두었으나 클라이언트 조각에는
+# 그 인터페이스가 없다. 인터페이스는 응답 형태를 바꾸지 않고 이 앱은 `success`·
+# `userErrors`를 직접 고르므로, 다른 payload들과 같이 평범한 타입으로 둔다.
+
+"기기 언어. 알림 제목 등 서버가 조립하는 문구에 쓴다."
+enum Locale {
+  EN
+  KO
+  JA
+  ZH
+}
+
+"토큰이 속한 OS. 발송 페이로드 형식이 갈리므로 서버가 알아야 한다."
+enum DevicePlatform {
+  IOS
+  ANDROID
+}
+
+"알림 카테고리. 트리거 3종을 두 값으로 묶는다."
+enum NotificationCategory {
+  MESSAGE
+  SPOT_QA
+}
+
+"카테고리 1건에 대한 호출자의 수신 설정."
+type NotificationPreference {
+  category: NotificationCategory!
+  enabled: Boolean!
+}
+
+input RegisterDeviceTokenInput {
+  deviceId: String!
+  fcmToken: String!
+  language: Locale!
+  platform: DevicePlatform!
+}
+
+type RegisterDeviceTokenPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+input DeleteDeviceTokenInput {
+  deviceId: String!
+}
+
+type DeleteDeviceTokenPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+input UpdateNotificationPreferenceInput {
+  category: NotificationCategory!
+  enabled: Boolean!
+}
+
+type UpdateNotificationPreferencePayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+
+  # 반영 후 **전체** 설정. 바뀐 한 건이 아니라 두 카테고리를 모두 돌려준다 —
+  # 클라이언트가 이 배열로 캐시를 갈아 끼우면 재조회가 필요 없다(AC19.3).
+  notificationPreferences: [NotificationPreference!]!
+}
+
+# `Me`는 auth 조각이 선언한 것을 **확장**한다 — 다시 선언하면 그 조각의 필드가 사라져
+# 인증 기능의 codegen이 깨진다.
+extend type Me {
+  notificationPreferences: [NotificationPreference!]!
+}
+
+# 루트 Mutation도 auth 조각이 선언한 것을 확장한다. 새 루트 Query 필드는 없다 —
+# 설정은 이미 있는 `me`로 읽힌다(계약).
+extend type Mutation {
+  registerDeviceToken(
+    input: RegisterDeviceTokenInput!
+  ): RegisterDeviceTokenPayload!
+  deleteDeviceToken(input: DeleteDeviceTokenInput!): DeleteDeviceTokenPayload!
+  updateNotificationPreference(
+    input: UpdateNotificationPreferenceInput!
+  ): UpdateNotificationPreferencePayload!
+}

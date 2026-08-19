@@ -1220,5 +1220,41 @@
   "spotQaMyQuestionsSignInBody": "Sign in to see the questions you've asked and their answers.",
   "spotQaPhotoUploadFailed": "{count, plural, =1{Couldn't upload 1 photo.} other{Couldn't upload {count} photos.}}",
   "spotQaUnresolveAction": "Unresolve",
-  "spotQaUnresolveFailed": "Couldn't undo it. Please try again."
+  "spotQaUnresolveFailed": "Couldn't undo it. Please try again.",
+  "alarmSettingsTitle": "Notifications",
+  "@alarmSettingsTitle": {
+    "description": "Title of the notification settings screen."
+  },
+  "settingsNotifications": "Notifications",
+  "@settingsNotifications": {
+    "description": "Settings row that opens notification settings."
+  },
+  "alarmCategoryMessage": "Messages",
+  "@alarmCategoryMessage": {
+    "description": "Notification category: direct messages."
+  },
+  "alarmCategoryMessageDescription": "New direct messages",
+  "@alarmCategoryMessageDescription": {
+    "description": "Explains what the messages category covers."
+  },
+  "alarmCategorySpotQa": "Questions & answers",
+  "@alarmCategorySpotQa": {
+    "description": "Notification category: spot questions and answers."
+  },
+  "alarmCategorySpotQaDescription": "Answers to your questions and replies to your answers",
+  "@alarmCategorySpotQaDescription": {
+    "description": "Explains what the Q&A category covers."
+  },
+  "alarmOsDisabledNotice": "Notifications are turned off for this app in your device settings, so nothing will arrive.",
+  "@alarmOsDisabledNotice": {
+    "description": "Shown when the OS-level notification permission is off."
+  },
+  "alarmSettingsLoadFailed": "Couldn't load your notification settings.",
+  "@alarmSettingsLoadFailed": {
+    "description": "Shown when notification preferences fail to load."
+  },
+  "alarmSettingsSaveFailed": "Couldn't save that. Please try again.",
+  "@alarmSettingsSaveFailed": {
+    "description": "Shown when toggling a notification category fails."
+  }
 }

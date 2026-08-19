@@ -23,6 +23,7 @@ import '../domain/onboarding/view/onboarding_screen.dart';
 import '../domain/settings/view/account_deletion_screen.dart';
 import '../domain/settings/view/email_change_screen.dart';
 import '../domain/settings/view/my_posts_screen.dart';
+import '../domain/alarm/view/notification_settings_screen.dart';
 import '../domain/settings/view/preferences_screen.dart';
 import '../domain/settings/view/profile_edit_screen.dart';
 import '../domain/settings/view/required_terms_screen.dart';
@@ -341,6 +342,13 @@ List<RouteBase> buildRoutes() => <RouteBase>[
         path: 'preferences',
         name: PreferencesScreen.routeName,
         builder: (_, _) => const PreferencesScreen(),
+      ),
+      // 알림 수신 설정(SPEC-0028 R19·R21). 설정 계열이라 필수 약관 게이트가 막지
+      // 않는다 — `_termsAllows`가 `/settings/`로 시작하는 경로를 전부 연다.
+      GoRoute(
+        path: 'notifications',
+        name: NotificationSettingsScreen.routeName,
+        builder: (_, _) => const NotificationSettingsScreen(),
       ),
       // 약관 동의 관리(R9·R10). 설정 계열이라 필수 약관 게이트가 막지 않는다 —
       // 미동의 상태에서도 여기서 무엇에 동의했는지 볼 수 있어야 한다(R11).

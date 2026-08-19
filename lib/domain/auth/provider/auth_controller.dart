@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/model/session_teardown_provider.dart';
 import '../../../common/network/graphql_client.dart';
 import '../../../common/storage/secure_storage.dart';
 import '../model/auth_failure.dart';
@@ -250,7 +251,13 @@ class AuthController extends _$AuthController {
   /// Signs out (spec §6.3): invalidate the refresh token server-side, then
   /// clear local tokens and reset state — regardless of the server call's
   /// outcome.
+  ///
+  /// **정리 훅이 가장 먼저다**(SPEC-0028 §3.2). 기기 푸시 해제처럼 인증을 요구하는
+  /// 작업은 세션이 살아 있는 동안에만 성공하므로, 저장소를 비우기 전에 부른다.
+  /// 여기서 alarm을 직접 부르지 않는 이유는 auth가 alarm을 알면 기능 간 의존이 되기
+  /// 때문이다 — 등록된 콜백만 부른다(`SessionTeardown`).
   Future<void> signOut() async {
+    await ref.read(sessionTeardownProvider).run();
     final String? refreshToken = await _storage.readRefreshToken();
     if (refreshToken != null) {
       await _repo.logout(refreshToken: refreshToken);
