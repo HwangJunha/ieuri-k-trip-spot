@@ -34,7 +34,7 @@ class SpotDetailView extends ConsumerWidget {
     super.key,
     required this.contentId,
     this.initialThumbnailUrl,
-    this.feedCategory,
+    this.swipeCategory,
   });
 
   /// 스와이프 카드가 이미 가진 썸네일 URL(SPEC-0006 R8). 본문 조회가 끝나기 전에도
@@ -43,13 +43,16 @@ class SpotDetailView extends ConsumerWidget {
   /// (AC-25). 조회가 끝나면 응답의 `thumbnailImageUrl`이 최종 값이다(AC-26).
   final String? initialThumbnailUrl;
 
-  /// 이 상세가 **어느 스와이프 피드에서** 열렸는지(null=피드 밖에서 진입,
-  /// SPEC-0006 R11). 반응 후 그 피드에서 카드를 소비할 때 쓰는 세션 키다.
+  /// 이 상세를 연 스와이프 세션의 **카테고리 선택**(null=스와이프 밖에서 진입,
+  /// SPEC-0006 R11). 반응 후 그 세션에서 카드를 소비할 때 쓰는 키다.
   ///
-  /// 이 관광지 자신의 카테고리가 아니라 **피드의 필터 집합**이다. 현재 선택 상태를
-  /// 다시 읽지 않는 이유는, 상세를 열어둔 채 필터를 바꾸면 그 선택이 이미 다른 피드를
-  /// 가리켜 정작 카드가 있는 인스턴스를 놓치기 때문이다.
-  final SpotCategorySelection? feedCategory;
+  /// 이 관광지 자신의 카테고리가 아니라 **스와이프의 필터 집합**이다. 선택이 비어
+  /// 있는 것(=전체)도 유효한 키다 — 빈 값을 null로 접으면 전체로 보던 사용자가
+  /// 좋아요를 눌러도 카드가 소비되지 않는다.
+  ///
+  /// 현재 선택 상태를 다시 읽지 않는 이유는, 상세를 열어둔 채 필터를 바꾸면 그
+  /// 선택이 이미 다른 세션을 가리켜 정작 카드가 있는 인스턴스를 놓치기 때문이다.
+  final SpotCategorySelection? swipeCategory;
 
   /// Discover 카드의 contentId(=Spot.id). 라우트 파라미터로 전달된다(R9).
   final String contentId;
@@ -75,7 +78,7 @@ class SpotDetailView extends ConsumerWidget {
           ),
           data: (SpotDetail data) => _DetailBody(
             contentId: contentId,
-            feedCategory: feedCategory,
+            swipeCategory: swipeCategory,
             detail: data,
             initialThumbnailUrl: initialThumbnailUrl,
           ),
@@ -179,15 +182,16 @@ class _ErrorState extends StatelessWidget {
 class _DetailBody extends ConsumerWidget {
   const _DetailBody({
     required this.contentId,
-    required this.feedCategory,
+    required this.swipeCategory,
     required this.detail,
     this.initialThumbnailUrl,
   });
 
   final String contentId;
 
-  /// 이 상세가 열린 스와이프 피드의 필터(null=피드 밖). 반응 후 카드 소비 대상이다.
-  final SpotCategorySelection? feedCategory;
+  /// 이 상세를 연 스와이프 세션의 카테고리 선택(null=스와이프 밖). 반응 후 카드
+  /// 소비 대상이다.
+  final SpotCategorySelection? swipeCategory;
 
   final SpotDetail detail;
 
@@ -369,17 +373,17 @@ class _DetailBody extends ConsumerWidget {
 
     // 반응은 상세가 이미 보냈으므로 카드만 제거한다(중복 전송 금지).
     //
-    // 어떤 피드에서 왔는지는 **현재 선택된 필터가 아니라** 이 화면이 열릴 때 받은
-    // 값이 답이다 — 상세를 열어둔 채 필터를 바꾸면 선택 상태는 이미 다른 피드를
-    // 가리켜, 정작 카드가 있는 인스턴스를 놓친다. 피드에 없는 id면 아무 일도 없다.
+    // 어떤 세션에서 왔는지는 **현재 선택된 필터가 아니라** 이 화면이 열릴 때 받은
+    // 값이 답이다 — 상세를 열어둔 채 필터를 바꾸면 선택 상태는 이미 다른 세션을
+    // 가리켜, 정작 카드가 있는 인스턴스를 놓친다. 세션에 없는 id면 아무 일도 없다.
     //
-    // null이면 스와이프 피드 밖에서 들어온 것이라(검색·좋아요·지도·딥링크) 소비할
-    // 스택이 없다. 예전에는 null이 "전체 피드"를 뜻해 그 인스턴스를 건드렸지만,
-    // "전체"가 사라진 지금 null을 넘기면 **없던 세션을 새로 만들어** 위치·목록 조회를
-    // 시작시킨다.
-    final SpotCategorySelection? feed = feedCategory;
-    if (feed != null) {
-      ref.read(swipeControllerProvider(feed).notifier).consume(contentId);
+    // null이면 스와이프 밖에서 들어온 것이라(검색·좋아요·지도·딥링크) 소비할 스택이
+    // 없다. **빈 선택(=전체)은 null이 아니다** — 그것도 유효한 세션 키이고, 둘을
+    // 같이 취급했다가 전체로 보던 사용자가 좋아요를 눌러도 다음 카드로 넘어가지
+    // 않는 회귀가 있었다.
+    final SpotCategorySelection? category = swipeCategory;
+    if (category != null) {
+      ref.read(swipeControllerProvider(category).notifier).consume(contentId);
     }
 
     if (navigator.canPop()) navigator.pop();

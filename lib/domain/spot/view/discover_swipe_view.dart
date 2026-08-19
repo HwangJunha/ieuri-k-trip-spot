@@ -360,9 +360,12 @@ class _CardStackState extends ConsumerState<_CardStack> {
       pathParameters: <String, String>{'id': spot.id},
       queryParameters: <String, String>{
         if (spot.thumbnailImageUrl != null) 'thumb': spot.thumbnailImageUrl!,
-        // 어느 피드에서 열렸는지(R11) — 반응 후 이 피드에서 카드를 소비한다.
-        // 정렬된 코드를 콤마로 이어 싣고, 라우트가 같은 규약으로 되돌린다.
-        'feed': widget.selection.codes.join(','),
+        // 어느 스와이프 세션에서 열렸는지(R11) — 반응 후 이 세션에서 카드를
+        // 소비한다. 정렬된 코드를 콤마로 이어 싣고, 라우트가 같은 규약으로 되돌린다.
+        //
+        // **선택이 비어도(=전체) 파라미터를 싣는다.** 값은 빈 문자열이 되는데,
+        // 라우트가 부재(null)와 빈 값을 구분해 빈 값을 "전체 세션"으로 되돌린다.
+        'category': widget.selection.codes.join(','),
       },
     );
   }
