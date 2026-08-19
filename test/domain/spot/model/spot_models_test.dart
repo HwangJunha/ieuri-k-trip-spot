@@ -5,6 +5,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/category/spot_category.dart';
+import 'package:ieuri_k_trip_spot/common/location/coordinates.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_service.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/distance.dart';
@@ -236,6 +237,7 @@ void main() {
     id: 'c1',
     title: 'Gyeongbokgung',
     thumbnailImageUrl: 'https://img/thumb.jpg',
+    coordinates: const Coordinates(latitude: 37.5665, longitude: 126.9780),
     overview: 'A palace.',
     address: 'Seoul',
     homepage: 'https://example.com',
@@ -259,6 +261,7 @@ void main() {
       id: 'c1',
       title: 'T',
       thumbnailImageUrl: 'https://img/t.jpg',
+      coordinates: const Coordinates(latitude: 37.5665, longitude: 126.9780),
       overview: '',
       address: '   ',
       homepage: '',
@@ -291,6 +294,7 @@ void main() {
       id: 'c1',
       title: 'T',
       thumbnailImageUrl: 'https://img/t.jpg',
+      coordinates: const Coordinates(latitude: 37.5665, longitude: 126.9780),
       homepage: homepage,
       copyright: CopyrightType.type1,
       attributionText: 'KTO',
@@ -353,6 +357,7 @@ void main() {
           id: 'c1',
           title: 'T',
           thumbnailImageUrl: 'https://img/t.jpg',
+          coordinates: const Coordinates(latitude: 37.5665, longitude: 126.9780),
           copyright: CopyrightType.type1,
           attributionText: 'KTO',
           gallery: const <SpotImage>[],
@@ -413,6 +418,7 @@ void main() {
       id: 'c1',
       title: 'T',
       thumbnailImageUrl: 'https://img/t.jpg',
+      coordinates: const Coordinates(latitude: 37.5665, longitude: 126.9780),
       copyright: CopyrightType.type1,
       attributionText: 'KTO',
       gallery: const <SpotImage>[],
@@ -433,6 +439,7 @@ void main() {
       id: 'c1',
       title: 'T',
       thumbnailImageUrl: 'https://img/t.jpg',
+      coordinates: const Coordinates(latitude: 37.5665, longitude: 126.9780),
       copyright: CopyrightType.type1,
       attributionText: 'Source: KTO',
       gallery: const <SpotImage>[
@@ -483,6 +490,7 @@ void main() {
       id: 'c1',
       title: 'Gyeongbokgung',
       thumbnailImageUrl: 'https://img/thumb.jpg',
+      coordinates: Coordinates(latitude: 37.5665, longitude: 126.9780),
       address: 'Seoul',
       copyright: CopyrightType.type1,
       attributionText: 'Source: KTO',
@@ -513,6 +521,7 @@ void main() {
       id: 'c1',
       title: 'T',
       thumbnailImageUrl: 'https://img/thumb.jpg',
+      coordinates: Coordinates(latitude: 37.5665, longitude: 126.9780),
       copyright: CopyrightType.type1,
       attributionText: 'Source: KTO',
       gallery: <SpotImage>[],

@@ -1795,6 +1795,20 @@ const documentNodeQuerySpotDetail = DocumentNode(
                   selectionSet: null,
                 ),
                 FieldNode(
+                  name: NameNode(value: 'mapX'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'mapY'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
                   name: NameNode(value: 'gallery'),
                   alias: null,
                   arguments: [],
@@ -1970,6 +1984,8 @@ class Query$SpotDetail$spotDetail {
     this.tel,
     required this.copyright,
     required this.attributionText,
+    required this.mapX,
+    required this.mapY,
     this.gallery,
     required this.likeCount,
     this.viewerReaction,
@@ -1987,6 +2003,8 @@ class Query$SpotDetail$spotDetail {
     final l$tel = json['tel'];
     final l$copyright = json['copyright'];
     final l$attributionText = json['attributionText'];
+    final l$mapX = json['mapX'];
+    final l$mapY = json['mapY'];
     final l$gallery = json['gallery'];
     final l$likeCount = json['likeCount'];
     final l$viewerReaction = json['viewerReaction'];
@@ -2002,6 +2020,8 @@ class Query$SpotDetail$spotDetail {
       tel: (l$tel as String?),
       copyright: fromJson$Enum$CopyrightType((l$copyright as String)),
       attributionText: (l$attributionText as String),
+      mapX: (l$mapX as num).toDouble(),
+      mapY: (l$mapY as num).toDouble(),
       gallery: (l$gallery as List<dynamic>?)
           ?.map(
             (e) => Query$SpotDetail$spotDetail$gallery.fromJson(
@@ -2046,6 +2066,10 @@ class Query$SpotDetail$spotDetail {
 
   final String attributionText;
 
+  final double mapX;
+
+  final double mapY;
+
   final List<Query$SpotDetail$spotDetail$gallery>? gallery;
 
   final int likeCount;
@@ -2076,6 +2100,10 @@ class Query$SpotDetail$spotDetail {
     _resultData['copyright'] = toJson$Enum$CopyrightType(l$copyright);
     final l$attributionText = attributionText;
     _resultData['attributionText'] = l$attributionText;
+    final l$mapX = mapX;
+    _resultData['mapX'] = l$mapX;
+    final l$mapY = mapY;
+    _resultData['mapY'] = l$mapY;
     final l$gallery = gallery;
     _resultData['gallery'] = l$gallery?.map((e) => e.toJson()).toList();
     final l$likeCount = likeCount;
@@ -2102,6 +2130,8 @@ class Query$SpotDetail$spotDetail {
     final l$tel = tel;
     final l$copyright = copyright;
     final l$attributionText = attributionText;
+    final l$mapX = mapX;
+    final l$mapY = mapY;
     final l$gallery = gallery;
     final l$likeCount = likeCount;
     final l$viewerReaction = viewerReaction;
@@ -2117,6 +2147,8 @@ class Query$SpotDetail$spotDetail {
       l$tel,
       l$copyright,
       l$attributionText,
+      l$mapX,
+      l$mapY,
       l$gallery == null ? null : Object.hashAll(l$gallery.map((v) => v)),
       l$likeCount,
       l$viewerReaction,
@@ -2177,6 +2209,16 @@ class Query$SpotDetail$spotDetail {
     final l$attributionText = attributionText;
     final lOther$attributionText = other.attributionText;
     if (l$attributionText != lOther$attributionText) {
+      return false;
+    }
+    final l$mapX = mapX;
+    final lOther$mapX = other.mapX;
+    if (l$mapX != lOther$mapX) {
+      return false;
+    }
+    final l$mapY = mapY;
+    final lOther$mapY = other.mapY;
+    if (l$mapY != lOther$mapY) {
       return false;
     }
     final l$gallery = gallery;
@@ -2255,6 +2297,8 @@ abstract class CopyWith$Query$SpotDetail$spotDetail<TRes> {
     String? tel,
     Enum$CopyrightType? copyright,
     String? attributionText,
+    double? mapX,
+    double? mapY,
     List<Query$SpotDetail$spotDetail$gallery>? gallery,
     int? likeCount,
     Enum$SpotReaction? viewerReaction,
@@ -2304,6 +2348,8 @@ class _CopyWithImpl$Query$SpotDetail$spotDetail<TRes>
     Object? tel = _undefined,
     Object? copyright = _undefined,
     Object? attributionText = _undefined,
+    Object? mapX = _undefined,
+    Object? mapY = _undefined,
     Object? gallery = _undefined,
     Object? likeCount = _undefined,
     Object? viewerReaction = _undefined,
@@ -2333,6 +2379,12 @@ class _CopyWithImpl$Query$SpotDetail$spotDetail<TRes>
       attributionText: attributionText == _undefined || attributionText == null
           ? _instance.attributionText
           : (attributionText as String),
+      mapX: mapX == _undefined || mapX == null
+          ? _instance.mapX
+          : (mapX as double),
+      mapY: mapY == _undefined || mapY == null
+          ? _instance.mapY
+          : (mapY as double),
       gallery: gallery == _undefined
           ? _instance.gallery
           : (gallery as List<Query$SpotDetail$spotDetail$gallery>?),
@@ -2412,6 +2464,8 @@ class _CopyWithStubImpl$Query$SpotDetail$spotDetail<TRes>
     String? tel,
     Enum$CopyrightType? copyright,
     String? attributionText,
+    double? mapX,
+    double? mapY,
     List<Query$SpotDetail$spotDetail$gallery>? gallery,
     int? likeCount,
     Enum$SpotReaction? viewerReaction,

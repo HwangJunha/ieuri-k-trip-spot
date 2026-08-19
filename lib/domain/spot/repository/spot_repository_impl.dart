@@ -434,6 +434,9 @@ class SpotRepositoryImpl implements SpotRepository {
     tel: r.tel,
     copyright: _copyright(r.copyright),
     attributionText: r.attributionText,
+    // **mapX가 경도, mapY가 위도다** — 서버 필드명이 직관과 반대라 여기서 뒤집는다.
+    // 이 변환은 이 한 줄에만 있고, 이후로는 이름이 분명한 Coordinates로만 다룬다.
+    coordinates: Coordinates(latitude: r.mapY, longitude: r.mapX),
     // null이면 빈 배열 — UI는 썸네일 1장으로 폴백한다(AC-26·AC-27).
     gallery:
         r.gallery?.map(_imageFromGallery).toList(growable: false) ??
