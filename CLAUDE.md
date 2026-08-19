@@ -58,38 +58,40 @@ Lower number wins: **domain boundaries beat brevity; brevity beats everything el
 
 ---
 
-## 1.4 근거 없는 대답 금지
+## 1.4 No answers without evidence
 
-**모르면 찾아라. 추측을 설명으로 내놓지 마라.**
+**If you don't know, look it up. Never present a guess as an explanation.**
 
-특히 **플랫폼·SDK·서드파티 라이브러리의 동작**이 그렇다. 그 동작은 내 코드에 적혀 있지
-않으므로 코드를 아무리 읽어도 알 수 없고, "아마 이럴 것이다"는 절반쯤 맞아서 더 위험하다.
-틀린 추측을 따라 고치면 멀쩡한 코드를 건드리고, 진짜 원인은 그대로 남는다.
+This applies above all to **platform, SDK, and third-party library behavior**. That behavior is
+not written in this repository, so no amount of reading the code reveals it — and "it probably
+works like this" is dangerous precisely because it is half right. Acting on a wrong guess edits
+working code while the real cause survives untouched.
 
-**근거로 인정되는 것은 둘뿐이다.**
+**Only two things count as evidence.**
 
-1. **공식 문서** — `WebFetch`로 해당 문서를 직접 읽는다
-2. **웹 검색** — `WebSearch`로 찾은 이슈 트래커·릴리스 노트·명세
+1. **Official documentation** — read it directly with `WebFetch`
+2. **Web search** — issue trackers, release notes, specs found via `WebSearch`
 
-이 둘 중 하나를 **실제로 읽고 나서** 답한다. 읽지 않았으면 "확인해 보겠다"고 말하고 찾는다.
-답에는 근거의 출처를 남긴다 — 나중에 그 판단을 검증할 사람이 같은 문서를 볼 수 있어야 한다.
+Answer only *after* actually reading one of them. If you haven't, say you will check, then check.
+Cite the source in the answer — whoever verifies the judgment later must be able to open the same
+page.
 
-**아래는 근거가 아니다.**
+**These are not evidence:**
 
-- 내 기억, 일반적인 통념, "보통 이렇게 동작한다"
-- 다른 플랫폼에서 그랬다는 사실 (Android가 그랬다고 iOS가 그런 것이 아니다)
-- 로그에 없는 것을 있다고 가정하는 것 — 로그는 **찍힌 줄만** 근거다
+- Memory, common wisdom, "this is usually how it works"
+- Behavior observed on another platform (Android doing it does not mean iOS does)
+- Assuming a log line that isn't there — only the lines actually printed are evidence
 
-**측정 가능한 것은 측정한다.** 문서를 찾기 전에 로그·재현으로 좁힐 수 있으면 그것이 먼저다
-(§1.5의 "측정한 것을 말하라"와 같은 규칙이다). 다만 좁힌 뒤 **원인을 설명할 때는** 반드시
-위 두 근거 중 하나를 댄다.
+**Measure what can be measured.** If logs or a reproduction can narrow the problem before you go
+reading, do that first (same rule as §1.5, "say what you measured"). But once narrowed, **stating
+the cause** still requires one of the two sources above.
 
-> **2026-08-20에 이 규칙이 생긴 이유.** SPEC-0028에서 iOS 포그라운드 알림이 오지 않는
-> 원인을 추측으로만 여러 번 답했다 — "시스템이 알아서 띄운다", "설정 옵션만 켜면 된다",
-> "delegate가 없어서다". 그때마다 코드를 고쳤고 전부 실패했다. 사용자가 근거를 요구한
-> 뒤에야 문서를 찾았고, 그제서야 `notification` 필드가 있는 메시지는 iOS에서
-> `onMessage`를 우회한다는 사실이 확인됐다(flutterfire#1644). **처음부터 찾았으면
-> 한 번에 끝났을 일이다.**
+> **Why this rule exists (2026-08-20).** In SPEC-0028 the cause of iOS foreground notifications
+> not arriving was answered by guesswork three times — "the system displays it automatically",
+> "just turn on the presentation option", "the delegate is missing". Code was changed each time
+> and every attempt failed. Only after the user demanded evidence was the documentation searched,
+> which surfaced that messages carrying a `notification` field bypass `onMessage` on iOS
+> (flutterfire#1644). **Searching first would have settled it in one pass.**
 
 ## 1.5 Working speed
 
