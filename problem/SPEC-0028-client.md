@@ -262,16 +262,75 @@ FCM 플러그인·OS 권한 다이얼로그·실제 알림 표시는 인프라�
 
 `problem/SPEC-0028-SERVER-device-token-contract.md`의 상태를 해소됨으로 바꿨다.
 
+## 10.2 실기기 검증 결과 (2026-08-20)
+
+Android(갤럭시 S931N, Android 16)와 iOS(iPad Air 5, iOS 16.6) 실기기에서 확인했다.
+
+| 항목 | Android | iOS |
+|---|---|---|
+| Firebase 초기화 | 확인 | 확인 |
+| FCM 토큰 발급 → `registerDeviceToken` | 확인(`success: true`) | 확인(`success: true`) |
+| 언어 매핑(`KO`)·플랫폼 값 | 확인 | 확인(`IOS`) |
+| 토큰 로그 마스킹(POL-013) | 확인(`***`) | 확인(`***`) |
+| 알림 채널 2개 | 확인(HIGH/DEFAULT) | 해당 없음 |
+| 백그라운드·종료 알림 수신 | 확인 | 확인 |
+| **포그라운드 알림 표시** | 확인 | **실패 — 아래 참조** |
+| 딥링크(탭 → 목적지) | 미확인 | 미확인 |
+| 설정 화면 토글 | 미확인 | 미확인 |
+
+### iOS 포그라운드 알림 — 해결하지 못했다
+
+**증상.** 앱이 떠 있는 동안 도착한 알림이 표시되지 않는다. 백그라운드·종료 상태에서는
+정상이다. Android는 같은 코드로 표시된다.
+
+**확인된 사실.** 실기기 로그로 아래까지는 정상임을 확인했다.
+
+- 실제 구현체가 선택된다(`service=FcmMessagingService`)
+- `setForegroundNotificationPresentationOptions`가 적용된다
+- `FirebaseMessaging.onMessage` 구독이 완료된다
+- 그런데 **알림이 도착해도 `onMessage`가 발화하지 않는다** — 구독 콜백에 진단 로그를
+  넣고 Firebase 콘솔에서 발송했으나 아무것도 찍히지 않았다
+
+**시도했고 전부 실패한 것 셋.**
+
+1. iOS 시스템 표시 옵션을 켜기(`alert: true`) — 변화 없음
+2. Android처럼 앱이 직접 `flutter_local_notifications`로 띄우기 — `onMessage`가 오지
+   않으므로 애초에 실행되지 않음
+3. `AppDelegate`에 `UNUserNotificationCenter.current().delegate = self` 지정 —
+   변화 없음
+
+**원인 추정과 그 한계.** 검색으로 찾은 근거는 flutterfire#1644("Dart side callbacks for
+FCM are not called on iOS if a message has a notification field")이며, `notification`
+필드가 실린 메시지는 iOS에서 APNs가 직접 처리해 `onMessage`를 우회한다는 내용이다.
+Firebase 문서도 포그라운드 전달이 `userNotificationCenter(_:willPresent:)`를 거친다고
+적고 있다.
+
+**다만 이 설명은 실기기에서 확정되지 않았다.** 3번(delegate 지정)이 그 가설에 따른
+수정이었는데 그래도 오지 않았기 때문이다. 즉 "서버가 data-only로 보내면 해결된다"는
+것도 아직 검증된 결론이 아니다.
+
+**그래서 이 기능은 되돌렸다.** 포그라운드 표시 관련 변경(`enableForegroundNotifications`의
+iOS 경로, `AppDelegate`의 delegate 지정)은 전부 커밋 `37da556` 상태로 복구했고, 현재
+동작은 다음과 같다.
+
+- Android: 포그라운드에서도 앱이 직접 표시한다(R15 개정 그대로)
+- iOS: 포그라운드에서 표시하지 않는다(원안 R15와 같은 결과)
+
+**다음에 이어서 할 때의 순서.** 코드를 먼저 고치지 말고 아래를 확정한 뒤에 손댄다.
+
+1. 서버가 실제로 내보내는 APNs 페이로드를 확인한다(`aps` 안에 `alert`·
+   `content-available`가 어떻게 들어가는지)
+2. `userNotificationCenter(_:willPresent:)`가 불리는지를 Swift 쪽 로그로 확인한다 —
+   이것이 불리지 않으면 Dart 쪽은 어떻게 고쳐도 소용이 없다
+3. 그 두 가지가 확정된 뒤에 클라이언트/서버 어느 쪽을 고칠지 정한다
+
 ### 여전히 확인하지 못한 것
 
-- **실제 발송·수신은 검증되지 않았다.** 서버도 "기기 토큰이 없어 보낼 대상이 없었고
-  포트 스텁 수준까지만 확인했다"고 적었다. 실기기에 Firebase 설정 파일을 넣고 토큰이
-  등록된 뒤에야 양쪽이 함께 확인할 수 있다
-- 포그라운드에서 알림이 실제로 뜨는지(R15 개정)는 OS 동작이라 단위 테스트로 확인할 수
-  없다(§10에 이미 적힌 대로 테스트를 만들지 않았다). iOS는 특히 미확인이다 — 시스템이
-  띄우는 경로라 Android와 코드가 다르다
-- Android 채널 2개가 실제로 생기는지, 딥링크가 실제 알림 탭으로 도는지도 실기기
-  확인이 필요하다
+- **딥링크가 실제 알림 탭으로 도는지** 양쪽 모두 미확인이다. 순수 함수
+  (`PushDestination.tryParse`)와 게이트 판정은 단위 테스트로 고정했으나, 실제 탭 →
+  목적지 이동은 확인하지 못했다
+- **설정 화면 토글**(R19)도 실기기에서 열어 보지 않았다
+- iOS 포그라운드는 위 §10.2 참조
 
 ### 계약과 다르게 쓴 곳
 
