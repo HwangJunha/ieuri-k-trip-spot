@@ -117,11 +117,11 @@ final class PushTokenRefreshesProvider
 String _$pushTokenRefreshesHash() =>
     r'970641f12953c0caf6b2414cbb2c6a72a935aa0a';
 
-/// 앱 전체에 한 번 하는 알림 준비 — Android 채널 2개 생성과 포그라운드 표시 억제
+/// 앱 전체에 한 번 하는 알림 준비 — Android 채널 2개 생성과 포그라운드 알림 표시
 /// (설계 §5·§6).
 ///
-/// **인증과 무관하다.** 로그인하지 않아도 채널은 있어야 하고, 배너를 띄우지 않는 것은
-/// 앱 전체 설정이다. 그래서 등록 흐름(R1)이 아니라 별도 provider로 둔다.
+/// **인증과 무관하다.** 로그인하지 않아도 채널은 있어야 하고, 표시 설정은 앱 전체
+/// 설정이다. 그래서 등록 흐름(R1)이 아니라 별도 provider로 둔다.
 ///
 /// 실패는 서비스 구현이 이미 삼킨다 — 채널이 없으면 Android에서 알림이 표시되지 않을
 /// 뿐 앱은 정상 동작한다.
@@ -129,11 +129,11 @@ String _$pushTokenRefreshesHash() =>
 @ProviderFor(pushNotificationSetup)
 const pushNotificationSetupProvider = PushNotificationSetupProvider._();
 
-/// 앱 전체에 한 번 하는 알림 준비 — Android 채널 2개 생성과 포그라운드 표시 억제
+/// 앱 전체에 한 번 하는 알림 준비 — Android 채널 2개 생성과 포그라운드 알림 표시
 /// (설계 §5·§6).
 ///
-/// **인증과 무관하다.** 로그인하지 않아도 채널은 있어야 하고, 배너를 띄우지 않는 것은
-/// 앱 전체 설정이다. 그래서 등록 흐름(R1)이 아니라 별도 provider로 둔다.
+/// **인증과 무관하다.** 로그인하지 않아도 채널은 있어야 하고, 표시 설정은 앱 전체
+/// 설정이다. 그래서 등록 흐름(R1)이 아니라 별도 provider로 둔다.
 ///
 /// 실패는 서비스 구현이 이미 삼킨다 — 채널이 없으면 Android에서 알림이 표시되지 않을
 /// 뿐 앱은 정상 동작한다.
@@ -141,11 +141,11 @@ const pushNotificationSetupProvider = PushNotificationSetupProvider._();
 final class PushNotificationSetupProvider
     extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
     with $FutureModifier<void>, $FutureProvider<void> {
-  /// 앱 전체에 한 번 하는 알림 준비 — Android 채널 2개 생성과 포그라운드 표시 억제
+  /// 앱 전체에 한 번 하는 알림 준비 — Android 채널 2개 생성과 포그라운드 알림 표시
   /// (설계 §5·§6).
   ///
-  /// **인증과 무관하다.** 로그인하지 않아도 채널은 있어야 하고, 배너를 띄우지 않는 것은
-  /// 앱 전체 설정이다. 그래서 등록 흐름(R1)이 아니라 별도 provider로 둔다.
+  /// **인증과 무관하다.** 로그인하지 않아도 채널은 있어야 하고, 표시 설정은 앱 전체
+  /// 설정이다. 그래서 등록 흐름(R1)이 아니라 별도 provider로 둔다.
   ///
   /// 실패는 서비스 구현이 이미 삼킨다 — 채널이 없으면 Android에서 알림이 표시되지 않을
   /// 뿐 앱은 정상 동작한다.
@@ -175,7 +175,7 @@ final class PushNotificationSetupProvider
 }
 
 String _$pushNotificationSetupHash() =>
-    r'13162d05e24afbc4907e79325e11c72319b9b801';
+    r'3ee65fb87f296f55a6c11f695836be9727e40844';
 
 /// 앱이 **종료 상태**에서 알림 탭으로 기동된 경우의 목적지(R17). 그런 경우가 아니면
 /// null이다.

@@ -111,6 +111,16 @@ class PushRegistrationController extends _$PushRegistrationController {
   /// **세션이 사라지기 전에 불러야 한다** — `deleteDeviceToken`이 인증을 요구하므로
   /// 순서가 뒤집히면 실패한다(설계 §3.2).
   Future<void> unregister() async {
+    final SentRegistrationStore sent = ref.read(sentRegistrationStoreProvider);
+    // **보낸 적이 없으면 해제할 것도 없다.** 등록되지 않은 기기에 대고
+    // `deleteDeviceToken`을 부르면 없는 것을 지우려는 왕복이 생기고, 세션이 이미
+    // 만료된 로그아웃 경로(부팅 시 리프레시 거부 등)에서는 그것이 `UNAUTHENTICATED`로
+    // 실패한다 — 실기기 첫 기동에서 실제로 관측됐다.
+    if (!sent.hasRegistration) {
+      state = PushRegistrationOutcome.unregistered;
+      return;
+    }
+
     final String deviceId = await ref
         .read(deviceIdStoreProvider)
         .readOrCreate();
@@ -122,7 +132,7 @@ class PushRegistrationController extends _$PushRegistrationController {
     } finally {
       // **지문은 반드시 지운다.** 남겨 두면 다음 로그인에서 "안 바뀌었다"고 판단해
       // 등록을 건너뛰고, 그 계정은 알림을 영영 못 받는다.
-      await ref.read(sentRegistrationStoreProvider).clear();
+      await sent.clear();
       state = PushRegistrationOutcome.unregistered;
     }
   }

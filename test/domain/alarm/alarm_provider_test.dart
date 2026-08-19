@@ -253,6 +253,7 @@ void main() {
       final ProviderContainer container = await _container(
         repo: repo,
         deviceId: FakeDeviceIdStore('device-9'),
+        sent: FakeSentRegistrationStore()..saved = 'previously-registered',
       );
 
       await container
@@ -260,6 +261,31 @@ void main() {
           .unregister();
 
       expect(repo.deletedDeviceIds, <String>['device-9']);
+    });
+
+    // 실기기 첫 기동에서 관측된 문제: 저장된 세션이 만료된 채 로그아웃 경로를 타면
+    // 등록된 적 없는 기기에 대고 해제를 시도해 UNAUTHENTICATED로 실패했다.
+    test('등록한 적이 없으면 해제를 시도하지 않는다', () async {
+      final FakeAlarmRepository repo = FakeAlarmRepository();
+      final ProviderContainer container = await _container(
+        repo: repo,
+        sent: FakeSentRegistrationStore(),
+      );
+
+      await container
+          .read(pushRegistrationControllerProvider.notifier)
+          .unregister();
+
+      expect(
+        repo.deletedDeviceIds,
+        isEmpty,
+        reason: '없는 것을 지우려는 왕복이고, 만료 세션에서는 실패까지 남긴다',
+      );
+      expect(
+        container.read(pushRegistrationControllerProvider),
+        PushRegistrationOutcome.unregistered,
+        reason: '해제할 것이 없는 것도 해제된 상태다',
+      );
     });
 
     test('해제가 실패해도 지문은 지운다', () async {

@@ -15,6 +15,13 @@ abstract interface class SentRegistrationStore {
   /// [digest]가 직전에 적어 둔 것과 다른지 판정한다. 적은 적이 없으면 참이다.
   bool hasChanged(String digest);
 
+  /// 이 기기가 한 번이라도 등록을 보낸 적이 있는지.
+  ///
+  /// 보낸 적이 없으면 해제할 것도 없다 — 그때 `deleteDeviceToken`을 부르면 서버에
+  /// 없는 것을 지우려는 왕복이 생기고, 세션이 이미 만료된 상황에서는 그것이
+  /// `UNAUTHENTICATED`로 실패한다(실기기에서 실제로 관측됐다).
+  bool get hasRegistration;
+
   Future<void> write(String digest);
 
   /// 로그아웃으로 등록을 해제했을 때 지운다 — 다음 로그인에서 반드시 다시 보내야 한다.
@@ -35,6 +42,12 @@ class SharedPreferencesSentRegistrationStore implements SentRegistrationStore {
     final String? saved = _prefs.getString(_key);
     if (saved == null || saved.isEmpty) return true;
     return saved != digest;
+  }
+
+  @override
+  bool get hasRegistration {
+    final String? saved = _prefs.getString(_key);
+    return saved != null && saved.isNotEmpty;
   }
 
   @override

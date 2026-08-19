@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io' show Platform;
 
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -64,12 +66,42 @@ class FcmMessagingService implements PushMessagingService {
   @override
   Stream<String> tokenRefreshes() => _messaging.onTokenRefresh;
 
+  /// 포그라운드에서 띄운 로컬 알림의 탭을 [notificationTaps]로 합류시키는 통로.
+  ///
+  /// FCM의 `onMessageOpenedApp`은 **백그라운드에서 깨어난 경우만** 흘린다. 포그라운드
+  /// 알림은 우리가 직접 띄운 것이라 탭도 우리가 받아야 하는데, 사용자에게는 둘이 같은
+  /// 동작이므로 목적지 스트림은 하나로 둔다.
+  final StreamController<PushDestination> _localTaps =
+      StreamController<PushDestination>.broadcast();
+
   @override
-  Stream<PushDestination> notificationTaps() =>
-      FirebaseMessaging.onMessageOpenedApp
-          .map(_destinationOf)
-          .where((PushDestination? d) => d != null)
-          .cast<PushDestination>();
+  Stream<PushDestination> notificationTaps() {
+    // 백그라운드 탭과 포그라운드 알림 탭을 한 줄기로 합친다. `async` 패키지의
+    // `StreamGroup`을 쓰지 않고 손으로 합치는 이유는 의존을 하나 더 들이지 않기
+    // 위해서다 — 합칠 스트림이 둘뿐이라 이 정도면 충분하다.
+    final StreamController<PushDestination> merged =
+        StreamController<PushDestination>.broadcast();
+    final List<StreamSubscription<PushDestination>> subscriptions =
+        <StreamSubscription<PushDestination>>[];
+
+    merged.onListen = () {
+      subscriptions.addAll(<StreamSubscription<PushDestination>>[
+        FirebaseMessaging.onMessageOpenedApp
+            .map(_destinationOf)
+            .where((PushDestination? d) => d != null)
+            .cast<PushDestination>()
+            .listen(merged.add),
+        _localTaps.stream.listen(merged.add),
+      ]);
+    };
+    merged.onCancel = () async {
+      for (final StreamSubscription<PushDestination> s in subscriptions) {
+        await s.cancel();
+      }
+      subscriptions.clear();
+    };
+    return merged.stream;
+  }
 
   @override
   Future<PushDestination?> initialDestination() async {
@@ -102,36 +134,117 @@ class FcmMessagingService implements PushMessagingService {
   }
 
   @override
-  Future<void> suppressForegroundBanners() async {
+  Future<void> enableForegroundNotifications() async {
     try {
-      // **결과가 양쪽에서 같아야 한다**(설계 §5).
-      //
-      // iOS는 앱이 떠 있으면 시스템이 배너를 자동으로 띄우지 않는 것이 기본이라,
-      // 아래 값을 전부 false로 두는 것이 곧 "아무것도 하지 않음"이다.
-      //
-      // Android는 `onMessage`를 구독하지 않으면 포그라운드 메시지가 표시되지 않는다 —
-      // 이 클래스는 `onMessage`를 어디에서도 듣지 않으므로 그것으로 끝난다.
-      // 그래서 여기서 하는 일은 iOS 쪽 명시뿐이다.
+      // iOS: 앱이 떠 있을 때 시스템이 배너를 띄우도록 켠다. 이것만으로 끝이며
+      // 아래 `onMessage` 구독은 iOS에서 알림을 **두 번** 띄우지 않도록 Android로
+      // 한정한다.
       await _messaging.setForegroundNotificationPresentationOptions(
-        alert: false,
-        badge: false,
-        sound: false,
+        alert: true,
+        badge: true,
+        sound: true,
       );
+
+      // 탭 응답기를 먼저 붙인다 — 알림을 띄우기 전에 준비돼 있어야 한다.
+      await _local.initialize(
+        const InitializationSettings(
+          android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+          iOS: DarwinInitializationSettings(
+            // 권한은 이미 `permission_handler`가 받았다(SPEC-0001의 부팅 시퀀스).
+            // 여기서 다시 요청하면 다이얼로그가 두 번 뜬다.
+            requestAlertPermission: false,
+            requestBadgePermission: false,
+            requestSoundPermission: false,
+          ),
+        ),
+        onDidReceiveNotificationResponse: _onLocalNotificationTap,
+      );
+
+      if (!Platform.isAndroid) return;
+
+      // Android: 포그라운드 메시지는 시스템 트레이로 가지 않으므로 직접 띄운다.
+      _foregroundMessages ??= FirebaseMessaging.onMessage.listen(_showLocal);
     } on Object catch (error) {
-      if (kDebugMode) debugPrint('[Alarm] 포그라운드 표시 설정 실패: $error');
+      if (kDebugMode) debugPrint('[Alarm] 포그라운드 알림 설정 실패: $error');
     }
   }
+
+  StreamSubscription<RemoteMessage>? _foregroundMessages;
+
+  /// 포그라운드에서 받은 메시지를 로컬 알림으로 띄운다.
+  ///
+  /// **목적지를 payload에 실어 둔다.** 탭했을 때 어디로 갈지는 그 값으로 복원하며,
+  /// 백그라운드 탭과 같은 스트림으로 흘려보낸다.
+  Future<void> _showLocal(RemoteMessage message) async {
+    try {
+      final RemoteNotification? notification = message.notification;
+      // 서버는 `notification.title`만 싣고 본문은 비운다(서버 안내 §0).
+      final String title = notification?.title ?? '';
+      if (title.isEmpty) return;
+
+      final Map<String, String> data = _stringData(message);
+      final AndroidNotificationChannel channel = _channelFor(data['type']);
+
+      await _local.show(
+        // 같은 대화의 알림이 쌓이지 않도록 목적지를 id로 접는다 — 새 메시지가
+        // 오면 같은 자리를 덮어쓴다.
+        (data['conversationId'] ?? data['questionId'] ?? '0').hashCode,
+        title,
+        notification?.body,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            channel.id,
+            channel.name,
+            channelDescription: channel.description,
+            importance: channel.importance,
+            priority: Priority.high,
+          ),
+        ),
+        payload: jsonEncode(data),
+      );
+    } on Object catch (error) {
+      if (kDebugMode) debugPrint('[Alarm] 포그라운드 알림 표시 실패: $error');
+    }
+  }
+
+  /// 로컬 알림 탭 → 목적지 스트림.
+  void _onLocalNotificationTap(NotificationResponse response) {
+    final String? payload = response.payload;
+    if (payload == null || payload.isEmpty) return;
+    try {
+      final Object? decoded = jsonDecode(payload);
+      if (decoded is! Map<String, dynamic>) return;
+      final PushDestination? destination = PushDestination.tryParse(
+        <String, String>{
+          for (final MapEntry<String, dynamic> e in decoded.entries)
+            if (e.value != null) e.key: e.value.toString(),
+        },
+      );
+      if (destination != null) _localTaps.add(destination);
+    } on FormatException {
+      // 깨진 payload는 버린다 — 앱이 죽는 것보다 알림 하나를 놓치는 편이 낫다.
+    }
+  }
+
+  /// 알림 종류에 맞는 채널. 모르는 종류는 질문·답변 쪽으로 보낸다 — DM 채널은
+  /// 중요도가 높아 엉뚱한 알림을 그리로 보내면 더 시끄럽다.
+  AndroidNotificationChannel _channelFor(String? type) =>
+      type == PushNotificationType.dm.wireName
+      ? _messageChannel
+      : _spotQaChannel;
 
   /// FCM 데이터 페이로드에서 목적지를 복원한다.
   ///
   /// 값이 전부 문자열이라(FCM 데이터 메시지 제약) `Map<String, String>`으로 좁혀
   /// 순수 함수인 [PushDestination.tryParse]에 넘긴다. 복원할 수 없으면 null이고,
   /// 호출부가 기본 착지점으로 보낸다(AC16.4).
-  PushDestination? _destinationOf(RemoteMessage message) {
-    final Map<String, String> data = <String, String>{
-      for (final MapEntry<String, dynamic> e in message.data.entries)
-        if (e.value != null) e.key: e.value.toString(),
-    };
-    return PushDestination.tryParse(data);
-  }
+  PushDestination? _destinationOf(RemoteMessage message) =>
+      PushDestination.tryParse(_stringData(message));
+
+  /// FCM 데이터를 `Map<String, String>`으로 좁힌다. 값이 전부 문자열이라(데이터 메시지
+  /// 제약) 손실이 없다.
+  Map<String, String> _stringData(RemoteMessage message) => <String, String>{
+    for (final MapEntry<String, dynamic> e in message.data.entries)
+      if (e.value != null) e.key: e.value.toString(),
+  };
 }

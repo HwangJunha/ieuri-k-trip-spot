@@ -27,10 +27,10 @@ abstract interface class PushMessagingService {
   /// 다시 부르는 것이다 — 갱신 전용 연산이 없다(설계 §8).
   Stream<String> tokenRefreshes();
 
-  /// 백그라운드에서 알림을 탭해 앱이 깨어난 경우의 목적지.
+  /// 알림을 탭했을 때의 목적지.
   ///
-  /// 포그라운드 수신은 여기로 오지 않는다 — 포그라운드에서는 아무것도 하지 않는다
-  /// (R15·AC15.2).
+  /// 백그라운드에서 깨어난 경우와, 포그라운드에서 띄운 알림을 탭한 경우가 모두
+  /// 여기로 온다 — 사용자에게는 같은 동작이라 목적지 처리도 하나여야 한다.
   Stream<PushDestination> notificationTaps();
 
   /// 앱이 **종료 상태**에서 알림 탭으로 기동된 경우의 목적지. 그런 경우가 아니면
@@ -41,12 +41,18 @@ abstract interface class PushMessagingService {
   /// 않으므로 필수다. iOS에는 채널 개념이 없어 아무것도 하지 않는다.
   Future<void> ensureChannels();
 
-  /// 포그라운드 표시를 끈다(R15).
+  /// 포그라운드에서도 알림을 표시하도록 준비한다.
   ///
-  /// iOS는 앱이 떠 있으면 시스템이 배너를 자동으로 띄우지 않으므로 할 일이 없고,
-  /// Android는 반대라 포그라운드 메시지를 가로채 표시하지 않도록 해야 한다. **결과가
-  /// 양쪽에서 같아야 한다**(설계 §5).
-  Future<void> suppressForegroundBanners();
+  /// **R15를 뒤집은 결과다(사용자 결정, 2026-08-19).** 원래 스펙은 "홈 배지가 이미
+  /// 도착을 알린다"는 근거로 포그라운드 배너를 띄우지 않기로 했으나, 실기기 확인에서
+  /// **알림을 놓치기 쉽다**는 판단이 나와 전부 띄우는 쪽으로 바꿨다(설계 §5 개정).
+  ///
+  /// 플랫폼별로 하는 일이 다르지만 **결과는 같아야 한다.**
+  /// - iOS: 앱이 떠 있으면 시스템이 배너를 자동으로 띄우지 않는 것이 기본이라,
+  ///   표시 옵션을 켜 주어야 한다
+  /// - Android: 포그라운드 메시지가 시스템 트레이로 가지 않으므로, 앱이 직접
+  ///   받아서 로컬 알림으로 띄워야 한다
+  Future<void> enableForegroundNotifications();
 }
 
 /// Firebase가 아직 배선되지 않은 동안 쓰는 구현.
@@ -85,7 +91,7 @@ class UnavailablePushMessagingService implements PushMessagingService {
   Future<void> ensureChannels() async {}
 
   @override
-  Future<void> suppressForegroundBanners() async {}
+  Future<void> enableForegroundNotifications() async {}
 }
 
 /// 이 기기의 플랫폼. 서버가 발송 페이로드 형식을 가르는 데 쓴다(계약).

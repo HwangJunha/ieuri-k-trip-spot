@@ -107,6 +107,9 @@ class FakeSentRegistrationStore implements SentRegistrationStore {
   bool hasChanged(String digest) => saved != digest;
 
   @override
+  bool get hasRegistration => saved != null && saved!.isNotEmpty;
+
+  @override
   Future<void> write(String digest) async => saved = digest;
 
   @override
@@ -130,7 +133,7 @@ class FakePushMessagingService implements PushMessagingService {
   final StreamController<String> refreshes = StreamController<String>.broadcast();
 
   int channelCalls = 0;
-  int suppressCalls = 0;
+  int foregroundSetupCalls = 0;
 
   @override
   Future<String?> token() async => issuedToken;
@@ -148,7 +151,7 @@ class FakePushMessagingService implements PushMessagingService {
   Future<void> ensureChannels() async => channelCalls++;
 
   @override
-  Future<void> suppressForegroundBanners() async => suppressCalls++;
+  Future<void> enableForegroundNotifications() async => foregroundSetupCalls++;
 
   Future<void> dispose() async {
     await taps.close();

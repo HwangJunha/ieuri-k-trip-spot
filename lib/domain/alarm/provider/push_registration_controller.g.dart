@@ -294,7 +294,7 @@ final class PushRegistrationControllerProvider
 }
 
 String _$pushRegistrationControllerHash() =>
-    r'1bff004102066f4de111466c154636ec67479aac';
+    r'9696c52cd67b8e4e533a79271f68af5c45cb4e6c';
 
 /// 기기 푸시 등록의 수명주기(SPEC-0028 R1·R2·R20).
 ///
