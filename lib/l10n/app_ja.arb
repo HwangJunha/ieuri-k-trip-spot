@@ -843,5 +843,14 @@
   "spotQaMyQuestionsSignInBody": "ログインすると、自分の質問と回答を確認できます。",
   "spotQaPhotoUploadFailed": "{count, plural, =1{写真1枚をアップロードできませんでした。} other{写真{count}枚をアップロードできませんでした。}}",
   "spotQaUnresolveAction": "未解決",
-  "spotQaUnresolveFailed": "戻せませんでした。しばらくしてからお試しください。"
+  "spotQaUnresolveFailed": "戻せませんでした。しばらくしてからお試しください。",
+  "alarmSettingsTitle": "通知",
+  "settingsNotifications": "通知",
+  "alarmCategoryMessage": "メッセージ",
+  "alarmCategoryMessageDescription": "新しいダイレクトメッセージ",
+  "alarmCategorySpotQa": "質問・回答",
+  "alarmCategorySpotQaDescription": "自分の質問への回答と、自分の回答への返信",
+  "alarmOsDisabledNotice": "端末の設定でこのアプリの通知がオフになっているため、通知は届きません。",
+  "alarmSettingsLoadFailed": "通知設定を読み込めませんでした。",
+  "alarmSettingsSaveFailed": "保存できませんでした。もう一度お試しください。"
 }

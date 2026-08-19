@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../common/localization/app_language.dart';
 import '../../../common/localization/locale_controller.dart';
+import '../../../common/navigation/alarm_routes.dart';
 import '../../../common/navigation/dm_routes.dart';
 import '../../../common/navigation/settings_routes.dart';
 import '../../../common/network/media_cdn.dart';
@@ -126,6 +127,13 @@ class SettingsScreen extends ConsumerWidget {
               title: l10n.settingsLanguage,
               value: language.nativeName,
               onTap: () => context.pushNamed(PreferencesScreen.routeName),
+            ),
+            // 알림 수신 설정(SPEC-0028). 화면은 `domain/alarm`이 소유하므로 이름만
+            // 공용 상수로 부른다 — 여기서 alarm의 view를 import하면 기능 간 의존이다.
+            SettingsTile(
+              icon: Icons.notifications_none,
+              title: l10n.settingsNotifications,
+              onTap: () => context.pushNamed(notificationSettingsRouteName),
             ),
 
             SettingsSectionHeader(l10n.settingsSectionLegal),

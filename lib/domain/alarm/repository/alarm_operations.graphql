@@ -1,0 +1,66 @@
+# SPEC-0028 FCM 푸시 알림이 쓰는 오퍼레이션. 스키마 조각은 `alarm_schema.graphql`이며
+# 생성 타입은 repository 밖으로 나가지 않는다(CLAUDE.md §3).
+
+# 기기 토큰 등록(R1). **업서트다** — 등록·토큰 로테이션·언어 변경이 전부 이 한 연산의
+# 재호출이다. 갱신 전용 연산이 없다.
+#
+# 실패해도 사용자에게 노출하지 않고 로그만 남긴다(R12·AC12.3).
+mutation RegisterDeviceToken($input: RegisterDeviceTokenInput!) {
+  registerDeviceToken(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+# 로그아웃 시 해제(R2). 멱등이라 이미 없는 토큰을 지워도 성공이다.
+#
+# **세션이 사라지기 전에 보내야 한다** — 이 뮤테이션이 인증을 요구하므로 순서가
+# 뒤집히면 실패한다(설계 §3.2).
+mutation DeleteDeviceToken($input: DeleteDeviceTokenInput!) {
+  deleteDeviceToken(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+# 카테고리별 수신 설정 조회(R19). 루트 쿼리를 새로 두지 않고 이미 있는 `me`로 읽는다.
+#
+# 서버가 두 카테고리를 **항상** 돌려준다 — 한 번도 설정을 바꾼 적 없는 회원에게도
+# 기본값 true로 두 항목이 온다(AC19.1). 별도의 초기화 호출이 필요 없다.
+query NotificationPreferences {
+  me {
+    notificationPreferences {
+      category
+      enabled
+    }
+  }
+}
+
+# 카테고리 하나를 토글한다(R19). 한 번에 한 카테고리를 바꾼다.
+#
+# 응답이 **두 카테고리 전체**를 돌려주므로 이 배열로 캐시를 갈아 끼우면 재조회가
+# 필요 없다(AC19.3).
+mutation UpdateNotificationPreference(
+  $input: UpdateNotificationPreferenceInput!
+) {
+  updateNotificationPreference(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    notificationPreferences {
+      category
+      enabled
+    }
+  }
+}

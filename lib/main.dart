@@ -11,6 +11,9 @@ import 'common/storage/app_preferences.dart';
 import 'common/storage/secure_storage.dart';
 import 'common/theme/app_theme.dart';
 import 'common/config/map_sdk_initializer.dart';
+import 'common/config/push_initializer.dart';
+import 'domain/alarm/component/push_deep_link_gate.dart';
+import 'domain/alarm/component/push_registration_gate.dart';
 import 'domain/auth/repository/sns_initializer.dart';
 import 'l10n/gen/app_localizations.dart';
 import 'router/app_router.dart';
@@ -18,12 +21,13 @@ import 'router/app_router.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SnsInitializer.ensureInitialized();
-  // 지도 SDK 초기화와 환경설정 로딩은 서로 독립이라 함께 기다린다. 키가 없으면
-  // 초기화가 조용히 건너뛰어지고 지도 화면만 안내를 띄운다 — 앱 기동은 막지
-  // 않는다(설계 §10).
-  final (SharedPreferences prefs, _) = await (
+  // 지도 SDK·푸시 초기화와 환경설정 로딩은 서로 독립이라 함께 기다린다. 키나 설정
+  // 파일이 없으면 초기화가 조용히 건너뛰어지고 해당 화면만 안내를 띄운다 — 앱 기동은
+  // 막지 않는다(설계 §10, SPEC-0028 §3.1).
+  final (SharedPreferences prefs, _, _) = await (
     SharedPreferences.getInstance(),
     MapSdkInitializer.ensureInitialized(),
+    PushInitializer.ensureInitialized(),
   ).wait;
 
   runApp(
@@ -62,8 +66,15 @@ class KTripSpotApp extends ConsumerWidget {
       ],
       // 라우팅되는 화면들 위에서 최초 실행 권한 시퀀스(SPEC-0001)를 구동한다: 어떤
       // 화면이 떠 있든 무관하게, 사전설명 시트와 앱 resume 재조회를 담을 안정적인 자리.
-      builder: (BuildContext context, Widget? child) =>
-          PermissionBootGate(child: child ?? const SizedBox.shrink()),
+      //
+      // 알림 게이트 둘도 같은 자리에 얹는다(SPEC-0028 §3.2·§3.3) — 화면을 그리지 않고
+      // 인증 전이와 알림 탭만 듣는다. **권한 게이트 안쪽에 둔다**: 등록은 권한 판정이
+      // 끝난 뒤라야 의미가 있고, 권한 시퀀스가 먼저 돌아야 `check`가 실제 값을 준다.
+      builder: (BuildContext context, Widget? child) => PermissionBootGate(
+        child: PushRegistrationGate(
+          child: PushDeepLinkGate(child: child ?? const SizedBox.shrink()),
+        ),
+      ),
       routerConfig: router,
     );
   }

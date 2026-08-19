@@ -843,5 +843,14 @@
   "spotQaMyQuestionsSignInBody": "登录后即可查看你的提问和回答。",
   "spotQaPhotoUploadFailed": "{count, plural, =1{有 1 张照片上传失败。} other{有 {count} 张照片上传失败。}}",
   "spotQaUnresolveAction": "未解决",
-  "spotQaUnresolveFailed": "撤销失败，请稍后再试。"
+  "spotQaUnresolveFailed": "撤销失败，请稍后再试。",
+  "alarmSettingsTitle": "通知",
+  "settingsNotifications": "通知",
+  "alarmCategoryMessage": "訊息",
+  "alarmCategoryMessageDescription": "新的私訊",
+  "alarmCategorySpotQa": "問題與回答",
+  "alarmCategorySpotQaDescription": "你的問題收到的回答，以及你的回答收到的回覆",
+  "alarmOsDisabledNotice": "裝置設定中已關閉此應用程式的通知，因此不會收到任何通知。",
+  "alarmSettingsLoadFailed": "無法載入通知設定。",
+  "alarmSettingsSaveFailed": "無法儲存，請再試一次。"
 }

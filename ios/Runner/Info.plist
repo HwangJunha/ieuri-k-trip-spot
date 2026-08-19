@@ -105,5 +105,11 @@
 			<string>kakaokompassauth</string>
 			<string>kakaolink</string>
 		</array>
+		<!-- FCM 푸시(SPEC-0028). 앱이 백그라운드일 때 도착한 알림을 시스템이 전달할 수
+		     있게 한다. 없으면 백그라운드 수신이 조용히 누락된다. -->
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>remote-notification</string>
+		</array>
 	</dict>
 </plist>

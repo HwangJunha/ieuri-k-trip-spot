@@ -58,6 +58,41 @@ Lower number wins: **domain boundaries beat brevity; brevity beats everything el
 
 ---
 
+## 1.4 No answers without evidence
+
+**If you don't know, look it up. Never present a guess as an explanation.**
+
+This applies above all to **platform, SDK, and third-party library behavior**. That behavior is
+not written in this repository, so no amount of reading the code reveals it — and "it probably
+works like this" is dangerous precisely because it is half right. Acting on a wrong guess edits
+working code while the real cause survives untouched.
+
+**Only two things count as evidence.**
+
+1. **Official documentation** — read it directly with `WebFetch`
+2. **Web search** — issue trackers, release notes, specs found via `WebSearch`
+
+Answer only *after* actually reading one of them. If you haven't, say you will check, then check.
+Cite the source in the answer — whoever verifies the judgment later must be able to open the same
+page.
+
+**These are not evidence:**
+
+- Memory, common wisdom, "this is usually how it works"
+- Behavior observed on another platform (Android doing it does not mean iOS does)
+- Assuming a log line that isn't there — only the lines actually printed are evidence
+
+**Measure what can be measured.** If logs or a reproduction can narrow the problem before you go
+reading, do that first (same rule as §1.5, "say what you measured"). But once narrowed, **stating
+the cause** still requires one of the two sources above.
+
+> **Why this rule exists (2026-08-20).** In SPEC-0028 the cause of iOS foreground notifications
+> not arriving was answered by guesswork three times — "the system displays it automatically",
+> "just turn on the presentation option", "the delegate is missing". Code was changed each time
+> and every attempt failed. Only after the user demanded evidence was the documentation searched,
+> which surfaced that messages carrying a `notification` field bypass `onMessage` on iOS
+> (flutterfire#1644). **Searching first would have settled it in one pass.**
+
 ## 1.5 Working speed
 
 Most wasted time in this repo is not thinking or building — it is **redoing work that failed the

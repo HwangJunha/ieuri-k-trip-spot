@@ -2000,5 +2000,14 @@
     }
   },
   "spotQaUnresolveAction": "미해결",
-  "spotQaUnresolveFailed": "되돌리지 못했습니다. 잠시 후 다시 시도해 주세요."
+  "spotQaUnresolveFailed": "되돌리지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  "alarmSettingsTitle": "알림",
+  "settingsNotifications": "알림",
+  "alarmCategoryMessage": "메시지",
+  "alarmCategoryMessageDescription": "새 다이렉트 메시지",
+  "alarmCategorySpotQa": "질문·답변",
+  "alarmCategorySpotQaDescription": "내 질문에 달린 답변과 내 답변에 달린 답글",
+  "alarmOsDisabledNotice": "기기 설정에서 이 앱의 알림이 꺼져 있어 알림이 오지 않습니다.",
+  "alarmSettingsLoadFailed": "알림 설정을 불러오지 못했습니다.",
+  "alarmSettingsSaveFailed": "저장하지 못했습니다. 다시 시도해 주세요."
 }
