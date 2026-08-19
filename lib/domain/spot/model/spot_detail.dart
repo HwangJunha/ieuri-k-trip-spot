@@ -1,3 +1,4 @@
+import '../../../common/location/coordinates.dart';
 import 'copyright_type.dart';
 import 'spot_image.dart';
 import 'spot_info_item.dart';
@@ -22,6 +23,7 @@ class SpotDetail {
     required this.thumbnailImageUrl,
     required this.copyright,
     required this.attributionText,
+    required this.coordinates,
     required this.gallery,
     required this.likeCount,
     this.overview,
@@ -60,6 +62,14 @@ class SpotDetail {
 
   /// 저작권 표준 문구 전문(AttributionBlock에 전문 노출, AC-28).
   final String attributionText;
+
+  /// 이 장소의 위치(SPEC-0027 미니 지도). 서버의 `mapX`(경도)·`mapY`(위도)가 둘 다
+  /// non-null이라 **항상 존재한다** — 지도 섹션은 좌표 부재를 다루지 않는다.
+  ///
+  /// 서버 필드명이 직관과 반대(mapX=경도, mapY=위도)라 뒤바뀜 위험이 있는데, 그
+  /// 변환은 repository 매핑 한 곳에만 두고 이후로는 이름이 분명한 이 값 객체로만
+  /// 다룬다.
+  final Coordinates coordinates;
 
   /// 갤러리(TourAPI 반환 순서, 최대 10장). 없으면 빈 배열.
   final List<SpotImage> gallery;
@@ -184,6 +194,7 @@ class SpotDetail {
       other.tel == tel &&
       other.copyright == copyright &&
       other.attributionText == attributionText &&
+      other.coordinates == coordinates &&
       _listEquals(other.gallery, gallery) &&
       other.likeCount == likeCount &&
       other.intro == intro &&
@@ -201,6 +212,7 @@ class SpotDetail {
     tel,
     copyright,
     attributionText,
+    coordinates,
     Object.hashAll(gallery),
     likeCount,
     intro,
@@ -219,6 +231,7 @@ class SpotDetail {
         thumbnailImageUrl: thumbnailImageUrl,
         copyright: copyright,
         attributionText: attributionText,
+        coordinates: coordinates,
         gallery: gallery,
         likeCount: likeCount,
         overview: overview,

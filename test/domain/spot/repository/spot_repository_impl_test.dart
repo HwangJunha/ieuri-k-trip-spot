@@ -98,6 +98,9 @@ Map<String, dynamic> _spotDetailPayload() => <String, dynamic>{
     'tel': null,
     'copyright': 'TYPE1',
     'attributionText': 'KTO',
+    // SPEC-0027 미니 지도 좌표. mapX가 경도, mapY가 위도다.
+    'mapX': 126.9769,
+    'mapY': 37.5759,
     'gallery': <dynamic>[],
     'likeCount': 0,
     'intro': null,
@@ -415,6 +418,9 @@ void main() {
               'tel': '02-000',
               'copyright': 'TYPE1',
               'attributionText': 'Source: KTO',
+              // SPEC-0027 미니 지도 좌표. mapX가 경도, mapY가 위도다.
+              'mapX': 126.9769,
+              'mapY': 37.5759,
               'gallery': <dynamic>[
                 <String, dynamic>{
                   'imageUrl': 'https://img/g1.jpg',
@@ -483,6 +489,9 @@ void main() {
               'tel': null,
               'copyright': 'UNSPECIFIED',
               'attributionText': 'KTO',
+              // SPEC-0027 미니 지도 좌표. mapX가 경도, mapY가 위도다.
+              'mapX': 126.9769,
+              'mapY': 37.5759,
               'gallery': <dynamic>[],
               'likeCount': 0,
               // 운영 정보가 아예 없는 카테고리는 intro 자체가 null이다.
@@ -568,6 +577,9 @@ void main() {
           'tel': null,
           'copyright': 'TYPE1',
           'attributionText': 'KTO',
+          // SPEC-0027 미니 지도 좌표. mapX가 경도, mapY가 위도다.
+          'mapX': 126.9769,
+          'mapY': 37.5759,
           'gallery': <dynamic>[],
           'likeCount': 0,
           'intro': null,
@@ -1085,6 +1097,9 @@ Map<String, dynamic> _detailData({
     'tel': null,
     'copyright': 'TYPE1',
     'attributionText': 'KTO',
+    // SPEC-0027 미니 지도 좌표. mapX가 경도, mapY가 위도다.
+    'mapX': 126.9769,
+    'mapY': 37.5759,
     'gallery': gallery,
     'likeCount': 0,
     'intro': null,

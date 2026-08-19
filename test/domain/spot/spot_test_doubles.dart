@@ -379,6 +379,12 @@ SpotDetail detailSpot(
   // 기본은 "운영 정보·이용안내 없음" — 이 섹션들을 검증하는 테스트만 값을 넘긴다.
   SpotIntro? intro,
   List<SpotInfoItem> infoItems = const <SpotInfoItem>[],
+  // 미니 지도(SPEC-0027)용 좌표. 서버가 non-null로 주므로 기본값을 둔다 —
+  // 지도를 검증하는 테스트만 값을 넘긴다.
+  Coordinates coordinates = const Coordinates(
+    latitude: 37.5665,
+    longitude: 126.9780,
+  ),
 }) => SpotDetail(
   id: id,
   title: title,
@@ -389,6 +395,7 @@ SpotDetail detailSpot(
   tel: tel,
   copyright: CopyrightType.type1,
   attributionText: 'Source: KTO',
+  coordinates: coordinates,
   gallery:
       gallery ??
       const <SpotImage>[
