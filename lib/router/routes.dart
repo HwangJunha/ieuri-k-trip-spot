@@ -125,10 +125,12 @@ List<RouteBase> buildRoutes() => <RouteBase>[
       child: SpotDetailView(
         contentId: state.pathParameters['id']!,
         initialThumbnailUrl: state.uri.queryParameters['thumb'],
-        // 어느 스와이프 피드에서 열렸는지(R11) — 그 피드의 **선택 집합**이다.
-        // 파라미터가 없으면 피드 밖에서 들어온 것이라 null이며, 그때는 소비할
-        // 카드 스택이 없다(직접 진입·검색·좋아요·지도).
-        feedCategory: _feedSelectionFrom(state.uri.queryParameters['feed']),
+        // 어느 스와이프 세션에서 열렸는지(R11) — 그 세션의 **카테고리 선택**이다.
+        // 파라미터가 아예 없으면 스와이프 밖에서 들어온 것이라 null이며, 그때는
+        // 소비할 카드 스택이 없다(직접 진입·검색·좋아요·지도).
+        swipeCategory: _swipeCategoryFrom(
+          state.uri.queryParameters['category'],
+        ),
       ),
       transitionDuration: const Duration(milliseconds: 300),
       reverseTransitionDuration: const Duration(milliseconds: 250),
@@ -411,8 +413,13 @@ Widget _slideUpFromBottom(
 /// 예전에는 Dart enum 이름을 되돌렸는데, `SpotCategory.values` 조회가 사라지면서
 /// 단순 문자열 파싱이 됐다 — 지도 마커가 서버 `code`를 싣고 라우터가 enum 이름과
 /// 비교해 **항상 폴백으로 떨어지던 어긋남**도 표기가 하나로 통일되며 사라졌다.
-SpotCategorySelection? _feedSelectionFrom(String? codes) {
-  if (codes == null || codes.isEmpty) return null;
+/// 스와이프 세션의 카테고리 선택을 되돌린다.
+///
+/// **파라미터 부재(null)와 빈 값('')은 다르다.** 부재는 스와이프 밖에서 들어온
+/// 것이고, 빈 값은 "전체"로 보던 세션이다 — 둘 다 null로 접었더니 전체로 보던
+/// 사용자가 좋아요를 눌러도 카드가 소비되지 않았다(SPEC-0020 회귀).
+SpotCategorySelection? _swipeCategoryFrom(String? codes) {
+  if (codes == null) return null;
   return SpotCategorySelection(
     codes.split(',').where((String c) => c.isNotEmpty).map(SpotCategory.ofCode),
   );

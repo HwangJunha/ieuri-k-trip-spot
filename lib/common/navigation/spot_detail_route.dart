@@ -36,22 +36,23 @@ const String searchRouteName = 'search';
 /// [thumbnailUrl]은 본문 조회를 기다리는 동안 같은 이미지를 그려 깜빡임을 없앤다
 /// (SPEC-0006 R8·AC-24). 없어도 오류가 아니다(AC-25).
 ///
-/// [feedCategory]는 **어느 피드에서 열렸는지**다(스와이프 세션의 선택 키). 스와이프
-/// 피드에서 열 때만 넘긴다 — 반응 후 소비할 카드 스택이 그쪽에만 있다(SPEC-0007 R11).
+/// [swipeCategory]는 **어느 스와이프 세션에서 열렸는지**다(그 세션의 카테고리
+/// 선택). 스와이프에서 열 때만 넘긴다 — 반응 후 소비할 카드 스택이 그쪽에만 있다
+/// (SPEC-0007 R11). 선택이 비어도(=전체) 유효한 값이라 빈 문자열을 그대로 싣는다.
 ///
 /// `push`이므로 돌아오면 호출한 화면이 그대로 살아 있다.
 void openSpotDetail(
   BuildContext context, {
   required String id,
   String? thumbnailUrl,
-  String? feedCategory,
+  String? swipeCategory,
 }) {
   context.pushNamed(
     spotDetailRouteName,
     pathParameters: <String, String>{'id': id},
     queryParameters: <String, String>{
       if (thumbnailUrl case final String value) 'thumb': value,
-      if (feedCategory case final String value) 'feed': value,
+      if (swipeCategory case final String value) 'category': value,
     },
   );
 }

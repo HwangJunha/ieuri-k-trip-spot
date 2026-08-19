@@ -82,37 +82,37 @@ void main() {
     expect(find.text('Direct'), findsOneWidget);
   });
 
-  testWidgets('feed 파라미터가 소비 대상 피드를 정한다 (R11)', (tester) async {
-    // feed는 **스와이프 피드의 선택 집합**이다 — 이 관광지의 카테고리가 아니다.
+  testWidgets('category 파라미터가 소비 대상 스와이프 세션을 정한다 (R11)', (tester) async {
+    // category는 **스와이프 세션의 선택 집합**이다 — 이 관광지의 카테고리가 아니다.
     // 콤마로 이은 코드가 그대로 세션 키가 된다.
     final repo = FakeSpotRepository(detail: detailSpot('c1'));
-    await _pumpRoute(tester, repo, '/spot/c1?feed=LODGING,RESTAURANT');
+    await _pumpRoute(tester, repo, '/spot/c1?category=LODGING,RESTAURANT');
 
     final SpotDetailView view = tester.widget<SpotDetailView>(
       find.byType(SpotDetailView),
     );
     expect(
-      view.feedCategory,
+      view.swipeCategory,
       SpotCategorySelection(const <SpotCategory>[catLodging, catRestaurant]),
     );
   });
 
-  testWidgets('feed의 코드 순서가 달라도 같은 세션을 가리킨다', (tester) async {
+  testWidgets('category의 코드 순서가 달라도 같은 세션을 가리킨다', (tester) async {
     // 선택 *순서*는 필터의 뜻을 바꾸지 않는다 — 순서가 키를 가르면 같은 필터가
     // 두 세션으로 갈라져 피드를 두 번 받는다.
     final repo = FakeSpotRepository(detail: detailSpot('c1'));
-    await _pumpRoute(tester, repo, '/spot/c1?feed=RESTAURANT,LODGING');
+    await _pumpRoute(tester, repo, '/spot/c1?category=RESTAURANT,LODGING');
 
     final SpotDetailView view = tester.widget<SpotDetailView>(
       find.byType(SpotDetailView),
     );
     expect(
-      view.feedCategory,
+      view.swipeCategory,
       SpotCategorySelection(const <SpotCategory>[catLodging, catRestaurant]),
     );
   });
 
-  testWidgets('feed 파라미터가 없으면 피드 밖 진입(null)이다 (R11)', (tester) async {
+  testWidgets('category 파라미터가 없으면 스와이프 밖 진입(null)이다 (R11)', (tester) async {
     // null이 유효한 값이다 — 검색·좋아요·지도·딥링크로 들어오면 소비할 카드
     // 스택이 없다. 기본값으로 떨어뜨리면 없던 세션을 새로 만든다.
     final repo = FakeSpotRepository(detail: detailSpot('c1'));
@@ -121,7 +121,7 @@ void main() {
     final SpotDetailView view = tester.widget<SpotDetailView>(
       find.byType(SpotDetailView),
     );
-    expect(view.feedCategory, isNull);
+    expect(view.swipeCategory, isNull);
   });
 
   testWidgets('상세 라우트는 아래→위 전환을 지정한다 (AC-17·AC-20·AC-22)', (tester) async {
