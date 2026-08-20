@@ -98,6 +98,7 @@ flutter:
 
   assets:
     - asset/icon/
+    - asset/geo/
 
   fonts:
     # Base multilingual family. Latin/KO glyphs from Noto Sans;
