@@ -245,9 +245,9 @@ void main() {
       // 재시도가 **다른 섹션을 건드리지 않았다**는 것이 이 테스트의 요지다(AC-20.2).
       // 축제 섹션은 한 번도 조회되지 않았다.
       expect(events.callCount, 0);
-      // Near you는 실패 1회 + 재시도 성공이다. 성공한 조회는 원문이 목표(10건)를
-      // 못 채워 번역본 보충이 뒤따르므로 2회다(SPEC-0019).
-      expect(repository.spotPageCallCount, 3);
+      // Near you는 실패 1회 + 재시도 성공 1회다. 섹션당 조회가 1회이므로
+      // 보충 조회가 붙지 않는다(SPEC-0029 AC-19.1).
+      expect(repository.spotPageCallCount, 2);
     });
   });
 
@@ -278,14 +278,14 @@ void main() {
     });
   });
 
-  // SPEC-0019 — 원문(hasOrigin: true)을 먼저 채우고, 목표에 모자라면 번역본
-  // (hasOrigin: false)으로 보충한다. 홈은 페이징이 없어 "끝에 도달"이라는 계기가
-  // 없으므로, 한 번에 목표 건수를 채우는 것이 유일한 노출 경로다.
-  group('원문 우선 · 번역본 보충', () {
-    test('원문이 모자라면 번역본으로 채운다', () async {
+  // SPEC-0029 AC-19.1 — 서버가 활성 언어의 장소만 주므로 섹션당 조회가 1회다.
+  // 원문을 먼저 채우고 번역본으로 보충하던 2단 조회가 사라졌다.
+  group('섹션당 조회 1회', () {
+    test('Near you는 한 번만 조회한다', () async {
+      // 결과가 목표(homeSectionSize=10)에 모자라도 보충 조회를 하지 않는다 —
+      // 그 지역에 활성 언어 장소가 둘뿐인 것이 정상 결과다.
       final repository = FakeSpotRepository(
         feed: <TouristSpot>[homeSpot('o1'), homeSpot('o2')],
-        translatedFeed: <TouristSpot>[homeSpot('t1'), homeSpot('t2')],
         pageSize: 10,
       );
       final container = makeContainer(spotRepository: repository);
@@ -294,46 +294,32 @@ void main() {
         nearbySpotsSectionProvider.future,
       );
 
-      // 원문이 앞, 번역본이 뒤 — 순서가 뒤집히면 원문 우선이 무의미하다.
-      expect(spots.map((TouristSpot s) => s.id), <String>[
-        'o1',
-        'o2',
-        't1',
-        't2',
-      ]);
-      expect(repository.requestedHasOrigin, <bool?>[true, false]);
+      expect(spots.map((TouristSpot s) => s.id), <String>['o1', 'o2']);
+      expect(repository.spotPageCallCount, 1);
     });
 
-    test('원문이 목표를 채우면 번역본을 조회하지 않는다', () async {
-      // 목표(homeSectionSize=10)를 원문만으로 채운다.
-      final repository = FakeSpotRepository(
-        feed: List<TouristSpot>.generate(10, (int i) => homeSpot('o$i')),
-        translatedFeed: <TouristSpot>[homeSpot('t1')],
-        pageSize: 10,
-      );
+    test('Popular도 한 번만 조회한다', () async {
+      final repository = FakeSpotRepository()
+        ..popular = <PopularSpot>[
+          PopularSpot(spot: homeSpot('p1'), likeCount: 7),
+        ];
       final container = makeContainer(spotRepository: repository);
 
-      final List<TouristSpot> spots = await container.read(
-        nearbySpotsSectionProvider.future,
-      );
+      await container.read(popularSpotsSectionProvider.future);
 
-      expect(spots, hasLength(10));
-      // 추가 왕복이 없다 — 대부분의 지역이 이 경로다.
-      expect(repository.requestedHasOrigin, <bool?>[true]);
-      expect(spots.map((TouristSpot s) => s.id), isNot(contains('t1')));
+      expect(repository.popularCallCount, 1);
     });
 
-    test('축제도 같은 규약으로 보충한다', () async {
-      final events = FakeEventRepository(festivals: <Festival>[festival('o1')])
-        ..translatedFestivals = <Festival>[festival('t1')];
+    test('축제도 한 번만 조회한다', () async {
+      final events = FakeEventRepository(festivals: <Festival>[festival('o1')]);
       final container = makeContainer(eventRepository: events);
 
       final List<Festival> items = await container.read(
         happeningNowEventsProvider.future,
       );
 
-      expect(items.map((Festival f) => f.id), <String>['o1', 't1']);
-      expect(events.requestedHasOrigin, <bool?>[true, false]);
+      expect(items.map((Festival f) => f.id), <String>['o1']);
+      expect(events.callCount, 1);
     });
   });
 }

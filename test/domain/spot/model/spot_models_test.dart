@@ -570,6 +570,50 @@ void main() {
     expect(SpotFailure.rateLimited.isSpotMissing, isFalse);
   });
 
+  // SPEC-0029 R-20 — "없다"와 "이 언어에서 못 본다"는 안내가 달라야 한다.
+  test('SPOT_NOT_FOUND_IN_LOCALE은 notFound와 다른 종류로 번역된다', () {
+    expect(
+      SpotFailure.fromQueryErrorCode('SPOT_NOT_FOUND_IN_LOCALE').kind,
+      SpotFailureKind.notFoundInLocale,
+    );
+    // 접두사가 겹치므로 SPOT_NOT_FOUND로 흘러가면 안 된다.
+    expect(
+      SpotFailure.fromQueryErrorCode('SPOT_NOT_FOUND').kind,
+      SpotFailureKind.notFound,
+    );
+    expect(
+      SpotFailure.fromQueryErrorCode('spot_not_found_in_locale').kind,
+      SpotFailureKind.notFoundInLocale,
+    );
+  });
+
+  test('isSpotMissingInLocale이 안내를 가른다', () {
+    // 안내 문구를 가르는 판정 — 언어를 바꾸면 볼 수 있는 장소인지.
+    expect(SpotFailure.notFoundInLocale.isSpotMissingInLocale, isTrue);
+    expect(SpotFailure.notFound.isSpotMissingInLocale, isFalse);
+    // 뮤테이션의 userErrors 형태로도 온다(reactToSpot·createPost 등).
+    expect(
+      const SpotFailure(
+        SpotFailureKind.userError,
+        code: 'SPOT_NOT_FOUND_IN_LOCALE',
+      ).isSpotMissingInLocale,
+      isTrue,
+    );
+  });
+
+  test('두 코드 모두 카드를 큐에서 걷어낸다', () {
+    // 스와이프 큐에서 빼는 판단에는 둘이 같은 결론이다 — 어느 쪽이든 지금 그 카드는
+    // 열리지 않으므로, 남겨 두면 같은 카드가 계속 돌아온다.
+    expect(SpotFailure.notFoundInLocale.isSpotMissing, isTrue);
+    expect(
+      const SpotFailure(
+        SpotFailureKind.userError,
+        code: 'SPOT_NOT_FOUND_IN_LOCALE',
+      ).isSpotMissing,
+      isTrue,
+    );
+  });
+
   test('fromQueryErrorCode falls back to network for unknown/null', () {
     expect(
       SpotFailure.fromQueryErrorCode('WHATEVER').kind,
@@ -710,12 +754,11 @@ void main() {
 
   test('isExhausted only when empty and no next page', () {
     expect(
-      // 번역본까지 다 받았을 때만 소진이다(SPEC-0019) — 원문이 끝난 것은 절반이다.
+      // SPEC-0029에서 원문/번역 두 구간이 사라져 소진 판정이 한 줄로 돌아왔다.
       const SwipeQueue(
         cards: <TouristSpot>[],
         loadedPage: 0,
         hasNextPage: false,
-        originExhausted: true,
       ).isExhausted,
       isTrue,
     );
@@ -749,34 +792,21 @@ void main() {
       cards: <TouristSpot>[_a],
       loadedPage: 2,
       hasNextPage: false,
-      originExhausted: true,
     );
     expect(done.nextPage, isNull);
   });
 
-  // SPEC-0019 — 원문 구간이 끝나면 번역본 구간으로 넘어간다. 번역본은 별개의 결과
-  // 집합이라 페이지를 0부터 다시 센다.
-  test('원문이 끝나면 번역본 0페이지로 넘어간다', () {
-    const SwipeQueue originDone = SwipeQueue(
+  // SPEC-0029 — 원문/번역 구간이 사라져 페이지 번호가 한 줄로 이어진다. 마지막
+  // 페이지를 받은 뒤 0으로 되감기던 전환점이 없다.
+  test('마지막 페이지 뒤에 되감기지 않는다', () {
+    const SwipeQueue lastPage = SwipeQueue(
       cards: <TouristSpot>[_a],
       loadedPage: 3,
       hasNextPage: false,
     );
 
-    expect(originDone.nextPage, 0, reason: '번역본은 처음부터 센다');
-    expect(originDone.nextHasOrigin, isFalse, reason: '다음 조회는 번역본이다');
-    expect(originDone.isExhausted, isFalse, reason: '아직 번역본이 남았다');
-  });
-
-  test('원문 구간에서는 nextHasOrigin이 true다', () {
-    const SwipeQueue inOrigin = SwipeQueue(
-      cards: <TouristSpot>[_a],
-      loadedPage: 1,
-      hasNextPage: true,
-    );
-
-    expect(inOrigin.nextHasOrigin, isTrue);
-    expect(inOrigin.nextPage, 2);
+    expect(lastPage.nextPage, isNull, reason: '이어 받을 구간이 없다');
+    expect(lastPage.isExhausted, isFalse, reason: '카드가 남아 있다');
   });
 
   test('copyWith replaces only given fields', () {

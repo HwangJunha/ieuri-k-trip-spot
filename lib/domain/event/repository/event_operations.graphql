@@ -10,7 +10,6 @@ query OngoingFestivals(
   $latitude: Float!
   $longitude: Float!
   $radiusMeters: Int
-  $hasOrigin: Boolean
   $first: Int
   $after: String
 ) {
@@ -18,7 +17,6 @@ query OngoingFestivals(
     latitude: $latitude
     longitude: $longitude
     radiusMeters: $radiusMeters
-    hasOrigin: $hasOrigin
     first: $first
     after: $after
   ) {

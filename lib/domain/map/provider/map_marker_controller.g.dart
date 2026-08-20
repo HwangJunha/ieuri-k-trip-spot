@@ -78,7 +78,7 @@ final class MapMarkerControllerProvider
 }
 
 String _$mapMarkerControllerHash() =>
-    r'1f3fd4d6713677612ca70cc4c832affa52c6aaf9';
+    r'fa959057580963b081aa3aac4b944eb3f8abbed7';
 
 /// 지도에 떠 있는 마커를 소유한다.
 ///

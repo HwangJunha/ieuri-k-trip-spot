@@ -50,7 +50,7 @@ final class LocaleControllerProvider
   }
 }
 
-String _$localeControllerHash() => r'0e9bcb8458647f22eff289a55d61bbd9f0fc4cca';
+String _$localeControllerHash() => r'78d7bd7fb385fb1e80b808d48c4442eb64350784';
 
 /// Holds the active [Locale] for the whole app. Initialised from the saved
 /// choice, or the device locale matched to a supported language (English

@@ -19,9 +19,11 @@ import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.
 import 'package:ieuri_k_trip_spot/common/media/photo_picker_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/community/view/post_composer_screen.dart';
 import 'package:ieuri_k_trip_spot/common/model/stored_draft.dart';
+import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
 import 'package:ieuri_k_trip_spot/common/storage/draft_store.dart';
 import 'package:ieuri_k_trip_spot/common/storage/draft_store_impl.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../common/storage/fake_draft_store.dart';
 import '../community_test_doubles.dart';
@@ -62,6 +64,9 @@ Future<void> _pump(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        // 초안 저장이 활성 언어를 기록하므로(SPEC-0029 AC-26.2) `LocaleController`가
+        // 살아야 하고, 그것이 `SharedPreferences`를 읽는다.
+        sharedPreferencesProvider.overrideWithValue(_prefs),
         communityRepositoryProvider.overrideWithValue(repo),
         // 초안 저장소는 **항상 override한다**(SPEC-0022 §8) — 실제 구현은
         // `shared_preferences`와 파일 시스템을 잡는다.
@@ -226,7 +231,15 @@ Finder _sheetChips([String? label]) => find.descendant(
       : find.widgetWithText(ChoiceChip, label),
 );
 
+/// 초안 저장이 읽는 `SharedPreferences`. `main`이 채워 둔다.
+late SharedPreferences _prefs;
+
 void main() {
+  setUpAll(() async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    _prefs = await SharedPreferences.getInstance();
+  });
+
   group('등록 버튼 활성 조건 (가이드 §5)', () {
     testWidgets('아무것도 안 넣으면 비활성이다', (WidgetTester tester) async {
       await _pump(tester, FakeCommunityRepository());

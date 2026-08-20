@@ -159,7 +159,10 @@
   "spotDetailDislikeAction": "Nope",
   "spotDetailLoading": "Loading spot…",
   "spotDetailNotFoundTitle": "Spot not found",
-  "spotDetailNotFoundBody": "We couldn't find this spot. It may have been removed or isn't available in your language.",
+  "spotDetailNotFoundBody": "We couldn't find this spot. It may have been removed.",
+  "spotDetailNotInLocaleTitle": "Not available in English",
+  "spotDetailNotInLocaleBody": "This spot exists, but it isn't available in the language you're using. Switch languages in Settings to see it.",
+  "spotDetailNotInLocaleAction": "Back to home",
   "spotDetailRateLimitedTitle": "Too many requests",
   "spotDetailRateLimitedBody": "We're a bit busy right now. Please try again in a moment.",
   "spotDetailUnavailableTitle": "Couldn't load this spot",
@@ -409,6 +412,10 @@
     "description": "글 등록 성공 안내"
   },
   "communityComposeErrorSpotNotFound": "That place is no longer available.",
+  "communityComposeErrorSpotNotInLocale": "That place isn't available in the language you're using.",
+  "@communityComposeErrorSpotNotInLocale": {
+    "description": "Shown when the selected spot is not available in the active language (SPEC-0029)."
+  },
   "@communityComposeErrorSpotNotFound": {
     "description": "SPOT_NOT_FOUND"
   },

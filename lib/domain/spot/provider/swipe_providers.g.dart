@@ -262,7 +262,7 @@ final class SwipeControllerProvider
   }
 }
 
-String _$swipeControllerHash() => r'd7c482261578c2743457753bb9c66f0e7302f53a';
+String _$swipeControllerHash() => r'8df3ad0e10331d6d36bc64d9693134ebe9cc6306';
 
 /// Discover 스와이프 카드 스택 컨트롤러(spec §4). [selection]별 패밀리 —
 /// 선택 변경은 다른 인스턴스 로딩으로 이어진다.

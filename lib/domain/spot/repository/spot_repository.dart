@@ -34,15 +34,16 @@ abstract interface class SpotRepository {
   /// page length. [latitude]/[longitude] are the user's location (server-required),
   /// [radiusMeters] bounds the search, and [categoryCodes] filters when set. Returns
   /// an [OffsetPage] carrying items + `page` + `hasNext` (spec §4).
-  /// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). true면 요청 언어로 **쓰인** 장소만,
-  /// false면 **번역된** 장소만, null이면 둘 다 온다. 두 집합은 서로 겹치지 않아
-  /// 원문을 먼저 채우고 모자란 만큼 번역본으로 보충하는 2단계 조회가 가능하다.
+  ///
+  /// **결과는 활성 언어에 원문이 있는 장소뿐이다**(SPEC-0029). 기계번역이 사라져
+  /// 서버가 언어 축으로 장소를 가르므로, 원문/번역을 고르던 `hasOrigin`도 함께
+  /// 없어졌다 — 고를 대상이 없다. 다른 언어에만 있는 장소는 오류가 아니라 그냥
+  /// 결과에 들어오지 않는다.
   Future<OffsetPage<TouristSpot>> fetchSpotPage({
     required double latitude,
     required double longitude,
     int? radiusMeters,
     List<String>? categoryCodes,
-    bool? hasOrigin,
     required int page,
     required int size,
   });
@@ -111,16 +112,17 @@ abstract interface class SpotRepository {
 
   /// 반경 내 인기 spot 한 페이지(SPEC-0013 R18).
   ///
-  /// 좋아요 총합 내림차순이며 **서버가 정렬한다**(POL-019). 좋아요 10개 미만인
-  /// spot은 서버가 제외하므로 클라이언트가 거르지 않는다(AC-18.2). 조건을 만족하는
+  /// 좋아요 총합 내림차순이며 **서버가 정렬한다**(POL-019). 최소 좋아요 수 미만인
+  /// spot은 서버가 제외하므로 클라이언트가 거르지 않는다(AC-18.2) — 그 기준은
+  /// SPEC-0029에서 10에서 5로 낮아졌고, 이 역시 서버가 정한다. 조건을 만족하는
   /// spot이 0건인 것은 정상 상태다(AC-18.4).
-  /// [hasOrigin]의 뜻은 [fetchSpotPage]와 같다(SPEC-0019).
+  ///
+  /// 활성 언어 한정은 [fetchSpotPage]와 같다(SPEC-0029).
   Future<CursorPage<PopularSpot>> fetchPopularSpots({
     required double latitude,
     required double longitude,
     int? radiusMeters,
     List<String>? categoryCodes,
-    bool? hasOrigin,
     int? first,
     String? after,
   });

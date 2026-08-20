@@ -10,12 +10,20 @@ part of 'recent_searches_providers.dart';
 // ignore_for_file: type=lint, type=warning
 /// 저장소를 provider 뒤에 둔다 — 테스트는 이 provider 하나만 override 한다.
 /// 다른 repository와 같은 자리에서 노출한다(CLAUDE.md §3).
+///
+/// **활성 언어를 watch 한다**(SPEC-0029 R-21). 저장 키가 언어별로 갈리므로, 언어가
+/// 바뀌면 이 provider가 무효화되어 새 언어의 목록을 읽는 저장소로 갈아 끼워진다.
+/// `read`로 하면 키가 첫 빌드 시점의 언어에 굳어 언어를 바꿔도 이전 목록이 남는다.
 
 @ProviderFor(recentSearchesStore)
 const recentSearchesStoreProvider = RecentSearchesStoreProvider._();
 
 /// 저장소를 provider 뒤에 둔다 — 테스트는 이 provider 하나만 override 한다.
 /// 다른 repository와 같은 자리에서 노출한다(CLAUDE.md §3).
+///
+/// **활성 언어를 watch 한다**(SPEC-0029 R-21). 저장 키가 언어별로 갈리므로, 언어가
+/// 바뀌면 이 provider가 무효화되어 새 언어의 목록을 읽는 저장소로 갈아 끼워진다.
+/// `read`로 하면 키가 첫 빌드 시점의 언어에 굳어 언어를 바꿔도 이전 목록이 남는다.
 
 final class RecentSearchesStoreProvider
     extends
@@ -27,6 +35,10 @@ final class RecentSearchesStoreProvider
     with $Provider<RecentSearchesStore> {
   /// 저장소를 provider 뒤에 둔다 — 테스트는 이 provider 하나만 override 한다.
   /// 다른 repository와 같은 자리에서 노출한다(CLAUDE.md §3).
+  ///
+  /// **활성 언어를 watch 한다**(SPEC-0029 R-21). 저장 키가 언어별로 갈리므로, 언어가
+  /// 바뀌면 이 provider가 무효화되어 새 언어의 목록을 읽는 저장소로 갈아 끼워진다.
+  /// `read`로 하면 키가 첫 빌드 시점의 언어에 굳어 언어를 바꿔도 이전 목록이 남는다.
   const RecentSearchesStoreProvider._()
     : super(
         from: null,
@@ -62,7 +74,7 @@ final class RecentSearchesStoreProvider
 }
 
 String _$recentSearchesStoreHash() =>
-    r'8deacad561f7042198613d4aa61b3456d68d0bb7';
+    r'22199fea1899636b91608802a71f3bd36b8c8d20';
 
 /// 최근 검색어 목록(R12). 최신 검색이 앞에 온다.
 ///
@@ -112,7 +124,7 @@ final class RecentSearchesProvider
   }
 }
 
-String _$recentSearchesHash() => r'23be3f444866964cf30a432a53c7c964794e2b4e';
+String _$recentSearchesHash() => r'61c975e2451602d8a892a6bb9318d04c47c618f7';
 
 /// 최근 검색어 목록(R12). 최신 검색이 앞에 온다.
 ///

@@ -158,7 +158,10 @@
   "spotDetailDislikeAction": "スキップ",
   "spotDetailLoading": "スポットを読み込んでいます…",
   "spotDetailNotFoundTitle": "スポットが見つかりません",
-  "spotDetailNotFoundBody": "このスポットが見つかりませんでした。削除されたか、現在の言語では利用できない可能性があります。",
+  "spotDetailNotFoundBody": "このスポットが見つかりませんでした。削除された可能性があります。",
+  "spotDetailNotInLocaleTitle": "現在の言語では表示できません",
+  "spotDetailNotInLocaleBody": "このスポットは存在しますが、お使いの言語では提供されていません。設定で言語を変更すると表示できます。",
+  "spotDetailNotInLocaleAction": "ホームに戻る",
   "spotDetailRateLimitedTitle": "リクエストが多すぎます",
   "spotDetailRateLimitedBody": "現在混み合っています。しばらくしてからもう一度お試しください。",
   "spotDetailUnavailableTitle": "スポットを読み込めませんでした",
@@ -399,6 +402,10 @@
     "description": "글 등록 성공 안내"
   },
   "communityComposeErrorSpotNotFound": "その場所は見つかりませんでした。",
+  "communityComposeErrorSpotNotInLocale": "そのスポットはお使いの言語では利用できません。",
+  "@communityComposeErrorSpotNotInLocale": {
+    "description": "Shown when the selected spot is not available in the active language (SPEC-0029)."
+  },
   "@communityComposeErrorSpotNotFound": {
     "description": "SPOT_NOT_FOUND"
   },

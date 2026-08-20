@@ -22,13 +22,12 @@ abstract interface class MapRepository {
   /// 카테고리 필터를 신설한다. null이면 전체이고, **빈 목록은 넘기지 않는다**
   /// (서버가 `EMPTY_CATEGORY_SET`으로 거절한다, AC5.1) — 다른 조회와 같은 규약이다.
   ///
-  /// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). true면 요청 언어로 **쓰인** 장소만,
-  /// false면 **번역된** 장소만, null이면 둘 다 온다.
+  /// **마커는 활성 언어에 원문이 있는 장소뿐이다**(SPEC-0029). 원문/번역을 고르던
+  /// `hasOrigin`은 계약에서 사라졌고, 뷰포트 조회도 한 번으로 끝난다.
   Future<MapViewportResult> fetchViewport({
     required MapBounds bbox,
     required int zoom,
     List<String>? categoryCodes,
-    bool? hasOrigin,
   });
 
   /// 뷰포트에 걸치는 구역의 실시간 혼잡도를 조회한다(R6~R11).

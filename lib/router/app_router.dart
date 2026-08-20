@@ -23,6 +23,82 @@ part 'app_router.g.dart';
 String _takeDestination(PendingDestination pending) =>
     destinationAfterGate(pending.takeLocation());
 
+/// 게이트 판정에 **보관 슬롯 소비까지** 얹은 최종 리다이렉트(R12 · SPEC-0028 R17).
+///
+/// [resolveGate]는 값만 보는 순수 판정이라 "원래 가려던 곳"을 모른다. 그 복귀를
+/// 여기서 얹는데, 슬롯을 언제 채우고 언제 꺼내는지가 곧 루프의 경계라 **라우터
+/// 클로저 안이 아니라 밖에** 둔다 — 안에 두면 GoRouter를 세우지 않고는 검증할 수
+/// 없고, 실제로 그래서 무한 루프가 실기기에서야 드러났다(`route_gate.dart` 상단이
+/// 같은 이유로 판정을 떼어 놓았다).
+///
+/// [pending]은 값을 바꾸므로 순수 함수가 아니다. 슬롯 자체가 라우터와 수명을 같이하는
+/// 가변 객체이고(빌드 중 provider state를 바꿀 수 없어서), 그 사정을 감추면 소비
+/// 시점을 시험할 수 없다.
+String? resolveRedirect({
+  required String location,
+  required bool languageChosen,
+  required AuthGateState auth,
+  required TermsGateState terms,
+  required PendingDestination pending,
+  bool emailVerificationHoldsHandle = false,
+}) {
+  final String? target = resolveGate(
+    location: location,
+    languageChosen: languageChosen,
+    auth: auth,
+    terms: terms,
+    emailVerificationHoldsHandle: emailVerificationHoldsHandle,
+  );
+
+  // 약관 게이트에 막혀 되돌려지는 경우에만 목적지를 보관한다(R12). 다른 게이트는
+  // 각자 복귀 규칙이 이미 있다.
+  //
+  // **이미 값이 있으면 덮어쓰지 않는다**(SPEC-0028 §3.3). 푸시로 열린 경우 목적지가
+  // 게이트보다 먼저 들어와 있고, 그것이 곧 "막히지 않았다면 갔을 곳"이다.
+  if (target == requiredTermsPath && location != requiredTermsPath) {
+    pending.rememberIfAbsent(location);
+  }
+
+  // 게이트가 풀린 직후 동의 화면에서 나갈 때는 **보관해 둔 목적지로 돌려보낸다**
+  // (R12 — 원래 가려던 곳으로 복귀). `resolveGate`는 순수 판정이라 이 상태를
+  // 모르고 기본 착지점을 주므로, 그 값을 여기서 갈아 끼운다. 보관한 것이 없으면
+  // `take()`가 기본 착지점을 그대로 돌려준다.
+  if (location == requiredTermsPath && target == discoverPath) {
+    return _takeDestination(pending);
+  }
+
+  // 푸시로 보관된 목적지는 약관 화면을 거치지 않는다 — 인증만 끝나면 되는 경우가
+  // 대부분이다(SPEC-0028 §3.3). 게이트가 전부 통과시키는 시점에 보관된 값이
+  // 있으면 그때 꺼낸다(AC17.2).
+  //
+  // **`target == null`만으로는 안 된다.** 그 값은 네 가지 다른 상황에서 나온다.
+  //   - 스플래시(`location == splashPath`)는 판정 전에 무조건 null이다 — 여기서
+  //     꺼내면 인증을 기다리지 않고 이동해 AC17.1을 어긴다
+  //   - 미인증 상태의 로그인·가입 화면도 null이다(`authPaths`) — 여기서 꺼내면
+  //     로그인하던 사용자를 목적지로 끌어내 로그인을 마칠 수 없다
+  //   - **약관 게이트가 아직 잡고 있는데 허용 화면에 있는 경우도 null이다** —
+  //     `/required-terms`와 `/settings/**`가 그렇다(`_termsAllows`). 여기서 꺼내면
+  //     동의하지도 않은 사용자를 보관된 목적지로 돌려보내고, 그 목적지가 다시
+  //     게이트에 막혀 `/required-terms`로 튕긴다. **그 왕복이 곧 무한 루프다.**
+  //     실기기 재현: 설정>약관에서 필수 항목을 끄면
+  //     `/required-terms => /home => /home => /required-terms`.
+  //   - 게이트를 전부 통과한 경우 — **이때만 꺼내야 한다**
+  //
+  // 그래서 인증이 `ready`인지와 **약관이 충족됐는지**를 함께 본다. 게이트가 아직
+  // 잡고 있는 동안에는 꺼내지 않고 두었다가, 동의를 마치면 위의 복귀 분기가
+  // 소비한다. 끝내 로그인하지 않으면 앱이 끝날 때 라우터와 함께 사라진다(AC17.3).
+  if (target == null &&
+      auth == AuthGateState.ready &&
+      terms == TermsGateState.satisfied &&
+      location != splashPath &&
+      pending.hasDestination) {
+    final String destination = _takeDestination(pending);
+    // 이미 그 자리면 다시 보내지 않는다 — 같은 곳으로의 리다이렉트는 루프다.
+    return destination == location ? null : destination;
+  }
+  return target;
+}
+
 @Riverpod(keepAlive: true)
 GoRouter goRouter(Ref ref) {
   // 라우터와 수명을 같이하는 지역 상태 — 리다이렉트가 빌드 중에 쓰므로 state를 가진
@@ -61,54 +137,14 @@ GoRouter goRouter(Ref ref) {
       final bool holdsHandle =
           extra is EmailVerificationArgs && extra.verificationId.isNotEmpty;
 
-      final String? target = resolveGate(
+      return resolveRedirect(
         location: location,
         languageChosen: ref.read(appPreferencesProvider).savedLanguage != null,
         auth: authGate,
         terms: termsGate,
         emailVerificationHoldsHandle: holdsHandle,
+        pending: pending,
       );
-
-      // 약관 게이트에 막혀 되돌려지는 경우에만 목적지를 보관한다(R12). 다른 게이트는
-      // 각자 복귀 규칙이 이미 있다.
-      //
-      // **이미 값이 있으면 덮어쓰지 않는다**(SPEC-0028 §3.3). 푸시로 열린 경우 목적지가
-      // 게이트보다 먼저 들어와 있고, 그것이 곧 "막히지 않았다면 갔을 곳"이다.
-      if (target == requiredTermsPath && location != requiredTermsPath) {
-        pending.rememberIfAbsent(location);
-      }
-
-      // 게이트가 풀린 직후 동의 화면에서 나갈 때는 **보관해 둔 목적지로 돌려보낸다**
-      // (R12 — 원래 가려던 곳으로 복귀). `resolveGate`는 순수 판정이라 이 상태를
-      // 모르고 기본 착지점을 주므로, 그 값을 여기서 갈아 끼운다. 보관한 것이 없으면
-      // `take()`가 기본 착지점을 그대로 돌려준다.
-      if (location == requiredTermsPath && target == discoverPath) {
-        return _takeDestination(pending);
-      }
-
-      // 푸시로 보관된 목적지는 약관 화면을 거치지 않는다 — 인증만 끝나면 되는 경우가
-      // 대부분이다(SPEC-0028 §3.3). 게이트가 전부 통과시키는 시점에 보관된 값이
-      // 있으면 그때 꺼낸다(AC17.2).
-      //
-      // **`target == null`만으로는 안 된다.** 그 값은 세 가지 다른 상황에서 나온다.
-      //   - 스플래시(`location == splashPath`)는 판정 전에 무조건 null이다 — 여기서
-      //     꺼내면 인증을 기다리지 않고 이동해 AC17.1을 어긴다
-      //   - 미인증 상태의 로그인·가입 화면도 null이다(`authPaths`) — 여기서 꺼내면
-      //     로그인하던 사용자를 목적지로 끌어내 로그인을 마칠 수 없다
-      //   - 게이트를 전부 통과한 경우 — **이때만 꺼내야 한다**
-      //
-      // 그래서 인증이 `ready`인지를 함께 본다. 미인증으로 판정된 동안에는 꺼내지
-      // 않고 두었다가, 로그인을 마치면 그때 소비된다. 끝내 로그인하지 않으면 앱이
-      // 끝날 때 라우터와 함께 사라진다(AC17.3).
-      if (target == null &&
-          authGate == AuthGateState.ready &&
-          location != splashPath &&
-          pending.hasDestination) {
-        final String destination = _takeDestination(pending);
-        // 이미 그 자리면 다시 보내지 않는다 — 같은 곳으로의 리다이렉트는 루프다.
-        return destination == location ? null : destination;
-      }
-      return target;
     },
     routes: buildRoutes(),
   );

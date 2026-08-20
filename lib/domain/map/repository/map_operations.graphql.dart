@@ -8,12 +8,10 @@ class Variables$Query$MapViewport {
     required Input$MapBoundsInput bbox,
     required int zoom,
     List<String>? categories,
-    bool? hasOrigin,
   }) => Variables$Query$MapViewport._({
     r'bbox': bbox,
     r'zoom': zoom,
     if (categories != null) r'categories': categories,
-    if (hasOrigin != null) r'hasOrigin': hasOrigin,
   });
 
   Variables$Query$MapViewport._(this._$data);
@@ -32,10 +30,6 @@ class Variables$Query$MapViewport {
           ?.map((e) => (e as String))
           .toList();
     }
-    if (data.containsKey('hasOrigin')) {
-      final l$hasOrigin = data['hasOrigin'];
-      result$data['hasOrigin'] = (l$hasOrigin as bool?);
-    }
     return Variables$Query$MapViewport._(result$data);
   }
 
@@ -47,8 +41,6 @@ class Variables$Query$MapViewport {
 
   List<String>? get categories => (_$data['categories'] as List<String>?);
 
-  bool? get hasOrigin => (_$data['hasOrigin'] as bool?);
-
   Map<String, dynamic> toJson() {
     final result$data = <String, dynamic>{};
     final l$bbox = bbox;
@@ -58,10 +50,6 @@ class Variables$Query$MapViewport {
     if (_$data.containsKey('categories')) {
       final l$categories = categories;
       result$data['categories'] = l$categories?.map((e) => e).toList();
-    }
-    if (_$data.containsKey('hasOrigin')) {
-      final l$hasOrigin = hasOrigin;
-      result$data['hasOrigin'] = l$hasOrigin;
     }
     return result$data;
   }
@@ -108,15 +96,6 @@ class Variables$Query$MapViewport {
     } else if (l$categories != lOther$categories) {
       return false;
     }
-    final l$hasOrigin = hasOrigin;
-    final lOther$hasOrigin = other.hasOrigin;
-    if (_$data.containsKey('hasOrigin') !=
-        other._$data.containsKey('hasOrigin')) {
-      return false;
-    }
-    if (l$hasOrigin != lOther$hasOrigin) {
-      return false;
-    }
     return true;
   }
 
@@ -125,7 +104,6 @@ class Variables$Query$MapViewport {
     final l$bbox = bbox;
     final l$zoom = zoom;
     final l$categories = categories;
-    final l$hasOrigin = hasOrigin;
     return Object.hashAll([
       l$bbox,
       l$zoom,
@@ -134,7 +112,6 @@ class Variables$Query$MapViewport {
                 ? null
                 : Object.hashAll(l$categories.map((v) => v))
           : const {},
-      _$data.containsKey('hasOrigin') ? l$hasOrigin : const {},
     ]);
   }
 }
@@ -148,12 +125,7 @@ abstract class CopyWith$Variables$Query$MapViewport<TRes> {
   factory CopyWith$Variables$Query$MapViewport.stub(TRes res) =
       _CopyWithStubImpl$Variables$Query$MapViewport;
 
-  TRes call({
-    Input$MapBoundsInput? bbox,
-    int? zoom,
-    List<String>? categories,
-    bool? hasOrigin,
-  });
+  TRes call({Input$MapBoundsInput? bbox, int? zoom, List<String>? categories});
 }
 
 class _CopyWithImpl$Variables$Query$MapViewport<TRes>
@@ -170,7 +142,6 @@ class _CopyWithImpl$Variables$Query$MapViewport<TRes>
     Object? bbox = _undefined,
     Object? zoom = _undefined,
     Object? categories = _undefined,
-    Object? hasOrigin = _undefined,
   }) => _then(
     Variables$Query$MapViewport._({
       ..._instance._$data,
@@ -178,7 +149,6 @@ class _CopyWithImpl$Variables$Query$MapViewport<TRes>
         'bbox': (bbox as Input$MapBoundsInput),
       if (zoom != _undefined && zoom != null) 'zoom': (zoom as int),
       if (categories != _undefined) 'categories': (categories as List<String>?),
-      if (hasOrigin != _undefined) 'hasOrigin': (hasOrigin as bool?),
     }),
   );
 }
@@ -189,12 +159,8 @@ class _CopyWithStubImpl$Variables$Query$MapViewport<TRes>
 
   TRes _res;
 
-  call({
-    Input$MapBoundsInput? bbox,
-    int? zoom,
-    List<String>? categories,
-    bool? hasOrigin,
-  }) => _res;
+  call({Input$MapBoundsInput? bbox, int? zoom, List<String>? categories}) =>
+      _res;
 }
 
 class Query$MapViewport {
@@ -331,15 +297,6 @@ const documentNodeQueryMapViewport = DocumentNode(
           defaultValue: DefaultValueNode(value: null),
           directives: [],
         ),
-        VariableDefinitionNode(
-          variable: VariableNode(name: NameNode(value: 'hasOrigin')),
-          type: NamedTypeNode(
-            name: NameNode(value: 'Boolean'),
-            isNonNull: false,
-          ),
-          defaultValue: DefaultValueNode(value: null),
-          directives: [],
-        ),
       ],
       directives: [],
       selectionSet: SelectionSetNode(
@@ -359,10 +316,6 @@ const documentNodeQueryMapViewport = DocumentNode(
               ArgumentNode(
                 name: NameNode(value: 'categories'),
                 value: VariableNode(name: NameNode(value: 'categories')),
-              ),
-              ArgumentNode(
-                name: NameNode(value: 'hasOrigin'),
-                value: VariableNode(name: NameNode(value: 'hasOrigin')),
               ),
             ],
             directives: [],

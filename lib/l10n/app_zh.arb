@@ -158,7 +158,10 @@
   "spotDetailDislikeAction": "跳過",
   "spotDetailLoading": "正在載入景點…",
   "spotDetailNotFoundTitle": "未找到該景點",
-  "spotDetailNotFoundBody": "我們找不到這個景點。它可能已被刪除，或在您的語言中不可用。",
+  "spotDetailNotFoundBody": "我們找不到這個景點。它可能已被刪除。",
+  "spotDetailNotInLocaleTitle": "目前的語言無法顯示",
+  "spotDetailNotInLocaleBody": "這個景點存在，但不提供您目前使用的語言。您可以在設定中切換語言後查看。",
+  "spotDetailNotInLocaleAction": "返回首頁",
   "spotDetailRateLimitedTitle": "請求過多",
   "spotDetailRateLimitedBody": "當前訪問量較大，請稍後再試。",
   "spotDetailUnavailableTitle": "無法載入該景點",
@@ -399,6 +402,10 @@
     "description": "글 등록 성공 안내"
   },
   "communityComposeErrorSpotNotFound": "找不到該地點。",
+  "communityComposeErrorSpotNotInLocale": "該景點不提供您目前使用的語言。",
+  "@communityComposeErrorSpotNotInLocale": {
+    "description": "Shown when the selected spot is not available in the active language (SPEC-0029)."
+  },
   "@communityComposeErrorSpotNotFound": {
     "description": "SPOT_NOT_FOUND"
   },
