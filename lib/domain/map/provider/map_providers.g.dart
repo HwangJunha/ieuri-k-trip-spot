@@ -58,8 +58,9 @@ String _$mapRepositoryHash() => r'ebd1feef5797a36458540e43a75a28142ac397fa';
 /// bbox와 zoom을 인자로 받아 family가 된다. 뷰포트가 바뀌면 새 인자가 되므로 이전
 /// 조회는 자동으로 버려진다 — 늦게 도착한 응답이 현재 뷰포트를 덮어쓰지 않는다
 /// (설계 §3.3).
-/// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). 화면은 원문으로 마커를 채우고 자리가
-/// 남으면 번역본으로 한 번 더 채운다 — 두 값이 서로 다른 family 인스턴스가 된다.
+/// **조회는 뷰포트당 한 번이다**(SPEC-0029). 원문/번역을 갈라 두 번 받던 `hasOrigin`이
+/// 계약에서 사라져, 서버가 활성 언어의 장소만 한 번에 준다.
+///
 /// **카테고리 필터를 받지 않는다**(사용자 결정, 2026-08-16). 서버 인자는 있지만
 /// 지도는 오버레이가 가장 많은 화면이라 바를 하나 더 얹으면 가독성이 떨어진다.
 
@@ -74,8 +75,9 @@ const mapViewportProvider = MapViewportFamily._();
 /// bbox와 zoom을 인자로 받아 family가 된다. 뷰포트가 바뀌면 새 인자가 되므로 이전
 /// 조회는 자동으로 버려진다 — 늦게 도착한 응답이 현재 뷰포트를 덮어쓰지 않는다
 /// (설계 §3.3).
-/// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). 화면은 원문으로 마커를 채우고 자리가
-/// 남으면 번역본으로 한 번 더 채운다 — 두 값이 서로 다른 family 인스턴스가 된다.
+/// **조회는 뷰포트당 한 번이다**(SPEC-0029). 원문/번역을 갈라 두 번 받던 `hasOrigin`이
+/// 계약에서 사라져, 서버가 활성 언어의 장소만 한 번에 준다.
+///
 /// **카테고리 필터를 받지 않는다**(사용자 결정, 2026-08-16). 서버 인자는 있지만
 /// 지도는 오버레이가 가장 많은 화면이라 바를 하나 더 얹으면 가독성이 떨어진다.
 
@@ -97,13 +99,14 @@ final class MapViewportProvider
   /// bbox와 zoom을 인자로 받아 family가 된다. 뷰포트가 바뀌면 새 인자가 되므로 이전
   /// 조회는 자동으로 버려진다 — 늦게 도착한 응답이 현재 뷰포트를 덮어쓰지 않는다
   /// (설계 §3.3).
-  /// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). 화면은 원문으로 마커를 채우고 자리가
-  /// 남으면 번역본으로 한 번 더 채운다 — 두 값이 서로 다른 family 인스턴스가 된다.
+  /// **조회는 뷰포트당 한 번이다**(SPEC-0029). 원문/번역을 갈라 두 번 받던 `hasOrigin`이
+  /// 계약에서 사라져, 서버가 활성 언어의 장소만 한 번에 준다.
+  ///
   /// **카테고리 필터를 받지 않는다**(사용자 결정, 2026-08-16). 서버 인자는 있지만
   /// 지도는 오버레이가 가장 많은 화면이라 바를 하나 더 얹으면 가독성이 떨어진다.
   const MapViewportProvider._({
     required MapViewportFamily super.from,
-    required (MapBounds, int, {bool? hasOrigin}) super.argument,
+    required (MapBounds, int) super.argument,
   }) : super(
          retry: null,
          name: r'mapViewportProvider',
@@ -130,13 +133,8 @@ final class MapViewportProvider
 
   @override
   FutureOr<MapViewportResult> create(Ref ref) {
-    final argument = this.argument as (MapBounds, int, {bool? hasOrigin});
-    return mapViewport(
-      ref,
-      argument.$1,
-      argument.$2,
-      hasOrigin: argument.hasOrigin,
-    );
+    final argument = this.argument as (MapBounds, int);
+    return mapViewport(ref, argument.$1, argument.$2);
   }
 
   @override
@@ -150,7 +148,7 @@ final class MapViewportProvider
   }
 }
 
-String _$mapViewportHash() => r'cd68ff20f411cccd64c4c450e18efde70074ba5f';
+String _$mapViewportHash() => r'54e2f986c1108113bccfba89f7931245253b228c';
 
 /// 뷰포트 안의 마커·클러스터(R1·R2·R3·R12).
 ///
@@ -160,8 +158,9 @@ String _$mapViewportHash() => r'cd68ff20f411cccd64c4c450e18efde70074ba5f';
 /// bbox와 zoom을 인자로 받아 family가 된다. 뷰포트가 바뀌면 새 인자가 되므로 이전
 /// 조회는 자동으로 버려진다 — 늦게 도착한 응답이 현재 뷰포트를 덮어쓰지 않는다
 /// (설계 §3.3).
-/// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). 화면은 원문으로 마커를 채우고 자리가
-/// 남으면 번역본으로 한 번 더 채운다 — 두 값이 서로 다른 family 인스턴스가 된다.
+/// **조회는 뷰포트당 한 번이다**(SPEC-0029). 원문/번역을 갈라 두 번 받던 `hasOrigin`이
+/// 계약에서 사라져, 서버가 활성 언어의 장소만 한 번에 준다.
+///
 /// **카테고리 필터를 받지 않는다**(사용자 결정, 2026-08-16). 서버 인자는 있지만
 /// 지도는 오버레이가 가장 많은 화면이라 바를 하나 더 얹으면 가독성이 떨어진다.
 
@@ -169,7 +168,7 @@ final class MapViewportFamily extends $Family
     with
         $FunctionalFamilyOverride<
           FutureOr<MapViewportResult>,
-          (MapBounds, int, {bool? hasOrigin})
+          (MapBounds, int)
         > {
   const MapViewportFamily._()
     : super(
@@ -188,16 +187,14 @@ final class MapViewportFamily extends $Family
   /// bbox와 zoom을 인자로 받아 family가 된다. 뷰포트가 바뀌면 새 인자가 되므로 이전
   /// 조회는 자동으로 버려진다 — 늦게 도착한 응답이 현재 뷰포트를 덮어쓰지 않는다
   /// (설계 §3.3).
-  /// [hasOrigin]은 원문/번역 구분이다(SPEC-0019). 화면은 원문으로 마커를 채우고 자리가
-  /// 남으면 번역본으로 한 번 더 채운다 — 두 값이 서로 다른 family 인스턴스가 된다.
+  /// **조회는 뷰포트당 한 번이다**(SPEC-0029). 원문/번역을 갈라 두 번 받던 `hasOrigin`이
+  /// 계약에서 사라져, 서버가 활성 언어의 장소만 한 번에 준다.
+  ///
   /// **카테고리 필터를 받지 않는다**(사용자 결정, 2026-08-16). 서버 인자는 있지만
   /// 지도는 오버레이가 가장 많은 화면이라 바를 하나 더 얹으면 가독성이 떨어진다.
 
-  MapViewportProvider call(MapBounds bbox, int zoom, {bool? hasOrigin}) =>
-      MapViewportProvider._(
-        argument: (bbox, zoom, hasOrigin: hasOrigin),
-        from: this,
-      );
+  MapViewportProvider call(MapBounds bbox, int zoom) =>
+      MapViewportProvider._(argument: (bbox, zoom), from: this);
 
   @override
   String toString() => r'mapViewportProvider';

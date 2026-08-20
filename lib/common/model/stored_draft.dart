@@ -27,6 +27,7 @@ class StoredDraft {
   const StoredDraft({
     required this.savedAt,
     this.category,
+    this.languageCode,
     this.spotId,
     this.spotTitle,
     this.title = '',
@@ -42,6 +43,14 @@ class StoredDraft {
   /// 목록이라 저장 당시의 카테고리가 나중에 사라질 수 있고, 그때 초안 전체가 아니라
   /// 이 값만 null로 복원한다(§3).
   final String? category;
+
+  /// 저장 당시의 활성 언어 코드(`en`·`ko`·…). **장소 참조의 유효 범위를 기록한다**
+  /// (SPEC-0029 AC-26.2) — spot은 언어별로 갈리므로 다른 언어에서 복원하면 [spotId]가
+  /// 해소되지 않을 수 있다.
+  ///
+  /// SPEC-0029 이전에 저장된 초안은 null이다. 그때는 언어를 알 수 없으므로 장소
+  /// 참조를 믿지 않는다([restoredSpotId] 참조).
+  final String? languageCode;
 
   final String? spotId;
   final String? spotTitle;
@@ -69,6 +78,7 @@ class StoredDraft {
   static StoredDraft fromDraft({
     required DateTime savedAt,
     TargetCategory? category,
+    String? languageCode,
     String? spotId,
     String? spotTitle,
     String title = '',
@@ -78,6 +88,7 @@ class StoredDraft {
   }) => StoredDraft(
     savedAt: savedAt,
     category: category?.code,
+    languageCode: languageCode,
     spotId: spotId,
     spotTitle: spotTitle,
     title: title,
@@ -94,9 +105,31 @@ class StoredDraft {
     return code == null ? null : TargetCategory.fromCode(code);
   }
 
+  /// [activeLanguageCode]에서 이 초안의 장소 참조를 쓸 수 있는지(SPEC-0029 AC-26.2).
+  ///
+  /// spot이 언어별로 갈리므로 **저장 당시와 다른 언어면 믿을 수 없다.** 그 id를
+  /// 그대로 제출하면 `SPOT_NOT_FOUND_IN_LOCALE`로 실패하는데, 사용자에겐 자기가 쓴
+  /// 글이 이유 없이 거절당하는 것으로 보인다.
+  ///
+  /// SPEC-0029 이전 초안([languageCode]가 null)도 믿지 않는다 — 어느 언어에서
+  /// 저장했는지 알 수 없어 안전한 쪽으로 판단한다. 카테고리와 같은 결이다: **초안
+  /// 전체를 버리지 않고 그 값만 비운다.**
+  bool spotIsUsableIn(String activeLanguageCode) =>
+      languageCode != null && languageCode == activeLanguageCode;
+
+  /// [activeLanguageCode]에서 복원할 장소 id. 쓸 수 없으면 null이다.
+  String? restoredSpotId(String activeLanguageCode) =>
+      spotIsUsableIn(activeLanguageCode) ? spotId : null;
+
+  /// [restoredSpotId]와 짝을 이루는 장소명. **id와 함께 비운다** — 제목만 남으면
+  /// 칩이 그려지는데 누르면 열리지 않는다.
+  String? restoredSpotTitle(String activeLanguageCode) =>
+      spotIsUsableIn(activeLanguageCode) ? spotTitle : null;
+
   Map<String, Object?> toJson() => <String, Object?>{
     'savedAt': savedAt.toIso8601String(),
     'category': category,
+    'languageCode': languageCode,
     'spotId': spotId,
     'spotTitle': spotTitle,
     'title': title,
@@ -133,6 +166,8 @@ class StoredDraft {
     return StoredDraft(
       savedAt: parsed,
       category: json['category'] as String?,
+      // SPEC-0029 이전에 저장된 초안엔 없다 — null이면 장소 참조를 믿지 않는다.
+      languageCode: json['languageCode'] as String?,
       spotId: json['spotId'] as String?,
       spotTitle: json['spotTitle'] as String?,
       title: json['title'] as String? ?? '',
@@ -151,6 +186,7 @@ class StoredDraft {
       other is StoredDraft &&
       other.savedAt == savedAt &&
       other.category == category &&
+      other.languageCode == languageCode &&
       other.spotId == spotId &&
       other.spotTitle == spotTitle &&
       other.title == title &&
@@ -162,6 +198,7 @@ class StoredDraft {
   int get hashCode => Object.hash(
     savedAt,
     category,
+    languageCode,
     spotId,
     spotTitle,
     title,

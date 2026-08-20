@@ -8,7 +8,6 @@ query Spots(
   $longitude: Float!
   $radiusMeters: Int
   $categories: [String!]
-  $hasOrigin: Boolean
   $page: Int
   $size: Int
 ) {
@@ -17,7 +16,6 @@ query Spots(
     longitude: $longitude
     radiusMeters: $radiusMeters
     categories: $categories
-    hasOrigin: $hasOrigin
     page: $page
     size: $size
   ) {
@@ -255,7 +253,6 @@ query PopularSpots(
   $longitude: Float!
   $radiusMeters: Int
   $categories: [String!]
-  $hasOrigin: Boolean
   $first: Int
   $after: String
 ) {
@@ -264,7 +261,6 @@ query PopularSpots(
     longitude: $longitude
     radiusMeters: $radiusMeters
     categories: $categories
-    hasOrigin: $hasOrigin
     first: $first
     after: $after
   ) {

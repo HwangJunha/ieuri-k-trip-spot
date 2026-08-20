@@ -12,13 +12,11 @@ query MapViewport(
   $bbox: MapBoundsInput!
   $zoom: Int!
   $categories: [String!]
-  $hasOrigin: Boolean
 ) {
   mapViewport(
     bbox: $bbox
     zoom: $zoom
     categories: $categories
-    hasOrigin: $hasOrigin
   ) {
     spots {
       id

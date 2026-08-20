@@ -7,8 +7,10 @@ import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/community/view/post_composer_screen.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
+import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
 import 'package:ieuri_k_trip_spot/common/storage/draft_store_impl.dart';
 import 'package:ieuri_k_trip_spot/router/routes.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../common/storage/fake_draft_store.dart';
 import '../domain/community/community_test_doubles.dart';
@@ -27,6 +29,8 @@ Future<void> _pumpRoute(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        // 초안 저장이 활성 언어를 기록하므로(SPEC-0029) `SharedPreferences`가 필요하다.
+        sharedPreferencesProvider.overrideWithValue(_prefs),
         communityRepositoryProvider.overrideWithValue(
           repo ?? FakeCommunityRepository(),
         ),
@@ -53,7 +57,15 @@ Future<void> _pumpRoute(
   await tester.pumpAndSettle();
 }
 
+/// 초안 저장이 읽는 `SharedPreferences`. `main`이 채워 둔다.
+late SharedPreferences _prefs;
+
 void main() {
+  setUpAll(() async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    _prefs = await SharedPreferences.getInstance();
+  });
+
   // 장소 상세에서 진입하면 장소가 이미 정해진 채로 열린다.
   testWidgets('spotId·spotTitle 쿼리 파라미터가 컴포저에 전달된다', (
     WidgetTester tester,

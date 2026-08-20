@@ -305,6 +305,14 @@ class _FooterRow extends StatelessWidget {
             if (hasSpot)
               // 이름만 눌러도 장소 상세로 간다. 카드 전체 탭(글 상세)과 겹치지
               // 않도록 InkWell을 이름에만 씌운다.
+              //
+              // **탭해도 되는 이유**(SPEC-0029 경로 A): `Post.spot`이 활성 언어에서
+              // 해소되지 않으면 **서버가 그 글을 목록에 넣지 않는다**(R-23). 목록으로
+              // 받은 글의 장소는 지금 열린다는 뜻이라 클라이언트가 따로 판정하지
+              // 않는다. 이 전제가 깨져도 상세 진입 후 R-20 안내로 떨어진다.
+              //
+              // DM 인용(`MessageQuoteCard`)은 결론이 반대다 — 그쪽은 목록 필터를
+              // 거치지 않은 스냅샷이라 탭을 열지 않는다.
               InkWell(
                 onTap: onSpotTap,
                 borderRadius: BorderRadius.circular(6),

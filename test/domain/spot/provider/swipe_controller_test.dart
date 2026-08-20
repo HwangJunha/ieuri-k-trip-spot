@@ -598,40 +598,24 @@ void main() {
     });
   });
 
-  // SPEC-0019 — 원문을 먼저 다 보여주고, 소진하면 번역본으로 이어간다. 두 집합은
-  // 겹치지 않고 각자 페이지를 0부터 세므로 전환 시 페이지가 되감긴다.
-  group('원문 → 번역본 전환', () {
-    test('첫 조회는 원문만 요청한다', () async {
-      // 원문이 넉넉해 첫 페이지에서 끝나지 않는 상황.
+  // SPEC-0029 — 서버가 활성 언어의 장소만 주므로 원문/번역 2단 조회가 사라졌다.
+  group('활성 언어 단일 조회', () {
+    test('첫 조회는 한 번뿐이다', () async {
       final repo = FakeSpotRepository(feed: _spots(10), pageSize: 5);
       await _load(repo);
 
-      expect(repo.requestedHasOrigin, <bool?>[true]);
+      expect(repo.spotPageCallCount, 1);
     });
 
-    test('원문이 첫 페이지에서 끝나면 번역본을 이어 받는다', () async {
-      final repo = FakeSpotRepository(
-        feed: <TouristSpot>[swipeSpot('o1')],
-        translatedFeed: <TouristSpot>[swipeSpot('t1'), swipeSpot('t2')],
-        pageSize: 5,
-      );
-
-      final (_, queue) = await _load(repo);
-
-      // 원문 1건 + 번역본 2건이 한 큐에 담긴다 — 첫 화면이 비지 않는다.
-      expect(queue.cards.map((TouristSpot s) => s.id), hasLength(3));
-      expect(repo.requestedHasOrigin, <bool?>[true, false]);
-      expect(queue.originExhausted, isTrue);
-    });
-
-    test('원문도 번역본도 없으면 소진 상태다', () async {
+    test('결과가 비면 그대로 소진 상태다', () async {
+      // 활성 언어에 장소가 없는 지역. 이어 받을 번역본 구간이 없으므로 빈 상태
+      // 문구가 첫 조회 직후에 뜬다.
       final repo = FakeSpotRepository(feed: const <TouristSpot>[], pageSize: 5);
 
       final (_, queue) = await _load(repo);
 
-      // 빈 상태 문구가 뜨려면 isExhausted가 서야 한다 — 원문만 비어서는 안 된다.
       expect(queue.isExhausted, isTrue);
-      expect(repo.requestedHasOrigin, <bool?>[true, false]);
+      expect(repo.spotPageCallCount, 1);
     });
   });
 
@@ -797,10 +781,8 @@ void main() {
     await container.read(swipeControllerProvider(noCategories).future);
     await Future<void>.delayed(const Duration(milliseconds: 600));
 
-    // 원문 1건이 첫 페이지에서 끝나 번역본 보충이 뒤따르므로 2회다(SPEC-0019).
-    // **재시도가 없었다는 것**이 이 테스트의 요지 — 재시도라면 같은 원문 조회가
-    // 두 번 나가지만, 여기서는 원문 1회 + 번역본 1회로 형태가 다르다.
-    expect(repo.requestedHasOrigin, <bool?>[true, false]);
+    // 성공한 첫 조회 1회로 끝난다 — 재시도가 있었다면 조회가 더 나갔을 것이다.
+    expect(repo.spotPageCallCount, 1);
   });
 
   test('상한 소진 후 무효화가 반복돼도 repository 호출이 늘지 않는다 (AC-11·AC-12)', () async {

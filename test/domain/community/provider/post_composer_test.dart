@@ -11,8 +11,15 @@ import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.
 import 'package:ieuri_k_trip_spot/common/storage/draft_store_impl.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/post_composer_providers.dart';
 
+import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../common/storage/fake_draft_store.dart';
 import '../community_test_doubles.dart';
+
+/// 초안 저장이 활성 언어를 기록하므로(SPEC-0029 AC-26.2) `LocaleController`가
+/// 살아야 하고, 그것이 `SharedPreferences`를 읽는다. `main`이 채워 둔다.
+late SharedPreferences _prefs;
 
 /// 초안 저장소는 **항상 override한다**(SPEC-0022 §8) — 실제 구현은
 /// `shared_preferences`와 파일 시스템을 잡는다.
@@ -22,6 +29,7 @@ ProviderContainer _container(
 }) {
   final ProviderContainer container = ProviderContainer(
     overrides: [
+      sharedPreferencesProvider.overrideWithValue(_prefs),
       communityRepositoryProvider.overrideWithValue(repo),
       draftStoreProvider.overrideWithValue(drafts ?? FakeDraftStore()),
     ],
@@ -52,6 +60,14 @@ PostImageUploadUrl _url(int n) => PostImageUploadUrl(
 );
 
 void main() {
+  // 초안 저장이 활성 언어를 함께 남기므로 `SharedPreferences`가 필요하다.
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    _prefs = await SharedPreferences.getInstance();
+  });
+
   group('초안 편집', () {
     test('장소 상세에서 진입하면 장소와 카테고리 제안이 채워져 있다', () {
       final ProviderContainer container = _container(FakeCommunityRepository());

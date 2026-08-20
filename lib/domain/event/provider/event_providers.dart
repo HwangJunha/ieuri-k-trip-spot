@@ -4,7 +4,6 @@ import '../../../common/localization/locale_controller.dart';
 import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
 import '../../../common/network/graphql_client.dart';
-import '../../../common/pagination/origin_fill.dart';
 import '../../../common/pagination/page.dart';
 import '../../../common/storage/search_radius_controller.dart';
 import '../model/festival.dart';
@@ -40,18 +39,13 @@ Future<List<Festival>> happeningNowEvents(Ref ref) async {
 
   final EventRepository repository = ref.watch(eventRepositoryProvider);
 
-  // 홈 다른 섹션과 같은 규약 — 원문 우선, 부족분만 번역본(SPEC-0019).
-  return fillWithTranslated<Festival>(
-    target: happeningNowSize,
-    fetch: (bool hasOrigin, int size) async {
-      final CursorPage<Festival> page = await repository.fetchOngoingFestivals(
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        radiusMeters: radiusMetersOf(radiusKm),
-        hasOrigin: hasOrigin,
-        first: size,
-      );
-      return page.items;
-    },
+  // 홈 다른 섹션과 같은 규약 — 조회는 한 번이다(SPEC-0029). 서버가 활성 언어의
+  // 축제만 주므로 원문/번역 2단 조회가 사라졌다.
+  final CursorPage<Festival> page = await repository.fetchOngoingFestivals(
+    latitude: coords.latitude,
+    longitude: coords.longitude,
+    radiusMeters: radiusMetersOf(radiusKm),
+    first: happeningNowSize,
   );
+  return page.items;
 }

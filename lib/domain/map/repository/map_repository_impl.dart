@@ -32,7 +32,6 @@ class MapRepositoryImpl implements MapRepository {
     required MapBounds bbox,
     required int zoom,
     List<String>? categoryCodes,
-    bool? hasOrigin,
   }) async {
     final Map<String, dynamic> data = await _query(
       documentNodeQueryMapViewport,
@@ -44,8 +43,6 @@ class MapRepositoryImpl implements MapRepository {
         categories: (categoryCodes == null || categoryCodes.isEmpty)
             ? null
             : categoryCodes,
-        // null이면 변수를 보내지 않아 서버가 원문·번역을 모두 준다(SPEC-0019).
-        hasOrigin: hasOrigin,
       ).toJson(),
       'mapViewport',
     );

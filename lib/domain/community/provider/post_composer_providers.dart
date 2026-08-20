@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../model/community_failure.dart';
+import '../../../common/localization/locale_controller.dart';
 import '../../../common/model/composer_photo.dart';
 import '../model/post_draft.dart';
 import '../../../common/model/post_image_upload.dart';
@@ -129,6 +130,11 @@ class PostComposer extends _$PostComposer {
     // 있어(Riverpod 3), 화면이 닫힐 때 마지막 저장을 하려면 참조가 미리 있어야 한다.
     _storeRef = ref.read(draftStoreProvider);
 
+    // 활성 언어도 같은 이유로 미리 읽어 둔다(SPEC-0029 AC-26.2). 저장 시점에
+    // `ref.read`를 부르면 dispose 경로의 마지막 저장에서 그 금지에 걸린다 —
+    // 언어가 바뀌면 컴포저는 어차피 다시 빌드되므로 빌드 시점의 값이 맞다.
+    _languageCode = ref.read(localeControllerProvider).languageCode;
+
     // 새 글에서만 자동 저장이 붙는다(R11). 수정 모드는 상태가 바뀌어도 디스크를
     // 건드리지 않는다.
     if (!editing) {
@@ -150,6 +156,10 @@ class PostComposer extends _$PostComposer {
       category: initialCategory,
     );
   }
+
+  /// [build]에서 붙잡아 둔 활성 언어 코드(SPEC-0029). 저장한 초안의 장소 참조가
+  /// 어느 언어에서 유효한지를 기록하는 값이다. [_storeRef]와 같은 이유로 미리 읽는다.
+  late String _languageCode;
 
   /// [build]에서 붙잡아 둔 저장소. dispose 시점에는 `ref.read`를 쓸 수 없다.
   /// 매 빌드에서 다시 채우므로 `late final`이 아니다 — 재빌드가 두 번째 대입에서
@@ -205,6 +215,9 @@ class PostComposer extends _$PostComposer {
     final StoredDraft stored = StoredDraft.fromDraft(
       savedAt: DateTime.now(),
       category: draft.category,
+      // 장소 참조의 유효 범위를 함께 남긴다(SPEC-0029 AC-26.2) — 다른 언어에서
+      // 복원하면 이 id는 해소되지 않는다.
+      languageCode: _languageCode,
       spotId: draft.spotId,
       spotTitle: draft.spotTitle,
       title: draft.title,
@@ -272,12 +285,18 @@ class PostComposer extends _$PostComposer {
     _restorePrompt = DraftRestorePrompt.settled;
     _offered = null;
     if (offered == null) return;
+    // 저장 이후 언어가 바뀌었으면 장소 참조를 비운다(SPEC-0029 AC-26.2). spot이
+    // 언어별로 갈리므로 그 id는 지금 언어에서 해소되지 않을 수 있고, 그대로 제출하면
+    // 사용자가 쓴 글이 이유 없이 거절당한다. **본문·사진은 그대로 복원한다** —
+    // 사용자가 쓴 것을 언어 때문에 버리지 않는다.
+    final String activeLanguage = _languageCode;
+
     state = PostDraft(
       // 서버 목록에서 사라진 카테고리는 null로 온다 — 초안 전체를 버리지 않고 그
-      // 값만 비워 사용자가 다시 고르게 한다(§3).
+      // 값만 비워 사용자가 다시 고르게 한다(§3). 장소도 같은 결이다.
       category: offered.draft.restoredCategory,
-      spotId: offered.draft.spotId,
-      spotTitle: offered.draft.spotTitle,
+      spotId: offered.draft.restoredSpotId(activeLanguage),
+      spotTitle: offered.draft.restoredSpotTitle(activeLanguage),
       title: offered.draft.title,
       body: offered.draft.body,
       tags: offered.draft.tags,

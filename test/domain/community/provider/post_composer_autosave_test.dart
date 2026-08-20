@@ -5,11 +5,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/model/composer_photo.dart';
 import 'package:ieuri_k_trip_spot/common/model/stored_draft.dart';
 import 'package:ieuri_k_trip_spot/common/model/target_category.dart';
+import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
 import 'package:ieuri_k_trip_spot/common/storage/draft_store.dart';
 import 'package:ieuri_k_trip_spot/common/storage/draft_store_impl.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_draft.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/community_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/community/provider/post_composer_providers.dart';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../common/storage/fake_draft_store.dart';
 import '../community_test_doubles.dart';
@@ -17,12 +20,17 @@ import '../community_test_doubles.dart';
 /// SPEC-0022 자동 저장. **디바운스 타이머의 실제 시간 경과는 테스트하지 않는다**
 /// (§8) — 프레임워크의 동작이고 애플리케이션 경계 위에서 관찰할 수 없다. 대신
 /// [PostComposer.flush]로 "대기 중인 변경을 지금 쓴다"는 경계만 두드린다.
+/// 초안 저장이 활성 언어를 기록하므로(SPEC-0029 AC-26.2) `LocaleController`가
+/// 살아야 하고, 그것이 `SharedPreferences`를 읽는다. `main`이 채워 둔다.
+late SharedPreferences _prefs;
+
 ProviderContainer _container(
   FakeDraftStore drafts, {
   FakeCommunityRepository? repo,
 }) {
   final ProviderContainer container = ProviderContainer(
     overrides: [
+      sharedPreferencesProvider.overrideWithValue(_prefs),
       communityRepositoryProvider.overrideWithValue(
         repo ?? FakeCommunityRepository(),
       ),
@@ -44,6 +52,14 @@ LocalPhoto _photo(String id) => LocalPhoto(
 );
 
 void main() {
+  // 초안 저장이 활성 언어를 함께 남기므로 `SharedPreferences`가 필요하다.
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    _prefs = await SharedPreferences.getInstance();
+  });
+
   group('저장 (R1)', () {
     test('작성 중인 내용이 저장된다', () {
       final FakeDraftStore drafts = FakeDraftStore();
@@ -99,15 +115,19 @@ void main() {
   });
 
   group('복원 (R5)', () {
-    StoredDraft stored({DateTime? savedAt}) => StoredDraft(
-      savedAt: savedAt ?? DateTime.utc(2026, 8, 16),
-      category: 'RESTAURANT',
-      spotId: 'spot-1',
-      spotTitle: '경복궁',
-      title: '저장된 제목',
-      body: '저장된 본문',
-      tags: const <String>['맛집'],
-    );
+    // 기본 언어는 컨테이너의 활성 언어(en)와 같다 — 그래야 장소 참조가 살아남고,
+    // 언어가 다른 경우는 아래 SPEC-0029 테스트가 따로 본다.
+    StoredDraft stored({DateTime? savedAt, String? languageCode = 'en'}) =>
+        StoredDraft(
+          savedAt: savedAt ?? DateTime.utc(2026, 8, 16),
+          category: 'RESTAURANT',
+          languageCode: languageCode,
+          spotId: 'spot-1',
+          spotTitle: '경복궁',
+          title: '저장된 제목',
+          body: '저장된 본문',
+          tags: const <String>['맛집'],
+        );
 
     test('저장된 초안이 있으면 이어쓰기를 제안한다', () async {
       final FakeDraftStore drafts = FakeDraftStore(
@@ -140,6 +160,48 @@ void main() {
       expect(draft.spotId, 'spot-1');
       expect(draft.tags, <String>['맛집']);
       expect(draft.photos, <ComposerPhoto>[const RemotePhoto('images/a')]);
+    });
+
+    // SPEC-0029 AC-26.2 — spot이 언어별로 갈리므로 다른 언어에서 저장한 장소
+    // 참조는 지금 해소되지 않을 수 있다. **본문·사진은 사용자가 쓴 것이라 지키고
+    // 장소만 비운다.**
+    test('다른 언어에서 저장한 초안은 장소만 비우고 본문·사진은 복원한다', () async {
+      final FakeDraftStore drafts = FakeDraftStore(
+        loadResult: DraftLoaded(stored(languageCode: 'ja'), <ComposerPhoto>[
+          const RemotePhoto('images/a'),
+        ]),
+      );
+      final ProviderContainer container = _container(drafts);
+      final PostComposer notifier = _notifier(container);
+
+      await notifier.considerDraft(now: DateTime.utc(2026, 8, 16));
+      notifier.restoreDraft();
+
+      final PostDraft draft = container.read(postComposerProvider());
+      expect(draft.spotId, isNull, reason: '이 언어에서 해소된다는 보장이 없다');
+      expect(draft.spotTitle, isNull, reason: '제목만 남으면 누를 수 없는 칩이 뜬다');
+      expect(draft.title, '저장된 제목');
+      expect(draft.body, '저장된 본문');
+      expect(draft.photos, <ComposerPhoto>[const RemotePhoto('images/a')]);
+    });
+
+    // SPEC-0029 이전에 저장된 초안은 언어를 모른다 — 안전한 쪽으로 판단한다.
+    test('언어를 모르는 예전 초안도 장소를 비운다', () async {
+      final FakeDraftStore drafts = FakeDraftStore(
+        loadResult: DraftLoaded(
+          stored(languageCode: null),
+          const <ComposerPhoto>[],
+        ),
+      );
+      final ProviderContainer container = _container(drafts);
+      final PostComposer notifier = _notifier(container);
+
+      await notifier.considerDraft(now: DateTime.utc(2026, 8, 16));
+      notifier.restoreDraft();
+
+      final PostDraft draft = container.read(postComposerProvider());
+      expect(draft.spotId, isNull);
+      expect(draft.body, '저장된 본문');
     });
 
     test('복원 이후의 저장이 제안을 되살리지 않는다 (R5-4)', () async {
@@ -322,6 +384,7 @@ void main() {
       final _ThrowingDraftStore drafts = _ThrowingDraftStore();
       final ProviderContainer container = ProviderContainer(
         overrides: [
+          sharedPreferencesProvider.overrideWithValue(_prefs),
           communityRepositoryProvider.overrideWithValue(
             FakeCommunityRepository(),
           ),

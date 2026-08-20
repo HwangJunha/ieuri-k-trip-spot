@@ -1,5 +1,8 @@
+import 'dart:ui' show Locale;
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/localization/locale_controller.dart';
 import '../../../common/storage/app_preferences.dart';
 import '../repository/recent_searches_store.dart';
 
@@ -7,9 +10,18 @@ part 'recent_searches_providers.g.dart';
 
 /// 저장소를 provider 뒤에 둔다 — 테스트는 이 provider 하나만 override 한다.
 /// 다른 repository와 같은 자리에서 노출한다(CLAUDE.md §3).
+///
+/// **활성 언어를 watch 한다**(SPEC-0029 R-21). 저장 키가 언어별로 갈리므로, 언어가
+/// 바뀌면 이 provider가 무효화되어 새 언어의 목록을 읽는 저장소로 갈아 끼워진다.
+/// `read`로 하면 키가 첫 빌드 시점의 언어에 굳어 언어를 바꿔도 이전 목록이 남는다.
 @Riverpod(keepAlive: true)
-RecentSearchesStore recentSearchesStore(Ref ref) =>
-    SharedPreferencesRecentSearchesStore(ref.watch(sharedPreferencesProvider));
+RecentSearchesStore recentSearchesStore(Ref ref) {
+  final Locale locale = ref.watch(localeControllerProvider);
+  return SharedPreferencesRecentSearchesStore(
+    ref.watch(sharedPreferencesProvider),
+    locale.languageCode,
+  );
+}
 
 /// 최근 검색어 목록(R12). 최신 검색이 앞에 온다.
 ///
@@ -20,8 +32,10 @@ RecentSearchesStore recentSearchesStore(Ref ref) =>
 class RecentSearches extends _$RecentSearches {
   RecentSearchesStore get _store => ref.read(recentSearchesStoreProvider);
 
+  /// 저장소를 **watch 한다**(SPEC-0029 R-21). 언어가 바뀌면 저장소가 갈아 끼워지므로,
+  /// 여기서 구독하지 않으면 keepAlive인 이 목록이 이전 언어의 이력을 그대로 들고 있다.
   @override
-  List<String> build() => _store.read();
+  List<String> build() => ref.watch(recentSearchesStoreProvider).read();
 
   /// 검색을 실행했을 때 질의를 기록한다(AC-12.1).
   ///

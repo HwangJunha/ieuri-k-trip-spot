@@ -608,7 +608,10 @@
   "spotDetailDislikeAction": "싫어요",
   "spotDetailLoading": "여행지를 불러오는 중…",
   "spotDetailNotFoundTitle": "여행지를 찾을 수 없어요",
-  "spotDetailNotFoundBody": "이 여행지를 찾지 못했어요. 삭제되었거나 현재 언어에서 제공되지 않을 수 있어요.",
+  "spotDetailNotFoundBody": "이 여행지를 찾지 못했어요. 삭제되었을 수 있어요.",
+  "spotDetailNotInLocaleTitle": "현재 언어에서는 볼 수 없어요",
+  "spotDetailNotInLocaleBody": "이 여행지는 있지만 지금 쓰는 언어로는 제공되지 않아요. 설정에서 언어를 바꾸면 볼 수 있어요.",
+  "spotDetailNotInLocaleAction": "홈으로 돌아가기",
   "spotDetailRateLimitedTitle": "요청이 많아요",
   "spotDetailRateLimitedBody": "지금 조금 붐벼요. 잠시 후 다시 시도해 주세요.",
   "spotDetailUnavailableTitle": "여행지를 불러오지 못했어요",
@@ -849,6 +852,10 @@
     "description": "글 등록 성공 안내"
   },
   "communityComposeErrorSpotNotFound": "그 장소를 찾을 수 없어요.",
+  "communityComposeErrorSpotNotInLocale": "그 장소는 지금 쓰는 언어에서는 쓸 수 없어요.",
+  "@communityComposeErrorSpotNotInLocale": {
+    "description": "Shown when the selected spot is not available in the active language (SPEC-0029)."
+  },
   "@communityComposeErrorSpotNotFound": {
     "description": "SPOT_NOT_FOUND"
   },
@@ -1094,6 +1101,9 @@
   "@spotDetailLoading": {},
   "@spotDetailNotFoundTitle": {},
   "@spotDetailNotFoundBody": {},
+  "@spotDetailNotInLocaleTitle": {},
+  "@spotDetailNotInLocaleBody": {},
+  "@spotDetailNotInLocaleAction": {},
   "@spotDetailRateLimitedTitle": {},
   "@spotDetailRateLimitedBody": {},
   "@spotDetailUnavailableTitle": {},

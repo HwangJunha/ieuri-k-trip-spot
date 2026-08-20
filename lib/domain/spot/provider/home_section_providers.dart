@@ -4,7 +4,6 @@ import '../../../common/localization/locale_controller.dart';
 import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
 import '../../../common/pagination/offset_page.dart';
-import '../../../common/pagination/origin_fill.dart';
 import '../../../common/pagination/page.dart';
 import '../../../common/storage/search_radius_controller.dart';
 import '../model/popular_spot.dart';
@@ -45,28 +44,30 @@ Future<List<TouristSpot>> nearbySpotsSection(Ref ref) async {
   final SpotRepository repository = ref.watch(spotRepositoryProvider);
 
   // 정렬은 서버가 보장한다(거리 오름차순) — 클라이언트가 다시 정렬하지 않는다.
-  // 원문을 먼저 채우고 모자란 만큼만 번역본을 덧붙인다(SPEC-0019).
-  return fillWithTranslated<TouristSpot>(
-    target: homeSectionSize,
-    fetch: (bool hasOrigin, int size) async {
-      final OffsetPage<TouristSpot> page = await repository.fetchSpotPage(
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        radiusMeters: radiusMetersOf(radiusKm),
-        hasOrigin: hasOrigin,
-        page: 0,
-        size: size,
-      );
-      return page.items;
-    },
+  //
+  // **조회는 한 번이다**(SPEC-0029). 서버가 활성 언어의 장소만 주므로 원문을 먼저
+  // 채우고 번역본으로 보충하던 2단 조회가 사라졌다. 반경 안에 활성 언어 장소가
+  // 적으면 섹션이 짧거나 비는데, 그것이 정상 결과다.
+  final OffsetPage<TouristSpot> page = await repository.fetchSpotPage(
+    latitude: coords.latitude,
+    longitude: coords.longitude,
+    radiusMeters: radiusMetersOf(radiusKm),
+    page: 0,
+    size: homeSectionSize,
   );
+  return page.items;
 }
 
 /// 홈 "Popular" 섹션(R18). 반경 안의 spot을 누적 좋아요 총합 내림차순으로 준다.
 ///
-/// **좋아요 10개 미만은 서버가 이미 걸러 낸다**(AC-18.2) — 표본이 적으면 순위가
+/// **최소 좋아요 수 미만은 서버가 이미 걸러 낸다**(AC-18.2) — 표본이 적으면 순위가
 /// 사실상 잡음이기 때문이고, 그 판단은 서버 몫이라 클라이언트가 다시 거르지 않는다.
-/// 정렬도 계약이므로 재정렬하지 않는다(POL-019).
+/// 그 기준은 SPEC-0029에서 10에서 5로 낮아졌으나 **클라이언트가 아는 값이 아니다** —
+/// 숫자를 여기 박아 두면 서버가 다시 바꿀 때 어긋난다. 정렬도 계약이므로 재정렬하지
+/// 않는다(POL-019).
+///
+/// 좋아요가 **활성 언어별로 집계된다**(SPEC-0029). 언어를 바꾸면 같은 지역에서도
+/// 다른 목록이 나오는데, 이는 데이터가 사라진 것이 아니라 축이 다른 것이다.
 ///
 /// 조건을 만족하는 spot이 0건인 것은 정상 상태다(AC-18.4) — 특히 초기 데이터
 /// 상황에서는 대부분 비어 있을 것으로 예상된다(설계 §2).
@@ -83,18 +84,12 @@ Future<List<PopularSpot>> popularSpotsSection(Ref ref) async {
 
   final SpotRepository repository = ref.watch(spotRepositoryProvider);
 
-  // Near you와 같은 규약 — 원문 우선, 부족분만 번역본(SPEC-0019).
-  return fillWithTranslated<PopularSpot>(
-    target: homeSectionSize,
-    fetch: (bool hasOrigin, int size) async {
-      final CursorPage<PopularSpot> page = await repository.fetchPopularSpots(
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        radiusMeters: radiusMetersOf(radiusKm),
-        hasOrigin: hasOrigin,
-        first: size,
-      );
-      return page.items;
-    },
+  // Near you와 같은 규약 — 조회는 한 번이다(SPEC-0029).
+  final CursorPage<PopularSpot> page = await repository.fetchPopularSpots(
+    latitude: coords.latitude,
+    longitude: coords.longitude,
+    radiusMeters: radiusMetersOf(radiusKm),
+    first: homeSectionSize,
   );
+  return page.items;
 }

@@ -157,6 +157,19 @@ class _ErrorState extends StatelessWidget {
     final SpotFailure failure = error is SpotFailure
         ? error as SpotFailure
         : SpotFailure.network;
+
+    // **이 언어에서 못 보는 것**은 "없다"와 다르다(SPEC-0029 R-20). 언어를 바꾸면
+    // 볼 수 있는 장소라 재시도 버튼은 무의미하다 — 같은 언어로 다시 물어도 결과가
+    // 같다. 그래서 행동 버튼이 홈 복귀다.
+    if (failure.isSpotMissingInLocale) {
+      return FailureNotice.retryable(
+        title: l10n.spotDetailNotInLocaleTitle,
+        body: l10n.spotDetailNotInLocaleBody,
+        actionLabel: l10n.spotDetailNotInLocaleAction,
+        onAction: () => context.go('/home'),
+      );
+    }
+
     final (String title, String body) = switch (failure.kind) {
       SpotFailureKind.notFound => (
         l10n.spotDetailNotFoundTitle,

@@ -25,7 +25,6 @@ import 'package:ieuri_k_trip_spot/domain/spot/repository/spot_repository.dart';
 class FakeSpotRepository implements SpotRepository {
   FakeSpotRepository({
     List<TouristSpot>? feed,
-    List<TouristSpot>? translatedFeed,
     this.categories,
     this.pageSize = 5,
     this.reactShouldFail = false,
@@ -39,7 +38,6 @@ class FakeSpotRepository implements SpotRepository {
     this.likedSpotsFailure,
     this.failLikedAfter = 0,
   }) : feed = feed ?? const <TouristSpot>[],
-       translatedFeed = translatedFeed ?? const <TouristSpot>[],
        liked = liked ?? const <LikedSpot>[];
 
   /// `fetchSpotPage`가 던질 실패(설정 시). [failPageTimes]와 함께 쓰면 앞의 N회만
@@ -56,22 +54,10 @@ class FakeSpotRepository implements SpotRepository {
   /// SPEC-0011 R13). null은 인자를 보내지 않은 것 — 0km가 그 경우다.
   final List<int?> requestedRadiiMeters = <int?>[];
 
+  /// 조회가 돌려줄 장소. **활성 언어의 장소만 담는다**(SPEC-0029) — 서버가 언어 축으로
+  /// 이미 갈라 주므로 페이크도 원문/번역을 구분하지 않는다.
   final List<TouristSpot> feed;
 
-  /// `hasOrigin: false`(번역본)로 조회했을 때 돌려줄 풀(SPEC-0019). 비워 두면 번역본이
-  /// 없는 지역이라, `hasOrigin: true`와 생략 모두 [feed]를 본다 — 기존 테스트는 이
-  /// 경로라 동작이 그대로다.
-  final List<TouristSpot> translatedFeed;
-
-  /// 호출마다 실린 `hasOrigin`(원문 우선 조회가 실제로 나가는지 확인용).
-  final List<bool?> requestedHasOrigin = <bool?>[];
-
-  /// `hasOrigin`으로 풀을 가른다. null이면 둘을 합쳐 돌려준다(서버 규약과 같다).
-  List<TouristSpot> _poolFor(bool? hasOrigin) => switch (hasOrigin) {
-    true => feed,
-    false => translatedFeed,
-    null => <TouristSpot>[...feed, ...translatedFeed],
-  };
   final List<SpotCategory>? categories;
   final int pageSize;
   final bool reactShouldFail;
@@ -168,9 +154,9 @@ class FakeSpotRepository implements SpotRepository {
   /// `fetchPopularSpots`가 돌려줄 항목(설정 시).
   List<PopularSpot> popular = const <PopularSpot>[];
 
-  /// `hasOrigin: false`(번역본)로 조회했을 때 돌려줄 인기 장소(SPEC-0019). 비워 두면
-  /// 기존 테스트와 동작이 같다.
-  List<PopularSpot> translatedPopular = const <PopularSpot>[];
+  /// `fetchPopularSpots` 호출 횟수(검증용). 홈 섹션이 조회를 한 번만 하는지 본다
+  /// (SPEC-0029 AC-19.1).
+  int popularCallCount = 0;
 
   /// 인기 조회에 실린 반경(검증용). **`requestedRadiiMeters`와 분리한다** — 두
   /// 조회가 한 리스트를 공유하면 "몇 번째 값이 누구 것인지"가 섞여 단언이 흔들린다.
@@ -191,20 +177,13 @@ class FakeSpotRepository implements SpotRepository {
     required double longitude,
     int? radiusMeters,
     List<String>? categoryCodes,
-    bool? hasOrigin,
     int? first,
     String? after,
   }) async {
+    popularCallCount++;
     popularRadiiMeters.add(radiusMeters);
-    requestedHasOrigin.add(hasOrigin);
     if (popularFailure != null) throw popularFailure!;
-    // [popular]가 원문, [translatedPopular]가 번역본이다(SPEC-0019). 번역본을 비워
-    // 두면 기존 테스트와 동작이 같다.
-    final List<PopularSpot> pool = switch (hasOrigin) {
-      true => popular,
-      false => translatedPopular,
-      null => <PopularSpot>[...popular, ...translatedPopular],
-    };
+    final List<PopularSpot> pool = popular;
     return CursorPage<PopularSpot>(
       items: first == null ? pool : pool.take(first).toList(growable: false),
       hasNextPage: false,
@@ -247,18 +226,16 @@ class FakeSpotRepository implements SpotRepository {
     required double longitude,
     int? radiusMeters,
     List<String>? categoryCodes,
-    bool? hasOrigin,
     required int page,
     required int size,
   }) async {
     spotPageCallCount++;
     requestedRadiiMeters.add(radiusMeters);
-    requestedHasOrigin.add(hasOrigin);
     if (pageFailure != null &&
         (failPageTimes == 0 || spotPageCallCount <= failPageTimes)) {
       throw pageFailure!;
     }
-    final List<TouristSpot> source = _poolFor(hasOrigin);
+    final List<TouristSpot> source = feed;
     final List<TouristSpot> pool = categoryCodes == null
         ? source
         : source

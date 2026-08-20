@@ -24,7 +24,6 @@ class EventRepositoryImpl implements EventRepository {
     required double latitude,
     required double longitude,
     int? radiusMeters,
-    bool? hasOrigin,
     int? first,
     String? after,
   }) async {
@@ -35,8 +34,6 @@ class EventRepositoryImpl implements EventRepository {
         latitude: latitude,
         longitude: longitude,
         radiusMeters: radiusMeters,
-        // null이면 변수를 보내지 않아 서버가 원문·번역을 모두 준다(SPEC-0019).
-        hasOrigin: hasOrigin,
         first: first,
         after: after,
       ).toJson(),

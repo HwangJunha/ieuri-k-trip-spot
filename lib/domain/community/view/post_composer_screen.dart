@@ -527,6 +527,10 @@ class _PostComposerScreenState extends ConsumerState<PostComposerScreen>
     'INVALID_TAG' => l10n.communityComposeErrorInvalidTag,
     'TOO_MANY_TAGS' => l10n.communityComposeErrorTooManyTags,
     'SPOT_NOT_FOUND' => l10n.communityComposeErrorSpotNotFound,
+    // 장소는 있으나 지금 언어에서 못 쓰는 경우다(SPEC-0029). "없다"고 하면
+    // 사용자가 장소를 잘못 골랐다고 오해한다.
+    'SPOT_NOT_FOUND_IN_LOCALE' =>
+      l10n.communityComposeErrorSpotNotInLocale,
     'TOO_MANY_PHOTOS' => l10n.communityComposeErrorTooManyPhotos,
     'PHOTO_NOT_UPLOADED' => l10n.communityComposeErrorPhotoNotUploaded,
     _ => l10n.communityActionFailed,

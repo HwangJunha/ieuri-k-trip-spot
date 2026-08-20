@@ -129,7 +129,6 @@ extend type Query {
     # SPEC-0020 R7: 지도 카테고리 필터. code 문자열 배열이며 OR로 걸린다.
     categories: [String!]
     # true면 요청 언어로 쓰인 원문만, false면 번역본만, 생략하면 둘 다(SPEC-0019).
-    hasOrigin: Boolean
   ): MapViewportResult!
 
   # areaIds 또는 bbox 중 하나는 필수다(R6). 둘 다 주면 areaIds가 우선한다.
