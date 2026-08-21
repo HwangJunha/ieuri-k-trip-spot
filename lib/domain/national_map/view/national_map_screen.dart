@@ -158,7 +158,7 @@ class _BodyState extends ConsumerState<_Body> {
     try {
       await ref
           .read(shareControllerProvider.notifier)
-          .share(message: widget.l10n.nationalMapShareMessage);
+          .share();
     } on Object {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

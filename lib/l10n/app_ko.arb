@@ -327,10 +327,6 @@
   "@nationalMapShare": {
     "description": "전국 지도 - 공유 버튼"
   },
-  "nationalMapShareMessage": "제가 다녀온 곳이에요. 이으리 앱에서 열 수 있어요.",
-  "@nationalMapShareMessage": {
-    "description": "공유 시트에 링크와 함께 보내는 안내. 1단계는 앱 설치자만 열 수 있다"
-  },
   "nationalMapShareFailed": "공유 링크를 만들지 못했어요.",
   "@nationalMapShareFailed": {
     "description": "공유 링크 발급 실패"

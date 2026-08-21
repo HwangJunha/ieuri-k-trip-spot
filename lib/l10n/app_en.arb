@@ -76,7 +76,6 @@
   "nationalMapOutsideKorea": "Only regions in Korea can be added.",
   "nationalMapLocationUnavailable": "Can't determine your location.",
   "nationalMapShare": "Share map",
-  "nationalMapShareMessage": "Here's where I've been. Open it in the ieuri app.",
   "nationalMapShareFailed": "Couldn't create a share link.",
   "sharedMapVisitedCount": "{count} regions visited",
   "sharedMapOverlapCount": "{count} in common with you",

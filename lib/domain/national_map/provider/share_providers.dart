@@ -21,17 +21,15 @@ class ShareController extends _$ShareController {
 
   /// 링크를 발급해 공유 시트로 넘긴다.
   ///
-  /// [message]는 링크 앞에 붙일 안내다. 1단계에서는 `ieuri://` 스킴이라
-  /// 앱 미설치자가 열 수 없어, 앱이 필요하다는 안내를 함께 보낸다.
-  Future<MapShareLink> share({required String message}) async {
+  /// **링크만 보낸다.** 안내 문구를 앞에 붙이면 받는 사람에게는 잡음이고, 링크
+  /// 미리보기(OG 태그)가 뜨는 곳에서는 그 미리보기가 설명을 대신한다.
+  Future<MapShareLink> share() async {
     state = true;
     try {
       final MapShareLink link = await ref
           .read(nationalMapRepositoryProvider)
           .createShareLink();
-      await ref
-          .read(shareSheetServiceProvider)
-          .share(text: '$message\n${link.shareUrl}');
+      await ref.read(shareSheetServiceProvider).share(text: link.shareUrl);
       return link;
     } finally {
       state = false;

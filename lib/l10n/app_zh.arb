@@ -76,7 +76,6 @@
   "nationalMapOutsideKorea": "只能登记韩国国内的地区。",
   "nationalMapLocationUnavailable": "无法获取当前位置。",
   "nationalMapShare": "分享地图",
-  "nationalMapShareMessage": "这是我去过的地方。可以在 ieuri 应用中打开。",
   "nationalMapShareFailed": "无法创建分享链接。",
   "sharedMapVisitedCount": "去过{count}个地区",
   "sharedMapOverlapCount": "有{count}个地区重合",
