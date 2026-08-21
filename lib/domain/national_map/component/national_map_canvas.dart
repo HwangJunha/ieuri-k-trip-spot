@@ -56,6 +56,21 @@ class _NationalMapCanvasState extends State<NationalMapCanvas>
   /// 끌기·핀치가 있었는지.
   bool _moved = false;
 
+  /// 이번 상호작용에서 동시에 닿은 손가락의 최대 수.
+  int _maxPointers = 0;
+
+  /// 배율이 바뀌었는지(= 핀치였는지).
+  bool _scaleChanged = false;
+
+  /// 배율이 이만큼 넘게 바뀌면 핀치로 본다.
+  static const double _scaleSlop = 0.02;
+
+  /// 핀치가 끝난 뒤 이 시각까지는 탭을 받지 않는다.
+  DateTime? _blockTapUntil;
+
+  /// 핀치 직후 탭을 막는 시간. 두 손가락을 동시에 떼기 어려워 필요하다.
+  static const Duration _afterPinchGuard = Duration(milliseconds: 220);
+
   /// 직전 탭의 시각과 위치. 더블탭 판별에 쓴다.
   DateTime? _lastTapAt;
   Offset? _lastTapPos;
@@ -66,13 +81,22 @@ class _NationalMapCanvasState extends State<NationalMapCanvas>
   void _onStart(ScaleStartDetails d) {
     _pressAt = d.localFocalPoint;
     _moved = false;
+    _maxPointers = d.pointerCount;
+    _scaleChanged = false;
   }
 
   void _onUpdate(ScaleUpdateDetails d) {
     final Offset? from = _pressAt;
     if (from == null) return;
-    if (d.pointerCount > 1 ||
-        (d.localFocalPoint - from).distance > _tapSlop) {
+
+    // 이번 상호작용에서 손가락이 최대 몇 개였는지 기억한다. 핀치 도중 하나를
+    // 떼면 pointerCount가 1로 줄어드는데, 그 순간만 보면 탭처럼 보인다.
+    if (d.pointerCount > _maxPointers) _maxPointers = d.pointerCount;
+
+    // 배율이 바뀌었으면 핀치다. 손가락이 거의 안 움직여도 확대는 될 수 있다.
+    if ((d.scale - 1).abs() > _scaleSlop) _scaleChanged = true;
+
+    if (d.pointerCount > 1 || (d.localFocalPoint - from).distance > _tapSlop) {
       _moved = true;
     }
   }
@@ -80,9 +104,20 @@ class _NationalMapCanvasState extends State<NationalMapCanvas>
   void _onEnd(Size size) {
     final Offset? at = _pressAt;
     _pressAt = null;
-    if (_moved || at == null) return; // 끌기·핀치였다
+
+    // 끌기·핀치·확대였으면 탭이 아니다.
+    if (_moved || _maxPointers > 1 || _scaleChanged || at == null) {
+      // **핀치 직후를 잠시 막는다.** 두 손가락을 동시에 떼기 어려워, 남은
+      // 손가락이 곧바로 새 상호작용을 만들고 그것이 탭으로 잡힌다 — 실기기에서
+      // 핀치할 때마다 상세가 열리던 원인이다.
+      _blockTapUntil = DateTime.now().add(_afterPinchGuard);
+      return;
+    }
 
     final DateTime now = DateTime.now();
+    // 핀치가 막 끝났으면 무시한다.
+    final DateTime? blockUntil = _blockTapUntil;
+    if (blockUntil != null && now.isBefore(blockUntil)) return;
     final DateTime? prev = _lastTapAt;
     final Offset? prevPos = _lastTapPos;
     final bool isDouble =

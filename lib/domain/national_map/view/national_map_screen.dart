@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -132,7 +134,12 @@ class _BodyState extends ConsumerState<_Body> {
           Positioned(
             left: 24,
             right: 24,
-            bottom: FloatingBottomNavScaffold.barExtent + 24,
+            // 하단 인셋을 더한다 — Android는 시스템 내비게이션이 더 있어
+            // barExtent만으로는 안내가 바에 가린다.
+            bottom:
+                FloatingBottomNavScaffold.barExtent +
+                MediaQuery.paddingOf(context).bottom +
+                24,
             child: _EmptyHint(text: l10n.nationalMapEmptyHint, scheme: scheme),
           ),
       ],
@@ -251,27 +258,64 @@ class _ShareButton extends ConsumerWidget {
   }
 }
 
-/// 한 칸도 없을 때의 안내. 지도 위에 얹어 시선을 끈다.
-class _EmptyHint extends StatelessWidget {
+/// 한 칸도 없을 때의 안내.
+///
+/// **3초 뒤 사라진다.** 지도를 채우기 전까지 계속 떠 있으면 지도를 가리는
+/// 방해물이 된다 — 한 번 읽으면 되는 문구다.
+class _EmptyHint extends StatefulWidget {
   const _EmptyHint({required this.text, required this.scheme});
 
   final String text;
   final ColorScheme scheme;
 
   @override
-  Widget build(BuildContext context) => DecoratedBox(
-    decoration: BoxDecoration(
-      color: scheme.inverseSurface.withValues(alpha: 0.9),
-      borderRadius: BorderRadius.circular(999),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: Theme.of(
-          context,
-        ).textTheme.bodySmall?.copyWith(color: scheme.onInverseSurface),
+  State<_EmptyHint> createState() => _EmptyHintState();
+}
+
+class _EmptyHintState extends State<_EmptyHint> {
+  static const Duration _visibleFor = Duration(seconds: 3);
+
+  bool _visible = true;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer(_visibleFor, () {
+      if (mounted) setState(() => _visible = false);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedOpacity(
+    opacity: _visible ? 1 : 0,
+    duration: const Duration(milliseconds: 300),
+    // 사라진 뒤에는 탭을 가로채지 않아야 한다 — 투명해도 자리는 남는다.
+    child: IgnorePointer(
+      ignoring: !_visible,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: widget.scheme.inverseSurface.withValues(alpha: 0.9),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          // 두 줄까지 접는다 — 한 줄로 두면 긴 문구가 잘린다.
+          child: Text(
+            widget.text,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: widget.scheme.onInverseSurface,
+            ),
+          ),
+        ),
       ),
     ),
   );
