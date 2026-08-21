@@ -8,7 +8,6 @@ import '../component/cell_image_view.dart';
 import '../model/cell_detail.dart';
 import '../model/map_cell.dart';
 import '../provider/national_map_providers.dart';
-import '../provider/visit_controller.dart';
 
 /// 지역 상세 — 대표 이미지와 그 칸의 장소 목록(R11·R22·R23·R24).
 class CellDetailScreen extends ConsumerWidget {
@@ -64,7 +63,6 @@ class _Body extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ThemeData theme = Theme.of(context);
     final MapCell cell = detail.cell;
-    final bool busy = ref.watch(visitControllerProvider);
 
     return NotificationListener<ScrollNotification>(
       // 바닥 근처에서 다음 페이지를 당긴다. 컨트롤러가 중복 요청을 막는다.
@@ -98,15 +96,17 @@ class _Body extends ConsumerWidget {
                   ],
                 ),
               ),
+              // **해제 버튼을 두지 않는다.** 여기는 지역을 둘러보는 화면이고
+              // 해제는 지도에서 칸을 눌렀을 때 뜨는 시트에 있다. 상태만 알린다.
               if (cell.visited)
-                OutlinedButton.icon(
-                  onPressed: busy
-                      ? null
-                      : () => ref
-                            .read(visitControllerProvider.notifier)
-                            .remove(cell.id),
-                  icon: const Icon(Icons.check_circle, size: 18),
-                  label: Text(l10n.nationalMapRemoveVisit),
+                Chip(
+                  avatar: Icon(
+                    Icons.check_circle,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  ),
+                  label: Text(l10n.nationalMapVisited),
+                  visualDensity: VisualDensity.compact,
                 ),
             ],
           ),
