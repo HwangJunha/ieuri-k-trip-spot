@@ -225,6 +225,18 @@
   "@navLibrary": {
     "description": "하단 내비 - 보관함 탭(좋아요/커뮤니티 토글)"
   },
+  "permissionPhotosRationaleTitle": "사진으로 지도를 채울까요?",
+  "@permissionPhotosRationaleTitle": {
+    "description": "사진 권한 사전설명 - 제목"
+  },
+  "permissionPhotosRationaleBody": "사진에 담긴 위치로 다녀온 지역을 찾아 지도를 채웁니다. 사진은 기기 밖으로 나가지 않고, 좌표는 지역을 판정하는 데만 쓰고 저장하지 않습니다.",
+  "@permissionPhotosRationaleBody": {
+    "description": "사진 권한 사전설명 - 본문(사진 미전송·좌표 미저장을 밝힌다)"
+  },
+  "permissionPhotosBlockedMessage": "사진 접근이 꺼져 있어 사진으로 채울 수 없어요. 설정에서 허용할 수 있습니다.",
+  "@permissionPhotosBlockedMessage": {
+    "description": "사진 권한 영구거부 안내"
+  },
   "nationalMapNationwide": "전국",
   "@nationalMapNationwide": {
     "description": "전국 지도 - 전체 진척 막대의 이름"

@@ -1,9 +1,23 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- SPEC-0001 R1/R7: foreground location + notifications only. No
-         ACCESS_BACKGROUND_LOCATION, CAMERA, RECORD_AUDIO, or media reads. -->
+    <!-- SPEC-0001 R1/R7: foreground location + notifications. No
+         ACCESS_BACKGROUND_LOCATION, CAMERA, or RECORD_AUDIO. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- SPEC-0030 R25/R31: 사진에 담긴 좌표로 방문 지역을 채운다. SPEC-0001의
+         "media reads 없음"을 뒤집는 결정이며 그 근거는 스펙 §5에 있다.
+
+         ACCESS_MEDIA_LOCATION이 **함께 있어야** EXIF의 GPS가 지워지지 않는다 —
+         Android 10+ 는 FUSE 계층에서 위치를 redact하며, READ_MEDIA_IMAGES만으로는
+         좌표가 전부 null로 온다. Photo Picker는 권한과 무관하게 GPS를 제거하므로
+         이 경로를 대체할 수 없다(설계 §4).
+
+         READ_MEDIA_IMAGES 광범위 접근은 Play 선언 심사 대상이다(스펙 §11 리스크). -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION"/>
+    <!-- Android 12 이하는 READ_MEDIA_IMAGES가 없다. -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"/>
     <!-- SPEC-0014: 지도 SDK가 타일을 내려받는 데 필요하다. 디버그 빌드는 Flutter가
          자동 주입해 지금까지 없어도 돌았지만, 릴리스 매니페스트에는 들어가지 않아
          지도가 빈 화면으로 뜬다. 위치 권한 2종은 위에 이미 있어 다시 넣지 않는다. -->
