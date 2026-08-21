@@ -234,56 +234,48 @@ final class ProvinceProgressProvider
 String _$provinceProgressHash() => r'b34cf99402be2586db185ca925234e3c95313973';
 
 /// 칸 상세(R11·R22). 칸 id로 부르는 family다.
+///
+/// 광역시 칸은 장소가 수천 건이라 커서로 이어 읽는다(스펙 §11).
 
-@ProviderFor(cellDetail)
-const cellDetailProvider = CellDetailFamily._();
+@ProviderFor(CellDetailController)
+const cellDetailControllerProvider = CellDetailControllerFamily._();
 
 /// 칸 상세(R11·R22). 칸 id로 부르는 family다.
-
-final class CellDetailProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<CellDetail>,
-          CellDetail,
-          FutureOr<CellDetail>
-        >
-    with $FutureModifier<CellDetail>, $FutureProvider<CellDetail> {
+///
+/// 광역시 칸은 장소가 수천 건이라 커서로 이어 읽는다(스펙 §11).
+final class CellDetailControllerProvider
+    extends $AsyncNotifierProvider<CellDetailController, CellDetail> {
   /// 칸 상세(R11·R22). 칸 id로 부르는 family다.
-  const CellDetailProvider._({
-    required CellDetailFamily super.from,
+  ///
+  /// 광역시 칸은 장소가 수천 건이라 커서로 이어 읽는다(스펙 §11).
+  const CellDetailControllerProvider._({
+    required CellDetailControllerFamily super.from,
     required String super.argument,
   }) : super(
          retry: null,
-         name: r'cellDetailProvider',
+         name: r'cellDetailControllerProvider',
          isAutoDispose: true,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
 
   @override
-  String debugGetCreateSourceHash() => _$cellDetailHash();
+  String debugGetCreateSourceHash() => _$cellDetailControllerHash();
 
   @override
   String toString() {
-    return r'cellDetailProvider'
+    return r'cellDetailControllerProvider'
         ''
         '($argument)';
   }
 
   @$internal
   @override
-  $FutureProviderElement<CellDetail> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<CellDetail> create(Ref ref) {
-    final argument = this.argument as String;
-    return cellDetail(ref, argument);
-  }
+  CellDetailController create() => CellDetailController();
 
   @override
   bool operator ==(Object other) {
-    return other is CellDetailProvider && other.argument == argument;
+    return other is CellDetailControllerProvider && other.argument == argument;
   }
 
   @override
@@ -292,26 +284,64 @@ final class CellDetailProvider
   }
 }
 
-String _$cellDetailHash() => r'ea42fce39590c819e1ad9b30c3a32b00b40e6661';
+String _$cellDetailControllerHash() =>
+    r'c28e8ad50a207cefcc465f4a7fb66b13c868a041';
 
 /// 칸 상세(R11·R22). 칸 id로 부르는 family다.
+///
+/// 광역시 칸은 장소가 수천 건이라 커서로 이어 읽는다(스펙 §11).
 
-final class CellDetailFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<CellDetail>, String> {
-  const CellDetailFamily._()
+final class CellDetailControllerFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          CellDetailController,
+          AsyncValue<CellDetail>,
+          CellDetail,
+          FutureOr<CellDetail>,
+          String
+        > {
+  const CellDetailControllerFamily._()
     : super(
         retry: null,
-        name: r'cellDetailProvider',
+        name: r'cellDetailControllerProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
 
   /// 칸 상세(R11·R22). 칸 id로 부르는 family다.
+  ///
+  /// 광역시 칸은 장소가 수천 건이라 커서로 이어 읽는다(스펙 §11).
 
-  CellDetailProvider call(String cellId) =>
-      CellDetailProvider._(argument: cellId, from: this);
+  CellDetailControllerProvider call(String cellId) =>
+      CellDetailControllerProvider._(argument: cellId, from: this);
 
   @override
-  String toString() => r'cellDetailProvider';
+  String toString() => r'cellDetailControllerProvider';
+}
+
+/// 칸 상세(R11·R22). 칸 id로 부르는 family다.
+///
+/// 광역시 칸은 장소가 수천 건이라 커서로 이어 읽는다(스펙 §11).
+
+abstract class _$CellDetailController extends $AsyncNotifier<CellDetail> {
+  late final _$args = ref.$arg as String;
+  String get cellId => _$args;
+
+  FutureOr<CellDetail> build(String cellId);
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build(_$args);
+    final ref = this.ref as $Ref<AsyncValue<CellDetail>, CellDetail>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<CellDetail>, CellDetail>,
+              AsyncValue<CellDetail>,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
 }

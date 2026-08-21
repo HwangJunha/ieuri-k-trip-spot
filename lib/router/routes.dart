@@ -32,6 +32,7 @@ import '../domain/library/view/library_screen.dart';
 import '../domain/map/view/map_screen.dart';
 import '../domain/national_map/view/cell_detail_screen.dart';
 import '../domain/national_map/view/national_map_screen.dart';
+import '../domain/national_map/view/shared_map_screen.dart';
 import '../domain/map/view/region_recommendation_screen.dart';
 import '../common/category/spot_category.dart';
 import '../common/category/spot_category_selection.dart';
@@ -372,6 +373,17 @@ List<RouteBase> buildRoutes() => <RouteBase>[
     path: '/required-terms',
     name: RequiredTermsScreen.routeName,
     builder: (_, _) => const RequiredTermsScreen(),
+  ),
+  // 공유 지도(SPEC-0030 R37). **인증 없이 열린다** — 게이트를 통과해야 한다.
+  //
+  // 경로의 마지막 조각이 토큰이다. 서버가 지금은 `ieuri://shared/<token>`을
+  // 주고 나중에 Universal Link로 바꾸는데, 마지막 조각만 쓰므로 그때도 이
+  // 라우트가 그대로 받는다.
+  GoRoute(
+    path: '/shared/:token',
+    name: SharedMapScreen.routeName,
+    builder: (_, GoRouterState state) =>
+        SharedMapScreen(token: state.pathParameters['token']!),
   ),
   // 지역 상세(SPEC-0030 R22). 셸 밖의 최상위 라우트라 하단 탭을 덮는다 —
   // 관광지 상세와 같은 성격이다. 칸 id만 넘긴다(§6).

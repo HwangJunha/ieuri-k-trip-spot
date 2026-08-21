@@ -1,3 +1,5 @@
+import '../../../common/location/location_service.dart';
+
 /// 현재 위치로 등록을 시도했을 때의 판정 결과(R33~R35).
 ///
 /// 화면이 무엇을 보여줄지가 여기서 갈린다. 순수 값이라 위젯 없이 검증할 수 있다.
@@ -54,12 +56,21 @@ class LocationOutsideKorea extends CurrentLocationCheck {
 }
 
 /// 위치를 얻지 못했다(R35). 버튼을 비활성화하고 사유를 보여준다.
-class LocationUnavailable extends CurrentLocationCheck {
-  const LocationUnavailable();
+///
+/// 이름이 `LocationUnavailable`이 아닌 이유는 `common/location`의 **예외**가 그
+/// 이름을 이미 쓰기 때문이다. 이쪽은 화면 상태이고 그쪽은 던져지는 오류라, 같은
+/// 이름을 두면 import가 충돌한다.
+class LocationNotAvailable extends CurrentLocationCheck {
+  const LocationNotAvailable(this.reason);
+
+  /// 왜 못 얻었는지. 위치 서비스가 꺼진 것과 권한이 없는 것은 사용자가 할 일이
+  /// 다르다. 원인을 모르면 null이다.
+  final LocationUnavailableReason? reason;
 
   @override
-  bool operator ==(Object other) => other is LocationUnavailable;
+  bool operator ==(Object other) =>
+      other is LocationNotAvailable && other.reason == reason;
 
   @override
-  int get hashCode => 1;
+  int get hashCode => reason.hashCode;
 }

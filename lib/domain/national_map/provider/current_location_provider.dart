@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
+import '../../../common/location/location_service.dart';
 import '../model/cell_geometry.dart';
 import '../model/current_location_check.dart';
 import '../model/district_boundary.dart';
@@ -24,9 +25,11 @@ Future<CurrentLocationCheck> currentLocationCheck(Ref ref) async {
   final Coordinates coords;
   try {
     coords = await ref.watch(currentCoordinatesProvider.future);
+  } on LocationUnavailable catch (e) {
+    // 위치 서비스가 꺼진 것과 권한이 없는 것은 사용자가 할 일이 다르다.
+    return LocationNotAvailable(e.reason);
   } on Object {
-    // 권한 거부·GPS 꺼짐·타임아웃을 구분하지 않는다 — 화면에서 할 일이 같다.
-    return const LocationUnavailable();
+    return const LocationNotAvailable(null);
   }
 
   final DistrictResolver resolver = await ref.watch(

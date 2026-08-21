@@ -13,6 +13,7 @@ import '../model/map_cell.dart';
 import '../model/province_progress.dart';
 import '../provider/current_location_provider.dart';
 import '../provider/national_map_providers.dart';
+import '../provider/share_providers.dart';
 import '../provider/visit_controller.dart';
 import 'cell_detail_screen.dart';
 
@@ -50,6 +51,7 @@ class _NationalMapScreenState extends ConsumerState<NationalMapScreen> {
             tooltip: l10n.photoSyncTitle,
             onPressed: () => showPhotoSyncSheet(context),
           ),
+          _ShareButton(l10n: l10n),
         ],
       ),
       body: SafeArea(
@@ -176,7 +178,7 @@ class _HereButton extends ConsumerWidget {
     final bool disabled =
         busy ||
         check.isLoading ||
-        check.value is LocationUnavailable ||
+        check.value is LocationNotAvailable ||
         check.value is LocationOutsideKorea;
 
     return FloatingActionButton.extended(
@@ -241,7 +243,7 @@ class _HereButton extends ConsumerWidget {
       case LocationOutsideKorea():
         _toast(context, l10n.nationalMapOutsideKorea);
 
-      case LocationUnavailable():
+      case LocationNotAvailable():
         _toast(context, l10n.nationalMapLocationUnavailable);
     }
   }
@@ -251,6 +253,43 @@ class _HereButton extends ConsumerWidget {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
+  }
+}
+
+/// 공유 링크를 발급해 시스템 공유 시트로 넘긴다(R36).
+class _ShareButton extends ConsumerWidget {
+  const _ShareButton({required this.l10n});
+
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bool busy = ref.watch(shareControllerProvider);
+
+    return IconButton(
+      icon: busy
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.ios_share),
+      tooltip: l10n.nationalMapShare,
+      onPressed: busy ? null : () => _share(context, ref),
+    );
+  }
+
+  Future<void> _share(BuildContext context, WidgetRef ref) async {
+    try {
+      await ref
+          .read(shareControllerProvider.notifier)
+          .share(message: l10n.nationalMapShareMessage);
+    } on Object {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.nationalMapShareFailed)),
+      );
+    }
   }
 }
 

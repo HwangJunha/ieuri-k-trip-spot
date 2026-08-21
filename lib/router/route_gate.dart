@@ -33,6 +33,13 @@ const String settingsPath = '/settings';
 /// Discover로 보낸다 — 홈은 하단 탭으로 언제든 갈 수 있다.
 const String discoverPath = '/discover';
 
+/// 공유 지도의 경로 접두사(SPEC-0030 R12·R37).
+///
+/// **인증과 무관하게 열린다** — 링크를 가진 누구나 볼 수 있는 것이 이 기능의
+/// 목적이고, 받은 사람이 앱을 처음 켠 경우도 포함한다. 뒤에 토큰이 붙으므로
+/// 정확히 일치가 아니라 접두사로 본다.
+const String sharedMapPathPrefix = '/shared/';
+
 /// 미인증 사용자에게 허용되는 경로(SPEC-0005 §10.2).
 const Set<String> authPaths = <String>{
   loginPath,
@@ -99,6 +106,11 @@ String? resolveGate({
 }) {
   // 스플래시는 자기 초기 내비게이션을 스스로 몬다.
   if (location == splashPath) return null;
+
+  // 공유 지도는 **모든 게이트보다 앞이다**(R12) — 링크를 받은 사람은 회원이
+  // 아닐 수 있고, 언어 선택조차 안 한 첫 실행일 수 있다. 링크를 눌러 들어온
+  // 사람을 로그인 화면으로 보내면 공유의 목적이 사라진다.
+  if (location.startsWith(sharedMapPathPrefix)) return null;
 
   // 1) 언어 선택이 먼저다(SPEC-0005 §10.1).
   if (!languageChosen) {

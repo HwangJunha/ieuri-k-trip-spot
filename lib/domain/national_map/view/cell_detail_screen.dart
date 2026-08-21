@@ -21,7 +21,9 @@ class CellDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final AsyncValue<CellDetail> detail = ref.watch(cellDetailProvider(cellId));
+    final AsyncValue<CellDetail> detail = ref.watch(
+      cellDetailControllerProvider(cellId),
+    );
 
     return Scaffold(
       appBar: AppBar(title: Text(detail.value?.cell.name ?? '')),
@@ -33,7 +35,8 @@ class CellDetailScreen extends ConsumerWidget {
               Text(l10n.nationalMapUnavailable),
               const SizedBox(height: 12),
               OutlinedButton(
-                onPressed: () => ref.invalidate(cellDetailProvider(cellId)),
+                onPressed: () =>
+                    ref.invalidate(cellDetailControllerProvider(cellId)),
                 child: Text(l10n.nationalMapRetry),
               ),
             ],
@@ -41,6 +44,7 @@ class CellDetailScreen extends ConsumerWidget {
         ),
         AsyncData<CellDetail>(value: final CellDetail d) => _Body(
           detail: d,
+          cellId: cellId,
           l10n: l10n,
         ),
         _ => const Center(child: CircularProgressIndicator()),
@@ -50,9 +54,10 @@ class CellDetailScreen extends ConsumerWidget {
 }
 
 class _Body extends ConsumerWidget {
-  const _Body({required this.detail, required this.l10n});
+  const _Body({required this.detail, required this.cellId, required this.l10n});
 
   final CellDetail detail;
+  final String cellId;
   final AppLocalizations l10n;
 
   @override
@@ -61,63 +66,78 @@ class _Body extends ConsumerWidget {
     final MapCell cell = detail.cell;
     final bool busy = ref.watch(visitControllerProvider);
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-      children: <Widget>[
-        // **이미지가 없어도 빈 칸으로 두지 않는다**(R10) — 지역명만 보인다.
-        if (cell.representativeImage != null)
-          CellImageView(image: cell.representativeImage!),
-        const SizedBox(height: 16),
-        Row(
-          children: <Widget>[
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(cell.name, style: theme.textTheme.titleLarge),
-                  Text(
-                    cell.provinceName,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+    return NotificationListener<ScrollNotification>(
+      // 바닥 근처에서 다음 페이지를 당긴다. 컨트롤러가 중복 요청을 막는다.
+      onNotification: (ScrollNotification n) {
+        if (detail.hasMore &&
+            n.metrics.pixels >= n.metrics.maxScrollExtent - 240) {
+          ref.read(cellDetailControllerProvider(cellId).notifier).loadMore();
+        }
+        return false;
+      },
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+        children: <Widget>[
+          // **이미지가 없어도 빈 칸으로 두지 않는다**(R10) — 지역명만 보인다.
+          if (cell.representativeImage != null)
+            CellImageView(image: cell.representativeImage!),
+          const SizedBox(height: 16),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(cell.name, style: theme.textTheme.titleLarge),
+                    Text(
+                      cell.provinceName,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              if (cell.visited)
+                OutlinedButton.icon(
+                  onPressed: busy
+                      ? null
+                      : () => ref
+                            .read(visitControllerProvider.notifier)
+                            .remove(cell.id),
+                  icon: const Icon(Icons.check_circle, size: 18),
+                  label: Text(l10n.nationalMapRemoveVisit),
+                ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Text(
+            l10n.nationalMapSpotsTitle,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
             ),
-            if (cell.visited)
-              OutlinedButton.icon(
-                onPressed: busy
-                    ? null
-                    : () => ref
-                          .read(visitControllerProvider.notifier)
-                          .remove(cell.id),
-                icon: const Icon(Icons.check_circle, size: 18),
-                label: Text(l10n.nationalMapRemoveVisit),
+          ),
+          const SizedBox(height: 8),
+          if (detail.spots.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Text(
+                l10n.nationalMapSpotsEmpty,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            )
+          else ...<Widget>[
+            for (final CellSpot spot in detail.spots) _SpotTile(spot: spot),
+            if (detail.hasMore)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(child: CircularProgressIndicator()),
               ),
           ],
-        ),
-        const SizedBox(height: 24),
-        Text(
-          l10n.nationalMapSpotsTitle,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 8),
-        if (detail.spots.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24),
-            child: Text(
-              l10n.nationalMapSpotsEmpty,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          )
-        else
-          for (final CellSpot spot in detail.spots)
-            _SpotTile(spot: spot),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -143,8 +163,9 @@ class _SpotTile extends StatelessWidget {
               : Image.network(
                   spot.thumbnailImageUrl,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) =>
-                      ColoredBox(color: theme.colorScheme.surfaceContainerHighest),
+                  errorBuilder: (_, _, _) => ColoredBox(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                  ),
                 ),
         ),
       ),
