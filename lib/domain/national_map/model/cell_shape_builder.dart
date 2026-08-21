@@ -81,9 +81,9 @@ class CellShapeBuilder {
           provinceCode: cell.provinceCode,
           // 지도에는 실사진 대신 유형별 도형을 그린다 — 칸 크기에서 사진은
           // 읽히지 않고, 56칸이 변경금지 유형이라 오려 넣을 수도 없다.
-          landmark: cell.representativeImage == null
+          landmark: cell.landmarkCaption == null
               ? null
-              : landmarkKindOf(cell.representativeImage!.caption),
+              : landmarkKindOf(cell.landmarkCaption!),
           polygons: polygons,
           center: centroid(polygons.first),
           bounds: GeoBounds.of(polygons.expand((List<GeoPoint> p) => p)),

@@ -124,6 +124,11 @@ fragment MapCellCore on MapCell {
     lat
     lng
   }
+  # **caption만 고른다.** 지도의 칸에는 실사진 대신 이름에서 뽑은 유형 도형을
+  # 그리므로(설계 §랜드마크) URL은 필요 없다. 실사진은 칸 상세에서 받는다.
+  representativeImage {
+    caption
+  }
 }
 
 fragment CellImageFields on CellImage {

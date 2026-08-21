@@ -186,6 +186,7 @@ class NationalMapRepositoryImpl implements NationalMapRepository {
     visited: c.viewerVisited,
     // 계약이 `[경도, 위도]`가 아니라 이름 있는 필드로 준다 — 순서를 헷갈릴 일이 없다.
     center: GeoPoint(c.center.lng, c.center.lat),
+    landmarkCaption: c.representativeImage?.caption,
     representativeImage: image,
   );
 

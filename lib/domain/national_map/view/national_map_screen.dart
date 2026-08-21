@@ -95,7 +95,7 @@ class _BodyState extends ConsumerState<_Body> {
         Positioned.fill(
           child: Padding(
             padding: EdgeInsets.only(
-              top: MediaQuery.paddingOf(context).top + 60,
+              top: MediaQuery.paddingOf(context).top + 52,
               bottom: FloatingBottomNavScaffold.barExtent,
             ),
             child: NationalMapCanvas(
@@ -103,34 +103,24 @@ class _BodyState extends ConsumerState<_Body> {
               visitedCellIds: visited,
               selectedCellId: _selectedCellId,
               onCellTap: _onCellTap,
-              // 세로 화면에서 좌우 빈 바다를 줄인다 — 지도가 주인공이다.
+              // 지도가 거의 정사각형이라 fit이면 세로가 절반 가까이 빈다.
+              // 세로를 채우고 좌우로 넘치는 빈 바다는 잘라 낸다.
               cover: true,
             ),
           ),
         ),
 
-        // 상단: 제목 대신 진척 한 줄.
+        // 상단: 진척 막대와 동작 아이콘만. 숫자는 적지 않는다.
         Positioned(
           top: 0,
           left: 0,
           right: 0,
           child: _TopBar(
             progress: nationwide,
-            label: l10n.nationalMapCellCount(
-              nationwide.visited,
-              nationwide.total,
-            ),
             onPhotoSync: () => showPhotoSyncSheet(context),
             onShare: () => _share(context),
             l10n: l10n,
           ),
-        ),
-
-        // 현재 위치 등록. 하단 탭 위로 띄운다.
-        Positioned(
-          right: 16,
-          bottom: FloatingBottomNavScaffold.barExtent + 12,
-          child: _HereButton(l10n: l10n),
         ),
 
         if (nationwide.visited == 0)
@@ -166,78 +156,56 @@ class _BodyState extends ConsumerState<_Body> {
   }
 }
 
-/// 지도 위에 떠 있는 얇은 상단 바 — 진척과 동작만 담는다.
+/// 지도 위에 떠 있는 얇은 상단 바.
+///
+/// **숫자를 적지 않는다** — "161칸 중 7칸"은 막대가 이미 보여주는 것을 글자로
+/// 반복할 뿐이고 지도를 가리는 값을 한다. 정확한 수치는 지역 상세에 있다.
+///
+/// 현재 위치 등록도 여기 아이콘으로 둔다. 지도 위에 떠 있던 확장 버튼은 제주를
+/// 가렸다.
 class _TopBar extends ConsumerWidget {
   const _TopBar({
     required this.progress,
-    required this.label,
     required this.onPhotoSync,
     required this.onShare,
     required this.l10n,
   });
 
   final ProvinceProgress progress;
-  final String label;
   final VoidCallback onPhotoSync;
   final VoidCallback onShare;
   final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ThemeData theme = Theme.of(context);
-    final ColorScheme scheme = theme.colorScheme;
+    final ColorScheme scheme = Theme.of(context).colorScheme;
     final bool sharing = ref.watch(shareControllerProvider);
 
     return ColoredBox(
-      // 지도가 뒤로 살짝 비치되 글씨는 읽히게 한다.
       color: scheme.surface.withValues(alpha: 0.92),
       child: Padding(
         padding: EdgeInsets.fromLTRB(
           16,
-          MediaQuery.paddingOf(context).top + 8,
-          6,
-          10,
+          MediaQuery.paddingOf(context).top + 6,
+          4,
+          8,
         ),
         child: Row(
           children: <Widget>[
+            // 진척은 막대만. 얼마나 찼는지는 길이로 읽는다.
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: <Widget>[
-                      Text(
-                        label,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        l10n.navNationalMap,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(999),
-                    child: LinearProgressIndicator(
-                      value: progress.ratio,
-                      minHeight: 5,
-                      backgroundColor: scheme.surfaceDim,
-                      valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
-                    ),
-                  ),
-                ],
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: LinearProgressIndicator(
+                  value: progress.ratio,
+                  minHeight: 6,
+                  backgroundColor: scheme.surfaceDim,
+                  valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
+                ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 12),
+            _HereButton(l10n: l10n),
             IconButton(
               icon: const Icon(Icons.photo_library_outlined),
               tooltip: l10n.photoSyncTitle,
@@ -287,7 +255,7 @@ class _EmptyHint extends StatelessWidget {
   );
 }
 
-/// "지금 여기" 버튼 — 현재 위치의 시군구를 등록한다(R33~R35).
+/// 현재 위치의 시군구를 등록한다(R33~R35). 상단 바의 아이콘이다.
 class _HereButton extends ConsumerWidget {
   const _HereButton({required this.l10n});
 
@@ -307,9 +275,8 @@ class _HereButton extends ConsumerWidget {
         check.value is LocationNotAvailable ||
         check.value is LocationOutsideKorea;
 
-    return FloatingActionButton.extended(
-      heroTag: 'national_map_here',
-      onPressed: disabled ? null : () => _onPressed(context, ref, check.value),
+    // **아이콘만 둔다.** 지도 위에 떠 있던 "지금 여기" 확장 버튼이 제주를 가렸다.
+    return IconButton(
       icon: check.isLoading
           ? const SizedBox(
               width: 18,
@@ -317,7 +284,8 @@ class _HereButton extends ConsumerWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : const Icon(Icons.my_location),
-      label: Text(l10n.nationalMapHere),
+      tooltip: l10n.nationalMapHere,
+      onPressed: disabled ? null : () => _onPressed(context, ref, check.value),
     );
   }
 

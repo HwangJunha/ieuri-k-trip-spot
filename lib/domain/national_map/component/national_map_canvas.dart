@@ -37,7 +37,9 @@ class NationalMapCanvas extends StatefulWidget {
 }
 
 class _NationalMapCanvasState extends State<NationalMapCanvas> {
-  static const double _padding = 12;
+  /// 지도 둘레 여백. 지도가 거의 정사각형이라(1.06:1) 여백을 키우면 눈에 띄게
+  /// 작아진다.
+  static const double _padding = 4;
 
   final TransformationController _controller = TransformationController();
 

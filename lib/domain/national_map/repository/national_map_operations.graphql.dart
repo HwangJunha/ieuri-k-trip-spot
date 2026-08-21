@@ -13,6 +13,7 @@ class Fragment$MapCellCore {
     required this.provinceCode,
     required this.viewerVisited,
     required this.center,
+    this.representativeImage,
   });
 
   factory Fragment$MapCellCore.fromJson(Map<String, dynamic> json) {
@@ -23,6 +24,7 @@ class Fragment$MapCellCore {
     final l$provinceCode = json['provinceCode'];
     final l$viewerVisited = json['viewerVisited'];
     final l$center = json['center'];
+    final l$representativeImage = json['representativeImage'];
     return Fragment$MapCellCore(
       id: (l$id as String),
       districtCodes: (l$districtCodes as List<dynamic>)
@@ -35,6 +37,11 @@ class Fragment$MapCellCore {
       center: Fragment$MapCellCore$center.fromJson(
         (l$center as Map<String, dynamic>),
       ),
+      representativeImage: l$representativeImage == null
+          ? null
+          : Fragment$MapCellCore$representativeImage.fromJson(
+              (l$representativeImage as Map<String, dynamic>),
+            ),
     );
   }
 
@@ -52,6 +59,8 @@ class Fragment$MapCellCore {
 
   final Fragment$MapCellCore$center center;
 
+  final Fragment$MapCellCore$representativeImage? representativeImage;
+
   Map<String, dynamic> toJson() {
     final _resultData = <String, dynamic>{};
     final l$id = id;
@@ -68,6 +77,8 @@ class Fragment$MapCellCore {
     _resultData['viewerVisited'] = l$viewerVisited;
     final l$center = center;
     _resultData['center'] = l$center.toJson();
+    final l$representativeImage = representativeImage;
+    _resultData['representativeImage'] = l$representativeImage?.toJson();
     return _resultData;
   }
 
@@ -80,6 +91,7 @@ class Fragment$MapCellCore {
     final l$provinceCode = provinceCode;
     final l$viewerVisited = viewerVisited;
     final l$center = center;
+    final l$representativeImage = representativeImage;
     return Object.hashAll([
       l$id,
       Object.hashAll(l$districtCodes.map((v) => v)),
@@ -88,6 +100,7 @@ class Fragment$MapCellCore {
       l$provinceCode,
       l$viewerVisited,
       l$center,
+      l$representativeImage,
     ]);
   }
 
@@ -141,6 +154,11 @@ class Fragment$MapCellCore {
     if (l$center != lOther$center) {
       return false;
     }
+    final l$representativeImage = representativeImage;
+    final lOther$representativeImage = other.representativeImage;
+    if (l$representativeImage != lOther$representativeImage) {
+      return false;
+    }
     return true;
   }
 }
@@ -167,8 +185,11 @@ abstract class CopyWith$Fragment$MapCellCore<TRes> {
     String? provinceCode,
     bool? viewerVisited,
     Fragment$MapCellCore$center? center,
+    Fragment$MapCellCore$representativeImage? representativeImage,
   });
   CopyWith$Fragment$MapCellCore$center<TRes> get center;
+  CopyWith$Fragment$MapCellCore$representativeImage<TRes>
+  get representativeImage;
 }
 
 class _CopyWithImpl$Fragment$MapCellCore<TRes>
@@ -189,6 +210,7 @@ class _CopyWithImpl$Fragment$MapCellCore<TRes>
     Object? provinceCode = _undefined,
     Object? viewerVisited = _undefined,
     Object? center = _undefined,
+    Object? representativeImage = _undefined,
   }) => _then(
     Fragment$MapCellCore(
       id: id == _undefined || id == null ? _instance.id : (id as String),
@@ -210,6 +232,9 @@ class _CopyWithImpl$Fragment$MapCellCore<TRes>
       center: center == _undefined || center == null
           ? _instance.center
           : (center as Fragment$MapCellCore$center),
+      representativeImage: representativeImage == _undefined
+          ? _instance.representativeImage
+          : (representativeImage as Fragment$MapCellCore$representativeImage?),
     ),
   );
 
@@ -219,6 +244,19 @@ class _CopyWithImpl$Fragment$MapCellCore<TRes>
       local$center,
       (e) => call(center: e),
     );
+  }
+
+  CopyWith$Fragment$MapCellCore$representativeImage<TRes>
+  get representativeImage {
+    final local$representativeImage = _instance.representativeImage;
+    return local$representativeImage == null
+        ? CopyWith$Fragment$MapCellCore$representativeImage.stub(
+            _then(_instance),
+          )
+        : CopyWith$Fragment$MapCellCore$representativeImage(
+            local$representativeImage,
+            (e) => call(representativeImage: e),
+          );
   }
 }
 
@@ -236,10 +274,15 @@ class _CopyWithStubImpl$Fragment$MapCellCore<TRes>
     String? provinceCode,
     bool? viewerVisited,
     Fragment$MapCellCore$center? center,
+    Fragment$MapCellCore$representativeImage? representativeImage,
   }) => _res;
 
   CopyWith$Fragment$MapCellCore$center<TRes> get center =>
       CopyWith$Fragment$MapCellCore$center.stub(_res);
+
+  CopyWith$Fragment$MapCellCore$representativeImage<TRes>
+  get representativeImage =>
+      CopyWith$Fragment$MapCellCore$representativeImage.stub(_res);
 }
 
 const fragmentDefinitionMapCellCore = FragmentDefinitionNode(
@@ -308,6 +351,23 @@ const fragmentDefinitionMapCellCore = FragmentDefinitionNode(
             ),
             FieldNode(
               name: NameNode(value: 'lng'),
+              alias: null,
+              arguments: [],
+              directives: [],
+              selectionSet: null,
+            ),
+          ],
+        ),
+      ),
+      FieldNode(
+        name: NameNode(value: 'representativeImage'),
+        alias: null,
+        arguments: [],
+        directives: [],
+        selectionSet: SelectionSetNode(
+          selections: [
+            FieldNode(
+              name: NameNode(value: 'caption'),
               alias: null,
               arguments: [],
               directives: [],
@@ -421,6 +481,103 @@ class _CopyWithStubImpl$Fragment$MapCellCore$center<TRes>
   TRes _res;
 
   call({double? lat, double? lng}) => _res;
+}
+
+class Fragment$MapCellCore$representativeImage {
+  Fragment$MapCellCore$representativeImage({required this.caption});
+
+  factory Fragment$MapCellCore$representativeImage.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$caption = json['caption'];
+    return Fragment$MapCellCore$representativeImage(
+      caption: (l$caption as String),
+    );
+  }
+
+  final String caption;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$caption = caption;
+    _resultData['caption'] = l$caption;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$caption = caption;
+    return Object.hashAll([l$caption]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Fragment$MapCellCore$representativeImage ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$caption = caption;
+    final lOther$caption = other.caption;
+    if (l$caption != lOther$caption) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Fragment$MapCellCore$representativeImage
+    on Fragment$MapCellCore$representativeImage {
+  CopyWith$Fragment$MapCellCore$representativeImage<
+    Fragment$MapCellCore$representativeImage
+  >
+  get copyWith =>
+      CopyWith$Fragment$MapCellCore$representativeImage(this, (i) => i);
+}
+
+abstract class CopyWith$Fragment$MapCellCore$representativeImage<TRes> {
+  factory CopyWith$Fragment$MapCellCore$representativeImage(
+    Fragment$MapCellCore$representativeImage instance,
+    TRes Function(Fragment$MapCellCore$representativeImage) then,
+  ) = _CopyWithImpl$Fragment$MapCellCore$representativeImage;
+
+  factory CopyWith$Fragment$MapCellCore$representativeImage.stub(TRes res) =
+      _CopyWithStubImpl$Fragment$MapCellCore$representativeImage;
+
+  TRes call({String? caption});
+}
+
+class _CopyWithImpl$Fragment$MapCellCore$representativeImage<TRes>
+    implements CopyWith$Fragment$MapCellCore$representativeImage<TRes> {
+  _CopyWithImpl$Fragment$MapCellCore$representativeImage(
+    this._instance,
+    this._then,
+  );
+
+  final Fragment$MapCellCore$representativeImage _instance;
+
+  final TRes Function(Fragment$MapCellCore$representativeImage) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? caption = _undefined}) => _then(
+    Fragment$MapCellCore$representativeImage(
+      caption: caption == _undefined || caption == null
+          ? _instance.caption
+          : (caption as String),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Fragment$MapCellCore$representativeImage<TRes>
+    implements CopyWith$Fragment$MapCellCore$representativeImage<TRes> {
+  _CopyWithStubImpl$Fragment$MapCellCore$representativeImage(this._res);
+
+  TRes _res;
+
+  call({String? caption}) => _res;
 }
 
 class Fragment$CellImageFields {
@@ -1317,7 +1474,7 @@ class Query$MapCellDetail$mapCell implements Fragment$MapCellCore {
       ),
       representativeImage: l$representativeImage == null
           ? null
-          : Fragment$CellImageFields.fromJson(
+          : Query$MapCellDetail$mapCell$representativeImage.fromJson(
               (l$representativeImage as Map<String, dynamic>),
             ),
       spots: Query$MapCellDetail$mapCell$spots.fromJson(
@@ -1340,7 +1497,7 @@ class Query$MapCellDetail$mapCell implements Fragment$MapCellCore {
 
   final Query$MapCellDetail$mapCell$center center;
 
-  final Fragment$CellImageFields? representativeImage;
+  final Query$MapCellDetail$mapCell$representativeImage? representativeImage;
 
   final Query$MapCellDetail$mapCell$spots spots;
 
@@ -1479,11 +1636,12 @@ abstract class CopyWith$Query$MapCellDetail$mapCell<TRes> {
     String? provinceCode,
     bool? viewerVisited,
     Query$MapCellDetail$mapCell$center? center,
-    Fragment$CellImageFields? representativeImage,
+    Query$MapCellDetail$mapCell$representativeImage? representativeImage,
     Query$MapCellDetail$mapCell$spots? spots,
   });
   CopyWith$Query$MapCellDetail$mapCell$center<TRes> get center;
-  CopyWith$Fragment$CellImageFields<TRes> get representativeImage;
+  CopyWith$Query$MapCellDetail$mapCell$representativeImage<TRes>
+  get representativeImage;
   CopyWith$Query$MapCellDetail$mapCell$spots<TRes> get spots;
 }
 
@@ -1530,7 +1688,8 @@ class _CopyWithImpl$Query$MapCellDetail$mapCell<TRes>
           : (center as Query$MapCellDetail$mapCell$center),
       representativeImage: representativeImage == _undefined
           ? _instance.representativeImage
-          : (representativeImage as Fragment$CellImageFields?),
+          : (representativeImage
+                as Query$MapCellDetail$mapCell$representativeImage?),
       spots: spots == _undefined || spots == null
           ? _instance.spots
           : (spots as Query$MapCellDetail$mapCell$spots),
@@ -1545,11 +1704,14 @@ class _CopyWithImpl$Query$MapCellDetail$mapCell<TRes>
     );
   }
 
-  CopyWith$Fragment$CellImageFields<TRes> get representativeImage {
+  CopyWith$Query$MapCellDetail$mapCell$representativeImage<TRes>
+  get representativeImage {
     final local$representativeImage = _instance.representativeImage;
     return local$representativeImage == null
-        ? CopyWith$Fragment$CellImageFields.stub(_then(_instance))
-        : CopyWith$Fragment$CellImageFields(
+        ? CopyWith$Query$MapCellDetail$mapCell$representativeImage.stub(
+            _then(_instance),
+          )
+        : CopyWith$Query$MapCellDetail$mapCell$representativeImage(
             local$representativeImage,
             (e) => call(representativeImage: e),
           );
@@ -1578,15 +1740,16 @@ class _CopyWithStubImpl$Query$MapCellDetail$mapCell<TRes>
     String? provinceCode,
     bool? viewerVisited,
     Query$MapCellDetail$mapCell$center? center,
-    Fragment$CellImageFields? representativeImage,
+    Query$MapCellDetail$mapCell$representativeImage? representativeImage,
     Query$MapCellDetail$mapCell$spots? spots,
   }) => _res;
 
   CopyWith$Query$MapCellDetail$mapCell$center<TRes> get center =>
       CopyWith$Query$MapCellDetail$mapCell$center.stub(_res);
 
-  CopyWith$Fragment$CellImageFields<TRes> get representativeImage =>
-      CopyWith$Fragment$CellImageFields.stub(_res);
+  CopyWith$Query$MapCellDetail$mapCell$representativeImage<TRes>
+  get representativeImage =>
+      CopyWith$Query$MapCellDetail$mapCell$representativeImage.stub(_res);
 
   CopyWith$Query$MapCellDetail$mapCell$spots<TRes> get spots =>
       CopyWith$Query$MapCellDetail$mapCell$spots.stub(_res);
@@ -1695,6 +1858,217 @@ class _CopyWithStubImpl$Query$MapCellDetail$mapCell$center<TRes>
   TRes _res;
 
   call({double? lat, double? lng}) => _res;
+}
+
+class Query$MapCellDetail$mapCell$representativeImage
+    implements
+        Fragment$MapCellCore$representativeImage,
+        Fragment$CellImageFields {
+  Query$MapCellDetail$mapCell$representativeImage({
+    required this.caption,
+    required this.imageUrl,
+    this.thumbnailUrl,
+    required this.kind,
+    required this.copyright,
+    required this.attributionText,
+  });
+
+  factory Query$MapCellDetail$mapCell$representativeImage.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$caption = json['caption'];
+    final l$imageUrl = json['imageUrl'];
+    final l$thumbnailUrl = json['thumbnailUrl'];
+    final l$kind = json['kind'];
+    final l$copyright = json['copyright'];
+    final l$attributionText = json['attributionText'];
+    return Query$MapCellDetail$mapCell$representativeImage(
+      caption: (l$caption as String),
+      imageUrl: (l$imageUrl as String),
+      thumbnailUrl: (l$thumbnailUrl as String?),
+      kind: fromJson$Enum$CellImageKind((l$kind as String)),
+      copyright: fromJson$Enum$CopyrightType((l$copyright as String)),
+      attributionText: (l$attributionText as String),
+    );
+  }
+
+  final String caption;
+
+  final String imageUrl;
+
+  final String? thumbnailUrl;
+
+  final Enum$CellImageKind kind;
+
+  final Enum$CopyrightType copyright;
+
+  final String attributionText;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$caption = caption;
+    _resultData['caption'] = l$caption;
+    final l$imageUrl = imageUrl;
+    _resultData['imageUrl'] = l$imageUrl;
+    final l$thumbnailUrl = thumbnailUrl;
+    _resultData['thumbnailUrl'] = l$thumbnailUrl;
+    final l$kind = kind;
+    _resultData['kind'] = toJson$Enum$CellImageKind(l$kind);
+    final l$copyright = copyright;
+    _resultData['copyright'] = toJson$Enum$CopyrightType(l$copyright);
+    final l$attributionText = attributionText;
+    _resultData['attributionText'] = l$attributionText;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$caption = caption;
+    final l$imageUrl = imageUrl;
+    final l$thumbnailUrl = thumbnailUrl;
+    final l$kind = kind;
+    final l$copyright = copyright;
+    final l$attributionText = attributionText;
+    return Object.hashAll([
+      l$caption,
+      l$imageUrl,
+      l$thumbnailUrl,
+      l$kind,
+      l$copyright,
+      l$attributionText,
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$MapCellDetail$mapCell$representativeImage ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$caption = caption;
+    final lOther$caption = other.caption;
+    if (l$caption != lOther$caption) {
+      return false;
+    }
+    final l$imageUrl = imageUrl;
+    final lOther$imageUrl = other.imageUrl;
+    if (l$imageUrl != lOther$imageUrl) {
+      return false;
+    }
+    final l$thumbnailUrl = thumbnailUrl;
+    final lOther$thumbnailUrl = other.thumbnailUrl;
+    if (l$thumbnailUrl != lOther$thumbnailUrl) {
+      return false;
+    }
+    final l$kind = kind;
+    final lOther$kind = other.kind;
+    if (l$kind != lOther$kind) {
+      return false;
+    }
+    final l$copyright = copyright;
+    final lOther$copyright = other.copyright;
+    if (l$copyright != lOther$copyright) {
+      return false;
+    }
+    final l$attributionText = attributionText;
+    final lOther$attributionText = other.attributionText;
+    if (l$attributionText != lOther$attributionText) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$MapCellDetail$mapCell$representativeImage
+    on Query$MapCellDetail$mapCell$representativeImage {
+  CopyWith$Query$MapCellDetail$mapCell$representativeImage<
+    Query$MapCellDetail$mapCell$representativeImage
+  >
+  get copyWith =>
+      CopyWith$Query$MapCellDetail$mapCell$representativeImage(this, (i) => i);
+}
+
+abstract class CopyWith$Query$MapCellDetail$mapCell$representativeImage<TRes> {
+  factory CopyWith$Query$MapCellDetail$mapCell$representativeImage(
+    Query$MapCellDetail$mapCell$representativeImage instance,
+    TRes Function(Query$MapCellDetail$mapCell$representativeImage) then,
+  ) = _CopyWithImpl$Query$MapCellDetail$mapCell$representativeImage;
+
+  factory CopyWith$Query$MapCellDetail$mapCell$representativeImage.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Query$MapCellDetail$mapCell$representativeImage;
+
+  TRes call({
+    String? caption,
+    String? imageUrl,
+    String? thumbnailUrl,
+    Enum$CellImageKind? kind,
+    Enum$CopyrightType? copyright,
+    String? attributionText,
+  });
+}
+
+class _CopyWithImpl$Query$MapCellDetail$mapCell$representativeImage<TRes>
+    implements CopyWith$Query$MapCellDetail$mapCell$representativeImage<TRes> {
+  _CopyWithImpl$Query$MapCellDetail$mapCell$representativeImage(
+    this._instance,
+    this._then,
+  );
+
+  final Query$MapCellDetail$mapCell$representativeImage _instance;
+
+  final TRes Function(Query$MapCellDetail$mapCell$representativeImage) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? caption = _undefined,
+    Object? imageUrl = _undefined,
+    Object? thumbnailUrl = _undefined,
+    Object? kind = _undefined,
+    Object? copyright = _undefined,
+    Object? attributionText = _undefined,
+  }) => _then(
+    Query$MapCellDetail$mapCell$representativeImage(
+      caption: caption == _undefined || caption == null
+          ? _instance.caption
+          : (caption as String),
+      imageUrl: imageUrl == _undefined || imageUrl == null
+          ? _instance.imageUrl
+          : (imageUrl as String),
+      thumbnailUrl: thumbnailUrl == _undefined
+          ? _instance.thumbnailUrl
+          : (thumbnailUrl as String?),
+      kind: kind == _undefined || kind == null
+          ? _instance.kind
+          : (kind as Enum$CellImageKind),
+      copyright: copyright == _undefined || copyright == null
+          ? _instance.copyright
+          : (copyright as Enum$CopyrightType),
+      attributionText: attributionText == _undefined || attributionText == null
+          ? _instance.attributionText
+          : (attributionText as String),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$MapCellDetail$mapCell$representativeImage<TRes>
+    implements CopyWith$Query$MapCellDetail$mapCell$representativeImage<TRes> {
+  _CopyWithStubImpl$Query$MapCellDetail$mapCell$representativeImage(this._res);
+
+  TRes _res;
+
+  call({
+    String? caption,
+    String? imageUrl,
+    String? thumbnailUrl,
+    Enum$CellImageKind? kind,
+    Enum$CopyrightType? copyright,
+    String? attributionText,
+  }) => _res;
 }
 
 class Query$MapCellDetail$mapCell$spots {
