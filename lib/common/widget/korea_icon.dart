@@ -51,10 +51,20 @@ class _KoreaPainter extends CustomPainter {
       ..strokeWidth = filled ? 0 : 1.5
       ..strokeJoin = StrokeJoin.round;
 
-    canvas.drawPath(_north(), paint);
-    canvas.drawPath(_south(), paint);
+    // **하나로 합쳐 그린다.** 두 Path를 따로 그리면 미선택(외곽선) 상태에서
+    // 국경선이 그어져 남북이 갈라져 보인다. 한반도는 이어진 하나여야 한다.
+    canvas.drawPath(_peninsula, paint);
     canvas.restore();
   }
+
+  /// 한반도 전체. 남·북을 union으로 합쳐 국경선을 없앤다.
+  ///
+  /// 매 프레임 합치지 않도록 한 번만 만든다 — `Path.combine`은 싸지 않다.
+  static final Path _peninsula = Path.combine(
+    PathOperation.union,
+    _north(),
+    _south(),
+  );
 
   /// 북쪽 절반.
   static Path _north() => Path()

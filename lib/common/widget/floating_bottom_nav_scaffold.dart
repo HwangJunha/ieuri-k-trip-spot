@@ -33,8 +33,11 @@ class FloatingBottomNavScaffold extends StatelessWidget {
   /// [barExtent]가 함께 따라간다.
   static const double _barVerticalPadding = 8;
 
-  /// Material [NavigationBar]의 기본 높이. 테마에서 높이를 지정하지 않아 기본값이다.
-  static const double _navigationBarHeight = 80;
+  /// 내비 바 높이.
+  ///
+  /// Material 기본값은 80이지만 그대로 두면 화면에서 두껍게 느껴진다. 라벨을
+  /// 선택된 탭에만 보이므로(`onlyShowSelected`) 아이콘+라벨 한 줄에 64면 넉넉하다.
+  static const double _navigationBarHeight = 64;
 
   void _onTap(int index) {
     // initialLocation:true re-taps reset the branch to its root (standard shell
@@ -86,6 +89,7 @@ class FloatingBottomNavScaffold extends StatelessWidget {
                 borderRadius: BorderRadius.circular(999),
                 child: NavigationBar(
                   key: const Key('bottom_nav_bar'),
+                  height: _navigationBarHeight,
                   selectedIndex: navigationShell.currentIndex,
                   onDestinationSelected: _onTap,
                   destinations: <Widget>[

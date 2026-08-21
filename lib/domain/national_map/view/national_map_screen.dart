@@ -98,7 +98,10 @@ class _BodyState extends ConsumerState<_Body> {
               top: MediaQuery.paddingOf(context).top + 52,
               // 바가 SafeArea 안에 있으므로 인셋까지 더하면 지도가 위로 떠
               // 버린다. 바 높이만 비켜서고 인셋은 바가 알아서 쓴다.
-              bottom: FloatingBottomNavScaffold.barExtent,
+              //
+              // 12를 더하는 이유: 제주가 지도 맨 아래라 바에 닿아 보인다.
+              // 여백을 늘려 지도를 위로 당긴다.
+              bottom: FloatingBottomNavScaffold.barExtent + 12,
             ),
             child: NationalMapCanvas(
               cells: widget.geometries,
