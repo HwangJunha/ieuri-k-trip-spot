@@ -23,9 +23,9 @@ class CellPalette {
   /// 화면 테마에서 팔레트를 만든다. 색을 위젯마다 고르지 않고 여기 모은다.
   factory CellPalette.of(ColorScheme scheme) => CellPalette(
     visitedFill: scheme.primary,
-    // 미방문은 "빈 칸"이지 "비활성"이 아니다. 배경보다 한 단 진하게 두어
-    // 칸의 모양이 보이게 한다.
-    unvisitedFill: scheme.surfaceContainerHighest,
+    // 미방문은 "빈 칸"이지 "비활성"이 아니다. `surfaceContainerHighest`는 배경과
+    // 너무 가까워 칸이 사라져 보였다(실측) — 한 단 더 진한 `surfaceDim`을 쓴다.
+    unvisitedFill: scheme.surfaceDim,
     // 칸 사이는 배경색으로 벌린다 — 선을 긋는 것보다 종이를 오려 붙인 느낌이 난다.
     border: scheme.surface,
     selectedBorder: scheme.onSurface,
