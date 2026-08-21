@@ -433,7 +433,7 @@ void main() {
         expect(c.districtCodes, isNotEmpty, reason: '${c.code}에 시군구가 없다');
         expect(c.polygons, isNotEmpty, reason: '${c.code}에 도형이 없다');
         for (final List<GeoPoint> ring in c.polygons) {
-          expect(ring.length, greaterThanOrEqualTo(3), reason: '${c.code}');
+          expect(ring.length, greaterThanOrEqualTo(3), reason: c.code);
         }
       }
     });

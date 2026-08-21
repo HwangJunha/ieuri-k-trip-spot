@@ -217,6 +217,46 @@
   "@navLiked": {
     "description": "하단 내비 - 좋아요 목록 탭"
   },
+  "navNationalMap": "전국 지도",
+  "@navNationalMap": {
+    "description": "하단 내비 - 전국 지도 탭"
+  },
+  "navLibrary": "보관함",
+  "@navLibrary": {
+    "description": "하단 내비 - 보관함 탭(좋아요/커뮤니티 토글)"
+  },
+  "nationalMapNationwide": "전국",
+  "@nationalMapNationwide": {
+    "description": "전국 지도 - 전체 진척 막대의 이름"
+  },
+  "nationalMapCellCount": "{total}칸 중 {visited}칸",
+  "@nationalMapCellCount": {
+    "description": "전국 지도 - 방문 진척(예: 161칸 중 12칸)",
+    "placeholders": {
+      "visited": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "nationalMapEmptyHint": "사진으로 채우거나 지금 있는 곳을 등록해 보세요.",
+  "@nationalMapEmptyHint": {
+    "description": "전국 지도 - 아직 한 칸도 없을 때 안내"
+  },
+  "nationalMapSelectHint": "지도에서 지역을 눌러 보세요.",
+  "@nationalMapSelectHint": {
+    "description": "전국 지도 - 칸을 고르지 않았을 때 하단 안내"
+  },
+  "nationalMapRecordVisit": "다녀왔어요",
+  "@nationalMapRecordVisit": {
+    "description": "전국 지도 - 선택한 칸을 방문으로 등록하는 버튼"
+  },
+  "nationalMapRemoveVisit": "등록 해제",
+  "@nationalMapRemoveVisit": {
+    "description": "전국 지도 - 방문 등록을 해제하는 버튼"
+  },
+  "nationalMapUnavailable": "지도를 불러오지 못했어요",
+  "@nationalMapUnavailable": {
+    "description": "전국 지도 - 칸 목록을 읽지 못했을 때"
+  },
   "navCommunity": "커뮤니티",
   "@navCommunity": {
     "description": "하단 내비 - 커뮤니티 탭"

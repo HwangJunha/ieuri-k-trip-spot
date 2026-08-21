@@ -13,7 +13,6 @@ import '../domain/auth/view/sign_up_screen.dart';
 import '../domain/auth/view/sns_sign_up_screen.dart';
 import '../common/model/target_category.dart';
 import '../domain/community/view/blocked_users_screen.dart';
-import '../domain/community/view/community_screen.dart';
 import '../domain/community/view/hidden_posts_screen.dart';
 import '../domain/community/view/post_composer_screen.dart';
 import '../domain/community/view/post_detail_screen.dart';
@@ -29,13 +28,14 @@ import '../domain/settings/view/profile_edit_screen.dart';
 import '../domain/settings/view/required_terms_screen.dart';
 import '../domain/settings/view/settings_screen.dart';
 import '../domain/settings/view/terms_screen.dart';
+import '../domain/library/view/library_screen.dart';
 import '../domain/map/view/map_screen.dart';
+import '../domain/national_map/view/national_map_screen.dart';
 import '../domain/map/view/region_recommendation_screen.dart';
 import '../common/category/spot_category.dart';
 import '../common/category/spot_category_selection.dart';
 import '../domain/spot/view/discover_screen.dart';
 import '../domain/spot/view/home_screen.dart';
-import '../domain/spot/view/liked_spots_screen.dart';
 import '../domain/spot/view/search_screen.dart';
 import '../domain/spot/view/spot_detail_view.dart';
 import '../domain/spot_qa/view/my_questions_screen.dart';
@@ -378,15 +378,22 @@ List<RouteBase> buildRoutes() => <RouteBase>[
         FloatingBottomNavScaffold(navigationShell: shell),
     branches: <StatefulShellBranch>[
       _branch('/home', HomeScreen.routeName, const HomeScreen()),
-      _branch('/map', MapScreen.routeName, const MapScreen()),
+      // SPEC-0030 R17: 1번 자리가 전국 지도가 되고, 기존 뷰포트 지도는 4번으로
+      // 내려간다. `MapScreen`의 라우트 이름과 경로(`/map`)는 그대로다 —
+      // 자리만 옮긴다(설계 §1).
+      _branch(
+        '/national-map',
+        NationalMapScreen.routeName,
+        const NationalMapScreen(),
+      ),
       // SPEC-0021 R9: 세그먼트 토글이 걷히면서 둘러보기 탭이 다시 추천 스와이프
       // 하나가 됐다. **라우트 이름과 탭 위치는 그대로다**(AC9.3·AC9.4) —
       // 가리키는 위젯만 `DiscoverScreen`으로 돌아간다.
       _branch('/discover', DiscoverScreen.routeName, const DiscoverScreen()),
-      // SPEC-0008 R-12·R-13: 탭 3·4의 목적지만 교체한다. 탭 수(5)와 Discover의
-      // 가운데 강조는 그대로다(AC-40) — 셸 구조는 건드리지 않는다.
-      _branch('/liked', LikedSpotsScreen.routeName, const LikedSpotsScreen()),
-      _branch('/community', CommunityScreen.routeName, const CommunityScreen()),
+      // SPEC-0030 R18: 좋아요와 커뮤니티가 보관함 한 화면으로 합쳐진다.
+      // 두 화면의 내부는 그대로이고 배치만 바뀐다.
+      _branch('/library', LibraryScreen.routeName, const LibraryScreen()),
+      _branch('/map', MapScreen.routeName, const MapScreen()),
     ],
   ),
 ];

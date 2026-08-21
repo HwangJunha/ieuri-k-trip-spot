@@ -94,11 +94,14 @@ class FloatingBottomNavScaffold extends StatelessWidget {
                       selectedIcon: const Icon(Icons.home),
                       label: l10n.navHome,
                     ),
+                    // SPEC-0030 R17: 1번은 전국 지도(내가 채운 기록), 4번이
+                    // 기존 뷰포트 지도(지금 주변에 뭐가 있나)다. 둘은 성격이
+                    // 달라 합치지 않는다(설계 §9).
                     NavigationDestination(
-                      key: const Key('bottom_nav_map'),
-                      icon: const Icon(Icons.map_outlined),
-                      selectedIcon: const Icon(Icons.map),
-                      label: l10n.navMap,
+                      key: const Key('bottom_nav_national_map'),
+                      icon: const Icon(Icons.public_outlined),
+                      selectedIcon: const Icon(Icons.public),
+                      label: l10n.navNationalMap,
                     ),
                     NavigationDestination(
                       key: const Key('bottom_nav_discover'),
@@ -109,17 +112,18 @@ class FloatingBottomNavScaffold extends StatelessWidget {
                       ),
                       label: l10n.navDiscover,
                     ),
+                    // SPEC-0030 R18: 좋아요와 커뮤니티가 보관함 한 자리로 합쳐진다.
                     NavigationDestination(
-                      key: const Key('bottom_nav_liked'),
-                      icon: const Icon(Icons.favorite_outline),
-                      selectedIcon: const Icon(Icons.favorite),
-                      label: l10n.navLiked,
+                      key: const Key('bottom_nav_library'),
+                      icon: const Icon(Icons.bookmark_outline),
+                      selectedIcon: const Icon(Icons.bookmark),
+                      label: l10n.navLibrary,
                     ),
                     NavigationDestination(
-                      key: const Key('bottom_nav_community'),
-                      icon: const Icon(Icons.forum_outlined),
-                      selectedIcon: const Icon(Icons.forum),
-                      label: l10n.navCommunity,
+                      key: const Key('bottom_nav_map'),
+                      icon: const Icon(Icons.map_outlined),
+                      selectedIcon: const Icon(Icons.map),
+                      label: l10n.navMap,
                     ),
                   ],
                 ),
