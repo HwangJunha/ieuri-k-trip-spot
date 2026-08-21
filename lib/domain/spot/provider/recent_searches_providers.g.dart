@@ -124,7 +124,7 @@ final class RecentSearchesProvider
   }
 }
 
-String _$recentSearchesHash() => r'61c975e2451602d8a892a6bb9318d04c47c618f7';
+String _$recentSearchesHash() => r'11bb0631bc3be532116b6ab153c0710f25f5fd50';
 
 /// 최근 검색어 목록(R12). 최신 검색이 앞에 온다.
 ///

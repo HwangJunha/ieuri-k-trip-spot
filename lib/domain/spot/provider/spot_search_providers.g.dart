@@ -75,7 +75,7 @@ final class SpotSearchCategoryProvider
 }
 
 String _$spotSearchCategoryHash() =>
-    r'0f4f9ef54472cea80fe2a7b138b27be64b4b5383';
+    r'ffa5c0f303112de79f92a9e5c7956ae247122c57';
 
 /// 검색에 걸린 카테고리 필터(SPEC-0013 R5 · SPEC-0020 R2). **비어 있을 수 없는
 /// 집합이다** — "전체 보기"가 사라졌으므로 `null`("필터 없음")이라는 표현이 없다.
@@ -165,7 +165,7 @@ final class SpotSearchProvider
   }
 }
 
-String _$spotSearchHash() => r'f3402ea76db6cbf0f4754efc4ec0c5d00ab3335a';
+String _$spotSearchHash() => r'd352ebbed6acf10310aa1724e8e4cfa310ba8f6f';
 
 /// 검색 결과 상태 기계(R11).
 ///

@@ -77,7 +77,7 @@ final class SelectedCategoryProvider
   }
 }
 
-String _$selectedCategoryHash() => r'199f36f50b6ebc7f2c728a269da718bc87fc2e8b';
+String _$selectedCategoryHash() => r'9c17df82338cee35ea29de54bf306b8043277401';
 
 /// 커뮤니티 탭에서 선택된 카테고리 집합(**빈 집합 = 전체**).
 ///
@@ -171,7 +171,7 @@ final class SelectedSortProvider
   }
 }
 
-String _$selectedSortHash() => r'72133e7a627f386495b6c6cf0b6ca5d9acaed6e0';
+String _$selectedSortHash() => r'd855cb4366d61ac3ff05978f62a3d4f994396cf2';
 
 /// 커뮤니티 탭에서 선택된 정렬(2차 가이드 §3). 기본은 [PostSortOrder.latest]다.
 ///

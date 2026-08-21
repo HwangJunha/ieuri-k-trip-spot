@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../auth/provider/session_scope.dart';
 
 part 'library_tab_provider.g.dart';
 
@@ -21,7 +22,11 @@ enum LibraryTab {
 @Riverpod(keepAlive: true)
 class LibraryTabController extends _$LibraryTabController {
   @override
-  LibraryTab build() => LibraryTab.liked;
+  LibraryTab build() {
+    // 로그아웃하면 첫 탭으로 되돌린다.
+    ref.watchSignedIn();
+    return LibraryTab.liked;
+  }
 
   void select(LibraryTab tab) => state = tab;
 }

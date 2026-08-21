@@ -61,6 +61,10 @@ String _$nationalMapRepositoryHash() =>
 ///
 /// 앱 세션당 한 번 조회하고 붙들어 둔다 — 161칸은 고정이고 방문 등록·해제는
 /// 뮤테이션 응답으로 이 캐시를 직접 고친다(재조회하지 않는다).
+///
+/// **인증 상태를 watch한다.** `keepAlive`라 로그아웃해도 캐시가 남는데, 여기 담긴
+/// `viewerVisited`는 사용자의 것이라 다음 사용자에게 이전 사람의 방문 칸이
+/// 보였다(실기기 확인). watch가 그 순간 이 provider를 다시 만든다.
 
 @ProviderFor(MapCells)
 const mapCellsProvider = MapCellsProvider._();
@@ -69,12 +73,20 @@ const mapCellsProvider = MapCellsProvider._();
 ///
 /// 앱 세션당 한 번 조회하고 붙들어 둔다 — 161칸은 고정이고 방문 등록·해제는
 /// 뮤테이션 응답으로 이 캐시를 직접 고친다(재조회하지 않는다).
+///
+/// **인증 상태를 watch한다.** `keepAlive`라 로그아웃해도 캐시가 남는데, 여기 담긴
+/// `viewerVisited`는 사용자의 것이라 다음 사용자에게 이전 사람의 방문 칸이
+/// 보였다(실기기 확인). watch가 그 순간 이 provider를 다시 만든다.
 final class MapCellsProvider
     extends $AsyncNotifierProvider<MapCells, List<MapCell>> {
   /// 161칸 + 뷰어의 방문 여부(R6·R20).
   ///
   /// 앱 세션당 한 번 조회하고 붙들어 둔다 — 161칸은 고정이고 방문 등록·해제는
   /// 뮤테이션 응답으로 이 캐시를 직접 고친다(재조회하지 않는다).
+  ///
+  /// **인증 상태를 watch한다.** `keepAlive`라 로그아웃해도 캐시가 남는데, 여기 담긴
+  /// `viewerVisited`는 사용자의 것이라 다음 사용자에게 이전 사람의 방문 칸이
+  /// 보였다(실기기 확인). watch가 그 순간 이 provider를 다시 만든다.
   const MapCellsProvider._()
     : super(
         from: null,
@@ -94,12 +106,16 @@ final class MapCellsProvider
   MapCells create() => MapCells();
 }
 
-String _$mapCellsHash() => r'160afc8f7ffae37f92568cc43b3d0b99c41cfcb9';
+String _$mapCellsHash() => r'e833cba9894883a72f553aaf1d0211f1effea9ce';
 
 /// 161칸 + 뷰어의 방문 여부(R6·R20).
 ///
 /// 앱 세션당 한 번 조회하고 붙들어 둔다 — 161칸은 고정이고 방문 등록·해제는
 /// 뮤테이션 응답으로 이 캐시를 직접 고친다(재조회하지 않는다).
+///
+/// **인증 상태를 watch한다.** `keepAlive`라 로그아웃해도 캐시가 남는데, 여기 담긴
+/// `viewerVisited`는 사용자의 것이라 다음 사용자에게 이전 사람의 방문 칸이
+/// 보였다(실기기 확인). watch가 그 순간 이 provider를 다시 만든다.
 
 abstract class _$MapCells extends $AsyncNotifier<List<MapCell>> {
   FutureOr<List<MapCell>> build();

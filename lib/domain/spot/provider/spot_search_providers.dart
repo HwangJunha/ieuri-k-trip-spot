@@ -13,6 +13,7 @@ import '../model/spot_suggestion.dart';
 import 'recent_searches_providers.dart';
 import '../../../common/category/spot_category_toggle.dart';
 import 'spot_providers.dart';
+import '../../auth/provider/session_scope.dart';
 
 part 'spot_search_providers.g.dart';
 
@@ -33,7 +34,11 @@ const int spotSearchPageSize = 20;
 @Riverpod(keepAlive: true)
 class SpotSearchCategory extends _$SpotSearchCategory with SpotCategoryToggle {
   @override
-  Set<SpotCategory> build() => <SpotCategory>{};
+  Set<SpotCategory> build() {
+    // 로그아웃하면 필터를 초기화한다.
+    ref.watchSignedIn();
+    return <SpotCategory>{};
+  }
 }
 
 /// 검색 결과 상태 기계(R11).
@@ -47,7 +52,11 @@ class SpotSearchCategory extends _$SpotSearchCategory with SpotCategoryToggle {
 @Riverpod(keepAlive: true)
 class SpotSearch extends _$SpotSearch {
   @override
-  SpotSearchState build() => const SpotSearchIdle();
+  SpotSearchState build() {
+    // 로그아웃하면 검색 결과를 버린다.
+    ref.watchSignedIn();
+    return const SpotSearchIdle();
+  }
 
   /// 질의를 실행한다(AC-11.1~11.4, AC-12.1).
   ///

@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/network/graphql_client.dart';
+import '../../auth/provider/session_scope.dart';
 import '../model/cell_detail.dart';
 import '../model/cell_geometry.dart';
 import '../model/cell_shape_builder.dart';
@@ -21,11 +22,19 @@ NationalMapRepository nationalMapRepository(Ref ref) =>
 ///
 /// 앱 세션당 한 번 조회하고 붙들어 둔다 — 161칸은 고정이고 방문 등록·해제는
 /// 뮤테이션 응답으로 이 캐시를 직접 고친다(재조회하지 않는다).
+///
+/// **인증 상태를 watch한다.** `keepAlive`라 로그아웃해도 캐시가 남는데, 여기 담긴
+/// `viewerVisited`는 사용자의 것이라 다음 사용자에게 이전 사람의 방문 칸이
+/// 보였다(실기기 확인). watch가 그 순간 이 provider를 다시 만든다.
 @Riverpod(keepAlive: true)
 class MapCells extends _$MapCells {
   @override
-  Future<List<MapCell>> build() =>
-      ref.watch(nationalMapRepositoryProvider).fetchCells();
+  Future<List<MapCell>> build() async {
+    // 비인증에서도 서버는 161칸을 주지만(viewerVisited 전부 false) 굳이 부르지
+    // 않는다 — 로그인하면 watch가 다시 부른다.
+    if (!ref.watchSignedIn()) return const <MapCell>[];
+    return ref.watch(nationalMapRepositoryProvider).fetchCells();
+  }
 
   /// 뮤테이션이 돌려준 칸으로 캐시를 고친다(계약 §7.1).
   void applyUpdated(Iterable<MapCell> updated) {

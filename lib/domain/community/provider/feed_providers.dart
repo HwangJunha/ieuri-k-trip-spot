@@ -11,6 +11,7 @@ import '../model/target_category_selection.dart';
 import '../../../common/model/target_category.dart';
 import '../repository/community_repository.dart';
 import 'community_providers.dart';
+import '../../auth/provider/session_scope.dart';
 
 part 'feed_providers.g.dart';
 
@@ -33,7 +34,11 @@ const int _pageSize = 20;
 @Riverpod(keepAlive: true)
 class SelectedCategory extends _$SelectedCategory {
   @override
-  Set<TargetCategory> build() => const <TargetCategory>{};
+  Set<TargetCategory> build() {
+    // 로그아웃하면 필터를 초기화한다.
+    ref.watchSignedIn();
+    return const <TargetCategory>{};
+  }
 
   /// [category]를 켜거나 끈다. 마지막 하나를 꺼도 막지 않는다 — 빈 집합은 "전체"이며
   /// 되돌릴 방법이 있는 정상 상태다.
@@ -63,7 +68,11 @@ class SelectedCategory extends _$SelectedCategory {
 @Riverpod(keepAlive: true)
 class SelectedSort extends _$SelectedSort {
   @override
-  PostSortOrder build() => PostSortOrder.latest;
+  PostSortOrder build() {
+    // 로그아웃하면 정렬을 기본값으로 되돌린다.
+    ref.watchSignedIn();
+    return PostSortOrder.latest;
+  }
 
   void select(PostSortOrder sort) => state = sort;
 }

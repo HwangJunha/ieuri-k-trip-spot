@@ -13,6 +13,7 @@ import 'retry_budget_providers.dart';
 import 'retry_counting.dart';
 import 'spot_providers.dart';
 import 'swipe_providers.dart';
+import '../../auth/provider/session_scope.dart';
 
 part 'spot_detail_providers.g.dart';
 
@@ -34,7 +35,11 @@ part 'spot_detail_providers.g.dart';
 @Riverpod(keepAlive: true)
 class SpotCategoryCodes extends _$SpotCategoryCodes {
   @override
-  Map<String, String> build() => const <String, String>{};
+  Map<String, String> build() {
+    // 로그아웃하면 버린다 — 이전 사용자가 무엇을 둘러봤는지의 흔적이다.
+    ref.watchSignedIn();
+    return const <String, String>{};
+  }
 
   /// 목록이 상세로 보내기 직전에 부른다. 이미 같은 값이면 상태를 바꾸지 않는다 —
   /// 불필요한 재빌드를 만들지 않기 위해서다.

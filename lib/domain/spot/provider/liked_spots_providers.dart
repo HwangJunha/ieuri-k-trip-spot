@@ -11,6 +11,7 @@ import '../repository/spot_repository.dart';
 import 'retry_counting.dart';
 import '../../../common/category/spot_category_toggle.dart';
 import 'spot_providers.dart';
+import '../../auth/provider/session_scope.dart';
 
 part 'liked_spots_providers.g.dart';
 
@@ -76,7 +77,11 @@ class LikedSpotsState {
 class SelectedLikedCategory extends _$SelectedLikedCategory
     with SpotCategoryToggle {
   @override
-  Set<SpotCategory> build() => <SpotCategory>{};
+  Set<SpotCategory> build() {
+    // 로그아웃하면 필터를 초기화한다.
+    ref.watchSignedIn();
+    return <SpotCategory>{};
+  }
 }
 
 /// 좋아요 목록 컨트롤러(SPEC-0008 R-18). [selection]별 패밀리 — 선택을 바꾸면

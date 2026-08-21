@@ -22,6 +22,7 @@ import 'retry_budget_providers.dart';
 import 'retry_counting.dart';
 import '../../../common/category/spot_category_toggle.dart';
 import 'spot_providers.dart';
+import '../../auth/provider/session_scope.dart';
 
 part 'swipe_providers.g.dart';
 
@@ -72,7 +73,11 @@ Future<List<SpotCategory>> availableSpotCategories(Ref ref) {
 class SelectedSpotCategory extends _$SelectedSpotCategory
     with SpotCategoryToggle {
   @override
-  Set<SpotCategory> build() => <SpotCategory>{};
+  Set<SpotCategory> build() {
+    // 로그아웃하면 필터를 초기화한다.
+    ref.watchSignedIn();
+    return <SpotCategory>{};
+  }
 }
 
 /// 지금 살아 있는 스와이프 세션의 선택 집합(SPEC-0007 §4.2 지원).
@@ -117,7 +122,7 @@ final Set<SpotCategorySelection> liveSwipeSessions = <SpotCategorySelection>{};
 /// 속한다. autoDispose면 카테고리를 옮기거나 다른 탭에 다녀오는 것만으로 큐가 버려지고,
 /// 돌아왔을 때 `build()`가 다시 돌아 [_shuffled]가 **새 순서**를 만든다. 사용자에겐
 /// 목록이 매번 랜덤으로 바뀌는 것으로 보이고, 이미 스와이프해 소비한 카드까지 되살아난다.
-/// 피드를 새로 받는 계기는 앱 재시작·언어 전환·명시적 [reload]뿐이어야 한다.
+/// 피드를 새로 받는 계기는 앱 재시작·언어 전환·로그아웃·명시적 [reload]다.
 @Riverpod(keepAlive: true, retry: spotRetryPolicy)
 class SwipeController extends _$SwipeController {
   SpotRepository get _repository => ref.read(spotRepositoryProvider);
@@ -150,6 +155,11 @@ class SwipeController extends _$SwipeController {
     // 다시 받는 이유는 카드에 박힌 제목·주소가 이전 언어의 문장이기 때문이다.
     // **값은 쓰지 않고 재빌드 트리거로만 구독한다** — 지우면 R-14가 깨진다.
     ref.watch(localeControllerProvider);
+
+    // 로그아웃도 같은 이유로 세션을 버린다. 큐와 소비한 카드는 그 사람의
+    // 것이라 다음 사용자에게 넘기면 안 된다 — 위 주석의 "앱 재시작·언어
+    // 전환·명시적 reload"에 로그아웃이 빠져 있었다.
+    ref.watchSignedIn();
 
     // 좌표는 watch 한다 — 위치가 바뀌면 피드를 다시 받아야 하기 때문이다. 그 재빌드가
     // 실패 상태에서 폭주하지 않도록 막는 것이 아래 상한 확인이다(R1).

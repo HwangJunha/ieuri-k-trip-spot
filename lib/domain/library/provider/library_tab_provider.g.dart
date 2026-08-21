@@ -63,7 +63,7 @@ final class LibraryTabControllerProvider
 }
 
 String _$libraryTabControllerHash() =>
-    r'd01a7362ee9178a46b4f078e0c16ca44f98650c6';
+    r'20e04481d8dd47ca4db23e2504cc95bd2735c442';
 
 /// 보관함의 상단 토글 상태(R18).
 ///

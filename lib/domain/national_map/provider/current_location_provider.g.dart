@@ -71,4 +71,4 @@ final class CurrentLocationCheckProvider
 }
 
 String _$currentLocationCheckHash() =>
-    r'c2d3e3174cd93e84dddde07a963f4b96958f7775';
+    r'8b50d1f7f626de3c671be8331a82f6972f7b260b';

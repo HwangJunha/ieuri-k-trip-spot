@@ -69,7 +69,7 @@ final class SelectedLikedCategoryProvider
 }
 
 String _$selectedLikedCategoryHash() =>
-    r'f761d377dfe6975bbaeb112edcf680f5653f0008';
+    r'e8f7c41f74f7804b0016a12edacb4946a6456500';
 
 /// 좋아요 목록의 카테고리 선택(SPEC-0020 R2). **비어 있을 수 없는 집합이다** —
 /// "전체 보기"가 사라졌으므로 `null`("필터 없음")이라는 표현 자체가 없다.

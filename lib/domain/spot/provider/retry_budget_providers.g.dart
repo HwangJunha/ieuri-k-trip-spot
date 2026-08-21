@@ -94,7 +94,7 @@ final class SpotRetryBudgetProvider
   }
 }
 
-String _$spotRetryBudgetHash() => r'29d5f0084ed47ac9af28139e6302ee75846b5b63';
+String _$spotRetryBudgetHash() => r'2861acb4ee0d910725d0263670a47c7ab7a36c11';
 
 /// 조회 시도 횟수를 담는 provider(SPEC-0006 R4). [scope] 문자열 하나로 패밀리를
 /// 이루며, 카운터를 세려는 조회 대상마다 고유한 scope를 쓴다(예:

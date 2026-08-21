@@ -9,6 +9,7 @@ import '../model/photo_scan_progress.dart';
 import '../service/photo_library_service.dart';
 import 'district_resolver_provider.dart';
 import 'national_map_providers.dart';
+import '../../auth/provider/session_scope.dart';
 
 part 'photo_scan_controller.g.dart';
 
@@ -34,7 +35,11 @@ PhotoLibraryService photoLibraryService(Ref ref) => const PhotoLibraryService();
 @Riverpod(keepAlive: true)
 class PhotoScanController extends _$PhotoScanController {
   @override
-  PhotoScanProgress build() => const PhotoScanProgress();
+  PhotoScanProgress build() {
+    // 로그아웃하면 스캔 결과를 버린다 — 이전 사용자의 사진에서 나온 지역이다.
+    ref.watchSignedIn();
+    return const PhotoScanProgress();
+  }
 
   /// 스캔을 멈추라는 신호. `stop()`이 세우고 루프가 본다.
   bool _cancelled = false;
