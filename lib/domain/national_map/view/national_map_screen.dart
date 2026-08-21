@@ -118,9 +118,15 @@ class _BodyState extends ConsumerState<_Body> {
           child: _TopBar(
             progress: nationwide,
             onPhotoSync: () => showPhotoSyncSheet(context),
-            onShare: () => _share(context),
             l10n: l10n,
           ),
+        ),
+
+        // 공유는 오른쪽 아래. 지도를 다 채운 뒤에 하는 일이라 주 동작과 떨어뜨린다.
+        Positioned(
+          right: 16,
+          bottom: FloatingBottomNavScaffold.barExtent + 12,
+          child: _ShareButton(onShare: () => _share(context), l10n: l10n),
         ),
 
         if (nationwide.visited == 0)
@@ -161,25 +167,22 @@ class _BodyState extends ConsumerState<_Body> {
 /// **숫자를 적지 않는다** — "161칸 중 7칸"은 막대가 이미 보여주는 것을 글자로
 /// 반복할 뿐이고 지도를 가리는 값을 한다. 정확한 수치는 지역 상세에 있다.
 ///
-/// 현재 위치 등록도 여기 아이콘으로 둔다. 지도 위에 떠 있던 확장 버튼은 제주를
-/// 가렸다.
+/// 오른쪽 **맨 끝이 현재 위치 등록**이다. 지도를 채우는 주 동작이라 엄지가 가장
+/// 먼저 닿는 자리에 두고, 브랜드 코럴로 칠해 다른 아이콘과 구분한다.
 class _TopBar extends ConsumerWidget {
   const _TopBar({
     required this.progress,
     required this.onPhotoSync,
-    required this.onShare,
     required this.l10n,
   });
 
   final ProvinceProgress progress;
   final VoidCallback onPhotoSync;
-  final VoidCallback onShare;
   final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ColorScheme scheme = Theme.of(context).colorScheme;
-    final bool sharing = ref.watch(shareControllerProvider);
 
     return ColoredBox(
       color: scheme.surface.withValues(alpha: 0.92),
@@ -205,26 +208,46 @@ class _TopBar extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 12),
-            _HereButton(l10n: l10n),
             IconButton(
               icon: const Icon(Icons.photo_library_outlined),
               tooltip: l10n.photoSyncTitle,
               onPressed: onPhotoSync,
             ),
-            IconButton(
-              icon: sharing
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.ios_share),
-              tooltip: l10n.nationalMapShare,
-              onPressed: sharing ? null : onShare,
-            ),
+            // 맨 끝. 빨간색으로 이것이 주 동작임을 알린다.
+            _HereButton(l10n: l10n),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// 공유 링크를 발급해 시스템 공유 시트로 넘긴다(R36).
+class _ShareButton extends ConsumerWidget {
+  const _ShareButton({required this.onShare, required this.l10n});
+
+  final VoidCallback onShare;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bool sharing = ref.watch(shareControllerProvider);
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+
+    return FloatingActionButton.small(
+      heroTag: 'national_map_share',
+      // 주 동작(등록)이 아니므로 코럴을 쓰지 않는다.
+      backgroundColor: scheme.surfaceContainerHighest,
+      foregroundColor: scheme.onSurface,
+      tooltip: l10n.nationalMapShare,
+      onPressed: sharing ? null : onShare,
+      child: sharing
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.ios_share),
     );
   }
 }
@@ -275,7 +298,10 @@ class _HereButton extends ConsumerWidget {
         check.value is LocationNotAvailable ||
         check.value is LocationOutsideKorea;
 
-    // **아이콘만 둔다.** 지도 위에 떠 있던 "지금 여기" 확장 버튼이 제주를 가렸다.
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+
+    // **브랜드 코럴로 칠한다.** 지도를 채우는 주 동작이라 다른 아이콘과 구분되어야
+    // 한다. 비활성일 때는 색을 빼 눌러도 안 된다는 것을 보여준다.
     return IconButton(
       icon: check.isLoading
           ? const SizedBox(
@@ -284,6 +310,7 @@ class _HereButton extends ConsumerWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : const Icon(Icons.my_location),
+      color: scheme.primary,
       tooltip: l10n.nationalMapHere,
       onPressed: disabled ? null : () => _onPressed(context, ref, check.value),
     );

@@ -51,10 +51,17 @@ class _NationalMapCanvasState extends State<NationalMapCanvas> {
 
   /// 탭 지점을 경위도로 되돌려 칸을 찾는다.
   ///
+  /// **탭을 `InteractiveViewer` 밖에서 받는다.** 안쪽에 `GestureDetector`를 두면
+  /// `HitTestBehavior.opaque`가 드래그를 통째로 가로채 확대·이동이 죽는다
+  /// (측정으로 확인: 팬 후 이동값이 0이었다). 대신 변환 행렬을 직접 역산한다.
+  ///
   /// **화면과 같은 투영을 써야 한다** — 배율이나 여백이 어긋나면 누른 곳과
   /// 다른 칸이 잡힌다.
   void _handleTap(TapUpDetails details, Size size) {
     if (widget.onCellTap == null || widget.cells.isEmpty) return;
+
+    // 확대·이동한 만큼 되돌린다. scene 좌표가 곧 CustomPaint의 좌표다.
+    final Offset scene = _toScene(details.localPosition);
 
     final CellProjection projection = CellProjection.fit(
       bounds: CellPainter.boundsOf(widget.cells),
@@ -64,11 +71,19 @@ class _NationalMapCanvasState extends State<NationalMapCanvas> {
       cover: widget.cover,
     );
 
-    final Offset local = details.localPosition;
-    final GeoPoint point = projection.toGeo(local.dx, local.dy);
+    final GeoPoint point = projection.toGeo(scene.dx, scene.dy);
     final CellGeometry? hit = CellHitTest.cellAt(widget.cells, point);
     if (hit != null) widget.onCellTap!(hit.cellId);
   }
+
+  /// 뷰포트 좌표 -> 변환을 되돌린 장면 좌표.
+  ///
+  /// `vector_math`를 직접 import하지 않는다 — Flutter가 전이적으로 줄 뿐 이 앱의
+  /// 의존이 아니다. `MatrixUtils`가 같은 일을 한다.
+  Offset _toScene(Offset viewport) => MatrixUtils.transformPoint(
+    Matrix4.inverted(_controller.value),
+    viewport,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -78,13 +93,17 @@ class _NationalMapCanvasState extends State<NationalMapCanvas> {
       builder: (BuildContext context, BoxConstraints constraints) {
         final Size size = Size(constraints.maxWidth, constraints.maxHeight);
 
-        return InteractiveViewer(
-          transformationController: _controller,
-          minScale: 1,
-          maxScale: 6,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTapUp: (TapUpDetails d) => _handleTap(d, size),
+        return GestureDetector(
+          // 탭만 받고 드래그·핀치는 InteractiveViewer로 흘려보낸다.
+          onTapUp: (TapUpDetails d) => _handleTap(d, size),
+          child: InteractiveViewer(
+            transformationController: _controller,
+            minScale: 1,
+            maxScale: 8,
+            // 확대했을 때 가장자리 칸까지 닿게 한다 — 기본값은 경계에서 막힌다.
+            boundaryMargin: const EdgeInsets.all(double.infinity),
+            // cover로 좌우가 넘치므로 잘라 그린다.
+            clipBehavior: Clip.hardEdge,
             child: CustomPaint(
               size: size,
               painter: CellPainter(

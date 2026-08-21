@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/gen/app_localizations.dart';
+import 'korea_icon.dart';
 
 /// The 5-tab shell chrome: renders the active tab's [StatefulNavigationShell]
 /// with a floating, rounded bottom navigation bar (DESIGN.md §8). The Discover
@@ -99,8 +100,10 @@ class FloatingBottomNavScaffold extends StatelessWidget {
                     // 달라 합치지 않는다(설계 §9).
                     NavigationDestination(
                       key: const Key('bottom_nav_national_map'),
-                      icon: const Icon(Icons.public_outlined),
-                      selectedIcon: const Icon(Icons.public),
+                      // 지구본(`Icons.public`)은 "전국"이라는 뜻이 안 드러난다.
+                      // 한반도 실루엣을 직접 그린다.
+                      icon: const KoreaIcon(),
+                      selectedIcon: const KoreaIcon(filled: true),
                       label: l10n.navNationalMap,
                     ),
                     NavigationDestination(
