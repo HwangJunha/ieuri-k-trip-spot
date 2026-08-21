@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../model/cell_geometry.dart';
 import '../model/cell_projection.dart';
 import '../model/landmark_kind.dart';
-import '../model/province_palette.dart';
 import 'landmark_icons.dart';
+import 'province_palette.dart';
 
 /// 전국 지도 161칸을 그리는 팔레트.
 ///

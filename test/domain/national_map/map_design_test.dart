@@ -4,7 +4,7 @@ import 'dart:ui' show Color;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/landmark_kind.dart';
-import 'package:ieuri_k_trip_spot/domain/national_map/model/province_palette.dart';
+import 'package:ieuri_k_trip_spot/domain/national_map/component/province_palette.dart';
 
 /// 서버가 실제로 주는 161개 랜드마크 이름. 분류가 이 목록을 덮는지 확인한다.
 ///
