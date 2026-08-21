@@ -96,12 +96,9 @@ class _BodyState extends ConsumerState<_Body> {
           child: Padding(
             padding: EdgeInsets.only(
               top: MediaQuery.paddingOf(context).top + 52,
-              // **하단 인셋을 더한다.** barExtent는 SafeArea를 제외한 값이라
-              // (그 상수의 주석) 홈 인디케이터 높이만큼 모자라 제주가 바에
-              // 가렸다. iPhone 17 Pro에서 34px이다.
-              bottom:
-                  FloatingBottomNavScaffold.barExtent +
-                  MediaQuery.paddingOf(context).bottom,
+              // 바가 SafeArea 안에 있으므로 인셋까지 더하면 지도가 위로 떠
+              // 버린다. 바 높이만 비켜서고 인셋은 바가 알아서 쓴다.
+              bottom: FloatingBottomNavScaffold.barExtent,
             ),
             child: NationalMapCanvas(
               cells: widget.geometries,
@@ -123,28 +120,16 @@ class _BodyState extends ConsumerState<_Body> {
           child: _TopBar(
             progress: nationwide,
             onPhotoSync: () => showPhotoSyncSheet(context),
+            onShare: () => _share(context),
             l10n: l10n,
           ),
-        ),
-
-        // 공유는 오른쪽 아래. 지도를 다 채운 뒤에 하는 일이라 주 동작과 떨어뜨린다.
-        Positioned(
-          right: 16,
-          bottom:
-              FloatingBottomNavScaffold.barExtent +
-              MediaQuery.paddingOf(context).bottom +
-              12,
-          child: _ShareButton(onShare: () => _share(context), l10n: l10n),
         ),
 
         if (nationwide.visited == 0)
           Positioned(
             left: 24,
             right: 24,
-            bottom:
-                FloatingBottomNavScaffold.barExtent +
-                MediaQuery.paddingOf(context).bottom +
-                76,
+            bottom: FloatingBottomNavScaffold.barExtent + 24,
             child: _EmptyHint(text: l10n.nationalMapEmptyHint, scheme: scheme),
           ),
       ],
@@ -184,11 +169,13 @@ class _TopBar extends ConsumerWidget {
   const _TopBar({
     required this.progress,
     required this.onPhotoSync,
+    required this.onShare,
     required this.l10n,
   });
 
   final ProvinceProgress progress;
   final VoidCallback onPhotoSync;
+  final VoidCallback onShare;
   final AppLocalizations l10n;
 
   @override
@@ -219,6 +206,9 @@ class _TopBar extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 12),
+            // 공유는 상단 우측이 표준이다(iOS 내비게이션 바, Android 앱바).
+            // 하단 FAB에 두면 "이 화면의 주 동작"으로 읽혀 과하다.
+            _ShareButton(onShare: onShare, l10n: l10n),
             IconButton(
               icon: const Icon(Icons.photo_library_outlined),
               tooltip: l10n.photoSyncTitle,
@@ -243,22 +233,17 @@ class _ShareButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final bool sharing = ref.watch(shareControllerProvider);
-    final ColorScheme scheme = Theme.of(context).colorScheme;
 
-    return FloatingActionButton.small(
-      heroTag: 'national_map_share',
-      // 주 동작(등록)이 아니므로 코럴을 쓰지 않는다.
-      backgroundColor: scheme.surfaceContainerHighest,
-      foregroundColor: scheme.onSurface,
-      tooltip: l10n.nationalMapShare,
-      onPressed: sharing ? null : onShare,
-      child: sharing
+    return IconButton(
+      icon: sharing
           ? const SizedBox(
               width: 18,
               height: 18,
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : const Icon(Icons.ios_share),
+      tooltip: l10n.nationalMapShare,
+      onPressed: sharing ? null : onShare,
     );
   }
 }
