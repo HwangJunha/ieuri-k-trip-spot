@@ -38,7 +38,11 @@ const String discoverPath = '/discover';
 /// **인증과 무관하게 열린다** — 링크를 가진 누구나 볼 수 있는 것이 이 기능의
 /// 목적이고, 받은 사람이 앱을 처음 켠 경우도 포함한다. 뒤에 토큰이 붙으므로
 /// 정확히 일치가 아니라 접두사로 본다.
-const String sharedMapPathPrefix = '/shared/';
+///
+/// **서버가 주는 URL의 경로와 같아야 한다** —
+/// `https://www.ieuri.co.kr/tour/korea-map/<token>`. 다르면 링크를 눌러 앱이
+/// 열려도 라우트가 매칭되지 않는다.
+const String sharedMapPathPrefix = '/tour/korea-map/';
 
 /// 미인증 사용자에게 허용되는 경로(SPEC-0005 §10.2).
 const Set<String> authPaths = <String>{

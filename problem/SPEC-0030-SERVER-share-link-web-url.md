@@ -2,7 +2,7 @@
 
 - 대상: `createMapShareLink`가 주는 `MapShareLink.shareUrl`
 - 확인 환경: 실기기(Android, 카카오톡 공유) 2026-08-22
-- 상태: 요청 중
+- 상태: **부분 해소(2026-08-22)** — 서버가 이미 `https://` 링크를 준다. 남은 것은 검증 파일 배치다.
 
 ## 지금 무슨 일이 일어나는가
 
@@ -26,18 +26,25 @@ Android 공식 문서(App Links)가 정리한 차이다.
 Firebase Dynamic Links는 대안이 될 수 없다 — **2025년 8월 25일 종료**됐고 기존
 링크도 404를 반환한다. Flutter 3.24부터 discontinued이며 공식 권장이 App Links다.
 
-## 요청
+## 해소된 것
 
-`shareUrl`을 `https://<도메인>/<경로>/<token>` 형태로 주세요. 예:
+서버가 이미 웹 URL을 준다(2026-08-22 확인).
 
 ```
-https://doryeong.app/n/6dhh6a73
+https://www.ieuri.co.kr/tour/korea-map/7EDr_f2JlFcVev2PcQqZm1-t5pVUOe1A
 ```
 
-클라이언트 지시문 §5가 이미 그 전환을 2단계로 계획해 두었고, 이 문서는 **그것을
-앞당겨 달라는 요청**이다. 1단계 그대로는 공유 기능이 성립하지 않는다.
+`sharedMap(token:)` 조회도 정상이다 — 닉네임·방문 칸 17개를 받았다.
 
-함께 필요한 것:
+클라이언트도 맞췄다.
+
+- 라우트를 `/tour/korea-map/:token`으로 바꿨다. 예전 `/shared/:token`으로 두면
+  링크를 눌러 앱이 열려도 **매칭되지 않는다**
+- iOS `Runner.entitlements`에 `applinks:www.ieuri.co.kr`을 넣었다
+- Flutter 3.44라 `Info.plist`의 `FlutterDeepLinkingEnabled`는 필요 없다
+  (3.27+ 기본 활성, 딥링크 플러그인도 쓰지 않는다)
+
+## 남은 요청
 
 - 그 도메인에 **`assetlinks.json`**(Android)과 **`apple-app-site-association`**(iOS)
   배치 — 이게 있어야 앱이 깔린 기기에서 브라우저를 거치지 않는다

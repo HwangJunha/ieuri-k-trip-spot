@@ -376,11 +376,11 @@ List<RouteBase> buildRoutes() => <RouteBase>[
   ),
   // 공유 지도(SPEC-0030 R37). **인증 없이 열린다** — 게이트를 통과해야 한다.
   //
-  // 경로의 마지막 조각이 토큰이다. 서버가 지금은 `ieuri://shared/<token>`을
-  // 주고 나중에 Universal Link로 바꾸는데, 마지막 조각만 쓰므로 그때도 이
-  // 라우트가 그대로 받는다.
+  // 서버가 주는 URL과 **경로가 같아야 한다** —
+  // `https://www.ieuri.co.kr/tour/korea-map/<token>`. 링크를 눌러 앱이 열려도
+  // 경로가 다르면 라우트가 매칭되지 않는다.
   GoRoute(
-    path: '/shared/:token',
+    path: '/tour/korea-map/:token',
     name: SharedMapScreen.routeName,
     builder: (_, GoRouterState state) =>
         SharedMapScreen(token: state.pathParameters['token']!),
