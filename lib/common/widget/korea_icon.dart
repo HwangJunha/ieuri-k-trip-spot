@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 
-/// 한반도(남한) 실루엣 아이콘.
+/// 한반도 실루엣 아이콘.
 ///
-/// 하단 탭의 전국 지도 자리에 쓴다. Material에 한국 모양 아이콘이 없어
-/// `Icons.public`(지구본)을 쓰고 있었는데, 전국 지도라는 뜻이 잘 드러나지 않는다.
+/// 하단 탭의 전국 지도 자리에 쓴다. `Icons.public`(지구본)을 쓰던 것을 바꿨다 —
+/// 지구본은 "전국"이라는 뜻이 드러나지 않는다.
 ///
-/// **실제 경계 데이터에서 만들었다.** 다만 지리적 정확도가 목적이 아니라 24px에서
-/// 읽히는 것이 목적이라, 위도 밴드마다 동·서 끝만 남겨 실루엣으로 눌렀다 —
-/// 서해안의 만(灣)을 그대로 두면 24px에서 뾰족한 톱니로 보인다.
+/// **남한만이 아니라 한반도 전체다.** "한반도"라고 하면 북한까지 포함한 모양을
+/// 뜻하고, 그 모양에서 제주는 보통 빼고 그린다.
+///
+/// 도형은 **Natural Earth**(퍼블릭 도메인) 1:110m 국가 경계에서 가져왔다. 그
+/// 축척의 원본이 이미 남 19점·북 44점이라 아이콘에 그대로 쓸 만큼 단순하다 —
+/// 따로 줄이지 않았다.
 class KoreaIcon extends StatelessWidget {
   const KoreaIcon({this.size = 24, this.color, this.filled = false, super.key});
 
@@ -45,70 +48,83 @@ class _KoreaPainter extends CustomPainter {
       ..color = color
       ..isAntiAlias = true
       ..style = filled ? PaintingStyle.fill : PaintingStyle.stroke
-      ..strokeWidth = filled ? 0 : 1.6
+      ..strokeWidth = filled ? 0 : 1.5
       ..strokeJoin = StrokeJoin.round;
 
-    canvas.drawPath(_mainland(), paint);
-    canvas.drawPath(_jeju(), paint);
+    canvas.drawPath(_north(), paint);
+    canvas.drawPath(_south(), paint);
     canvas.restore();
   }
 
-  /// 본토 실루엣.
-  static Path _mainland() => Path()
-    ..moveTo(14.02, 1.50)
-    ..lineTo(14.41, 2.28)
-    ..lineTo(14.72, 3.06)
-    ..lineTo(15.33, 3.85)
-    ..lineTo(15.91, 4.63)
-    ..lineTo(16.35, 5.41)
-    ..lineTo(16.79, 6.19)
-    ..lineTo(17.12, 6.97)
-    ..lineTo(17.11, 7.76)
-    ..lineTo(17.27, 8.54)
-    ..lineTo(17.19, 9.32)
-    ..lineTo(17.12, 10.10)
-    ..lineTo(17.57, 10.88)
-    ..lineTo(17.61, 11.67)
-    ..lineTo(17.41, 12.45)
-    ..lineTo(17.23, 13.23)
-    ..lineTo(17.04, 14.01)
-    ..lineTo(16.55, 14.79)
-    ..lineTo(15.81, 15.58)
-    ..lineTo(14.01, 16.36)
-    ..lineTo(11.36, 17.14)
-    ..lineTo(10.54, 17.92)
-    ..lineTo(7.52, 17.92)
-    ..lineTo(6.88, 17.14)
-    ..lineTo(6.90, 16.36)
-    ..lineTo(6.85, 15.58)
-    ..lineTo(6.83, 14.79)
-    ..lineTo(7.10, 14.01)
-    ..lineTo(7.53, 13.23)
-    ..lineTo(7.76, 12.45)
-    ..lineTo(7.74, 11.67)
-    ..lineTo(7.65, 10.88)
-    ..lineTo(7.61, 10.10)
-    ..lineTo(6.97, 9.32)
-    ..lineTo(6.39, 8.54)
-    ..lineTo(6.58, 7.76)
-    ..lineTo(7.61, 6.97)
-    ..lineTo(7.94, 6.19)
-    ..lineTo(7.25, 5.41)
-    ..lineTo(7.16, 4.63)
-    ..lineTo(7.43, 3.85)
-    ..lineTo(8.74, 3.06)
-    ..lineTo(9.22, 2.28)
-    ..lineTo(13.42, 1.50)
+  /// 북쪽 절반.
+  static Path _north() => Path()
+    ..moveTo(17.94, 2.94)
+    ..lineTo(17.94, 2.94)
+    ..lineTo(18.21, 3.37)
+    ..lineTo(17.49, 3.22)
+    ..lineTo(16.66, 4.05)
+    ..lineTo(16.09, 4.88)
+    ..lineTo(16.16, 6.64)
+    ..lineTo(15.18, 7.18)
+    ..lineTo(14.84, 7.61)
+    ..lineTo(14.12, 8.33)
+    ..lineTo(12.85, 8.73)
+    ..lineTo(12.02, 9.39)
+    ..lineTo(11.96, 10.45)
+    ..lineTo(11.74, 10.72)
+    ..lineTo(12.50, 11.11)
+    ..lineTo(13.58, 12.18)
+    ..lineTo(13.30, 12.78)
+    ..lineTo(12.49, 12.94)
+    ..lineTo(11.14, 13.05)
+    ..lineTo(10.40, 14.16)
+    ..lineTo(9.55, 14.07)
+    ..lineTo(9.43, 14.29)
+    ..lineTo(8.50, 13.83)
+    ..lineTo(8.27, 14.29)
+    ..lineTo(7.71, 14.49)
+    ..lineTo(7.65, 14.03)
+    ..lineTo(7.15, 13.81)
+    ..lineTo(6.64, 13.42)
+    ..lineTo(7.16, 12.34)
+    ..lineTo(7.61, 12.05)
+    ..lineTo(7.44, 11.61)
+    ..lineTo(7.93, 10.29)
+    ..lineTo(7.80, 9.89)
+    ..lineTo(6.69, 9.62)
+    ..lineTo(5.79, 8.97)
+    ..lineTo(7.34, 7.40)
+    ..lineTo(9.44, 6.09)
+    ..lineTo(10.75, 4.36)
+    ..lineTo(11.66, 5.12)
+    ..lineTo(13.31, 5.21)
+    ..lineTo(13.01, 3.92)
+    ..lineTo(15.95, 2.87)
+    ..lineTo(16.71, 1.50)
+    ..lineTo(17.94, 2.94)
     ..close();
 
-  /// 제주.
-  static Path _jeju() => Path()
-    ..moveTo(8.71, 21.65)
-    ..lineTo(8.98, 21.38)
-    ..lineTo(7.65, 21.38)
-    ..lineTo(6.57, 22.29)
-    ..lineTo(8.05, 22.50)
-    ..lineTo(8.95, 21.53)
+  /// 남쪽 절반.
+  static Path _south() => Path()
+    ..moveTo(9.43, 14.29)
+    ..lineTo(9.55, 14.07)
+    ..lineTo(10.40, 14.16)
+    ..lineTo(11.14, 13.05)
+    ..lineTo(12.49, 12.94)
+    ..lineTo(13.30, 12.78)
+    ..lineTo(13.58, 12.18)
+    ..lineTo(15.22, 15.07)
+    ..lineTo(15.70, 16.65)
+    ..lineTo(15.71, 19.47)
+    ..lineTo(14.99, 20.81)
+    ..lineTo(13.26, 21.28)
+    ..lineTo(11.74, 22.29)
+    ..lineTo(10.02, 22.50)
+    ..lineTo(9.81, 21.17)
+    ..lineTo(10.16, 19.34)
+    ..lineTo(9.32, 16.79)
+    ..lineTo(10.74, 16.38)
+    ..lineTo(9.43, 14.29)
     ..close();
 
   @override

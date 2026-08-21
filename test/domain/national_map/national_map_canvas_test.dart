@@ -48,6 +48,41 @@ void main() {
     expect(c.value.getTranslation().x, isNot(0));
   });
 
+  // 핀치만으로는 확대할 수 있다는 것을 알기 어렵다.
+  testWidgets('더블탭으로 확대되고 다시 누르면 되돌아온다', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 300,
+            height: 300,
+            child: NationalMapCanvas(
+              cells: <CellGeometry>[_sq('1', 127, 37), _sq('2', 128, 37)],
+              visitedCellIds: const <String>{},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final InteractiveViewer iv = tester.widget<InteractiveViewer>(
+      find.byType(InteractiveViewer),
+    );
+    final TransformationController c = iv.transformationController!;
+    expect(c.value.getMaxScaleOnAxis(), 1);
+
+    await tester.tapAt(const Offset(150, 150));
+    await tester.tapAt(const Offset(150, 150));
+    await tester.pumpAndSettle();
+    expect(c.value.getMaxScaleOnAxis(), greaterThan(2));
+
+    // 한 번 더 하면 원래대로.
+    await tester.tapAt(const Offset(150, 150));
+    await tester.tapAt(const Offset(150, 150));
+    await tester.pumpAndSettle();
+    expect(c.value.getMaxScaleOnAxis(), closeTo(1, 0.01));
+  });
+
   // 팬을 살리려고 탭을 InteractiveViewer 밖으로 옮겼다. 변환 역산이 맞는지
   // 확인한다 — 틀리면 누른 곳과 다른 칸이 잡힌다.
   testWidgets('탭하면 칸이 잡힌다', (WidgetTester tester) async {

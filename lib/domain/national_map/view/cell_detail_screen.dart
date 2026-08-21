@@ -5,10 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../spot/view/spot_detail_view.dart';
 import '../component/cell_image_view.dart';
-import '../component/province_progress_bar.dart';
 import '../model/cell_detail.dart';
 import '../model/map_cell.dart';
-import '../model/province_progress.dart';
 import '../provider/national_map_providers.dart';
 import '../provider/visit_controller.dart';
 
@@ -112,10 +110,6 @@ class _Body extends ConsumerWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 20),
-          // 이 칸이 속한 시도의 진척(R21). 지도에서는 전국 한 줄만 보여주므로
-          // 시도 단위는 여기가 자리다 — "경상북도 22칸 중 5칸".
-          _ProvinceProgress(provinceCode: cell.provinceCode, l10n: l10n),
           const SizedBox(height: 24),
           Text(
             l10n.nationalMapSpotsTitle,
@@ -181,31 +175,6 @@ class _SpotTile extends StatelessWidget {
         SpotDetailView.routeName,
         pathParameters: <String, String>{'id': spot.id},
       ),
-    );
-  }
-}
-
-
-/// 이 칸이 속한 시도의 진척(R21).
-class _ProvinceProgress extends ConsumerWidget {
-  const _ProvinceProgress({required this.provinceCode, required this.l10n});
-
-  final String provinceCode;
-  final AppLocalizations l10n;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final AsyncValue<List<ProvinceProgress>> all = ref.watch(
-      provinceProgressProvider,
-    );
-    final ProvinceProgress? mine = all.value
-        ?.where((ProvinceProgress p) => p.provinceCode == provinceCode)
-        .firstOrNull;
-    if (mine == null) return const SizedBox.shrink();
-
-    return ProvinceProgressBar(
-      progress: mine,
-      label: l10n.nationalMapCellCount(mine.visited, mine.total),
     );
   }
 }

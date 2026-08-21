@@ -96,7 +96,12 @@ class _BodyState extends ConsumerState<_Body> {
           child: Padding(
             padding: EdgeInsets.only(
               top: MediaQuery.paddingOf(context).top + 52,
-              bottom: FloatingBottomNavScaffold.barExtent,
+              // **하단 인셋을 더한다.** barExtent는 SafeArea를 제외한 값이라
+              // (그 상수의 주석) 홈 인디케이터 높이만큼 모자라 제주가 바에
+              // 가렸다. iPhone 17 Pro에서 34px이다.
+              bottom:
+                  FloatingBottomNavScaffold.barExtent +
+                  MediaQuery.paddingOf(context).bottom,
             ),
             child: NationalMapCanvas(
               cells: widget.geometries,
@@ -125,7 +130,10 @@ class _BodyState extends ConsumerState<_Body> {
         // 공유는 오른쪽 아래. 지도를 다 채운 뒤에 하는 일이라 주 동작과 떨어뜨린다.
         Positioned(
           right: 16,
-          bottom: FloatingBottomNavScaffold.barExtent + 12,
+          bottom:
+              FloatingBottomNavScaffold.barExtent +
+              MediaQuery.paddingOf(context).bottom +
+              12,
           child: _ShareButton(onShare: () => _share(context), l10n: l10n),
         ),
 
@@ -133,7 +141,10 @@ class _BodyState extends ConsumerState<_Body> {
           Positioned(
             left: 24,
             right: 24,
-            bottom: FloatingBottomNavScaffold.barExtent + 76,
+            bottom:
+                FloatingBottomNavScaffold.barExtent +
+                MediaQuery.paddingOf(context).bottom +
+                76,
             child: _EmptyHint(text: l10n.nationalMapEmptyHint, scheme: scheme),
           ),
       ],
