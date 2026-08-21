@@ -140,8 +140,9 @@ void main() {
       onboarded: true,
       repo: repo,
     );
-    // 커뮤니티로 가려다 게이트에 막힌다.
-    container.read(goRouterProvider).goNamed('community');
+    // 보관함으로 가려다 게이트에 막힌다(SPEC-0030 R18로 커뮤니티가 그 안으로
+    // 들어갔다 — 검사하는 것은 "기본 착지점이 아닌 곳"이면 무엇이든 된다).
+    container.read(goRouterProvider).goNamed('library');
     expect(await _land(tester, container), '/required-terms');
 
     // 동의하면 게이트가 풀리고 **원래 가려던 곳**으로 복귀한다 — 기본 착지점인
@@ -158,7 +159,7 @@ void main() {
           .currentConfiguration
           .uri
           .path,
-      '/community',
+      '/library',
     );
   });
 }

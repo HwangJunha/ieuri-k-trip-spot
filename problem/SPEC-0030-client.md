@@ -1,4 +1,45 @@
-> spec: SPEC-0030 · source: `Specs/SPEC-0030/spec.md` (Obsidian) · status: draft
+> spec: SPEC-0030 · source: `Specs/SPEC-0030/spec.md` (Obsidian) · status: 슬라이스 3 일부 구현
+
+## 구현 현황 (2026-08-21)
+
+**서버 계약이 아직 존재하지 않는다.** `mapCells`·`mapCell`·`resolveDistricts`·
+`recordVisits`·`removeVisit`·공유 링크 어느 것도 라이브 서버(`localhost:8888`, 이
+작업 중 내내 응답 없음)에도, `ieuri-server`의 `dev`에도, 서버 쪽 SPEC-0030
+워크트리에도 없다. 서버 슬라이스 1·2·4·6이 병렬로 진행 중이다.
+
+그래서 **repository와 `.graphql` 오퍼레이션을 쓰지 않았다.** 추측한 스키마로 쓰면
+코드젠은 통과하고 런타임에 깨진다(CLAUDE.md §13, SPEC-0020·SPEC-0021 선례).
+사용자 결정으로 계약을 제외하고 나머지를 먼저 만들었다.
+
+| 요구사항 | 상태 |
+|---|---|
+| R17~R19 탭 재구성 · 보관함 토글 | 구현 |
+| R20~R22 칸 렌더링 · 진척 · 칸 진입 | 구현(방문 상태는 로컬) |
+| R21 시도 진척 계산 | 구현 + 테스트 |
+| R23 저작권 유형별 렌더링 | 모델·매핑 구현 + 테스트 |
+| R25~R28 좌표 축약 · 재개 상태 | 계산 구현 + 테스트 |
+| R31 사진 권한 | 구현(권한·매니페스트·문구) |
+| R29·R30 실제 스캔 · 확인 화면 | 미구현 — `photo_manager` 도입 필요 |
+| R33~R35 현재 위치 등록 | 미구현 — `resolveDistricts` 부재 |
+| R24 출처 표기 노출 | 미구현 — 칸 상세 화면 없음 |
+| R36~R38 공유 | 미구현 — 서버 슬라이스 6 대기 |
+
+**검증하지 못한 것:** 서버가 죽어 있어 계약 일치를 확인하지 못했다. 오퍼레이션을
+쓰지 않았으므로 어긋날 코드도 아직 없다.
+
+### 서버가 나오면 고칠 지점
+
+`lib/domain/national_map/provider/national_map_providers.dart`의 `mapCells`가
+지금은 앱 자산의 칸을 전부 미방문으로 낸다. 본문만 repository 호출로 바꾸면 되고
+화면·계산은 `MapCell`에 맞춰 뒀으므로 그대로 둔다. `LocalVisitedCells`는 그때
+없어진다(영속화하지 않은 이유가 이것이다).
+
+### 칸 도형은 클라이언트 자산이다
+
+`asset/geo/korea_cells.json` — KOSTAT 2013 시군구 경계에서 만든 161칸.
+출처·라이선스·생성 방법은 `asset/geo/README.md`에 있다. 2013년 기준이라
+청원군(2014 청주 통합)과 군위군(2023 대구 편입)을 보정해야 161칸이 된다.
+
 
 # 전국 지도 — 클라이언트 설계
 
