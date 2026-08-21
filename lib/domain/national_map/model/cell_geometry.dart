@@ -1,52 +1,38 @@
-/// 칸 1개의 도형(SPEC-0030 §3). 앱에 내장한 `asset/geo/korea_cells.json`에서 읽는다.
+/// 칸 1개의 **화면에 그릴 도형**(SPEC-0030 §3).
 ///
-/// **서버가 주는 것이 아니다.** 서버는 칸 목록과 방문 여부를 주고, 도형은 클라이언트
-/// 자산이다. 둘은 [code]로 맞춘다.
+/// `CellShapeBuilder`가 서버 칸 정의와 원본 경계로 런타임에 조립한다. 이름·시군구
+/// 코드 같은 속성은 여기 없다 — 그건 서버 [MapCell]이 갖고, 이 타입은 [cellId]로
+/// 그것과 이어진다.
+///
+/// 단순화된 도형이라 **판정에 쓰지 않는다.** 좌표 판정은 언제나 원본
+/// (`DistrictBoundary`)으로 한다.
 class CellGeometry {
   const CellGeometry({
-    required this.code,
-    required this.nameKo,
-    required this.nameEn,
-    required this.provinceCode,
-    required this.provinceNameKo,
-    required this.provinceNameEn,
-    required this.districtCodes,
-    required this.center,
+    required this.cellId,
     required this.polygons,
+    required this.center,
     required this.bounds,
   });
 
-  /// 칸 코드. 서버 `MapCell.code`와 대응시키는 키다.
-  final String code;
+  /// 서버 `MapCell.id`. 방문 여부·이름을 찾는 열쇠다.
+  final String cellId;
 
-  /// 자산에 담긴 한국어·영어 명칭.
-  ///
-  /// **화면 표시에는 쓰지 않는다** — 표시 명칭은 활성 언어로 서버가 준다(R8).
-  /// 서버 응답과 칸을 맞추거나 디버깅할 때만 본다.
-  final String nameKo;
-  final String nameEn;
-
-  final String provinceCode;
-  final String provinceNameKo;
-  final String provinceNameEn;
-
-  /// 이 칸이 포함하는 시군구 행정표준코드 5자리 목록.
-  final List<String> districtCodes;
-
-  /// 칸의 대표 좌표(폴리곤 무게중심). `[경도, 위도]`가 아니라 [GeoPoint]다.
-  final GeoPoint center;
-
-  /// 외곽 링 목록. 섬이 있으면 2개 이상이다. 구멍은 담지 않는다.
+  /// 외곽 링 목록. 섬이 있으면 2개 이상이다. 구멍은 담지 않는다 —
+  /// 구멍이 중요한 것은 판정이고 그건 원본이 담당한다.
   final List<List<GeoPoint>> polygons;
 
-  /// 이 칸 전체를 감싸는 경위도 사각형. 히트 테스트의 1차 필터다.
+  /// 대표 좌표(가장 큰 폴리곤의 무게중심). 지도를 이 칸으로 옮길 때 쓴다.
+  final GeoPoint center;
+
+  /// 이 칸 전체를 감싸는 사각형. 탭 히트 테스트의 1차 필터다.
   final GeoBounds bounds;
 
   @override
-  bool operator ==(Object other) => other is CellGeometry && other.code == code;
+  bool operator ==(Object other) =>
+      other is CellGeometry && other.cellId == cellId;
 
   @override
-  int get hashCode => code.hashCode;
+  int get hashCode => cellId.hashCode;
 }
 
 /// 경위도 한 점. `dart:ui`의 `Offset`과 섞이지 않게 별도 타입으로 둔다.

@@ -5,16 +5,18 @@ import 'package:go_router/go_router.dart';
 import '../../../common/widget/floating_bottom_nav_scaffold.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/national_map_canvas.dart';
+import '../component/photo_sync_sheet.dart';
 import '../component/province_progress_bar.dart';
 import '../model/cell_geometry.dart';
-import '../model/cell_geometry_index.dart';
+import '../model/current_location_check.dart';
 import '../model/map_cell.dart';
 import '../model/province_progress.dart';
-import '../provider/cell_geometry_provider.dart';
+import '../provider/current_location_provider.dart';
 import '../provider/national_map_providers.dart';
+import '../provider/visit_controller.dart';
 import 'cell_detail_screen.dart';
 
-/// 전국 지도 — 161칸을 채워나가는 화면(R20~R22).
+/// 전국 지도 — 161칸을 채워나가는 화면(R20~R22·R29·R33~R35).
 ///
 /// 참조 디자인은 스크래치 지도다. 칸을 긁어 채우는 경험을 앱 팔레트로 옮긴다 —
 /// 미방문은 가라앉히고 방문은 브랜드 코럴로 채운다(설계 §3, `CellPalette`).
@@ -34,12 +36,9 @@ class _NationalMapScreenState extends ConsumerState<NationalMapScreen> {
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
 
+    final AsyncValue<List<MapCell>> cells = ref.watch(mapCellsProvider);
     final AsyncValue<List<CellGeometry>> geometries = ref.watch(
       cellGeometriesProvider,
-    );
-    final AsyncValue<List<MapCell>> cells = ref.watch(mapCellsProvider);
-    final AsyncValue<CellGeometryIndex> index = ref.watch(
-      cellGeometryIndexProvider,
     );
 
     return Scaffold(
@@ -47,30 +46,27 @@ class _NationalMapScreenState extends ConsumerState<NationalMapScreen> {
         title: Text(l10n.navNationalMap),
         actions: <Widget>[
           IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: l10n.nationalMapRetry,
-            onPressed: () => ref.invalidate(mapCellsProvider),
+            icon: const Icon(Icons.photo_library_outlined),
+            tooltip: l10n.photoSyncTitle,
+            onPressed: () => showPhotoSyncSheet(context),
           ),
         ],
       ),
       body: SafeArea(
-        child: switch ((geometries, cells, index)) {
-          (AsyncError<List<CellGeometry>>(), _, _) ||
-          (_, AsyncError<List<MapCell>>(), _) ||
-          (_, _, AsyncError<CellGeometryIndex>()) => _ErrorBody(
+        child: switch ((cells, geometries)) {
+          (AsyncError<List<MapCell>>(), _) ||
+          (_, AsyncError<List<CellGeometry>>()) => _ErrorBody(
             message: l10n.nationalMapUnavailable,
             retryLabel: l10n.nationalMapRetry,
             onRetry: () => ref.invalidate(mapCellsProvider),
           ),
           (
-            AsyncData<List<CellGeometry>>(value: final List<CellGeometry> g),
             AsyncData<List<MapCell>>(value: final List<MapCell> c),
-            AsyncData<CellGeometryIndex>(value: final CellGeometryIndex i),
+            AsyncData<List<CellGeometry>>(value: final List<CellGeometry> g),
           ) =>
             _Body(
-              geometries: g,
               cells: c,
-              index: i,
+              geometries: g,
               selectedCellId: _selectedCellId,
               onCellTap: (String id) => setState(() => _selectedCellId = id),
               l10n: l10n,
@@ -84,17 +80,15 @@ class _NationalMapScreenState extends ConsumerState<NationalMapScreen> {
 
 class _Body extends ConsumerWidget {
   const _Body({
-    required this.geometries,
     required this.cells,
-    required this.index,
+    required this.geometries,
     required this.selectedCellId,
     required this.onCellTap,
     required this.l10n,
   });
 
-  final List<CellGeometry> geometries;
   final List<MapCell> cells;
-  final CellGeometryIndex index;
+  final List<CellGeometry> geometries;
   final String? selectedCellId;
   final ValueChanged<String> onCellTap;
   final AppLocalizations l10n;
@@ -140,17 +134,123 @@ class _Body extends ConsumerWidget {
           ),
         ),
         Expanded(
-          child: NationalMapCanvas(
-            cells: geometries,
-            cellIdOf: index.cellIdByGeometryCode,
-            visitedCellIds: visited,
-            selectedCellId: selectedCellId,
-            onCellTap: onCellTap,
+          child: Stack(
+            children: <Widget>[
+              Positioned.fill(
+                child: NationalMapCanvas(
+                  cells: geometries,
+                  visitedCellIds: visited,
+                  selectedCellId: selectedCellId,
+                  onCellTap: onCellTap,
+                ),
+              ),
+              // 현재 위치 등록(R33). 지도 위에 띄워 언제든 누를 수 있게 한다.
+              Positioned(
+                right: 16,
+                bottom: 16,
+                child: _HereButton(l10n: l10n),
+              ),
+            ],
           ),
         ),
         _SelectedCellBar(cell: selected, l10n: l10n),
       ],
     );
+  }
+}
+
+/// "지금 여기" 버튼 — 현재 위치의 시군구를 등록한다(R33~R35).
+class _HereButton extends ConsumerWidget {
+  const _HereButton({required this.l10n});
+
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AsyncValue<CurrentLocationCheck> check = ref.watch(
+      currentLocationCheckProvider,
+    );
+    final bool busy = ref.watch(visitControllerProvider);
+
+    // 위치를 얻지 못하면 버튼을 비활성화하고 사유를 보여준다(R35).
+    final bool disabled =
+        busy ||
+        check.isLoading ||
+        check.value is LocationUnavailable ||
+        check.value is LocationOutsideKorea;
+
+    return FloatingActionButton.extended(
+      heroTag: 'national_map_here',
+      onPressed: disabled ? null : () => _onPressed(context, ref, check.value),
+      icon: check.isLoading
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.my_location),
+      label: Text(_label()),
+    );
+  }
+
+  String _label() => l10n.nationalMapHere;
+
+  Future<void> _onPressed(
+    BuildContext context,
+    WidgetRef ref,
+    CurrentLocationCheck? check,
+  ) async {
+    if (check == null) return;
+
+    switch (check) {
+      case LocationRegistrable(
+        districtCode: final String code,
+        districtName: final String name,
+      ):
+        // **확인을 받아야 등록한다**(R33). 취소하면 아무 일도 없다.
+        final bool ok =
+            await showDialog<bool>(
+              context: context,
+              builder: (BuildContext ctx) => AlertDialog(
+                title: Text(l10n.nationalMapRegisterTitle),
+                content: Text(l10n.nationalMapRegisterBody(name)),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(false),
+                    child: Text(l10n.commonCancel),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.of(ctx).pop(true),
+                    child: Text(l10n.nationalMapRecordVisit),
+                  ),
+                ],
+              ),
+            ) ??
+            false;
+        if (!ok || !context.mounted) return;
+
+        await ref
+            .read(visitControllerProvider.notifier)
+            .record(<String>[code]);
+        // 방문이 늘었으니 다음 판정은 "이미 방문"이 되어야 한다.
+        ref.invalidate(currentLocationCheckProvider);
+
+      case LocationAlreadyVisited(cellName: final String name):
+        _toast(context, l10n.nationalMapAlreadyVisited(name));
+
+      case LocationOutsideKorea():
+        _toast(context, l10n.nationalMapOutsideKorea);
+
+      case LocationUnavailable():
+        _toast(context, l10n.nationalMapLocationUnavailable);
+    }
+  }
+
+  void _toast(BuildContext context, String message) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 }
 

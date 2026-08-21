@@ -3,12 +3,13 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../common/network/graphql_client.dart';
 import '../model/cell_detail.dart';
 import '../model/cell_geometry.dart';
-import '../model/cell_geometry_index.dart';
+import '../model/cell_shape_builder.dart';
+import '../model/district_boundary.dart';
 import '../model/map_cell.dart';
 import '../model/province_progress.dart';
 import '../repository/national_map_repository.dart';
 import '../repository/national_map_repository_impl.dart';
-import 'cell_geometry_provider.dart';
+import 'district_resolver_provider.dart';
 
 part 'national_map_providers.g.dart';
 
@@ -27,8 +28,6 @@ class MapCells extends _$MapCells {
       ref.watch(nationalMapRepositoryProvider).fetchCells();
 
   /// 뮤테이션이 돌려준 칸으로 캐시를 고친다(계약 §7.1).
-  ///
-  /// 서버가 변경된 노드를 주므로 목록 전체를 다시 받지 않는다.
   void applyUpdated(Iterable<MapCell> updated) {
     final List<MapCell>? current = state.value;
     if (current == null || updated.isEmpty) return;
@@ -41,7 +40,7 @@ class MapCells extends _$MapCells {
     ]);
   }
 
-  /// 낙관적으로 방문 표시를 바꾼다. 실패하면 [applyUpdated] 없이 되돌린다.
+  /// 낙관적으로 방문 표시를 바꾼다. 실패하면 되돌린다.
   void setVisitedOptimistically(Set<String> cellIds, {required bool visited}) {
     final List<MapCell>? current = state.value;
     if (current == null || cellIds.isEmpty) return;
@@ -53,6 +52,23 @@ class MapCells extends _$MapCells {
   }
 }
 
+/// 칸 도형(R20).
+///
+/// **서버가 정한 칸 정의로 원본 경계를 런타임에 합친다.** 별도의 도형 자산을 두지
+/// 않는 이유는 묶음 규칙이 서버 소유이기 때문이다 — 클라이언트가 규칙을 따로
+/// 가지면 서버가 바꿀 때 조용히 어긋난다.
+///
+/// 조립에 ~250ms가 들어 한 번만 하고 붙들어 둔다. 방문 여부는 여기 없다
+/// (도형은 방문과 무관하게 그대로다) — 색칠은 [mapCellsProvider]가 정한다.
+@Riverpod(keepAlive: true)
+Future<List<CellGeometry>> cellGeometries(Ref ref) async {
+  final List<MapCell> cells = await ref.watch(mapCellsProvider.future);
+  final List<DistrictBoundary> boundaries = await ref.watch(
+    districtBoundariesProvider.future,
+  );
+  return CellShapeBuilder.build(cells: cells, boundaries: boundaries);
+}
+
 /// 시도별 진척(R21). **클라이언트가 센다** — 161칸을 이미 갖고 있다.
 @riverpod
 Future<List<ProvinceProgress>> provinceProgress(Ref ref) async {
@@ -60,20 +76,7 @@ Future<List<ProvinceProgress>> provinceProgress(Ref ref) async {
   return provinceProgressOf(cells);
 }
 
-/// 서버 칸과 렌더링 도형을 이은 인덱스.
-///
-/// 지도를 그리려면 둘이 다 있어야 하므로 여기서 합쳐 한 번만 계산한다.
-@riverpod
-Future<CellGeometryIndex> cellGeometryIndex(Ref ref) async {
-  final List<MapCell> cells = await ref.watch(mapCellsProvider.future);
-  final List<CellGeometry> geometries = await ref.watch(
-    cellGeometriesProvider.future,
-  );
-  return CellGeometryIndex.build(cells: cells, geometries: geometries);
-}
-
 /// 칸 상세(R11·R22). 칸 id로 부르는 family다.
 @riverpod
-Future<CellDetail> cellDetail(Ref ref, String cellId) => ref
-    .watch(nationalMapRepositoryProvider)
-    .fetchCellDetail(cellId: cellId);
+Future<CellDetail> cellDetail(Ref ref, String cellId) =>
+    ref.watch(nationalMapRepositoryProvider).fetchCellDetail(cellId: cellId);

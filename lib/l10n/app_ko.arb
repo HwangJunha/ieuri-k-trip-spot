@@ -285,6 +285,110 @@
   "@nationalMapSpotsEmpty": {
     "description": "지역 상세 - 장소가 없을 때"
   },
+  "commonCancel": "취소",
+  "@commonCancel": {
+    "description": "공통 - 취소 버튼"
+  },
+  "commonClose": "닫기",
+  "@commonClose": {
+    "description": "공통 - 닫기 버튼"
+  },
+  "nationalMapHere": "지금 여기",
+  "@nationalMapHere": {
+    "description": "전국 지도 - 현재 위치 등록 버튼"
+  },
+  "nationalMapRegisterTitle": "이 지역을 등록할까요?",
+  "@nationalMapRegisterTitle": {
+    "description": "현재 위치 등록 확인 다이얼로그 제목"
+  },
+  "nationalMapRegisterBody": "{district}에 다녀온 것으로 기록합니다.",
+  "@nationalMapRegisterBody": {
+    "description": "현재 위치 등록 확인 다이얼로그 본문",
+    "placeholders": {
+      "district": { "type": "String" }
+    }
+  },
+  "nationalMapAlreadyVisited": "{cell}은(는) 이미 다녀온 곳이에요.",
+  "@nationalMapAlreadyVisited": {
+    "description": "이미 방문한 칸에서 등록을 시도했을 때",
+    "placeholders": {
+      "cell": { "type": "String" }
+    }
+  },
+  "nationalMapOutsideKorea": "국내 지역만 등록할 수 있어요.",
+  "@nationalMapOutsideKorea": {
+    "description": "한국 밖 좌표에서 등록을 시도했을 때"
+  },
+  "nationalMapLocationUnavailable": "현재 위치를 확인할 수 없어요.",
+  "@nationalMapLocationUnavailable": {
+    "description": "위치 획득 실패"
+  },
+  "photoSyncTitle": "사진으로 채우기",
+  "@photoSyncTitle": {
+    "description": "사진 동기화 시트 제목"
+  },
+  "photoSyncBody": "사진에 담긴 위치로 다녀온 지역을 찾아요. 사진은 기기 밖으로 나가지 않습니다.",
+  "@photoSyncBody": {
+    "description": "사진 동기화 시트 설명 - 사진 미전송을 밝힌다"
+  },
+  "photoSyncStart": "시작하기",
+  "@photoSyncStart": {
+    "description": "사진 동기화 - 시작 버튼"
+  },
+  "photoSyncResume": "이어서 하기",
+  "@photoSyncResume": {
+    "description": "사진 동기화 - 중단 지점부터 재개"
+  },
+  "photoSyncStop": "멈추기",
+  "@photoSyncStop": {
+    "description": "사진 동기화 - 스캔 중단"
+  },
+  "photoSyncProgress": "{done} / {total}장 확인했어요",
+  "@photoSyncProgress": {
+    "description": "사진 동기화 진행률",
+    "placeholders": {
+      "done": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "photoSyncFoundSoFar": "지금까지 {count}곳을 찾았어요",
+  "@photoSyncFoundSoFar": {
+    "description": "스캔 중 찾은 지역 수",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "photoSyncFound": "{count}곳을 찾았어요",
+  "@photoSyncFound": {
+    "description": "스캔 완료 후 찾은 지역 수",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "photoSyncConfirmBody": "등록하면 지도가 채워집니다.",
+  "@photoSyncConfirmBody": {
+    "description": "등록 확인 안내"
+  },
+  "photoSyncRegister": "등록하기",
+  "@photoSyncRegister": {
+    "description": "사진 동기화 - 판정 결과 등록"
+  },
+  "photoSyncDone": "지도를 채웠어요.",
+  "@photoSyncDone": {
+    "description": "사진 동기화 완료"
+  },
+  "photoSyncNoCoordinates": "위치 정보가 있는 사진을 찾지 못했어요.",
+  "@photoSyncNoCoordinates": {
+    "description": "좌표가 하나도 없이 끝났을 때 - 오류가 아니다"
+  },
+  "photoSyncPermissionDenied": "사진 접근을 허용하면 지도를 채울 수 있어요.",
+  "@photoSyncPermissionDenied": {
+    "description": "사진 권한 거부 안내 - 오류가 아니다"
+  },
+  "photoSyncFailed": "사진을 읽는 중 문제가 생겼어요.",
+  "@photoSyncFailed": {
+    "description": "사진 동기화 실패"
+  },
   "nationalMapUnavailable": "지도를 불러오지 못했어요",
   "@nationalMapUnavailable": {
     "description": "전국 지도 - 칸 목록을 읽지 못했을 때"

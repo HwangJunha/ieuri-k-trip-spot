@@ -1,8 +1,5 @@
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/cell_geometry.dart';
-import 'package:ieuri_k_trip_spot/domain/national_map/model/cell_geometry_source.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/cell_hit_test.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/cell_image.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/cell_projection.dart';
@@ -12,13 +9,12 @@ import 'package:ieuri_k_trip_spot/domain/national_map/model/national_map_config.
 import 'package:ieuri_k_trip_spot/domain/national_map/model/photo_scan_progress.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/province_progress.dart';
 
-/// 정사각형 링 하나짜리 칸을 만든다.
+/// 정사각형 링 하나짜리 칸 도형을 만든다.
 CellGeometry _square(
-  String code, {
+  String cellId, {
   required double lng,
   required double lat,
   double size = 1,
-  String province = '41',
 }) {
   final List<GeoPoint> ring = <GeoPoint>[
     GeoPoint(lng, lat),
@@ -27,15 +23,9 @@ CellGeometry _square(
     GeoPoint(lng, lat + size),
   ];
   return CellGeometry(
-    code: code,
-    nameKo: code,
-    nameEn: code,
-    provinceCode: province,
-    provinceNameKo: province,
-    provinceNameEn: province,
-    districtCodes: <String>[code],
-    center: GeoPoint(lng + size / 2, lat + size / 2),
+    cellId: cellId,
     polygons: <List<GeoPoint>>[ring],
+    center: GeoPoint(lng + size / 2, lat + size / 2),
     bounds: GeoBounds.of(ring),
   );
 }
@@ -47,6 +37,7 @@ MapCell _cell(String code, String province, {bool visited = false}) => MapCell(
   provinceName: province,
   provinceCode: province,
   visited: visited,
+  center: const GeoPoint(127, 37),
 );
 
 void main() {
@@ -113,7 +104,7 @@ void main() {
           const GeoPoint(127.5, 37.5), // 방문 칸 안
           const GeoPoint(129.0, 35.0), // 밖
         ],
-        <CellGeometry>[visited],
+        <GeoBounds>[visited.bounds],
       );
 
       expect(kept, hasLength(1));
@@ -126,7 +117,7 @@ void main() {
       ];
 
       expect(
-        CoordinateReduction.excludingVisited(points, const <CellGeometry>[]),
+        CoordinateReduction.excludingVisited(points, const <GeoBounds>[]),
         hasLength(1),
       );
     });
@@ -141,7 +132,7 @@ void main() {
           const GeoPoint(127.5001, 37.5001), // 같은 격자 -> 2단계에서 탈락
           const GeoPoint(129.0, 35.2), // 살아남는다
         ],
-        visitedCells: <CellGeometry>[visited],
+        visitedBounds: <GeoBounds>[visited.bounds],
       );
 
       expect(out, hasLength(1));
@@ -149,25 +140,38 @@ void main() {
     });
   });
 
-  group('요청 배치 (계약 §7.4)', () {
-    test('상한 크기로 나눈다', () {
-      final List<GeoPoint> points = <GeoPoint>[
-        for (int i = 0; i < 1200; i++) GeoPoint(127 + i * 0.001, 37),
+  group('한국 영역 (R25)', () {
+    test('국내 주요 좌표가 영역 안이다', () {
+      const List<GeoPoint> inside = <GeoPoint>[
+        GeoPoint(126.9780, 37.5665), // 서울
+        GeoPoint(129.0756, 35.1796), // 부산
+        GeoPoint(126.5312, 33.4996), // 제주
+        GeoPoint(130.9058, 37.4844), // 울릉도
       ];
 
-      final List<List<GeoPoint>> chunks = CoordinateReduction.chunk(points);
-
-      expect(chunks.map((List<GeoPoint> c) => c.length), <int>[500, 500, 200]);
-      expect(
-        chunks.every(
-          (List<GeoPoint> c) => c.length <= NationalMapConfig.resolveBatchSize,
-        ),
-        isTrue,
-      );
+      for (final GeoPoint p in inside) {
+        expect(
+          NationalMapConfig.koreaBounds.contains(p),
+          isTrue,
+          reason: '$p',
+        );
+      }
     });
 
-    test('빈 목록은 배치를 만들지 않는다', () {
-      expect(CoordinateReduction.chunk(const <GeoPoint>[]), isEmpty);
+    test('해외 좌표는 영역 밖이다', () {
+      const List<GeoPoint> outside = <GeoPoint>[
+        GeoPoint(139.7, 35.68), // 도쿄
+        GeoPoint(-74.0, 40.7), // 뉴욕
+        GeoPoint(121.5, 25.0), // 타이베이
+      ];
+
+      for (final GeoPoint p in outside) {
+        expect(
+          NationalMapConfig.koreaBounds.contains(p),
+          isFalse,
+          reason: '$p',
+        );
+      }
     });
   });
 
@@ -310,12 +314,12 @@ void main() {
     test('칸 안의 점은 그 칸을 찾는다', () {
       expect(
         CellHitTest.cellAt(<CellGeometry>[a, b], const GeoPoint(127.5, 37.5))
-            ?.code,
+            ?.cellId,
         'A',
       );
       expect(
         CellHitTest.cellAt(<CellGeometry>[a, b], const GeoPoint(129.5, 35.5))
-            ?.code,
+            ?.cellId,
         'B',
       );
     });
@@ -406,94 +410,4 @@ void main() {
     });
   });
 
-  group('칸 자산 (설계 §3)', () {
-    test('실제 자산이 161칸으로 파싱된다', () {
-      final String raw = File('asset/geo/korea_cells.json').readAsStringSync();
-
-      final List<CellGeometry> cells = CellGeometrySource.parse(raw);
-
-      expect(cells, hasLength(161), reason: 'R7이 정한 표시 칸 수');
-    });
-
-    test('경기도가 31칸이다', () {
-      final String raw = File('asset/geo/korea_cells.json').readAsStringSync();
-      final List<CellGeometry> cells = CellGeometrySource.parse(raw);
-
-      final Iterable<CellGeometry> gyeonggi =
-          cells.where((CellGeometry c) => c.provinceCode == '41');
-
-      expect(gyeonggi, hasLength(31), reason: '스펙 R21의 예시와 같아야 한다');
-    });
-
-    test('모든 칸이 시군구 코드와 폴리곤을 갖는다', () {
-      final String raw = File('asset/geo/korea_cells.json').readAsStringSync();
-      final List<CellGeometry> cells = CellGeometrySource.parse(raw);
-
-      for (final CellGeometry c in cells) {
-        expect(c.districtCodes, isNotEmpty, reason: '${c.code}에 시군구가 없다');
-        expect(c.polygons, isNotEmpty, reason: '${c.code}에 도형이 없다');
-        for (final List<GeoPoint> ring in c.polygons) {
-          expect(ring.length, greaterThanOrEqualTo(3), reason: c.code);
-        }
-      }
-    });
-
-    test('칸 코드가 겹치지 않는다', () {
-      final String raw = File('asset/geo/korea_cells.json').readAsStringSync();
-      final List<CellGeometry> cells = CellGeometrySource.parse(raw);
-
-      expect(cells.map((CellGeometry c) => c.code).toSet(), hasLength(161));
-    });
-
-    test('현행 행정구역 코드를 쓴다', () {
-      final String raw = File('asset/geo/korea_cells.json').readAsStringSync();
-      final List<CellGeometry> cells = CellGeometrySource.parse(raw);
-
-      // 서버 경계 파일에서 생성하므로 KOSTAT 2013의 구형 코드가 남아 있으면 안 된다.
-      // 종로구는 11110이지 11010이 아니다 — 어긋나면 서버 칸과 이을 수 없다.
-      final CellGeometry seoul = cells.firstWhere(
-        (CellGeometry c) => c.districtCodes.contains('11110'),
-      );
-
-      expect(seoul.nameKo, '서울특별시');
-      expect(seoul.districtCodes, hasLength(25));
-      expect(
-        cells.any((CellGeometry c) => c.districtCodes.contains('11010')),
-        isFalse,
-        reason: 'KOSTAT 2013 구형 코드가 남아 있다',
-      );
-    });
-
-    test('칸 중심이 한국 영역 안이다', () {
-      final String raw = File('asset/geo/korea_cells.json').readAsStringSync();
-      final List<CellGeometry> cells = CellGeometrySource.parse(raw);
-
-      for (final CellGeometry c in cells) {
-        expect(
-          NationalMapConfig.koreaBounds.contains(c.center),
-          isTrue,
-          reason: '${c.code}의 중심이 한국 밖이다',
-        );
-      }
-    });
-
-    test('서울 좌표가 서울 칸을 찾는다', () {
-      final String raw = File('asset/geo/korea_cells.json').readAsStringSync();
-      final List<CellGeometry> cells = CellGeometrySource.parse(raw);
-
-      // 서울시청.
-      final CellGeometry? hit =
-          CellHitTest.cellAt(cells, const GeoPoint(126.9780, 37.5665));
-
-      expect(hit?.nameKo, '서울특별시');
-    });
-
-    test('형식이 어긋나면 드러난다', () {
-      expect(
-        () => CellGeometrySource.parse('{"version":99,"cells":[]}'),
-        throwsFormatException,
-      );
-      expect(() => CellGeometrySource.parse('[]'), throwsFormatException);
-    });
-  });
 }

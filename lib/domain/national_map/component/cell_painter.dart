@@ -48,7 +48,6 @@ class CellPalette {
 class CellPainter extends CustomPainter {
   const CellPainter({
     required this.cells,
-    required this.cellIdOf,
     required this.visitedCellIds,
     required this.palette,
     this.overlappingCellIds,
@@ -56,13 +55,8 @@ class CellPainter extends CustomPainter {
     this.padding = 12,
   });
 
+  /// 그릴 칸 도형. 각자 서버 칸 id를 갖고 있다.
   final List<CellGeometry> cells;
-
-  /// 도형 코드 -> 서버 칸 id.
-  ///
-  /// 도형 자산의 `code`와 서버의 `id`는 서로 다른 체계라 이 맵으로 잇는다
-  /// (`CellGeometryIndex`).
-  final Map<String, String> cellIdOf;
 
   /// 방문한 **칸 id**.
   final Set<String> visitedCellIds;
@@ -92,12 +86,11 @@ class CellPainter extends CustomPainter {
     for (final CellGeometry cell in cells) {
       final Path path = _pathOf(cell, projection);
 
-      final String? cellId = cellIdOf[cell.code];
-      fill.color = _fillOf(cellId);
+      fill.color = _fillOf(cell.cellId);
       canvas.drawPath(path, fill);
       canvas.drawPath(path, stroke);
 
-      if (cellId != null && cellId == selectedCellId) selectedPath = path;
+      if (cell.cellId == selectedCellId) selectedPath = path;
     }
 
     // 선택된 칸은 맨 위에 다시 그려 이웃 칸의 테두리에 가리지 않게 한다.
@@ -113,8 +106,7 @@ class CellPainter extends CustomPainter {
     }
   }
 
-  Color _fillOf(String? cellId) {
-    if (cellId == null) return palette.unvisitedFill;
+  Color _fillOf(String cellId) {
     if (overlappingCellIds != null && overlappingCellIds!.contains(cellId)) {
       return palette.overlapFill;
     }
@@ -164,7 +156,6 @@ class CellPainter extends CustomPainter {
       old.cells != cells ||
       old.selectedCellId != selectedCellId ||
       old.palette.visitedFill != palette.visitedFill ||
-      old.cellIdOf.length != cellIdOf.length ||
       !setEquals(old.visitedCellIds, visitedCellIds) ||
       !setEquals(old.overlappingCellIds, overlappingCellIds);
 

@@ -94,7 +94,7 @@ final class MapCellsProvider
   MapCells create() => MapCells();
 }
 
-String _$mapCellsHash() => r'0f108eee3bd8c5228a0a7c8f0b877ae0ed1f597b';
+String _$mapCellsHash() => r'160afc8f7ffae37f92568cc43b3d0b99c41cfcb9';
 
 /// 161칸 + 뷰어의 방문 여부(R6·R20).
 ///
@@ -119,6 +119,73 @@ abstract class _$MapCells extends $AsyncNotifier<List<MapCell>> {
     element.handleValue(ref, created);
   }
 }
+
+/// 칸 도형(R20).
+///
+/// **서버가 정한 칸 정의로 원본 경계를 런타임에 합친다.** 별도의 도형 자산을 두지
+/// 않는 이유는 묶음 규칙이 서버 소유이기 때문이다 — 클라이언트가 규칙을 따로
+/// 가지면 서버가 바꿀 때 조용히 어긋난다.
+///
+/// 조립에 ~250ms가 들어 한 번만 하고 붙들어 둔다. 방문 여부는 여기 없다
+/// (도형은 방문과 무관하게 그대로다) — 색칠은 [mapCellsProvider]가 정한다.
+
+@ProviderFor(cellGeometries)
+const cellGeometriesProvider = CellGeometriesProvider._();
+
+/// 칸 도형(R20).
+///
+/// **서버가 정한 칸 정의로 원본 경계를 런타임에 합친다.** 별도의 도형 자산을 두지
+/// 않는 이유는 묶음 규칙이 서버 소유이기 때문이다 — 클라이언트가 규칙을 따로
+/// 가지면 서버가 바꿀 때 조용히 어긋난다.
+///
+/// 조립에 ~250ms가 들어 한 번만 하고 붙들어 둔다. 방문 여부는 여기 없다
+/// (도형은 방문과 무관하게 그대로다) — 색칠은 [mapCellsProvider]가 정한다.
+
+final class CellGeometriesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<CellGeometry>>,
+          List<CellGeometry>,
+          FutureOr<List<CellGeometry>>
+        >
+    with
+        $FutureModifier<List<CellGeometry>>,
+        $FutureProvider<List<CellGeometry>> {
+  /// 칸 도형(R20).
+  ///
+  /// **서버가 정한 칸 정의로 원본 경계를 런타임에 합친다.** 별도의 도형 자산을 두지
+  /// 않는 이유는 묶음 규칙이 서버 소유이기 때문이다 — 클라이언트가 규칙을 따로
+  /// 가지면 서버가 바꿀 때 조용히 어긋난다.
+  ///
+  /// 조립에 ~250ms가 들어 한 번만 하고 붙들어 둔다. 방문 여부는 여기 없다
+  /// (도형은 방문과 무관하게 그대로다) — 색칠은 [mapCellsProvider]가 정한다.
+  const CellGeometriesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'cellGeometriesProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$cellGeometriesHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<CellGeometry>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<CellGeometry>> create(Ref ref) {
+    return cellGeometries(ref);
+  }
+}
+
+String _$cellGeometriesHash() => r'5b12add6d27f734c2cadf476c9214da707e77dbb';
 
 /// 시도별 진척(R21). **클라이언트가 센다** — 161칸을 이미 갖고 있다.
 
@@ -165,58 +232,6 @@ final class ProvinceProgressProvider
 }
 
 String _$provinceProgressHash() => r'b34cf99402be2586db185ca925234e3c95313973';
-
-/// 서버 칸과 렌더링 도형을 이은 인덱스.
-///
-/// 지도를 그리려면 둘이 다 있어야 하므로 여기서 합쳐 한 번만 계산한다.
-
-@ProviderFor(cellGeometryIndex)
-const cellGeometryIndexProvider = CellGeometryIndexProvider._();
-
-/// 서버 칸과 렌더링 도형을 이은 인덱스.
-///
-/// 지도를 그리려면 둘이 다 있어야 하므로 여기서 합쳐 한 번만 계산한다.
-
-final class CellGeometryIndexProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<CellGeometryIndex>,
-          CellGeometryIndex,
-          FutureOr<CellGeometryIndex>
-        >
-    with
-        $FutureModifier<CellGeometryIndex>,
-        $FutureProvider<CellGeometryIndex> {
-  /// 서버 칸과 렌더링 도형을 이은 인덱스.
-  ///
-  /// 지도를 그리려면 둘이 다 있어야 하므로 여기서 합쳐 한 번만 계산한다.
-  const CellGeometryIndexProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'cellGeometryIndexProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$cellGeometryIndexHash();
-
-  @$internal
-  @override
-  $FutureProviderElement<CellGeometryIndex> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<CellGeometryIndex> create(Ref ref) {
-    return cellGeometryIndex(ref);
-  }
-}
-
-String _$cellGeometryIndexHash() => r'173ee60986e160c76d00c711f09881b124a9ff1a';
 
 /// 칸 상세(R11·R22). 칸 id로 부르는 family다.
 

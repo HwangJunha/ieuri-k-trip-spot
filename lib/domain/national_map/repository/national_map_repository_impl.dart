@@ -4,6 +4,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../common/network/graphql_debug_log.dart';
 import '../../../common/network/graphql_failure.dart';
 import '../model/cell_detail.dart';
+import '../model/cell_geometry.dart';
 import '../model/cell_image.dart';
 import '../model/map_cell.dart';
 import '../model/national_map_failure.dart';
@@ -183,6 +184,8 @@ class NationalMapRepositoryImpl implements NationalMapRepository {
     provinceName: c.provinceName,
     provinceCode: c.provinceCode,
     visited: c.viewerVisited,
+    // 계약이 `[경도, 위도]`가 아니라 이름 있는 필드로 준다 — 순서를 헷갈릴 일이 없다.
+    center: GeoPoint(c.center.lng, c.center.lat),
     representativeImage: image,
   );
 

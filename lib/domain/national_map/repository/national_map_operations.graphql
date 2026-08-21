@@ -118,14 +118,13 @@ fragment MapCellCore on MapCell {
   provinceName
   provinceCode
   viewerVisited
+  # 지도를 이 칸으로 옮길 때 쓴다. 한때 161칸 전부 null이라 응답이 통째로
+  # 무너졌으나 서버가 고쳤다(2026-08-22 확인).
+  center {
+    lat
+    lng
+  }
 }
-
-# **center를 고르지 않는다.** 서버가 161칸 전부에서 lat/lng를 null로 주는데
-# Coordinates!가 non-null이라 null이 위로 전파되어 mapCells 전체가 null이 된다
-# (problem/SPEC-0030-SERVER-map-cell-center-null.md).
-#
-# 막히지 않는 이유는 칸 도형 자산이 무게중심을 갖고 있어서다. 서버가 고치면
-# 되살릴지 정한다.
 
 fragment CellImageFields on CellImage {
   imageUrl

@@ -12,7 +12,6 @@ import 'cell_painter.dart';
 class NationalMapCanvas extends StatefulWidget {
   const NationalMapCanvas({
     required this.cells,
-    required this.cellIdOf,
     required this.visitedCellIds,
     this.overlappingCellIds,
     this.selectedCellId,
@@ -21,9 +20,6 @@ class NationalMapCanvas extends StatefulWidget {
   });
 
   final List<CellGeometry> cells;
-
-  /// 도형 코드 -> 서버 칸 id.
-  final Map<String, String> cellIdOf;
 
   final Set<String> visitedCellIds;
   final Set<String>? overlappingCellIds;
@@ -64,10 +60,7 @@ class _NationalMapCanvasState extends State<NationalMapCanvas> {
     final Offset local = details.localPosition;
     final GeoPoint point = projection.toGeo(local.dx, local.dy);
     final CellGeometry? hit = CellHitTest.cellAt(widget.cells, point);
-    if (hit == null) return;
-
-    final String? cellId = widget.cellIdOf[hit.code];
-    if (cellId != null) widget.onCellTap!(cellId);
+    if (hit != null) widget.onCellTap!(hit.cellId);
   }
 
   @override
@@ -89,7 +82,6 @@ class _NationalMapCanvasState extends State<NationalMapCanvas> {
               size: size,
               painter: CellPainter(
                 cells: widget.cells,
-                cellIdOf: widget.cellIdOf,
                 visitedCellIds: widget.visitedCellIds,
                 overlappingCellIds: widget.overlappingCellIds,
                 selectedCellId: widget.selectedCellId,

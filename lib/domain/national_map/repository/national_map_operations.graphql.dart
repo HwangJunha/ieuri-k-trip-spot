@@ -12,6 +12,7 @@ class Fragment$MapCellCore {
     required this.provinceName,
     required this.provinceCode,
     required this.viewerVisited,
+    required this.center,
   });
 
   factory Fragment$MapCellCore.fromJson(Map<String, dynamic> json) {
@@ -21,6 +22,7 @@ class Fragment$MapCellCore {
     final l$provinceName = json['provinceName'];
     final l$provinceCode = json['provinceCode'];
     final l$viewerVisited = json['viewerVisited'];
+    final l$center = json['center'];
     return Fragment$MapCellCore(
       id: (l$id as String),
       districtCodes: (l$districtCodes as List<dynamic>)
@@ -30,6 +32,9 @@ class Fragment$MapCellCore {
       provinceName: (l$provinceName as String),
       provinceCode: (l$provinceCode as String),
       viewerVisited: (l$viewerVisited as bool),
+      center: Fragment$MapCellCore$center.fromJson(
+        (l$center as Map<String, dynamic>),
+      ),
     );
   }
 
@@ -45,6 +50,8 @@ class Fragment$MapCellCore {
 
   final bool viewerVisited;
 
+  final Fragment$MapCellCore$center center;
+
   Map<String, dynamic> toJson() {
     final _resultData = <String, dynamic>{};
     final l$id = id;
@@ -59,6 +66,8 @@ class Fragment$MapCellCore {
     _resultData['provinceCode'] = l$provinceCode;
     final l$viewerVisited = viewerVisited;
     _resultData['viewerVisited'] = l$viewerVisited;
+    final l$center = center;
+    _resultData['center'] = l$center.toJson();
     return _resultData;
   }
 
@@ -70,6 +79,7 @@ class Fragment$MapCellCore {
     final l$provinceName = provinceName;
     final l$provinceCode = provinceCode;
     final l$viewerVisited = viewerVisited;
+    final l$center = center;
     return Object.hashAll([
       l$id,
       Object.hashAll(l$districtCodes.map((v) => v)),
@@ -77,6 +87,7 @@ class Fragment$MapCellCore {
       l$provinceName,
       l$provinceCode,
       l$viewerVisited,
+      l$center,
     ]);
   }
 
@@ -125,6 +136,11 @@ class Fragment$MapCellCore {
     if (l$viewerVisited != lOther$viewerVisited) {
       return false;
     }
+    final l$center = center;
+    final lOther$center = other.center;
+    if (l$center != lOther$center) {
+      return false;
+    }
     return true;
   }
 }
@@ -150,7 +166,9 @@ abstract class CopyWith$Fragment$MapCellCore<TRes> {
     String? provinceName,
     String? provinceCode,
     bool? viewerVisited,
+    Fragment$MapCellCore$center? center,
   });
+  CopyWith$Fragment$MapCellCore$center<TRes> get center;
 }
 
 class _CopyWithImpl$Fragment$MapCellCore<TRes>
@@ -170,6 +188,7 @@ class _CopyWithImpl$Fragment$MapCellCore<TRes>
     Object? provinceName = _undefined,
     Object? provinceCode = _undefined,
     Object? viewerVisited = _undefined,
+    Object? center = _undefined,
   }) => _then(
     Fragment$MapCellCore(
       id: id == _undefined || id == null ? _instance.id : (id as String),
@@ -188,8 +207,19 @@ class _CopyWithImpl$Fragment$MapCellCore<TRes>
       viewerVisited: viewerVisited == _undefined || viewerVisited == null
           ? _instance.viewerVisited
           : (viewerVisited as bool),
+      center: center == _undefined || center == null
+          ? _instance.center
+          : (center as Fragment$MapCellCore$center),
     ),
   );
+
+  CopyWith$Fragment$MapCellCore$center<TRes> get center {
+    final local$center = _instance.center;
+    return CopyWith$Fragment$MapCellCore$center(
+      local$center,
+      (e) => call(center: e),
+    );
+  }
 }
 
 class _CopyWithStubImpl$Fragment$MapCellCore<TRes>
@@ -205,7 +235,11 @@ class _CopyWithStubImpl$Fragment$MapCellCore<TRes>
     String? provinceName,
     String? provinceCode,
     bool? viewerVisited,
+    Fragment$MapCellCore$center? center,
   }) => _res;
+
+  CopyWith$Fragment$MapCellCore$center<TRes> get center =>
+      CopyWith$Fragment$MapCellCore$center.stub(_res);
 }
 
 const fragmentDefinitionMapCellCore = FragmentDefinitionNode(
@@ -258,12 +292,136 @@ const fragmentDefinitionMapCellCore = FragmentDefinitionNode(
         directives: [],
         selectionSet: null,
       ),
+      FieldNode(
+        name: NameNode(value: 'center'),
+        alias: null,
+        arguments: [],
+        directives: [],
+        selectionSet: SelectionSetNode(
+          selections: [
+            FieldNode(
+              name: NameNode(value: 'lat'),
+              alias: null,
+              arguments: [],
+              directives: [],
+              selectionSet: null,
+            ),
+            FieldNode(
+              name: NameNode(value: 'lng'),
+              alias: null,
+              arguments: [],
+              directives: [],
+              selectionSet: null,
+            ),
+          ],
+        ),
+      ),
     ],
   ),
 );
 const documentNodeFragmentMapCellCore = DocumentNode(
   definitions: [fragmentDefinitionMapCellCore],
 );
+
+class Fragment$MapCellCore$center {
+  Fragment$MapCellCore$center({required this.lat, required this.lng});
+
+  factory Fragment$MapCellCore$center.fromJson(Map<String, dynamic> json) {
+    final l$lat = json['lat'];
+    final l$lng = json['lng'];
+    return Fragment$MapCellCore$center(
+      lat: (l$lat as num).toDouble(),
+      lng: (l$lng as num).toDouble(),
+    );
+  }
+
+  final double lat;
+
+  final double lng;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$lat = lat;
+    _resultData['lat'] = l$lat;
+    final l$lng = lng;
+    _resultData['lng'] = l$lng;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$lat = lat;
+    final l$lng = lng;
+    return Object.hashAll([l$lat, l$lng]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Fragment$MapCellCore$center ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$lat = lat;
+    final lOther$lat = other.lat;
+    if (l$lat != lOther$lat) {
+      return false;
+    }
+    final l$lng = lng;
+    final lOther$lng = other.lng;
+    if (l$lng != lOther$lng) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Fragment$MapCellCore$center
+    on Fragment$MapCellCore$center {
+  CopyWith$Fragment$MapCellCore$center<Fragment$MapCellCore$center>
+  get copyWith => CopyWith$Fragment$MapCellCore$center(this, (i) => i);
+}
+
+abstract class CopyWith$Fragment$MapCellCore$center<TRes> {
+  factory CopyWith$Fragment$MapCellCore$center(
+    Fragment$MapCellCore$center instance,
+    TRes Function(Fragment$MapCellCore$center) then,
+  ) = _CopyWithImpl$Fragment$MapCellCore$center;
+
+  factory CopyWith$Fragment$MapCellCore$center.stub(TRes res) =
+      _CopyWithStubImpl$Fragment$MapCellCore$center;
+
+  TRes call({double? lat, double? lng});
+}
+
+class _CopyWithImpl$Fragment$MapCellCore$center<TRes>
+    implements CopyWith$Fragment$MapCellCore$center<TRes> {
+  _CopyWithImpl$Fragment$MapCellCore$center(this._instance, this._then);
+
+  final Fragment$MapCellCore$center _instance;
+
+  final TRes Function(Fragment$MapCellCore$center) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? lat = _undefined, Object? lng = _undefined}) => _then(
+    Fragment$MapCellCore$center(
+      lat: lat == _undefined || lat == null ? _instance.lat : (lat as double),
+      lng: lng == _undefined || lng == null ? _instance.lng : (lng as double),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Fragment$MapCellCore$center<TRes>
+    implements CopyWith$Fragment$MapCellCore$center<TRes> {
+  _CopyWithStubImpl$Fragment$MapCellCore$center(this._res);
+
+  TRes _res;
+
+  call({double? lat, double? lng}) => _res;
+}
 
 class Fragment$CellImageFields {
   Fragment$CellImageFields({
@@ -1130,6 +1288,7 @@ class Query$MapCellDetail$mapCell implements Fragment$MapCellCore {
     required this.provinceName,
     required this.provinceCode,
     required this.viewerVisited,
+    required this.center,
     this.representativeImage,
     required this.spots,
   });
@@ -1141,6 +1300,7 @@ class Query$MapCellDetail$mapCell implements Fragment$MapCellCore {
     final l$provinceName = json['provinceName'];
     final l$provinceCode = json['provinceCode'];
     final l$viewerVisited = json['viewerVisited'];
+    final l$center = json['center'];
     final l$representativeImage = json['representativeImage'];
     final l$spots = json['spots'];
     return Query$MapCellDetail$mapCell(
@@ -1152,6 +1312,9 @@ class Query$MapCellDetail$mapCell implements Fragment$MapCellCore {
       provinceName: (l$provinceName as String),
       provinceCode: (l$provinceCode as String),
       viewerVisited: (l$viewerVisited as bool),
+      center: Query$MapCellDetail$mapCell$center.fromJson(
+        (l$center as Map<String, dynamic>),
+      ),
       representativeImage: l$representativeImage == null
           ? null
           : Fragment$CellImageFields.fromJson(
@@ -1175,6 +1338,8 @@ class Query$MapCellDetail$mapCell implements Fragment$MapCellCore {
 
   final bool viewerVisited;
 
+  final Query$MapCellDetail$mapCell$center center;
+
   final Fragment$CellImageFields? representativeImage;
 
   final Query$MapCellDetail$mapCell$spots spots;
@@ -1193,6 +1358,8 @@ class Query$MapCellDetail$mapCell implements Fragment$MapCellCore {
     _resultData['provinceCode'] = l$provinceCode;
     final l$viewerVisited = viewerVisited;
     _resultData['viewerVisited'] = l$viewerVisited;
+    final l$center = center;
+    _resultData['center'] = l$center.toJson();
     final l$representativeImage = representativeImage;
     _resultData['representativeImage'] = l$representativeImage?.toJson();
     final l$spots = spots;
@@ -1208,6 +1375,7 @@ class Query$MapCellDetail$mapCell implements Fragment$MapCellCore {
     final l$provinceName = provinceName;
     final l$provinceCode = provinceCode;
     final l$viewerVisited = viewerVisited;
+    final l$center = center;
     final l$representativeImage = representativeImage;
     final l$spots = spots;
     return Object.hashAll([
@@ -1217,6 +1385,7 @@ class Query$MapCellDetail$mapCell implements Fragment$MapCellCore {
       l$provinceName,
       l$provinceCode,
       l$viewerVisited,
+      l$center,
       l$representativeImage,
       l$spots,
     ]);
@@ -1268,6 +1437,11 @@ class Query$MapCellDetail$mapCell implements Fragment$MapCellCore {
     if (l$viewerVisited != lOther$viewerVisited) {
       return false;
     }
+    final l$center = center;
+    final lOther$center = other.center;
+    if (l$center != lOther$center) {
+      return false;
+    }
     final l$representativeImage = representativeImage;
     final lOther$representativeImage = other.representativeImage;
     if (l$representativeImage != lOther$representativeImage) {
@@ -1304,9 +1478,11 @@ abstract class CopyWith$Query$MapCellDetail$mapCell<TRes> {
     String? provinceName,
     String? provinceCode,
     bool? viewerVisited,
+    Query$MapCellDetail$mapCell$center? center,
     Fragment$CellImageFields? representativeImage,
     Query$MapCellDetail$mapCell$spots? spots,
   });
+  CopyWith$Query$MapCellDetail$mapCell$center<TRes> get center;
   CopyWith$Fragment$CellImageFields<TRes> get representativeImage;
   CopyWith$Query$MapCellDetail$mapCell$spots<TRes> get spots;
 }
@@ -1328,6 +1504,7 @@ class _CopyWithImpl$Query$MapCellDetail$mapCell<TRes>
     Object? provinceName = _undefined,
     Object? provinceCode = _undefined,
     Object? viewerVisited = _undefined,
+    Object? center = _undefined,
     Object? representativeImage = _undefined,
     Object? spots = _undefined,
   }) => _then(
@@ -1348,6 +1525,9 @@ class _CopyWithImpl$Query$MapCellDetail$mapCell<TRes>
       viewerVisited: viewerVisited == _undefined || viewerVisited == null
           ? _instance.viewerVisited
           : (viewerVisited as bool),
+      center: center == _undefined || center == null
+          ? _instance.center
+          : (center as Query$MapCellDetail$mapCell$center),
       representativeImage: representativeImage == _undefined
           ? _instance.representativeImage
           : (representativeImage as Fragment$CellImageFields?),
@@ -1356,6 +1536,14 @@ class _CopyWithImpl$Query$MapCellDetail$mapCell<TRes>
           : (spots as Query$MapCellDetail$mapCell$spots),
     ),
   );
+
+  CopyWith$Query$MapCellDetail$mapCell$center<TRes> get center {
+    final local$center = _instance.center;
+    return CopyWith$Query$MapCellDetail$mapCell$center(
+      local$center,
+      (e) => call(center: e),
+    );
+  }
 
   CopyWith$Fragment$CellImageFields<TRes> get representativeImage {
     final local$representativeImage = _instance.representativeImage;
@@ -1389,15 +1577,124 @@ class _CopyWithStubImpl$Query$MapCellDetail$mapCell<TRes>
     String? provinceName,
     String? provinceCode,
     bool? viewerVisited,
+    Query$MapCellDetail$mapCell$center? center,
     Fragment$CellImageFields? representativeImage,
     Query$MapCellDetail$mapCell$spots? spots,
   }) => _res;
+
+  CopyWith$Query$MapCellDetail$mapCell$center<TRes> get center =>
+      CopyWith$Query$MapCellDetail$mapCell$center.stub(_res);
 
   CopyWith$Fragment$CellImageFields<TRes> get representativeImage =>
       CopyWith$Fragment$CellImageFields.stub(_res);
 
   CopyWith$Query$MapCellDetail$mapCell$spots<TRes> get spots =>
       CopyWith$Query$MapCellDetail$mapCell$spots.stub(_res);
+}
+
+class Query$MapCellDetail$mapCell$center
+    implements Fragment$MapCellCore$center {
+  Query$MapCellDetail$mapCell$center({required this.lat, required this.lng});
+
+  factory Query$MapCellDetail$mapCell$center.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$lat = json['lat'];
+    final l$lng = json['lng'];
+    return Query$MapCellDetail$mapCell$center(
+      lat: (l$lat as num).toDouble(),
+      lng: (l$lng as num).toDouble(),
+    );
+  }
+
+  final double lat;
+
+  final double lng;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$lat = lat;
+    _resultData['lat'] = l$lat;
+    final l$lng = lng;
+    _resultData['lng'] = l$lng;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$lat = lat;
+    final l$lng = lng;
+    return Object.hashAll([l$lat, l$lng]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$MapCellDetail$mapCell$center ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$lat = lat;
+    final lOther$lat = other.lat;
+    if (l$lat != lOther$lat) {
+      return false;
+    }
+    final l$lng = lng;
+    final lOther$lng = other.lng;
+    if (l$lng != lOther$lng) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$MapCellDetail$mapCell$center
+    on Query$MapCellDetail$mapCell$center {
+  CopyWith$Query$MapCellDetail$mapCell$center<
+    Query$MapCellDetail$mapCell$center
+  >
+  get copyWith => CopyWith$Query$MapCellDetail$mapCell$center(this, (i) => i);
+}
+
+abstract class CopyWith$Query$MapCellDetail$mapCell$center<TRes> {
+  factory CopyWith$Query$MapCellDetail$mapCell$center(
+    Query$MapCellDetail$mapCell$center instance,
+    TRes Function(Query$MapCellDetail$mapCell$center) then,
+  ) = _CopyWithImpl$Query$MapCellDetail$mapCell$center;
+
+  factory CopyWith$Query$MapCellDetail$mapCell$center.stub(TRes res) =
+      _CopyWithStubImpl$Query$MapCellDetail$mapCell$center;
+
+  TRes call({double? lat, double? lng});
+}
+
+class _CopyWithImpl$Query$MapCellDetail$mapCell$center<TRes>
+    implements CopyWith$Query$MapCellDetail$mapCell$center<TRes> {
+  _CopyWithImpl$Query$MapCellDetail$mapCell$center(this._instance, this._then);
+
+  final Query$MapCellDetail$mapCell$center _instance;
+
+  final TRes Function(Query$MapCellDetail$mapCell$center) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? lat = _undefined, Object? lng = _undefined}) => _then(
+    Query$MapCellDetail$mapCell$center(
+      lat: lat == _undefined || lat == null ? _instance.lat : (lat as double),
+      lng: lng == _undefined || lng == null ? _instance.lng : (lng as double),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$MapCellDetail$mapCell$center<TRes>
+    implements CopyWith$Query$MapCellDetail$mapCell$center<TRes> {
+  _CopyWithStubImpl$Query$MapCellDetail$mapCell$center(this._res);
+
+  TRes _res;
+
+  call({double? lat, double? lng}) => _res;
 }
 
 class Query$MapCellDetail$mapCell$spots {

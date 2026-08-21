@@ -1,3 +1,4 @@
+import 'cell_geometry.dart';
 import 'cell_image.dart';
 
 /// 전국 지도의 표시 칸 1개(계약 `MapCell`).
@@ -5,8 +6,8 @@ import 'cell_image.dart';
 /// 행정구역 시군구와 1:1이 아니다 — 광역시는 전체가 1칸, 구를 가진 일반시 12곳도
 /// 시 단위로 1칸이다. 전국 252개 시군구가 161칸이 된다(R7).
 ///
-/// 도형은 여기 없다. 칸의 모양은 앱 자산(`CellGeometry`)이고 [districtCodes]가
-/// 겹치는지로 잇는다(`CellGeometryIndex`).
+/// 도형은 여기 없다. 칸의 모양은 [districtCodes]로 원본 경계를 합쳐 런타임에
+/// 만들며(`CellShapeBuilder`), 결과는 [id]로 이 칸과 이어진다.
 class MapCell {
   const MapCell({
     required this.id,
@@ -15,6 +16,7 @@ class MapCell {
     required this.provinceName,
     required this.provinceCode,
     required this.visited,
+    required this.center,
     this.representativeImage,
   });
 
@@ -43,6 +45,9 @@ class MapCell {
   /// 서울 칸 전체가 칠해진다. 의도된 동작이다(R6).
   final bool visited;
 
+  /// 지도를 이 칸으로 옮길 때 쓰는 대표 좌표. 항상 이 칸의 경계 안이다.
+  final GeoPoint center;
+
   /// 대표 이미지. **없을 수 있다**(R10) — 특산품 14건이 아직 없어 실제로
   /// 발생한다. 없어도 칸은 그리고 지역명만 표시한다.
   final CellImage? representativeImage;
@@ -54,6 +59,7 @@ class MapCell {
     provinceName: provinceName,
     provinceCode: provinceCode,
     visited: visited ?? this.visited,
+    center: center,
     representativeImage: representativeImage ?? this.representativeImage,
   );
 
