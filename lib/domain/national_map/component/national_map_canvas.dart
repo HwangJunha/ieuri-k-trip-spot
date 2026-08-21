@@ -12,19 +12,24 @@ import 'cell_painter.dart';
 class NationalMapCanvas extends StatefulWidget {
   const NationalMapCanvas({
     required this.cells,
-    required this.visitedCodes,
-    this.overlappingCodes,
-    this.selectedCode,
+    required this.cellIdOf,
+    required this.visitedCellIds,
+    this.overlappingCellIds,
+    this.selectedCellId,
     this.onCellTap,
     super.key,
   });
 
   final List<CellGeometry> cells;
-  final Set<String> visitedCodes;
-  final Set<String>? overlappingCodes;
-  final String? selectedCode;
 
-  /// 칸을 누르면 그 칸 코드를 준다. 칸이 아닌 곳을 누르면 호출하지 않는다.
+  /// 도형 코드 -> 서버 칸 id.
+  final Map<String, String> cellIdOf;
+
+  final Set<String> visitedCellIds;
+  final Set<String>? overlappingCellIds;
+  final String? selectedCellId;
+
+  /// 칸을 누르면 그 **칸 id**를 준다. 칸이 아닌 곳을 누르면 호출하지 않는다.
   final ValueChanged<String>? onCellTap;
 
   @override
@@ -59,7 +64,10 @@ class _NationalMapCanvasState extends State<NationalMapCanvas> {
     final Offset local = details.localPosition;
     final GeoPoint point = projection.toGeo(local.dx, local.dy);
     final CellGeometry? hit = CellHitTest.cellAt(widget.cells, point);
-    if (hit != null) widget.onCellTap!(hit.code);
+    if (hit == null) return;
+
+    final String? cellId = widget.cellIdOf[hit.code];
+    if (cellId != null) widget.onCellTap!(cellId);
   }
 
   @override
@@ -81,9 +89,10 @@ class _NationalMapCanvasState extends State<NationalMapCanvas> {
               size: size,
               painter: CellPainter(
                 cells: widget.cells,
-                visitedCodes: widget.visitedCodes,
-                overlappingCodes: widget.overlappingCodes,
-                selectedCode: widget.selectedCode,
+                cellIdOf: widget.cellIdOf,
+                visitedCellIds: widget.visitedCellIds,
+                overlappingCellIds: widget.overlappingCellIds,
+                selectedCellId: widget.selectedCellId,
                 palette: palette,
                 padding: _padding,
               ),

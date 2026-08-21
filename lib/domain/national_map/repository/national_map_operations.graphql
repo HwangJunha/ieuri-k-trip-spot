@@ -1,0 +1,137 @@
+# SPEC-0030 전국 지도 오퍼레이션.
+#
+# **mapCells에서 spots를 고르지 않는다.** 고르면 칸마다 질의가 따로 나가 161회가
+# 된다(스키마 주석). 지도를 그리는 데 장소 목록은 필요 없다.
+
+# 161칸 + 뷰어의 방문 여부. 한 화면 한 왕복이다.
+query MapCells {
+  mapCells {
+    ...MapCellCore
+  }
+}
+
+# 칸 상세 — 대표 이미지와 장소 목록.
+query MapCellDetail($id: ID!, $first: Int, $after: String) {
+  mapCell(id: $id) {
+    ...MapCellCore
+    representativeImage {
+      ...CellImageFields
+    }
+    spots(first: $first, after: $after) {
+      edges {
+        cursor
+        likeCount
+        node {
+          id
+          title
+          thumbnailImageUrl
+          lat
+          lng
+          category {
+            code
+            label
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# 공유 링크로 남의 지도를 본다.
+query SharedMap($token: String!) {
+  sharedMap(token: $token) {
+    ownerNickname
+    visitedCellIds
+    # **null과 빈 배열이 다르다** — null은 비인증이라 비교 불가, []는 겹침 없음.
+    overlappingCellIds
+    visitedCount
+  }
+}
+
+# 방문 등록. 로컬 판정 결과(시군구 코드)를 보낸다.
+#
+# 응답의 updatedCells로 지도를 고친다 — 재조회하지 않는다.
+mutation RecordVisits($input: RecordVisitsInput!) {
+  recordVisits(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    updatedCells {
+      ...MapCellCore
+    }
+  }
+}
+
+# 방문 해제. 칸 id를 보낸다.
+mutation RemoveVisit($input: RemoveVisitInput!) {
+  removeVisit(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    updatedCell {
+      ...MapCellCore
+    }
+  }
+}
+
+mutation CreateMapShareLink {
+  createMapShareLink {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    shareLink {
+      shareUrl
+      createdAt
+    }
+  }
+}
+
+mutation RevokeMapShareLink($input: RevokeMapShareLinkInput!) {
+  revokeMapShareLink(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+# 지도를 그리고 진척을 세는 데 필요한 칸의 최소 형태.
+fragment MapCellCore on MapCell {
+  id
+  districtCodes
+  name
+  provinceName
+  provinceCode
+  viewerVisited
+}
+
+# **center를 고르지 않는다.** 서버가 161칸 전부에서 lat/lng를 null로 주는데
+# Coordinates!가 non-null이라 null이 위로 전파되어 mapCells 전체가 null이 된다
+# (problem/SPEC-0030-SERVER-map-cell-center-null.md).
+#
+# 막히지 않는 이유는 칸 도형 자산이 무게중심을 갖고 있어서다. 서버가 고치면
+# 되살릴지 정한다.
+
+fragment CellImageFields on CellImage {
+  imageUrl
+  thumbnailUrl
+  caption
+  kind
+  copyright
+  attributionText
+}

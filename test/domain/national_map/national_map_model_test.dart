@@ -41,7 +41,7 @@ CellGeometry _square(
 }
 
 MapCell _cell(String code, String province, {bool visited = false}) => MapCell(
-  code: code,
+  id: code,
   districtCodes: <String>[code],
   name: code,
   provinceName: province,
@@ -445,20 +445,23 @@ void main() {
       expect(cells.map((CellGeometry c) => c.code).toSet(), hasLength(161));
     });
 
-    test('청원군과 군위군이 현행 행정구역대로 보정돼 있다', () {
+    test('현행 행정구역 코드를 쓴다', () {
       final String raw = File('asset/geo/korea_cells.json').readAsStringSync();
       final List<CellGeometry> cells = CellGeometrySource.parse(raw);
 
-      // 청원군(33310)은 청주시 칸에, 군위군(37310)은 대구 칸에 들어간다.
-      final CellGeometry cheongju = cells.firstWhere(
-        (CellGeometry c) => c.districtCodes.contains('33310'),
-      );
-      final CellGeometry daegu = cells.firstWhere(
-        (CellGeometry c) => c.districtCodes.contains('37310'),
+      // 서버 경계 파일에서 생성하므로 KOSTAT 2013의 구형 코드가 남아 있으면 안 된다.
+      // 종로구는 11110이지 11010이 아니다 — 어긋나면 서버 칸과 이을 수 없다.
+      final CellGeometry seoul = cells.firstWhere(
+        (CellGeometry c) => c.districtCodes.contains('11110'),
       );
 
-      expect(cheongju.nameKo, '청주시');
-      expect(daegu.nameKo, '대구광역시');
+      expect(seoul.nameKo, '서울특별시');
+      expect(seoul.districtCodes, hasLength(25));
+      expect(
+        cells.any((CellGeometry c) => c.districtCodes.contains('11010')),
+        isFalse,
+        reason: 'KOSTAT 2013 구형 코드가 남아 있다',
+      );
     });
 
     test('칸 중심이 한국 영역 안이다', () {

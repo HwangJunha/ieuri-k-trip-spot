@@ -30,6 +30,7 @@ import '../domain/settings/view/settings_screen.dart';
 import '../domain/settings/view/terms_screen.dart';
 import '../domain/library/view/library_screen.dart';
 import '../domain/map/view/map_screen.dart';
+import '../domain/national_map/view/cell_detail_screen.dart';
 import '../domain/national_map/view/national_map_screen.dart';
 import '../domain/map/view/region_recommendation_screen.dart';
 import '../common/category/spot_category.dart';
@@ -371,6 +372,14 @@ List<RouteBase> buildRoutes() => <RouteBase>[
     path: '/required-terms',
     name: RequiredTermsScreen.routeName,
     builder: (_, _) => const RequiredTermsScreen(),
+  ),
+  // 지역 상세(SPEC-0030 R22). 셸 밖의 최상위 라우트라 하단 탭을 덮는다 —
+  // 관광지 상세와 같은 성격이다. 칸 id만 넘긴다(§6).
+  GoRoute(
+    path: '/cell/:id',
+    name: CellDetailScreen.routeName,
+    builder: (_, GoRouterState state) =>
+        CellDetailScreen(cellId: state.pathParameters['id']!),
   ),
   // The post-onboarding 5-tab shell. Each tab keeps its own navigation stack.
   StatefulShellRoute.indexedStack(

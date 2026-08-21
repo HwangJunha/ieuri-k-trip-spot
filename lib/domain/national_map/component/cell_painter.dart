@@ -48,22 +48,29 @@ class CellPalette {
 class CellPainter extends CustomPainter {
   const CellPainter({
     required this.cells,
-    required this.visitedCodes,
+    required this.cellIdOf,
+    required this.visitedCellIds,
     required this.palette,
-    this.overlappingCodes,
-    this.selectedCode,
+    this.overlappingCellIds,
+    this.selectedCellId,
     this.padding = 12,
   });
 
   final List<CellGeometry> cells;
 
-  /// 방문한 칸 코드.
-  final Set<String> visitedCodes;
+  /// 도형 코드 -> 서버 칸 id.
+  ///
+  /// 도형 자산의 `code`와 서버의 `id`는 서로 다른 체계라 이 맵으로 잇는다
+  /// (`CellGeometryIndex`).
+  final Map<String, String> cellIdOf;
 
-  /// 겹치는 칸 코드(공유 지도 전용). null이면 겹침 UI를 그리지 않는다.
-  final Set<String>? overlappingCodes;
+  /// 방문한 **칸 id**.
+  final Set<String> visitedCellIds;
 
-  final String? selectedCode;
+  /// 겹치는 칸 id(공유 지도 전용). null이면 겹침 UI를 그리지 않는다.
+  final Set<String>? overlappingCellIds;
+
+  final String? selectedCellId;
   final CellPalette palette;
   final double padding;
 
@@ -85,11 +92,12 @@ class CellPainter extends CustomPainter {
     for (final CellGeometry cell in cells) {
       final Path path = _pathOf(cell, projection);
 
-      fill.color = _fillOf(cell.code);
+      final String? cellId = cellIdOf[cell.code];
+      fill.color = _fillOf(cellId);
       canvas.drawPath(path, fill);
       canvas.drawPath(path, stroke);
 
-      if (cell.code == selectedCode) selectedPath = path;
+      if (cellId != null && cellId == selectedCellId) selectedPath = path;
     }
 
     // 선택된 칸은 맨 위에 다시 그려 이웃 칸의 테두리에 가리지 않게 한다.
@@ -105,11 +113,12 @@ class CellPainter extends CustomPainter {
     }
   }
 
-  Color _fillOf(String code) {
-    if (overlappingCodes != null && overlappingCodes!.contains(code)) {
+  Color _fillOf(String? cellId) {
+    if (cellId == null) return palette.unvisitedFill;
+    if (overlappingCellIds != null && overlappingCellIds!.contains(cellId)) {
       return palette.overlapFill;
     }
-    return visitedCodes.contains(code)
+    return visitedCellIds.contains(cellId)
         ? palette.visitedFill
         : palette.unvisitedFill;
   }
@@ -153,10 +162,11 @@ class CellPainter extends CustomPainter {
   @override
   bool shouldRepaint(CellPainter old) =>
       old.cells != cells ||
-      old.selectedCode != selectedCode ||
+      old.selectedCellId != selectedCellId ||
       old.palette.visitedFill != palette.visitedFill ||
-      !setEquals(old.visitedCodes, visitedCodes) ||
-      !setEquals(old.overlappingCodes, overlappingCodes);
+      old.cellIdOf.length != cellIdOf.length ||
+      !setEquals(old.visitedCellIds, visitedCellIds) ||
+      !setEquals(old.overlappingCellIds, overlappingCellIds);
 
   static bool setEquals(Set<String>? a, Set<String>? b) {
     if (identical(a, b)) return true;

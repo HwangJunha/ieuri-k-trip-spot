@@ -1,0 +1,159 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../l10n/gen/app_localizations.dart';
+import '../../spot/view/spot_detail_view.dart';
+import '../component/cell_image_view.dart';
+import '../model/cell_detail.dart';
+import '../model/map_cell.dart';
+import '../provider/national_map_providers.dart';
+import '../provider/visit_controller.dart';
+
+/// 지역 상세 — 대표 이미지와 그 칸의 장소 목록(R11·R22·R23·R24).
+class CellDetailScreen extends ConsumerWidget {
+  const CellDetailScreen({required this.cellId, super.key});
+
+  static String get routeName => 'cell-detail';
+
+  final String cellId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final AsyncValue<CellDetail> detail = ref.watch(cellDetailProvider(cellId));
+
+    return Scaffold(
+      appBar: AppBar(title: Text(detail.value?.cell.name ?? '')),
+      body: switch (detail) {
+        AsyncError<CellDetail>() => Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text(l10n.nationalMapUnavailable),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: () => ref.invalidate(cellDetailProvider(cellId)),
+                child: Text(l10n.nationalMapRetry),
+              ),
+            ],
+          ),
+        ),
+        AsyncData<CellDetail>(value: final CellDetail d) => _Body(
+          detail: d,
+          l10n: l10n,
+        ),
+        _ => const Center(child: CircularProgressIndicator()),
+      },
+    );
+  }
+}
+
+class _Body extends ConsumerWidget {
+  const _Body({required this.detail, required this.l10n});
+
+  final CellDetail detail;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ThemeData theme = Theme.of(context);
+    final MapCell cell = detail.cell;
+    final bool busy = ref.watch(visitControllerProvider);
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      children: <Widget>[
+        // **이미지가 없어도 빈 칸으로 두지 않는다**(R10) — 지역명만 보인다.
+        if (cell.representativeImage != null)
+          CellImageView(image: cell.representativeImage!),
+        const SizedBox(height: 16),
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(cell.name, style: theme.textTheme.titleLarge),
+                  Text(
+                    cell.provinceName,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (cell.visited)
+              OutlinedButton.icon(
+                onPressed: busy
+                    ? null
+                    : () => ref
+                          .read(visitControllerProvider.notifier)
+                          .remove(cell.id),
+                icon: const Icon(Icons.check_circle, size: 18),
+                label: Text(l10n.nationalMapRemoveVisit),
+              ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Text(
+          l10n.nationalMapSpotsTitle,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (detail.spots.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Text(
+              l10n.nationalMapSpotsEmpty,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          )
+        else
+          for (final CellSpot spot in detail.spots)
+            _SpotTile(spot: spot),
+      ],
+    );
+  }
+}
+
+class _SpotTile extends StatelessWidget {
+  const _SpotTile({required this.spot});
+
+  final CellSpot spot;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: SizedBox(
+          width: 56,
+          height: 56,
+          child: spot.thumbnailImageUrl.isEmpty
+              ? ColoredBox(color: theme.colorScheme.surfaceContainerHighest)
+              : Image.network(
+                  spot.thumbnailImageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) =>
+                      ColoredBox(color: theme.colorScheme.surfaceContainerHighest),
+                ),
+        ),
+      ),
+      title: Text(spot.title, maxLines: 2, overflow: TextOverflow.ellipsis),
+      subtitle: Text(spot.categoryLabel),
+      onTap: () => context.pushNamed(
+        SpotDetailView.routeName,
+        pathParameters: <String, String>{'id': spot.id},
+      ),
+    );
+  }
+}

@@ -5,10 +5,11 @@ import 'cell_image.dart';
 /// 행정구역 시군구와 1:1이 아니다 — 광역시는 전체가 1칸, 구를 가진 일반시 12곳도
 /// 시 단위로 1칸이다. 전국 252개 시군구가 161칸이 된다(R7).
 ///
-/// 도형은 여기 없다. 칸의 모양은 앱 자산(`CellGeometry`)이고 [code]로 맞춘다.
+/// 도형은 여기 없다. 칸의 모양은 앱 자산(`CellGeometry`)이고 [districtCodes]가
+/// 겹치는지로 잇는다(`CellGeometryIndex`).
 class MapCell {
   const MapCell({
-    required this.code,
+    required this.id,
     required this.districtCodes,
     required this.name,
     required this.provinceName,
@@ -17,12 +18,15 @@ class MapCell {
     this.representativeImage,
   });
 
-  /// 칸 코드. 이 칸을 가리키는 안정 식별자다.
-  final String code;
+  /// 칸 id. **행정구역 코드가 아니다** — 칸은 서버가 정한 표시 단위라 대응하는
+  /// 공식 코드가 없다. 상세 진입·해제·공유가 이 값을 쓴다.
+  final String id;
 
   /// 이 칸이 포함하는 시군구 행정표준코드 5자리 목록.
   ///
-  /// 좌표 판정 결과를 칸에 대응시킬 때 쓴다.
+  /// **등록은 이쪽이다.** 로컬 판정 결과(시군구 코드)를 `recordVisits`로 보내고,
+  /// 해제만 [id]로 한다. 비대칭이 의도다 — 저장이 시군구 단위여야 나중에 칸
+  /// 규칙이 바뀌어도 기록이 살아남는다.
   final List<String> districtCodes;
 
   /// 활성 언어 표기(R8). 서버가 폴백까지 끝낸 값이다.
@@ -35,15 +39,16 @@ class MapCell {
 
   /// 뷰어가 이 칸을 방문했는지. 비인증 조회에서는 항상 false다.
   ///
-  /// 칸에 속한 시군구 중 **하나라도** 방문했으면 참이다 — 수원시 장안구를
-  /// 방문하면 수원시 칸 전체가 방문으로 표시된다.
+  /// 칸에 속한 시군구 중 **하나라도** 방문했으면 참이다 — 종로구를 방문하면
+  /// 서울 칸 전체가 칠해진다. 의도된 동작이다(R6).
   final bool visited;
 
-  /// 대표 이미지. **없을 수 있다**(R10) — 없어도 칸은 그린다.
+  /// 대표 이미지. **없을 수 있다**(R10) — 특산품 14건이 아직 없어 실제로
+  /// 발생한다. 없어도 칸은 그리고 지역명만 표시한다.
   final CellImage? representativeImage;
 
   MapCell copyWith({bool? visited, CellImage? representativeImage}) => MapCell(
-    code: code,
+    id: id,
     districtCodes: districtCodes,
     name: name,
     provinceName: provinceName,
@@ -55,7 +60,7 @@ class MapCell {
   @override
   bool operator ==(Object other) =>
       other is MapCell &&
-      other.code == code &&
+      other.id == id &&
       other.name == name &&
       other.provinceName == provinceName &&
       other.provinceCode == provinceCode &&
@@ -64,7 +69,7 @@ class MapCell {
 
   @override
   int get hashCode => Object.hash(
-    code,
+    id,
     name,
     provinceName,
     provinceCode,

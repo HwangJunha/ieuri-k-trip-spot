@@ -8,53 +8,80 @@ part of 'national_map_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 161칸과 뷰어의 방문 여부(R6·R20).
-///
-/// **아직 서버 계약이 없다.** `mapCells`·`recordVisits`를 비롯한 SPEC-0030의
-/// 루트 필드가 서버에 존재하지 않아(슬라이스 1·2가 진행 중) repository를 붙이지
-/// 못했다. 추측한 스키마로 오퍼레이션을 쓰면 코드젠은 통과하고 런타임에 깨진다
-/// (CLAUDE.md §13) — 그래서 지금은 **앱 자산의 칸 목록을 전부 미방문으로** 낸다.
-///
-/// 서버가 나오면 이 provider의 본문만 repository 호출로 바꾼다. 화면과 계산은
-/// 이미 [MapCell]에 맞춰져 있어 그대로 둔다.
 
-@ProviderFor(mapCells)
-const mapCellsProvider = MapCellsProvider._();
+@ProviderFor(nationalMapRepository)
+const nationalMapRepositoryProvider = NationalMapRepositoryProvider._();
 
-/// 161칸과 뷰어의 방문 여부(R6·R20).
-///
-/// **아직 서버 계약이 없다.** `mapCells`·`recordVisits`를 비롯한 SPEC-0030의
-/// 루트 필드가 서버에 존재하지 않아(슬라이스 1·2가 진행 중) repository를 붙이지
-/// 못했다. 추측한 스키마로 오퍼레이션을 쓰면 코드젠은 통과하고 런타임에 깨진다
-/// (CLAUDE.md §13) — 그래서 지금은 **앱 자산의 칸 목록을 전부 미방문으로** 낸다.
-///
-/// 서버가 나오면 이 provider의 본문만 repository 호출로 바꾼다. 화면과 계산은
-/// 이미 [MapCell]에 맞춰져 있어 그대로 둔다.
-
-final class MapCellsProvider
+final class NationalMapRepositoryProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<MapCell>>,
-          List<MapCell>,
-          FutureOr<List<MapCell>>
+          NationalMapRepository,
+          NationalMapRepository,
+          NationalMapRepository
         >
-    with $FutureModifier<List<MapCell>>, $FutureProvider<List<MapCell>> {
-  /// 161칸과 뷰어의 방문 여부(R6·R20).
+    with $Provider<NationalMapRepository> {
+  const NationalMapRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'nationalMapRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$nationalMapRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<NationalMapRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  NationalMapRepository create(Ref ref) {
+    return nationalMapRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(NationalMapRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<NationalMapRepository>(value),
+    );
+  }
+}
+
+String _$nationalMapRepositoryHash() =>
+    r'9f9dbb2785b6d8a4365f78cefae4b0110d9d6a16';
+
+/// 161칸 + 뷰어의 방문 여부(R6·R20).
+///
+/// 앱 세션당 한 번 조회하고 붙들어 둔다 — 161칸은 고정이고 방문 등록·해제는
+/// 뮤테이션 응답으로 이 캐시를 직접 고친다(재조회하지 않는다).
+
+@ProviderFor(MapCells)
+const mapCellsProvider = MapCellsProvider._();
+
+/// 161칸 + 뷰어의 방문 여부(R6·R20).
+///
+/// 앱 세션당 한 번 조회하고 붙들어 둔다 — 161칸은 고정이고 방문 등록·해제는
+/// 뮤테이션 응답으로 이 캐시를 직접 고친다(재조회하지 않는다).
+final class MapCellsProvider
+    extends $AsyncNotifierProvider<MapCells, List<MapCell>> {
+  /// 161칸 + 뷰어의 방문 여부(R6·R20).
   ///
-  /// **아직 서버 계약이 없다.** `mapCells`·`recordVisits`를 비롯한 SPEC-0030의
-  /// 루트 필드가 서버에 존재하지 않아(슬라이스 1·2가 진행 중) repository를 붙이지
-  /// 못했다. 추측한 스키마로 오퍼레이션을 쓰면 코드젠은 통과하고 런타임에 깨진다
-  /// (CLAUDE.md §13) — 그래서 지금은 **앱 자산의 칸 목록을 전부 미방문으로** 낸다.
-  ///
-  /// 서버가 나오면 이 provider의 본문만 repository 호출로 바꾼다. 화면과 계산은
-  /// 이미 [MapCell]에 맞춰져 있어 그대로 둔다.
+  /// 앱 세션당 한 번 조회하고 붙들어 둔다 — 161칸은 고정이고 방문 등록·해제는
+  /// 뮤테이션 응답으로 이 캐시를 직접 고친다(재조회하지 않는다).
   const MapCellsProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'mapCellsProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -64,86 +91,28 @@ final class MapCellsProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<MapCell>> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<List<MapCell>> create(Ref ref) {
-    return mapCells(ref);
-  }
+  MapCells create() => MapCells();
 }
 
-String _$mapCellsHash() => r'cd39a51019f1eb6a8dc49df68972b89bd1123e11';
+String _$mapCellsHash() => r'0f108eee3bd8c5228a0a7c8f0b877ae0ed1f597b';
 
-/// 이 기기에서 방문으로 표시한 칸.
+/// 161칸 + 뷰어의 방문 여부(R6·R20).
 ///
-/// **서버가 붙기 전까지의 임시 저장소다.** 앱을 껐다 켜면 사라진다 — 영속화하지
-/// 않는 이유는, 서버가 나오면 이 provider 자체가 없어지기 때문이다. 지금 로컬 DB에
-/// 스키마를 만들어 두면 그때 마이그레이션할 것이 생긴다.
+/// 앱 세션당 한 번 조회하고 붙들어 둔다 — 161칸은 고정이고 방문 등록·해제는
+/// 뮤테이션 응답으로 이 캐시를 직접 고친다(재조회하지 않는다).
 
-@ProviderFor(LocalVisitedCells)
-const localVisitedCellsProvider = LocalVisitedCellsProvider._();
-
-/// 이 기기에서 방문으로 표시한 칸.
-///
-/// **서버가 붙기 전까지의 임시 저장소다.** 앱을 껐다 켜면 사라진다 — 영속화하지
-/// 않는 이유는, 서버가 나오면 이 provider 자체가 없어지기 때문이다. 지금 로컬 DB에
-/// 스키마를 만들어 두면 그때 마이그레이션할 것이 생긴다.
-final class LocalVisitedCellsProvider
-    extends $NotifierProvider<LocalVisitedCells, Set<String>> {
-  /// 이 기기에서 방문으로 표시한 칸.
-  ///
-  /// **서버가 붙기 전까지의 임시 저장소다.** 앱을 껐다 켜면 사라진다 — 영속화하지
-  /// 않는 이유는, 서버가 나오면 이 provider 자체가 없어지기 때문이다. 지금 로컬 DB에
-  /// 스키마를 만들어 두면 그때 마이그레이션할 것이 생긴다.
-  const LocalVisitedCellsProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'localVisitedCellsProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$localVisitedCellsHash();
-
-  @$internal
-  @override
-  LocalVisitedCells create() => LocalVisitedCells();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(Set<String> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<Set<String>>(value),
-    );
-  }
-}
-
-String _$localVisitedCellsHash() => r'289fd883ba3d6db084241390c3dc51c26621eb3e';
-
-/// 이 기기에서 방문으로 표시한 칸.
-///
-/// **서버가 붙기 전까지의 임시 저장소다.** 앱을 껐다 켜면 사라진다 — 영속화하지
-/// 않는 이유는, 서버가 나오면 이 provider 자체가 없어지기 때문이다. 지금 로컬 DB에
-/// 스키마를 만들어 두면 그때 마이그레이션할 것이 생긴다.
-
-abstract class _$LocalVisitedCells extends $Notifier<Set<String>> {
-  Set<String> build();
+abstract class _$MapCells extends $AsyncNotifier<List<MapCell>> {
+  FutureOr<List<MapCell>> build();
   @$mustCallSuper
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<Set<String>, Set<String>>;
+    final ref = this.ref as $Ref<AsyncValue<List<MapCell>>, List<MapCell>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<Set<String>, Set<String>>,
-              Set<String>,
+              AnyNotifier<AsyncValue<List<MapCell>>, List<MapCell>>,
+              AsyncValue<List<MapCell>>,
               Object?,
               Object?
             >;
@@ -151,12 +120,12 @@ abstract class _$LocalVisitedCells extends $Notifier<Set<String>> {
   }
 }
 
-/// 시도별 진척(R21). 칸 목록에서 계산한다 — 서버가 다시 내려주지 않는다.
+/// 시도별 진척(R21). **클라이언트가 센다** — 161칸을 이미 갖고 있다.
 
 @ProviderFor(provinceProgress)
 const provinceProgressProvider = ProvinceProgressProvider._();
 
-/// 시도별 진척(R21). 칸 목록에서 계산한다 — 서버가 다시 내려주지 않는다.
+/// 시도별 진척(R21). **클라이언트가 센다** — 161칸을 이미 갖고 있다.
 
 final class ProvinceProgressProvider
     extends
@@ -168,7 +137,7 @@ final class ProvinceProgressProvider
     with
         $FutureModifier<List<ProvinceProgress>>,
         $FutureProvider<List<ProvinceProgress>> {
-  /// 시도별 진척(R21). 칸 목록에서 계산한다 — 서버가 다시 내려주지 않는다.
+  /// 시도별 진척(R21). **클라이언트가 센다** — 161칸을 이미 갖고 있다.
   const ProvinceProgressProvider._()
     : super(
         from: null,
@@ -196,3 +165,138 @@ final class ProvinceProgressProvider
 }
 
 String _$provinceProgressHash() => r'b34cf99402be2586db185ca925234e3c95313973';
+
+/// 서버 칸과 렌더링 도형을 이은 인덱스.
+///
+/// 지도를 그리려면 둘이 다 있어야 하므로 여기서 합쳐 한 번만 계산한다.
+
+@ProviderFor(cellGeometryIndex)
+const cellGeometryIndexProvider = CellGeometryIndexProvider._();
+
+/// 서버 칸과 렌더링 도형을 이은 인덱스.
+///
+/// 지도를 그리려면 둘이 다 있어야 하므로 여기서 합쳐 한 번만 계산한다.
+
+final class CellGeometryIndexProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<CellGeometryIndex>,
+          CellGeometryIndex,
+          FutureOr<CellGeometryIndex>
+        >
+    with
+        $FutureModifier<CellGeometryIndex>,
+        $FutureProvider<CellGeometryIndex> {
+  /// 서버 칸과 렌더링 도형을 이은 인덱스.
+  ///
+  /// 지도를 그리려면 둘이 다 있어야 하므로 여기서 합쳐 한 번만 계산한다.
+  const CellGeometryIndexProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'cellGeometryIndexProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$cellGeometryIndexHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<CellGeometryIndex> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<CellGeometryIndex> create(Ref ref) {
+    return cellGeometryIndex(ref);
+  }
+}
+
+String _$cellGeometryIndexHash() => r'173ee60986e160c76d00c711f09881b124a9ff1a';
+
+/// 칸 상세(R11·R22). 칸 id로 부르는 family다.
+
+@ProviderFor(cellDetail)
+const cellDetailProvider = CellDetailFamily._();
+
+/// 칸 상세(R11·R22). 칸 id로 부르는 family다.
+
+final class CellDetailProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<CellDetail>,
+          CellDetail,
+          FutureOr<CellDetail>
+        >
+    with $FutureModifier<CellDetail>, $FutureProvider<CellDetail> {
+  /// 칸 상세(R11·R22). 칸 id로 부르는 family다.
+  const CellDetailProvider._({
+    required CellDetailFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'cellDetailProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$cellDetailHash();
+
+  @override
+  String toString() {
+    return r'cellDetailProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<CellDetail> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<CellDetail> create(Ref ref) {
+    final argument = this.argument as String;
+    return cellDetail(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is CellDetailProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$cellDetailHash() => r'ea42fce39590c819e1ad9b30c3a32b00b40e6661';
+
+/// 칸 상세(R11·R22). 칸 id로 부르는 family다.
+
+final class CellDetailFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<CellDetail>, String> {
+  const CellDetailFamily._()
+    : super(
+        retry: null,
+        name: r'cellDetailProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// 칸 상세(R11·R22). 칸 id로 부르는 family다.
+
+  CellDetailProvider call(String cellId) =>
+      CellDetailProvider._(argument: cellId, from: this);
+
+  @override
+  String toString() => r'cellDetailProvider';
+}

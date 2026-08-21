@@ -1,73 +1,79 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/network/graphql_client.dart';
+import '../model/cell_detail.dart';
 import '../model/cell_geometry.dart';
+import '../model/cell_geometry_index.dart';
 import '../model/map_cell.dart';
 import '../model/province_progress.dart';
+import '../repository/national_map_repository.dart';
+import '../repository/national_map_repository_impl.dart';
 import 'cell_geometry_provider.dart';
 
 part 'national_map_providers.g.dart';
 
-/// 161칸과 뷰어의 방문 여부(R6·R20).
-///
-/// **아직 서버 계약이 없다.** `mapCells`·`recordVisits`를 비롯한 SPEC-0030의
-/// 루트 필드가 서버에 존재하지 않아(슬라이스 1·2가 진행 중) repository를 붙이지
-/// 못했다. 추측한 스키마로 오퍼레이션을 쓰면 코드젠은 통과하고 런타임에 깨진다
-/// (CLAUDE.md §13) — 그래서 지금은 **앱 자산의 칸 목록을 전부 미방문으로** 낸다.
-///
-/// 서버가 나오면 이 provider의 본문만 repository 호출로 바꾼다. 화면과 계산은
-/// 이미 [MapCell]에 맞춰져 있어 그대로 둔다.
 @riverpod
-Future<List<MapCell>> mapCells(Ref ref) async {
-  final List<CellGeometry> geometries = await ref.watch(
-    cellGeometriesProvider.future,
-  );
-  final Set<String> visited = ref.watch(localVisitedCellsProvider);
+NationalMapRepository nationalMapRepository(Ref ref) =>
+    NationalMapRepositoryImpl(ref.watch(graphqlClientProvider));
 
-  return <MapCell>[
-    for (final CellGeometry g in geometries)
-      MapCell(
-        code: g.code,
-        districtCodes: g.districtCodes,
-        // 서버가 활성 언어로 줄 값이다(R8). 그때까지는 자산의 이름을 쓴다.
-        name: g.nameKo,
-        provinceName: g.provinceNameKo,
-        provinceCode: g.provinceCode,
-        visited: visited.contains(g.code),
-      ),
-  ];
-}
-
-/// 이 기기에서 방문으로 표시한 칸.
+/// 161칸 + 뷰어의 방문 여부(R6·R20).
 ///
-/// **서버가 붙기 전까지의 임시 저장소다.** 앱을 껐다 켜면 사라진다 — 영속화하지
-/// 않는 이유는, 서버가 나오면 이 provider 자체가 없어지기 때문이다. 지금 로컬 DB에
-/// 스키마를 만들어 두면 그때 마이그레이션할 것이 생긴다.
+/// 앱 세션당 한 번 조회하고 붙들어 둔다 — 161칸은 고정이고 방문 등록·해제는
+/// 뮤테이션 응답으로 이 캐시를 직접 고친다(재조회하지 않는다).
 @Riverpod(keepAlive: true)
-class LocalVisitedCells extends _$LocalVisitedCells {
+class MapCells extends _$MapCells {
   @override
-  Set<String> build() => const <String>{};
+  Future<List<MapCell>> build() =>
+      ref.watch(nationalMapRepositoryProvider).fetchCells();
 
-  /// 방문으로 표시한다. 이미 방문한 칸이면 아무 일도 일어나지 않는다(R3의 멱등).
-  void record(String cellCode) {
-    if (state.contains(cellCode)) return;
-    state = <String>{...state, cellCode};
+  /// 뮤테이션이 돌려준 칸으로 캐시를 고친다(계약 §7.1).
+  ///
+  /// 서버가 변경된 노드를 주므로 목록 전체를 다시 받지 않는다.
+  void applyUpdated(Iterable<MapCell> updated) {
+    final List<MapCell>? current = state.value;
+    if (current == null || updated.isEmpty) return;
+
+    final Map<String, MapCell> byId = <String, MapCell>{
+      for (final MapCell c in updated) c.id: c,
+    };
+    state = AsyncData<List<MapCell>>(<MapCell>[
+      for (final MapCell c in current) byId[c.id] ?? c,
+    ]);
   }
 
-  /// 방문을 해제한다. 없는 칸이어도 오류가 아니다(R4).
-  void remove(String cellCode) {
-    if (!state.contains(cellCode)) return;
-    state = <String>{...state}..remove(cellCode);
-  }
+  /// 낙관적으로 방문 표시를 바꾼다. 실패하면 [applyUpdated] 없이 되돌린다.
+  void setVisitedOptimistically(Set<String> cellIds, {required bool visited}) {
+    final List<MapCell>? current = state.value;
+    if (current == null || cellIds.isEmpty) return;
 
-  /// 여러 칸을 한 번에 표시한다(사진 동기화 확인 후).
-  void recordAll(Iterable<String> cellCodes) {
-    state = <String>{...state, ...cellCodes};
+    state = AsyncData<List<MapCell>>(<MapCell>[
+      for (final MapCell c in current)
+        cellIds.contains(c.id) ? c.copyWith(visited: visited) : c,
+    ]);
   }
 }
 
-/// 시도별 진척(R21). 칸 목록에서 계산한다 — 서버가 다시 내려주지 않는다.
+/// 시도별 진척(R21). **클라이언트가 센다** — 161칸을 이미 갖고 있다.
 @riverpod
 Future<List<ProvinceProgress>> provinceProgress(Ref ref) async {
   final List<MapCell> cells = await ref.watch(mapCellsProvider.future);
   return provinceProgressOf(cells);
 }
+
+/// 서버 칸과 렌더링 도형을 이은 인덱스.
+///
+/// 지도를 그리려면 둘이 다 있어야 하므로 여기서 합쳐 한 번만 계산한다.
+@riverpod
+Future<CellGeometryIndex> cellGeometryIndex(Ref ref) async {
+  final List<MapCell> cells = await ref.watch(mapCellsProvider.future);
+  final List<CellGeometry> geometries = await ref.watch(
+    cellGeometriesProvider.future,
+  );
+  return CellGeometryIndex.build(cells: cells, geometries: geometries);
+}
+
+/// 칸 상세(R11·R22). 칸 id로 부르는 family다.
+@riverpod
+Future<CellDetail> cellDetail(Ref ref, String cellId) => ref
+    .watch(nationalMapRepositoryProvider)
+    .fetchCellDetail(cellId: cellId);
