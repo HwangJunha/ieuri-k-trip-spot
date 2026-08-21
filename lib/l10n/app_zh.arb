@@ -60,7 +60,7 @@
   "nationalMapCellCount": "{total}格中{visited}格",
   "nationalMapEmptyHint": "用照片填充，或登记你现在所在的地方。",
   "nationalMapSelectHint": "点击地图上的地区。",
-  "nationalMapRecordVisit": "我去过",
+  "nationalMapRecordVisit": "登记",
   "nationalMapRemoveVisit": "取消登记",
   "nationalMapRetry": "重试",
   "nationalMapVisited": "已去过",

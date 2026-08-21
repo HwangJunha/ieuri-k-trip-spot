@@ -53,6 +53,9 @@ Future<CurrentLocationCheck> currentLocationCheck(Ref ref) async {
 
   return LocationRegistrable(
     districtCode: district.code,
-    districtName: district.nameKo,
+    // **칸 이름을 쓴다.** 등록하면 그 칸 전체가 칠해지므로 "강남구에 다녀온
+    // 것으로 기록합니다"는 결과와 어긋난다 — 실제로 칠해지는 것은 서울 칸이다.
+    // 칸을 못 찾는 경우에만 시군구 이름으로 물러선다.
+    districtName: owning?.name ?? district.nameKo,
   );
 }

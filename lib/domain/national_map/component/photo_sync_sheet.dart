@@ -16,6 +16,10 @@ import 'map_sheet.dart';
 Future<void> showPhotoSyncSheet(BuildContext context) =>
     showMapSheet<void>(context, builder: (_) => const PhotoSyncSheet());
 
+/// 자동 등록이 도는 중인지. 시트가 stateless라 파일 수준에 둔다 — 한 번에
+/// 하나의 스캔만 돌므로 인스턴스별로 나눌 이유가 없다.
+bool _registering = false;
+
 /// 사진첩을 훑어 방문 지역을 찾는 시트.
 ///
 /// **스캔 중에도 시트를 닫고 앱을 쓸 수 있다**(R29) — 진행 상태는 provider가
@@ -78,7 +82,11 @@ class _Content extends ConsumerWidget {
                 ),
               ),
             FilledButton(
-              onPressed: () => controller.start(),
+              onPressed: () {
+                // 이전 스캔의 가드가 남아 있으면 이번 등록이 막힌다.
+                _registering = false;
+                controller.start();
+              },
               child: Text(
                 progress.isResumable
                     ? l10n.photoSyncResume
@@ -137,7 +145,20 @@ class _Content extends ConsumerWidget {
         );
 
       case PhotoScanStage.awaitingConfirmation:
-        // 확인 없이 자동 등록하지 않는다(R30).
+        // **묻지 않고 바로 등록한다**(사용자 결정, 2026-08-22). 스캔을 직접
+        // 시작한 것이 곧 동의라고 본다 — 한 번 더 묻는 것은 군더더기다.
+        //
+        // build 중에 상태를 바꿀 수 없으므로 프레임 뒤로 미룬다.
+        //
+        // **한 번만 보낸다.** 리빌드마다 콜백이 걸리므로 가드가 없으면 등록이
+        // 여러 번 나간다(멱등이라 서버는 버티지만 요청이 낭비된다).
+        if (!_registering) {
+          _registering = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            await _register(context, ref, controller);
+            _registering = false;
+          });
+        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
@@ -147,34 +168,8 @@ class _Content extends ConsumerWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.photoSyncConfirmBody,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
             const SizedBox(height: 16),
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      controller.reset();
-                      Navigator.of(context).maybePop();
-                    },
-                    child: Text(l10n.commonCancel),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () => _register(context, ref, controller),
-                    child: Text(l10n.photoSyncRegister),
-                  ),
-                ),
-              ],
-            ),
+            const Center(child: CircularProgressIndicator()),
           ],
         );
 
@@ -206,7 +201,7 @@ class _Content extends ConsumerWidget {
     final List<String> codes = progress.resolvedCellCodes;
     // 사진이 몇 장이든 요청은 1회다 — 판정 결과가 시군구 코드로 축약돼 있다.
     await ref.read(visitControllerProvider.notifier).record(codes);
+    // 시트를 닫지 않는다 — 완료 문구를 보고 사용자가 닫는다.
     controller.confirmed();
-    if (context.mounted) Navigator.of(context).maybePop();
   }
 }

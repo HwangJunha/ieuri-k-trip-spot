@@ -60,7 +60,7 @@
   "nationalMapCellCount": "{total}区画中{visited}区画",
   "nationalMapEmptyHint": "写真から埋めるか、今いる場所を登録してみましょう。",
   "nationalMapSelectHint": "地図で地域をタップしてください。",
-  "nationalMapRecordVisit": "行きました",
+  "nationalMapRecordVisit": "登録",
   "nationalMapRemoveVisit": "登録を解除",
   "nationalMapRetry": "再試行",
   "nationalMapVisited": "訪問済み",

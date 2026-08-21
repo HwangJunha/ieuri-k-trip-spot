@@ -257,7 +257,7 @@
   "@nationalMapSelectHint": {
     "description": "전국 지도 - 칸을 고르지 않았을 때 하단 안내"
   },
-  "nationalMapRecordVisit": "다녀왔어요",
+  "nationalMapRecordVisit": "등록",
   "@nationalMapRecordVisit": {
     "description": "전국 지도 - 선택한 칸을 방문으로 등록하는 버튼"
   },

@@ -18,13 +18,16 @@ PhotoLibraryService photoLibraryService(Ref ref) => const PhotoLibraryService();
 /// 사진첩을 훑어 방문한 시군구를 찾는다(R25~R30).
 ///
 /// **좌표는 기기를 떠나지 않는다.** 판정까지 로컬에서 끝내고 서버에는 시군구
-/// 코드만 보낸다 — 그것도 사용자가 확인한 뒤에(R30).
+/// 코드만 보낸다.
 ///
 /// 흐름:
 /// ```
 /// 권한 요청 -> 배치로 좌표 읽기 -> 한국 밖 버림 -> 1km 격자 축약
-///          -> 로컬 판정 -> 이미 방문한 시군구 제외 -> 사용자 확인 -> recordVisits
+///          -> 로컬 판정 -> 이미 방문한 시군구 제외 -> recordVisits
 /// ```
+///
+/// 스펙 R30은 등록 전 별도 확인을 요구했으나 **없앴다**(사용자 결정,
+/// 2026-08-22) — 스캔을 사용자가 직접 시작하므로 그 행위가 곧 동의다.
 ///
 /// 배치마다 상태를 갱신해 중단·재개할 수 있다(R28). 스캔 중에도 앱의 다른 기능을
 /// 쓸 수 있다(R29) — 이 컨트롤러는 UI를 막지 않는다.
@@ -139,7 +142,11 @@ class PhotoScanController extends _$PhotoScanController {
       );
     }
 
-    // 판정 결과는 **확인을 거쳐야** 등록된다(R30).
+    // 찾은 것이 있으면 확인 단계로 넘긴다. **화면이 곧바로 등록한다** —
+    // 스캔을 사용자가 직접 시작했으므로 그 행위가 곧 동의라는 결정이다
+    // (사용자 결정, 2026-08-22. 스펙 R30의 별도 확인 단계를 없앤다).
+    //
+    // 단계 자체는 남긴다 — 등록이 도는 동안 보여줄 상태가 필요하다.
     state = state.copyWith(
       stage: found.isEmpty
           ? PhotoScanStage.completed
@@ -153,7 +160,7 @@ class PhotoScanController extends _$PhotoScanController {
   /// 진행 중인 스캔을 멈춘다. 처리 지점은 남는다(R28).
   void stop() => _cancelled = true;
 
-  /// 사용자가 확인했다. 등록은 화면이 `VisitController`로 한다.
+  /// 등록이 끝났다. 등록 자체는 화면이 `VisitController`로 한다.
   void confirmed() =>
       state = state.copyWith(stage: PhotoScanStage.completed);
 

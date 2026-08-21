@@ -123,6 +123,12 @@ class _Header extends StatelessWidget {
   }
 }
 
+/// 해제하고 시트를 닫는다.
+Future<void> _remove(BuildContext context, WidgetRef ref, String cellId) async {
+  await ref.read(visitControllerProvider.notifier).remove(cellId);
+  if (context.mounted) Navigator.of(context).maybePop();
+}
+
 class _Content extends ConsumerWidget {
   const _Content({
     required this.detail,
@@ -173,11 +179,12 @@ class _Content extends ConsumerWidget {
             if (cell.visited)
               Expanded(
                 child: OutlinedButton(
+                  // 해제하면 시트를 닫는다 — 이 시트는 "이 칸에 무엇을 할지"를
+                  // 묻는 자리이고, 해제하고 나면 볼 일이 끝난다. 열어 두면
+                  // 방금 지운 상태를 계속 보게 된다.
                   onPressed: busy
                       ? null
-                      : () => ref
-                            .read(visitControllerProvider.notifier)
-                            .remove(cell.id),
+                      : () => _remove(context, ref, cell.id),
                   child: Text(l10n.nationalMapRemoveVisit),
                 ),
               ),

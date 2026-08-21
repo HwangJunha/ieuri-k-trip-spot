@@ -17,8 +17,11 @@ class LocationRegistrable extends CurrentLocationCheck {
   /// 판정된 시군구 코드. `recordVisits`에 보낼 값이다.
   final String districtCode;
 
-  /// 확인 문구에 쓸 이름. 자산의 한국어 이름이라 활성 언어와 다를 수 있으나,
-  /// 서버 칸 이름은 아직 어느 칸인지 모르므로 이것이 유일한 단서다.
+  /// 확인 문구에 쓸 이름.
+  ///
+  /// **칸 이름이다**(예: "서울특별시"). 등록하면 칸 전체가 칠해지므로 시군구
+  /// 이름("강남구")을 보여주면 결과와 어긋난다. 칸을 못 찾은 경우에만 시군구
+  /// 이름이 들어온다.
   final String districtName;
 
   @override
