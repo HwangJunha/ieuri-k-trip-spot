@@ -178,8 +178,14 @@ class _NationalMapCanvasState extends State<NationalMapCanvas>
       cover: widget.cover,
     );
 
-    final GeoPoint point = projection.toGeo(scene.dx, scene.dy);
-    final CellGeometry? hit = CellHitTest.cellAt(widget.cells, point);
+    // 칸마다 화면 오프셋을 되돌려 경위도로 바꾼다 — 제주는 위로 올려 그리므로
+    // 그 몫을 빼야 누른 곳과 잡히는 칸이 맞는다.
+    final CellGeometry? hit = CellHitTest.cellAtVarying(widget.cells, (
+      CellGeometry cell,
+    ) {
+      final Offset shift = CellPainter.screenOffsetOf(cell);
+      return projection.toGeo(scene.dx - shift.dx, scene.dy - shift.dy);
+    });
     if (hit != null) widget.onCellTap!(hit.cellId);
   }
 

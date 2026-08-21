@@ -12,8 +12,16 @@ class CellHitTest {
   ///
   /// bounds로 먼저 거른 뒤 폴리곤을 본다 — 161칸 전부에 대해 폴리곤을 훑으면
   /// 탭 한 번에 수만 점을 계산하게 된다.
-  static CellGeometry? cellAt(Iterable<CellGeometry> cells, GeoPoint point) {
+  ///
+  /// [geoPointAt]은 **칸마다** 경위도를 되돌려 주는 함수다. 화면에서 따로 옮겨
+  /// 그리는 칸이 있어(제주) 변환이 칸마다 다르기 때문이다 — 하나의 좌표로
+  /// 검사하면 옮긴 칸은 보이는 곳과 눌리는 곳이 어긋난다.
+  static CellGeometry? cellAtVarying(
+    Iterable<CellGeometry> cells,
+    GeoPoint Function(CellGeometry cell) geoPointAt,
+  ) {
     for (final CellGeometry cell in cells) {
+      final GeoPoint point = geoPointAt(cell);
       if (!cell.bounds.contains(point)) continue;
       for (final List<GeoPoint> ring in cell.polygons) {
         if (containsPoint(ring, point)) return cell;
@@ -21,6 +29,12 @@ class CellHitTest {
     }
     return null;
   }
+
+  /// 모든 칸에 같은 좌표를 쓰는 경우.
+  static CellGeometry? cellAt(
+    Iterable<CellGeometry> cells,
+    GeoPoint point,
+  ) => cellAtVarying(cells, (CellGeometry _) => point);
 
   /// 링이 점을 품는지(ray casting).
   ///

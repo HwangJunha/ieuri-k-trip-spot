@@ -92,6 +92,23 @@ class CellPainter extends CustomPainter {
   /// 아이콘을 그리는 최소 칸 크기(px). 이보다 작으면 뭉개져서 생략한다.
   static const double _minIconBox = 22;
 
+  /// 제주의 시도 코드.
+  static const String _jejuProvince = '50';
+
+  /// 제주를 화면에서 이만큼 위로 올린다.
+  ///
+  /// 제주는 본토에서 한참 남쪽이라 지도를 화면에 맞추면 아래쪽에 홀로 떨어져
+  /// 하단 바에 닿아 보인다. 종이 지도가 제주를 네모 상자에 따로 담는 것과 같은
+  /// 이유로 **화면에서만** 당겨 올린다 — 좌표 자체는 건드리지 않는다.
+  ///
+  /// **히트 테스트도 같은 값을 써야 한다**(`CellPainter.screenOffsetOf`).
+  /// 어긋나면 보이는 곳과 눌리는 곳이 달라진다.
+  static const Offset _jejuOffset = Offset(0, -12);
+
+  /// 이 칸을 화면에서 옮길 양. 대부분 0이다.
+  static Offset screenOffsetOf(CellGeometry cell) =>
+      cell.provinceCode == _jejuProvince ? _jejuOffset : Offset.zero;
+
   @override
   void paint(Canvas canvas, Size size) {
     if (cells.isEmpty) return;
@@ -176,11 +193,12 @@ class CellPainter extends CustomPainter {
     // 칸이 클수록 크게, 다만 한없이 커지지는 않게 묶는다.
     final double iconSize = (box * 0.62).clamp(14.0, 34.0);
     final ({double dx, double dy}) c = projection.toScreen(cell.center);
+    final Offset shift = screenOffsetOf(cell);
 
     LandmarkIcons.paint(
       canvas,
       landmark,
-      center: Offset(c.dx, c.dy),
+      center: Offset(c.dx + shift.dx, c.dy + shift.dy),
       size: iconSize,
       color: palette.iconColor,
       accentColor: palette.iconAccent,
@@ -200,14 +218,15 @@ class CellPainter extends CustomPainter {
   }
 
   Path _pathOf(CellGeometry cell, CellProjection projection) {
+    final Offset shift = screenOffsetOf(cell);
     final Path path = Path();
     for (final List<GeoPoint> ring in cell.polygons) {
       if (ring.isEmpty) continue;
       final ({double dx, double dy}) first = projection.toScreen(ring.first);
-      path.moveTo(first.dx, first.dy);
+      path.moveTo(first.dx + shift.dx, first.dy + shift.dy);
       for (int i = 1; i < ring.length; i++) {
         final ({double dx, double dy}) p = projection.toScreen(ring[i]);
-        path.lineTo(p.dx, p.dy);
+        path.lineTo(p.dx + shift.dx, p.dy + shift.dy);
       }
       path.close();
     }

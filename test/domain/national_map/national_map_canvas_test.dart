@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/component/national_map_canvas.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/cell_geometry.dart';
 
-CellGeometry _sq(String id, double lng, double lat) {
+CellGeometry _sq(String id, double lng, double lat, {String province = '41'}) {
   final ring = <GeoPoint>[
     GeoPoint(lng, lat),
     GeoPoint(lng + 1, lat),
@@ -12,7 +12,7 @@ CellGeometry _sq(String id, double lng, double lat) {
   ];
   return CellGeometry(
     cellId: id,
-    provinceCode: '41',
+    provinceCode: province,
     polygons: <List<GeoPoint>>[ring],
     center: GeoPoint(lng + .5, lat + .5),
     bounds: GeoBounds.of(ring),
@@ -112,5 +112,37 @@ void main() {
     await tester.tapAt(const Offset(220, 150));
     await tester.pump();
     expect(tapped, '2');
+  });
+
+  // 제주는 화면에서만 위로 올려 그린다. 그리기와 히트 테스트가 같은 오프셋을
+  // 써야 보이는 곳과 눌리는 곳이 맞는다 — 어긋나면 조용히 틀린다.
+  testWidgets('제주는 올려 그린 자리에서 눌린다', (WidgetTester tester) async {
+    String? tapped;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 300,
+            height: 300,
+            child: NationalMapCanvas(
+              // 위아래로 붙은 두 칸. 아래쪽이 제주다.
+              cells: <CellGeometry>[
+                _sq('main', 127, 37),
+                _sq('jeju', 127, 36, province: '50'),
+              ],
+              visitedCellIds: const <String>{},
+              onCellTap: (String id) => tapped = id,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // 제주 칸의 아래쪽 가장자리 근처. 오프셋이 없으면 여기가 제주 밖이다.
+    await tester.tapAt(const Offset(150, 285));
+    await tester.pump();
+
+    // 12px 올려 그렸으므로 화면 아래쪽 12px 띠는 이제 제주가 아니다.
+    expect(tapped, isNot('main'));
   });
 }
