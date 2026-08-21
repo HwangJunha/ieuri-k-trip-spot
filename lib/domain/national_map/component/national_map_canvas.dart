@@ -16,6 +16,7 @@ class NationalMapCanvas extends StatefulWidget {
     this.overlappingCellIds,
     this.selectedCellId,
     this.onCellTap,
+    this.cover = false,
     super.key,
   });
 
@@ -27,6 +28,9 @@ class NationalMapCanvas extends StatefulWidget {
 
   /// 칸을 누르면 그 **칸 id**를 준다. 칸이 아닌 곳을 누르면 호출하지 않는다.
   final ValueChanged<String>? onCellTap;
+
+  /// 짧은 쪽을 채울지. 세로로 긴 화면에서 빈 바다를 줄인다.
+  final bool cover;
 
   @override
   State<NationalMapCanvas> createState() => _NationalMapCanvasState();
@@ -55,6 +59,7 @@ class _NationalMapCanvasState extends State<NationalMapCanvas> {
       width: size.width,
       height: size.height,
       padding: _padding,
+      cover: widget.cover,
     );
 
     final Offset local = details.localPosition;
@@ -87,6 +92,7 @@ class _NationalMapCanvasState extends State<NationalMapCanvas> {
                 selectedCellId: widget.selectedCellId,
                 palette: palette,
                 padding: _padding,
+                cover: widget.cover,
               ),
             ),
           ),

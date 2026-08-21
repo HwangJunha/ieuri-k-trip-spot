@@ -24,6 +24,7 @@ CellGeometry _square(
   ];
   return CellGeometry(
     cellId: cellId,
+    provinceCode: '41',
     polygons: <List<GeoPoint>>[ring],
     center: GeoPoint(lng + size / 2, lat + size / 2),
     bounds: GeoBounds.of(ring),

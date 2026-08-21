@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'cell_geometry.dart';
 import 'district_boundary.dart';
+import 'landmark_kind.dart';
 import 'map_cell.dart';
 
 /// 서버가 정한 칸([MapCell])과 원본 시군구 경계로 **칸 도형을 조립한다.**
@@ -77,6 +78,12 @@ class CellShapeBuilder {
       out.add(
         CellGeometry(
           cellId: cell.id,
+          provinceCode: cell.provinceCode,
+          // 지도에는 실사진 대신 유형별 도형을 그린다 — 칸 크기에서 사진은
+          // 읽히지 않고, 56칸이 변경금지 유형이라 오려 넣을 수도 없다.
+          landmark: cell.representativeImage == null
+              ? null
+              : landmarkKindOf(cell.representativeImage!.caption),
           polygons: polygons,
           center: centroid(polygons.first),
           bounds: GeoBounds.of(polygons.expand((List<GeoPoint> p) => p)),

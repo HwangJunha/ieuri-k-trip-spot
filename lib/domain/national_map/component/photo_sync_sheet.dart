@@ -7,14 +7,14 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../model/photo_scan_progress.dart';
 import '../provider/photo_scan_controller.dart';
 import '../provider/visit_controller.dart';
+import 'map_sheet.dart';
 
 /// 사진 동기화 시트를 연다(R29·R30).
-Future<void> showPhotoSyncSheet(BuildContext context) => showModalBottomSheet(
-  context: context,
-  isScrollControlled: true,
-  showDragHandle: true,
-  builder: (_) => const PhotoSyncSheet(),
-);
+///
+/// 하단 탭에 가리지 않도록 `showMapSheet`을 쓴다 — 직접 `showModalBottomSheet`을
+/// 부르면 버튼이 탭 바 뒤로 들어간다.
+Future<void> showPhotoSyncSheet(BuildContext context) =>
+    showMapSheet<void>(context, builder: (_) => const PhotoSyncSheet());
 
 /// 사진첩을 훑어 방문 지역을 찾는 시트.
 ///
@@ -29,29 +29,21 @@ class PhotoSyncSheet extends ConsumerWidget {
     final ThemeData theme = Theme.of(context);
     final PhotoScanProgress progress = ref.watch(photoScanControllerProvider);
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        24,
-        8,
-        24,
-        24 + MediaQuery.viewInsetsOf(context).bottom,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(l10n.photoSyncTitle, style: theme.textTheme.titleLarge),
-          const SizedBox(height: 8),
-          Text(
-            l10n.photoSyncBody,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(l10n.photoSyncTitle, style: theme.textTheme.titleLarge),
+        const SizedBox(height: 8),
+        Text(
+          l10n.photoSyncBody,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
           ),
-          const SizedBox(height: 20),
-          _Content(progress: progress, l10n: l10n),
-        ],
-      ),
+        ),
+        const SizedBox(height: 20),
+        _Content(progress: progress, l10n: l10n),
+      ],
     );
   }
 }

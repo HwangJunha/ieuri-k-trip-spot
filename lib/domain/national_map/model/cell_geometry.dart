@@ -1,3 +1,5 @@
+import 'landmark_kind.dart';
+
 /// 칸 1개의 **화면에 그릴 도형**(SPEC-0030 §3).
 ///
 /// `CellShapeBuilder`가 서버 칸 정의와 원본 경계로 런타임에 조립한다. 이름·시군구
@@ -9,13 +11,21 @@
 class CellGeometry {
   const CellGeometry({
     required this.cellId,
+    required this.provinceCode,
     required this.polygons,
     required this.center,
     required this.bounds,
+    this.landmark,
   });
 
   /// 서버 `MapCell.id`. 방문 여부·이름을 찾는 열쇠다.
   final String cellId;
+
+  /// 상위 시도 코드 2자리. 칸 색을 정한다(`ProvincePalette`).
+  final String provinceCode;
+
+  /// 이 칸에 그릴 랜드마크 유형. 대표 이미지가 없으면 null이다.
+  final LandmarkKind? landmark;
 
   /// 외곽 링 목록. 섬이 있으면 2개 이상이다. 구멍은 담지 않는다 —
   /// 구멍이 중요한 것은 판정이고 그건 원본이 담당한다.

@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../common/widget/floating_bottom_nav_scaffold.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../component/cell_sheet.dart';
 import '../component/national_map_canvas.dart';
 import '../component/photo_sync_sheet.dart';
-import '../component/province_progress_bar.dart';
 import '../model/cell_geometry.dart';
 import '../model/current_location_check.dart';
 import '../model/map_cell.dart';
@@ -15,26 +14,19 @@ import '../provider/current_location_provider.dart';
 import '../provider/national_map_providers.dart';
 import '../provider/share_providers.dart';
 import '../provider/visit_controller.dart';
-import 'cell_detail_screen.dart';
 
-/// 전국 지도 — 161칸을 채워나가는 화면(R20~R22·R29·R33~R35).
+/// 전국 지도 — 161칸을 채워나가는 화면(R20~R22·R29·R33~R36).
 ///
-/// 참조 디자인은 스크래치 지도다. 칸을 긁어 채우는 경험을 앱 팔레트로 옮긴다 —
-/// 미방문은 가라앉히고 방문은 브랜드 코럴로 채운다(설계 §3, `CellPalette`).
-class NationalMapScreen extends ConsumerStatefulWidget {
+/// 참조 디자인은 스크래치 지도 포스터다. **지도가 주인공이고 나머지는 비켜선다** —
+/// 진척 바·선택 바를 화면에 상시로 쌓으면 지도가 작아지고 자잘해 보인다. 진척은
+/// 상단에 한 줄, 칸을 누르면 아래에서 시트가 올라온다.
+class NationalMapScreen extends ConsumerWidget {
   const NationalMapScreen({super.key});
 
   static String get routeName => 'national-map';
 
   @override
-  ConsumerState<NationalMapScreen> createState() => _NationalMapScreenState();
-}
-
-class _NationalMapScreenState extends ConsumerState<NationalMapScreen> {
-  String? _selectedCellId;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
 
     final AsyncValue<List<MapCell>> cells = ref.watch(mapCellsProvider);
@@ -43,122 +35,256 @@ class _NationalMapScreenState extends ConsumerState<NationalMapScreen> {
     );
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.navNationalMap),
-        actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.photo_library_outlined),
-            tooltip: l10n.photoSyncTitle,
-            onPressed: () => showPhotoSyncSheet(context),
-          ),
-          _ShareButton(l10n: l10n),
-        ],
-      ),
-      body: SafeArea(
-        child: switch ((cells, geometries)) {
-          (AsyncError<List<MapCell>>(), _) ||
-          (_, AsyncError<List<CellGeometry>>()) => _ErrorBody(
+      // 지도를 화면 끝까지 쓰기 위해 AppBar를 두지 않는다. 제목·동작은 지도 위에
+      // 떠 있는 얇은 바가 대신한다.
+      body: switch ((cells, geometries)) {
+        (AsyncError<List<MapCell>>(), _) ||
+        (_, AsyncError<List<CellGeometry>>()) => SafeArea(
+          child: _ErrorBody(
             message: l10n.nationalMapUnavailable,
             retryLabel: l10n.nationalMapRetry,
             onRetry: () => ref.invalidate(mapCellsProvider),
           ),
-          (
-            AsyncData<List<MapCell>>(value: final List<MapCell> c),
-            AsyncData<List<CellGeometry>>(value: final List<CellGeometry> g),
-          ) =>
-            _Body(
-              cells: c,
-              geometries: g,
-              selectedCellId: _selectedCellId,
-              onCellTap: (String id) => setState(() => _selectedCellId = id),
-              l10n: l10n,
-            ),
-          _ => const Center(child: CircularProgressIndicator()),
-        },
-      ),
+        ),
+        (
+          AsyncData<List<MapCell>>(value: final List<MapCell> c),
+          AsyncData<List<CellGeometry>>(value: final List<CellGeometry> g),
+        ) =>
+          _Body(cells: c, geometries: g, l10n: l10n),
+        _ => const Center(child: CircularProgressIndicator()),
+      },
     );
   }
 }
 
-class _Body extends ConsumerWidget {
+class _Body extends ConsumerStatefulWidget {
   const _Body({
     required this.cells,
     required this.geometries,
-    required this.selectedCellId,
-    required this.onCellTap,
     required this.l10n,
   });
 
   final List<MapCell> cells;
   final List<CellGeometry> geometries;
-  final String? selectedCellId;
-  final ValueChanged<String> onCellTap;
+  final AppLocalizations l10n;
+
+  @override
+  ConsumerState<_Body> createState() => _BodyState();
+}
+
+class _BodyState extends ConsumerState<_Body> {
+  String? _selectedCellId;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = widget.l10n;
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+
+    final Set<String> visited = <String>{
+      for (final MapCell c in widget.cells)
+        if (c.visited) c.id,
+    };
+    final ProvinceProgress nationwide = nationwideProgressOf(
+      widget.cells,
+      label: l10n.nationalMapNationwide,
+    );
+
+    return Stack(
+      children: <Widget>[
+        // 지도가 화면 전체를 쓴다. 상단 바와 하단 탭에 가리는 만큼만 여백을 준다.
+        Positioned.fill(
+          child: Padding(
+            padding: EdgeInsets.only(
+              top: MediaQuery.paddingOf(context).top + 60,
+              bottom: FloatingBottomNavScaffold.barExtent,
+            ),
+            child: NationalMapCanvas(
+              cells: widget.geometries,
+              visitedCellIds: visited,
+              selectedCellId: _selectedCellId,
+              onCellTap: _onCellTap,
+              // 세로 화면에서 좌우 빈 바다를 줄인다 — 지도가 주인공이다.
+              cover: true,
+            ),
+          ),
+        ),
+
+        // 상단: 제목 대신 진척 한 줄.
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: _TopBar(
+            progress: nationwide,
+            label: l10n.nationalMapCellCount(
+              nationwide.visited,
+              nationwide.total,
+            ),
+            onPhotoSync: () => showPhotoSyncSheet(context),
+            onShare: () => _share(context),
+            l10n: l10n,
+          ),
+        ),
+
+        // 현재 위치 등록. 하단 탭 위로 띄운다.
+        Positioned(
+          right: 16,
+          bottom: FloatingBottomNavScaffold.barExtent + 12,
+          child: _HereButton(l10n: l10n),
+        ),
+
+        if (nationwide.visited == 0)
+          Positioned(
+            left: 24,
+            right: 24,
+            bottom: FloatingBottomNavScaffold.barExtent + 76,
+            child: _EmptyHint(text: l10n.nationalMapEmptyHint, scheme: scheme),
+          ),
+      ],
+    );
+  }
+
+  void _onCellTap(String cellId) {
+    setState(() => _selectedCellId = cellId);
+    // 칸 정보를 화면에 상시로 붙여 두지 않고 시트로 띄운다 — 지도가 넓어진다.
+    showCellSheet(context, cellId: cellId).whenComplete(() {
+      if (mounted) setState(() => _selectedCellId = null);
+    });
+  }
+
+  Future<void> _share(BuildContext context) async {
+    try {
+      await ref
+          .read(shareControllerProvider.notifier)
+          .share(message: widget.l10n.nationalMapShareMessage);
+    } on Object {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(widget.l10n.nationalMapShareFailed)),
+      );
+    }
+  }
+}
+
+/// 지도 위에 떠 있는 얇은 상단 바 — 진척과 동작만 담는다.
+class _TopBar extends ConsumerWidget {
+  const _TopBar({
+    required this.progress,
+    required this.label,
+    required this.onPhotoSync,
+    required this.onShare,
+    required this.l10n,
+  });
+
+  final ProvinceProgress progress;
+  final String label;
+  final VoidCallback onPhotoSync;
+  final VoidCallback onShare;
   final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final Set<String> visited = <String>{
-      for (final MapCell c in cells)
-        if (c.visited) c.id,
-    };
-    final ProvinceProgress nationwide = nationwideProgressOf(
-      cells,
-      label: l10n.nationalMapNationwide,
-    );
-    final MapCell? selected = selectedCellId == null
-        ? null
-        : cells.where((MapCell c) => c.id == selectedCellId).firstOrNull;
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme scheme = theme.colorScheme;
+    final bool sharing = ref.watch(shareControllerProvider);
 
-    return Column(
-      children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              ProvinceProgressBar(
-                progress: nationwide,
-                label: l10n.nationalMapCellCount(
-                  nationwide.visited,
-                  nationwide.total,
-                ),
-              ),
-              if (nationwide.visited == 0) ...<Widget>[
-                const SizedBox(height: 4),
-                Text(
-                  l10n.nationalMapEmptyHint,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+    return ColoredBox(
+      // 지도가 뒤로 살짝 비치되 글씨는 읽히게 한다.
+      color: scheme.surface.withValues(alpha: 0.92),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          16,
+          MediaQuery.paddingOf(context).top + 8,
+          6,
+          10,
+        ),
+        child: Row(
+          children: <Widget>[
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: <Widget>[
+                      Text(
+                        label,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        l10n.navNationalMap,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ],
-          ),
-        ),
-        Expanded(
-          child: Stack(
-            children: <Widget>[
-              Positioned.fill(
-                child: NationalMapCanvas(
-                  cells: geometries,
-                  visitedCellIds: visited,
-                  selectedCellId: selectedCellId,
-                  onCellTap: onCellTap,
-                ),
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: LinearProgressIndicator(
+                      value: progress.ratio,
+                      minHeight: 5,
+                      backgroundColor: scheme.surfaceDim,
+                      valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
+                    ),
+                  ),
+                ],
               ),
-              // 현재 위치 등록(R33). 지도 위에 띄워 언제든 누를 수 있게 한다.
-              Positioned(
-                right: 16,
-                bottom: 16,
-                child: _HereButton(l10n: l10n),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              icon: const Icon(Icons.photo_library_outlined),
+              tooltip: l10n.photoSyncTitle,
+              onPressed: onPhotoSync,
+            ),
+            IconButton(
+              icon: sharing
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.ios_share),
+              tooltip: l10n.nationalMapShare,
+              onPressed: sharing ? null : onShare,
+            ),
+          ],
         ),
-        _SelectedCellBar(cell: selected, l10n: l10n),
-      ],
+      ),
     );
   }
+}
+
+/// 한 칸도 없을 때의 안내. 지도 위에 얹어 시선을 끈다.
+class _EmptyHint extends StatelessWidget {
+  const _EmptyHint({required this.text, required this.scheme});
+
+  final String text;
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: scheme.inverseSurface.withValues(alpha: 0.9),
+      borderRadius: BorderRadius.circular(999),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: scheme.onInverseSurface),
+      ),
+    ),
+  );
 }
 
 /// "지금 여기" 버튼 — 현재 위치의 시군구를 등록한다(R33~R35).
@@ -174,7 +300,7 @@ class _HereButton extends ConsumerWidget {
     );
     final bool busy = ref.watch(visitControllerProvider);
 
-    // 위치를 얻지 못하면 버튼을 비활성화하고 사유를 보여준다(R35).
+    // 위치를 얻지 못하면 버튼을 비활성화한다(R35).
     final bool disabled =
         busy ||
         check.isLoading ||
@@ -191,11 +317,9 @@ class _HereButton extends ConsumerWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : const Icon(Icons.my_location),
-      label: Text(_label()),
+      label: Text(l10n.nationalMapHere),
     );
   }
-
-  String _label() => l10n.nationalMapHere;
 
   Future<void> _onPressed(
     BuildContext context,
@@ -231,9 +355,7 @@ class _HereButton extends ConsumerWidget {
             false;
         if (!ok || !context.mounted) return;
 
-        await ref
-            .read(visitControllerProvider.notifier)
-            .record(<String>[code]);
+        await ref.read(visitControllerProvider.notifier).record(<String>[code]);
         // 방문이 늘었으니 다음 판정은 "이미 방문"이 되어야 한다.
         ref.invalidate(currentLocationCheckProvider);
 
@@ -253,109 +375,6 @@ class _HereButton extends ConsumerWidget {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
-  }
-}
-
-/// 공유 링크를 발급해 시스템 공유 시트로 넘긴다(R36).
-class _ShareButton extends ConsumerWidget {
-  const _ShareButton({required this.l10n});
-
-  final AppLocalizations l10n;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final bool busy = ref.watch(shareControllerProvider);
-
-    return IconButton(
-      icon: busy
-          ? const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : const Icon(Icons.ios_share),
-      tooltip: l10n.nationalMapShare,
-      onPressed: busy ? null : () => _share(context, ref),
-    );
-  }
-
-  Future<void> _share(BuildContext context, WidgetRef ref) async {
-    try {
-      await ref
-          .read(shareControllerProvider.notifier)
-          .share(message: l10n.nationalMapShareMessage);
-    } on Object {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.nationalMapShareFailed)),
-      );
-    }
-  }
-}
-
-/// 선택한 칸의 이름과 상세 진입(R22).
-class _SelectedCellBar extends StatelessWidget {
-  const _SelectedCellBar({required this.cell, required this.l10n});
-
-  final MapCell? cell;
-  final AppLocalizations l10n;
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final MapCell? selected = cell;
-
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.fromLTRB(
-        16,
-        12,
-        16,
-        12 + FloatingBottomNavScaffold.barExtent,
-      ),
-      color: theme.colorScheme.surfaceContainerLow,
-      child: selected == null
-          ? Text(
-              l10n.nationalMapSelectHint,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            )
-          : Row(
-              children: <Widget>[
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        selected.name,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        selected.visited
-                            ? l10n.nationalMapVisited
-                            : selected.provinceName,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: selected.visited
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                FilledButton.tonal(
-                  onPressed: () => context.pushNamed(
-                    CellDetailScreen.routeName,
-                    pathParameters: <String, String>{'id': selected.id},
-                  ),
-                  child: Text(l10n.nationalMapOpenDetail),
-                ),
-              ],
-            ),
-    );
   }
 }
 

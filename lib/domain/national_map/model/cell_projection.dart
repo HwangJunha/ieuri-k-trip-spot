@@ -18,7 +18,11 @@ class CellProjection {
     required this.lngScale,
   });
 
-  /// [bounds]를 [width]×[height] 안에 비율을 지켜 담는 투영을 만든다.
+  /// [bounds]를 [width]×[height]에 비율을 지켜 담는 투영을 만든다.
+  ///
+  /// [cover]가 참이면 **짧은 쪽을 채운다** — 세로로 긴 폰에서 `fit`으로 맞추면
+  /// 한국이 세로로 길어 좌우에 빈 바다가 크게 남고 지도가 작아 보인다. 넘치는
+  /// 부분은 확대·이동으로 본다.
   ///
   /// 남는 쪽은 가운데 정렬한다.
   factory CellProjection.fit({
@@ -26,6 +30,7 @@ class CellProjection {
     required double width,
     required double height,
     double padding = 0,
+    bool cover = false,
   }) {
     final double midLat = (bounds.minLat + bounds.maxLat) / 2;
     final double lngScale = math.cos(midLat * math.pi / 180);
@@ -41,6 +46,8 @@ class CellProjection {
 
     final double scale = spanX <= 0 || spanY <= 0
         ? 1
+        : cover
+        ? math.max(safeW / spanX, safeH / spanY)
         : math.min(safeW / spanX, safeH / spanY);
 
     return CellProjection._(
