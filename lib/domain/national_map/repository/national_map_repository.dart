@@ -1,5 +1,6 @@
 import '../model/cell_detail.dart';
 import '../model/map_cell.dart';
+import '../model/map_relation.dart';
 import '../model/shared_map.dart';
 
 /// 전국 지도 데이터 접근 경계(SPEC-0030). 생성된 `*.graphql.dart` 타입은 구현체
@@ -35,6 +36,17 @@ abstract interface class NationalMapRepository {
 
   /// 공유 링크로 남의 지도 조회(R37).
   Future<SharedMap> fetchSharedMap(String token);
+
+  /// 내 관계 목록 한 페이지. 겹침은 **조회 시점에 재계산**된 값이다.
+  Future<MapRelationPage> fetchRelations({int? first, String? after});
+
+  /// 공유 링크로 관계를 맺는다. **양쪽 목록에 서로 추가된다.**
+  ///
+  /// 이미 맺어진 상대면 오류가 아니라 그대로 성공한다(멱등).
+  Future<void> createRelation(String shareUrl);
+
+  /// 관계를 **내 목록에서만** 지운다. 상대 목록의 나는 남는다.
+  Future<void> removeRelation(String memberId);
 }
 
 /// 방문 등록 결과.

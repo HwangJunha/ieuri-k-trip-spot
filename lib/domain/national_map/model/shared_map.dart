@@ -67,8 +67,12 @@ class MapShareLink {
 
   /// 공유할 링크 **전체**. 시스템 공유 시트에 그대로 넘긴다.
   ///
-  /// **조립하지 않는다.** 지금은 `ieuri://shared/<token>`이고 웹이 생기면
-  /// Universal Link로 바뀌는데, 서버가 조립하므로 그때 앱 배포가 필요 없다.
+  /// **조립하지 않는다.** 서버가 `https://www.ieuri.co.kr/tour/korea-map/<token>`
+  /// 형태로 완성해 주므로, 형태가 바뀌어도 앱 배포가 필요 없다.
+  ///
+  /// 앱 자체의 스킴은 `ktripspot://tour/korea-map/<token>`으로 **경로가 같다**.
+  /// 다만 그것은 폴백이며 공유에는 쓰지 않는다 — 메신저가 커스텀 스킴을 링크로
+  /// 인식조차 하지 않는다.
   final String shareUrl;
 
   final DateTime createdAt;
@@ -76,6 +80,23 @@ class MapShareLink {
   /// 링크에서 토큰을 꺼낸다.
   ///
   /// **경로의 마지막 조각을 쓴다** — 스킴이 바뀌어도 이 코드가 안 바뀐다.
+  /// 토큰으로 공유 링크를 되돌린다.
+  ///
+  /// **조립이 아니라 복원이다.** 딥링크로 들어오면 GoRouter가 경로에서 토큰만
+  /// 떼어 주는데, 관계 등록(`createMapRelation`)은 `shareUrl`을 통째로 요구한다
+  /// ("발급된 shareUrl을 그대로 넣는다 — 토큰 추출은 서버가 한다").
+  ///
+  /// 출처(origin)는 서버 계약으로 고정돼 있고 iOS Associated Domains에도 같은
+  /// 값이 박혀 있다. 서버가 도메인을 바꾸면 **여기와 entitlements를 함께**
+  /// 고쳐야 한다.
+  static String urlOf(String token) => '$shareUrlOrigin$sharedMapPath$token';
+
+  /// 공유 링크의 출처. `Runner.entitlements`의 `applinks:`와 같아야 한다.
+  static const String shareUrlOrigin = 'https://www.ieuri.co.kr';
+
+  /// 공유 링크의 경로. `router/route_gate.dart`의 접두사와 같아야 한다.
+  static const String sharedMapPath = '/tour/korea-map/';
+
   static String? tokenOf(String shareUrl) {
     final List<String> parts = shareUrl
         .split('/')

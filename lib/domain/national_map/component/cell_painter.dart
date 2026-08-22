@@ -19,7 +19,6 @@ class CellPalette {
     required this.unvisitedFill,
     required this.border,
     required this.selectedBorder,
-    required this.overlapFill,
     required this.fallbackVisitedFill,
     required this.iconColor,
     required this.iconAccent,
@@ -33,7 +32,6 @@ class CellPalette {
     // 칸 사이는 배경색으로 벌린다 — 선을 긋는 것보다 종이를 오려 붙인 느낌이 난다.
     border: scheme.surface,
     selectedBorder: scheme.onSurface,
-    overlapFill: scheme.tertiary,
     fallbackVisitedFill: scheme.primary,
     // 아이콘은 칸 색 위에 얹히므로 흰색이어야 어느 시도에서든 읽힌다.
     iconColor: const Color(0xFFFFFFFF),
@@ -43,9 +41,6 @@ class CellPalette {
   final Color unvisitedFill;
   final Color border;
   final Color selectedBorder;
-
-  /// 공유 지도에서 나와 상대가 함께 방문한 칸(R37).
-  final Color overlapFill;
 
   /// 시도 색을 모르는 칸의 방문 색.
   final Color fallbackVisitedFill;
@@ -140,8 +135,11 @@ class CellPainter extends CustomPainter {
 
     // 2) 랜드마크는 칸을 다 칠한 뒤 얹는다 — 섞어 그리면 이웃 칸에 가린다.
     if (showLandmarks) {
+      // 겹침 모드에서는 겹치는 칸에만 얹는다 — 칠하지 않은 칸에 그림만 남으면
+      // 무엇이 겹친 것인지 흐려진다.
+      final Set<String> withIcon = overlappingCellIds ?? visitedCellIds;
       for (final CellGeometry cell in cells) {
-        if (!visitedCellIds.contains(cell.cellId)) continue;
+        if (!withIcon.contains(cell.cellId)) continue;
         _paintLandmark(canvas, cell, projection);
       }
     }
@@ -207,10 +205,20 @@ class CellPainter extends CustomPainter {
 
   Color _fillOf(CellGeometry cell) {
     final String id = cell.cellId;
-    if (overlappingCellIds != null && overlappingCellIds!.contains(id)) {
-      return palette.overlapFill;
+
+    // 겹침 모드(공유 지도)에서는 **겹치는 칸만** 칠한다 — 이 화면이 답하는
+    // 질문은 "어디가 겹치나"이지 "이 사람이 어디를 갔나"가 아니다.
+    //
+    // **색은 전국 지도와 같은 시도색이다.** 한 가지 색으로만 칠하면 칸이 늘수록
+    // 지도가 통째로 빨개져 채우는 재미가 사라진다(실기기 확인).
+    final Set<String>? overlapping = overlappingCellIds;
+    if (overlapping != null && !overlapping.contains(id)) {
+      return palette.unvisitedFill;
     }
-    if (!visitedCellIds.contains(id)) return palette.unvisitedFill;
+
+    if (overlapping == null && !visitedCellIds.contains(id)) {
+      return palette.unvisitedFill;
+    }
     return ProvincePalette.of(
       cell.provinceCode,
       fallback: palette.fallbackVisitedFill,

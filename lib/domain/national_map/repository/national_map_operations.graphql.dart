@@ -4,6 +4,249 @@ import '../../spot/repository/spot_schema.graphql.dart';
 import 'national_map_schema.graphql.dart';
 import 'package:gql/ast.dart';
 
+class Fragment$MapRelationCore {
+  Fragment$MapRelationCore({
+    required this.memberId,
+    required this.nickname,
+    required this.overlappingCount,
+    required this.overlappingCellIds,
+    required this.theirVisitedCount,
+  });
+
+  factory Fragment$MapRelationCore.fromJson(Map<String, dynamic> json) {
+    final l$memberId = json['memberId'];
+    final l$nickname = json['nickname'];
+    final l$overlappingCount = json['overlappingCount'];
+    final l$overlappingCellIds = json['overlappingCellIds'];
+    final l$theirVisitedCount = json['theirVisitedCount'];
+    return Fragment$MapRelationCore(
+      memberId: (l$memberId as String),
+      nickname: (l$nickname as String),
+      overlappingCount: (l$overlappingCount as int),
+      overlappingCellIds: (l$overlappingCellIds as List<dynamic>)
+          .map((e) => (e as String))
+          .toList(),
+      theirVisitedCount: (l$theirVisitedCount as int),
+    );
+  }
+
+  final String memberId;
+
+  final String nickname;
+
+  final int overlappingCount;
+
+  final List<String> overlappingCellIds;
+
+  final int theirVisitedCount;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$memberId = memberId;
+    _resultData['memberId'] = l$memberId;
+    final l$nickname = nickname;
+    _resultData['nickname'] = l$nickname;
+    final l$overlappingCount = overlappingCount;
+    _resultData['overlappingCount'] = l$overlappingCount;
+    final l$overlappingCellIds = overlappingCellIds;
+    _resultData['overlappingCellIds'] = l$overlappingCellIds
+        .map((e) => e)
+        .toList();
+    final l$theirVisitedCount = theirVisitedCount;
+    _resultData['theirVisitedCount'] = l$theirVisitedCount;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$memberId = memberId;
+    final l$nickname = nickname;
+    final l$overlappingCount = overlappingCount;
+    final l$overlappingCellIds = overlappingCellIds;
+    final l$theirVisitedCount = theirVisitedCount;
+    return Object.hashAll([
+      l$memberId,
+      l$nickname,
+      l$overlappingCount,
+      Object.hashAll(l$overlappingCellIds.map((v) => v)),
+      l$theirVisitedCount,
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Fragment$MapRelationCore ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$memberId = memberId;
+    final lOther$memberId = other.memberId;
+    if (l$memberId != lOther$memberId) {
+      return false;
+    }
+    final l$nickname = nickname;
+    final lOther$nickname = other.nickname;
+    if (l$nickname != lOther$nickname) {
+      return false;
+    }
+    final l$overlappingCount = overlappingCount;
+    final lOther$overlappingCount = other.overlappingCount;
+    if (l$overlappingCount != lOther$overlappingCount) {
+      return false;
+    }
+    final l$overlappingCellIds = overlappingCellIds;
+    final lOther$overlappingCellIds = other.overlappingCellIds;
+    if (l$overlappingCellIds.length != lOther$overlappingCellIds.length) {
+      return false;
+    }
+    for (int i = 0; i < l$overlappingCellIds.length; i++) {
+      final l$overlappingCellIds$entry = l$overlappingCellIds[i];
+      final lOther$overlappingCellIds$entry = lOther$overlappingCellIds[i];
+      if (l$overlappingCellIds$entry != lOther$overlappingCellIds$entry) {
+        return false;
+      }
+    }
+    final l$theirVisitedCount = theirVisitedCount;
+    final lOther$theirVisitedCount = other.theirVisitedCount;
+    if (l$theirVisitedCount != lOther$theirVisitedCount) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Fragment$MapRelationCore
+    on Fragment$MapRelationCore {
+  CopyWith$Fragment$MapRelationCore<Fragment$MapRelationCore> get copyWith =>
+      CopyWith$Fragment$MapRelationCore(this, (i) => i);
+}
+
+abstract class CopyWith$Fragment$MapRelationCore<TRes> {
+  factory CopyWith$Fragment$MapRelationCore(
+    Fragment$MapRelationCore instance,
+    TRes Function(Fragment$MapRelationCore) then,
+  ) = _CopyWithImpl$Fragment$MapRelationCore;
+
+  factory CopyWith$Fragment$MapRelationCore.stub(TRes res) =
+      _CopyWithStubImpl$Fragment$MapRelationCore;
+
+  TRes call({
+    String? memberId,
+    String? nickname,
+    int? overlappingCount,
+    List<String>? overlappingCellIds,
+    int? theirVisitedCount,
+  });
+}
+
+class _CopyWithImpl$Fragment$MapRelationCore<TRes>
+    implements CopyWith$Fragment$MapRelationCore<TRes> {
+  _CopyWithImpl$Fragment$MapRelationCore(this._instance, this._then);
+
+  final Fragment$MapRelationCore _instance;
+
+  final TRes Function(Fragment$MapRelationCore) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? memberId = _undefined,
+    Object? nickname = _undefined,
+    Object? overlappingCount = _undefined,
+    Object? overlappingCellIds = _undefined,
+    Object? theirVisitedCount = _undefined,
+  }) => _then(
+    Fragment$MapRelationCore(
+      memberId: memberId == _undefined || memberId == null
+          ? _instance.memberId
+          : (memberId as String),
+      nickname: nickname == _undefined || nickname == null
+          ? _instance.nickname
+          : (nickname as String),
+      overlappingCount:
+          overlappingCount == _undefined || overlappingCount == null
+          ? _instance.overlappingCount
+          : (overlappingCount as int),
+      overlappingCellIds:
+          overlappingCellIds == _undefined || overlappingCellIds == null
+          ? _instance.overlappingCellIds
+          : (overlappingCellIds as List<String>),
+      theirVisitedCount:
+          theirVisitedCount == _undefined || theirVisitedCount == null
+          ? _instance.theirVisitedCount
+          : (theirVisitedCount as int),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Fragment$MapRelationCore<TRes>
+    implements CopyWith$Fragment$MapRelationCore<TRes> {
+  _CopyWithStubImpl$Fragment$MapRelationCore(this._res);
+
+  TRes _res;
+
+  call({
+    String? memberId,
+    String? nickname,
+    int? overlappingCount,
+    List<String>? overlappingCellIds,
+    int? theirVisitedCount,
+  }) => _res;
+}
+
+const fragmentDefinitionMapRelationCore = FragmentDefinitionNode(
+  name: NameNode(value: 'MapRelationCore'),
+  typeCondition: TypeConditionNode(
+    on: NamedTypeNode(name: NameNode(value: 'MapRelation'), isNonNull: false),
+  ),
+  directives: [],
+  selectionSet: SelectionSetNode(
+    selections: [
+      FieldNode(
+        name: NameNode(value: 'memberId'),
+        alias: null,
+        arguments: [],
+        directives: [],
+        selectionSet: null,
+      ),
+      FieldNode(
+        name: NameNode(value: 'nickname'),
+        alias: null,
+        arguments: [],
+        directives: [],
+        selectionSet: null,
+      ),
+      FieldNode(
+        name: NameNode(value: 'overlappingCount'),
+        alias: null,
+        arguments: [],
+        directives: [],
+        selectionSet: null,
+      ),
+      FieldNode(
+        name: NameNode(value: 'overlappingCellIds'),
+        alias: null,
+        arguments: [],
+        directives: [],
+        selectionSet: null,
+      ),
+      FieldNode(
+        name: NameNode(value: 'theirVisitedCount'),
+        alias: null,
+        arguments: [],
+        directives: [],
+        selectionSet: null,
+      ),
+    ],
+  ),
+);
+const documentNodeFragmentMapRelationCore = DocumentNode(
+  definitions: [fragmentDefinitionMapRelationCore],
+);
+
 class Fragment$MapCellCore {
   Fragment$MapCellCore({
     required this.id,
@@ -3106,6 +3349,30 @@ const documentNodeQuerySharedMap = DocumentNode(
                   selectionSet: null,
                 ),
                 FieldNode(
+                  name: NameNode(value: 'overlappingCells'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'id'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'name'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
+                FieldNode(
                   name: NameNode(value: 'visitedCount'),
                   alias: null,
                   arguments: [],
@@ -3126,6 +3393,7 @@ class Query$SharedMap$sharedMap {
     required this.ownerNickname,
     required this.visitedCellIds,
     this.overlappingCellIds,
+    this.overlappingCells,
     required this.visitedCount,
   });
 
@@ -3133,6 +3401,7 @@ class Query$SharedMap$sharedMap {
     final l$ownerNickname = json['ownerNickname'];
     final l$visitedCellIds = json['visitedCellIds'];
     final l$overlappingCellIds = json['overlappingCellIds'];
+    final l$overlappingCells = json['overlappingCells'];
     final l$visitedCount = json['visitedCount'];
     return Query$SharedMap$sharedMap(
       ownerNickname: (l$ownerNickname as String),
@@ -3141,6 +3410,13 @@ class Query$SharedMap$sharedMap {
           .toList(),
       overlappingCellIds: (l$overlappingCellIds as List<dynamic>?)
           ?.map((e) => (e as String))
+          .toList(),
+      overlappingCells: (l$overlappingCells as List<dynamic>?)
+          ?.map(
+            (e) => Query$SharedMap$sharedMap$overlappingCells.fromJson(
+              (e as Map<String, dynamic>),
+            ),
+          )
           .toList(),
       visitedCount: (l$visitedCount as int),
     );
@@ -3151,6 +3427,8 @@ class Query$SharedMap$sharedMap {
   final List<String> visitedCellIds;
 
   final List<String>? overlappingCellIds;
+
+  final List<Query$SharedMap$sharedMap$overlappingCells>? overlappingCells;
 
   final int visitedCount;
 
@@ -3164,6 +3442,10 @@ class Query$SharedMap$sharedMap {
     _resultData['overlappingCellIds'] = l$overlappingCellIds
         ?.map((e) => e)
         .toList();
+    final l$overlappingCells = overlappingCells;
+    _resultData['overlappingCells'] = l$overlappingCells
+        ?.map((e) => e.toJson())
+        .toList();
     final l$visitedCount = visitedCount;
     _resultData['visitedCount'] = l$visitedCount;
     return _resultData;
@@ -3174,6 +3456,7 @@ class Query$SharedMap$sharedMap {
     final l$ownerNickname = ownerNickname;
     final l$visitedCellIds = visitedCellIds;
     final l$overlappingCellIds = overlappingCellIds;
+    final l$overlappingCells = overlappingCells;
     final l$visitedCount = visitedCount;
     return Object.hashAll([
       l$ownerNickname,
@@ -3181,6 +3464,9 @@ class Query$SharedMap$sharedMap {
       l$overlappingCellIds == null
           ? null
           : Object.hashAll(l$overlappingCellIds.map((v) => v)),
+      l$overlappingCells == null
+          ? null
+          : Object.hashAll(l$overlappingCells.map((v) => v)),
       l$visitedCount,
     ]);
   }
@@ -3227,6 +3513,22 @@ class Query$SharedMap$sharedMap {
     } else if (l$overlappingCellIds != lOther$overlappingCellIds) {
       return false;
     }
+    final l$overlappingCells = overlappingCells;
+    final lOther$overlappingCells = other.overlappingCells;
+    if (l$overlappingCells != null && lOther$overlappingCells != null) {
+      if (l$overlappingCells.length != lOther$overlappingCells.length) {
+        return false;
+      }
+      for (int i = 0; i < l$overlappingCells.length; i++) {
+        final l$overlappingCells$entry = l$overlappingCells[i];
+        final lOther$overlappingCells$entry = lOther$overlappingCells[i];
+        if (l$overlappingCells$entry != lOther$overlappingCells$entry) {
+          return false;
+        }
+      }
+    } else if (l$overlappingCells != lOther$overlappingCells) {
+      return false;
+    }
     final l$visitedCount = visitedCount;
     final lOther$visitedCount = other.visitedCount;
     if (l$visitedCount != lOther$visitedCount) {
@@ -3255,8 +3557,19 @@ abstract class CopyWith$Query$SharedMap$sharedMap<TRes> {
     String? ownerNickname,
     List<String>? visitedCellIds,
     List<String>? overlappingCellIds,
+    List<Query$SharedMap$sharedMap$overlappingCells>? overlappingCells,
     int? visitedCount,
   });
+  TRes overlappingCells(
+    Iterable<Query$SharedMap$sharedMap$overlappingCells>? Function(
+      Iterable<
+        CopyWith$Query$SharedMap$sharedMap$overlappingCells<
+          Query$SharedMap$sharedMap$overlappingCells
+        >
+      >?,
+    )
+    _fn,
+  );
 }
 
 class _CopyWithImpl$Query$SharedMap$sharedMap<TRes>
@@ -3273,6 +3586,7 @@ class _CopyWithImpl$Query$SharedMap$sharedMap<TRes>
     Object? ownerNickname = _undefined,
     Object? visitedCellIds = _undefined,
     Object? overlappingCellIds = _undefined,
+    Object? overlappingCells = _undefined,
     Object? visitedCount = _undefined,
   }) => _then(
     Query$SharedMap$sharedMap(
@@ -3285,10 +3599,31 @@ class _CopyWithImpl$Query$SharedMap$sharedMap<TRes>
       overlappingCellIds: overlappingCellIds == _undefined
           ? _instance.overlappingCellIds
           : (overlappingCellIds as List<String>?),
+      overlappingCells: overlappingCells == _undefined
+          ? _instance.overlappingCells
+          : (overlappingCells
+                as List<Query$SharedMap$sharedMap$overlappingCells>?),
       visitedCount: visitedCount == _undefined || visitedCount == null
           ? _instance.visitedCount
           : (visitedCount as int),
     ),
+  );
+
+  TRes overlappingCells(
+    Iterable<Query$SharedMap$sharedMap$overlappingCells>? Function(
+      Iterable<
+        CopyWith$Query$SharedMap$sharedMap$overlappingCells<
+          Query$SharedMap$sharedMap$overlappingCells
+        >
+      >?,
+    )
+    _fn,
+  ) => call(
+    overlappingCells: _fn(
+      _instance.overlappingCells?.map(
+        (e) => CopyWith$Query$SharedMap$sharedMap$overlappingCells(e, (i) => i),
+      ),
+    )?.toList(),
   );
 }
 
@@ -3302,8 +3637,2117 @@ class _CopyWithStubImpl$Query$SharedMap$sharedMap<TRes>
     String? ownerNickname,
     List<String>? visitedCellIds,
     List<String>? overlappingCellIds,
+    List<Query$SharedMap$sharedMap$overlappingCells>? overlappingCells,
     int? visitedCount,
   }) => _res;
+
+  overlappingCells(_fn) => _res;
+}
+
+class Query$SharedMap$sharedMap$overlappingCells {
+  Query$SharedMap$sharedMap$overlappingCells({
+    required this.id,
+    required this.name,
+  });
+
+  factory Query$SharedMap$sharedMap$overlappingCells.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$id = json['id'];
+    final l$name = json['name'];
+    return Query$SharedMap$sharedMap$overlappingCells(
+      id: (l$id as String),
+      name: (l$name as String),
+    );
+  }
+
+  final String id;
+
+  final String name;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$id = id;
+    _resultData['id'] = l$id;
+    final l$name = name;
+    _resultData['name'] = l$name;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$id = id;
+    final l$name = name;
+    return Object.hashAll([l$id, l$name]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$SharedMap$sharedMap$overlappingCells ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$id = id;
+    final lOther$id = other.id;
+    if (l$id != lOther$id) {
+      return false;
+    }
+    final l$name = name;
+    final lOther$name = other.name;
+    if (l$name != lOther$name) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$SharedMap$sharedMap$overlappingCells
+    on Query$SharedMap$sharedMap$overlappingCells {
+  CopyWith$Query$SharedMap$sharedMap$overlappingCells<
+    Query$SharedMap$sharedMap$overlappingCells
+  >
+  get copyWith =>
+      CopyWith$Query$SharedMap$sharedMap$overlappingCells(this, (i) => i);
+}
+
+abstract class CopyWith$Query$SharedMap$sharedMap$overlappingCells<TRes> {
+  factory CopyWith$Query$SharedMap$sharedMap$overlappingCells(
+    Query$SharedMap$sharedMap$overlappingCells instance,
+    TRes Function(Query$SharedMap$sharedMap$overlappingCells) then,
+  ) = _CopyWithImpl$Query$SharedMap$sharedMap$overlappingCells;
+
+  factory CopyWith$Query$SharedMap$sharedMap$overlappingCells.stub(TRes res) =
+      _CopyWithStubImpl$Query$SharedMap$sharedMap$overlappingCells;
+
+  TRes call({String? id, String? name});
+}
+
+class _CopyWithImpl$Query$SharedMap$sharedMap$overlappingCells<TRes>
+    implements CopyWith$Query$SharedMap$sharedMap$overlappingCells<TRes> {
+  _CopyWithImpl$Query$SharedMap$sharedMap$overlappingCells(
+    this._instance,
+    this._then,
+  );
+
+  final Query$SharedMap$sharedMap$overlappingCells _instance;
+
+  final TRes Function(Query$SharedMap$sharedMap$overlappingCells) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? id = _undefined, Object? name = _undefined}) => _then(
+    Query$SharedMap$sharedMap$overlappingCells(
+      id: id == _undefined || id == null ? _instance.id : (id as String),
+      name: name == _undefined || name == null
+          ? _instance.name
+          : (name as String),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$SharedMap$sharedMap$overlappingCells<TRes>
+    implements CopyWith$Query$SharedMap$sharedMap$overlappingCells<TRes> {
+  _CopyWithStubImpl$Query$SharedMap$sharedMap$overlappingCells(this._res);
+
+  TRes _res;
+
+  call({String? id, String? name}) => _res;
+}
+
+class Variables$Query$MapRelations {
+  factory Variables$Query$MapRelations({int? first, String? after}) =>
+      Variables$Query$MapRelations._({
+        if (first != null) r'first': first,
+        if (after != null) r'after': after,
+      });
+
+  Variables$Query$MapRelations._(this._$data);
+
+  factory Variables$Query$MapRelations.fromJson(Map<String, dynamic> data) {
+    final result$data = <String, dynamic>{};
+    if (data.containsKey('first')) {
+      final l$first = data['first'];
+      result$data['first'] = (l$first as int?);
+    }
+    if (data.containsKey('after')) {
+      final l$after = data['after'];
+      result$data['after'] = (l$after as String?);
+    }
+    return Variables$Query$MapRelations._(result$data);
+  }
+
+  Map<String, dynamic> _$data;
+
+  int? get first => (_$data['first'] as int?);
+
+  String? get after => (_$data['after'] as String?);
+
+  Map<String, dynamic> toJson() {
+    final result$data = <String, dynamic>{};
+    if (_$data.containsKey('first')) {
+      final l$first = first;
+      result$data['first'] = l$first;
+    }
+    if (_$data.containsKey('after')) {
+      final l$after = after;
+      result$data['after'] = l$after;
+    }
+    return result$data;
+  }
+
+  CopyWith$Variables$Query$MapRelations<Variables$Query$MapRelations>
+  get copyWith => CopyWith$Variables$Query$MapRelations(this, (i) => i);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Variables$Query$MapRelations ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$first = first;
+    final lOther$first = other.first;
+    if (_$data.containsKey('first') != other._$data.containsKey('first')) {
+      return false;
+    }
+    if (l$first != lOther$first) {
+      return false;
+    }
+    final l$after = after;
+    final lOther$after = other.after;
+    if (_$data.containsKey('after') != other._$data.containsKey('after')) {
+      return false;
+    }
+    if (l$after != lOther$after) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    final l$first = first;
+    final l$after = after;
+    return Object.hashAll([
+      _$data.containsKey('first') ? l$first : const {},
+      _$data.containsKey('after') ? l$after : const {},
+    ]);
+  }
+}
+
+abstract class CopyWith$Variables$Query$MapRelations<TRes> {
+  factory CopyWith$Variables$Query$MapRelations(
+    Variables$Query$MapRelations instance,
+    TRes Function(Variables$Query$MapRelations) then,
+  ) = _CopyWithImpl$Variables$Query$MapRelations;
+
+  factory CopyWith$Variables$Query$MapRelations.stub(TRes res) =
+      _CopyWithStubImpl$Variables$Query$MapRelations;
+
+  TRes call({int? first, String? after});
+}
+
+class _CopyWithImpl$Variables$Query$MapRelations<TRes>
+    implements CopyWith$Variables$Query$MapRelations<TRes> {
+  _CopyWithImpl$Variables$Query$MapRelations(this._instance, this._then);
+
+  final Variables$Query$MapRelations _instance;
+
+  final TRes Function(Variables$Query$MapRelations) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? first = _undefined, Object? after = _undefined}) => _then(
+    Variables$Query$MapRelations._({
+      ..._instance._$data,
+      if (first != _undefined) 'first': (first as int?),
+      if (after != _undefined) 'after': (after as String?),
+    }),
+  );
+}
+
+class _CopyWithStubImpl$Variables$Query$MapRelations<TRes>
+    implements CopyWith$Variables$Query$MapRelations<TRes> {
+  _CopyWithStubImpl$Variables$Query$MapRelations(this._res);
+
+  TRes _res;
+
+  call({int? first, String? after}) => _res;
+}
+
+class Query$MapRelations {
+  Query$MapRelations({required this.mapRelations});
+
+  factory Query$MapRelations.fromJson(Map<String, dynamic> json) {
+    final l$mapRelations = json['mapRelations'];
+    return Query$MapRelations(
+      mapRelations: Query$MapRelations$mapRelations.fromJson(
+        (l$mapRelations as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final Query$MapRelations$mapRelations mapRelations;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$mapRelations = mapRelations;
+    _resultData['mapRelations'] = l$mapRelations.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$mapRelations = mapRelations;
+    return Object.hashAll([l$mapRelations]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$MapRelations || runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$mapRelations = mapRelations;
+    final lOther$mapRelations = other.mapRelations;
+    if (l$mapRelations != lOther$mapRelations) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$MapRelations on Query$MapRelations {
+  CopyWith$Query$MapRelations<Query$MapRelations> get copyWith =>
+      CopyWith$Query$MapRelations(this, (i) => i);
+}
+
+abstract class CopyWith$Query$MapRelations<TRes> {
+  factory CopyWith$Query$MapRelations(
+    Query$MapRelations instance,
+    TRes Function(Query$MapRelations) then,
+  ) = _CopyWithImpl$Query$MapRelations;
+
+  factory CopyWith$Query$MapRelations.stub(TRes res) =
+      _CopyWithStubImpl$Query$MapRelations;
+
+  TRes call({Query$MapRelations$mapRelations? mapRelations});
+  CopyWith$Query$MapRelations$mapRelations<TRes> get mapRelations;
+}
+
+class _CopyWithImpl$Query$MapRelations<TRes>
+    implements CopyWith$Query$MapRelations<TRes> {
+  _CopyWithImpl$Query$MapRelations(this._instance, this._then);
+
+  final Query$MapRelations _instance;
+
+  final TRes Function(Query$MapRelations) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? mapRelations = _undefined}) => _then(
+    Query$MapRelations(
+      mapRelations: mapRelations == _undefined || mapRelations == null
+          ? _instance.mapRelations
+          : (mapRelations as Query$MapRelations$mapRelations),
+    ),
+  );
+
+  CopyWith$Query$MapRelations$mapRelations<TRes> get mapRelations {
+    final local$mapRelations = _instance.mapRelations;
+    return CopyWith$Query$MapRelations$mapRelations(
+      local$mapRelations,
+      (e) => call(mapRelations: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Query$MapRelations<TRes>
+    implements CopyWith$Query$MapRelations<TRes> {
+  _CopyWithStubImpl$Query$MapRelations(this._res);
+
+  TRes _res;
+
+  call({Query$MapRelations$mapRelations? mapRelations}) => _res;
+
+  CopyWith$Query$MapRelations$mapRelations<TRes> get mapRelations =>
+      CopyWith$Query$MapRelations$mapRelations.stub(_res);
+}
+
+const documentNodeQueryMapRelations = DocumentNode(
+  definitions: [
+    OperationDefinitionNode(
+      type: OperationType.query,
+      name: NameNode(value: 'MapRelations'),
+      variableDefinitions: [
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'first')),
+          type: NamedTypeNode(name: NameNode(value: 'Int'), isNonNull: false),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'after')),
+          type: NamedTypeNode(
+            name: NameNode(value: 'String'),
+            isNonNull: false,
+          ),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+      ],
+      directives: [],
+      selectionSet: SelectionSetNode(
+        selections: [
+          FieldNode(
+            name: NameNode(value: 'mapRelations'),
+            alias: null,
+            arguments: [
+              ArgumentNode(
+                name: NameNode(value: 'first'),
+                value: VariableNode(name: NameNode(value: 'first')),
+              ),
+              ArgumentNode(
+                name: NameNode(value: 'after'),
+                value: VariableNode(name: NameNode(value: 'after')),
+              ),
+            ],
+            directives: [],
+            selectionSet: SelectionSetNode(
+              selections: [
+                FieldNode(
+                  name: NameNode(value: 'edges'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'node'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: SelectionSetNode(
+                          selections: [
+                            FragmentSpreadNode(
+                              name: NameNode(value: 'MapRelationCore'),
+                              directives: [],
+                            ),
+                          ],
+                        ),
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'cursor'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
+                FieldNode(
+                  name: NameNode(value: 'pageInfo'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'hasNextPage'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'endCursor'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+    fragmentDefinitionMapRelationCore,
+  ],
+);
+
+class Query$MapRelations$mapRelations {
+  Query$MapRelations$mapRelations({
+    required this.edges,
+    required this.pageInfo,
+  });
+
+  factory Query$MapRelations$mapRelations.fromJson(Map<String, dynamic> json) {
+    final l$edges = json['edges'];
+    final l$pageInfo = json['pageInfo'];
+    return Query$MapRelations$mapRelations(
+      edges: (l$edges as List<dynamic>)
+          .map(
+            (e) => Query$MapRelations$mapRelations$edges.fromJson(
+              (e as Map<String, dynamic>),
+            ),
+          )
+          .toList(),
+      pageInfo: Query$MapRelations$mapRelations$pageInfo.fromJson(
+        (l$pageInfo as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final List<Query$MapRelations$mapRelations$edges> edges;
+
+  final Query$MapRelations$mapRelations$pageInfo pageInfo;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$edges = edges;
+    _resultData['edges'] = l$edges.map((e) => e.toJson()).toList();
+    final l$pageInfo = pageInfo;
+    _resultData['pageInfo'] = l$pageInfo.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$edges = edges;
+    final l$pageInfo = pageInfo;
+    return Object.hashAll([Object.hashAll(l$edges.map((v) => v)), l$pageInfo]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$MapRelations$mapRelations ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$edges = edges;
+    final lOther$edges = other.edges;
+    if (l$edges.length != lOther$edges.length) {
+      return false;
+    }
+    for (int i = 0; i < l$edges.length; i++) {
+      final l$edges$entry = l$edges[i];
+      final lOther$edges$entry = lOther$edges[i];
+      if (l$edges$entry != lOther$edges$entry) {
+        return false;
+      }
+    }
+    final l$pageInfo = pageInfo;
+    final lOther$pageInfo = other.pageInfo;
+    if (l$pageInfo != lOther$pageInfo) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$MapRelations$mapRelations
+    on Query$MapRelations$mapRelations {
+  CopyWith$Query$MapRelations$mapRelations<Query$MapRelations$mapRelations>
+  get copyWith => CopyWith$Query$MapRelations$mapRelations(this, (i) => i);
+}
+
+abstract class CopyWith$Query$MapRelations$mapRelations<TRes> {
+  factory CopyWith$Query$MapRelations$mapRelations(
+    Query$MapRelations$mapRelations instance,
+    TRes Function(Query$MapRelations$mapRelations) then,
+  ) = _CopyWithImpl$Query$MapRelations$mapRelations;
+
+  factory CopyWith$Query$MapRelations$mapRelations.stub(TRes res) =
+      _CopyWithStubImpl$Query$MapRelations$mapRelations;
+
+  TRes call({
+    List<Query$MapRelations$mapRelations$edges>? edges,
+    Query$MapRelations$mapRelations$pageInfo? pageInfo,
+  });
+  TRes edges(
+    Iterable<Query$MapRelations$mapRelations$edges> Function(
+      Iterable<
+        CopyWith$Query$MapRelations$mapRelations$edges<
+          Query$MapRelations$mapRelations$edges
+        >
+      >,
+    )
+    _fn,
+  );
+  CopyWith$Query$MapRelations$mapRelations$pageInfo<TRes> get pageInfo;
+}
+
+class _CopyWithImpl$Query$MapRelations$mapRelations<TRes>
+    implements CopyWith$Query$MapRelations$mapRelations<TRes> {
+  _CopyWithImpl$Query$MapRelations$mapRelations(this._instance, this._then);
+
+  final Query$MapRelations$mapRelations _instance;
+
+  final TRes Function(Query$MapRelations$mapRelations) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? edges = _undefined, Object? pageInfo = _undefined}) =>
+      _then(
+        Query$MapRelations$mapRelations(
+          edges: edges == _undefined || edges == null
+              ? _instance.edges
+              : (edges as List<Query$MapRelations$mapRelations$edges>),
+          pageInfo: pageInfo == _undefined || pageInfo == null
+              ? _instance.pageInfo
+              : (pageInfo as Query$MapRelations$mapRelations$pageInfo),
+        ),
+      );
+
+  TRes edges(
+    Iterable<Query$MapRelations$mapRelations$edges> Function(
+      Iterable<
+        CopyWith$Query$MapRelations$mapRelations$edges<
+          Query$MapRelations$mapRelations$edges
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    edges: _fn(
+      _instance.edges.map(
+        (e) => CopyWith$Query$MapRelations$mapRelations$edges(e, (i) => i),
+      ),
+    ).toList(),
+  );
+
+  CopyWith$Query$MapRelations$mapRelations$pageInfo<TRes> get pageInfo {
+    final local$pageInfo = _instance.pageInfo;
+    return CopyWith$Query$MapRelations$mapRelations$pageInfo(
+      local$pageInfo,
+      (e) => call(pageInfo: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Query$MapRelations$mapRelations<TRes>
+    implements CopyWith$Query$MapRelations$mapRelations<TRes> {
+  _CopyWithStubImpl$Query$MapRelations$mapRelations(this._res);
+
+  TRes _res;
+
+  call({
+    List<Query$MapRelations$mapRelations$edges>? edges,
+    Query$MapRelations$mapRelations$pageInfo? pageInfo,
+  }) => _res;
+
+  edges(_fn) => _res;
+
+  CopyWith$Query$MapRelations$mapRelations$pageInfo<TRes> get pageInfo =>
+      CopyWith$Query$MapRelations$mapRelations$pageInfo.stub(_res);
+}
+
+class Query$MapRelations$mapRelations$edges {
+  Query$MapRelations$mapRelations$edges({
+    required this.node,
+    required this.cursor,
+  });
+
+  factory Query$MapRelations$mapRelations$edges.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$node = json['node'];
+    final l$cursor = json['cursor'];
+    return Query$MapRelations$mapRelations$edges(
+      node: Fragment$MapRelationCore.fromJson((l$node as Map<String, dynamic>)),
+      cursor: (l$cursor as String),
+    );
+  }
+
+  final Fragment$MapRelationCore node;
+
+  final String cursor;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$node = node;
+    _resultData['node'] = l$node.toJson();
+    final l$cursor = cursor;
+    _resultData['cursor'] = l$cursor;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$node = node;
+    final l$cursor = cursor;
+    return Object.hashAll([l$node, l$cursor]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$MapRelations$mapRelations$edges ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$node = node;
+    final lOther$node = other.node;
+    if (l$node != lOther$node) {
+      return false;
+    }
+    final l$cursor = cursor;
+    final lOther$cursor = other.cursor;
+    if (l$cursor != lOther$cursor) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$MapRelations$mapRelations$edges
+    on Query$MapRelations$mapRelations$edges {
+  CopyWith$Query$MapRelations$mapRelations$edges<
+    Query$MapRelations$mapRelations$edges
+  >
+  get copyWith =>
+      CopyWith$Query$MapRelations$mapRelations$edges(this, (i) => i);
+}
+
+abstract class CopyWith$Query$MapRelations$mapRelations$edges<TRes> {
+  factory CopyWith$Query$MapRelations$mapRelations$edges(
+    Query$MapRelations$mapRelations$edges instance,
+    TRes Function(Query$MapRelations$mapRelations$edges) then,
+  ) = _CopyWithImpl$Query$MapRelations$mapRelations$edges;
+
+  factory CopyWith$Query$MapRelations$mapRelations$edges.stub(TRes res) =
+      _CopyWithStubImpl$Query$MapRelations$mapRelations$edges;
+
+  TRes call({Fragment$MapRelationCore? node, String? cursor});
+  CopyWith$Fragment$MapRelationCore<TRes> get node;
+}
+
+class _CopyWithImpl$Query$MapRelations$mapRelations$edges<TRes>
+    implements CopyWith$Query$MapRelations$mapRelations$edges<TRes> {
+  _CopyWithImpl$Query$MapRelations$mapRelations$edges(
+    this._instance,
+    this._then,
+  );
+
+  final Query$MapRelations$mapRelations$edges _instance;
+
+  final TRes Function(Query$MapRelations$mapRelations$edges) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? node = _undefined, Object? cursor = _undefined}) => _then(
+    Query$MapRelations$mapRelations$edges(
+      node: node == _undefined || node == null
+          ? _instance.node
+          : (node as Fragment$MapRelationCore),
+      cursor: cursor == _undefined || cursor == null
+          ? _instance.cursor
+          : (cursor as String),
+    ),
+  );
+
+  CopyWith$Fragment$MapRelationCore<TRes> get node {
+    final local$node = _instance.node;
+    return CopyWith$Fragment$MapRelationCore(local$node, (e) => call(node: e));
+  }
+}
+
+class _CopyWithStubImpl$Query$MapRelations$mapRelations$edges<TRes>
+    implements CopyWith$Query$MapRelations$mapRelations$edges<TRes> {
+  _CopyWithStubImpl$Query$MapRelations$mapRelations$edges(this._res);
+
+  TRes _res;
+
+  call({Fragment$MapRelationCore? node, String? cursor}) => _res;
+
+  CopyWith$Fragment$MapRelationCore<TRes> get node =>
+      CopyWith$Fragment$MapRelationCore.stub(_res);
+}
+
+class Query$MapRelations$mapRelations$pageInfo {
+  Query$MapRelations$mapRelations$pageInfo({
+    required this.hasNextPage,
+    this.endCursor,
+  });
+
+  factory Query$MapRelations$mapRelations$pageInfo.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$hasNextPage = json['hasNextPage'];
+    final l$endCursor = json['endCursor'];
+    return Query$MapRelations$mapRelations$pageInfo(
+      hasNextPage: (l$hasNextPage as bool),
+      endCursor: (l$endCursor as String?),
+    );
+  }
+
+  final bool hasNextPage;
+
+  final String? endCursor;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$hasNextPage = hasNextPage;
+    _resultData['hasNextPage'] = l$hasNextPage;
+    final l$endCursor = endCursor;
+    _resultData['endCursor'] = l$endCursor;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$hasNextPage = hasNextPage;
+    final l$endCursor = endCursor;
+    return Object.hashAll([l$hasNextPage, l$endCursor]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Query$MapRelations$mapRelations$pageInfo ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$hasNextPage = hasNextPage;
+    final lOther$hasNextPage = other.hasNextPage;
+    if (l$hasNextPage != lOther$hasNextPage) {
+      return false;
+    }
+    final l$endCursor = endCursor;
+    final lOther$endCursor = other.endCursor;
+    if (l$endCursor != lOther$endCursor) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Query$MapRelations$mapRelations$pageInfo
+    on Query$MapRelations$mapRelations$pageInfo {
+  CopyWith$Query$MapRelations$mapRelations$pageInfo<
+    Query$MapRelations$mapRelations$pageInfo
+  >
+  get copyWith =>
+      CopyWith$Query$MapRelations$mapRelations$pageInfo(this, (i) => i);
+}
+
+abstract class CopyWith$Query$MapRelations$mapRelations$pageInfo<TRes> {
+  factory CopyWith$Query$MapRelations$mapRelations$pageInfo(
+    Query$MapRelations$mapRelations$pageInfo instance,
+    TRes Function(Query$MapRelations$mapRelations$pageInfo) then,
+  ) = _CopyWithImpl$Query$MapRelations$mapRelations$pageInfo;
+
+  factory CopyWith$Query$MapRelations$mapRelations$pageInfo.stub(TRes res) =
+      _CopyWithStubImpl$Query$MapRelations$mapRelations$pageInfo;
+
+  TRes call({bool? hasNextPage, String? endCursor});
+}
+
+class _CopyWithImpl$Query$MapRelations$mapRelations$pageInfo<TRes>
+    implements CopyWith$Query$MapRelations$mapRelations$pageInfo<TRes> {
+  _CopyWithImpl$Query$MapRelations$mapRelations$pageInfo(
+    this._instance,
+    this._then,
+  );
+
+  final Query$MapRelations$mapRelations$pageInfo _instance;
+
+  final TRes Function(Query$MapRelations$mapRelations$pageInfo) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? hasNextPage = _undefined,
+    Object? endCursor = _undefined,
+  }) => _then(
+    Query$MapRelations$mapRelations$pageInfo(
+      hasNextPage: hasNextPage == _undefined || hasNextPage == null
+          ? _instance.hasNextPage
+          : (hasNextPage as bool),
+      endCursor: endCursor == _undefined
+          ? _instance.endCursor
+          : (endCursor as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Query$MapRelations$mapRelations$pageInfo<TRes>
+    implements CopyWith$Query$MapRelations$mapRelations$pageInfo<TRes> {
+  _CopyWithStubImpl$Query$MapRelations$mapRelations$pageInfo(this._res);
+
+  TRes _res;
+
+  call({bool? hasNextPage, String? endCursor}) => _res;
+}
+
+class Variables$Mutation$CreateMapRelation {
+  factory Variables$Mutation$CreateMapRelation({
+    required Input$CreateMapRelationInput input,
+  }) => Variables$Mutation$CreateMapRelation._({r'input': input});
+
+  Variables$Mutation$CreateMapRelation._(this._$data);
+
+  factory Variables$Mutation$CreateMapRelation.fromJson(
+    Map<String, dynamic> data,
+  ) {
+    final result$data = <String, dynamic>{};
+    final l$input = data['input'];
+    result$data['input'] = Input$CreateMapRelationInput.fromJson(
+      (l$input as Map<String, dynamic>),
+    );
+    return Variables$Mutation$CreateMapRelation._(result$data);
+  }
+
+  Map<String, dynamic> _$data;
+
+  Input$CreateMapRelationInput get input =>
+      (_$data['input'] as Input$CreateMapRelationInput);
+
+  Map<String, dynamic> toJson() {
+    final result$data = <String, dynamic>{};
+    final l$input = input;
+    result$data['input'] = l$input.toJson();
+    return result$data;
+  }
+
+  CopyWith$Variables$Mutation$CreateMapRelation<
+    Variables$Mutation$CreateMapRelation
+  >
+  get copyWith => CopyWith$Variables$Mutation$CreateMapRelation(this, (i) => i);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Variables$Mutation$CreateMapRelation ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$input = input;
+    final lOther$input = other.input;
+    if (l$input != lOther$input) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    final l$input = input;
+    return Object.hashAll([l$input]);
+  }
+}
+
+abstract class CopyWith$Variables$Mutation$CreateMapRelation<TRes> {
+  factory CopyWith$Variables$Mutation$CreateMapRelation(
+    Variables$Mutation$CreateMapRelation instance,
+    TRes Function(Variables$Mutation$CreateMapRelation) then,
+  ) = _CopyWithImpl$Variables$Mutation$CreateMapRelation;
+
+  factory CopyWith$Variables$Mutation$CreateMapRelation.stub(TRes res) =
+      _CopyWithStubImpl$Variables$Mutation$CreateMapRelation;
+
+  TRes call({Input$CreateMapRelationInput? input});
+}
+
+class _CopyWithImpl$Variables$Mutation$CreateMapRelation<TRes>
+    implements CopyWith$Variables$Mutation$CreateMapRelation<TRes> {
+  _CopyWithImpl$Variables$Mutation$CreateMapRelation(
+    this._instance,
+    this._then,
+  );
+
+  final Variables$Mutation$CreateMapRelation _instance;
+
+  final TRes Function(Variables$Mutation$CreateMapRelation) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? input = _undefined}) => _then(
+    Variables$Mutation$CreateMapRelation._({
+      ..._instance._$data,
+      if (input != _undefined && input != null)
+        'input': (input as Input$CreateMapRelationInput),
+    }),
+  );
+}
+
+class _CopyWithStubImpl$Variables$Mutation$CreateMapRelation<TRes>
+    implements CopyWith$Variables$Mutation$CreateMapRelation<TRes> {
+  _CopyWithStubImpl$Variables$Mutation$CreateMapRelation(this._res);
+
+  TRes _res;
+
+  call({Input$CreateMapRelationInput? input}) => _res;
+}
+
+class Mutation$CreateMapRelation {
+  Mutation$CreateMapRelation({required this.createMapRelation});
+
+  factory Mutation$CreateMapRelation.fromJson(Map<String, dynamic> json) {
+    final l$createMapRelation = json['createMapRelation'];
+    return Mutation$CreateMapRelation(
+      createMapRelation: Mutation$CreateMapRelation$createMapRelation.fromJson(
+        (l$createMapRelation as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final Mutation$CreateMapRelation$createMapRelation createMapRelation;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$createMapRelation = createMapRelation;
+    _resultData['createMapRelation'] = l$createMapRelation.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$createMapRelation = createMapRelation;
+    return Object.hashAll([l$createMapRelation]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$CreateMapRelation ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$createMapRelation = createMapRelation;
+    final lOther$createMapRelation = other.createMapRelation;
+    if (l$createMapRelation != lOther$createMapRelation) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$CreateMapRelation
+    on Mutation$CreateMapRelation {
+  CopyWith$Mutation$CreateMapRelation<Mutation$CreateMapRelation>
+  get copyWith => CopyWith$Mutation$CreateMapRelation(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$CreateMapRelation<TRes> {
+  factory CopyWith$Mutation$CreateMapRelation(
+    Mutation$CreateMapRelation instance,
+    TRes Function(Mutation$CreateMapRelation) then,
+  ) = _CopyWithImpl$Mutation$CreateMapRelation;
+
+  factory CopyWith$Mutation$CreateMapRelation.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$CreateMapRelation;
+
+  TRes call({Mutation$CreateMapRelation$createMapRelation? createMapRelation});
+  CopyWith$Mutation$CreateMapRelation$createMapRelation<TRes>
+  get createMapRelation;
+}
+
+class _CopyWithImpl$Mutation$CreateMapRelation<TRes>
+    implements CopyWith$Mutation$CreateMapRelation<TRes> {
+  _CopyWithImpl$Mutation$CreateMapRelation(this._instance, this._then);
+
+  final Mutation$CreateMapRelation _instance;
+
+  final TRes Function(Mutation$CreateMapRelation) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? createMapRelation = _undefined}) => _then(
+    Mutation$CreateMapRelation(
+      createMapRelation:
+          createMapRelation == _undefined || createMapRelation == null
+          ? _instance.createMapRelation
+          : (createMapRelation as Mutation$CreateMapRelation$createMapRelation),
+    ),
+  );
+
+  CopyWith$Mutation$CreateMapRelation$createMapRelation<TRes>
+  get createMapRelation {
+    final local$createMapRelation = _instance.createMapRelation;
+    return CopyWith$Mutation$CreateMapRelation$createMapRelation(
+      local$createMapRelation,
+      (e) => call(createMapRelation: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Mutation$CreateMapRelation<TRes>
+    implements CopyWith$Mutation$CreateMapRelation<TRes> {
+  _CopyWithStubImpl$Mutation$CreateMapRelation(this._res);
+
+  TRes _res;
+
+  call({Mutation$CreateMapRelation$createMapRelation? createMapRelation}) =>
+      _res;
+
+  CopyWith$Mutation$CreateMapRelation$createMapRelation<TRes>
+  get createMapRelation =>
+      CopyWith$Mutation$CreateMapRelation$createMapRelation.stub(_res);
+}
+
+const documentNodeMutationCreateMapRelation = DocumentNode(
+  definitions: [
+    OperationDefinitionNode(
+      type: OperationType.mutation,
+      name: NameNode(value: 'CreateMapRelation'),
+      variableDefinitions: [
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'input')),
+          type: NamedTypeNode(
+            name: NameNode(value: 'CreateMapRelationInput'),
+            isNonNull: true,
+          ),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+      ],
+      directives: [],
+      selectionSet: SelectionSetNode(
+        selections: [
+          FieldNode(
+            name: NameNode(value: 'createMapRelation'),
+            alias: null,
+            arguments: [
+              ArgumentNode(
+                name: NameNode(value: 'input'),
+                value: VariableNode(name: NameNode(value: 'input')),
+              ),
+            ],
+            directives: [],
+            selectionSet: SelectionSetNode(
+              selections: [
+                FieldNode(
+                  name: NameNode(value: 'success'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'counterpartMemberId'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'userErrors'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'code'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'message'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'field'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+);
+
+class Mutation$CreateMapRelation$createMapRelation {
+  Mutation$CreateMapRelation$createMapRelation({
+    required this.success,
+    this.counterpartMemberId,
+    required this.userErrors,
+  });
+
+  factory Mutation$CreateMapRelation$createMapRelation.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$success = json['success'];
+    final l$counterpartMemberId = json['counterpartMemberId'];
+    final l$userErrors = json['userErrors'];
+    return Mutation$CreateMapRelation$createMapRelation(
+      success: (l$success as bool),
+      counterpartMemberId: (l$counterpartMemberId as String?),
+      userErrors: (l$userErrors as List<dynamic>)
+          .map(
+            (e) =>
+                Mutation$CreateMapRelation$createMapRelation$userErrors.fromJson(
+                  (e as Map<String, dynamic>),
+                ),
+          )
+          .toList(),
+    );
+  }
+
+  final bool success;
+
+  final String? counterpartMemberId;
+
+  final List<Mutation$CreateMapRelation$createMapRelation$userErrors>
+  userErrors;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$success = success;
+    _resultData['success'] = l$success;
+    final l$counterpartMemberId = counterpartMemberId;
+    _resultData['counterpartMemberId'] = l$counterpartMemberId;
+    final l$userErrors = userErrors;
+    _resultData['userErrors'] = l$userErrors.map((e) => e.toJson()).toList();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$success = success;
+    final l$counterpartMemberId = counterpartMemberId;
+    final l$userErrors = userErrors;
+    return Object.hashAll([
+      l$success,
+      l$counterpartMemberId,
+      Object.hashAll(l$userErrors.map((v) => v)),
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$CreateMapRelation$createMapRelation ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$success = success;
+    final lOther$success = other.success;
+    if (l$success != lOther$success) {
+      return false;
+    }
+    final l$counterpartMemberId = counterpartMemberId;
+    final lOther$counterpartMemberId = other.counterpartMemberId;
+    if (l$counterpartMemberId != lOther$counterpartMemberId) {
+      return false;
+    }
+    final l$userErrors = userErrors;
+    final lOther$userErrors = other.userErrors;
+    if (l$userErrors.length != lOther$userErrors.length) {
+      return false;
+    }
+    for (int i = 0; i < l$userErrors.length; i++) {
+      final l$userErrors$entry = l$userErrors[i];
+      final lOther$userErrors$entry = lOther$userErrors[i];
+      if (l$userErrors$entry != lOther$userErrors$entry) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$CreateMapRelation$createMapRelation
+    on Mutation$CreateMapRelation$createMapRelation {
+  CopyWith$Mutation$CreateMapRelation$createMapRelation<
+    Mutation$CreateMapRelation$createMapRelation
+  >
+  get copyWith =>
+      CopyWith$Mutation$CreateMapRelation$createMapRelation(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$CreateMapRelation$createMapRelation<TRes> {
+  factory CopyWith$Mutation$CreateMapRelation$createMapRelation(
+    Mutation$CreateMapRelation$createMapRelation instance,
+    TRes Function(Mutation$CreateMapRelation$createMapRelation) then,
+  ) = _CopyWithImpl$Mutation$CreateMapRelation$createMapRelation;
+
+  factory CopyWith$Mutation$CreateMapRelation$createMapRelation.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$CreateMapRelation$createMapRelation;
+
+  TRes call({
+    bool? success,
+    String? counterpartMemberId,
+    List<Mutation$CreateMapRelation$createMapRelation$userErrors>? userErrors,
+  });
+  TRes userErrors(
+    Iterable<Mutation$CreateMapRelation$createMapRelation$userErrors> Function(
+      Iterable<
+        CopyWith$Mutation$CreateMapRelation$createMapRelation$userErrors<
+          Mutation$CreateMapRelation$createMapRelation$userErrors
+        >
+      >,
+    )
+    _fn,
+  );
+}
+
+class _CopyWithImpl$Mutation$CreateMapRelation$createMapRelation<TRes>
+    implements CopyWith$Mutation$CreateMapRelation$createMapRelation<TRes> {
+  _CopyWithImpl$Mutation$CreateMapRelation$createMapRelation(
+    this._instance,
+    this._then,
+  );
+
+  final Mutation$CreateMapRelation$createMapRelation _instance;
+
+  final TRes Function(Mutation$CreateMapRelation$createMapRelation) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? success = _undefined,
+    Object? counterpartMemberId = _undefined,
+    Object? userErrors = _undefined,
+  }) => _then(
+    Mutation$CreateMapRelation$createMapRelation(
+      success: success == _undefined || success == null
+          ? _instance.success
+          : (success as bool),
+      counterpartMemberId: counterpartMemberId == _undefined
+          ? _instance.counterpartMemberId
+          : (counterpartMemberId as String?),
+      userErrors: userErrors == _undefined || userErrors == null
+          ? _instance.userErrors
+          : (userErrors
+                as List<
+                  Mutation$CreateMapRelation$createMapRelation$userErrors
+                >),
+    ),
+  );
+
+  TRes userErrors(
+    Iterable<Mutation$CreateMapRelation$createMapRelation$userErrors> Function(
+      Iterable<
+        CopyWith$Mutation$CreateMapRelation$createMapRelation$userErrors<
+          Mutation$CreateMapRelation$createMapRelation$userErrors
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    userErrors: _fn(
+      _instance.userErrors.map(
+        (e) => CopyWith$Mutation$CreateMapRelation$createMapRelation$userErrors(
+          e,
+          (i) => i,
+        ),
+      ),
+    ).toList(),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$CreateMapRelation$createMapRelation<TRes>
+    implements CopyWith$Mutation$CreateMapRelation$createMapRelation<TRes> {
+  _CopyWithStubImpl$Mutation$CreateMapRelation$createMapRelation(this._res);
+
+  TRes _res;
+
+  call({
+    bool? success,
+    String? counterpartMemberId,
+    List<Mutation$CreateMapRelation$createMapRelation$userErrors>? userErrors,
+  }) => _res;
+
+  userErrors(_fn) => _res;
+}
+
+class Mutation$CreateMapRelation$createMapRelation$userErrors {
+  Mutation$CreateMapRelation$createMapRelation$userErrors({
+    required this.code,
+    required this.message,
+    this.field,
+  });
+
+  factory Mutation$CreateMapRelation$createMapRelation$userErrors.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$code = json['code'];
+    final l$message = json['message'];
+    final l$field = json['field'];
+    return Mutation$CreateMapRelation$createMapRelation$userErrors(
+      code: (l$code as String),
+      message: (l$message as String),
+      field: (l$field as String?),
+    );
+  }
+
+  final String code;
+
+  final String message;
+
+  final String? field;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$message = message;
+    _resultData['message'] = l$message;
+    final l$field = field;
+    _resultData['field'] = l$field;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$code = code;
+    final l$message = message;
+    final l$field = field;
+    return Object.hashAll([l$code, l$message, l$field]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$CreateMapRelation$createMapRelation$userErrors ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$message = message;
+    final lOther$message = other.message;
+    if (l$message != lOther$message) {
+      return false;
+    }
+    final l$field = field;
+    final lOther$field = other.field;
+    if (l$field != lOther$field) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$CreateMapRelation$createMapRelation$userErrors
+    on Mutation$CreateMapRelation$createMapRelation$userErrors {
+  CopyWith$Mutation$CreateMapRelation$createMapRelation$userErrors<
+    Mutation$CreateMapRelation$createMapRelation$userErrors
+  >
+  get copyWith =>
+      CopyWith$Mutation$CreateMapRelation$createMapRelation$userErrors(
+        this,
+        (i) => i,
+      );
+}
+
+abstract class CopyWith$Mutation$CreateMapRelation$createMapRelation$userErrors<
+  TRes
+> {
+  factory CopyWith$Mutation$CreateMapRelation$createMapRelation$userErrors(
+    Mutation$CreateMapRelation$createMapRelation$userErrors instance,
+    TRes Function(Mutation$CreateMapRelation$createMapRelation$userErrors) then,
+  ) = _CopyWithImpl$Mutation$CreateMapRelation$createMapRelation$userErrors;
+
+  factory CopyWith$Mutation$CreateMapRelation$createMapRelation$userErrors.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Mutation$CreateMapRelation$createMapRelation$userErrors;
+
+  TRes call({String? code, String? message, String? field});
+}
+
+class _CopyWithImpl$Mutation$CreateMapRelation$createMapRelation$userErrors<
+  TRes
+>
+    implements
+        CopyWith$Mutation$CreateMapRelation$createMapRelation$userErrors<TRes> {
+  _CopyWithImpl$Mutation$CreateMapRelation$createMapRelation$userErrors(
+    this._instance,
+    this._then,
+  );
+
+  final Mutation$CreateMapRelation$createMapRelation$userErrors _instance;
+
+  final TRes Function(Mutation$CreateMapRelation$createMapRelation$userErrors)
+  _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? code = _undefined,
+    Object? message = _undefined,
+    Object? field = _undefined,
+  }) => _then(
+    Mutation$CreateMapRelation$createMapRelation$userErrors(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      message: message == _undefined || message == null
+          ? _instance.message
+          : (message as String),
+      field: field == _undefined ? _instance.field : (field as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$CreateMapRelation$createMapRelation$userErrors<
+  TRes
+>
+    implements
+        CopyWith$Mutation$CreateMapRelation$createMapRelation$userErrors<TRes> {
+  _CopyWithStubImpl$Mutation$CreateMapRelation$createMapRelation$userErrors(
+    this._res,
+  );
+
+  TRes _res;
+
+  call({String? code, String? message, String? field}) => _res;
+}
+
+class Variables$Mutation$RemoveMapRelation {
+  factory Variables$Mutation$RemoveMapRelation({
+    required Input$RemoveMapRelationInput input,
+  }) => Variables$Mutation$RemoveMapRelation._({r'input': input});
+
+  Variables$Mutation$RemoveMapRelation._(this._$data);
+
+  factory Variables$Mutation$RemoveMapRelation.fromJson(
+    Map<String, dynamic> data,
+  ) {
+    final result$data = <String, dynamic>{};
+    final l$input = data['input'];
+    result$data['input'] = Input$RemoveMapRelationInput.fromJson(
+      (l$input as Map<String, dynamic>),
+    );
+    return Variables$Mutation$RemoveMapRelation._(result$data);
+  }
+
+  Map<String, dynamic> _$data;
+
+  Input$RemoveMapRelationInput get input =>
+      (_$data['input'] as Input$RemoveMapRelationInput);
+
+  Map<String, dynamic> toJson() {
+    final result$data = <String, dynamic>{};
+    final l$input = input;
+    result$data['input'] = l$input.toJson();
+    return result$data;
+  }
+
+  CopyWith$Variables$Mutation$RemoveMapRelation<
+    Variables$Mutation$RemoveMapRelation
+  >
+  get copyWith => CopyWith$Variables$Mutation$RemoveMapRelation(this, (i) => i);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Variables$Mutation$RemoveMapRelation ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$input = input;
+    final lOther$input = other.input;
+    if (l$input != lOther$input) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode {
+    final l$input = input;
+    return Object.hashAll([l$input]);
+  }
+}
+
+abstract class CopyWith$Variables$Mutation$RemoveMapRelation<TRes> {
+  factory CopyWith$Variables$Mutation$RemoveMapRelation(
+    Variables$Mutation$RemoveMapRelation instance,
+    TRes Function(Variables$Mutation$RemoveMapRelation) then,
+  ) = _CopyWithImpl$Variables$Mutation$RemoveMapRelation;
+
+  factory CopyWith$Variables$Mutation$RemoveMapRelation.stub(TRes res) =
+      _CopyWithStubImpl$Variables$Mutation$RemoveMapRelation;
+
+  TRes call({Input$RemoveMapRelationInput? input});
+}
+
+class _CopyWithImpl$Variables$Mutation$RemoveMapRelation<TRes>
+    implements CopyWith$Variables$Mutation$RemoveMapRelation<TRes> {
+  _CopyWithImpl$Variables$Mutation$RemoveMapRelation(
+    this._instance,
+    this._then,
+  );
+
+  final Variables$Mutation$RemoveMapRelation _instance;
+
+  final TRes Function(Variables$Mutation$RemoveMapRelation) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? input = _undefined}) => _then(
+    Variables$Mutation$RemoveMapRelation._({
+      ..._instance._$data,
+      if (input != _undefined && input != null)
+        'input': (input as Input$RemoveMapRelationInput),
+    }),
+  );
+}
+
+class _CopyWithStubImpl$Variables$Mutation$RemoveMapRelation<TRes>
+    implements CopyWith$Variables$Mutation$RemoveMapRelation<TRes> {
+  _CopyWithStubImpl$Variables$Mutation$RemoveMapRelation(this._res);
+
+  TRes _res;
+
+  call({Input$RemoveMapRelationInput? input}) => _res;
+}
+
+class Mutation$RemoveMapRelation {
+  Mutation$RemoveMapRelation({required this.removeMapRelation});
+
+  factory Mutation$RemoveMapRelation.fromJson(Map<String, dynamic> json) {
+    final l$removeMapRelation = json['removeMapRelation'];
+    return Mutation$RemoveMapRelation(
+      removeMapRelation: Mutation$RemoveMapRelation$removeMapRelation.fromJson(
+        (l$removeMapRelation as Map<String, dynamic>),
+      ),
+    );
+  }
+
+  final Mutation$RemoveMapRelation$removeMapRelation removeMapRelation;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$removeMapRelation = removeMapRelation;
+    _resultData['removeMapRelation'] = l$removeMapRelation.toJson();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$removeMapRelation = removeMapRelation;
+    return Object.hashAll([l$removeMapRelation]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$RemoveMapRelation ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$removeMapRelation = removeMapRelation;
+    final lOther$removeMapRelation = other.removeMapRelation;
+    if (l$removeMapRelation != lOther$removeMapRelation) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$RemoveMapRelation
+    on Mutation$RemoveMapRelation {
+  CopyWith$Mutation$RemoveMapRelation<Mutation$RemoveMapRelation>
+  get copyWith => CopyWith$Mutation$RemoveMapRelation(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$RemoveMapRelation<TRes> {
+  factory CopyWith$Mutation$RemoveMapRelation(
+    Mutation$RemoveMapRelation instance,
+    TRes Function(Mutation$RemoveMapRelation) then,
+  ) = _CopyWithImpl$Mutation$RemoveMapRelation;
+
+  factory CopyWith$Mutation$RemoveMapRelation.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$RemoveMapRelation;
+
+  TRes call({Mutation$RemoveMapRelation$removeMapRelation? removeMapRelation});
+  CopyWith$Mutation$RemoveMapRelation$removeMapRelation<TRes>
+  get removeMapRelation;
+}
+
+class _CopyWithImpl$Mutation$RemoveMapRelation<TRes>
+    implements CopyWith$Mutation$RemoveMapRelation<TRes> {
+  _CopyWithImpl$Mutation$RemoveMapRelation(this._instance, this._then);
+
+  final Mutation$RemoveMapRelation _instance;
+
+  final TRes Function(Mutation$RemoveMapRelation) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? removeMapRelation = _undefined}) => _then(
+    Mutation$RemoveMapRelation(
+      removeMapRelation:
+          removeMapRelation == _undefined || removeMapRelation == null
+          ? _instance.removeMapRelation
+          : (removeMapRelation as Mutation$RemoveMapRelation$removeMapRelation),
+    ),
+  );
+
+  CopyWith$Mutation$RemoveMapRelation$removeMapRelation<TRes>
+  get removeMapRelation {
+    final local$removeMapRelation = _instance.removeMapRelation;
+    return CopyWith$Mutation$RemoveMapRelation$removeMapRelation(
+      local$removeMapRelation,
+      (e) => call(removeMapRelation: e),
+    );
+  }
+}
+
+class _CopyWithStubImpl$Mutation$RemoveMapRelation<TRes>
+    implements CopyWith$Mutation$RemoveMapRelation<TRes> {
+  _CopyWithStubImpl$Mutation$RemoveMapRelation(this._res);
+
+  TRes _res;
+
+  call({Mutation$RemoveMapRelation$removeMapRelation? removeMapRelation}) =>
+      _res;
+
+  CopyWith$Mutation$RemoveMapRelation$removeMapRelation<TRes>
+  get removeMapRelation =>
+      CopyWith$Mutation$RemoveMapRelation$removeMapRelation.stub(_res);
+}
+
+const documentNodeMutationRemoveMapRelation = DocumentNode(
+  definitions: [
+    OperationDefinitionNode(
+      type: OperationType.mutation,
+      name: NameNode(value: 'RemoveMapRelation'),
+      variableDefinitions: [
+        VariableDefinitionNode(
+          variable: VariableNode(name: NameNode(value: 'input')),
+          type: NamedTypeNode(
+            name: NameNode(value: 'RemoveMapRelationInput'),
+            isNonNull: true,
+          ),
+          defaultValue: DefaultValueNode(value: null),
+          directives: [],
+        ),
+      ],
+      directives: [],
+      selectionSet: SelectionSetNode(
+        selections: [
+          FieldNode(
+            name: NameNode(value: 'removeMapRelation'),
+            alias: null,
+            arguments: [
+              ArgumentNode(
+                name: NameNode(value: 'input'),
+                value: VariableNode(name: NameNode(value: 'input')),
+              ),
+            ],
+            directives: [],
+            selectionSet: SelectionSetNode(
+              selections: [
+                FieldNode(
+                  name: NameNode(value: 'success'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: null,
+                ),
+                FieldNode(
+                  name: NameNode(value: 'userErrors'),
+                  alias: null,
+                  arguments: [],
+                  directives: [],
+                  selectionSet: SelectionSetNode(
+                    selections: [
+                      FieldNode(
+                        name: NameNode(value: 'code'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'message'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                      FieldNode(
+                        name: NameNode(value: 'field'),
+                        alias: null,
+                        arguments: [],
+                        directives: [],
+                        selectionSet: null,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+);
+
+class Mutation$RemoveMapRelation$removeMapRelation {
+  Mutation$RemoveMapRelation$removeMapRelation({
+    required this.success,
+    required this.userErrors,
+  });
+
+  factory Mutation$RemoveMapRelation$removeMapRelation.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$success = json['success'];
+    final l$userErrors = json['userErrors'];
+    return Mutation$RemoveMapRelation$removeMapRelation(
+      success: (l$success as bool),
+      userErrors: (l$userErrors as List<dynamic>)
+          .map(
+            (e) =>
+                Mutation$RemoveMapRelation$removeMapRelation$userErrors.fromJson(
+                  (e as Map<String, dynamic>),
+                ),
+          )
+          .toList(),
+    );
+  }
+
+  final bool success;
+
+  final List<Mutation$RemoveMapRelation$removeMapRelation$userErrors>
+  userErrors;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$success = success;
+    _resultData['success'] = l$success;
+    final l$userErrors = userErrors;
+    _resultData['userErrors'] = l$userErrors.map((e) => e.toJson()).toList();
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$success = success;
+    final l$userErrors = userErrors;
+    return Object.hashAll([
+      l$success,
+      Object.hashAll(l$userErrors.map((v) => v)),
+    ]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$RemoveMapRelation$removeMapRelation ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$success = success;
+    final lOther$success = other.success;
+    if (l$success != lOther$success) {
+      return false;
+    }
+    final l$userErrors = userErrors;
+    final lOther$userErrors = other.userErrors;
+    if (l$userErrors.length != lOther$userErrors.length) {
+      return false;
+    }
+    for (int i = 0; i < l$userErrors.length; i++) {
+      final l$userErrors$entry = l$userErrors[i];
+      final lOther$userErrors$entry = lOther$userErrors[i];
+      if (l$userErrors$entry != lOther$userErrors$entry) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$RemoveMapRelation$removeMapRelation
+    on Mutation$RemoveMapRelation$removeMapRelation {
+  CopyWith$Mutation$RemoveMapRelation$removeMapRelation<
+    Mutation$RemoveMapRelation$removeMapRelation
+  >
+  get copyWith =>
+      CopyWith$Mutation$RemoveMapRelation$removeMapRelation(this, (i) => i);
+}
+
+abstract class CopyWith$Mutation$RemoveMapRelation$removeMapRelation<TRes> {
+  factory CopyWith$Mutation$RemoveMapRelation$removeMapRelation(
+    Mutation$RemoveMapRelation$removeMapRelation instance,
+    TRes Function(Mutation$RemoveMapRelation$removeMapRelation) then,
+  ) = _CopyWithImpl$Mutation$RemoveMapRelation$removeMapRelation;
+
+  factory CopyWith$Mutation$RemoveMapRelation$removeMapRelation.stub(TRes res) =
+      _CopyWithStubImpl$Mutation$RemoveMapRelation$removeMapRelation;
+
+  TRes call({
+    bool? success,
+    List<Mutation$RemoveMapRelation$removeMapRelation$userErrors>? userErrors,
+  });
+  TRes userErrors(
+    Iterable<Mutation$RemoveMapRelation$removeMapRelation$userErrors> Function(
+      Iterable<
+        CopyWith$Mutation$RemoveMapRelation$removeMapRelation$userErrors<
+          Mutation$RemoveMapRelation$removeMapRelation$userErrors
+        >
+      >,
+    )
+    _fn,
+  );
+}
+
+class _CopyWithImpl$Mutation$RemoveMapRelation$removeMapRelation<TRes>
+    implements CopyWith$Mutation$RemoveMapRelation$removeMapRelation<TRes> {
+  _CopyWithImpl$Mutation$RemoveMapRelation$removeMapRelation(
+    this._instance,
+    this._then,
+  );
+
+  final Mutation$RemoveMapRelation$removeMapRelation _instance;
+
+  final TRes Function(Mutation$RemoveMapRelation$removeMapRelation) _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({Object? success = _undefined, Object? userErrors = _undefined}) =>
+      _then(
+        Mutation$RemoveMapRelation$removeMapRelation(
+          success: success == _undefined || success == null
+              ? _instance.success
+              : (success as bool),
+          userErrors: userErrors == _undefined || userErrors == null
+              ? _instance.userErrors
+              : (userErrors
+                    as List<
+                      Mutation$RemoveMapRelation$removeMapRelation$userErrors
+                    >),
+        ),
+      );
+
+  TRes userErrors(
+    Iterable<Mutation$RemoveMapRelation$removeMapRelation$userErrors> Function(
+      Iterable<
+        CopyWith$Mutation$RemoveMapRelation$removeMapRelation$userErrors<
+          Mutation$RemoveMapRelation$removeMapRelation$userErrors
+        >
+      >,
+    )
+    _fn,
+  ) => call(
+    userErrors: _fn(
+      _instance.userErrors.map(
+        (e) => CopyWith$Mutation$RemoveMapRelation$removeMapRelation$userErrors(
+          e,
+          (i) => i,
+        ),
+      ),
+    ).toList(),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$RemoveMapRelation$removeMapRelation<TRes>
+    implements CopyWith$Mutation$RemoveMapRelation$removeMapRelation<TRes> {
+  _CopyWithStubImpl$Mutation$RemoveMapRelation$removeMapRelation(this._res);
+
+  TRes _res;
+
+  call({
+    bool? success,
+    List<Mutation$RemoveMapRelation$removeMapRelation$userErrors>? userErrors,
+  }) => _res;
+
+  userErrors(_fn) => _res;
+}
+
+class Mutation$RemoveMapRelation$removeMapRelation$userErrors {
+  Mutation$RemoveMapRelation$removeMapRelation$userErrors({
+    required this.code,
+    required this.message,
+    this.field,
+  });
+
+  factory Mutation$RemoveMapRelation$removeMapRelation$userErrors.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final l$code = json['code'];
+    final l$message = json['message'];
+    final l$field = json['field'];
+    return Mutation$RemoveMapRelation$removeMapRelation$userErrors(
+      code: (l$code as String),
+      message: (l$message as String),
+      field: (l$field as String?),
+    );
+  }
+
+  final String code;
+
+  final String message;
+
+  final String? field;
+
+  Map<String, dynamic> toJson() {
+    final _resultData = <String, dynamic>{};
+    final l$code = code;
+    _resultData['code'] = l$code;
+    final l$message = message;
+    _resultData['message'] = l$message;
+    final l$field = field;
+    _resultData['field'] = l$field;
+    return _resultData;
+  }
+
+  @override
+  int get hashCode {
+    final l$code = code;
+    final l$message = message;
+    final l$field = field;
+    return Object.hashAll([l$code, l$message, l$field]);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Mutation$RemoveMapRelation$removeMapRelation$userErrors ||
+        runtimeType != other.runtimeType) {
+      return false;
+    }
+    final l$code = code;
+    final lOther$code = other.code;
+    if (l$code != lOther$code) {
+      return false;
+    }
+    final l$message = message;
+    final lOther$message = other.message;
+    if (l$message != lOther$message) {
+      return false;
+    }
+    final l$field = field;
+    final lOther$field = other.field;
+    if (l$field != lOther$field) {
+      return false;
+    }
+    return true;
+  }
+}
+
+extension UtilityExtension$Mutation$RemoveMapRelation$removeMapRelation$userErrors
+    on Mutation$RemoveMapRelation$removeMapRelation$userErrors {
+  CopyWith$Mutation$RemoveMapRelation$removeMapRelation$userErrors<
+    Mutation$RemoveMapRelation$removeMapRelation$userErrors
+  >
+  get copyWith =>
+      CopyWith$Mutation$RemoveMapRelation$removeMapRelation$userErrors(
+        this,
+        (i) => i,
+      );
+}
+
+abstract class CopyWith$Mutation$RemoveMapRelation$removeMapRelation$userErrors<
+  TRes
+> {
+  factory CopyWith$Mutation$RemoveMapRelation$removeMapRelation$userErrors(
+    Mutation$RemoveMapRelation$removeMapRelation$userErrors instance,
+    TRes Function(Mutation$RemoveMapRelation$removeMapRelation$userErrors) then,
+  ) = _CopyWithImpl$Mutation$RemoveMapRelation$removeMapRelation$userErrors;
+
+  factory CopyWith$Mutation$RemoveMapRelation$removeMapRelation$userErrors.stub(
+    TRes res,
+  ) = _CopyWithStubImpl$Mutation$RemoveMapRelation$removeMapRelation$userErrors;
+
+  TRes call({String? code, String? message, String? field});
+}
+
+class _CopyWithImpl$Mutation$RemoveMapRelation$removeMapRelation$userErrors<
+  TRes
+>
+    implements
+        CopyWith$Mutation$RemoveMapRelation$removeMapRelation$userErrors<TRes> {
+  _CopyWithImpl$Mutation$RemoveMapRelation$removeMapRelation$userErrors(
+    this._instance,
+    this._then,
+  );
+
+  final Mutation$RemoveMapRelation$removeMapRelation$userErrors _instance;
+
+  final TRes Function(Mutation$RemoveMapRelation$removeMapRelation$userErrors)
+  _then;
+
+  static const _undefined = <dynamic, dynamic>{};
+
+  TRes call({
+    Object? code = _undefined,
+    Object? message = _undefined,
+    Object? field = _undefined,
+  }) => _then(
+    Mutation$RemoveMapRelation$removeMapRelation$userErrors(
+      code: code == _undefined || code == null
+          ? _instance.code
+          : (code as String),
+      message: message == _undefined || message == null
+          ? _instance.message
+          : (message as String),
+      field: field == _undefined ? _instance.field : (field as String?),
+    ),
+  );
+}
+
+class _CopyWithStubImpl$Mutation$RemoveMapRelation$removeMapRelation$userErrors<
+  TRes
+>
+    implements
+        CopyWith$Mutation$RemoveMapRelation$removeMapRelation$userErrors<TRes> {
+  _CopyWithStubImpl$Mutation$RemoveMapRelation$removeMapRelation$userErrors(
+    this._res,
+  );
+
+  TRes _res;
+
+  call({String? code, String? message, String? field}) => _res;
 }
 
 class Variables$Mutation$RecordVisits {

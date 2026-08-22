@@ -78,8 +78,39 @@ class _NationalMapCanvasState extends State<NationalMapCanvas>
   /// 두 번의 탭이 이 안에 들어오면 더블탭이다.
   static const Duration _doubleTapWindow = Duration(milliseconds: 300);
 
+  /// 지금 화면에 닿아 있는 손가락 수. `Listener`가 직접 센다.
+  int _livePointers = 0;
+
+  /// 이번 터치에서 두 손가락 이상이 닿았는지.
+  ///
+  /// **모든 손가락을 뗄 때까지 유지한다.** 핀치 도중 하나를 먼저 떼면 남은
+  /// 하나가 새 상호작용을 만드는데, 그것까지 탭이 아니어야 한다.
+  bool _multiTouch = false;
+
+  void _onPointerDown(PointerDownEvent e) {
+    _livePointers++;
+    if (_livePointers > 1) {
+      _multiTouch = true;
+      // 두 번째 손가락이 닿은 순간, 이미 진행 중이던 단일 터치도 탭이 아니다.
+      _pressAt = null;
+    }
+  }
+
+  void _onPointerUp(PointerEvent e) {
+    if (_livePointers > 0) _livePointers--;
+    if (_livePointers > 0) return;
+
+    // 마지막 손가락이 떨어졌다. 멀티터치였다면 잠시 탭을 막는다 — 두 손가락을
+    // 정확히 동시에 떼기는 어렵고, 늦게 떨어진 쪽이 새 탭으로 잡힌다.
+    if (_multiTouch) {
+      _multiTouch = false;
+      _blockTapUntil = DateTime.now().add(_afterPinchGuard);
+    }
+  }
+
   void _onStart(ScaleStartDetails d) {
-    _pressAt = d.localFocalPoint;
+    // 이미 두 손가락이 닿아 있으면 시작부터 탭 후보가 아니다.
+    _pressAt = _multiTouch || _livePointers > 1 ? null : d.localFocalPoint;
     _moved = false;
     _maxPointers = d.pointerCount;
     _scaleChanged = false;
@@ -105,8 +136,14 @@ class _NationalMapCanvasState extends State<NationalMapCanvas>
     final Offset? at = _pressAt;
     _pressAt = null;
 
-    // 끌기·핀치·확대였으면 탭이 아니다.
-    if (_moved || _maxPointers > 1 || _scaleChanged || at == null) {
+    // 끌기·핀치·확대였으면 탭이 아니다. `_multiTouch`는 Listener가 센 실제
+    // 손가락 수라, InteractiveViewer가 놓치는 시차 접촉까지 잡는다.
+    if (_moved ||
+        _maxPointers > 1 ||
+        _multiTouch ||
+        _livePointers > 0 ||
+        _scaleChanged ||
+        at == null) {
       // **핀치 직후를 잠시 막는다.** 두 손가락을 동시에 떼기 어려워, 남은
       // 손가락이 곧바로 새 상호작용을 만들고 그것이 탭으로 잡힌다 — 실기기에서
       // 핀치할 때마다 상세가 열리던 원인이다.
@@ -245,7 +282,17 @@ class _NationalMapCanvasState extends State<NationalMapCanvas>
         // 팬이 죽고, 안쪽에 `onDoubleTap`을 두면 단일 탭과 팬이 함께 죽는다
         // (behavior 3종을 다 재봤다). 대신 InteractiveViewer가 주는
         // 상호작용 콜백에서 탭·더블탭을 직접 판별한다.
-        return InteractiveViewer(
+        // **Listener로 실제 손가락 수를 센다.** InteractiveViewer의 콜백은
+        // 제스처가 인식된 뒤에만 오고 `pointerCount`도 그 시점의 값이라, 두
+        // 손가락이 미세하게 시차를 두고 닿으면 첫 손가락만으로 상호작용이
+        // 시작·종료돼 탭으로 잡힌다 — 실기기에서 확대하려다 상세가 열리던
+        // 원인이다. Listener는 제스처 경쟁에 끼지 않아 팬·줌을 방해하지 않는다.
+        return Listener(
+          behavior: HitTestBehavior.deferToChild,
+          onPointerDown: _onPointerDown,
+          onPointerUp: _onPointerUp,
+          onPointerCancel: _onPointerUp,
+          child: InteractiveViewer(
           transformationController: _controller,
           minScale: 1,
           maxScale: 8,
@@ -267,6 +314,7 @@ class _NationalMapCanvasState extends State<NationalMapCanvas>
               padding: _padding,
               cover: widget.cover,
             ),
+          ),
           ),
         );
       },

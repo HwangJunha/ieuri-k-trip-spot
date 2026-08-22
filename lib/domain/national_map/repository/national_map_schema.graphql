@@ -29,6 +29,10 @@ extend type Query {
   # 공유 링크 조회. 인증 없이 열린다.
   # 오류: SHARE_LINK_NOT_FOUND(없거나 폐기됨) · SHARE_LINK_BLOCKED(차단).
   sharedMap(token: String!): SharedMap!
+
+  # 내 관계 목록(관계 지도). 겹침은 **조회 시점에 재계산**된다.
+  # 정렬은 맺은 시각 내림차순 고정. 인증 필수(UNAUTHENTICATED).
+  mapRelations(first: Int, after: String): MapRelationConnection!
 }
 
 extend type Mutation {
@@ -43,6 +47,14 @@ extend type Mutation {
 
   # 공유 링크 폐기. 발급 때 받은 shareUrl을 그대로 넣는다.
   revokeMapShareLink(input: RevokeMapShareLinkInput!): RevokeMapShareLinkPayload!
+
+  # 공유 링크로 관계를 맺는다. **양쪽 목록에 서로 추가된다.** 멱등이다.
+  # 오류: SHARE_LINK_NOT_FOUND · SHARE_LINK_BLOCKED · CANNOT_RELATE_SELF.
+  createMapRelation(input: CreateMapRelationInput!): CreateMapRelationPayload!
+
+  # 관계를 **내 목록에서만** 지운다. 상대 목록의 나는 남는다.
+  # 없는 관계의 삭제는 오류가 아니다.
+  removeMapRelation(input: RemoveMapRelationInput!): RemoveMapRelationPayload!
 }
 
 # 전국 지도의 표시 칸 1개. 252개 시군구가 161칸이 된다.
@@ -158,5 +170,50 @@ type SharedMap {
   visitedCellIds: [ID!]!
   # **비인증이면 null이다** — 빈 배열(겹침 없음)과 구분된다.
   overlappingCellIds: [ID!]
+  # 겹치는 칸의 이름까지 담은 목록. id만으로는 어디인지 말할 수 없어 함께 받는다.
+  overlappingCells: [MapCell!]
   visitedCount: Int!
+}
+
+# 관계 지도의 상대 한 명.
+type MapRelation {
+  memberId: ID!
+  # 닉네임만. 다른 개인정보는 없다.
+  nickname: String!
+  # **조회 시점에 재계산된 값이다.** 등록 시점의 스냅샷이 아니다.
+  overlappingCount: Int!
+  overlappingCellIds: [ID!]!
+  # 상대의 총 방문 칸 수. 겹침 비율을 보여줄 때 쓴다.
+  theirVisitedCount: Int!
+  createdAt: String!
+}
+
+type MapRelationEdge {
+  node: MapRelation!
+  cursor: String!
+}
+
+type MapRelationConnection {
+  edges: [MapRelationEdge!]!
+  pageInfo: PageInfo!
+}
+
+input CreateMapRelationInput {
+  # 공유받은 링크를 그대로 넣는다. 토큰 추출은 서버가 한다.
+  shareUrl: String!
+}
+
+type CreateMapRelationPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  counterpartMemberId: ID
+}
+
+input RemoveMapRelationInput {
+  memberId: ID!
+}
+
+type RemoveMapRelationPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
 }

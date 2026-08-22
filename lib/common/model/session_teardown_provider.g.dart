@@ -20,6 +20,11 @@ part of 'session_teardown_provider.dart';
 /// 등록을 이 provider 안에서 하는 이유는 **부를 자리가 마땅치 않아서**다. alarm은
 /// 화면 게이트가 있어 거기서 걸지만, 이쪽은 화면이 없다. `keepAlive`라 한 번만
 /// 만들어지므로 중복 등록되지 않는다.
+///
+/// **common이 domain을 import하는 것은 여기서 의도한 것이다**(CLAUDE.md §4).
+/// 지울 대상이 두 기능(spot의 검색 이력, community의 초안)에 걸쳐 있어 어느 한쪽에
+/// 둘 수 없고, 저장소를 common으로 끌어올리면 그 기능의 데이터가 자기 도메인을
+/// 떠난다. 의존은 이 방향으로만 흐르고 역방향은 없다.
 
 @ProviderFor(sessionTeardown)
 const sessionTeardownProvider = SessionTeardownProvider._();
@@ -36,6 +41,11 @@ const sessionTeardownProvider = SessionTeardownProvider._();
 /// 등록을 이 provider 안에서 하는 이유는 **부를 자리가 마땅치 않아서**다. alarm은
 /// 화면 게이트가 있어 거기서 걸지만, 이쪽은 화면이 없다. `keepAlive`라 한 번만
 /// 만들어지므로 중복 등록되지 않는다.
+///
+/// **common이 domain을 import하는 것은 여기서 의도한 것이다**(CLAUDE.md §4).
+/// 지울 대상이 두 기능(spot의 검색 이력, community의 초안)에 걸쳐 있어 어느 한쪽에
+/// 둘 수 없고, 저장소를 common으로 끌어올리면 그 기능의 데이터가 자기 도메인을
+/// 떠난다. 의존은 이 방향으로만 흐르고 역방향은 없다.
 
 final class SessionTeardownProvider
     extends
@@ -53,6 +63,11 @@ final class SessionTeardownProvider
   /// 등록을 이 provider 안에서 하는 이유는 **부를 자리가 마땅치 않아서**다. alarm은
   /// 화면 게이트가 있어 거기서 걸지만, 이쪽은 화면이 없다. `keepAlive`라 한 번만
   /// 만들어지므로 중복 등록되지 않는다.
+  ///
+  /// **common이 domain을 import하는 것은 여기서 의도한 것이다**(CLAUDE.md §4).
+  /// 지울 대상이 두 기능(spot의 검색 이력, community의 초안)에 걸쳐 있어 어느 한쪽에
+  /// 둘 수 없고, 저장소를 common으로 끌어올리면 그 기능의 데이터가 자기 도메인을
+  /// 떠난다. 의존은 이 방향으로만 흐르고 역방향은 없다.
   const SessionTeardownProvider._()
     : super(
         from: null,

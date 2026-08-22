@@ -47,6 +47,44 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- 공유 지도 App Links (SPEC-0030). 서버가 주는
+                 `https://www.ieuri.co.kr/tour/korea-map/<token>`을 앱이 받는다.
+
+                 `autoVerify`가 있어야 브라우저를 거치지 않고 앱이 바로 열리며,
+                 그러려면 도메인에 `/.well-known/assetlinks.json`이 있어야 한다
+                 (웹 몫, problem/SPEC-0030-WEB-share-link-app-open.md).
+
+                 **다만 이것만으로는 부족하다.** 카카오톡·인스타그램은 링크를
+                 인앱 브라우저(WebView)로 여는데, App Links 가로채기는 WebView
+                 안에서 일어나지 않는다. 그래서 중간 페이지의 「앱에서 열기」
+                 버튼을 사용자가 눌러야 이 필터가 걸린다(§중간 페이지). -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https"
+                      android:host="www.ieuri.co.kr"
+                      android:pathPrefix="/tour/korea-map/" />
+                <data android:scheme="https"
+                      android:host="ieuri.co.kr"
+                      android:pathPrefix="/tour/korea-map/" />
+            </intent-filter>
+            <!-- 앱 자체의 스킴(SPEC-0030). 회사명(ieuri)이 아니라 **앱 이름**을
+                 쓴다 — applicationId `kr.ieuri.ktripspot`의 마지막 조각과 같다.
+
+                 경로를 웹과 똑같이 두어 GoRouter 라우트 하나가 둘 다 받는다:
+                   웹   https://www.ieuri.co.kr/tour/korea-map/<token>
+                   스킴 ktripspot://tour/korea-map/<token>
+
+                 **폴백이다.** 외부 링크는 App Links가 맡고, 이것은 인앱
+                 브라우저에서 App Links 버튼조차 막히는 경우를 위한 대비다.
+                 `autoVerify`를 붙이지 않는다 — 커스텀 스킴은 검증 대상이 아니다. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="ktripspot" android:host="tour" />
+            </intent-filter>
         </activity>
         <!-- Kakao login redirect (spec §7): the SDK returns to this activity via
              the kakao{NATIVE_APP_KEY} scheme after the KakaoTalk/account flow. -->

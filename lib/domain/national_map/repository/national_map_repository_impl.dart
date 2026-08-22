@@ -7,6 +7,7 @@ import '../model/cell_detail.dart';
 import '../model/cell_geometry.dart';
 import '../model/cell_image.dart';
 import '../model/map_cell.dart';
+import '../model/map_relation.dart';
 import '../model/national_map_failure.dart';
 import '../model/shared_map.dart';
 import 'national_map_operations.graphql.dart';
@@ -216,6 +217,65 @@ class NationalMapRepositoryImpl implements NationalMapRepository {
         );
 
   /// 뮤테이션 도메인 실패 검사. 코드만 로깅하고(메시지는 PII 가능) 실패를 던진다.
+  @override
+  Future<MapRelationPage> fetchRelations({int? first, String? after}) async {
+    final Map<String, dynamic> data = await _query(
+      documentNodeQueryMapRelations,
+      Variables$Query$MapRelations(first: first, after: after).toJson(),
+      'mapRelations',
+    );
+    final Query$MapRelations$mapRelations c = Query$MapRelations.fromJson(
+      data,
+    ).mapRelations;
+
+    return MapRelationPage(
+      relations: <MapRelation>[
+        for (final Query$MapRelations$mapRelations$edges e in c.edges)
+          MapRelation(
+            memberId: e.node.memberId,
+            nickname: e.node.nickname,
+            overlappingCount: e.node.overlappingCount,
+            overlappingCellIds: List<String>.unmodifiable(
+              e.node.overlappingCellIds,
+            ),
+            theirVisitedCount: e.node.theirVisitedCount,
+          ),
+      ],
+      hasMore: c.pageInfo.hasNextPage,
+      endCursor: c.pageInfo.endCursor,
+    );
+  }
+
+  @override
+  Future<void> createRelation(String shareUrl) async {
+    final Map<String, dynamic> data = await _mutate(
+      documentNodeMutationCreateMapRelation,
+      Variables$Mutation$CreateMapRelation(
+        input: Input$CreateMapRelationInput(shareUrl: shareUrl),
+      ).toJson(),
+      'createMapRelation',
+    );
+    final Mutation$CreateMapRelation$createMapRelation payload =
+        Mutation$CreateMapRelation.fromJson(data).createMapRelation;
+
+    _check('createMapRelation', payload.success, payload.userErrors.length);
+  }
+
+  @override
+  Future<void> removeRelation(String memberId) async {
+    final Map<String, dynamic> data = await _mutate(
+      documentNodeMutationRemoveMapRelation,
+      Variables$Mutation$RemoveMapRelation(
+        input: Input$RemoveMapRelationInput(memberId: memberId),
+      ).toJson(),
+      'removeMapRelation',
+    );
+    final Mutation$RemoveMapRelation$removeMapRelation payload =
+        Mutation$RemoveMapRelation.fromJson(data).removeMapRelation;
+
+    _check('removeMapRelation', payload.success, payload.userErrors.length);
+  }
+
   void _check(String operation, bool success, int userErrorCount) {
     if (userErrorCount > 0 || !success) {
       GraphqlDebugLog.request(operation, const <String, dynamic>{});

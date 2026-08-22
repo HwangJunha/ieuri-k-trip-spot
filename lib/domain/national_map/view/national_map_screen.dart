@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../common/widget/floating_bottom_nav_scaffold.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -16,6 +17,7 @@ import '../provider/current_location_provider.dart';
 import '../provider/national_map_providers.dart';
 import '../provider/share_providers.dart';
 import '../provider/visit_controller.dart';
+import 'relation_map_screen.dart';
 
 /// 전국 지도 — 161칸을 채워나가는 화면(R20~R22·R29·R33~R36).
 ///
@@ -126,6 +128,8 @@ class _BodyState extends ConsumerState<_Body> {
             progress: nationwide,
             onPhotoSync: () => showPhotoSyncSheet(context),
             onShare: () => _share(context),
+            onRelations: () =>
+                context.pushNamed(RelationMapScreen.routeName),
             l10n: l10n,
           ),
         ),
@@ -180,12 +184,16 @@ class _TopBar extends ConsumerWidget {
     required this.progress,
     required this.onPhotoSync,
     required this.onShare,
+    required this.onRelations,
     required this.l10n,
   });
 
   final ProvinceProgress progress;
   final VoidCallback onPhotoSync;
   final VoidCallback onShare;
+
+  /// 관계 지도로 간다.
+  final VoidCallback onRelations;
   final AppLocalizations l10n;
 
   @override
@@ -216,6 +224,13 @@ class _TopBar extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 12),
+            // 관계 지도. 공유와 나란히 둔다 — 링크를 뿌리는 것과 그 결과를 보는
+            // 것이 한 쌍이라 서로 옆에 있어야 흐름이 읽힌다.
+            IconButton(
+              icon: const Icon(Icons.group_outlined),
+              tooltip: l10n.relationMapTitle,
+              onPressed: onRelations,
+            ),
             // 공유는 상단 우측이 표준이다(iOS 내비게이션 바, Android 앱바).
             // 하단 FAB에 두면 "이 화면의 주 동작"으로 읽혀 과하다.
             _ShareButton(onShare: onShare, l10n: l10n),

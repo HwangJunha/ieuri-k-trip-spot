@@ -3,6 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/localization/app_language.dart';
 import 'package:ieuri_k_trip_spot/common/localization/locale_controller.dart';
 import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/model/auth_session.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/model/auth_state.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/model/me.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/provider/auth_controller.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/repository/recent_searches_store.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/recent_searches_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,7 +24,13 @@ void main() {
 
   ProviderContainer makeContainer() {
     final container = ProviderContainer(
-      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        // 최근 검색어는 로그아웃 시 비워지도록 인증을 watch한다
+        // (`SessionScope`) — 이전 사용자의 검색어가 남으면 안 된다.
+        // 그래서 테스트도 로그인 상태를 세워 줘야 한다.
+        authControllerProvider.overrideWith(_AuthedController.new),
+      ],
     );
     addTearDown(container.dispose);
     return container;
@@ -42,9 +52,19 @@ void main() {
 
     // 새 컨테이너 = 앱 재시작. 값은 provider가 아니라 SharedPreferences가 지킨다.
     final second = ProviderContainer(
-      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        // 최근 검색어는 로그아웃 시 비워지도록 인증을 watch한다
+        // (`SessionScope`) — 이전 사용자의 검색어가 남으면 안 된다.
+        // 그래서 테스트도 로그인 상태를 세워 줘야 한다.
+        authControllerProvider.overrideWith(_AuthedController.new),
+      ],
     );
     addTearDown(second.dispose);
+
+    // 인증이 확정된 뒤에 읽는다 — loading 동안에는 미로그인으로 보여
+    // 최근 검색어가 빈 목록으로 한 번 확정된다(`SessionScope`).
+    await second.read(authControllerProvider.future);
 
     expect(second.read(recentSearchesProvider), <String>['불국사']);
   });
@@ -161,4 +181,17 @@ void main() {
       expect(prefs.getStringList('recent_searches_ja'), <String>['金閣寺']);
     });
   });
+}
+
+/// 로그인 상태만 흉내 내는 최소 컨트롤러. 세션 저장소를 세우지 않는다 —
+/// 여기서 검증하는 것은 인증 흐름이 아니라 검색어 저장이다.
+class _AuthedController extends AuthController {
+  @override
+  Future<AuthState> build() async => AuthState(
+    session: AuthSession(
+      accessToken: 'a',
+      refreshToken: 'r',
+      user: const Me(id: 'me', nickname: '나', email: 'me@example.com'),
+    ),
+  );
 }

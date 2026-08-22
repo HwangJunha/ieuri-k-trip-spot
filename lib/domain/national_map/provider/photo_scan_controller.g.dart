@@ -139,7 +139,7 @@ final class PhotoScanControllerProvider
 }
 
 String _$photoScanControllerHash() =>
-    r'25fe47f19538d08a9d362e9e38fab14151cd4d32';
+    r'0b63040a7a79d07d30f699a0245b03de20aeadd8';
 
 /// 사진첩을 훑어 방문한 시군구를 찾는다(R25~R30).
 ///

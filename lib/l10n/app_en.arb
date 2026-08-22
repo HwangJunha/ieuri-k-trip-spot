@@ -54,7 +54,7 @@
   "navNationalMap": "Korea Map",
   "navLibrary": "Library",
   "permissionPhotosRationaleTitle": "Fill your map from photos?",
-  "permissionPhotosRationaleBody": "We read the location saved in your photos to find where you've been. Your photos never leave your device, and coordinates are used only to identify regions \u2014 they're never stored.",
+  "permissionPhotosRationaleBody": "We read the location saved in your photos to find where you've been. Your photos never leave your device, and coordinates are used only to identify regions — they're never stored.",
   "permissionPhotosBlockedMessage": "Photo access is off, so we can't fill your map from photos. You can allow it in Settings.",
   "nationalMapNationwide": "Nationwide",
   "nationalMapCellCount": "{visited} of {total}",
@@ -78,7 +78,7 @@
   "nationalMapShare": "Share map",
   "nationalMapShareFailed": "Couldn't create a share link.",
   "sharedMapVisitedCount": "{count} regions visited",
-  "sharedMapOverlapCount": "{count} in common with you",
+  "sharedMapOverlapCount": "{count} in common",
   "sharedMapNoOverlap": "Nothing in common yet.",
   "sharedMapSignInToCompare": "Sign in to see what you have in common.",
   "sharedMapGone": "This map is no longer available.",
@@ -1212,7 +1212,6 @@
   "emailVerificationChangeAddressBody": "We'll send a new code to this address. Your previous code stops working.",
   "emailVerificationAddressChanged": "New code sent to the updated address.",
   "emailVerificationResendCountdown": "Resend available in {seconds}s",
-  "commonCancel": "Cancel",
   "emailVerificationNeedsResend": "Your previous code is no longer valid. Send a new code to continue.",
   "errorMemberAlreadyRegistered": "This email is already registered. Try signing in instead.",
   "errorInvalidInput": "Some of the details you entered aren't valid. Check them and try again.",
@@ -1310,5 +1309,33 @@
   "alarmSettingsSaveFailed": "Couldn't save that. Please try again.",
   "@alarmSettingsSaveFailed": {
     "description": "Shown when toggling a notification category fails."
-  }
+  },
+  "relationConnect": "Add to my map",
+  "relationConnected": "Added",
+  "relationConnectFailed": "Couldn't add. Please try again.",
+  "relationSignInToConnect": "Sign in to add this person to your map.",
+  "relationMapTitle": "Trips we share",
+  "relationMapCount": "{count} people",
+  "@relationMapCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relationMapEmpty": "No one yet. Share your map and whoever opens it can add themselves.",
+  "relationMapMe": "Me",
+  "relationOverlapWith": "{count} in common",
+  "@relationOverlapWith": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relationRemove": "Remove",
+  "relationRemoved": "Removed from your map.",
+  "relationRemoveFailed": "Couldn't remove. Please try again.",
+  "relationMapHint": "The closer to the center, the more you have in common.",
+  "commonMore": "Show more"
 }

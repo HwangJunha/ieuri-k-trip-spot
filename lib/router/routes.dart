@@ -32,6 +32,8 @@ import '../domain/library/view/library_screen.dart';
 import '../domain/map/view/map_screen.dart';
 import '../domain/national_map/view/cell_detail_screen.dart';
 import '../domain/national_map/view/national_map_screen.dart';
+import '../domain/national_map/view/relation_detail_screen.dart';
+import '../domain/national_map/view/relation_map_screen.dart';
 import '../domain/national_map/view/shared_map_screen.dart';
 import '../domain/map/view/region_recommendation_screen.dart';
 import '../common/category/spot_category.dart';
@@ -384,6 +386,20 @@ List<RouteBase> buildRoutes() => <RouteBase>[
     name: SharedMapScreen.routeName,
     builder: (_, GoRouterState state) =>
         SharedMapScreen(token: state.pathParameters['token']!),
+  ),
+  // 관계 지도(SPEC-0030). 공유 링크로 맺은 사람들과의 겹침을 본다.
+  GoRoute(
+    path: '/relations',
+    name: RelationMapScreen.routeName,
+    builder: (_, _) => const RelationMapScreen(),
+  ),
+  // 관계 한 명의 겹침 지도(SPEC-0030). 목록이 이미 겹친 칸을 갖고 있어
+  // 서버를 다시 부르지 않는다 — 회원 id만 넘긴다.
+  GoRoute(
+    path: '/relations/:memberId',
+    name: RelationDetailScreen.routeName,
+    builder: (_, GoRouterState state) =>
+        RelationDetailScreen(memberId: state.pathParameters['memberId']!),
   ),
   // 지역 상세(SPEC-0030 R22). 셸 밖의 최상위 라우트라 하단 탭을 덮는다 —
   // 관광지 상세와 같은 성격이다. 칸 id만 넘긴다(§6).

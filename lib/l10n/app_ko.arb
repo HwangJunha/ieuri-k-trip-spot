@@ -245,8 +245,12 @@
   "@nationalMapCellCount": {
     "description": "전국 지도 - 방문 진척(예: 161칸 중 12칸)",
     "placeholders": {
-      "visited": { "type": "int" },
-      "total": { "type": "int" }
+      "visited": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "nationalMapEmptyHint": "사진으로 채우거나 지금 있는 곳을 등록해 보세요.",
@@ -287,7 +291,7 @@
   },
   "commonCancel": "취소",
   "@commonCancel": {
-    "description": "공통 - 취소 버튼"
+    "description": "다이얼로그 공용 취소"
   },
   "commonClose": "닫기",
   "@commonClose": {
@@ -305,14 +309,18 @@
   "@nationalMapRegisterBody": {
     "description": "현재 위치 등록 확인 다이얼로그 본문",
     "placeholders": {
-      "district": { "type": "String" }
+      "district": {
+        "type": "String"
+      }
     }
   },
   "nationalMapAlreadyVisited": "{cell}은(는) 이미 다녀온 곳이에요.",
   "@nationalMapAlreadyVisited": {
     "description": "이미 방문한 칸에서 등록을 시도했을 때",
     "placeholders": {
-      "cell": { "type": "String" }
+      "cell": {
+        "type": "String"
+      }
     }
   },
   "nationalMapOutsideKorea": "국내 지역만 등록할 수 있어요.",
@@ -335,14 +343,18 @@
   "@sharedMapVisitedCount": {
     "description": "공유 지도 - 상대가 방문한 칸 수",
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "sharedMapOverlapCount": "{count}곳이 겹쳐요",
   "@sharedMapOverlapCount": {
     "description": "공유 지도 - 나와 겹치는 칸 수",
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "sharedMapNoOverlap": "겹치는 곳이 없네요.",
@@ -385,22 +397,30 @@
   "@photoSyncProgress": {
     "description": "사진 동기화 진행률",
     "placeholders": {
-      "done": { "type": "int" },
-      "total": { "type": "int" }
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "photoSyncFoundSoFar": "지금까지 {count}곳을 찾았어요",
   "@photoSyncFoundSoFar": {
     "description": "스캔 중 찾은 지역 수",
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "photoSyncFound": "{count}곳을 찾았어요",
   "@photoSyncFound": {
     "description": "스캔 완료 후 찾은 지역 수",
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "photoSyncConfirmBody": "등록하면 지도가 채워집니다.",
@@ -2094,10 +2114,6 @@
       }
     }
   },
-  "commonCancel": "취소",
-  "@commonCancel": {
-    "description": "다이얼로그 공용 취소"
-  },
   "emailVerificationNeedsResend": "이전 인증 코드는 더 이상 사용할 수 없습니다. 새 코드를 받아 주세요.",
   "@emailVerificationNeedsResend": {
     "description": "핸들 없이 인증 화면에 도착한 경우의 안내"
@@ -2233,5 +2249,33 @@
   "alarmCategorySpotQaDescription": "내 질문에 달린 답변과 내 답변에 달린 답글",
   "alarmOsDisabledNotice": "기기 설정에서 이 앱의 알림이 꺼져 있어 알림이 오지 않습니다.",
   "alarmSettingsLoadFailed": "알림 설정을 불러오지 못했습니다.",
-  "alarmSettingsSaveFailed": "저장하지 못했습니다. 다시 시도해 주세요."
+  "alarmSettingsSaveFailed": "저장하지 못했습니다. 다시 시도해 주세요.",
+  "relationConnect": "내 지도에 등록",
+  "relationConnected": "등록됨",
+  "relationConnectFailed": "등록하지 못했어요. 다시 시도해 주세요.",
+  "relationSignInToConnect": "로그인하면 이 사람을 내 지도에 등록할 수 있어요.",
+  "relationMapTitle": "나와 겹친 여행",
+  "relationMapCount": "{count}명",
+  "@relationMapCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relationMapEmpty": "아직 아무도 없어요. 내 지도를 공유하면 열어 본 사람이 스스로 등록할 수 있어요.",
+  "relationMapMe": "나",
+  "relationOverlapWith": "{count}곳 겹침",
+  "@relationOverlapWith": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relationRemove": "빼기",
+  "relationRemoved": "내 지도에서 뺐어요.",
+  "relationRemoveFailed": "빼지 못했어요. 다시 시도해 주세요.",
+  "relationMapHint": "가운데에 가까울수록 겹치는 곳이 많아요.",
+  "commonMore": "더 보기"
 }

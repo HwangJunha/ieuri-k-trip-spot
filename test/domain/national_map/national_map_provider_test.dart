@@ -3,18 +3,25 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/location/coordinates.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_service.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/model/auth_session.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/model/auth_state.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/model/me.dart';
+import 'package:ieuri_k_trip_spot/domain/auth/provider/auth_controller.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/cell_detail.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/cell_geometry.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/current_location_check.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/district_boundary.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/district_resolver.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/map_cell.dart';
+import 'package:ieuri_k_trip_spot/domain/national_map/model/map_relation.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/photo_scan_progress.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/shared_map.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/provider/current_location_provider.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/provider/district_resolver_provider.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/provider/national_map_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/provider/photo_scan_controller.dart';
+import 'package:ieuri_k_trip_spot/domain/national_map/provider/photo_scan_checkpoint_provider.dart';
+import 'package:ieuri_k_trip_spot/domain/national_map/repository/photo_scan_checkpoint_store.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/provider/share_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/provider/visit_controller.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/repository/national_map_repository.dart';
@@ -145,6 +152,25 @@ class _FakeRepository implements NationalMapRepository {
     visitedCellIds: const <String>['1'],
     visitedCount: 1,
   );
+
+  /// 관계 목록. 기본은 비어 있고 테스트가 필요할 때 채운다.
+  List<MapRelation> relations = <MapRelation>[];
+  String? lastCreatedShareUrl;
+  String? lastRemovedMemberId;
+
+  @override
+  Future<MapRelationPage> fetchRelations({int? first, String? after}) async =>
+      MapRelationPage(relations: relations, hasMore: false);
+
+  @override
+  Future<void> createRelation(String shareUrl) async {
+    lastCreatedShareUrl = shareUrl;
+  }
+
+  @override
+  Future<void> removeRelation(String memberId) async {
+    lastRemovedMemberId = memberId;
+  }
 }
 
 class _FakeLibrary implements PhotoLibraryService {
@@ -181,6 +207,51 @@ class _FakeLibrary implements PhotoLibraryService {
         : start + count;
     return coordinates.sublist(start, end);
   }
+
+  @override
+  Stream<PhotoCoordinate> streamCoordinates({
+    required int start,
+    required int count,
+  }) async* {
+    requestCount++;
+    if (start == throwsAt) throw Exception('read failed');
+    if (start >= coordinates.length) return;
+    final int end = (start + count) > coordinates.length
+        ? coordinates.length
+        : start + count;
+    // 페이크는 좌표 없는 사진을 흉내 내지 않는다 — 있는 것만 한 장씩 흘린다.
+    for (final GeoPoint p in coordinates.sublist(start, end)) {
+      yield PhotoCoordinate(p);
+    }
+  }
+}
+
+/// 메모리에만 담는 중단 지점 저장소.
+class _FakeCheckpointStore implements PhotoScanCheckpointStore {
+  PhotoScanCheckpoint? saved;
+
+  @override
+  PhotoScanCheckpoint? read() => saved;
+
+  @override
+  Future<void> write(PhotoScanCheckpoint checkpoint) async =>
+      saved = checkpoint;
+
+  @override
+  Future<void> clear() async => saved = null;
+}
+
+/// 로그인 상태만 흉내 내는 최소 컨트롤러. 세션 저장소를 세우지 않는다 —
+/// 여기서 검증하는 것은 인증 흐름이 아니라 지도 동작이다.
+class _AuthedController extends AuthController {
+  @override
+  Future<AuthState> build() async => AuthState(
+    session: AuthSession(
+      accessToken: 'a',
+      refreshToken: 'r',
+      user: const Me(id: 'me', nickname: '나', email: 'me@example.com'),
+    ),
+  );
 }
 
 class _FakeShareSheet implements ShareSheetService {
@@ -214,10 +285,19 @@ ProviderContainer _container({
   _FakeShareSheet? sheet,
   Coordinates? location,
   List<DistrictBoundary>? boundaries,
+  _FakeCheckpointStore? checkpoints,
 }) {
   final ProviderContainer c = ProviderContainer(
     overrides: [
+      // 지도 provider들이 로그아웃 시 캐시를 비우려고 인증을 watch한다
+      // (`SessionScope`). 인증이 loading에 머물면 mapCells가 값을 내지 않는다.
+      authControllerProvider.overrideWith(_AuthedController.new),
       nationalMapRepositoryProvider.overrideWithValue(repo),
+      // 스캔 중단 지점 저장소는 SharedPreferences를 쓴다 — 테스트에서는
+      // 메모리 페이크로 바꿔 준비 코드를 없앤다.
+      photoScanCheckpointStoreProvider.overrideWithValue(
+        checkpoints ?? _FakeCheckpointStore(),
+      ),
       if (library != null)
         photoLibraryServiceProvider.overrideWithValue(library),
       if (sheet != null) shareSheetServiceProvider.overrideWithValue(sheet),
@@ -235,13 +315,17 @@ ProviderContainer _container({
 }
 
 void main() {
+  // 사진 스캔 컨트롤러가 앱 생명주기를 듣는다(`AppLifecycleListener`) —
+  // 바인딩이 없으면 provider를 만드는 것만으로 실패한다.
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('방문 등록 (R3·R30)', () {
     test('시군구 코드를 보내고 응답으로 캐시를 고친다', () async {
       final _FakeRepository repo = _FakeRepository(
         cells: <MapCell>[_cell('1', <String>['11110'])],
       );
       final ProviderContainer c = _container(repo: repo);
-      await c.read(mapCellsProvider.future);
+      await _readCells(c);
 
       await c.read(visitControllerProvider.notifier).record(<String>['11110']);
 
@@ -267,7 +351,7 @@ void main() {
         cells: <MapCell>[_cell('7', <String>['11110'], visited: true)],
       );
       final ProviderContainer c = _container(repo: repo);
-      await c.read(mapCellsProvider.future);
+      await _readCells(c);
 
       await c.read(visitControllerProvider.notifier).remove('7');
 
@@ -340,7 +424,7 @@ void main() {
         library: library,
         boundaries: boundaries,
       );
-      await c.read(mapCellsProvider.future);
+      await _readCells(c);
 
       await c.read(photoScanControllerProvider.notifier).start();
 
@@ -509,11 +593,10 @@ void main() {
         sheet: sheet,
       );
 
-      await c.read(shareControllerProvider.notifier).share(message: '안내');
+      await c.read(shareControllerProvider.notifier).share();
 
       // **조립하지 않는다** — 서버가 준 URL이 그대로 들어가야 한다.
       expect(sheet.lastText, contains('ieuri://shared/tok123'));
-      expect(sheet.lastText, contains('안내'));
     });
 
     test('폐기는 받았던 shareUrl을 그대로 되돌려준다', () async {
@@ -535,7 +618,7 @@ void main() {
       );
 
       await expectLater(
-        c.read(shareControllerProvider.notifier).share(message: 'x'),
+        c.read(shareControllerProvider.notifier).share(),
         throwsA(isA<Exception>()),
       );
       expect(c.read(shareControllerProvider), isFalse);
@@ -576,4 +659,13 @@ void main() {
       );
     });
   });
+}
+
+/// 인증이 확정된 뒤 칸을 읽는다.
+///
+/// 지도 provider들은 인증을 **watch**한다. 인증이 loading인 동안에는 미로그인으로
+/// 보여 `mapCells`가 빈 목록으로 한 번 확정되므로, 먼저 인증을 확정시켜야 한다.
+Future<List<MapCell>> _readCells(ProviderContainer c) async {
+  await c.read(authControllerProvider.future);
+  return c.read(mapCellsProvider.future);
 }
