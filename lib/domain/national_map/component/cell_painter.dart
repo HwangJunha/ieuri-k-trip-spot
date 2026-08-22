@@ -115,43 +115,60 @@ class CellPainter extends CustomPainter {
       ..isAntiAlias = true;
     final Paint stroke = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2
+      // 그림 위에 그리므로 얇으면 묻힌다. 칸을 오려 붙인 인상을 유지하되
+      // 경계가 읽히는 최소 굵기다.
+      ..strokeWidth = 1.8
       ..strokeJoin = StrokeJoin.round
       ..isAntiAlias = true
       ..color = palette.border;
 
     Path? selectedPath;
 
-    // 1) 칸을 칠한다.
-    for (final CellGeometry cell in cells) {
-      final Path path = _pathOf(cell, projection);
+    // 칸 도형은 두 번 쓴다 — 면을 칠할 때, 그리고 그림을 그 모양으로 자를 때.
+    // 두 번 만들지 않고 들고 간다.
+    final List<Path> paths = <Path>[
+      for (final CellGeometry cell in cells) _pathOf(cell, projection),
+    ];
+
+    // 1) 칸 면을 칠한다. 테두리는 그림을 얹은 뒤에 그린다(3단계).
+    for (int i = 0; i < cells.length; i++) {
+      final CellGeometry cell = cells[i];
+      final Path path = paths[i];
 
       fill.color = _fillOf(cell);
       canvas.drawPath(path, fill);
-      canvas.drawPath(path, stroke);
 
       if (cell.cellId == selectedCellId) selectedPath = path;
     }
 
     // 2) 랜드마크는 칸을 다 칠한 뒤 얹는다 — 섞어 그리면 이웃 칸에 가린다.
     //
-    // **모든 칸에 그린다**(SPEC-0031 §5). 미방문 칸도 무채색 아이콘을 얹어 무엇이
+    // **모든 칸에 그린다**(SPEC-0031 §5). 미방문 칸도 무채색 그림을 얹어 무엇이
     // 있는 곳인지 미리 보여 준다 — 방문 여부는 **어느 변형을 쓸지**만 가른다.
     final LandmarkIconCache? cache = iconCache;
     if (showLandmarks && cache != null) {
       final Set<String> filled = overlappingCellIds ?? visitedCellIds;
-      for (final CellGeometry cell in cells) {
+      for (int i = 0; i < cells.length; i++) {
         _paintLandmark(
           canvas,
-          cell,
+          cells[i],
+          paths[i],
           projection,
           cache,
-          visited: filled.contains(cell.cellId),
+          visited: filled.contains(cells[i].cellId),
         );
       }
     }
 
-    // 3) 선택된 칸은 맨 위에 다시 그려 이웃 칸의 테두리에 가리지 않게 한다.
+    // 3) 칸 테두리는 **그림 위에** 그린다.
+    //
+    // 그림이 칸을 가득 채우므로 테두리를 먼저 그리면 그림에 덮여 칸 경계가
+    // 사라진다. 그러면 어디까지가 한 칸인지 알 수 없어 탭할 대상이 보이지 않는다.
+    for (final Path path in paths) {
+      canvas.drawPath(path, stroke);
+    }
+
+    // 4) 선택된 칸은 맨 위에 다시 그려 이웃 칸의 테두리에 가리지 않게 한다.
     if (selectedPath != null) {
       canvas.drawPath(
         selectedPath,
@@ -165,16 +182,21 @@ class CellPainter extends CustomPainter {
     }
   }
 
-  /// 칸의 화면상 크기에 맞춰 랜드마크를 그린다.
+  /// 칸을 랜드마크 그림으로 **채운다**.
   ///
-  /// **작은 칸에는 그리지 않는다.** 22px보다 좁은 칸에 그림을 넣으면 무엇인지
-  /// 안 보이고 얼룩만 남아 오히려 지저분해진다(R18).
+  /// 참조는 스크래치 지도다 — 칸 하나하나가 그림으로 꽉 차 있고, 긁어내면 그
+  /// 면적만큼 색이 드러난다. 채우는 재미가 **면적**에서 나온다.
   ///
-  /// **칸 도형으로 자르지 않는다.** 아이콘은 칸을 설명하는 기호이지 칸의 무늬가
-  /// 아니다 — 클리핑하면 실루엣이 잘려 무엇인지 알 수 없게 된다.
+  /// 그래서 그림을 칸 가운데 배지로 얹지 않고 **칸을 덮도록 키운 뒤 칸 도형으로
+  /// 자른다.** 가장자리가 잘리는 것은 의도다 — 작은 칸에서는 그림의 일부만
+  /// 남는데, 종이 스크래치 지도도 그렇다.
+  ///
+  /// **작은 칸에는 그리지 않는다.** 22px보다 좁으면 무엇인지 안 보이고 얼룩만
+  /// 남는다(R18).
   void _paintLandmark(
     Canvas canvas,
     CellGeometry cell,
+    Path cellPath,
     CellProjection projection,
     LandmarkIconCache cache, {
     required bool visited,
@@ -188,46 +210,55 @@ class CellPainter extends CustomPainter {
     // 캐시 미스면 이번 프레임은 면 색만 그린다. paint()에서 await하지 않는다.
     if (info == null) return;
 
-    final List<GeoPoint> ring = cell.polygons.first;
-    double minX = double.infinity;
-    double maxX = double.negativeInfinity;
-    double minY = double.infinity;
-    double maxY = double.negativeInfinity;
-    for (final GeoPoint p in ring) {
-      final ({double dx, double dy}) s = projection.toScreen(p);
-      if (s.dx < minX) minX = s.dx;
-      if (s.dx > maxX) maxX = s.dx;
-      if (s.dy < minY) minY = s.dy;
-      if (s.dy > maxY) maxY = s.dy;
-    }
+    final Rect bounds = cellPath.getBounds();
+    if (bounds.isEmpty) return;
 
-    final double w = maxX - minX;
-    final double h = maxY - minY;
-    final double box = w < h ? w : h;
+    final double box = bounds.shortestSide;
     if (box < minIconBox) return;
 
-    // 칸이 클수록 크게, 다만 한없이 커지지는 않게 묶는다.
-    //
-    // **하한을 [minIconBox]로 두면 안 된다.** 그러면 22px 칸에 22px 아이콘이
-    // 들어가 칸을 가득 채우고 이웃까지 넘본다 — 지도가 아이콘 벽이 된다.
-    // 하한은 표시 하한(22)보다 낮아야 하고, 상한도 칸 대비 비율로 묶는다.
-    final double iconSize = (box * 0.52).clamp(12.0, 30.0);
-    final ({double dx, double dy}) c = projection.toScreen(cell.center);
-    final Offset shift = screenOffsetOf(cell);
+    // **칸을 덮을 만큼 키운다.** 긴 쪽에 맞추면 짧은 쪽이 남고, 짧은 쪽에 맞추면
+    // 긴 쪽이 빈다 — 덮으려면 긴 쪽 기준이다(cover).
+    final double drawSize = bounds.longestSide * _iconCoverage;
+    final double scale = drawSize / info.size.width;
 
-    // 그림은 120×120 viewBox 기준이라 칸 크기에 맞춰 줄인다.
-    // save/restore로 감싸지 않으면 이후 칸이 전부 같은 변환을 물려받는다.
-    final double scale = iconSize / info.size.width;
     canvas
       ..save()
+      // 칸 밖으로 넘친 부분을 잘라낸다. 이웃 칸을 침범하지 않는다.
+      ..clipPath(cellPath);
+
+    // **미방문은 옅게 얹는다.** 스크래치 지도는 긁기 전이 단색이고 긁어야 그림이
+    // 드러난다. 미방문까지 진하게 채우면 방문해도 "드러나는" 맛이 없고, 지도
+    // 전체가 회색으로 무거워진다. 방문 칸만 또렷하게 두어 대비를 만든다.
+    if (!visited) {
+      canvas.saveLayer(
+        bounds,
+        Paint()..color = const Color(0xFFFFFFFF).withValues(alpha: _unvisitedIconOpacity),
+      );
+    }
+
+    canvas
       ..translate(
-        c.dx + shift.dx - iconSize / 2,
-        c.dy + shift.dy - iconSize / 2,
+        bounds.center.dx - drawSize / 2,
+        bounds.center.dy - drawSize / 2,
       )
       ..scale(scale)
-      ..drawPicture(info.picture)
-      ..restore();
+      ..drawPicture(info.picture);
+
+    if (!visited) canvas.restore();
+    canvas.restore();
   }
+
+  /// 미방문 칸 그림의 불투명도.
+  ///
+  /// 디자인 시스템이 "투명도는 미방문 아이콘을 55%로 낮추는 단 하나의 용도"라고
+  /// 정해 둔 값을 따른다.
+  static const double _unvisitedIconOpacity = 0.55;
+
+  /// 그림이 칸의 긴 변 대비 차지하는 비율.
+  ///
+  /// 1보다 크게 둬서 모서리까지 덮는다 — 딱 1이면 칸이 정사각형이 아닌 이상
+  /// 네 귀퉁이가 빈다. 너무 키우면 그림의 가운데만 남아 무엇인지 알 수 없다.
+  static const double _iconCoverage = 1.15;
 
   Color _fillOf(CellGeometry cell) {
     final String id = cell.cellId;
