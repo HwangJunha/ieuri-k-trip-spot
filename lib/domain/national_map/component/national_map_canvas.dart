@@ -1,9 +1,12 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/material.dart';
 
 import '../model/cell_geometry.dart';
 import '../model/cell_hit_test.dart';
 import '../model/cell_projection.dart';
 import 'cell_painter.dart';
+import 'landmark_icon_cache.dart';
 
 /// 161칸을 그리고 탭을 받는 지도(R20·R22).
 ///
@@ -188,13 +191,58 @@ class _NationalMapCanvasState extends State<NationalMapCanvas>
       final Animation<Matrix4>? z = _zoom;
       if (z != null) _controller.value = z.value;
     });
+    _preloadIcons();
+  }
+
+  @override
+  void didUpdateWidget(NationalMapCanvas old) {
+    super.didUpdateWidget(old);
+    // 방문 칸이 바뀌면 그 칸이 필요로 하는 변형이 달라진다. 칸 목록이 바뀌어도
+    // 마찬가지다.
+    if (old.cells != widget.cells ||
+        !CellPainter.setEquals(old.visitedCellIds, widget.visitedCellIds) ||
+        !CellPainter.setEquals(
+          old.overlappingCellIds,
+          widget.overlappingCellIds,
+        )) {
+      _preloadIcons();
+    }
   }
 
   @override
   void dispose() {
+    _iconCache.dispose();
     _animation.dispose();
     _controller.dispose();
     super.dispose();
+  }
+
+  /// 이 지도가 쓰는 아이콘 그림 캐시.
+  final LandmarkIconCache _iconCache = LandmarkIconCache();
+
+  /// 칸에 필요한 아이콘을 미리 디코딩한다(스펙 §4).
+  ///
+  /// **161칸 전부가 대상이다.** 미방문 칸도 무채색 아이콘을 그리므로 방문 여부는
+  /// 어느 변형이 필요한지만 가른다. `paint()`에서 `await`할 수 없으니 여기서
+  /// 채우고, 끝나면 다시 그린다.
+  void _preloadIcons() {
+    final Set<String> filled =
+        widget.overlappingCellIds ?? widget.visitedCellIds;
+    final List<LandmarkIconKey> keys = <LandmarkIconKey>[
+      for (final CellGeometry cell in widget.cells)
+        if (cell.landmarkSlug != null)
+          LandmarkIconKey(
+            cell.landmarkSlug!,
+            visited: filled.contains(cell.cellId),
+          ),
+    ];
+    if (keys.isEmpty) return;
+
+    unawaited(
+      _iconCache.preload(keys).then((_) {
+        if (mounted) setState(() {});
+      }),
+    );
   }
 
   /// 더블탭으로 확대·복귀한다.
@@ -311,6 +359,7 @@ class _NationalMapCanvasState extends State<NationalMapCanvas>
               overlappingCellIds: widget.overlappingCellIds,
               selectedCellId: widget.selectedCellId,
               palette: palette,
+              iconCache: _iconCache,
               padding: _padding,
               cover: widget.cover,
             ),

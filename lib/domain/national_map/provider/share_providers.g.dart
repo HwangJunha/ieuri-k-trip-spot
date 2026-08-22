@@ -59,8 +59,8 @@ String _$shareSheetServiceHash() => r'f58f83f52fb74e3a88fe4d2b2af7c0479ada6c08';
 /// 공유 링크 발급과 시스템 공유 시트 전달(R36).
 ///
 /// **링크를 조립하지 않는다** — 서버가 완성된 `shareUrl`을 준다. 지금은
-/// `ieuri://shared/<token>`이고 웹이 생기면 Universal Link로 바뀌는데, 서버가
-/// 조립하므로 그때 앱 배포가 필요 없다.
+/// `https://www.ieuri.co.kr/tour/korea-map/<token>`이며, 서버가 조립하므로
+/// 형태가 바뀌어도 앱 배포가 필요 없다.
 
 @ProviderFor(ShareController)
 const shareControllerProvider = ShareControllerProvider._();
@@ -68,15 +68,15 @@ const shareControllerProvider = ShareControllerProvider._();
 /// 공유 링크 발급과 시스템 공유 시트 전달(R36).
 ///
 /// **링크를 조립하지 않는다** — 서버가 완성된 `shareUrl`을 준다. 지금은
-/// `ieuri://shared/<token>`이고 웹이 생기면 Universal Link로 바뀌는데, 서버가
-/// 조립하므로 그때 앱 배포가 필요 없다.
+/// `https://www.ieuri.co.kr/tour/korea-map/<token>`이며, 서버가 조립하므로
+/// 형태가 바뀌어도 앱 배포가 필요 없다.
 final class ShareControllerProvider
     extends $NotifierProvider<ShareController, bool> {
   /// 공유 링크 발급과 시스템 공유 시트 전달(R36).
   ///
   /// **링크를 조립하지 않는다** — 서버가 완성된 `shareUrl`을 준다. 지금은
-  /// `ieuri://shared/<token>`이고 웹이 생기면 Universal Link로 바뀌는데, 서버가
-  /// 조립하므로 그때 앱 배포가 필요 없다.
+  /// `https://www.ieuri.co.kr/tour/korea-map/<token>`이며, 서버가 조립하므로
+  /// 형태가 바뀌어도 앱 배포가 필요 없다.
   const ShareControllerProvider._()
     : super(
         from: null,
@@ -109,8 +109,8 @@ String _$shareControllerHash() => r'4382a3197771d11dcd5fb10aef1f70db6f297eaf';
 /// 공유 링크 발급과 시스템 공유 시트 전달(R36).
 ///
 /// **링크를 조립하지 않는다** — 서버가 완성된 `shareUrl`을 준다. 지금은
-/// `ieuri://shared/<token>`이고 웹이 생기면 Universal Link로 바뀌는데, 서버가
-/// 조립하므로 그때 앱 배포가 필요 없다.
+/// `https://www.ieuri.co.kr/tour/korea-map/<token>`이며, 서버가 조립하므로
+/// 형태가 바뀌어도 앱 배포가 필요 없다.
 
 abstract class _$ShareController extends $Notifier<bool> {
   bool build();

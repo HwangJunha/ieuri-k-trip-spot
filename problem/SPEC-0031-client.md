@@ -1,4 +1,64 @@
-> spec: SPEC-0031 · source: `Specs/SPEC-0031/spec.md` (Obsidian) · issue: #73 · status: draft
+> spec: SPEC-0031 · source: `Specs/SPEC-0031/spec.md` (Obsidian) · issue: #73 · status: in-progress
+
+## 구현 기록 (2026-08-22)
+
+**결합 키가 검증됐다.** 서버 `MapCell.id`는 `"1"`~`"161"` 문자열이고 결합 테이블의
+`cell_id`와 완전히 일치한다(라이브 서버 161칸 대조). 이 스펙 전체가 이 가정 위에
+서 있었으므로 먼저 확인했다 — 울산=태화강, 서울=경복궁, 경주=불국사로 내용까지
+맞는다.
+
+**`ColorMapper` 가정도 검증됐다.** 실제 SVG를 디코딩해 픽셀을 확인하는 테스트
+(`landmark_icon_render_test.dart`)를 두었다. 색 치환 함수를 직접 부르는 단위
+테스트는 "함수가 옳은 색을 돌려준다"만 증명할 뿐 **flutter_svg가 그 함수를 실제로
+부르는지**는 증명하지 못한다. 파이프라인 끝까지 통과시킨 결과:
+
+- 방문 변형에 원색이 칠해지고, 미방문 변형에서는 사라진다
+- 외곽선 `#2B2B45`는 두 변형 모두 불변이다(R10이 구조로 보장됨)
+- **파랑 채널 1 차이로 구분한 조정 폴백값(rock `#5A6B8D` → `#5A6B8C`)도 통과한다.**
+  여기가 깨졌으면 161개를 다시 칠해야 했다
+
+**변경한 것 (§1 대비)**
+
+| 파일 | 실제 조치 |
+|---|---|
+| `component/landmark_icons.dart` | 삭제함 |
+| `model/landmark_kind.dart` | 삭제함 |
+| `component/province_palette.dart` | **남겨 뒀다.** 칸 면 색은 `landmark_category_tint.dart`로 옮겼지만 시도 색은 진행률 바 등 다른 곳이 쓴다 |
+| `component/cell_painter.dart` | 모든 칸에 아이콘, `Picture`로 그림, `minIconBox` 설정값화 |
+| `model/cell_geometry.dart` | `landmark: LandmarkKind?` → `landmarkSlug` + `landmarkCategory` |
+| `model/cell_shape_builder.dart` | 결합 테이블 조회로 교체 |
+| `repository/national_map_operations.graphql` | `MapCellCore`에서 `representativeImage` 제거 |
+| `model/map_cell.dart` | `landmarkCaption` 필드 삭제 |
+
+**§4와 다르게 한 것**: 캐시가 `PictureInfo`를 그대로 담지 않고 `LandmarkIconPicture`
+(그림 + 크기)를 쓴다. `PictureInfo`는 생성자가 private이라 테스트에서 만들 수 없어
+디코딩 횟수를 셀 수 없었다.
+
+### 실제로 그려 보고 고친 것 두 가지
+
+단위 테스트는 전부 통과하는 상태에서 **렌더해 보고서야** 드러난 문제들이다.
+
+**1. 아이콘이 칸을 가득 채웠다.** `iconSize`의 하한을 표시 하한(`minIconBox` 22)과
+같게 두는 바람에, 22px 칸에 22px 아이콘이 들어가 이웃 칸까지 넘봤다. 지도가 아이콘
+벽이 되어 칸 도형이 보이지 않았다. 하한을 12로 낮추고 비율도 0.62 → 0.52로 줄였다.
+
+**2. 칸을 채워도 채운 티가 나지 않았다.** 카테고리 틴트를 디자인 시스템의
+"20~25% 틴트" 그대로 잡았더니 휘도가 미방문 면(0.79)과 비슷하거나 **오히려
+높았다**(park 0.83). 채우는 재미가 이 화면의 전부인데 그게 죽어 있었다.
+0.62~0.75로 눌렀고, 「미방문 면보다 뚜렷이 진하다」를 테스트로 박았다.
+
+### 확인 방법
+
+`landmark_icon_render_test.dart`가 실제 SVG를 디코딩해 픽셀을 본다. 색 치환 함수를
+직접 부르는 검사는 "함수가 옳은 색을 돌려준다"만 증명하지 **flutter_svg가 그 함수를
+부르는지**는 증명하지 못하므로, 한 번은 파이프라인 끝까지 통과시킨다.
+
+지도 전체를 눈으로 보려면 위젯 테스트로 캔버스를 PNG로 뽑았다(일회성 도구라
+저장소에 남기지 않았다). 시뮬레이터 자동 조작은 권한으로 막혀 쓰지 못했다.
+
+**남은 것**: 실기기 확인. 위 렌더는 실제 서버 칸 161개 + 실제 경계 + 실제 아이콘을
+쓰지만 시뮬레이터/실기기의 화면 밀도와 제스처까지 재현하지는 않는다.
+
 
 # SPEC-0031 — 지역 랜드마크 아이콘과 칸 상태 시각 체계 (클라이언트)
 

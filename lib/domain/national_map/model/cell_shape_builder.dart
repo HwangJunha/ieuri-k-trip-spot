@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'cell_geometry.dart';
 import 'district_boundary.dart';
-import 'landmark_kind.dart';
+import 'landmark_icon_binding.dart';
 import 'map_cell.dart';
 
 /// 서버가 정한 칸([MapCell])과 원본 시군구 경계로 **칸 도형을 조립한다.**
@@ -75,15 +75,19 @@ class CellShapeBuilder {
             ringArea(b).compareTo(ringArea(a)),
       );
 
+      // 그릴 아이콘은 **결합 테이블이 정한다**(SPEC-0031 §0). 서버 칸 id가 곧
+      // 결합 키다. caption 정규식 분류를 쓰지 않는다 — 같은 이름이 여러 유형에
+      // 걸리고, 무엇보다 칸에 보이는 사진과 아이콘이 같은 장소여야 한다.
+      final LandmarkIconBinding? binding = landmarkIconBindingOf(
+        int.tryParse(cell.id) ?? -1,
+      );
+
       out.add(
         CellGeometry(
           cellId: cell.id,
           provinceCode: cell.provinceCode,
-          // 지도에는 실사진 대신 유형별 도형을 그린다 — 칸 크기에서 사진은
-          // 읽히지 않고, 56칸이 변경금지 유형이라 오려 넣을 수도 없다.
-          landmark: cell.landmarkCaption == null
-              ? null
-              : landmarkKindOf(cell.landmarkCaption!),
+          landmarkSlug: binding?.slug,
+          landmarkCategory: binding?.category,
           polygons: polygons,
           center: centroid(polygons.first),
           bounds: GeoBounds.of(polygons.expand((List<GeoPoint> p) => p)),

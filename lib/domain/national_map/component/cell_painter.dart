@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../model/cell_geometry.dart';
 import '../model/cell_projection.dart';
-import '../model/landmark_kind.dart';
-import 'landmark_icons.dart';
-import 'province_palette.dart';
+import 'landmark_category_tint.dart';
+import 'landmark_icon_cache.dart';
 
 /// 전국 지도 161칸을 그리는 팔레트.
 ///
@@ -12,16 +11,15 @@ import 'province_palette.dart';
 /// 색은 앱과 어울리게 눌렀다 — 포스터의 하늘색 바다·형광 원색을 그대로 옮기면
 /// 웜 톤인 앱 안에서 이 화면만 떠 보인다.
 ///
-/// **방문 칸은 시도별로 색이 다르다**(`ProvincePalette`). 하나의 브랜드색으로만
-/// 칠하면 몇 칸을 채우든 빨간 얼룩으로 보여 채우는 재미가 사라진다.
+/// **방문 칸은 카테고리별 틴트다**(SPEC-0031). 시도별 18색을 쓰던 것을 바꿨다 —
+/// 이제 칸마다 랜드마크 아이콘이 얹히므로 면 색은 그 랜드마크의 성격을 거들고,
+/// 아이콘이 묻히지 않게 연해야 한다.
 class CellPalette {
   const CellPalette({
     required this.unvisitedFill,
     required this.border,
     required this.selectedBorder,
     required this.fallbackVisitedFill,
-    required this.iconColor,
-    required this.iconAccent,
   });
 
   /// 화면 테마에서 팔레트를 만든다. 색을 위젯마다 고르지 않고 여기 모은다.
@@ -33,20 +31,14 @@ class CellPalette {
     border: scheme.surface,
     selectedBorder: scheme.onSurface,
     fallbackVisitedFill: scheme.primary,
-    // 아이콘은 칸 색 위에 얹히므로 흰색이어야 어느 시도에서든 읽힌다.
-    iconColor: const Color(0xFFFFFFFF),
-    iconAccent: const Color(0x9EFFFFFF),
   );
 
   final Color unvisitedFill;
   final Color border;
   final Color selectedBorder;
 
-  /// 시도 색을 모르는 칸의 방문 색.
+  /// 카테고리를 모르는 칸의 방문 색.
   final Color fallbackVisitedFill;
-
-  final Color iconColor;
-  final Color iconAccent;
 }
 
 /// 161칸을 그린다(설계 §3).
@@ -58,12 +50,17 @@ class CellPainter extends CustomPainter {
     required this.cells,
     required this.visitedCellIds,
     required this.palette,
+    this.iconCache,
     this.overlappingCellIds,
     this.selectedCellId,
     this.padding = 12,
     this.showLandmarks = true,
     this.cover = false,
+    this.minIconBox = defaultMinIconBox,
   });
+
+  /// 아이콘 그림 캐시. null이면 아이콘을 그리지 않는다(작은 미리보기·테스트).
+  final LandmarkIconCache? iconCache;
 
   /// 그릴 칸 도형. 각자 서버 칸 id와 시도 코드를 갖고 있다.
   final List<CellGeometry> cells;
@@ -85,7 +82,10 @@ class CellPainter extends CustomPainter {
   final bool cover;
 
   /// 아이콘을 그리는 최소 칸 크기(px). 이보다 작으면 뭉개져서 생략한다.
-  static const double _minIconBox = 22;
+  final double minIconBox;
+
+  /// [minIconBox]의 기본값. SPEC-0030에서 쓰던 값을 승계한다(스펙 R15).
+  static const double defaultMinIconBox = 22;
 
   /// 제주의 시도 코드.
   static const String _jejuProvince = '50';
@@ -134,13 +134,20 @@ class CellPainter extends CustomPainter {
     }
 
     // 2) 랜드마크는 칸을 다 칠한 뒤 얹는다 — 섞어 그리면 이웃 칸에 가린다.
-    if (showLandmarks) {
-      // 겹침 모드에서는 겹치는 칸에만 얹는다 — 칠하지 않은 칸에 그림만 남으면
-      // 무엇이 겹친 것인지 흐려진다.
-      final Set<String> withIcon = overlappingCellIds ?? visitedCellIds;
+    //
+    // **모든 칸에 그린다**(SPEC-0031 §5). 미방문 칸도 무채색 아이콘을 얹어 무엇이
+    // 있는 곳인지 미리 보여 준다 — 방문 여부는 **어느 변형을 쓸지**만 가른다.
+    final LandmarkIconCache? cache = iconCache;
+    if (showLandmarks && cache != null) {
+      final Set<String> filled = overlappingCellIds ?? visitedCellIds;
       for (final CellGeometry cell in cells) {
-        if (!withIcon.contains(cell.cellId)) continue;
-        _paintLandmark(canvas, cell, projection);
+        _paintLandmark(
+          canvas,
+          cell,
+          projection,
+          cache,
+          visited: filled.contains(cell.cellId),
+        );
       }
     }
 
@@ -160,15 +167,26 @@ class CellPainter extends CustomPainter {
 
   /// 칸의 화면상 크기에 맞춰 랜드마크를 그린다.
   ///
-  /// **작은 칸에는 그리지 않는다.** 20px 칸에 그림을 넣으면 무엇인지 안 보이고
-  /// 얼룩만 남아 오히려 지저분해진다.
+  /// **작은 칸에는 그리지 않는다.** 22px보다 좁은 칸에 그림을 넣으면 무엇인지
+  /// 안 보이고 얼룩만 남아 오히려 지저분해진다(R18).
+  ///
+  /// **칸 도형으로 자르지 않는다.** 아이콘은 칸을 설명하는 기호이지 칸의 무늬가
+  /// 아니다 — 클리핑하면 실루엣이 잘려 무엇인지 알 수 없게 된다.
   void _paintLandmark(
     Canvas canvas,
     CellGeometry cell,
     CellProjection projection,
-  ) {
-    final LandmarkKind? landmark = cell.landmark;
-    if (landmark == null) return;
+    LandmarkIconCache cache, {
+    required bool visited,
+  }) {
+    final String? slug = cell.landmarkSlug;
+    if (slug == null) return;
+
+    final LandmarkIconPicture? info = cache.pictureOf(
+      LandmarkIconKey(slug, visited: visited),
+    );
+    // 캐시 미스면 이번 프레임은 면 색만 그린다. paint()에서 await하지 않는다.
+    if (info == null) return;
 
     final List<GeoPoint> ring = cell.polygons.first;
     double minX = double.infinity;
@@ -186,21 +204,29 @@ class CellPainter extends CustomPainter {
     final double w = maxX - minX;
     final double h = maxY - minY;
     final double box = w < h ? w : h;
-    if (box < _minIconBox) return;
+    if (box < minIconBox) return;
 
     // 칸이 클수록 크게, 다만 한없이 커지지는 않게 묶는다.
-    final double iconSize = (box * 0.62).clamp(14.0, 34.0);
+    //
+    // **하한을 [minIconBox]로 두면 안 된다.** 그러면 22px 칸에 22px 아이콘이
+    // 들어가 칸을 가득 채우고 이웃까지 넘본다 — 지도가 아이콘 벽이 된다.
+    // 하한은 표시 하한(22)보다 낮아야 하고, 상한도 칸 대비 비율로 묶는다.
+    final double iconSize = (box * 0.52).clamp(12.0, 30.0);
     final ({double dx, double dy}) c = projection.toScreen(cell.center);
     final Offset shift = screenOffsetOf(cell);
 
-    LandmarkIcons.paint(
-      canvas,
-      landmark,
-      center: Offset(c.dx + shift.dx, c.dy + shift.dy),
-      size: iconSize,
-      color: palette.iconColor,
-      accentColor: palette.iconAccent,
-    );
+    // 그림은 120×120 viewBox 기준이라 칸 크기에 맞춰 줄인다.
+    // save/restore로 감싸지 않으면 이후 칸이 전부 같은 변환을 물려받는다.
+    final double scale = iconSize / info.size.width;
+    canvas
+      ..save()
+      ..translate(
+        c.dx + shift.dx - iconSize / 2,
+        c.dy + shift.dy - iconSize / 2,
+      )
+      ..scale(scale)
+      ..drawPicture(info.picture)
+      ..restore();
   }
 
   Color _fillOf(CellGeometry cell) {
@@ -219,8 +245,10 @@ class CellPainter extends CustomPainter {
     if (overlapping == null && !visitedCellIds.contains(id)) {
       return palette.unvisitedFill;
     }
-    return ProvincePalette.of(
-      cell.provinceCode,
+    // 방문 칸은 **카테고리 틴트**다(SPEC-0031). 시도색을 쓰던 것을 바꿨다 —
+    // 아이콘이 면 위에 얹히므로 면이 진하면 아이콘이 묻힌다.
+    return LandmarkCategoryTint.of(
+      cell.landmarkCategory,
       fallback: palette.fallbackVisitedFill,
     );
   }
@@ -269,7 +297,12 @@ class CellPainter extends CustomPainter {
       old.selectedCellId != selectedCellId ||
       old.showLandmarks != showLandmarks ||
       old.cover != cover ||
+      old.minIconBox != minIconBox ||
       old.palette.unvisitedFill != palette.unvisitedFill ||
+      // 캐시가 비동기로 채워지므로 올라온 그림 수가 바뀌면 다시 그려야 한다.
+      // 인스턴스만 비교하면 프리로드가 끝나도 화면이 갱신되지 않는다.
+      old.iconCache != iconCache ||
+      old.iconCache?.length != iconCache?.length ||
       !setEquals(old.visitedCellIds, visitedCellIds) ||
       !setEquals(old.overlappingCellIds, overlappingCellIds);
 

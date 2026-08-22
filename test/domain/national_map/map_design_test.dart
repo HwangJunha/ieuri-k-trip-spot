@@ -3,135 +3,241 @@ import 'dart:io';
 import 'dart:ui' show Color;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ieuri_k_trip_spot/domain/national_map/model/landmark_kind.dart';
-import 'package:ieuri_k_trip_spot/domain/national_map/component/province_palette.dart';
-
-/// 서버가 실제로 주는 161개 랜드마크 이름. 분류가 이 목록을 덮는지 확인한다.
-///
-/// 라이브 서버에서 받아 고정해 둔 값이다 — 테스트가 서버에 의존하면 안 된다.
-const List<String> _realCaptions = <String>[
-  '경복궁', '광안대교', '서문시장', '강화 고인돌 유적', '5·18 민주광장',
-  '대청호오백리길', '태화강 국가정원', '세종호수공원', '행주산성', '한국만화박물관',
-  '율동공원', '수원화성', '대부도', '안양예술공원', '한국민속촌',
-  '의정부 부대찌개 거리', '광명동굴', '평택호 관광단지', '소요산', '서울대공원',
-  '동구릉', '다산 정약용 유적지', '물향기수목원', '시흥갯골생태공원', '수리산',
-  '왕송호수', '하남 동사지', '임진각 평화누리', '이천 도예촌', '안성팜랜드',
-  '김포 장릉', '융건릉', '남한산성', '양주 회암사지', '한탄강 유네스코 세계지질공원',
-  '여주 영릉', '재인폭포', '자라섬', '두물머리', '청주 상당산성',
-  '충주 탑평리 칠층석탑 (중앙탑)', '제천 의림지', '속리산 법주사', '부소담악', '영동 와인',
-  '좌구산자연휴양림', '진천 농다리', '괴산 화양구곡', '감곡매괴성모순례지성당', '도담삼봉',
-  '유관순 열사 유적', '공산성', '대천해수욕장', '현충사', '해미읍성',
-  '관촉사 석조미륵보살입상', '사계고택 (은농재)', '왜목마을', '금산 인삼', '부소산성',
-  '신성리 갈대밭', '청양 고추·구기자', '홍주읍성', '수덕사 대웅전', '태안해안국립공원',
-  '목포근대역사관', '오동도', '순천만습지', '나주 영산포', '광양 매화마을',
-  '죽녹원', '태안사', '화엄사', '팔영산', '보성 녹차밭',
-  '화순 고인돌 유적', '정남진 편백숲 우드랜드', '다산초당', '대흥사', '월출산국립공원',
-  '회산 백련지', '함평 한우', '영광 굴비', '축령산 편백숲', '청산도',
-  '진도 신비의 바닷길', '신안 갯벌', '호미곶 해맞이광장', '불국사', '직지사',
-  '하회마을', '금오산 도립공원', '부석사', '은해사', '경천대',
-  '문경새재', '갓바위(관봉 석조여래좌상)', '금성산 고분군', '주왕산 국립공원',
-  '영양국제밤하늘보호공원', '영덕 블루로드', '청도 반시', '지산동 고분군', '성주 참외',
-  '가실성당', '회룡포', '청량산 도립공원', '성류굴', '독도',
-  '진해 군항제 벚꽃길(여좌천)', '진주성', '한산도', '삼천포대교', '대성동 고분군',
-  '영남루', '외도 보타니아', '통도사', '의령 망개떡', '말이산 고분군',
-  '우포늪', '상족암 군립공원', '가천 다랭이마을', '쌍계사', '지리산 국립공원 천왕봉',
-  '함양 상림', '수승대', '해인사 장경판전', '한라산국립공원', '성산일출봉',
-  '남이섬', '치악산 국립공원', '강릉 경포대', '무릉계곡', '태백산 국립공원',
-  '설악산 국립공원', '삼척 죽서루', '수타사', '횡성호수길', '장릉',
-  '월정사', '아우라지', '고석정', '화천천', '대암산 용늪',
-  '백담사', '화진포', '낙산사 의상대와 홍련암', '전주한옥마을', '군산 근대역사문화거리',
-  '미륵사지', '내장산국립공원', '광한루원', '금산사', '오성한옥마을',
-  '마이산', '덕유산국립공원', '논개사당(의암사)', '옥정호·붕어섬', '강천산군립공원',
-  '고창 고인돌 유적', '변산반도국립공원',
-];
+import 'package:ieuri_k_trip_spot/domain/national_map/component/landmark_category_tint.dart';
+import 'package:ieuri_k_trip_spot/domain/national_map/component/landmark_color_mapper.dart';
+import 'package:ieuri_k_trip_spot/domain/national_map/component/landmark_icon_role.dart';
+import 'package:ieuri_k_trip_spot/domain/national_map/model/landmark_category.dart';
+import 'package:ieuri_k_trip_spot/domain/national_map/model/landmark_icon_binding.dart';
 
 void main() {
-  group('랜드마크 유형 분류', () {
-    test('구체적인 규칙이 일반 규칙을 이긴다', () {
-      // "속리산 법주사"는 산이 아니라 사찰이다 — 순서가 뒤집히면 산이 된다.
-      expect(landmarkKindOf('속리산 법주사'), LandmarkKind.temple);
-      // "성주 참외"는 성곽이 아니라 특산품이다.
-      expect(landmarkKindOf('성주 참외'), LandmarkKind.food);
-      // "수원화성"은 성곽이다.
-      expect(landmarkKindOf('수원화성'), LandmarkKind.fortress);
-    });
-
-    test('대표적인 이름이 기대한 유형으로 간다', () {
-      expect(landmarkKindOf('경복궁'), LandmarkKind.hanok);
-      expect(landmarkKindOf('광안대교'), LandmarkKind.bridge);
-      expect(landmarkKindOf('서문시장'), LandmarkKind.modern);
-      expect(landmarkKindOf('설악산 국립공원'), LandmarkKind.mountain);
-      expect(landmarkKindOf('대천해수욕장'), LandmarkKind.sea);
-      expect(landmarkKindOf('재인폭포'), LandmarkKind.water);
-      expect(landmarkKindOf('죽녹원'), LandmarkKind.forest);
-      expect(landmarkKindOf('불국사'), LandmarkKind.temple);
-      expect(landmarkKindOf('강화 고인돌 유적'), LandmarkKind.fortress);
-      expect(landmarkKindOf('영광 굴비'), LandmarkKind.food);
-    });
-
-    test('실제 161개 이름이 전부 분류된다', () {
-      // 분류가 안 되면 폴백으로 가는데, 폴백이 과하게 많으면 규칙이 부실한 것이다.
-      expect(_realCaptions, hasLength(161));
-
-      final Map<LandmarkKind, int> counts = <LandmarkKind, int>{};
-      for (final String caption in _realCaptions) {
-        final LandmarkKind kind = landmarkKindOf(caption);
-        counts[kind] = (counts[kind] ?? 0) + 1;
-      }
-
-      // 한 유형이 전체의 3분의 1을 넘으면 그림이 단조로워진다.
-      for (final MapEntry<LandmarkKind, int> e in counts.entries) {
+  group('아이콘 결합 테이블', () {
+    test('161칸이 빠짐없이 등록돼 있다', () {
+      expect(landmarkIconBindings, hasLength(161));
+      for (int id = 1; id <= 161; id++) {
         expect(
-          e.value,
-          lessThan(_realCaptions.length ~/ 3),
-          reason: '${e.key}가 너무 많다 — 규칙을 더 나눠야 한다',
+          landmarkIconBindingOf(id),
+          isNotNull,
+          reason: '$id번 칸에 결합이 없다',
         );
       }
-      // 유형이 골고루 쓰여야 알록달록하다.
-      expect(counts.keys.length, greaterThanOrEqualTo(9));
     });
 
-    test('빈 이름도 터지지 않는다', () {
-      expect(landmarkKindOf(''), isA<LandmarkKind>());
+    test('slug가 서로 다르다', () {
+      // 두 칸이 같은 아이콘을 쓰면 지도에서 같은 그림이 두 번 보인다.
+      final Set<String> slugs = <String>{
+        for (final LandmarkIconBinding b in landmarkIconBindings.values) b.slug,
+      };
+      expect(slugs, hasLength(161));
+    });
+
+    test('미등록 칸은 null이고 목록에서 빠지지 않는다', () {
+      // R19: 결합이 없는 칸도 면은 칠한다. 부르는 쪽이 아이콘만 생략한다.
+      expect(landmarkIconBindingOf(0), isNull);
+      expect(landmarkIconBindingOf(999), isNull);
+    });
+
+    test('에셋 경로를 slug로 만든다', () {
+      expect(
+        landmarkIconAssetOf('bulguksa-temple'),
+        'asset/icon/landmark/bulguksa-temple.svg',
+      );
+    });
+
+    test('카테고리 분포가 기획 산출물과 같다', () {
+      final Map<LandmarkCategory, int> counts = <LandmarkCategory, int>{};
+      for (final LandmarkIconBinding b in landmarkIconBindings.values) {
+        counts[b.category] = (counts[b.category] ?? 0) + 1;
+      }
+      expect(counts[LandmarkCategory.nature], 66);
+      expect(counts[LandmarkCategory.heritage], 64);
+      expect(counts[LandmarkCategory.culture], 14);
+      expect(counts[LandmarkCategory.park], 13);
+      expect(counts[LandmarkCategory.specialty], 4);
     });
   });
 
-  group('시도별 색', () {
-    test('17개 시도에 색이 있다', () {
-      expect(ProvincePalette.definedCount, 17);
+  group('카테고리 틴트', () {
+    test('5종에 색이 있다', () {
+      expect(LandmarkCategoryTint.definedCount, 5);
     });
 
-    test('모르는 시도 코드는 폴백이다', () {
+    test('모르는 카테고리는 폴백이다', () {
+      // R19: 결합이 없는 칸도 칠해야 한다.
       const Color fallback = Color(0xFF123456);
-      expect(ProvincePalette.of('99', fallback: fallback), fallback);
+      expect(LandmarkCategoryTint.of(null, fallback: fallback), fallback);
     });
 
-    test('색이 서로 다르다', () {
-      // 같은 색이 둘이면 인접 시도가 구분되지 않을 수 있다.
-      const List<String> codes = <String>[
-        '11', '26', '27', '28', '29', '30', '31', '36',
-        '41', '43', '44', '46', '47', '48', '50', '51', '52',
-      ];
-      final Set<int> used = <int>{
-        for (final String c in codes)
-          ProvincePalette.of(c, fallback: const Color(0xFF000000)).toARGB32(),
+    test('틴트가 서로 구분된다', () {
+      // 두 카테고리가 같은 색이면 면 색이 정보를 주지 못한다.
+      final List<Color> all = LandmarkCategoryTint.all.toList();
+      final Set<int> used = <int>{for (final Color c in all) c.toARGB32()};
+      expect(used, hasLength(all.length));
+
+      // **색상(hue)이 갈려야 한다.** 틴트는 전부 밝아서 RGB 거리는 작을 수밖에
+      // 없다 — 아이콘이 얹히므로 밝아야 하고, 그래서 거리로 재면 모두 가깝게
+      // 나온다. 실제로 눈에 보이는 차이는 색 기울기다(heritage는 분홍 쪽,
+      // specialty는 노랑 쪽).
+      for (int i = 0; i < all.length; i++) {
+        for (int j = i + 1; j < all.length; j++) {
+          expect(
+            _hueDistance(all[i], all[j]),
+            greaterThan(12),
+            reason: '$i번과 $j번 틴트의 색 기울기가 너무 비슷하다',
+          );
+        }
+      }
+    });
+
+    test('미방문 면보다 뚜렷이 진하다', () {
+      // 칸을 채워도 채운 티가 나지 않으면 이 화면의 재미가 사라진다.
+      // 처음 값들은 미방문(0.79)과 비슷하거나 오히려 밝아서 실제 렌더에서
+      // 방문·미방문이 구분되지 않았다.
+      const Color unvisited = Color(0xFFEDE4E2); // scheme.surfaceDim
+      final double unvisitedY = relativeLuminance(unvisited);
+      for (final Color c in LandmarkCategoryTint.all) {
+        expect(
+          relativeLuminance(c),
+          lessThan(unvisitedY - 0.03),
+          reason: '$c가 미방문 면과 너무 비슷하다',
+        );
+      }
+    });
+
+    test('아이콘이 묻히지 않게 충분히 밝다', () {
+      // 면이 진하면 그 위에 얹는 아이콘이 읽히지 않는다. 위 검사와 함께
+      // 틴트를 좁은 구간에 묶는다.
+      for (final Color c in LandmarkCategoryTint.all) {
+        expect(relativeLuminance(c), greaterThan(0.55));
+      }
+    });
+  });
+
+  group('역할 색표', () {
+    test('18역할이 서로 다른 폴백값을 갖는다', () {
+      // ColorMapper가 **색값으로** 역할을 찾으므로 폴백이 겹치면 역할이 섞인다.
+      expect(landmarkRoleVariants, hasLength(18));
+    });
+
+    test('무채색 변형은 채도가 0이다', () {
+      // R8: 미방문은 색상이 아니라 채도·명도로 구분한다.
+      for (final LandmarkRoleVariants v in landmarkRoleVariants.values) {
+        expect(v.grey.r, v.grey.g, reason: '${v.grey}가 무채색이 아니다');
+        expect(v.grey.g, v.grey.b, reason: '${v.grey}가 무채색이 아니다');
+      }
+    });
+
+    test('투명한 면이 없다', () {
+      // R7: 미방문도 선화가 아니라 무채색 면이다.
+      for (final LandmarkRoleVariants v in landmarkRoleVariants.values) {
+        expect(v.full.a, 1.0);
+        expect(v.grey.a, 1.0);
+      }
+    });
+
+    test('무채색이 전채색의 명도 순서를 보존한다', () {
+      // R9: 밝은 면이 무채색에서 어두워지면 아이콘의 입체가 뒤집힌다.
+      final List<LandmarkRoleVariants> sorted =
+          landmarkRoleVariants.values.toList()
+            ..sort(
+              (LandmarkRoleVariants a, LandmarkRoleVariants b) =>
+                  relativeLuminance(
+                    a.full,
+                  ).compareTo(relativeLuminance(b.full)),
+            );
+      for (int i = 1; i < sorted.length; i++) {
+        expect(
+          relativeLuminance(sorted[i].grey),
+          greaterThanOrEqualTo(relativeLuminance(sorted[i - 1].grey) - 1e-9),
+          reason: '$i번에서 명도 순서가 뒤집혔다',
+        );
+      }
+    });
+
+    test('색표의 무채색이 휘도 환산식과 일치한다', () {
+      // 표가 손으로 수정돼 식과 크게 어긋나는 것을 막는다.
+      //
+      // 허용 오차 2는 반올림 몫이다 — 표는 기획 하네스가 만들었고 이 식과
+      // 반올림 자릿수가 다를 수 있다(foliage-light가 196 대 197). 자릿수까지
+      // 맞추는 것은 이 검사의 목적이 아니다.
+      for (final LandmarkRoleVariants v in landmarkRoleVariants.values) {
+        final Color computed = desaturateByLuminance(v.full);
+        expect(
+          (computed.r * 255 - v.grey.r * 255).abs(),
+          lessThanOrEqualTo(2),
+          reason: '${v.full} → 기대 $computed, 표에는 ${v.grey}',
+        );
+      }
+    });
+  });
+
+  group('ColorMapper', () {
+    const VisitedLandmarkColorMapper visited = VisitedLandmarkColorMapper();
+    const UnvisitedLandmarkColorMapper unvisited =
+        UnvisitedLandmarkColorMapper();
+
+    test('외곽선은 어떤 변형에서도 바뀌지 않는다', () {
+      // R10: stroke를 손대지 않는 것이 구조로 보장된다.
+      for (final ColorMapperCase c in <ColorMapperCase>[
+        ColorMapperCase(visited.substitute, landmarkOutline),
+        ColorMapperCase(unvisited.substitute, landmarkOutline),
+      ]) {
+        expect(c.run('stroke'), c.color);
+      }
+    });
+
+    test('방문은 폴백값을 전채색으로 바꾼다', () {
+      const int roofFallback = 0xFFC4633A;
+      final LandmarkRoleVariants roof = landmarkRoleVariants[roofFallback]!;
+      expect(
+        visited.substitute(null, 'path', 'fill', const Color(roofFallback)),
+        roof.full,
+      );
+    });
+
+    test('미방문은 폴백값을 무채색으로 바꾼다', () {
+      const int roofFallback = 0xFFC4633A;
+      final LandmarkRoleVariants roof = landmarkRoleVariants[roofFallback]!;
+      expect(
+        unvisited.substitute(null, 'path', 'fill', const Color(roofFallback)),
+        roof.grey,
+      );
+    });
+
+    test('두 변형이 서로 다르다', () {
+      // R7: 같은 SVG에서 두 상태가 실제로 갈려야 한다.
+      const Color roof = Color(0xFFC4633A);
+      expect(
+        visited.substitute(null, 'path', 'fill', roof),
+        isNot(unvisited.substitute(null, 'path', 'fill', roof)),
+      );
+    });
+
+    test('역할표에 없는 색은 그대로 통과한다', () {
+      // 알 수 없는 색을 임의로 바꾸면 아이콘이 조용히 망가진다.
+      const Color unknown = Color(0xFF010203);
+      expect(visited.substitute(null, 'path', 'fill', unknown), unknown);
+      expect(unvisited.substitute(null, 'path', 'fill', unknown), unknown);
+    });
+
+    test('폴백값이 조정된 5역할도 각각 제 색을 찾는다', () {
+      // stone·sand·rock·snow·sun은 파랑 채널을 옮겨 유일하게 만든 값이다.
+      // 이 구분이 깨지면 두 역할이 같은 색으로 칠해진다.
+      const Map<int, int> adjusted = <int, int>{
+        0xFFFFE4E2: 0xFFFFE4E1, // stone
+        0xFFFFE4E3: 0xFFFFE4E1, // sand
+        0xFF5A6B8D: 0xFF5A6B8C, // rock
+        0xFFFFF6F1: 0xFFFFF6F0, // snow
+        0xFFF5A624: 0xFFF5A623, // sun
       };
-
-      expect(used, hasLength(codes.length));
-    });
-
-    test('맞닿은 시도끼리 계열이 다르다', () {
-      // 경기(41)–강원(51)–충북(43)은 서로 접한다. 색상 거리가 충분해야 한다.
-      const Color black = Color(0xFF000000);
-      final Color gyeonggi = ProvincePalette.of('41', fallback: black);
-      final Color gangwon = ProvincePalette.of('51', fallback: black);
-      final Color chungbuk = ProvincePalette.of('43', fallback: black);
-
-      // 임계 50은 실측으로 정했다 — 이보다 가까우면 지도에서 두 시도가
-      // 한 덩어리로 보인다(경북·경남이 9였을 때 실제로 그랬다).
-      expect(_distance(gyeonggi, gangwon), greaterThan(50));
-      expect(_distance(gyeonggi, chungbuk), greaterThan(50));
-      expect(_distance(gangwon, chungbuk), greaterThan(50));
+      adjusted.forEach((int fallback, int full) {
+        expect(
+          visited
+              .substitute(null, 'path', 'fill', Color(fallback))
+              .toARGB32(),
+          full,
+          reason: '${fallback.toRadixString(16)}가 역할을 찾지 못했다',
+        );
+      });
     });
   });
 
@@ -150,13 +256,41 @@ void main() {
       // 묶음 규칙은 서버 소유다. 자산을 되살리면 코드 체계가 다시 어긋난다.
       expect(File('asset/geo/korea_cells.json').existsSync(), isFalse);
     });
+
+    test('161개 아이콘 파일이 전부 있다', () {
+      // 결합 테이블이 가리키는 에셋이 없으면 그 칸만 조용히 아이콘을 잃는다.
+      final List<String> missing = <String>[
+        for (final LandmarkIconBinding b in landmarkIconBindings.values)
+          if (!File(landmarkIconAssetOf(b.slug)).existsSync()) b.slug,
+      ];
+      expect(missing, isEmpty, reason: '에셋이 없다: ${missing.join(', ')}');
+    });
   });
 }
 
-/// 두 색의 RGB 거리. 계열이 갈렸는지 보는 거친 잣대다.
-double _distance(Color a, Color b) {
-  final int dr = ((a.r - b.r) * 255).round();
-  final int dg = ((a.g - b.g) * 255).round();
-  final int db = ((a.b - b.b) * 255).round();
-  return (dr * dr + dg * dg + db * db).toDouble() / 255;
+/// 두 색의 **기울기** 차이.
+///
+/// 밝기를 뺀 채널 비율만 비교한다 — 밝은 틴트끼리는 절대 거리가 작아도 색
+/// 기울기(어느 채널이 더 센가)는 뚜렷이 다르다.
+double _hueDistance(Color a, Color b) {
+  ({double r, double g, double b}) tilt(Color c) {
+    final double sum = c.r + c.g + c.b;
+    if (sum == 0) return (r: 0, g: 0, b: 0);
+    return (r: c.r / sum, g: c.g / sum, b: c.b / sum);
+  }
+
+  final ({double r, double g, double b}) x = tilt(a);
+  final ({double r, double g, double b}) y = tilt(b);
+  return ((x.r - y.r).abs() + (x.g - y.g).abs() + (x.b - y.b).abs()) * 1000;
+}
+
+/// 외곽선 불변 검사를 두 매퍼에 같은 모양으로 돌리기 위한 묶음.
+class ColorMapperCase {
+  ColorMapperCase(this._substitute, this.color);
+
+  final Color Function(String?, String, String, Color) _substitute;
+  final Color color;
+
+  Color run(String attributeName) =>
+      _substitute(null, 'path', attributeName, color);
 }
