@@ -100,6 +100,7 @@ flutter:
 
   assets:
     - asset/icon/
+    - asset/icon/landmark/
     - asset/geo/
 
   fonts:
