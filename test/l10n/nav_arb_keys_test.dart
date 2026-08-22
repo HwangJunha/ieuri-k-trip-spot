@@ -9,12 +9,16 @@ import 'package:flutter_test/flutter_test.dart';
 /// 위젯을 세우지 않고 `.arb` 키 존재만 검사한다(설계 §6).
 const List<String> _locales = <String>['en', 'ko', 'ja', 'zh'];
 
-/// 탭이 5개이므로 라벨도 5개다. `navLiked`·`navCommunity`가 `navEvents`·`navChat`을
-/// 대체한다.
+/// 탭이 5개이므로 탭 라벨도 5개다(SPEC-0030 R17: 홈·전국 지도·둘러보기·보관함·지도).
+///
+/// `navLiked`·`navCommunity`는 **탭 라벨에서는 빠졌지만 지워지지 않는다** —
+/// 보관함의 세그먼트 토글이 같은 문구를 쓴다(R18). 그래서 폐기 키가 아니다.
 const List<String> _requiredKeys = <String>[
   'navHome',
-  'navMap',
+  'navNationalMap',
   'navDiscover',
+  'navLibrary',
+  'navMap',
   'navLiked',
   'navCommunity',
   'likedSpotsEmpty',

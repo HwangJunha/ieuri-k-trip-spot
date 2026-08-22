@@ -32,9 +32,28 @@ import 'post_moderation_flow.dart';
 /// **칩이 비어도 정상이다**(가이드 §2). 구성이 없는 앱이면 서버가 빈 목록을 주며,
 /// 그때는 줄 자체를 그리지 않고 피드가 위로 붙는다.
 class CommunityScreen extends ConsumerWidget {
-  const CommunityScreen({super.key});
+  const CommunityScreen({super.key, this.showAppBar = true});
 
   static String get routeName => 'community';
+
+  /// 자체 상단바를 그릴지(SPEC-0030 R18).
+  ///
+  /// 보관함 화면이 이 화면을 품을 때는 상단바를 보관함이 갖고 토글을 거기 둔다.
+  /// **숨긴 글 진입점은 사라지지 않는다** — 보관함이 [hiddenPostsAction]을 자기
+  /// 상단바에 얹는다. 화면의 동작은 그대로다.
+  final bool showAppBar;
+
+  /// 숨긴 글 목록으로 가는 버튼(SPEC-0011 R2).
+  ///
+  /// 상단바를 보관함이 가질 때 그쪽이 이 버튼을 그대로 쓰도록 꺼내 둔다.
+  static Widget hiddenPostsAction(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    return IconButton(
+      icon: const Icon(Icons.visibility_off_outlined),
+      tooltip: l10n.communityHiddenPostsAction,
+      onPressed: () => context.pushNamed(HiddenPostsScreen.routeName),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -46,25 +65,21 @@ class CommunityScreen extends ConsumerWidget {
     final PostSortOrder sort = ref.watch(selectedSortProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.communityTitle),
-        actions: <Widget>[
-          // 숨긴 글만 남는다(SPEC-0011 R2) — 차단 목록 진입점은 설정으로 옮겼다.
-          //
-          // 원래 둘을 나란히 둔 근거는 "둘 다 내가 안 보이게 한 것을 되돌리는
-          // 화면이라 같은 자리에 있어야 찾는다"였다(2차 가이드 §2). 차단이
-          // 빠지면서 **그 근거는 깨졌다.** 스펙의 결정이므로 따르되, 남은 하나가
-          // 왜 여기 홀로 있는지를 나중에 되짚을 수 있게 적어 둔다.
-          //
-          // 차단 목록 화면 자체는 이 기능에 그대로 있다 — 옮기면 커뮤니티
-          // 리포지토리 의존이 `settings`로 끌려 들어간다(설계 §1).
-          IconButton(
-            icon: const Icon(Icons.visibility_off_outlined),
-            tooltip: l10n.communityHiddenPostsAction,
-            onPressed: () => context.pushNamed(HiddenPostsScreen.routeName),
-          ),
-        ],
-      ),
+      // 숨긴 글만 남는다(SPEC-0011 R2) — 차단 목록 진입점은 설정으로 옮겼다.
+      //
+      // 원래 둘을 나란히 둔 근거는 "둘 다 내가 안 보이게 한 것을 되돌리는
+      // 화면이라 같은 자리에 있어야 찾는다"였다(2차 가이드 §2). 차단이
+      // 빠지면서 **그 근거는 깨졌다.** 스펙의 결정이므로 따르되, 남은 하나가
+      // 왜 여기 홀로 있는지를 나중에 되짚을 수 있게 적어 둔다.
+      //
+      // 차단 목록 화면 자체는 이 기능에 그대로 있다 — 옮기면 커뮤니티
+      // 리포지토리 의존이 `settings`로 끌려 들어간다(설계 §1).
+      appBar: showAppBar
+          ? AppBar(
+              title: Text(l10n.communityTitle),
+              actions: <Widget>[hiddenPostsAction(context)],
+            )
+          : null,
       // 셸이 `extendBody: true`라 이 화면의 body가 떠 있는 내비 바 **아래까지**
       // 그려진다. 기본 위치의 FAB은 그 바에 가려지므로 바 높이만큼 띄우고, 바에
       // 딱 붙지 않도록 한 칸 더 준다. 바 높이를 여기 적지 않고 셸 상수를 읽는

@@ -13,7 +13,6 @@ import '../domain/auth/view/sign_up_screen.dart';
 import '../domain/auth/view/sns_sign_up_screen.dart';
 import '../common/model/target_category.dart';
 import '../domain/community/view/blocked_users_screen.dart';
-import '../domain/community/view/community_screen.dart';
 import '../domain/community/view/hidden_posts_screen.dart';
 import '../domain/community/view/post_composer_screen.dart';
 import '../domain/community/view/post_detail_screen.dart';
@@ -29,13 +28,18 @@ import '../domain/settings/view/profile_edit_screen.dart';
 import '../domain/settings/view/required_terms_screen.dart';
 import '../domain/settings/view/settings_screen.dart';
 import '../domain/settings/view/terms_screen.dart';
+import '../domain/library/view/library_screen.dart';
 import '../domain/map/view/map_screen.dart';
+import '../domain/national_map/view/cell_detail_screen.dart';
+import '../domain/national_map/view/national_map_screen.dart';
+import '../domain/national_map/view/relation_detail_screen.dart';
+import '../domain/national_map/view/relation_map_screen.dart';
+import '../domain/national_map/view/shared_map_screen.dart';
 import '../domain/map/view/region_recommendation_screen.dart';
 import '../common/category/spot_category.dart';
 import '../common/category/spot_category_selection.dart';
 import '../domain/spot/view/discover_screen.dart';
 import '../domain/spot/view/home_screen.dart';
-import '../domain/spot/view/liked_spots_screen.dart';
 import '../domain/spot/view/search_screen.dart';
 import '../domain/spot/view/spot_detail_view.dart';
 import '../domain/spot_qa/view/my_questions_screen.dart';
@@ -372,21 +376,61 @@ List<RouteBase> buildRoutes() => <RouteBase>[
     name: RequiredTermsScreen.routeName,
     builder: (_, _) => const RequiredTermsScreen(),
   ),
+  // 공유 지도(SPEC-0030 R37). **인증 없이 열린다** — 게이트를 통과해야 한다.
+  //
+  // 서버가 주는 URL과 **경로가 같아야 한다** —
+  // `https://www.ieuri.co.kr/tour/korea-map/<token>`. 링크를 눌러 앱이 열려도
+  // 경로가 다르면 라우트가 매칭되지 않는다.
+  GoRoute(
+    path: '/tour/korea-map/:token',
+    name: SharedMapScreen.routeName,
+    builder: (_, GoRouterState state) =>
+        SharedMapScreen(token: state.pathParameters['token']!),
+  ),
+  // 관계 지도(SPEC-0030). 공유 링크로 맺은 사람들과의 겹침을 본다.
+  GoRoute(
+    path: '/relations',
+    name: RelationMapScreen.routeName,
+    builder: (_, _) => const RelationMapScreen(),
+  ),
+  // 관계 한 명의 겹침 지도(SPEC-0030). 목록이 이미 겹친 칸을 갖고 있어
+  // 서버를 다시 부르지 않는다 — 회원 id만 넘긴다.
+  GoRoute(
+    path: '/relations/:memberId',
+    name: RelationDetailScreen.routeName,
+    builder: (_, GoRouterState state) =>
+        RelationDetailScreen(memberId: state.pathParameters['memberId']!),
+  ),
+  // 지역 상세(SPEC-0030 R22). 셸 밖의 최상위 라우트라 하단 탭을 덮는다 —
+  // 관광지 상세와 같은 성격이다. 칸 id만 넘긴다(§6).
+  GoRoute(
+    path: '/cell/:id',
+    name: CellDetailScreen.routeName,
+    builder: (_, GoRouterState state) =>
+        CellDetailScreen(cellId: state.pathParameters['id']!),
+  ),
   // The post-onboarding 5-tab shell. Each tab keeps its own navigation stack.
   StatefulShellRoute.indexedStack(
     builder: (_, _, StatefulNavigationShell shell) =>
         FloatingBottomNavScaffold(navigationShell: shell),
     branches: <StatefulShellBranch>[
       _branch('/home', HomeScreen.routeName, const HomeScreen()),
-      _branch('/map', MapScreen.routeName, const MapScreen()),
+      // SPEC-0030 R17: 1번 자리가 전국 지도가 되고, 기존 뷰포트 지도는 4번으로
+      // 내려간다. `MapScreen`의 라우트 이름과 경로(`/map`)는 그대로다 —
+      // 자리만 옮긴다(설계 §1).
+      _branch(
+        '/national-map',
+        NationalMapScreen.routeName,
+        const NationalMapScreen(),
+      ),
       // SPEC-0021 R9: 세그먼트 토글이 걷히면서 둘러보기 탭이 다시 추천 스와이프
       // 하나가 됐다. **라우트 이름과 탭 위치는 그대로다**(AC9.3·AC9.4) —
       // 가리키는 위젯만 `DiscoverScreen`으로 돌아간다.
       _branch('/discover', DiscoverScreen.routeName, const DiscoverScreen()),
-      // SPEC-0008 R-12·R-13: 탭 3·4의 목적지만 교체한다. 탭 수(5)와 Discover의
-      // 가운데 강조는 그대로다(AC-40) — 셸 구조는 건드리지 않는다.
-      _branch('/liked', LikedSpotsScreen.routeName, const LikedSpotsScreen()),
-      _branch('/community', CommunityScreen.routeName, const CommunityScreen()),
+      // SPEC-0030 R18: 좋아요와 커뮤니티가 보관함 한 화면으로 합쳐진다.
+      // 두 화면의 내부는 그대로이고 배치만 바뀐다.
+      _branch('/library', LibraryScreen.routeName, const LibraryScreen()),
+      _branch('/map', MapScreen.routeName, const MapScreen()),
     ],
   ),
 ];

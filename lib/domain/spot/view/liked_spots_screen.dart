@@ -26,9 +26,15 @@ import 'spot_detail_view.dart';
 ///
 /// 좋아요는 spot에 대한 반응이라 spot 도메인의 화면이다 — 별도 도메인이 아니다.
 class LikedSpotsScreen extends ConsumerWidget {
-  const LikedSpotsScreen({super.key});
+  const LikedSpotsScreen({super.key, this.showAppBar = true});
 
   static String get routeName => likedSpotsRouteName;
+
+  /// 자체 상단바를 그릴지(SPEC-0030 R18).
+  ///
+  /// 보관함 화면이 이 화면을 품을 때는 상단바를 보관함이 갖고 토글을 거기 둔다 —
+  /// 그대로 두면 상단바가 두 줄이 된다. **화면의 동작은 그대로다**, 상단바만 빠진다.
+  final bool showAppBar;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -42,7 +48,7 @@ class LikedSpotsScreen extends ConsumerWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.navLiked)),
+      appBar: showAppBar ? AppBar(title: Text(l10n.navLiked)) : null,
       body: SafeArea(
         child: Column(
           children: <Widget>[

@@ -116,7 +116,7 @@ final class SelectedSpotCategoryProvider
 }
 
 String _$selectedSpotCategoryHash() =>
-    r'1021630b06fe16538a3457a8ba3f8e0ebea4e39d';
+    r'521be5ec397fe4a748f419007d1883b2ae05bcd7';
 
 /// Discover 스와이프의 카테고리 선택(SPEC-0020 R2). **비어 있을 수 없는 집합이다** —
 /// "전체 보기"가 사라졌으므로 `null`("필터 없음")이라는 표현 자체가 없다.
@@ -169,7 +169,7 @@ abstract class _$SelectedSpotCategory extends $Notifier<Set<SpotCategory>> {
 /// 속한다. autoDispose면 카테고리를 옮기거나 다른 탭에 다녀오는 것만으로 큐가 버려지고,
 /// 돌아왔을 때 `build()`가 다시 돌아 [_shuffled]가 **새 순서**를 만든다. 사용자에겐
 /// 목록이 매번 랜덤으로 바뀌는 것으로 보이고, 이미 스와이프해 소비한 카드까지 되살아난다.
-/// 피드를 새로 받는 계기는 앱 재시작·언어 전환·명시적 [reload]뿐이어야 한다.
+/// 피드를 새로 받는 계기는 앱 재시작·언어 전환·로그아웃·명시적 [reload]다.
 
 @ProviderFor(SwipeController)
 const swipeControllerProvider = SwipeControllerFamily._();
@@ -198,7 +198,7 @@ const swipeControllerProvider = SwipeControllerFamily._();
 /// 속한다. autoDispose면 카테고리를 옮기거나 다른 탭에 다녀오는 것만으로 큐가 버려지고,
 /// 돌아왔을 때 `build()`가 다시 돌아 [_shuffled]가 **새 순서**를 만든다. 사용자에겐
 /// 목록이 매번 랜덤으로 바뀌는 것으로 보이고, 이미 스와이프해 소비한 카드까지 되살아난다.
-/// 피드를 새로 받는 계기는 앱 재시작·언어 전환·명시적 [reload]뿐이어야 한다.
+/// 피드를 새로 받는 계기는 앱 재시작·언어 전환·로그아웃·명시적 [reload]다.
 final class SwipeControllerProvider
     extends $AsyncNotifierProvider<SwipeController, SwipeQueue> {
   /// Discover 스와이프 카드 스택 컨트롤러(spec §4). [selection]별 패밀리 —
@@ -225,7 +225,7 @@ final class SwipeControllerProvider
   /// 속한다. autoDispose면 카테고리를 옮기거나 다른 탭에 다녀오는 것만으로 큐가 버려지고,
   /// 돌아왔을 때 `build()`가 다시 돌아 [_shuffled]가 **새 순서**를 만든다. 사용자에겐
   /// 목록이 매번 랜덤으로 바뀌는 것으로 보이고, 이미 스와이프해 소비한 카드까지 되살아난다.
-  /// 피드를 새로 받는 계기는 앱 재시작·언어 전환·명시적 [reload]뿐이어야 한다.
+  /// 피드를 새로 받는 계기는 앱 재시작·언어 전환·로그아웃·명시적 [reload]다.
   const SwipeControllerProvider._({
     required SwipeControllerFamily super.from,
     required SpotCategorySelection super.argument,
@@ -262,7 +262,7 @@ final class SwipeControllerProvider
   }
 }
 
-String _$swipeControllerHash() => r'8df3ad0e10331d6d36bc64d9693134ebe9cc6306';
+String _$swipeControllerHash() => r'f9788faaed8f90bcd46cae6d279633af8be8622c';
 
 /// Discover 스와이프 카드 스택 컨트롤러(spec §4). [selection]별 패밀리 —
 /// 선택 변경은 다른 인스턴스 로딩으로 이어진다.
@@ -288,7 +288,7 @@ String _$swipeControllerHash() => r'8df3ad0e10331d6d36bc64d9693134ebe9cc6306';
 /// 속한다. autoDispose면 카테고리를 옮기거나 다른 탭에 다녀오는 것만으로 큐가 버려지고,
 /// 돌아왔을 때 `build()`가 다시 돌아 [_shuffled]가 **새 순서**를 만든다. 사용자에겐
 /// 목록이 매번 랜덤으로 바뀌는 것으로 보이고, 이미 스와이프해 소비한 카드까지 되살아난다.
-/// 피드를 새로 받는 계기는 앱 재시작·언어 전환·명시적 [reload]뿐이어야 한다.
+/// 피드를 새로 받는 계기는 앱 재시작·언어 전환·로그아웃·명시적 [reload]다.
 
 final class SwipeControllerFamily extends $Family
     with
@@ -332,7 +332,7 @@ final class SwipeControllerFamily extends $Family
   /// 속한다. autoDispose면 카테고리를 옮기거나 다른 탭에 다녀오는 것만으로 큐가 버려지고,
   /// 돌아왔을 때 `build()`가 다시 돌아 [_shuffled]가 **새 순서**를 만든다. 사용자에겐
   /// 목록이 매번 랜덤으로 바뀌는 것으로 보이고, 이미 스와이프해 소비한 카드까지 되살아난다.
-  /// 피드를 새로 받는 계기는 앱 재시작·언어 전환·명시적 [reload]뿐이어야 한다.
+  /// 피드를 새로 받는 계기는 앱 재시작·언어 전환·로그아웃·명시적 [reload]다.
 
   SwipeControllerProvider call(SpotCategorySelection selection) =>
       SwipeControllerProvider._(argument: selection, from: this);
@@ -365,7 +365,7 @@ final class SwipeControllerFamily extends $Family
 /// 속한다. autoDispose면 카테고리를 옮기거나 다른 탭에 다녀오는 것만으로 큐가 버려지고,
 /// 돌아왔을 때 `build()`가 다시 돌아 [_shuffled]가 **새 순서**를 만든다. 사용자에겐
 /// 목록이 매번 랜덤으로 바뀌는 것으로 보이고, 이미 스와이프해 소비한 카드까지 되살아난다.
-/// 피드를 새로 받는 계기는 앱 재시작·언어 전환·명시적 [reload]뿐이어야 한다.
+/// 피드를 새로 받는 계기는 앱 재시작·언어 전환·로그아웃·명시적 [reload]다.
 
 abstract class _$SwipeController extends $AsyncNotifier<SwipeQueue> {
   late final _$args = ref.$arg as SpotCategorySelection;

@@ -87,8 +87,11 @@ Future<void> _pump(WidgetTester tester, ProviderContainer container) async {
 }
 
 void main() {
-  // SPEC-0008 AC-38·AC-41: 탭 3은 좋아요 목록으로 간다.
-  testWidgets('tapping the Liked tab shows the liked spots screen', (
+  // SPEC-0030 R18: 좋아요는 보관함 탭 안에 있고, 그 탭의 첫 화면이 좋아요다.
+  //
+  // SPEC-0008 AC-38·AC-41이 "탭 3 = 좋아요"였고 도달 경로만 바뀌었다 — 여전히
+  // 하단 탭 한 번으로 좋아요 목록에 닿는다.
+  testWidgets('tapping the Library tab shows the liked spots screen', (
     tester,
   ) async {
     final container = await _homeContainer();
@@ -97,29 +100,57 @@ void main() {
     // Home is the initial tab: its section headers are visible.
     expect(find.text('Near You'), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('bottom_nav_liked')));
+    await tester.tap(find.byKey(const Key('bottom_nav_library')));
     await tester.pumpAndSettle();
 
     expect(find.text('No liked spots yet.'), findsOneWidget);
     expect(find.text('Near You'), findsNothing);
   });
 
-  // SPEC-0008 AC-39: 탭 4는 커뮤니티로 간다. 행사 탭은 도달 경로가 사라진다.
+  // SPEC-0030 R18: 커뮤니티는 보관함 안의 토글로 간다. 별도 탭이 아니다.
   //
-  // AC-42("화면 내용은 플레이스홀더 그대로")는 SPEC-0010이 대체한다 — 같은 탭·같은
-  // 라우트를 유지한 채 스텁 내용만 Spot Talk 화면으로 바뀌었다. 여기서 검사하는 것은
-  // 여전히 "탭 4를 누르면 커뮤니티에 도달하고 홈이 사라진다"이며, 그 계약은 그대로다.
-  testWidgets('tapping the Community tab shows the Spot Talk screen', (
+  // 검사하는 계약은 "커뮤니티에 도달하고 홈이 사라진다"로 그대로이며, 경로만
+  // 탭 4에서 보관함 토글로 바뀌었다.
+  testWidgets('toggling to Community inside Library shows Spot Talk', (
     tester,
   ) async {
     final container = await _homeContainer();
     await _pump(tester, container);
 
-    await tester.tap(find.byKey(const Key('bottom_nav_community')));
+    await tester.tap(find.byKey(const Key('bottom_nav_library')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Community'));
     await tester.pumpAndSettle();
 
     expect(find.text('Spot Talk'), findsOneWidget);
     expect(find.text('Near You'), findsNothing);
+  });
+
+  // SPEC-0030 R18: 토글 선택은 탭을 떠나도 유지된다.
+  testWidgets('the Library toggle survives leaving and returning to the tab', (
+    tester,
+  ) async {
+    final container = await _homeContainer();
+    await _pump(tester, container);
+
+    await tester.tap(find.byKey(const Key('bottom_nav_library')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Community'));
+    await tester.pumpAndSettle();
+    expect(find.text('Spot Talk'), findsOneWidget);
+
+    // 홈에 갔다가 돌아온다.
+    await tester.tap(find.byKey(const Key('bottom_nav_home')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('bottom_nav_library')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Spot Talk'),
+      findsOneWidget,
+      reason: '마지막으로 보던 쪽이 그대로 나와야 한다',
+    );
   });
 
   // SPEC-0008 AC-40: 목적지만 교체되고 탭 수(5)는 그대로다. 라벨 문자열이 아니라

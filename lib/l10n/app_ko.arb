@@ -217,6 +217,240 @@
   "@navLiked": {
     "description": "하단 내비 - 좋아요 목록 탭"
   },
+  "navNationalMap": "전국 지도",
+  "@navNationalMap": {
+    "description": "하단 내비 - 전국 지도 탭"
+  },
+  "navLibrary": "보관함",
+  "@navLibrary": {
+    "description": "하단 내비 - 보관함 탭(좋아요/커뮤니티 토글)"
+  },
+  "permissionPhotosRationaleTitle": "사진으로 지도를 채울까요?",
+  "@permissionPhotosRationaleTitle": {
+    "description": "사진 권한 사전설명 - 제목"
+  },
+  "permissionPhotosRationaleBody": "사진에 담긴 위치로 다녀온 지역을 찾아 지도를 채웁니다. 사진은 기기 밖으로 나가지 않고, 좌표는 지역을 판정하는 데만 쓰고 저장하지 않습니다.",
+  "@permissionPhotosRationaleBody": {
+    "description": "사진 권한 사전설명 - 본문(사진 미전송·좌표 미저장을 밝힌다)"
+  },
+  "permissionPhotosBlockedMessage": "사진 접근이 꺼져 있어 사진으로 채울 수 없어요. 설정에서 허용할 수 있습니다.",
+  "@permissionPhotosBlockedMessage": {
+    "description": "사진 권한 영구거부 안내"
+  },
+  "nationalMapNationwide": "전국",
+  "@nationalMapNationwide": {
+    "description": "전국 지도 - 전체 진척 막대의 이름"
+  },
+  "nationalMapCellCount": "{total}칸 중 {visited}칸",
+  "@nationalMapCellCount": {
+    "description": "전국 지도 - 방문 진척(예: 161칸 중 12칸)",
+    "placeholders": {
+      "visited": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "nationalMapEmptyHint": "사진으로 채우거나 지금 있는 곳을 등록해 보세요.",
+  "@nationalMapEmptyHint": {
+    "description": "전국 지도 - 아직 한 칸도 없을 때 안내"
+  },
+  "nationalMapSelectHint": "지도에서 지역을 눌러 보세요.",
+  "@nationalMapSelectHint": {
+    "description": "전국 지도 - 칸을 고르지 않았을 때 하단 안내"
+  },
+  "nationalMapRecordVisit": "등록",
+  "@nationalMapRecordVisit": {
+    "description": "전국 지도 - 선택한 칸을 방문으로 등록하는 버튼"
+  },
+  "nationalMapRemoveVisit": "등록 해제",
+  "@nationalMapRemoveVisit": {
+    "description": "전국 지도 - 방문 등록을 해제하는 버튼"
+  },
+  "nationalMapRetry": "다시 시도",
+  "@nationalMapRetry": {
+    "description": "전국 지도 - 재시도 버튼"
+  },
+  "nationalMapVisited": "다녀온 곳",
+  "@nationalMapVisited": {
+    "description": "전국 지도 - 선택한 칸이 이미 방문인 상태"
+  },
+  "nationalMapOpenDetail": "자세히",
+  "@nationalMapOpenDetail": {
+    "description": "전국 지도 - 지역 상세로 가는 버튼"
+  },
+  "nationalMapSpotsTitle": "이 지역의 여행지",
+  "@nationalMapSpotsTitle": {
+    "description": "지역 상세 - 장소 목록 제목"
+  },
+  "nationalMapSpotsEmpty": "아직 등록된 여행지가 없어요.",
+  "@nationalMapSpotsEmpty": {
+    "description": "지역 상세 - 장소가 없을 때"
+  },
+  "commonCancel": "취소",
+  "@commonCancel": {
+    "description": "다이얼로그 공용 취소"
+  },
+  "commonClose": "닫기",
+  "@commonClose": {
+    "description": "공통 - 닫기 버튼"
+  },
+  "nationalMapHere": "지금 여기",
+  "@nationalMapHere": {
+    "description": "전국 지도 - 현재 위치 등록 버튼"
+  },
+  "nationalMapRegisterTitle": "이 지역을 등록할까요?",
+  "@nationalMapRegisterTitle": {
+    "description": "현재 위치 등록 확인 다이얼로그 제목"
+  },
+  "nationalMapRegisterBody": "{district}에 다녀온 것으로 기록합니다.",
+  "@nationalMapRegisterBody": {
+    "description": "현재 위치 등록 확인 다이얼로그 본문",
+    "placeholders": {
+      "district": {
+        "type": "String"
+      }
+    }
+  },
+  "nationalMapAlreadyVisited": "{cell}은(는) 이미 다녀온 곳이에요.",
+  "@nationalMapAlreadyVisited": {
+    "description": "이미 방문한 칸에서 등록을 시도했을 때",
+    "placeholders": {
+      "cell": {
+        "type": "String"
+      }
+    }
+  },
+  "nationalMapOutsideKorea": "국내 지역만 등록할 수 있어요.",
+  "@nationalMapOutsideKorea": {
+    "description": "한국 밖 좌표에서 등록을 시도했을 때"
+  },
+  "nationalMapLocationUnavailable": "현재 위치를 확인할 수 없어요.",
+  "@nationalMapLocationUnavailable": {
+    "description": "위치 획득 실패"
+  },
+  "nationalMapShare": "지도 공유",
+  "@nationalMapShare": {
+    "description": "전국 지도 - 공유 버튼"
+  },
+  "nationalMapShareFailed": "공유 링크를 만들지 못했어요.",
+  "@nationalMapShareFailed": {
+    "description": "공유 링크 발급 실패"
+  },
+  "sharedMapVisitedCount": "{count}곳을 다녀왔어요",
+  "@sharedMapVisitedCount": {
+    "description": "공유 지도 - 상대가 방문한 칸 수",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharedMapOverlapCount": "{count}곳이 겹쳐요",
+  "@sharedMapOverlapCount": {
+    "description": "공유 지도 - 나와 겹치는 칸 수",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharedMapNoOverlap": "겹치는 곳이 없네요.",
+  "@sharedMapNoOverlap": {
+    "description": "공유 지도 - 비교했는데 겹침이 없을 때(빈 배열)"
+  },
+  "sharedMapSignInToCompare": "로그인하면 겹치는 곳을 볼 수 있어요.",
+  "@sharedMapSignInToCompare": {
+    "description": "공유 지도 - 비인증이라 비교하지 못했을 때(null)"
+  },
+  "sharedMapGone": "더 이상 볼 수 없는 지도예요.",
+  "@sharedMapGone": {
+    "description": "공유 링크가 없거나 폐기됨 - 둘을 구분하지 않는다"
+  },
+  "sharedMapBlocked": "이 지도는 볼 수 없어요.",
+  "@sharedMapBlocked": {
+    "description": "차단 관계라 조회 불가"
+  },
+  "photoSyncTitle": "사진으로 채우기",
+  "@photoSyncTitle": {
+    "description": "사진 동기화 시트 제목"
+  },
+  "photoSyncBody": "사진에 담긴 위치로 다녀온 지역을 찾아요. 사진은 기기 밖으로 나가지 않습니다.",
+  "@photoSyncBody": {
+    "description": "사진 동기화 시트 설명 - 사진 미전송을 밝힌다"
+  },
+  "photoSyncStart": "시작하기",
+  "@photoSyncStart": {
+    "description": "사진 동기화 - 시작 버튼"
+  },
+  "photoSyncResume": "이어서 하기",
+  "@photoSyncResume": {
+    "description": "사진 동기화 - 중단 지점부터 재개"
+  },
+  "photoSyncStop": "멈추기",
+  "@photoSyncStop": {
+    "description": "사진 동기화 - 스캔 중단"
+  },
+  "photoSyncProgress": "{done} / {total}장 확인했어요",
+  "@photoSyncProgress": {
+    "description": "사진 동기화 진행률",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "photoSyncFoundSoFar": "지금까지 {count}곳을 찾았어요",
+  "@photoSyncFoundSoFar": {
+    "description": "스캔 중 찾은 지역 수",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoSyncFound": "{count}곳을 찾았어요",
+  "@photoSyncFound": {
+    "description": "스캔 완료 후 찾은 지역 수",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoSyncConfirmBody": "등록하면 지도가 채워집니다.",
+  "@photoSyncConfirmBody": {
+    "description": "등록 확인 안내"
+  },
+  "photoSyncRegister": "등록하기",
+  "@photoSyncRegister": {
+    "description": "사진 동기화 - 판정 결과 등록"
+  },
+  "photoSyncDone": "지도를 채웠어요.",
+  "@photoSyncDone": {
+    "description": "사진 동기화 완료"
+  },
+  "photoSyncNoCoordinates": "위치 정보가 있는 사진을 찾지 못했어요.",
+  "@photoSyncNoCoordinates": {
+    "description": "좌표가 하나도 없이 끝났을 때 - 오류가 아니다"
+  },
+  "photoSyncPermissionDenied": "사진 접근을 허용하면 지도를 채울 수 있어요.",
+  "@photoSyncPermissionDenied": {
+    "description": "사진 권한 거부 안내 - 오류가 아니다"
+  },
+  "photoSyncFailed": "사진을 읽는 중 문제가 생겼어요.",
+  "@photoSyncFailed": {
+    "description": "사진 동기화 실패"
+  },
+  "nationalMapUnavailable": "지도를 불러오지 못했어요",
+  "@nationalMapUnavailable": {
+    "description": "전국 지도 - 칸 목록을 읽지 못했을 때"
+  },
   "navCommunity": "커뮤니티",
   "@navCommunity": {
     "description": "하단 내비 - 커뮤니티 탭"
@@ -1880,10 +2114,6 @@
       }
     }
   },
-  "commonCancel": "취소",
-  "@commonCancel": {
-    "description": "다이얼로그 공용 취소"
-  },
   "emailVerificationNeedsResend": "이전 인증 코드는 더 이상 사용할 수 없습니다. 새 코드를 받아 주세요.",
   "@emailVerificationNeedsResend": {
     "description": "핸들 없이 인증 화면에 도착한 경우의 안내"
@@ -2019,5 +2249,33 @@
   "alarmCategorySpotQaDescription": "내 질문에 달린 답변과 내 답변에 달린 답글",
   "alarmOsDisabledNotice": "기기 설정에서 이 앱의 알림이 꺼져 있어 알림이 오지 않습니다.",
   "alarmSettingsLoadFailed": "알림 설정을 불러오지 못했습니다.",
-  "alarmSettingsSaveFailed": "저장하지 못했습니다. 다시 시도해 주세요."
+  "alarmSettingsSaveFailed": "저장하지 못했습니다. 다시 시도해 주세요.",
+  "relationConnect": "내 지도에 등록",
+  "relationConnected": "등록됨",
+  "relationConnectFailed": "등록하지 못했어요. 다시 시도해 주세요.",
+  "relationSignInToConnect": "로그인하면 이 사람을 내 지도에 등록할 수 있어요.",
+  "relationMapTitle": "나와 겹친 여행",
+  "relationMapCount": "{count}명",
+  "@relationMapCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relationMapEmpty": "아직 아무도 없어요. 내 지도를 공유하면 열어 본 사람이 스스로 등록할 수 있어요.",
+  "relationMapMe": "나",
+  "relationOverlapWith": "{count}곳 겹침",
+  "@relationOverlapWith": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relationRemove": "빼기",
+  "relationRemoved": "내 지도에서 뺐어요.",
+  "relationRemoveFailed": "빼지 못했어요. 다시 시도해 주세요.",
+  "relationMapHint": "가운데에 가까울수록 겹치는 곳이 많아요.",
+  "commonMore": "더 보기"
 }

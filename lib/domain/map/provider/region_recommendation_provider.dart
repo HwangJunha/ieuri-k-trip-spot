@@ -5,6 +5,7 @@ import '../../../common/location/location_providers.dart';
 import '../../../common/location/location_service.dart';
 import '../model/region_recommendation.dart';
 import 'map_providers.dart';
+import '../../auth/provider/session_scope.dart';
 
 part 'region_recommendation_provider.g.dart';
 
@@ -78,7 +79,11 @@ Future<Coordinates> _resolveOrigin(Ref ref) async {
 @Riverpod(keepAlive: true)
 class RegionRecommendationRetryCount extends _$RegionRecommendationRetryCount {
   @override
-  int build() => 0;
+  int build() {
+    // 로그아웃하면 재시도 횟수를 되돌린다.
+    ref.watchSignedIn();
+    return 0;
+  }
 
   /// 아직 재시도를 쓸 수 있는지.
   bool get canRetry => state < regionRecommendationRetryLimit;

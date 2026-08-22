@@ -5,6 +5,7 @@ import '../model/map_marker.dart';
 import '../model/map_tuning.dart';
 import '../model/map_viewport_result.dart';
 import '../model/marker_thinning.dart';
+import '../../auth/provider/session_scope.dart';
 
 part 'map_marker_controller.g.dart';
 
@@ -23,7 +24,12 @@ part 'map_marker_controller.g.dart';
 @Riverpod(keepAlive: true)
 class MapMarkerController extends _$MapMarkerController {
   @override
-  List<MapMarker> build() => const <MapMarker>[];
+  List<MapMarker> build() {
+    // 로그아웃하면 쌓인 마커를 버린다. 이 컨트롤러는 `add` 의미라 스스로
+    // 비워지지 않는다.
+    ref.watchSignedIn();
+    return const <MapMarker>[];
+  }
 
 
   /// 새 조회 결과를 기존 마커에 **더한다**.

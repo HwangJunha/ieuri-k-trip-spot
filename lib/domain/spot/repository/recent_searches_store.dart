@@ -29,6 +29,12 @@ abstract interface class RecentSearchesStore {
 
   /// 목록을 통째로 저장한다(호출부가 순서·상한을 이미 적용한 상태로 넘긴다).
   Future<void> write(List<String> queries);
+
+  /// **모든 언어의** 이력을 지운다. 로그아웃이 부른다.
+  ///
+  /// 활성 언어만 지우면 다른 언어의 이력이 남아 다음 사용자에게 보인다 —
+  /// 언어를 바꿔 본 적 있는 사용자에게 실제로 일어난다.
+  Future<void> clearAll();
 }
 
 /// [SharedPreferences] 기반 구현.
@@ -61,4 +67,15 @@ class SharedPreferencesRecentSearchesStore implements RecentSearchesStore {
   @override
   Future<void> write(List<String> queries) =>
       _prefs.setStringList(_key, queries);
+
+  @override
+  Future<void> clearAll() async {
+    // 언어를 열거하지 않고 접두사로 찾는다 — 지원 언어가 늘어도 따라온다.
+    final Iterable<String> keys = _prefs.getKeys().where(
+      (String k) => k.startsWith(_keyPrefix),
+    );
+    for (final String key in keys) {
+      await _prefs.remove(key);
+    }
+  }
 }

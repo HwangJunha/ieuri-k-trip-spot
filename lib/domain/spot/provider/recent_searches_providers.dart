@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../common/localization/locale_controller.dart';
 import '../../../common/storage/app_preferences.dart';
 import '../repository/recent_searches_store.dart';
+import '../../auth/provider/session_scope.dart';
 
 part 'recent_searches_providers.g.dart';
 
@@ -35,7 +36,14 @@ class RecentSearches extends _$RecentSearches {
   /// 저장소를 **watch 한다**(SPEC-0029 R-21). 언어가 바뀌면 저장소가 갈아 끼워지므로,
   /// 여기서 구독하지 않으면 keepAlive인 이 목록이 이전 언어의 이력을 그대로 들고 있다.
   @override
-  List<String> build() => ref.watch(recentSearchesStoreProvider).read();
+  List<String> build() {
+    // 로그아웃하면 목록을 비운다 — 검색어는 그 사람이 무엇을 찾았는지다.
+    //
+    // **디스크는 이것만으로 안 지워진다.** 저장소가 언어별로만 나뉘어 있어
+    // 앱을 다시 켜면 되살아난다 — `signOut()`이 `clear()`를 부른다.
+    if (!ref.watchSignedIn()) return const <String>[];
+    return ref.watch(recentSearchesStoreProvider).read();
+  }
 
   /// 검색을 실행했을 때 질의를 기록한다(AC-12.1).
   ///

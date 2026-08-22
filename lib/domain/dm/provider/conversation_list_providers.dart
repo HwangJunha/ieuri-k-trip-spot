@@ -9,6 +9,7 @@ import '../../../common/pagination/page.dart';
 import '../model/conversation.dart';
 import '../repository/dm_repository.dart';
 import 'dm_providers.dart';
+import '../../auth/provider/session_scope.dart';
 
 part 'conversation_list_providers.g.dart';
 
@@ -26,7 +27,11 @@ const int _pageSize = 20;
 @Riverpod(keepAlive: true)
 class UnreadConversationsFlag extends _$UnreadConversationsFlag {
   @override
-  bool build() => false;
+  bool build() {
+    // 로그아웃하면 안 읽음 배지를 내린다 — 이전 사용자의 DM이다.
+    ref.watchSignedIn();
+    return false;
+  }
 
   void set(bool value) => state = value;
 }

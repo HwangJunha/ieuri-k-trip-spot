@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/gen/app_localizations.dart';
+import 'korea_icon.dart';
 
 /// The 5-tab shell chrome: renders the active tab's [StatefulNavigationShell]
 /// with a floating, rounded bottom navigation bar (DESIGN.md §8). The Discover
@@ -32,7 +33,9 @@ class FloatingBottomNavScaffold extends StatelessWidget {
   /// [barExtent]가 함께 따라간다.
   static const double _barVerticalPadding = 8;
 
-  /// Material [NavigationBar]의 기본 높이. 테마에서 높이를 지정하지 않아 기본값이다.
+  /// Material [NavigationBar]의 기본 높이.
+  ///
+  /// 64로 줄여 봤으나 얇아서 되돌렸다(사용자 결정, 2026-08-22).
   static const double _navigationBarHeight = 80;
 
   void _onTap(int index) {
@@ -85,6 +88,7 @@ class FloatingBottomNavScaffold extends StatelessWidget {
                 borderRadius: BorderRadius.circular(999),
                 child: NavigationBar(
                   key: const Key('bottom_nav_bar'),
+                  height: _navigationBarHeight,
                   selectedIndex: navigationShell.currentIndex,
                   onDestinationSelected: _onTap,
                   destinations: <Widget>[
@@ -94,11 +98,16 @@ class FloatingBottomNavScaffold extends StatelessWidget {
                       selectedIcon: const Icon(Icons.home),
                       label: l10n.navHome,
                     ),
+                    // SPEC-0030 R17: 1번은 전국 지도(내가 채운 기록), 4번이
+                    // 기존 뷰포트 지도(지금 주변에 뭐가 있나)다. 둘은 성격이
+                    // 달라 합치지 않는다(설계 §9).
                     NavigationDestination(
-                      key: const Key('bottom_nav_map'),
-                      icon: const Icon(Icons.map_outlined),
-                      selectedIcon: const Icon(Icons.map),
-                      label: l10n.navMap,
+                      key: const Key('bottom_nav_national_map'),
+                      // 지구본(`Icons.public`)은 "전국"이라는 뜻이 안 드러난다.
+                      // 한반도 실루엣을 직접 그린다.
+                      icon: const KoreaIcon(),
+                      selectedIcon: const KoreaIcon(filled: true),
+                      label: l10n.navNationalMap,
                     ),
                     NavigationDestination(
                       key: const Key('bottom_nav_discover'),
@@ -109,17 +118,18 @@ class FloatingBottomNavScaffold extends StatelessWidget {
                       ),
                       label: l10n.navDiscover,
                     ),
+                    // SPEC-0030 R18: 좋아요와 커뮤니티가 보관함 한 자리로 합쳐진다.
                     NavigationDestination(
-                      key: const Key('bottom_nav_liked'),
-                      icon: const Icon(Icons.favorite_outline),
-                      selectedIcon: const Icon(Icons.favorite),
-                      label: l10n.navLiked,
+                      key: const Key('bottom_nav_library'),
+                      icon: const Icon(Icons.bookmark_outline),
+                      selectedIcon: const Icon(Icons.bookmark),
+                      label: l10n.navLibrary,
                     ),
                     NavigationDestination(
-                      key: const Key('bottom_nav_community'),
-                      icon: const Icon(Icons.forum_outlined),
-                      selectedIcon: const Icon(Icons.forum),
-                      label: l10n.navCommunity,
+                      key: const Key('bottom_nav_map'),
+                      icon: const Icon(Icons.map_outlined),
+                      selectedIcon: const Icon(Icons.map),
+                      label: l10n.navMap,
                     ),
                   ],
                 ),

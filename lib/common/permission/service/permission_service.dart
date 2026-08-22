@@ -44,9 +44,14 @@ class PermissionHandlerService implements PermissionService {
   Future<bool> openSettings() => openAppSettings();
 
   /// 포그라운드 위치만 — 절대 `locationAlways`는 안 씀 (R1, R7).
+  ///
+  /// 사진은 `Permission.photos`다. Android 13+에서 이것이 `READ_MEDIA_IMAGES`로
+  /// 매핑되며, EXIF의 GPS를 읽으려면 매니페스트의 `ACCESS_MEDIA_LOCATION`이
+  /// 함께 있어야 한다 — 런타임 요청 대상은 아니다(SPEC-0030 설계 §4).
   Permission _permission(PermissionKind kind) => switch (kind) {
     PermissionKind.location => Permission.locationWhenInUse,
     PermissionKind.notification => Permission.notification,
+    PermissionKind.photos => Permission.photos,
   };
 
   PermissionState _map(PermissionStatus status) => switch (status) {

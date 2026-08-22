@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../model/retry_budget.dart';
+import '../../auth/provider/session_scope.dart';
 
 part 'retry_budget_providers.g.dart';
 
@@ -19,7 +20,12 @@ part 'retry_budget_providers.g.dart';
 @Riverpod(keepAlive: true)
 class SpotRetryBudget extends _$SpotRetryBudget {
   @override
-  RetryBudget build(String scope) => const RetryBudget();
+  RetryBudget build(String scope) {
+    // 로그아웃하면 예산을 되돌린다 — 이전 사용자가 소진한 한도를 새 사용자가
+    // 물려받으면 아무것도 못 한다.
+    ref.watchSignedIn();
+    return const RetryBudget();
+  }
 
   /// [failure] 1회를 계상한다. 인증 실패·권한 거부처럼 계상하지 않는 실패는 호출부가
   /// 걸러낸 뒤 부른다(설계문서 §2.3). 실패 자체를 함께 보관해, 소진 뒤의 재빌드가

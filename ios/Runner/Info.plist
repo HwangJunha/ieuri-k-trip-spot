@@ -7,7 +7,7 @@
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>K-Trip Spot uses your location while you use the app to show nearby attractions and real-time crowd levels. It is never accessed in the background.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
-		<string>K-Trip Spot needs access to your photo library so you can attach photos to your community posts.</string>
+		<string>K-Trip Spot reads the location saved in your photos to fill in the regions you have visited on your map, and lets you attach photos to community posts. Your photos never leave your device, and location data is used only to identify regions — it is never stored.</string>
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
@@ -82,6 +82,29 @@
 		     Google uses its REVERSED_CLIENT_ID; Kakao uses kakao{NATIVE_APP_KEY}. -->
 		<key>CFBundleURLTypes</key>
 		<array>
+			<!-- 앱 자체의 스킴(SPEC-0030). 회사명(ieuri)이 아니라 **앱 이름**을 쓴다 —
+			     번들 id `kr.ieuri.ktripspot`의 마지막 조각과 같다.
+
+			     경로는 웹 URL과 **똑같이** 둔다:
+			       웹   https://www.ieuri.co.kr/tour/korea-map/<token>
+			       스킴 ktripspot://tour/korea-map/<token>
+			     그래야 GoRouter 라우트 하나가 둘 다 받는다.
+
+			     **주 경로가 아니라 폴백이다.** 외부에서 들어오는 링크는
+			     Universal Links가 맡는다(2026 권장). 이 스킴은 카카오톡 인앱
+			     브라우저에서 Universal Link 버튼조차 막히는 경우를 위한 대비이며,
+			     메신저는 커스텀 스킴을 링크로 인식조차 하지 않으므로 이것만으로
+			     공유를 대신할 수는 없다. -->
+			<dict>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+				<key>CFBundleURLName</key>
+				<string>kr.ieuri.ktripspot</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>ktripspot</string>
+				</array>
+			</dict>
 			<dict>
 				<key>CFBundleTypeRole</key>
 				<string>Editor</string>

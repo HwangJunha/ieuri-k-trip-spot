@@ -86,7 +86,7 @@ final class SpotCategoryCodesProvider
   }
 }
 
-String _$spotCategoryCodesHash() => r'4768a0e04bcb1a9e05823314a3df5c0ba2dc1931';
+String _$spotCategoryCodesHash() => r'5c8de5910e665aebfd6aad90e2bd3e650de88278';
 
 /// 상세를 열기 직전에 목록이 알려주는 **spot의 카테고리 코드**(contentId → code).
 ///

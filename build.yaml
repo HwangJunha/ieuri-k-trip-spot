@@ -37,6 +37,11 @@ targets:
           - lib/domain/settings/repository/email_change_schema.graphql
           # SPEC-0014 지도·혼잡도. MapSpot/SpotCluster가 SpotCategory를 참조하는데,
           # codegen이 조각을 하나로 병합하므로 spot 쪽 정의를 그대로 쓴다.
+          # SPEC-0030 전국 지도. CellSpot이 SpotCategory를, CellImage가
+          # CopyrightType을 참조하는데 codegen이 조각을 하나로 병합하므로 spot 쪽
+          # 정의를 그대로 쓴다.
+          - lib/domain/national_map/repository/national_map_operations.graphql
+          - lib/domain/national_map/repository/national_map_schema.graphql
           - lib/domain/map/repository/map_operations.graphql
           - lib/domain/map/repository/map_schema.graphql
           # SPEC-0017 DM(SPEC-0021로 피드가 빠졌다). PostAuthor·PageInfo·UserError·
