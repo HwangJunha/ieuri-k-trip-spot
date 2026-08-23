@@ -8,7 +8,8 @@ import '../model/cell_image.dart';
 /// 원본 비율을 지킨다 — 공공누리 제3유형의 "변경금지"가 형식의 변경까지 포함한다고
 /// 읽히기 때문이다. UI 취향이 아니라 법적 제약이다(POL-051).
 ///
-/// `attributionText`는 유형과 무관하게 **항상** 노출한다.
+/// `attributionText`는 **값이 있으면** 유형과 무관하게 노출한다. 우리가 만든
+/// 이미지는 표기할 출처가 없어 서버가 빈 문자열을 내려준다.
 class CellImageView extends StatelessWidget {
   const CellImageView({required this.image, this.height = 200, super.key});
 
@@ -62,14 +63,18 @@ class CellImageView extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 4),
-        // 유형과 무관하게 항상 노출한다(R24).
-        Text(
-          image.attributionText,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+        // **출처가 비어 있으면 줄 자체를 두지 않는다.** 우리가 만든 이미지
+        // (cdn.ieuri.co.kr)는 표기할 출처가 없는데, 빈 Text 를 그리면 아래
+        // 여백만 남아 레이아웃이 어긋난다. 남의 사진일 때만 R24 가 걸린다.
+        if (image.attributionText.trim().isNotEmpty) ...<Widget>[
+          const SizedBox(height: 4),
+          Text(
+            image.attributionText,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
-        ),
+        ],
       ],
     );
   }
