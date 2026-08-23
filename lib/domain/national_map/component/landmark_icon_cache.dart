@@ -1,4 +1,4 @@
-import 'dart:ui' show Picture, Size;
+import 'dart:ui' show Canvas, Image, Picture, PictureRecorder, Size;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -53,13 +53,62 @@ class LandmarkIconKey {
 /// 없다. 캐시가 실제로 필요로 하는 것은 그림과 그 기준 크기 둘뿐이다.
 @immutable
 class LandmarkIconPicture {
-  const LandmarkIconPicture({required this.picture, required this.size});
+  LandmarkIconPicture({required this.picture, required this.size});
 
   /// `canvas.drawPicture()`로 바로 그려지는 그림.
   final Picture picture;
 
   /// 그림의 기준 크기(SVG viewBox, 120×120). 칸 크기에 맞출 때 분모가 된다.
   final Size size;
+
+  /// 화면 크기별로 구워 둔 래스터.
+  ///
+  /// **벡터를 프레임마다 재생하는 것이 버벅임의 절반이다.** 실기기 프로파일에서
+  /// raster 23ms 중 `drawPicture` 161회가 15.4ms 였다(saveLayer 를 끄고 잰 값).
+  /// 한 번 구워 두면 다음 프레임부터는 합성만 하면 된다.
+  ///
+  /// **키는 그릴 픽셀 크기다.** 정사각으로 굽거나 한 크기만 굽고 늘려 쓰면
+  /// 세로로 긴 칸에서 픽셀이 늘어나 경계가 계단이 된다 — 실제로 그렇게 만들어
+  /// 실기기에서 확인됐다. 그리는 크기 그대로 구워 늘리지 않는다.
+  final Map<int, Image> _rasters = <int, Image>{};
+
+  /// [width]×[height] 픽셀로 구운 래스터. 없으면 지금 굽는다.
+  ///
+  /// `toImageSync` 는 핸들을 동기로 돌려주고 래스터화는 뒤에서 한다 — 그래서
+  /// `paint()` 안에서 부를 수 있다. GPU 문맥이 있으면 GPU 에 상주하는 이미지가
+  /// 되어 그리기가 더 빠르다(dart:ui 문서).
+  Image rasterOf(int width, int height) {
+    final int key = width * 100000 + height;
+    final Image? cached = _rasters[key];
+    if (cached != null) return cached;
+
+    final PictureRecorder recorder = PictureRecorder();
+    Canvas(recorder)
+      ..scale(width / size.width, height / size.height)
+      ..drawPicture(picture);
+    final Picture scaled = recorder.endRecording();
+    final Image image = scaled.toImageSync(width, height);
+    scaled.dispose();
+
+    // 줌 단계마다 한 장씩 쌓이므로 상한을 둔다. 오래된 것부터 버린다.
+    if (_rasters.length >= _maxRastersPerIcon) {
+      final int oldest = _rasters.keys.first;
+      _rasters.remove(oldest)?.dispose();
+    }
+    _rasters[key] = image;
+    return image;
+  }
+
+  /// 한 아이콘이 들고 있을 래스터 수 상한.
+  static const int _maxRastersPerIcon = 5;
+
+  void dispose() {
+    for (final Image image in _rasters.values) {
+      image.dispose();
+    }
+    _rasters.clear();
+    picture.dispose();
+  }
 }
 
 /// SVG 한 장을 그릴 수 있는 [LandmarkIconPicture]로 만든다.
@@ -129,7 +178,8 @@ class LandmarkIconCache {
   /// 캐시를 비우고 그림을 해제한다.
   void dispose() {
     for (final LandmarkIconPicture info in _pictures.values) {
-      info.picture.dispose();
+      // 그림과 함께 **구워 둔 래스터도** 놓아 준다.
+      info.dispose();
     }
     _pictures.clear();
   }

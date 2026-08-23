@@ -388,6 +388,7 @@ class _NationalMapCanvasState extends State<NationalMapCanvas>
               zoomScale: _zoomScale,
               padding: _padding,
               cover: widget.cover,
+              devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
             ),
           ),
           ),

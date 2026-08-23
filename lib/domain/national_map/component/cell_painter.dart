@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import 'dart:ui' as ui show Image;
+
 import 'package:flutter/material.dart';
 
 import '../model/cell_geometry.dart';
@@ -60,7 +62,14 @@ class CellPainter extends CustomPainter {
     this.cover = false,
     this.iconSize = defaultIconSize,
     this.zoomScale = 1,
+    this.devicePixelRatio = 1,
   });
+
+  /// 화면의 물리 픽셀 배율.
+  ///
+  /// 래스터를 논리 크기로만 구우면 고해상도 화면에서 흐려진다 — 실제 픽셀
+  /// 수만큼 구워야 벡터로 그린 것과 같은 선명도가 나온다.
+  final double devicePixelRatio;
 
   /// 아이콘 그림 캐시. null이면 아이콘을 그리지 않는다(작은 미리보기·테스트).
   final LandmarkIconCache? iconCache;
@@ -322,6 +331,47 @@ class CellPainter extends CustomPainter {
     LandmarkIconPicture info,
     double opacity,
   ) {
+    // **그릴 크기 그대로 구운 래스터를 쓴다.**
+    //
+    // 실기기 프로파일에서 raster 23ms 중 `saveLayer` 161회가 7.7ms,
+    // `drawPicture` 161회가 15.4ms 였다. 래스터는 둘을 한꺼번에 없앤다 —
+    // 합성만 하면 되고, 투명도는 `Paint.color` 의 알파가 처리해 오프스크린
+    // 버퍼가 필요 없다.
+    //
+    // **늘리지 않는 것이 핵심이다.** 한 크기로 구워 칸마다 늘려 쓰면 세로로
+    // 긴 칸에서 픽셀이 늘어나 경계가 계단이 된다(실기기 확인). 그리는 크기를
+    // 그대로 키로 삼아 굽는다.
+    // 확대 배율까지 곱해야 확대했을 때도 선명하다.
+    //
+    // **다만 배율을 그대로 쓰면 안 된다.** 핀치 중에는 배율이 프레임마다
+    // 조금씩 달라지는데, 그때마다 크기가 바뀌면 161개를 매 프레임 다시 굽는다
+    // — 팬은 부드러운데 줌만 버벅이던 원인이다. 몇 단계로 반올림해 단계를
+    // 넘을 때만 다시 굽는다. 단계 사이에서는 최대 1.5배 확대되지만, 구운 것이
+    // 이미 화면 픽셀보다 촘촘해 눈에 띄지 않는다.
+    final double dpr = devicePixelRatio * _rasterZoomStep(zoomScale);
+    final int w = (bounds.width * dpr).round();
+    final int h = (bounds.height * dpr).round();
+    if (w > 0 && h > 0 && w <= _maxRasterSide && h <= _maxRasterSide) {
+      final ui.Image raster = info.rasterOf(w, h);
+      canvas
+        ..save()
+        ..clipPath(cellPath)
+        ..drawImageRect(
+          raster,
+          Rect.fromLTWH(0, 0, w.toDouble(), h.toDouble()),
+          bounds,
+          Paint()
+            ..isAntiAlias = true
+            // 구운 크기와 그리는 크기가 같으므로 확대·축소가 없다. 그래도
+            // 부동소수 오차로 반 픽셀이 어긋날 수 있어 보간은 켜 둔다.
+            ..filterQuality = FilterQuality.medium
+            ..color = const Color(0xFFFFFFFF).withValues(alpha: opacity),
+        )
+        ..restore();
+      return;
+    }
+
+    // 너무 크거나(확대 최대) 크기가 0이면 벡터로 그린다.
     canvas.save();
     if (opacity < 0.99) {
       canvas.saveLayer(
@@ -345,6 +395,24 @@ class CellPainter extends CustomPainter {
     if (opacity < 0.99) canvas.restore();
     canvas.restore();
   }
+
+  /// 이 배율에서 쓸 래스터 배율. 연속값을 몇 단계로 접는다.
+  ///
+  /// 핀치 중 배율은 매 프레임 미세하게 달라진다. 그 값을 그대로 쓰면 크기가
+  /// 계속 바뀌어 캐시가 맞지 않고 161개를 다시 굽는다.
+  static double _rasterZoomStep(double zoom) {
+    if (zoom <= 1.2) return 1;
+    if (zoom <= 1.8) return 1.5;
+    if (zoom <= 2.8) return 2.25;
+    if (zoom <= 4.2) return 3.5;
+    return 5;
+  }
+
+  /// 래스터 한 변의 상한(px). 넘으면 벡터로 그린다.
+  ///
+  /// 크게 확대하면 칸 하나가 화면을 덮어 래스터가 수천 픽셀이 된다 — 그때는
+  /// 굽는 값이 그리는 값보다 비싸고 메모리도 많이 든다.
+  static const int _maxRasterSide = 1024;
 
   /// 확대해도 카드가 이 배 이상 커지지는 않는다.
   ///
