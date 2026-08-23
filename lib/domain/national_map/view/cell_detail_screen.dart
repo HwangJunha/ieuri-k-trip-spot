@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../component/cell_artwork_view.dart';
+import '../component/cell_image_view.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../spot/view/spot_detail_view.dart';
-import '../component/cell_image_view.dart';
 import '../model/cell_detail.dart';
 import '../model/map_cell.dart';
 import '../provider/national_map_providers.dart';
@@ -76,9 +77,13 @@ class _Body extends ConsumerWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         children: <Widget>[
-          // **이미지가 없어도 빈 칸으로 두지 않는다**(R10) — 지역명만 보인다.
+          // **상세는 실사 사진이다**(SPEC-0031, 2026-08-23 결정). 지도 칸은 우리
+          // 그림이고, 확대하면 그 지역의 실제 모습을 본다. 사진이 아직 없는
+          // 칸은 그림으로 대체한다.
           if (cell.representativeImage != null)
-            CellImageView(image: cell.representativeImage!),
+            CellImageView(image: cell.representativeImage!)
+          else
+            CellArtworkView(cellId: cell.id, visited: cell.visited),
           const SizedBox(height: 16),
           Row(
             children: <Widget>[

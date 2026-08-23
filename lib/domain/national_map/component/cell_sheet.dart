@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'cell_artwork_view.dart';
+import 'cell_image_view.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/cell_detail.dart';
 import '../model/map_cell.dart';
 import '../provider/national_map_providers.dart';
 import '../provider/visit_controller.dart';
 import '../view/cell_detail_screen.dart';
-import 'cell_image_view.dart';
 import 'map_sheet.dart';
 
 /// 지도에서 칸을 눌렀을 때 올라오는 시트(R22·R24).
@@ -149,9 +150,16 @@ class _Content extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        // **이미지가 없어도 빈 칸으로 두지 않는다**(R10) — 지역명만 보인다.
+        // **상세는 실사 사진이다**(SPEC-0031, 2026-08-23 결정). 지도 칸은 우리
+        // 그림이지만 상세까지 그림이면 정보가 늘지 않는다 — 확대했을 때 그
+        // 지역이 실제로 어떻게 생겼는지 보여주는 편이 낫다.
+        //
+        // 서버 이미지가 없는 칸이 남아 있으므로 그림으로 대체한다. R10의
+        // "빈 칸으로 두지 않는다"는 이 폴백이 지킨다.
         if (cell.representativeImage != null)
-          CellImageView(image: cell.representativeImage!, height: 180),
+          CellImageView(image: cell.representativeImage!, height: 180)
+        else
+          CellArtworkView(cellId: cell.id, visited: cell.visited, height: 180),
         const SizedBox(height: 16),
         if (detail.spots.isNotEmpty) ...<Widget>[
           Text(

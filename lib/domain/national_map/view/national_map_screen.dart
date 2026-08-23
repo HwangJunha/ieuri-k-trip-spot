@@ -112,9 +112,11 @@ class _BodyState extends ConsumerState<_Body> {
               visitedCellIds: visited,
               selectedCellId: _selectedCellId,
               onCellTap: _onCellTap,
-              // 지도가 거의 정사각형이라 fit이면 세로가 절반 가까이 빈다.
-              // 세로를 채우고 좌우로 넘치는 빈 바다는 잘라 낸다.
-              cover: true,
+              // **전국이 한눈에 들어와야 한다.** cover로 세로를 채우면 배율이
+              // 두 배가 되어 좌우가 414px 잘리고 제주와 북쪽 일부가 화면 밖으로
+              // 나간다(실기기 확인). 먼 섬을 뺀 본토 비율이 0.73이라 fit이면
+              // 가로가 꽉 차고 남는 세로에 제주가 들어온다.
+              cover: false,
             ),
           ),
         ),

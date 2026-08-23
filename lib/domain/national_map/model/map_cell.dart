@@ -17,7 +17,6 @@ class MapCell {
     required this.provinceCode,
     required this.visited,
     required this.center,
-    this.landmarkCaption,
     this.representativeImage,
   });
 
@@ -49,12 +48,6 @@ class MapCell {
   /// 지도를 이 칸으로 옮길 때 쓰는 대표 좌표. 항상 이 칸의 경계 안이다.
   final GeoPoint center;
 
-  /// 대표 이미지의 **이름만**(예: 경복궁). 지도에 그릴 도형 유형을 여기서 뽑는다.
-  ///
-  /// `mapCells`는 이 값만 받고 [representativeImage]는 null이다 — 지도의 칸에는
-  /// 실사진을 그리지 않으므로 URL을 받을 이유가 없다. 상세 조회에서는 둘 다 온다.
-  final String? landmarkCaption;
-
   /// 대표 이미지. **없을 수 있다**(R10) — 특산품 14건이 아직 없어 실제로
   /// 발생한다. 없어도 칸은 그리고 지역명만 표시한다.
   final CellImage? representativeImage;
@@ -67,7 +60,6 @@ class MapCell {
     provinceCode: provinceCode,
     visited: visited ?? this.visited,
     center: center,
-    landmarkCaption: landmarkCaption,
     representativeImage: representativeImage ?? this.representativeImage,
   );
 

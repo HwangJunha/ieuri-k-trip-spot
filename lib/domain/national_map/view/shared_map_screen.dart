@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
-import '../../../common/widget/floating_bottom_nav_scaffold.dart';
 import '../component/cell_sheet.dart';
+import '../component/overlap_list_sheet.dart';
 import '../component/national_map_canvas.dart';
 import '../model/cell_geometry.dart';
 import '../model/national_map_failure.dart';
@@ -11,6 +12,7 @@ import '../model/shared_map.dart';
 import '../provider/national_map_providers.dart';
 import '../provider/relation_providers.dart';
 import '../provider/share_providers.dart';
+import 'national_map_screen.dart';
 
 /// 공유 링크로 연 남의 지도(R37·R38).
 ///
@@ -96,9 +98,11 @@ class _BodyState extends ConsumerState<_Body> {
           child: Padding(
             padding: EdgeInsets.only(
               top: MediaQuery.paddingOf(context).top + 52,
-              // 전국 지도와 같은 값이다 — 제주가 지도 맨 아래라 이만큼 비켜서지
-              // 않으면 하단 바에 잘린다(실기기 확인).
-              bottom: FloatingBottomNavScaffold.barExtent + 28,
+              // **하단 바 높이를 비우지 않는다.** 전국 지도에서 값을 가져왔는데
+              // 이 화면은 딥링크로 단독으로 열려 하단 바가 없다 — 그만큼이
+              // 통째로 빈 공간이 되어 지도가 한 눈에 들어오지 않았다.
+              // 제주가 잘리지 않을 만큼만 둔다.
+              bottom: MediaQuery.paddingOf(context).bottom + 12,
             ),
             child: switch (geometries) {
               AsyncData<List<CellGeometry>>(
@@ -160,7 +164,18 @@ class _TopBar extends ConsumerWidget {
         ),
         child: Row(
           children: <Widget>[
-            const BackButton(),
+            // **pop 할 수 있을 때만 pop 한다.** 딥링크로 바로 열리면 스택에
+            // 이전 화면이 없어 기본 [BackButton]은 아무 일도 하지 않는다 —
+            // 버튼이 눌리지 않는 것처럼 보였다. 그때는 전국 지도로 보낸다.
+            BackButton(
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.goNamed(NationalMapScreen.routeName);
+                }
+              },
+            ),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -196,6 +211,17 @@ class _TopBar extends ConsumerWidget {
                 ],
               ),
             ),
+            // 겹치는 **곳이 어디인지**는 목록으로 본다. 지도에서 색칠된 칸을
+            // 눈으로 찾는 것은 작은 칸이 섞이면 사실상 불가능하다(사용자 지적).
+            if (map.canCompare && !map.hasNoOverlap)
+              IconButton(
+                icon: const Icon(Icons.format_list_bulleted),
+                tooltip: l10n.sharedMapOverlapCount(
+                  map.overlappingCellIds!.length,
+                ),
+                onPressed: () =>
+                    OverlapListSheet.show(context, map.overlappingCellIds!),
+              ),
             _ConnectAction(map: map, token: token, l10n: l10n),
           ],
         ),

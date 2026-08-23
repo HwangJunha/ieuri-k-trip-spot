@@ -1,9 +1,12 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/material.dart';
 
 import '../model/cell_geometry.dart';
 import '../model/cell_hit_test.dart';
 import '../model/cell_projection.dart';
 import 'cell_painter.dart';
+import 'landmark_icon_cache.dart';
 
 /// 161칸을 그리고 탭을 받는 지도(R20·R22).
 ///
@@ -181,6 +184,9 @@ class _NationalMapCanvasState extends State<NationalMapCanvas>
   );
   Animation<Matrix4>? _zoom;
 
+  /// 현재 확대 배율. 칸이 커지면 그림을 더 또렷하게 그린다(SPEC-0031 §5.1).
+  double _zoomScale = 1;
+
   @override
   void initState() {
     super.initState();
@@ -188,13 +194,80 @@ class _NationalMapCanvasState extends State<NationalMapCanvas>
       final Animation<Matrix4>? z = _zoom;
       if (z != null) _controller.value = z.value;
     });
+    // **배율을 painter에 알린다.** 종이 지도와 달리 화면은 확대할 수 있으므로,
+    // 칸이 손톱만 해지는 배율에서만 장면 그림을 드러낸다. 기본 배율에서 다
+    // 그리면 2~3mm 칸에서 뭉개져 얼룩만 남는다.
+    _controller.addListener(_onTransformChanged);
+    _preloadIcons();
+  }
+
+  void _onTransformChanged() {
+    final double next = _controller.value.getMaxScaleOnAxis();
+    // 미세한 변화까지 setState하면 팬·핀치 중에 프레임이 낭비된다.
+    if ((next - _zoomScale).abs() < 0.05) return;
+    final LandmarkDetail before = _detailFor(_zoomScale);
+    setState(() => _zoomScale = next);
+    // 상세 단계가 바뀌는 순간에만 그 벌을 읽어 온다. 처음부터 322장을 다 들고
+    // 있으면 진입이 느려지고, 대부분은 확대하지 않는다.
+    if (_detailFor(next) != before) _preloadIcons();
+  }
+
+  /// 이 배율에서 쓸 그림 단계. [CellPainter]와 같은 기준을 써야 한다.
+  static LandmarkDetail _detailFor(double zoom) =>
+      CellPainter.detailForZoom(zoom);
+
+  @override
+  void didUpdateWidget(NationalMapCanvas old) {
+    super.didUpdateWidget(old);
+    // 방문 칸이 바뀌면 그 칸이 필요로 하는 변형이 달라진다. 칸 목록이 바뀌어도
+    // 마찬가지다.
+    if (old.cells != widget.cells ||
+        !CellPainter.setEquals(old.visitedCellIds, widget.visitedCellIds) ||
+        !CellPainter.setEquals(
+          old.overlappingCellIds,
+          widget.overlappingCellIds,
+        )) {
+      _preloadIcons();
+    }
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_onTransformChanged);
+    _iconCache.dispose();
     _animation.dispose();
     _controller.dispose();
     super.dispose();
+  }
+
+  /// 이 지도가 쓰는 아이콘 그림 캐시.
+  final LandmarkIconCache _iconCache = LandmarkIconCache();
+
+  /// 칸에 필요한 아이콘을 미리 디코딩한다(스펙 §4).
+  ///
+  /// **161칸 전부가 대상이다.** 미방문 칸도 무채색 아이콘을 그리므로 방문 여부는
+  /// 어느 변형이 필요한지만 가른다. `paint()`에서 `await`할 수 없으니 여기서
+  /// 채우고, 끝나면 다시 그린다.
+  void _preloadIcons() {
+    final Set<String> filled =
+        widget.overlappingCellIds ?? widget.visitedCellIds;
+    final LandmarkDetail detail = _detailFor(_zoomScale);
+    final List<LandmarkIconKey> keys = <LandmarkIconKey>[
+      for (final CellGeometry cell in widget.cells)
+        if (cell.landmarkSlug != null)
+          LandmarkIconKey(
+            cell.landmarkSlug!,
+            visited: filled.contains(cell.cellId),
+            detail: detail,
+          ),
+    ];
+    if (keys.isEmpty) return;
+
+    unawaited(
+      _iconCache.preload(keys).then((_) {
+        if (mounted) setState(() {});
+      }),
+    );
   }
 
   /// 더블탭으로 확대·복귀한다.
@@ -311,8 +384,11 @@ class _NationalMapCanvasState extends State<NationalMapCanvas>
               overlappingCellIds: widget.overlappingCellIds,
               selectedCellId: widget.selectedCellId,
               palette: palette,
+              iconCache: _iconCache,
+              zoomScale: _zoomScale,
               padding: _padding,
               cover: widget.cover,
+              devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
             ),
           ),
           ),

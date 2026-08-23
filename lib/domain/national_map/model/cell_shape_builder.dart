@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'cell_geometry.dart';
 import 'district_boundary.dart';
-import 'landmark_kind.dart';
+import 'landmark_icon_binding.dart';
 import 'map_cell.dart';
 
 /// 서버가 정한 칸([MapCell])과 원본 시군구 경계로 **칸 도형을 조립한다.**
@@ -24,6 +24,65 @@ class CellShapeBuilder {
   /// 아주 작은 섬은 그리지 않는다. 화면에서 한 점보다 작고 개수만 늘린다.
   static const double defaultMinArea = 0.0006;
 
+  /// 부속 섬을 남길 최소 크기(경위도 도 단위).
+  ///
+  /// 지도 전체 경도폭이 약 5.5도이고 폰 화면에서 330pt이므로 1도 ≈ 60pt다.
+  /// 0.1도면 화면에서 약 6pt(1mm) — 이보다 작은 섬은 점으로만 찍혀 지도를
+  /// 어지럽힌다. 0으로 두면 거르지 않는다.
+  static const double defaultMinIsletSpan = 0.1;
+
+  /// 링의 짧은 쪽 폭(도 단위).
+  static double _spanOf(List<GeoPoint> ring) {
+    double minLng = double.infinity;
+    double maxLng = double.negativeInfinity;
+    double minLat = double.infinity;
+    double maxLat = double.negativeInfinity;
+    for (final GeoPoint p in ring) {
+      if (p.lng < minLng) minLng = p.lng;
+      if (p.lng > maxLng) maxLng = p.lng;
+      if (p.lat < minLat) minLat = p.lat;
+      if (p.lat > maxLat) maxLat = p.lat;
+    }
+    final double w = maxLng - minLng;
+    final double h = maxLat - minLat;
+    return w < h ? w : h;
+  }
+
+  /// 미리 만들어 둔 도형으로 [cells]를 조립한다(SPEC-0031 방식 1).
+  ///
+  /// 실제 경계를 합치는 [build]와 달리 **크기가 고른 볼록 다각형**을 쓴다.
+  /// 이유는 `CellShapeSource` 문서에 있다 — 폰 화면에서 칸마다 그림을 넣으려면
+  /// 칸 크기가 고르게 나와야 한다.
+  ///
+  /// 도형이 없는 칸은 결과에서 빠진다.
+  static List<CellGeometry> buildFromShapes({
+    required Iterable<MapCell> cells,
+    required Map<String, List<List<GeoPoint>>> shapes,
+  }) {
+    final List<CellGeometry> out = <CellGeometry>[];
+    for (final MapCell cell in cells) {
+      final List<List<GeoPoint>>? parts = shapes[cell.id];
+      if (parts == null || parts.isEmpty) continue;
+
+      final LandmarkIconBinding? binding = landmarkIconBindingOf(
+        int.tryParse(cell.id) ?? -1,
+      );
+
+      out.add(
+        CellGeometry(
+          cellId: cell.id,
+          provinceCode: cell.provinceCode,
+          landmarkSlug: binding?.slug,
+          landmarkCategory: binding?.category,
+          polygons: parts,
+          center: centroid(parts.first),
+          bounds: GeoBounds.of(parts.expand((List<GeoPoint> p) => p)),
+        ),
+      );
+    }
+    return out;
+  }
+
   /// [cells]마다 도형을 만든다.
   ///
   /// 서버 칸의 `districtCodes`로 [boundaries]를 골라 합치고(dissolve) 단순화한다.
@@ -33,6 +92,7 @@ class CellShapeBuilder {
     required Iterable<DistrictBoundary> boundaries,
     double tolerance = defaultTolerance,
     double minArea = defaultMinArea,
+    double minIsletSpan = defaultMinIsletSpan,
   }) {
     final Map<String, DistrictBoundary> byCode = <String, DistrictBoundary>{
       for (final DistrictBoundary b in boundaries) b.code: b,
@@ -75,15 +135,33 @@ class CellShapeBuilder {
             ringArea(b).compareTo(ringArea(a)),
       );
 
+      // **너무 작은 부속 섬은 버린다.** 76개 조각 중 69개가 화면에서 6pt(약 1mm)
+      // 미만이라 점으로만 찍히고, 그림도 못 얹으면서 지도만 지저분해진다.
+      // 제주·거제·강화처럼 알아볼 만한 섬은 남는다(최대 12pt).
+      //
+      // **첫 번째(가장 큰) 폴리곤은 언제나 남긴다** — 본토이거나, 울릉군처럼
+      // 섬 하나가 곧 그 칸이기 때문이다.
+      if (polygons.length > 1 && minIsletSpan > 0) {
+        polygons.removeWhere(
+          (List<GeoPoint> ring) =>
+              !identical(ring, polygons.first) &&
+              _spanOf(ring) < minIsletSpan,
+        );
+      }
+
+      // 그릴 아이콘은 **결합 테이블이 정한다**(SPEC-0031 §0). 서버 칸 id가 곧
+      // 결합 키다. caption 정규식 분류를 쓰지 않는다 — 같은 이름이 여러 유형에
+      // 걸리고, 무엇보다 칸에 보이는 사진과 아이콘이 같은 장소여야 한다.
+      final LandmarkIconBinding? binding = landmarkIconBindingOf(
+        int.tryParse(cell.id) ?? -1,
+      );
+
       out.add(
         CellGeometry(
           cellId: cell.id,
           provinceCode: cell.provinceCode,
-          // 지도에는 실사진 대신 유형별 도형을 그린다 — 칸 크기에서 사진은
-          // 읽히지 않고, 56칸이 변경금지 유형이라 오려 넣을 수도 없다.
-          landmark: cell.landmarkCaption == null
-              ? null
-              : landmarkKindOf(cell.landmarkCaption!),
+          landmarkSlug: binding?.slug,
+          landmarkCategory: binding?.category,
           polygons: polygons,
           center: centroid(polygons.first),
           bounds: GeoBounds.of(polygons.expand((List<GeoPoint> p) => p)),

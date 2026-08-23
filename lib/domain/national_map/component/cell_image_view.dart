@@ -8,7 +8,8 @@ import '../model/cell_image.dart';
 /// 원본 비율을 지킨다 — 공공누리 제3유형의 "변경금지"가 형식의 변경까지 포함한다고
 /// 읽히기 때문이다. UI 취향이 아니라 법적 제약이다(POL-051).
 ///
-/// `attributionText`는 유형과 무관하게 **항상** 노출한다.
+/// 출처는 **확인된 것만** 노출한다 — UNSPECIFIED 이거나 값이 비어 있으면
+/// 표기하지 않는다([CellImage.showsAttribution]).
 class CellImageView extends StatelessWidget {
   const CellImageView({required this.image, this.height = 200, super.key});
 
@@ -62,14 +63,18 @@ class CellImageView extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 4),
-        // 유형과 무관하게 항상 노출한다(R24).
-        Text(
-          image.attributionText,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+        // 출처는 **확인된 것만** 적는다 — 판단은 모델이 한다
+        // ([CellImage.showsAttribution]). 빈 Text 를 그리면 아래 여백만
+        // 남아 레이아웃이 어긋나므로 줄 자체를 두지 않는다.
+        if (image.showsAttribution) ...<Widget>[
+          const SizedBox(height: 4),
+          Text(
+            image.attributionText,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
-        ),
+        ],
       ],
     );
   }

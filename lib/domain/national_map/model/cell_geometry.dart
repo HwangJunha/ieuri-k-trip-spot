@@ -1,4 +1,4 @@
-import 'landmark_kind.dart';
+import 'landmark_category.dart';
 
 /// 칸 1개의 **화면에 그릴 도형**(SPEC-0030 §3).
 ///
@@ -15,17 +15,22 @@ class CellGeometry {
     required this.polygons,
     required this.center,
     required this.bounds,
-    this.landmark,
+    this.landmarkSlug,
+    this.landmarkCategory,
   });
 
   /// 서버 `MapCell.id`. 방문 여부·이름을 찾는 열쇠다.
   final String cellId;
 
-  /// 상위 시도 코드 2자리. 칸 색을 정한다(`ProvincePalette`).
+  /// 상위 시도 코드 2자리.
   final String provinceCode;
 
-  /// 이 칸에 그릴 랜드마크 유형. 대표 이미지가 없으면 null이다.
-  final LandmarkKind? landmark;
+  /// 이 칸에 그릴 아이콘의 파일명(SPEC-0031). 결합 테이블에 없는 칸이면 null이고,
+  /// 그 칸은 면만 칠하고 아이콘을 생략한다(R19).
+  final String? landmarkSlug;
+
+  /// 칸의 면 색을 정하는 카테고리. 결합 테이블에 없으면 null이다.
+  final LandmarkCategory? landmarkCategory;
 
   /// 외곽 링 목록. 섬이 있으면 2개 이상이다. 구멍은 담지 않는다 —
   /// 구멍이 중요한 것은 판정이고 그건 원본이 담당한다.
