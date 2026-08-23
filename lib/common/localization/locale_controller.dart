@@ -34,11 +34,18 @@ class LocaleController extends _$LocaleController {
   /// 이전 언어의 `Accept-Language`를 싣고 나가, 방금 비운 자리를 낡은 응답으로 다시
   /// 채운다.
   Future<void> select(AppLanguage language) async {
+    // **저장은 언제나 한다.** 값이 같다고 여기서 돌아서면 첫 실행 언어 선택이
+    // 먹히지 않는다 — 기기 언어가 한국어면 [build]가 이미 한국어로 시작하므로,
+    // 사용자가 한국어 그대로 확인해도 `state == locale` 이라 저장을 건너뛰었다.
+    // 그러면 `savedLanguage` 가 null 로 남고 라우터 게이트가 다시 이 화면으로
+    // 돌려보내, 버튼이 안 눌리는 것처럼 보였다.
+    await ref.read(appPreferencesProvider).saveLanguage(language);
+
+    // 화면을 다시 세우고 언어에 매인 상태를 비우는 일은 **실제로 바뀔 때만**
+    // 한다. 같은 언어에 이것까지 돌리면 들고 있던 목록이 이유 없이 사라진다.
     if (state == language.locale) return;
 
-    await ref.read(appPreferencesProvider).saveLanguage(language);
     state = language.locale;
-
     invalidateLocaleScopedState(ref);
   }
 

@@ -118,7 +118,6 @@ class RelationOrbit extends StatelessWidget {
                         _radiusOfRing(i, ringCount, maxRadius),
                     ],
                     orbitColor: scheme.outlineVariant.withValues(alpha: 0.45),
-                    linkColor: scheme.primary,
                   ),
                 ),
               ),
@@ -336,14 +335,12 @@ class _WebPainter extends CustomPainter {
     required this.placed,
     required this.ringRadii,
     required this.orbitColor,
-    required this.linkColor,
   });
 
   final Offset center;
   final List<_Placed> placed;
   final List<double> ringRadii;
   final Color orbitColor;
-  final Color linkColor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -357,18 +354,9 @@ class _WebPainter extends CustomPainter {
       _dashedCircle(canvas, center, r, orbit);
     }
 
-    // 연결선. 겹칠수록 진하고 굵다.
-    for (final _Placed p in placed) {
-      final double t = p.relation.overlapRatio.clamp(0.0, 1.0);
-      canvas.drawLine(
-        center,
-        p.at,
-        Paint()
-          ..strokeWidth = 1 + 1.6 * t
-          ..isAntiAlias = true
-          ..color = linkColor.withValues(alpha: 0.12 + 0.38 * t),
-      );
-    }
+    // **연결선은 그리지 않는다.** 가운데의 '나'와 상대를 잇는 선이 상대 이름을
+    // 가로질러 지나가 이름이 읽히지 않았다(사용자 지적). 거리가 이미 겹침
+    // 정도를 말해 주므로 선이 없어도 뜻은 그대로다.
   }
 
   /// 점선 원. `dashPath` 패키지 없이 호를 끊어 그린다.
@@ -387,6 +375,5 @@ class _WebPainter extends CustomPainter {
       old.center != center ||
       old.placed != placed ||
       old.ringRadii != ringRadii ||
-      old.orbitColor != orbitColor ||
-      old.linkColor != linkColor;
+      old.orbitColor != orbitColor;
 }

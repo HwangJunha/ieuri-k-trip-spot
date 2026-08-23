@@ -17,6 +17,7 @@ import 'domain/alarm/component/push_registration_gate.dart';
 import 'domain/auth/repository/sns_initializer.dart';
 import 'l10n/gen/app_localizations.dart';
 import 'router/app_router.dart';
+import 'router/deep_link_parser.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -75,7 +76,16 @@ class KTripSpotApp extends ConsumerWidget {
           child: PushDeepLinkGate(child: child ?? const SizedBox.shrink()),
         ),
       ),
-      routerConfig: router,
+      // **딥링크 URL을 파서 앞에서 정규화한다**([DeepLinkRouteInformationParser]).
+      // 커스텀 스킴으로 열리면 URL이 통째로 location 이 되어 라우트에 걸리지
+      // 않는다. `routerConfig` 로 통째로 넘기면 파서를 끼울 자리가 없어 구성
+      // 요소를 하나씩 넘긴다 — 값은 전부 `router` 의 것 그대로다.
+      routerDelegate: router.routerDelegate,
+      routeInformationParser: DeepLinkRouteInformationParser(
+        router.routeInformationParser,
+      ),
+      routeInformationProvider: router.routeInformationProvider,
+      backButtonDispatcher: router.backButtonDispatcher,
     );
   }
 }

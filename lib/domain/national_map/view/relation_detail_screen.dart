@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
-import '../../../common/widget/floating_bottom_nav_scaffold.dart';
 import '../component/cell_sheet.dart';
+import '../component/overlap_list_sheet.dart';
 import '../component/national_map_canvas.dart';
 import '../model/cell_geometry.dart';
 import '../model/map_relation.dart';
@@ -67,7 +67,9 @@ class _RelationDetailScreenState extends ConsumerState<RelationDetailScreen> {
               padding: EdgeInsets.only(
                 top: MediaQuery.paddingOf(context).top + 52,
                 // 전국 지도와 같은 값 — 제주가 하단 바에 잘리지 않게 비켜선다.
-                bottom: FloatingBottomNavScaffold.barExtent + 28,
+                // **하단 바 높이를 비우지 않는다.** 이 화면은 하단 바 없이
+                // 단독으로 열리므로 그만큼이 빈 공간이 되어 지도가 작아진다.
+                bottom: MediaQuery.paddingOf(context).bottom + 12,
               ),
               child: switch (geometries) {
                 AsyncData<List<CellGeometry>>(
@@ -131,6 +133,18 @@ class _RelationDetailScreenState extends ConsumerState<RelationDetailScreen> {
                         ],
                       ),
                     ),
+                    // 겹치는 곳을 목록으로 본다.
+                    if (relation.overlappingCellIds.isNotEmpty)
+                      IconButton(
+                        icon: const Icon(Icons.format_list_bulleted),
+                        tooltip: l10n.sharedMapOverlapCount(
+                          relation.overlappingCount,
+                        ),
+                        onPressed: () => OverlapListSheet.show(
+                          context,
+                          relation.overlappingCellIds,
+                        ),
+                      ),
                     IconButton(
                       icon: const Icon(Icons.person_remove_outlined),
                       tooltip: l10n.relationRemove,
