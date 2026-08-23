@@ -51,6 +51,18 @@ class CellImage {
   /// 이 값으로 결정한다.
   bool get allowsCrop => copyright == CellCopyrightType.type1;
 
+  /// 출처를 표기할지.
+  ///
+  /// **UNSPECIFIED 는 표기하지 않는다**(칸 대표 이미지에 한한 규칙). 유형이
+  /// 밝혀지지 않은 것은 출처도 확인되지 않은 것이라, 화면에는 "한국관광공사"
+  /// 한 줄만 뜨면서 근거 없는 표기가 된다. 크롭 금지(R23)는 그대로 지킨다 —
+  /// 그쪽은 안전한 쪽으로 가는 것이 맞고, 표기는 반대로 확인된 것만 적는다.
+  ///
+  /// 우리가 만든 이미지(cdn.ieuri.co.kr)는 서버가 빈 문자열을 내려준다.
+  bool get showsAttribution =>
+      copyright != CellCopyrightType.unspecified &&
+      attributionText.trim().isNotEmpty;
+
   @override
   bool operator ==(Object other) =>
       other is CellImage &&
