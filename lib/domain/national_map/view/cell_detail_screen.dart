@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../component/cell_artwork_view.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../spot/view/spot_detail_view.dart';
-import '../component/cell_image_view.dart';
 import '../model/cell_detail.dart';
 import '../model/map_cell.dart';
 import '../provider/national_map_providers.dart';
@@ -76,9 +76,9 @@ class _Body extends ConsumerWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         children: <Widget>[
-          // **이미지가 없어도 빈 칸으로 두지 않는다**(R10) — 지역명만 보인다.
-          if (cell.representativeImage != null)
-            CellImageView(image: cell.representativeImage!),
+          // **사진 대신 우리 그림을 쓴다**(SPEC-0031) — 지도와 같은 세계관을
+          // 유지한다. 결합 테이블에서 찾으므로 서버 이미지 유무와 무관하다.
+          CellArtworkView(cellId: cell.id, visited: cell.visited),
           const SizedBox(height: 16),
           Row(
             children: <Widget>[

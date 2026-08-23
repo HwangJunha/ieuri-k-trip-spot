@@ -136,26 +136,91 @@ abstract class _$MapCells extends $AsyncNotifier<List<MapCell>> {
   }
 }
 
+/// 미리 만들어 둔 칸 도형(SPEC-0031 방식 1).
+///
+/// 없거나 깨졌으면 빈 맵을 준다 — 그러면 [cellGeometries]가 원본 경계로 조립하는
+/// 예전 방식으로 돌아간다.
+
+@ProviderFor(cellShapes)
+const cellShapesProvider = CellShapesProvider._();
+
+/// 미리 만들어 둔 칸 도형(SPEC-0031 방식 1).
+///
+/// 없거나 깨졌으면 빈 맵을 준다 — 그러면 [cellGeometries]가 원본 경계로 조립하는
+/// 예전 방식으로 돌아간다.
+
+final class CellShapesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Map<String, List<List<GeoPoint>>>>,
+          Map<String, List<List<GeoPoint>>>,
+          FutureOr<Map<String, List<List<GeoPoint>>>>
+        >
+    with
+        $FutureModifier<Map<String, List<List<GeoPoint>>>>,
+        $FutureProvider<Map<String, List<List<GeoPoint>>>> {
+  /// 미리 만들어 둔 칸 도형(SPEC-0031 방식 1).
+  ///
+  /// 없거나 깨졌으면 빈 맵을 준다 — 그러면 [cellGeometries]가 원본 경계로 조립하는
+  /// 예전 방식으로 돌아간다.
+  const CellShapesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'cellShapesProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$cellShapesHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<Map<String, List<List<GeoPoint>>>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Map<String, List<List<GeoPoint>>>> create(Ref ref) {
+    return cellShapes(ref);
+  }
+}
+
+String _$cellShapesHash() => r'13d63df382f3b43f8af5e13f4a28bfcdf82efb2b';
+
 /// 칸 도형(R20).
 ///
-/// **서버가 정한 칸 정의로 원본 경계를 런타임에 합친다.** 별도의 도형 자산을 두지
-/// 않는 이유는 묶음 규칙이 서버 소유이기 때문이다 — 클라이언트가 규칙을 따로
-/// 가지면 서버가 바꿀 때 조용히 어긋난다.
+/// **크기가 고른 다각형을 쓴다**(SPEC-0031). 실제 시군구 경계를 합치면 폰 화면에서
+/// 서울 주변이 2~3mm가 되어 칸마다 넣는 랜드마크 그림이 들어가지 않는다. 이유는
+/// `CellShapeSource` 문서에 있다.
 ///
-/// 조립에 ~250ms가 들어 한 번만 하고 붙들어 둔다. 방문 여부는 여기 없다
-/// (도형은 방문과 무관하게 그대로다) — 색칠은 [mapCellsProvider]가 정한다.
+/// 도형 자산이 없으면 **예전 방식(원본 경계 합치기)으로 돌아간다.** 자산 하나로
+/// 두 방식을 오갈 수 있어야 화면을 보며 판단할 수 있다.
+///
+/// 칸 묶음 규칙은 어느 쪽이든 서버 소유다 — 이 자산이 정하는 것은 모양뿐이다.
+///
+/// 조립 결과는 붙들어 둔다. 방문 여부는 여기 없다(도형은 방문과 무관하다) —
+/// 색칠은 [mapCellsProvider]가 정한다.
 
 @ProviderFor(cellGeometries)
 const cellGeometriesProvider = CellGeometriesProvider._();
 
 /// 칸 도형(R20).
 ///
-/// **서버가 정한 칸 정의로 원본 경계를 런타임에 합친다.** 별도의 도형 자산을 두지
-/// 않는 이유는 묶음 규칙이 서버 소유이기 때문이다 — 클라이언트가 규칙을 따로
-/// 가지면 서버가 바꿀 때 조용히 어긋난다.
+/// **크기가 고른 다각형을 쓴다**(SPEC-0031). 실제 시군구 경계를 합치면 폰 화면에서
+/// 서울 주변이 2~3mm가 되어 칸마다 넣는 랜드마크 그림이 들어가지 않는다. 이유는
+/// `CellShapeSource` 문서에 있다.
 ///
-/// 조립에 ~250ms가 들어 한 번만 하고 붙들어 둔다. 방문 여부는 여기 없다
-/// (도형은 방문과 무관하게 그대로다) — 색칠은 [mapCellsProvider]가 정한다.
+/// 도형 자산이 없으면 **예전 방식(원본 경계 합치기)으로 돌아간다.** 자산 하나로
+/// 두 방식을 오갈 수 있어야 화면을 보며 판단할 수 있다.
+///
+/// 칸 묶음 규칙은 어느 쪽이든 서버 소유다 — 이 자산이 정하는 것은 모양뿐이다.
+///
+/// 조립 결과는 붙들어 둔다. 방문 여부는 여기 없다(도형은 방문과 무관하다) —
+/// 색칠은 [mapCellsProvider]가 정한다.
 
 final class CellGeometriesProvider
     extends
@@ -169,12 +234,17 @@ final class CellGeometriesProvider
         $FutureProvider<List<CellGeometry>> {
   /// 칸 도형(R20).
   ///
-  /// **서버가 정한 칸 정의로 원본 경계를 런타임에 합친다.** 별도의 도형 자산을 두지
-  /// 않는 이유는 묶음 규칙이 서버 소유이기 때문이다 — 클라이언트가 규칙을 따로
-  /// 가지면 서버가 바꿀 때 조용히 어긋난다.
+  /// **크기가 고른 다각형을 쓴다**(SPEC-0031). 실제 시군구 경계를 합치면 폰 화면에서
+  /// 서울 주변이 2~3mm가 되어 칸마다 넣는 랜드마크 그림이 들어가지 않는다. 이유는
+  /// `CellShapeSource` 문서에 있다.
   ///
-  /// 조립에 ~250ms가 들어 한 번만 하고 붙들어 둔다. 방문 여부는 여기 없다
-  /// (도형은 방문과 무관하게 그대로다) — 색칠은 [mapCellsProvider]가 정한다.
+  /// 도형 자산이 없으면 **예전 방식(원본 경계 합치기)으로 돌아간다.** 자산 하나로
+  /// 두 방식을 오갈 수 있어야 화면을 보며 판단할 수 있다.
+  ///
+  /// 칸 묶음 규칙은 어느 쪽이든 서버 소유다 — 이 자산이 정하는 것은 모양뿐이다.
+  ///
+  /// 조립 결과는 붙들어 둔다. 방문 여부는 여기 없다(도형은 방문과 무관하다) —
+  /// 색칠은 [mapCellsProvider]가 정한다.
   const CellGeometriesProvider._()
     : super(
         from: null,
@@ -201,7 +271,7 @@ final class CellGeometriesProvider
   }
 }
 
-String _$cellGeometriesHash() => r'5b12add6d27f734c2cadf476c9214da707e77dbb';
+String _$cellGeometriesHash() => r'76f364ebc0c22100bb741ec5890c79d5ec02f076';
 
 /// 시도별 진척(R21). **클라이언트가 센다** — 161칸을 이미 갖고 있다.
 

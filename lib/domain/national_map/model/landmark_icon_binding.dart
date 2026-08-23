@@ -189,4 +189,5 @@ LandmarkIconBinding? landmarkIconBindingOf(int cellId) =>
     landmarkIconBindings[cellId];
 
 /// slug 로 에셋 경로를 만든다. AppAssets 에 161개 상수를 넣지 않는다(SPEC-0031 §1).
-String landmarkIconAssetOf(String slug) => 'asset/icon/landmark/$slug.svg';
+String landmarkIconAssetOf(String slug, {String suffix = ''}) =>
+    'asset/icon/landmark/$slug$suffix.svg';

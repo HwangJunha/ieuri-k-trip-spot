@@ -184,6 +184,9 @@ class _NationalMapCanvasState extends State<NationalMapCanvas>
   );
   Animation<Matrix4>? _zoom;
 
+  /// 현재 확대 배율. 칸이 커지면 그림을 더 또렷하게 그린다(SPEC-0031 §5.1).
+  double _zoomScale = 1;
+
   @override
   void initState() {
     super.initState();
@@ -191,8 +194,27 @@ class _NationalMapCanvasState extends State<NationalMapCanvas>
       final Animation<Matrix4>? z = _zoom;
       if (z != null) _controller.value = z.value;
     });
+    // **배율을 painter에 알린다.** 종이 지도와 달리 화면은 확대할 수 있으므로,
+    // 칸이 손톱만 해지는 배율에서만 장면 그림을 드러낸다. 기본 배율에서 다
+    // 그리면 2~3mm 칸에서 뭉개져 얼룩만 남는다.
+    _controller.addListener(_onTransformChanged);
     _preloadIcons();
   }
+
+  void _onTransformChanged() {
+    final double next = _controller.value.getMaxScaleOnAxis();
+    // 미세한 변화까지 setState하면 팬·핀치 중에 프레임이 낭비된다.
+    if ((next - _zoomScale).abs() < 0.05) return;
+    final LandmarkDetail before = _detailFor(_zoomScale);
+    setState(() => _zoomScale = next);
+    // 상세 단계가 바뀌는 순간에만 그 벌을 읽어 온다. 처음부터 322장을 다 들고
+    // 있으면 진입이 느려지고, 대부분은 확대하지 않는다.
+    if (_detailFor(next) != before) _preloadIcons();
+  }
+
+  /// 이 배율에서 쓸 그림 단계. [CellPainter]와 같은 기준을 써야 한다.
+  static LandmarkDetail _detailFor(double zoom) =>
+      CellPainter.detailForZoom(zoom);
 
   @override
   void didUpdateWidget(NationalMapCanvas old) {
@@ -211,6 +233,7 @@ class _NationalMapCanvasState extends State<NationalMapCanvas>
 
   @override
   void dispose() {
+    _controller.removeListener(_onTransformChanged);
     _iconCache.dispose();
     _animation.dispose();
     _controller.dispose();
@@ -228,12 +251,14 @@ class _NationalMapCanvasState extends State<NationalMapCanvas>
   void _preloadIcons() {
     final Set<String> filled =
         widget.overlappingCellIds ?? widget.visitedCellIds;
+    final LandmarkDetail detail = _detailFor(_zoomScale);
     final List<LandmarkIconKey> keys = <LandmarkIconKey>[
       for (final CellGeometry cell in widget.cells)
         if (cell.landmarkSlug != null)
           LandmarkIconKey(
             cell.landmarkSlug!,
             visited: filled.contains(cell.cellId),
+            detail: detail,
           ),
     ];
     if (keys.isEmpty) return;
@@ -360,6 +385,7 @@ class _NationalMapCanvasState extends State<NationalMapCanvas>
               selectedCellId: widget.selectedCellId,
               palette: palette,
               iconCache: _iconCache,
+              zoomScale: _zoomScale,
               padding: _padding,
               cover: widget.cover,
             ),

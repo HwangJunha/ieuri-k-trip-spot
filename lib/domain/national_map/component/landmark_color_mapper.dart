@@ -40,6 +40,10 @@ class UnvisitedLandmarkColorMapper extends ColorMapper {
 /// - `stroke`는 손대지 않는다 → 외곽선 불변이 **구조로** 보장된다(스펙 R10)
 /// - 역할표에 없는 색은 **그대로 돌려준다**. 알 수 없는 색을 임의로 바꾸면
 ///   아이콘이 조용히 망가진다
+///
+/// **미방문 칸은 색이 없어야 한다.** 이 지도는 스크래치 지도다 — 가 본 곳만
+/// 색이 드러나고 나머지는 밑그림으로 남는 것이 전부다. 전부 칠해 두면 무엇을
+/// 모았는지 알 수 없고 채우는 재미가 사라진다.
 Color _substitute(String attributeName, Color color, {required bool visited}) {
   if (attributeName == 'stroke') return color;
 

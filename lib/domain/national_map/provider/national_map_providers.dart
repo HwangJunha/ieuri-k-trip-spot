@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart' show compute;
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/network/graphql_client.dart';
@@ -5,6 +7,7 @@ import '../../auth/provider/session_scope.dart';
 import '../model/cell_detail.dart';
 import '../model/cell_geometry.dart';
 import '../model/cell_shape_builder.dart';
+import '../model/cell_shape_source.dart';
 import '../model/district_boundary.dart';
 import '../model/map_cell.dart';
 import '../model/province_progress.dart';
@@ -61,17 +64,48 @@ class MapCells extends _$MapCells {
   }
 }
 
+/// 미리 만들어 둔 칸 도형(SPEC-0031 방식 1).
+///
+/// 없거나 깨졌으면 빈 맵을 준다 — 그러면 [cellGeometries]가 원본 경계로 조립하는
+/// 예전 방식으로 돌아간다.
+@Riverpod(keepAlive: true)
+Future<Map<String, List<List<GeoPoint>>>> cellShapes(Ref ref) async {
+  try {
+    final String raw = await rootBundle.loadString(CellShapeSource.assetPath);
+    return compute(CellShapeSource.parse, raw);
+  } on Object {
+    return const <String, List<List<GeoPoint>>>{};
+  }
+}
+
 /// 칸 도형(R20).
 ///
-/// **서버가 정한 칸 정의로 원본 경계를 런타임에 합친다.** 별도의 도형 자산을 두지
-/// 않는 이유는 묶음 규칙이 서버 소유이기 때문이다 — 클라이언트가 규칙을 따로
-/// 가지면 서버가 바꿀 때 조용히 어긋난다.
+/// **크기가 고른 다각형을 쓴다**(SPEC-0031). 실제 시군구 경계를 합치면 폰 화면에서
+/// 서울 주변이 2~3mm가 되어 칸마다 넣는 랜드마크 그림이 들어가지 않는다. 이유는
+/// `CellShapeSource` 문서에 있다.
 ///
-/// 조립에 ~250ms가 들어 한 번만 하고 붙들어 둔다. 방문 여부는 여기 없다
-/// (도형은 방문과 무관하게 그대로다) — 색칠은 [mapCellsProvider]가 정한다.
+/// 도형 자산이 없으면 **예전 방식(원본 경계 합치기)으로 돌아간다.** 자산 하나로
+/// 두 방식을 오갈 수 있어야 화면을 보며 판단할 수 있다.
+///
+/// 칸 묶음 규칙은 어느 쪽이든 서버 소유다 — 이 자산이 정하는 것은 모양뿐이다.
+///
+/// 조립 결과는 붙들어 둔다. 방문 여부는 여기 없다(도형은 방문과 무관하다) —
+/// 색칠은 [mapCellsProvider]가 정한다.
 @Riverpod(keepAlive: true)
 Future<List<CellGeometry>> cellGeometries(Ref ref) async {
   final List<MapCell> cells = await ref.watch(mapCellsProvider.future);
+
+  final Map<String, List<List<GeoPoint>>> shapes = await ref.watch(
+    cellShapesProvider.future,
+  );
+  if (shapes.isNotEmpty) {
+    final List<CellGeometry> out = CellShapeBuilder.buildFromShapes(
+      cells: cells,
+      shapes: shapes,
+    );
+    if (out.isNotEmpty) return out;
+  }
+
   final List<DistrictBoundary> boundaries = await ref.watch(
     districtBoundariesProvider.future,
   );

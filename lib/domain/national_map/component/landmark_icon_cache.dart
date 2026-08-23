@@ -6,25 +6,45 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../model/landmark_icon_binding.dart';
 import 'landmark_color_mapper.dart';
 
-/// (slug × 변형) 하나를 가리키는 캐시 키.
+/// 그림의 상세 단계.
+///
+/// **지금은 한 단계뿐이다.** 확대하면 다른 그림으로 갈아타는 방식을 만들어
+/// 봤지만, 칸 모양이던 그림이 갑자기 네모 카드로 바뀌어 지도가 무너져 보였다.
+/// 상세 화면에는 별도 파일(`<slug>@hero.svg`)을 쓰므로 여기서는 필요 없다.
+enum LandmarkDetail {
+  /// 지도에 그리는 그림. 칸 윤곽으로 잘린다.
+  simple;
+
+  /// 에셋 파일명에 붙는 꼬리표.
+  String get suffix => '';
+}
+
+/// (slug × 변형 × 상세단계) 하나를 가리키는 캐시 키.
 @immutable
 class LandmarkIconKey {
-  const LandmarkIconKey(this.slug, {required this.visited});
+  const LandmarkIconKey(
+    this.slug, {
+    required this.visited,
+    this.detail = LandmarkDetail.simple,
+  });
 
   final String slug;
   final bool visited;
+  final LandmarkDetail detail;
 
   @override
   bool operator ==(Object other) =>
       other is LandmarkIconKey &&
       other.slug == slug &&
-      other.visited == visited;
+      other.visited == visited &&
+      other.detail == detail;
 
   @override
-  int get hashCode => Object.hash(slug, visited);
+  int get hashCode => Object.hash(slug, visited, detail);
 
   @override
-  String toString() => 'LandmarkIconKey($slug, visited: $visited)';
+  String toString() =>
+      'LandmarkIconKey($slug, visited: $visited, detail: ${detail.name})';
 }
 
 /// 그려질 준비가 된 아이콘 한 장.
@@ -121,12 +141,27 @@ class LandmarkIconCache {
 /// `PictureInfo.picture`가 `dart:ui`의 `Picture`이며 `canvas.drawPicture()`로
 /// 직접 그려진다.
 Future<LandmarkIconPicture> _decodeFromAsset(LandmarkIconKey key) async {
-  final SvgAssetLoader loader = SvgAssetLoader(
-    landmarkIconAssetOf(key.slug),
-    colorMapper: key.visited
-        ? const VisitedLandmarkColorMapper()
-        : const UnvisitedLandmarkColorMapper(),
-  );
-  final PictureInfo info = await vg.loadPicture(loader, null);
-  return LandmarkIconPicture(picture: info.picture, size: info.size);
+  final ColorMapper mapper = key.visited
+      ? const VisitedLandmarkColorMapper()
+      : const UnvisitedLandmarkColorMapper();
+
+  Future<LandmarkIconPicture> load(String suffix) async {
+    final PictureInfo info = await vg.loadPicture(
+      SvgAssetLoader(
+        landmarkIconAssetOf(key.slug, suffix: suffix),
+        colorMapper: mapper,
+      ),
+      null,
+    );
+    return LandmarkIconPicture(picture: info.picture, size: info.size);
+  }
+
+  try {
+    return await load(key.detail.suffix);
+  } on Object {
+    // **상세본이 아직 없으면 기본본으로 돌아간다.** 322장을 한 번에 그릴 수
+    // 없으므로 둘이 섞인 상태로도 지도가 온전해야 한다.
+    if (key.detail == LandmarkDetail.simple) rethrow;
+    return load('');
+  }
 }

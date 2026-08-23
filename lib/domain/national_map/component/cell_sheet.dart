@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'cell_artwork_view.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/cell_detail.dart';
 import '../model/map_cell.dart';
 import '../provider/national_map_providers.dart';
 import '../provider/visit_controller.dart';
 import '../view/cell_detail_screen.dart';
-import 'cell_image_view.dart';
 import 'map_sheet.dart';
 
 /// 지도에서 칸을 눌렀을 때 올라오는 시트(R22·R24).
@@ -149,9 +149,11 @@ class _Content extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        // **이미지가 없어도 빈 칸으로 두지 않는다**(R10) — 지역명만 보인다.
-        if (cell.representativeImage != null)
-          CellImageView(image: cell.representativeImage!, height: 180),
+        // **사진 대신 우리 그림을 쓴다**(SPEC-0031). 지도는 일러스트인데 상세만
+        // 관광공사 사진이라 둘이 따로 놀았다. 그림은 결합 테이블로 찾으므로
+        // 서버 이미지가 없어도 항상 나온다 — R10의 "빈 칸으로 두지 않는다"가
+        // 오히려 더 잘 지켜진다.
+        CellArtworkView(cellId: cell.id, visited: cell.visited, height: 180),
         const SizedBox(height: 16),
         if (detail.spots.isNotEmpty) ...<Widget>[
           Text(
