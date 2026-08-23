@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../component/cell_artwork_view.dart';
+import '../component/cell_image_view.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../spot/view/spot_detail_view.dart';
 import '../model/cell_detail.dart';
@@ -76,9 +77,13 @@ class _Body extends ConsumerWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         children: <Widget>[
-          // **사진 대신 우리 그림을 쓴다**(SPEC-0031) — 지도와 같은 세계관을
-          // 유지한다. 결합 테이블에서 찾으므로 서버 이미지 유무와 무관하다.
-          CellArtworkView(cellId: cell.id, visited: cell.visited),
+          // **상세는 실사 사진이다**(SPEC-0031, 2026-08-23 결정). 지도 칸은 우리
+          // 그림이고, 확대하면 그 지역의 실제 모습을 본다. 사진이 아직 없는
+          // 칸은 그림으로 대체한다.
+          if (cell.representativeImage != null)
+            CellImageView(image: cell.representativeImage!)
+          else
+            CellArtworkView(cellId: cell.id, visited: cell.visited),
           const SizedBox(height: 16),
           Row(
             children: <Widget>[
