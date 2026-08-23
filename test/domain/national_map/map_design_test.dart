@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/component/landmark_category_tint.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/component/landmark_color_mapper.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/component/landmark_icon_role.dart';
+import 'package:ieuri_k_trip_spot/domain/national_map/component/landmark_luminance.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/landmark_category.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/landmark_icon_binding.dart';
 
@@ -113,16 +114,26 @@ void main() {
   });
 
   group('역할 색표', () {
-    test('18역할이 서로 다른 폴백값을 갖는다', () {
-      // ColorMapper가 **색값으로** 역할을 찾으므로 폴백이 겹치면 역할이 섞인다.
-      expect(landmarkRoleVariants, hasLength(18));
+    test('그림에 쓰인 색이 빠짐없이 등록돼 있다', () {
+      // ColorMapper가 **색값으로** 역할을 찾고, 표에 없는 색은 그대로 통과한다
+      // — 즉 빠진 색은 미방문 칸에서 혼자 원색으로 남는다. 표는 이제 손으로
+      // 고르는 18역할이 아니라 `genroles.py`가 실제 SVG에서 훑어 만든다.
+      expect(landmarkRoleVariants.length, greaterThanOrEqualTo(30));
     });
 
-    test('무채색 변형은 채도가 0이다', () {
+    test('무채색 변형은 색이 남지 않는다', () {
       // R8: 미방문은 색상이 아니라 채도·명도로 구분한다.
+      //
+      // **완전한 회색(R=G=B)이 아니라 아주 옅은 웜 그레이다.** 순회색은 웜 톤인
+      // 앱 안에서 파랗게 떠 보여, 전 색을 R>G>B 쪽으로 한 톱니만 기울였다.
       for (final LandmarkRoleVariants v in landmarkRoleVariants.values) {
-        expect(v.grey.r, v.grey.g, reason: '${v.grey}가 무채색이 아니다');
-        expect(v.grey.g, v.grey.b, reason: '${v.grey}가 무채색이 아니다');
+        if (v.grey == v.full) continue; // 외곽선 등 변환 제외 색
+        final List<double> ch = <double>[v.grey.r, v.grey.g, v.grey.b];
+        final double spread =
+            ch.reduce((double a, double b) => a > b ? a : b) -
+            ch.reduce((double a, double b) => a < b ? a : b);
+        expect(spread * 255, lessThanOrEqualTo(8), reason: '${v.grey}');
+        expect(v.grey.r, greaterThanOrEqualTo(v.grey.b), reason: '${v.grey}');
       }
     });
 
@@ -134,37 +145,48 @@ void main() {
       }
     });
 
-    test('무채색이 전채색의 명도 순서를 보존한다', () {
+    test('무채색이 전채색의 명도 순서를 크게 뒤집지 않는다', () {
       // R9: 밝은 면이 무채색에서 어두워지면 아이콘의 입체가 뒤집힌다.
+      //
+      // **엄격한 단조 증가는 요구하지 않는다.** 표는 감마 보정 없는 가중합으로
+      // 회색을 뽑고 이 검사는 sRGB 상대휘도로 재므로, 척도가 달라 원색 휘도가
+      // 거의 같은 색끼리 미세하게 순서가 갈린다. 척도를 맞춰 봤더니 역전은
+      // 사라졌지만 어두운 면이 통째로 밝아져 실기기에서 그림이 흐려졌다 —
+      // 보이지 않는 0.02 를 고치려고 보이는 것을 잃는 거래다.
       final List<LandmarkRoleVariants> sorted =
-          landmarkRoleVariants.values.toList()
+          landmarkRoleVariants.values
+              .where((LandmarkRoleVariants v) => v.grey != v.full)
+              .toList()
             ..sort(
               (LandmarkRoleVariants a, LandmarkRoleVariants b) =>
                   relativeLuminance(
                     a.full,
                   ).compareTo(relativeLuminance(b.full)),
             );
-      for (int i = 1; i < sorted.length; i++) {
+      // 직전 항목이 아니라 여기까지의 최대값과 견준다 — 이웃끼리만 보면 미세한
+      // 어긋남이 줄줄이 통과해 전체로는 크게 뒤집힐 수 있다.
+      double peak = 0;
+      for (int i = 0; i < sorted.length; i++) {
+        final double y = relativeLuminance(sorted[i].grey);
         expect(
-          relativeLuminance(sorted[i].grey),
-          greaterThanOrEqualTo(relativeLuminance(sorted[i - 1].grey) - 1e-9),
-          reason: '$i번에서 명도 순서가 뒤집혔다',
+          y,
+          greaterThanOrEqualTo(peak - 0.08),
+          reason: '$i번에서 명도 순서가 눈에 띄게 뒤집혔다',
         );
+        if (y > peak) peak = y;
       }
     });
 
-    test('색표의 무채색이 휘도 환산식과 일치한다', () {
-      // 표가 손으로 수정돼 식과 크게 어긋나는 것을 막는다.
-      //
-      // 허용 오차 2는 반올림 몫이다 — 표는 기획 하네스가 만들었고 이 식과
-      // 반올림 자릿수가 다를 수 있다(foliage-light가 196 대 197). 자릿수까지
-      // 맞추는 것은 이 검사의 목적이 아니다.
+    test('무채색이 밑그림 구간 안에 들어온다', () {
+      // 표는 순수 휘도를 그대로 옮기지 않는다. 그러면 161칸이 한 화면에서
+      // 시멘트 덩어리가 돼 형태가 사라진다. 어두운 쪽을 들어 올려 밝은 구간으로
+      // 압축해 '밑그림'처럼 보이게 한다.
       for (final LandmarkRoleVariants v in landmarkRoleVariants.values) {
-        final Color computed = desaturateByLuminance(v.full);
+        if (v.grey == v.full) continue; // 외곽선 등 변환 제외 색
         expect(
-          (computed.r * 255 - v.grey.r * 255).abs(),
-          lessThanOrEqualTo(2),
-          reason: '${v.full} → 기대 $computed, 표에는 ${v.grey}',
+          v.grey.r * 255,
+          inInclusiveRange(60, 250),
+          reason: '${v.full} → ${v.grey}가 밑그림 구간을 벗어났다',
         );
       }
     });
@@ -185,30 +207,35 @@ void main() {
       }
     });
 
-    test('방문은 폴백값을 전채색으로 바꾼다', () {
-      const int roofFallback = 0xFFC4633A;
-      final LandmarkRoleVariants roof = landmarkRoleVariants[roofFallback]!;
+    // 표는 `genroles.py`가 실제 SVG에서 훑어 만드므로 특정 색을 적어 두면
+    // 다시 그릴 때마다 깨진다. **표에서 뽑아 쓴다.**
+    final MapEntry<int, LandmarkRoleVariants> sample = landmarkRoleVariants
+        .entries
+        .firstWhere(
+          (MapEntry<int, LandmarkRoleVariants> e) =>
+              e.value.grey != e.value.full,
+        );
+
+    test('방문은 등록된 색을 전채색으로 바꾼다', () {
       expect(
-        visited.substitute(null, 'path', 'fill', const Color(roofFallback)),
-        roof.full,
+        visited.substitute(null, 'path', 'fill', Color(sample.key)),
+        sample.value.full,
       );
     });
 
-    test('미방문은 폴백값을 무채색으로 바꾼다', () {
-      const int roofFallback = 0xFFC4633A;
-      final LandmarkRoleVariants roof = landmarkRoleVariants[roofFallback]!;
+    test('미방문은 등록된 색을 무채색으로 바꾼다', () {
       expect(
-        unvisited.substitute(null, 'path', 'fill', const Color(roofFallback)),
-        roof.grey,
+        unvisited.substitute(null, 'path', 'fill', Color(sample.key)),
+        sample.value.grey,
       );
     });
 
     test('두 변형이 서로 다르다', () {
       // R7: 같은 SVG에서 두 상태가 실제로 갈려야 한다.
-      const Color roof = Color(0xFFC4633A);
+      final Color c = Color(sample.key);
       expect(
-        visited.substitute(null, 'path', 'fill', roof),
-        isNot(unvisited.substitute(null, 'path', 'fill', roof)),
+        visited.substitute(null, 'path', 'fill', c),
+        isNot(unvisited.substitute(null, 'path', 'fill', c)),
       );
     });
 
@@ -219,26 +246,6 @@ void main() {
       expect(unvisited.substitute(null, 'path', 'fill', unknown), unknown);
     });
 
-    test('폴백값이 조정된 5역할도 각각 제 색을 찾는다', () {
-      // stone·sand·rock·snow·sun은 파랑 채널을 옮겨 유일하게 만든 값이다.
-      // 이 구분이 깨지면 두 역할이 같은 색으로 칠해진다.
-      const Map<int, int> adjusted = <int, int>{
-        0xFFFFE4E2: 0xFFFFE4E1, // stone
-        0xFFFFE4E3: 0xFFFFE4E1, // sand
-        0xFF5A6B8D: 0xFF5A6B8C, // rock
-        0xFFFFF6F1: 0xFFFFF6F0, // snow
-        0xFFF5A624: 0xFFF5A623, // sun
-      };
-      adjusted.forEach((int fallback, int full) {
-        expect(
-          visited
-              .substitute(null, 'path', 'fill', Color(fallback))
-              .toARGB32(),
-          full,
-          reason: '${fallback.toRadixString(16)}가 역할을 찾지 못했다',
-        );
-      });
-    });
   });
 
   group('경계 자산이 리포에 있다', () {

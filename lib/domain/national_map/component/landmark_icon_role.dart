@@ -37,6 +37,10 @@ const Map<int, LandmarkRoleVariants> landmarkRoleVariants =
     full: Color(0xFF2E6B4F),
     grey: Color(0xFF999895),
   ),
+  0xFFE99888: LandmarkRoleVariants(
+    full: Color(0xFFE99888),
+    grey: Color(0xFFC6C4C1),
+  ),
   0xFF8A4818: LandmarkRoleVariants(
     full: Color(0xFF8A4818),
     grey: Color(0xFF93928F),
@@ -65,17 +69,21 @@ const Map<int, LandmarkRoleVariants> landmarkRoleVariants =
     full: Color(0xFFD9C9B4),
     grey: Color(0xFFD9D7D3),
   ),
-  0xFF4E8F63: LandmarkRoleVariants(
-    full: Color(0xFF4E8F63),
-    grey: Color(0xFFAEACAA),
+  0xFF88E9B1: LandmarkRoleVariants(
+    full: Color(0xFF88E9B1),
+    grey: Color(0xFFDCDAD6),
+  ),
+  0xFFE9D288: LandmarkRoleVariants(
+    full: Color(0xFFE9D288),
+    grey: Color(0xFFDDDAD7),
   ),
   0xFFE0A93B: LandmarkRoleVariants(
     full: Color(0xFFE0A93B),
     grey: Color(0xFFC9C7C4),
   ),
-  0xFFFFEDD6: LandmarkRoleVariants(
-    full: Color(0xFFFFEDD6),
-    grey: Color(0xFFECEAE6),
+  0xFF4E8F63: LandmarkRoleVariants(
+    full: Color(0xFF4E8F63),
+    grey: Color(0xFFAEACAA),
   ),
   0xFF3E93A8: LandmarkRoleVariants(
     full: Color(0xFF3E93A8),
@@ -89,13 +97,25 @@ const Map<int, LandmarkRoleVariants> landmarkRoleVariants =
     full: Color(0xFF55626E),
     grey: Color(0xFF9C9A98),
   ),
-  0xFFA85C22: LandmarkRoleVariants(
-    full: Color(0xFFA85C22),
-    grey: Color(0xFFA19F9D),
+  0xFF88E9CE: LandmarkRoleVariants(
+    full: Color(0xFF88E9CE),
+    grey: Color(0xFFDDDBD7),
+  ),
+  0xFF9888E9: LandmarkRoleVariants(
+    full: Color(0xFF9888E9),
+    grey: Color(0xFFBAB8B5),
   ),
   0xFF63B0C0: LandmarkRoleVariants(
     full: Color(0xFF63B0C0),
     grey: Color(0xFFC2C0BD),
+  ),
+  0xFF88C1E9: LandmarkRoleVariants(
+    full: Color(0xFF88C1E9),
+    grey: Color(0xFFCFCDC9),
+  ),
+  0xFFA85C22: LandmarkRoleVariants(
+    full: Color(0xFFA85C22),
+    grey: Color(0xFFA19F9D),
   ),
   0xFF2E7A8C: LandmarkRoleVariants(
     full: Color(0xFF2E7A8C),
@@ -109,25 +129,17 @@ const Map<int, LandmarkRoleVariants> landmarkRoleVariants =
     full: Color(0xFFB08968),
     grey: Color(0xFFB8B6B3),
   ),
-  0xFFFFEEE9: LandmarkRoleVariants(
-    full: Color(0xFFFFEEE9),
-    grey: Color(0xFFEDEBE7),
-  ),
-  0xFFE9F8EE: LandmarkRoleVariants(
-    full: Color(0xFFE9F8EE),
-    grey: Color(0xFFEFECE8),
-  ),
-  0xFFC9752F: LandmarkRoleVariants(
-    full: Color(0xFFC9752F),
-    grey: Color(0xFFB0AEAC),
+  0xFFE988C9: LandmarkRoleVariants(
+    full: Color(0xFFE988C9),
+    grey: Color(0xFFC3C0BD),
   ),
   0xFF94714F: LandmarkRoleVariants(
     full: Color(0xFF94714F),
     grey: Color(0xFFA9A7A5),
   ),
-  0xFF2B2B45: LandmarkRoleVariants(
-    full: Color(0xFF2B2B45),
-    grey: Color(0xFF2B2B45),
+  0xFFC9752F: LandmarkRoleVariants(
+    full: Color(0xFFC9752F),
+    grey: Color(0xFFB0AEAC),
   ),
   0xFFF5D670: LandmarkRoleVariants(
     full: Color(0xFFF5D670),
@@ -145,29 +157,21 @@ const Map<int, LandmarkRoleVariants> landmarkRoleVariants =
     full: Color(0xFFE88BB0),
     grey: Color(0xFFC3C0BD),
   ),
-  0xFFE6F4FD: LandmarkRoleVariants(
-    full: Color(0xFFE6F4FD),
-    grey: Color(0xFFEEEBE7),
+  0xFF2B2B45: LandmarkRoleVariants(
+    full: Color(0xFF2B2B45),
+    grey: Color(0xFF2B2B45),
   ),
-  0xFFFFD9A8: LandmarkRoleVariants(
-    full: Color(0xFFFFD9A8),
-    grey: Color(0xFFE3E0DD),
+  0xFFB1E988: LandmarkRoleVariants(
+    full: Color(0xFFB1E988),
+    grey: Color(0xFFDFDDD9),
   ),
   0xFFE8B42E: LandmarkRoleVariants(
     full: Color(0xFFE8B42E),
     grey: Color(0xFFCECBC8),
   ),
-  0xFFE7F8F7: LandmarkRoleVariants(
-    full: Color(0xFFE7F8F7),
-    grey: Color(0xFFEFECE9),
-  ),
   0xFFA8C86A: LandmarkRoleVariants(
     full: Color(0xFFA8C86A),
     grey: Color(0xFFD0CECB),
-  ),
-  0xFFF2ECFB: LandmarkRoleVariants(
-    full: Color(0xFFF2ECFB),
-    grey: Color(0xFFECE9E6),
   ),
   0xFF2B3A38: LandmarkRoleVariants(
     full: Color(0xFF2B3A38),
@@ -176,10 +180,6 @@ const Map<int, LandmarkRoleVariants> landmarkRoleVariants =
   0xFFBFB4A0: LandmarkRoleVariants(
     full: Color(0xFFBFB4A0),
     grey: Color(0xFFCDCBC8),
-  ),
-  0xFFFFEEF2: LandmarkRoleVariants(
-    full: Color(0xFFFFEEF2),
-    grey: Color(0xFFEEEBE7),
   ),
   0xFF6B5A9E: LandmarkRoleVariants(
     full: Color(0xFF6B5A9E),
@@ -197,21 +197,9 @@ const Map<int, LandmarkRoleVariants> landmarkRoleVariants =
     full: Color(0xFFB9B2A4),
     grey: Color(0xFFCCCAC7),
   ),
-  0xFFD3F0DC: LandmarkRoleVariants(
-    full: Color(0xFFD3F0DC),
-    grey: Color(0xFFE9E6E3),
-  ),
   0xFF9E9382: LandmarkRoleVariants(
     full: Color(0xFF9E9382),
     grey: Color(0xFFBBB9B6),
-  ),
-  0xFFFFDCD2: LandmarkRoleVariants(
-    full: Color(0xFFFFDCD2),
-    grey: Color(0xFFE6E3E0),
-  ),
-  0xFFFFF8E2: LandmarkRoleVariants(
-    full: Color(0xFFFFF8E2),
-    grey: Color(0xFFF1EEEA),
   ),
   0xFFCDB878: LandmarkRoleVariants(
     full: Color(0xFFCDB878),
@@ -229,14 +217,6 @@ const Map<int, LandmarkRoleVariants> landmarkRoleVariants =
     full: Color(0xFFDCD3C2),
     grey: Color(0xFFDEDBD8),
   ),
-  0xFFCFF0EE: LandmarkRoleVariants(
-    full: Color(0xFFCFF0EE),
-    grey: Color(0xFFE9E6E3),
-  ),
-  0xFFCFE9FA: LandmarkRoleVariants(
-    full: Color(0xFFCFE9FA),
-    grey: Color(0xFFE7E4E1),
-  ),
   0xFFD8D3C8: LandmarkRoleVariants(
     full: Color(0xFFD8D3C8),
     grey: Color(0xFFDEDBD8),
@@ -253,17 +233,9 @@ const Map<int, LandmarkRoleVariants> landmarkRoleVariants =
     full: Color(0xFFF0CB6E),
     grey: Color(0xFFDAD7D4),
   ),
-  0xFFE6DCF7: LandmarkRoleVariants(
-    full: Color(0xFFE6DCF7),
-    grey: Color(0xFFE4E2DE),
-  ),
   0xFFE0705A: LandmarkRoleVariants(
     full: Color(0xFFE0705A),
     grey: Color(0xFFB3B1AE),
-  ),
-  0xFFFFDCE4: LandmarkRoleVariants(
-    full: Color(0xFFFFDCE4),
-    grey: Color(0xFFE7E4E0),
   ),
   0xFF8E7DBE: LandmarkRoleVariants(
     full: Color(0xFF8E7DBE),
@@ -305,10 +277,6 @@ const Map<int, LandmarkRoleVariants> landmarkRoleVariants =
     full: Color(0xFF7E7362),
     grey: Color(0xFFA8A6A4),
   ),
-  0xFFFFF0BE: LandmarkRoleVariants(
-    full: Color(0xFFFFF0BE),
-    grey: Color(0xFFEDEAE6),
-  ),
   0xFFB8862A: LandmarkRoleVariants(
     full: Color(0xFFB8862A),
     grey: Color(0xFFB5B3B0),
@@ -316,6 +284,10 @@ const Map<int, LandmarkRoleVariants> landmarkRoleVariants =
   0xFF7EA84E: LandmarkRoleVariants(
     full: Color(0xFF7EA84E),
     grey: Color(0xFFBEBBB9),
+  ),
+  0xFF8A6A4A: LandmarkRoleVariants(
+    full: Color(0xFF8A6A4A),
+    grey: Color(0xFFA5A3A0),
   ),
   0xFF4B3A22: LandmarkRoleVariants(
     full: Color(0xFF4B3A22),
@@ -349,9 +321,9 @@ const Map<int, LandmarkRoleVariants> landmarkRoleVariants =
     full: Color(0xFFB9AE9C),
     grey: Color(0xFFCAC8C5),
   ),
-  0xFF8A6A4A: LandmarkRoleVariants(
-    full: Color(0xFF8A6A4A),
-    grey: Color(0xFFA5A3A0),
+  0xFF5E6B75: LandmarkRoleVariants(
+    full: Color(0xFF5E6B75),
+    grey: Color(0xFFA1A09D),
   ),
   0xFF5E3620: LandmarkRoleVariants(
     full: Color(0xFF5E3620),
@@ -381,10 +353,6 @@ const Map<int, LandmarkRoleVariants> landmarkRoleVariants =
     full: Color(0xFF9C907C),
     grey: Color(0xFFB9B7B4),
   ),
-  0xFF5E6B75: LandmarkRoleVariants(
-    full: Color(0xFF5E6B75),
-    grey: Color(0xFFA1A09D),
-  ),
   0xFFBFA871: LandmarkRoleVariants(
     full: Color(0xFFBFA871),
     grey: Color(0xFFC7C4C1),
@@ -392,6 +360,10 @@ const Map<int, LandmarkRoleVariants> landmarkRoleVariants =
   0xFF2E7264: LandmarkRoleVariants(
     full: Color(0xFF2E7264),
     grey: Color(0xFF9D9C99),
+  ),
+  0xFFCFC7BA: LandmarkRoleVariants(
+    full: Color(0xFFCFC7BA),
+    grey: Color(0xFFD8D5D2),
   ),
   0xFF37424B: LandmarkRoleVariants(
     full: Color(0xFF37424B),
@@ -485,6 +457,10 @@ const Map<int, LandmarkRoleVariants> landmarkRoleVariants =
     full: Color(0xFFB0A187),
     grey: Color(0xFFC3C1BE),
   ),
+  0xFF88D6E9: LandmarkRoleVariants(
+    full: Color(0xFF88D6E9),
+    grey: Color(0xFFD7D5D1),
+  ),
   0xFF1E3325: LandmarkRoleVariants(
     full: Color(0xFF1E3325),
     grey: Color(0xFF7A7876),
@@ -573,17 +549,13 @@ const Map<int, LandmarkRoleVariants> landmarkRoleVariants =
     full: Color(0xFFE8C558),
     grey: Color(0xFFD6D3D0),
   ),
-  0xFF3A5248: LandmarkRoleVariants(
-    full: Color(0xFF3A5248),
-    grey: Color(0xFF8F8D8B),
-  ),
   0xFFC9B79C: LandmarkRoleVariants(
     full: Color(0xFFC9B79C),
     grey: Color(0xFFD0CDCA),
   ),
-  0xFFCFC7BA: LandmarkRoleVariants(
-    full: Color(0xFFCFC7BA),
-    grey: Color(0xFFD8D5D2),
+  0xFFE4DED2: LandmarkRoleVariants(
+    full: Color(0xFFE4DED2),
+    grey: Color(0xFFE4E1DE),
   ),
   0xFFFBD2E1: LandmarkRoleVariants(
     full: Color(0xFFFBD2E1),
@@ -625,10 +597,6 @@ const Map<int, LandmarkRoleVariants> landmarkRoleVariants =
     full: Color(0xFFF0E4D2),
     grey: Color(0xFFE7E4E1),
   ),
-  0xFFFFF4E0: LandmarkRoleVariants(
-    full: Color(0xFFFFF4E0),
-    grey: Color(0xFFEFECE9),
-  ),
   0xFF4E555D: LandmarkRoleVariants(
     full: Color(0xFF4E555D),
     grey: Color(0xFF949390),
@@ -644,14 +612,6 @@ const Map<int, LandmarkRoleVariants> landmarkRoleVariants =
   0xFFEDE4D2: LandmarkRoleVariants(
     full: Color(0xFFEDE4D2),
     grey: Color(0xFFE7E4E1),
-  ),
-  0xFF20302C: LandmarkRoleVariants(
-    full: Color(0xFF20302C),
-    grey: Color(0xFF797776),
-  ),
-  0xFF2C4038: LandmarkRoleVariants(
-    full: Color(0xFF2C4038),
-    grey: Color(0xFF848280),
   ),
   0xFF3E7A46: LandmarkRoleVariants(
     full: Color(0xFF3E7A46),
@@ -748,10 +708,6 @@ const Map<int, LandmarkRoleVariants> landmarkRoleVariants =
   0xFF4A4F55: LandmarkRoleVariants(
     full: Color(0xFF4A4F55),
     grey: Color(0xFF918F8D),
-  ),
-  0xFFFFE9C2: LandmarkRoleVariants(
-    full: Color(0xFFFFE9C2),
-    grey: Color(0xFFEAE7E4),
   ),
   0xFFC4620F: LandmarkRoleVariants(
     full: Color(0xFFC4620F),
@@ -873,10 +829,6 @@ const Map<int, LandmarkRoleVariants> landmarkRoleVariants =
     full: Color(0xFF7C5A3A),
     grey: Color(0xFF9B9997),
   ),
-  0xFFE4DED2: LandmarkRoleVariants(
-    full: Color(0xFFE4DED2),
-    grey: Color(0xFFE4E1DE),
-  ),
   0xFF5B3572: LandmarkRoleVariants(
     full: Color(0xFF5B3572),
     grey: Color(0xFF888684),
@@ -952,10 +904,6 @@ const Map<int, LandmarkRoleVariants> landmarkRoleVariants =
   0xFF20242F: LandmarkRoleVariants(
     full: Color(0xFF20242F),
     grey: Color(0xFF72716F),
-  ),
-  0xFFE8EDEA: LandmarkRoleVariants(
-    full: Color(0xFFE8EDEA),
-    grey: Color(0xFFEBE8E4),
   ),
   0xFFA89C82: LandmarkRoleVariants(
     full: Color(0xFFA89C82),
@@ -1268,6 +1216,18 @@ const Map<int, LandmarkRoleVariants> landmarkRoleVariants =
   0xFF5E4222: LandmarkRoleVariants(
     full: Color(0xFF5E4222),
     grey: Color(0xFF8B8987),
+  ),
+  0xFFC9A94E: LandmarkRoleVariants(
+    full: Color(0xFFC9A94E),
+    grey: Color(0xFFC7C5C2),
+  ),
+  0xFFE3C878: LandmarkRoleVariants(
+    full: Color(0xFFE3C878),
+    grey: Color(0xFFD8D5D2),
+  ),
+  0xFFA8873A: LandmarkRoleVariants(
+    full: Color(0xFFA8873A),
+    grey: Color(0xFFB4B2B0),
   ),
   0xFFC79A4B: LandmarkRoleVariants(
     full: Color(0xFFC79A4B),

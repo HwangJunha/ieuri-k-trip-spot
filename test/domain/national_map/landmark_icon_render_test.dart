@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/component/landmark_color_mapper.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/component/landmark_icon_role.dart';
+import 'package:ieuri_k_trip_spot/domain/national_map/component/landmark_luminance.dart';
 
 /// **실제 SVG를 디코딩해 픽셀을 본다.**
 ///
@@ -65,11 +66,16 @@ void main() {
     );
     final Set<int> used = colorsIn(data);
 
-    // 지붕(terracotta)이 실제로 칠해졌다.
+    // **표에 등록된 전채색이 실제로 화면에 나온다.** 특정 색을 적어 두면
+    // 그림을 다시 그릴 때마다 깨지므로 표와 대조한다.
+    final Set<int> fulls = <int>{
+      for (final LandmarkRoleVariants v in landmarkRoleVariants.values)
+        v.full.toARGB32(),
+    };
     expect(
-      used,
-      contains(0xFFC4633A),
-      reason: '전채색 지붕이 없다 — ColorMapper가 불리지 않았을 수 있다',
+      used.any(fulls.contains),
+      isTrue,
+      reason: '전채색이 하나도 없다 — ColorMapper가 불리지 않았을 수 있다',
     );
     // 외곽선은 그대로다.
     expect(used, contains(landmarkOutline.toARGB32()));
@@ -82,14 +88,18 @@ void main() {
     );
     final Set<int> used = colorsIn(data);
 
-    // 원색이 하나도 남아 있으면 안 된다.
-    expect(
-      used,
-      isNot(contains(0xFFC4633A)),
-      reason: '미방문인데 원색이 남았다',
-    );
-    // 지붕 자리는 그 역할의 무채색이다.
-    expect(used, contains(0xFF7D7D7D));
+    // 표에 등록된 원색은 하나도 남아 있으면 안 된다. 외곽선만 예외다(R10).
+    final Set<int> fulls = <int>{
+      for (final LandmarkRoleVariants v in landmarkRoleVariants.values)
+        if (v.grey != v.full) v.full.toARGB32(),
+    };
+    expect(used.where(fulls.contains), isEmpty, reason: '미방문인데 원색이 남았다');
+    // 대신 표의 무채색이 나타난다.
+    final Set<int> greys = <int>{
+      for (final LandmarkRoleVariants v in landmarkRoleVariants.values)
+        v.grey.toARGB32(),
+    };
+    expect(used.any(greys.contains), isTrue, reason: '무채색으로 안 바뀌었다');
     // 외곽선은 여전히 그대로다(R10).
     expect(used, contains(landmarkOutline.toARGB32()));
   });
@@ -138,25 +148,5 @@ void main() {
       }
     }
     expect(differing, greaterThan(100), reason: '두 변형이 거의 같다');
-  });
-
-  test('폴백값이 조정된 역할도 화면에서 제 색을 찾는다', () async {
-    // stone·sand·rock·snow·sun은 파랑 채널을 1~2 옮겨 유일하게 만든 값이다.
-    // 이 조정이 렌더 파이프라인을 통과하는지 확인한다 — 여기서 깨지면 두 역할이
-    // 같은 색으로 칠해진다.
-    final ByteData data = await rasterize(
-      'asset/icon/landmark/maisan-mountain.svg',
-      const VisitedLandmarkColorMapper(),
-    );
-    final Set<int> used = colorsIn(data);
-
-    // 마이산은 rock(#5A6B8D → #5A6B8C)을 쓴다.
-    expect(
-      used,
-      contains(0xFF5A6B8C),
-      reason: 'rock 역할이 전채색으로 바뀌지 않았다',
-    );
-    // 조정 전 폴백값이 그대로 남아 있으면 치환이 안 된 것이다.
-    expect(used, isNot(contains(0xFF5A6B8D)));
   });
 }
