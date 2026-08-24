@@ -30,7 +30,15 @@ if [ -z "$FLAVOR" ]; then
   exit 0
 fi
 
-SOURCE="${PROJECT_DIR}/config/${FLAVOR}/GoogleService-Info.plist"
+# **번들이 하나라 Firebase 앱도 하나다**(2026-08-25).
+#
+# 예전에는 dev 빌드의 번들이 `kr.ieuri.ktripspot.dev`라 Firebase 앱도 따로 있었다.
+# 그 접미사를 걷어내면서(→ `android/app/build.gradle.kts` 주석) 두 flavor의 번들이
+# 같아졌고, dev용 plist는 이제 맞지 않는다 — 번들이 어긋나면 초기화가 실패한다.
+#
+# flavor는 앱 이름만 가르므로 설정은 prod 것을 함께 쓴다. `config/dev/`는 남겨 두되
+# 참조하지 않는다 — 지우지 않는 것은 접미사를 되살릴 경우를 위해서다.
+SOURCE="${PROJECT_DIR}/config/prod/GoogleService-Info.plist"
 
 if [ ! -f "$SOURCE" ]; then
   # **빌드를 막지 않는다.** 설정 파일이 없어도 앱은 기동되고 알림만 빠진다는 것이
@@ -41,4 +49,4 @@ fi
 
 DEST="${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/GoogleService-Info.plist"
 cp "$SOURCE" "$DEST"
-echo "GoogleService-Info.plist ← config/${FLAVOR}"
+echo "GoogleService-Info.plist ← config/prod (flavor=${FLAVOR}, 번들 공용)"
