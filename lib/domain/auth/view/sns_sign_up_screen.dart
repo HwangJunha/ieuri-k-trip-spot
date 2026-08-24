@@ -12,6 +12,7 @@ import '../model/sns_credential.dart';
 import '../model/sns_registration_result.dart';
 import '../../../common/model/terms_code.dart';
 import '../provider/auth_controller.dart';
+import '../provider/pending_sns_credential.dart';
 import 'email_verification_screen.dart';
 import 'login_screen.dart';
 
@@ -114,6 +115,11 @@ class _SnsSignUpScreenState extends ConsumerState<SnsSignUpScreen> {
         //
         // 자동 로그인이 실패했다면(토큰 만료 등) 세션이 없으므로 예전처럼 로그인
         // 화면으로 보낸다. 그쪽에서 다시 시도하면 된다.
+
+        // 가입이 끝났으니 보관해 둔 자격증명을 비운다 — 남겨 두면 다음 로그인
+        // 시도에서 남의 자격증명으로 가입 화면이 열린다.
+        ref.read(pendingSnsCredentialProvider.notifier).clear();
+
         final bool signedIn =
             ref.read(authControllerProvider).value?.isAuthenticated ?? false;
         if (!signedIn) {

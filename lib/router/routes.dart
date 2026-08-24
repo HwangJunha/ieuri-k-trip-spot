@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../common/location/coordinates.dart';
@@ -10,6 +11,7 @@ import '../domain/auth/view/login_screen.dart';
 import '../domain/auth/model/sns_credential.dart';
 import '../domain/auth/view/password_reset_screen.dart';
 import '../domain/auth/view/sign_up_screen.dart';
+import '../domain/auth/provider/pending_sns_credential.dart';
 import '../domain/auth/view/sns_sign_up_screen.dart';
 import '../common/model/target_category.dart';
 import '../domain/community/view/blocked_users_screen.dart';
@@ -105,9 +107,22 @@ List<RouteBase> buildRoutes() => <RouteBase>[
     // 그 자리에서 터져 빨간 화면이 떴다 — 자격증명 없이 SNS 가입을 이어갈 수는
     // 없으니 크래시 대신 로그인으로 보낸다.
     builder: (_, GoRouterState state) {
-      final Object? extra = state.extra;
-      if (extra is! SnsCredential) return const LoginScreen();
-      return SnsSignUpScreen(credential: extra);
+      // **자격증명은 provider에서 읽는다.** `extra`로 받으면 인증 상태가 바뀔 때
+      // 라우터가 라우트를 다시 만들면서(refreshListenable) 값이 사라진다 —
+      // 구글·애플 로그인이 가입 화면 대신 로그인 화면으로 떨어지던 원인이다
+      // (실기기 확인 2026-08-25).
+      //
+      // 그래도 없을 수 있다: 앱 재시작·딥링크로 이 경로에 직접 닿는 경우다.
+      // 자격증명 없이 SNS 가입을 이어갈 수는 없으니 로그인으로 되돌린다.
+      return Consumer(
+        builder: (BuildContext context, WidgetRef ref, _) {
+          final SnsCredential? credential = ref.watch(
+            pendingSnsCredentialProvider,
+          );
+          if (credential == null) return const LoginScreen();
+          return SnsSignUpScreen(credential: credential);
+        },
+      );
     },
   ),
   GoRoute(

@@ -12,6 +12,7 @@ import '../../../common/model/email_format.dart';
 import '../model/sns_provider.dart';
 import '../model/sns_sign_in_outcome.dart';
 import '../provider/auth_controller.dart';
+import '../provider/pending_sns_credential.dart';
 import 'password_reset_screen.dart';
 import 'sign_up_screen.dart';
 import 'sns_sign_up_screen.dart';
@@ -68,7 +69,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         case SnsAuthenticated():
           break; // router handles navigation
         case SnsNeedsSignUp(:final credential):
-          context.pushNamed(SnsSignUpScreen.routeName, extra: credential);
+          // **`extra` 대신 provider에 담는다.** 인증 상태가 바뀌면 라우터가
+          // 라우트를 다시 만드는데(refreshListenable) `extra`는 그때 사라진다.
+          ref.read(pendingSnsCredentialProvider.notifier).set(credential);
+          context.pushNamed(SnsSignUpScreen.routeName);
         case SnsCancelled():
           break; // silent
       }
