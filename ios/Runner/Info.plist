@@ -27,8 +27,11 @@
 		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
+		<!-- 표시 이름과 같은 값으로 둔다. 홈 화면은 이름이 길면
+		     CFBundleDisplayName 대신 이쪽을 쓰기도 해, 여기가 고정이면
+		     dev/prod가 같은 이름으로 보인다(실기기 확인 2026-08-25). -->
 		<key>CFBundleName</key>
-		<string>K-Trip Spot</string>
+		<string>$(APP_DISPLAY_NAME)</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>
