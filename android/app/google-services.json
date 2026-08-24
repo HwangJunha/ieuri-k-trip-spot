@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "504325192446-osqhtr4vek11ld8fqn7tq2pmouhumpgr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "kr.ieuri.ktripspot",
+            "certificate_hash": "19856f4d7b196e422bb6042d728a60cd073852ae"
+          }
+        },
+        {
           "client_id": "504325192446-ujmg1s3vkvv2l2jivfb6pemarg0sujrc.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
