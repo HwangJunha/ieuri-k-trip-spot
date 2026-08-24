@@ -67,6 +67,7 @@ class HappeningNowSection extends ConsumerWidget {
                   // 서버가 spot 자신의 카테고리로 해석한다.
                   onTap: () => openSpotDetail(
                     context,
+                    from: 'home_event',
                     id: f.id,
                     thumbnailUrl: f.thumbnailImageUrl,
                   ),

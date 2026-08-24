@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kakao_map_sdk/kakao_map_sdk.dart';
 
+import '../../../common/analytics/analytics_events.dart';
+import '../../../common/analytics/app_analytics.dart';
 import '../../../common/config/map_sdk_initializer.dart';
 import '../../../common/location/coordinates.dart';
 import 'package:logger/logger.dart';
@@ -421,6 +423,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
   /// 마커를 탭했을 때. 상세 화면으로 보낸다 — **id만 넘긴다**(CLAUDE.md §6).
   void _onMarkerTap(MapMarker marker) {
+    // **조기 반환 위에서 센다.** 문화행사 마커를 누른 것도 지도 사용이다 —
+    // 아래에서 걸러진 뒤 세면 "눌렀지만 아무 일도 없었다"가 통계에서 사라진다.
+    AppAnalytics.logEvent(AnalyticsEvents.mapSpotTap, <String, Object>{
+      AnalyticsParams.markerKind: marker.kind.name,
+    });
     // 문화행사는 아직 상세 화면이 없다 — 계약이 주는 것은 외부 링크뿐이다(spec §7.9).
     if (marker.kind != MapMarkerKind.spot) return;
     // `common/navigation`의 헬퍼를 쓴다 — 인자 규약이 거기 모여 있어, 직접
@@ -429,7 +436,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     // **카테고리는 넘기지 않는다**(SPEC-0020). 서버가 상세를 spot 자신의 카테고리로
     // 해석하므로 인자가 사라졌다 — 마커가 실어 온 `categoryName`(=서버 `code`)은
     // 지도 위 표현에만 쓴다.
-    openSpotDetail(context, id: marker.id);
+    openSpotDetail(context, id: marker.id, from: 'map');
   }
 
   /// 클러스터 탭(R22)은 없다 — 서버가 클러스터 필드를 제거했다(2026-08-10).

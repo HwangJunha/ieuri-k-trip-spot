@@ -2,6 +2,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:logger/logger.dart';
 
+import '../../../common/analytics/analytics_events.dart';
+import '../../../common/analytics/app_analytics.dart';
 import '../../../common/log/app_log.dart';
 import '../../../common/model/post.dart';
 import 'community_providers.dart';
@@ -57,6 +59,13 @@ class PostDetail extends _$PostDetail {
           original.copyWith(likedByViewer: liking, likeCount: serverCount),
         );
       }
+      // 목록(`FeedController.toggleLike`)과 **의도적으로 분리된 별개 구현**이라
+      // 양쪽에 심는다 — 딥링크로 상세에 바로 들어오면 목록이 비어 있어 이 경로만
+      // 탄다.
+      AppAnalytics.logEvent(AnalyticsEvents.likeToggle, <String, Object>{
+        AnalyticsParams.target: 'post',
+        AnalyticsParams.liked: liking,
+      });
     } on Object catch (error) {
       // 실패 — 이전 값으로 롤백한다. 미인증 유도는 화면이 담당한다.
       _log.w('toggleLike failed: ${error.runtimeType}');

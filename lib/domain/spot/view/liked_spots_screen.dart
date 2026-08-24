@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../common/navigation/settings_routes.dart';
 import '../../../common/pagination/pagination_list_view.dart';
+import '../../../common/analytics/analytics_events.dart';
+import '../../../common/analytics/app_analytics.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../common/category/spot_category_bar.dart';
 import '../component/liked_spot_card.dart';
@@ -137,6 +139,9 @@ class _LikedList extends ConsumerWidget {
     ref
         .read(spotCategoryCodesProvider.notifier)
         .remember(spot.id, spot.category.code);
+    AppAnalytics.logEvent(AnalyticsEvents.spotDetailView, <String, Object>{
+      AnalyticsParams.from: 'liked',
+    });
     context.pushNamed(
       SpotDetailView.routeName,
       pathParameters: <String, String>{'id': spot.id},

@@ -1,4 +1,6 @@
 import 'package:flutter/widgets.dart';
+import '../analytics/analytics_events.dart';
+import '../analytics/app_analytics.dart';
 import 'package:go_router/go_router.dart';
 
 /// 관광지 상세 라우트 이름.
@@ -40,13 +42,24 @@ const String searchRouteName = 'search';
 /// 선택). 스와이프에서 열 때만 넘긴다 — 반응 후 소비할 카드 스택이 그쪽에만 있다
 /// (SPEC-0007 R11). 선택이 비어도(=전체) 유효한 값이라 빈 문자열을 그대로 싣는다.
 ///
+/// [from]은 **어느 화면에서 들어왔는지**다(집계 전용, 라우트에는 실리지 않는다).
+/// 상세 화면 자신은 이것을 알 수 없다 — `swipeCategory`가 non-null이면 스와이프라는
+/// 것만 간접적으로 드러날 뿐, 지도·검색·좋아요·홈은 상세에서 구분되지 않는다.
+/// 지도 클릭이 실제로 상세까지 데려가는지는 이 값으로만 알 수 있다.
+///
 /// `push`이므로 돌아오면 호출한 화면이 그대로 살아 있다.
 void openSpotDetail(
   BuildContext context, {
   required String id,
   String? thumbnailUrl,
   String? swipeCategory,
+  String? from,
 }) {
+  if (from != null) {
+    AppAnalytics.logEvent(AnalyticsEvents.spotDetailView, <String, Object>{
+      AnalyticsParams.from: from,
+    });
+  }
   context.pushNamed(
     spotDetailRouteName,
     pathParameters: <String, String>{'id': id},

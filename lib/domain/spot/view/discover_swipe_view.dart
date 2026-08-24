@@ -10,6 +10,8 @@ import '../../../common/permission/provider/permission_providers.dart';
 import '../../../common/storage/search_radius_controller.dart';
 import '../../../common/widget/failure_notice.dart';
 import '../../../common/widget/floating_bottom_nav_scaffold.dart';
+import '../../../common/analytics/analytics_events.dart';
+import '../../../common/analytics/app_analytics.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../common/category/spot_category_bar.dart';
 import '../component/drag_feedback_overlay.dart';
@@ -478,6 +480,9 @@ class _CardStackState extends ConsumerState<_CardStack>
     ref
         .read(spotCategoryCodesProvider.notifier)
         .remember(spot.id, spot.category?.code);
+    AppAnalytics.logEvent(AnalyticsEvents.spotDetailView, <String, Object>{
+      AnalyticsParams.from: 'swipe',
+    });
     context.pushNamed(
       SpotDetailView.routeName,
       pathParameters: <String, String>{'id': spot.id},

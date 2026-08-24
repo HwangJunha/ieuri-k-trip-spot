@@ -1,6 +1,8 @@
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/analytics/analytics_events.dart';
+import '../../../common/analytics/app_analytics.dart';
 import '../../../common/log/app_log.dart';
 
 import '../../../common/model/session_teardown_provider.dart';
@@ -117,7 +119,14 @@ class AuthController extends _$AuthController {
         email: email,
         password: password,
       );
-      return _establishSession(tokens);
+      final AuthState established = await _establishSession(tokens);
+      // **여기까지 왔으면 성공이다** — `AsyncValue.guard`가 감싸고 있어 실패는
+      // 도달하지 못한다. 세션 복원(`_restoreSession`)은 이 경로를 타지 않으므로
+      // 앱 재시작이 로그인으로 잡히지 않는다.
+      AppAnalytics.logEvent(AnalyticsEvents.login, <String, Object>{
+        AnalyticsParams.method: 'email',
+      });
+      return established;
     });
   }
 
@@ -189,6 +198,11 @@ class AuthController extends _$AuthController {
         state = previous;
         rethrow;
       }
+      // 미가입(`memberNotFound`)은 아래 catch에서 가입 화면으로 가므로 여기 닿지
+      // 않는다 — 실제로 세션이 선 경우만 잡힌다.
+      AppAnalytics.logEvent(AnalyticsEvents.login, <String, Object>{
+        AnalyticsParams.method: provider.name,
+      });
       return const SnsAuthenticated();
     } on AuthFailure catch (failure) {
       // Not registered yet → route to SNS sign-up. Restore the prior state so
@@ -232,6 +246,13 @@ class AuthController extends _$AuthController {
       agreements: agreements,
       authorizationCode: credential.authorizationCode,
     );
+
+    // **서버 등록이 끝난 시점을 가입으로 본다.** 이메일 인증이 남았을 수도 있지만,
+    // 그건 별개 단계다 — 여기서 세지 않으면 인증 화면에서 이탈한 사용자가 가입
+    // 시도에 잡히지 않아 퍼널이 끊긴다.
+    AppAnalytics.logEvent(AnalyticsEvents.signUp, <String, Object>{
+      AnalyticsParams.method: credential.provider.name,
+    });
 
     // 코드 인증이 남았으면 아직 로그인시킬 수 없다 — 인증 화면이 먼저다.
     if (result.needsVerification) return result;
@@ -366,6 +387,9 @@ class AuthController extends _$AuthController {
     final String? userId = current?.userId;
     if (current == null || userId == null) return;
     await _storage.setOnboardingCompleted(userId);
+    // **단일 관문이다.** 온보딩 화면의 "시작하기"와 "건너뛰기"가 모두 여기로 모이고,
+    // 다른 호출부가 없다 — 화면 쪽에 심으면 두 버튼에 각각 넣어야 한다.
+    AppAnalytics.logEvent(AnalyticsEvents.onboardingComplete);
     state = AsyncValue<AuthState>.data(
       current.copyWith(onboardingCompleted: true),
     );

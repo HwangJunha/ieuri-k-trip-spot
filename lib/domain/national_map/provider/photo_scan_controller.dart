@@ -8,6 +8,8 @@ import '../model/coordinate_reduction.dart';
 import '../model/district_resolver.dart';
 import '../model/map_cell.dart';
 import '../model/national_map_config.dart';
+import '../../../common/analytics/analytics_events.dart';
+import '../../../common/analytics/app_analytics.dart';
 import '../model/photo_scan_progress.dart';
 import '../repository/photo_scan_checkpoint_store.dart';
 import '../service/photo_library_service.dart';
@@ -87,6 +89,12 @@ class PhotoScanController extends _$PhotoScanController {
     // 1) 권한(R31). 거부해도 오류가 아니다 — 안내만 하고 끝낸다(R32).
     state = state.copyWith(stage: PhotoScanStage.requestingPermission);
     final bool granted = await library.requestAccess();
+    // **`PermissionController`를 지나지 않는 경로다.** `photo_manager`를 직접
+    // 부르므로 여기 심지 않으면 사진 권한 결과가 통째로 빠진다.
+    AppAnalytics.logEvent(AnalyticsEvents.permissionResult, <String, Object>{
+      AnalyticsParams.permission: 'photo',
+      AnalyticsParams.granted: granted,
+    });
     if (!granted) {
       state = state.copyWith(stage: PhotoScanStage.permissionDenied);
       return;
@@ -263,6 +271,11 @@ class PhotoScanController extends _$PhotoScanController {
       foundCoordinates: withCoordinates,
       resolvedCellCodes: found.toList()..sort(),
     );
+    // **좌표가 있던 사진 수를 센다.** 훑은 총량(`total`)은 사진첩 크기에 좌우돼
+    // 기능 사용량을 나타내지 못하고, 찾아낸 지역 수는 아래 등록 이벤트가 센다.
+    AppAnalytics.logEvent(AnalyticsEvents.nationalMapPhotoAdd, <String, Object>{
+      AnalyticsParams.photoCount: withCoordinates,
+    });
     // 끝까지 훑었으니 중단 지점은 필요 없다. 남겨 두면 다음에 켰을 때
     // "이어하기"가 뜬다.
     await checkpoints.clear();

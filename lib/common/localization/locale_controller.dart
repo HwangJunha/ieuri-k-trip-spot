@@ -3,6 +3,8 @@ import 'dart:ui' show Locale;
 import 'package:flutter/widgets.dart' show WidgetsBinding;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../analytics/analytics_events.dart';
+import '../analytics/app_analytics.dart';
 import '../storage/app_preferences.dart';
 import 'app_language.dart';
 import 'locale_invalidation.dart';
@@ -44,6 +46,13 @@ class LocaleController extends _$LocaleController {
     // 화면을 다시 세우고 언어에 매인 상태를 비우는 일은 **실제로 바뀔 때만**
     // 한다. 같은 언어에 이것까지 돌리면 들고 있던 목록이 이유 없이 사라진다.
     if (state == language.locale) return;
+
+    // **조기 반환 뒤라 실제로 바뀐 경우만 잡힌다.** 첫 실행 화면이 확인 버튼에서
+    // 같은 언어로 한 번 더 `select`를 부르는데, 그것까지 세면 언어 변경이 두 배로
+    // 잡힌다.
+    AppAnalytics.logEvent(AnalyticsEvents.languageChange, <String, Object>{
+      AnalyticsParams.language: language.code,
+    });
 
     state = language.locale;
     invalidateLocaleScopedState(ref);

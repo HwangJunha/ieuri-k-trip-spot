@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'common/analytics/app_analytics.dart';
 import 'common/localization/app_language.dart';
 import 'common/localization/locale_controller.dart';
 import 'common/permission/component/permission_boot_gate.dart';
@@ -30,6 +31,11 @@ Future<void> main() async {
     MapSdkInitializer.ensureInitialized(),
     PushInitializer.ensureInitialized(),
   ).wait;
+
+  // **Firebase 초기화 뒤라야 한다** — `PushInitializer`가 `Firebase.initializeApp`을
+  // 부르고, 그전에 인스턴스를 만들면 던진다. 설정이 없어 초기화가 건너뛰어졌으면
+  // 여기서도 조용히 빠진다(같은 규칙).
+  AppAnalytics.ensureInitialized();
 
   runApp(
     ProviderScope(

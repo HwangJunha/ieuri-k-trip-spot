@@ -1,5 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../analytics/analytics_events.dart';
+import '../../analytics/app_analytics.dart';
 import '../model/permission_kind.dart';
 import '../model/permission_state.dart';
 import '../service/permission_service.dart';
@@ -72,6 +74,15 @@ class PermissionController extends _$PermissionController {
   Future<PermissionState> request(PermissionKind kind) async {
     final PermissionState result = await _service.request(kind);
     _record(kind, result);
+    // 거부율이 높으면 사전설명 문구를 고쳐야 한다 — 숫자가 없으면 고칠 근거가 없다.
+    //
+    // **사진 권한은 여기를 지나지 않는다.** 전국 지도의 사진 스캔이
+    // `photo_manager`를 직접 부르므로 그쪽에도 따로 심는다
+    // (`PhotoScanController.start`).
+    AppAnalytics.logEvent(AnalyticsEvents.permissionResult, <String, Object>{
+      AnalyticsParams.permission: kind.name,
+      AnalyticsParams.granted: result == PermissionState.granted,
+    });
     return result;
   }
 

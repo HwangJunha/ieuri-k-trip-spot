@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../common/permission/component/permission_blocked_notice.dart';
 import '../../../common/permission/model/permission_kind.dart';
+import '../../../common/analytics/analytics_events.dart';
+import '../../../common/analytics/app_analytics.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/photo_scan_progress.dart';
 import '../provider/photo_scan_controller.dart';
@@ -201,6 +203,11 @@ class _Content extends ConsumerWidget {
     final List<String> codes = progress.resolvedCellCodes;
     // 사진이 몇 장이든 요청은 1회다 — 판정 결과가 시군구 코드로 축약돼 있다.
     await ref.read(visitControllerProvider.notifier).record(codes);
+    // **호출부에 심는다.** `VisitController.record`는 사진 경로와 현재 위치 경로가
+    // 합류하는 자리라, 거기 심으면 둘을 구분할 수 없다.
+    AppAnalytics.logEvent(AnalyticsEvents.nationalMapRegionAdd, <String, Object>{
+      AnalyticsParams.from: 'photo',
+    });
     // 시트를 닫지 않는다 — 완료 문구를 보고 사용자가 닫는다.
     controller.confirmed();
   }

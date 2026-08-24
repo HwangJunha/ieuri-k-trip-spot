@@ -6,6 +6,8 @@ import '../../../common/category/spot_category_selection.dart';
 import 'package:logger/logger.dart';
 
 import '../../../common/log/app_log.dart';
+import '../../../common/analytics/analytics_events.dart';
+import '../../../common/analytics/app_analytics.dart';
 import '../model/spot_detail.dart';
 import '../model/spot_failure.dart';
 import '../model/spot_reaction.dart';
@@ -169,6 +171,12 @@ class SpotDetailController extends _$SpotDetailController {
 
     try {
       await _repository.reactToSpot(current.id, reaction);
+      // **서버 성공이 확정된 자리다.** 아래 catch가 롤백 후 rethrow하므로 실패는
+      // 여기 닿지 않는다.
+      AppAnalytics.logEvent(AnalyticsEvents.likeToggle, <String, Object>{
+        AnalyticsParams.target: 'spot',
+        AnalyticsParams.liked: reaction == SpotReaction.like,
+      });
     } catch (error, stack) {
       // 실패 롤백(AC-30): 델타를 빼는 게 아니라 낙관 반영 직전 스냅샷(current·
       // previousReaction)을 그대로 복원한다 — 단순하고, 반응이 겹쳐도 어긋나지 않는다.

@@ -8,6 +8,8 @@ import '../component/auth_failure_message.dart';
 import '../component/auth_text_field.dart';
 import '../model/auth_failure.dart';
 import '../model/email_verification_handle.dart';
+import '../../../common/analytics/analytics_events.dart';
+import '../../../common/analytics/app_analytics.dart';
 import '../../../common/model/email_format.dart';
 import '../model/password_policy.dart';
 import '../../../common/model/terms_code.dart';
@@ -104,6 +106,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             ageVerified: _agreements.ageVerified,
             agreements: _buildAgreements(),
           );
+      // **핸들을 받았으면 서버 등록이 끝난 것이다.** 이메일 인증이 남았지만 그건
+      // 별개 단계다 — 여기서 세지 않으면 인증 화면에서 이탈한 사용자가 가입 시도에
+      // 잡히지 않아 퍼널이 끊긴다.
+      AppAnalytics.logEvent(AnalyticsEvents.signUp, <String, Object>{
+        AnalyticsParams.method: 'email',
+      });
       if (!mounted) return;
       // No tokens on sign-up (§4.2) — go to email verification with the handle.
       //

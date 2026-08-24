@@ -7,6 +7,8 @@ import '../../../common/pagination/offset_page.dart';
 import '../../../common/storage/search_radius_controller.dart';
 import '../../../common/category/spot_category.dart';
 import '../../../common/category/spot_category_selection.dart';
+import '../../../common/analytics/analytics_events.dart';
+import '../../../common/analytics/app_analytics.dart';
 import '../model/spot_search_result.dart';
 import '../model/spot_search_state.dart';
 import '../model/spot_suggestion.dart';
@@ -139,6 +141,12 @@ class SpotSearch extends _$SpotSearch {
       state = result.isEmpty
           ? SpotSearchEmpty(query)
           : SpotSearchLoaded(query: query, result: result);
+
+      // **질의 원문은 싣지 않는다**(POL-013, 아래 catch와 같은 이유). 알고 싶은
+      // 것은 "결과가 없는 검색이 얼마나 되는가"이지 무엇을 찾았는지가 아니다.
+      AppAnalytics.logEvent(AnalyticsEvents.search, <String, Object>{
+        AnalyticsParams.hasResult: !result.isEmpty,
+      });
     } catch (error) {
       // 질의 원문은 사용자 입력이라 로깅하지 않는다(POL-013).
       state = SpotSearchFailed(query);

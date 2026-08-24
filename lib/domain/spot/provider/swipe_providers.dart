@@ -17,6 +17,8 @@ import '../../../common/category/spot_category.dart';
 import '../../../common/category/spot_category_selection.dart';
 import '../model/spot_failure.dart';
 import '../model/spot_reaction.dart';
+import '../../../common/analytics/analytics_events.dart';
+import '../../../common/analytics/app_analytics.dart';
 import '../model/swipe_queue.dart';
 import '../model/tourist_spot.dart';
 import '../repository/spot_repository.dart';
@@ -234,6 +236,12 @@ class SwipeController extends _$SwipeController {
     state = AsyncData<SwipeQueue>(
       queue.copyWith(cards: queue.cards.sublist(1)),
     );
+
+    // **`consume`은 이 경로를 타지 않는다** — 상세 화면에서 누른 좋아요는 스와이프가
+    // 아니라 좋아요로 잡혀야 한다(→[likeToggle]).
+    AppAnalytics.logEvent(AnalyticsEvents.spotSwipe, <String, Object>{
+      AnalyticsParams.liked: reaction == SpotReaction.like,
+    });
 
     // 반응 기록은 비동기 발사, 실패는 조용히 로깅(복원 없음).
     _record(top.id, reaction);
