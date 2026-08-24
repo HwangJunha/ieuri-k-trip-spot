@@ -1,4 +1,7 @@
 #include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"
+// Profile 구성도 이 파일을 부모로 쓴다 — 그쪽 Pods 파일도 함께 include 한다.
+// `#include?`는 파일이 없으면 조용히 넘어가므로 둘을 같이 적어도 안전하다.
+#include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"
 #include "Generated.xcconfig"
 
 // 앱 표시 이름의 **기본값**. flavor별로 다르게 하려면 Xcode의

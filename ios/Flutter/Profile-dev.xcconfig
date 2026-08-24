@@ -1,0 +1,9 @@
+#include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.profile-dev.xcconfig"
+#include "Release.xcconfig"
+
+// dev flavor 전용 설정.
+//
+// **Pods 파일을 각자 include 하는 것이 핵심이다.** 부모(Release.xcconfig)는
+// 기본 구성용 Pods 파일만 include 하므로, 이걸 두지 않으면 CocoaPods가
+// "base configuration을 설정하지 못했다"고 경고하고 링크가 깨진다.
+APP_DISPLAY_NAME = KTS Dev
