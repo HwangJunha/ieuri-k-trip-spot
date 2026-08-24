@@ -4,13 +4,20 @@
 # 보고, 이쪽은 "받아서 올릴 수 있는 파일"을 만든다. 그래서 여기서는 서명하고
 # 환경값을 주입한다.
 #
-# | 브랜치 | flavor | 서명 | 받는 곳 |
-# |---|---|---|---|
-# | dev    | dev  | 릴리스 키 | Actions Artifacts (내부 테스트) |
-# | master | prod | 릴리스 키 | Actions Artifacts (스토어 업로드용) |
+# | 브랜치 | Android | iOS |
+# |---|---|---|
+# | dev    | dev flavor, **APK만** (내부 테스트) | **돌지 않는다** |
+# | master | prod flavor, APK + AAB (스토어 업로드) | 서명 없이 빌드 확인 |
+#
+# 둘 다 릴리스 키로 서명한다 — 서명이 없으면 스토어에 올릴 수 없고, 디버그 키로
+# 떨어진 것을 모른 채 지나가면 업로드 단계에서야 알게 된다.
+#
+# **iOS는 master에서만 돈다**(사용자 결정 2026-08-25). macOS 러너가 분당 10배로
+# 과금되는데, dev 머지마다 돌리면 그 비용이 실제 이득을 넘는다 — iOS 빌드가
+# 깨졌는지는 출시 직전에 알아도 늦지 않고, 개발 중에는 로컬에서 계속 빌드한다.
 #
 # **iOS는 서명하지 않는다.** 인증서·프로비저닝 프로파일을 CI에 올리는 것은
-# 별개 작업이라(Fastlane match 등) 지금은 `--no-codesign`으로 빌드만 확인하고,
+# 별개 작업이라(Fastlane match 등) `--no-codesign`으로 빌드만 확인하고,
 # TestFlight에 올릴 ipa는 로컬에서 만든다. 붙일 때가 되면 이 파일에 서명 단계를
 # 더하면 된다.
 name: build
@@ -109,13 +116,19 @@ jobs:
       - name: 코드 생성
         run: dart run build_runner build --delete-conflicting-outputs
 
-      # **APK와 AAB를 둘 다 만든다.** AAB가 Play 업로드 형식이고, APK는 기기에
-      # 직접 설치해 확인할 때 쓴다.
+      # **APK는 항상, AAB는 master에서만.**
+      #
+      # AAB는 Play 업로드 형식이라 스토어에 올릴 때만 필요하고, dev 산출물은
+      # 기기에 직접 설치해 보는 용도라 APK 하나면 된다. 둘 다 만들면 빌드가
+      # 통째로 두 번 도는데, 첫 실행이 APK 하나에 711초였다(2026-08-24) — dev
+      # 머지마다 그 두 배를 쓸 이유가 없다.
       - name: 빌드
         run: |
           F="${{ steps.env.outputs.flavor }}"
           flutter build apk --release --flavor "$F" --dart-define-from-file=".env.$F"
-          flutter build appbundle --release --flavor "$F" --dart-define-from-file=".env.$F"
+          if [ "${{ github.ref_name }}" = "master" ]; then
+            flutter build appbundle --release --flavor "$F" --dart-define-from-file=".env.$F"
+          fi
 
       # 디버그 키로 떨어졌으면 스토어에 못 올린다 — 조용히 넘어가면 업로드
       # 단계에서야 알게 된다.
@@ -135,13 +148,19 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: android-${{ steps.env.outputs.flavor }}-${{ github.sha }}
+          # AAB는 master에서만 생긴다(위 빌드 단계) — dev에서는 APK만 담긴다.
           path: |
             build/app/outputs/flutter-apk/*-release.apk
             build/app/outputs/bundle/**/*.aab
           retention-days: 30
+          # APK는 어느 브랜치에서도 반드시 있어야 한다. 하나도 없으면 빌드가
+          # 조용히 실패한 것이다.
           if-no-files-found: error
 
   ios:
+    # **master로 머지될 때만 돈다.** macOS 러너는 분당 10배 과금이라 dev마다
+    # 돌리면 무료 한도가 빠르게 마른다(위 헤더).
+    if: github.ref_name == 'master'
     runs-on: macos-latest
     timeout-minutes: 45
 
