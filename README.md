@@ -2,6 +2,23 @@
 
 A new Flutter project.
 
+## 코드 생성 (클론 후 가장 먼저)
+
+**생성 파일은 커밋되지 않는다**(`.gitignore` — `*.g.dart`, `*.graphql.dart`).
+빌드 산출물이지 소스가 아니기 때문이다. 클론한 뒤 이걸 먼저 돌리지 않으면
+**컴파일 자체가 되지 않는다.**
+
+```sh
+flutter pub get
+dart run build_runner build --delete-conflicting-outputs
+```
+
+Riverpod provider(`@riverpod`)나 `.graphql` 오퍼레이션을 고쳤을 때도 다시 돌린다.
+1~20초면 끝나며, 그보다 오래 걸리면 멈춘 것이다(CLAUDE.md §11.5).
+
+손으로 쓰는 `.graphql`(오퍼레이션)과 `*_schema.graphql`(SDL)은 **커밋한다** —
+생성물이 아니라 서버 계약의 출처다.
+
 ## SNS 설정 (실행 전 필수)
 
 SNS 로그인에 쓰는 클라이언트 식별자는 `.env`에서 읽어 `--dart-define`으로

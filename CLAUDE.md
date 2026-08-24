@@ -31,7 +31,10 @@ tests weren't run because you're mid-development (§8), report `flutter analyze`
 runs; everything else waits for this list, and nothing here runs twice.
 
 1. `flutter analyze` — must be clean
-2. `dart run build_runner build` if any `.graphql`/`@riverpod` source changed (§11.5)
+2. `dart run build_runner build` if any `.graphql`/`@riverpod` source changed (§11.5).
+   **생성물은 커밋되지 않으므로**(`.gitignore` — `*.g.dart`, `*.graphql.dart`)
+   빼먹어도 diff에는 아무것도 안 뜬다. 로컬 컴파일이 깨지는 것으로만 드러나니
+   provider나 오퍼레이션을 고쳤으면 **반드시 돌린다**
 3. **Live-server operation sweep** if any `.graphql` operation changed (§13) — codegen passing
    proves nothing about the server
 4. `flutter test` — once (§8)
