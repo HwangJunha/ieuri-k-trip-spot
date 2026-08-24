@@ -301,7 +301,7 @@ final class FeedControllerProvider
   }
 }
 
-String _$feedControllerHash() => r'dc72b1a1cac20fb5d4ada375dd6b3f80e7333e76';
+String _$feedControllerHash() => r'cedd70fceb549f5ca25c3fb86c3bd8994bb2af8a';
 
 /// 커뮤니티 탭의 지역 피드. [selection]·[sort]별 패밀리 — 둘 중 하나를 바꾸면 다른
 /// 인스턴스가 로딩되고 **필터링·정렬은 서버가 한다**(클라이언트가 받은 목록을 거르거나

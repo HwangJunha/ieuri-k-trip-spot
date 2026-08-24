@@ -69,7 +69,7 @@ final class ProfileImageControllerProvider
 }
 
 String _$profileImageControllerHash() =>
-    r'a1eb733cebd98be6a54bca86368911db42bc9465';
+    r'310ac2acaa83141b47bd3a0d32b724f20113e199';
 
 /// 프로필 이미지 업로드·제거(R6).
 ///

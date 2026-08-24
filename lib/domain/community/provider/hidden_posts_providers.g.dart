@@ -67,7 +67,7 @@ final class HiddenPostsControllerProvider
 }
 
 String _$hiddenPostsControllerHash() =>
-    r'a2865183f578830c45d4646a4e242c43eb59bbe4';
+    r'cbc1df70394a2e30bce82eba60d33b774d06ca33';
 
 /// 내가 숨긴 글 목록(2차 가이드 §2) — 해제 화면이 쓴다.
 ///

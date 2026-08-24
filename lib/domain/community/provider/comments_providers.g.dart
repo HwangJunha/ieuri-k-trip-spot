@@ -96,7 +96,7 @@ final class CommentsControllerProvider
 }
 
 String _$commentsControllerHash() =>
-    r'b8f3bad9d0ce706ff983286dd6e799a338afa3df';
+    r'bdf2c46bfcf1676cf400e97fdebbca19b85eae03';
 
 /// 글 하나의 최상위 댓글과 각 댓글의 답글(가이드 §2, 2차 가이드 §1). [postId]별
 /// 패밀리 — id를 인자로 두면 codegen이 family를 만든다(CLAUDE.md §5).

@@ -45,7 +45,7 @@ final class MyPostsControllerProvider
   MyPostsController create() => MyPostsController();
 }
 
-String _$myPostsControllerHash() => r'e50461fbe454019a8b97ae5032145cdc915ccd59';
+String _$myPostsControllerHash() => r'cac4508cb45ae4757f43e8d8a7578814929534f7';
 
 /// 내가 쓴 글(R3).
 ///

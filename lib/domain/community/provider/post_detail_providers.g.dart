@@ -86,7 +86,7 @@ final class PostDetailProvider
   }
 }
 
-String _$postDetailHash() => r'be8a5a74bbb7e4c72a3ff2d3f05590b079e0df0e';
+String _$postDetailHash() => r'bb9857c07317ed783927d5e3b87b48670abc2a1f';
 
 /// 글 상세. [postId]별 패밀리 — id를 인자로 두면 codegen이 family를 만든다
 /// (CLAUDE.md §5, provider를 복제하지 않는다).

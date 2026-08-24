@@ -213,7 +213,7 @@ final class ConversationListControllerProvider
 }
 
 String _$conversationListControllerHash() =>
-    r'b93295ac1aa9ff5fed5a07b2ee7e2f95ea3fb638';
+    r'2831da50e6c874a666977fe7c2e28c04e493df37';
 
 /// 내가 참여한 대화 목록(R8).
 ///

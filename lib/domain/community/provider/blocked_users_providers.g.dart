@@ -46,7 +46,7 @@ final class BlockedUsersControllerProvider
 }
 
 String _$blockedUsersControllerHash() =>
-    r'c38f6e4936670a9011a42e933401bfde2aa617f4';
+    r'60abfaaa49e505bc37b3825729894cc9c3c2f38b';
 
 /// 내가 차단한 사람 목록(가이드 §6).
 ///
