@@ -55,8 +55,11 @@ class SwipeCardMetrics {
   /// 기기와 무관한 기본 하단 여백. 안전 영역 위에 얹는다.
   ///
   /// 36인 이유: 20으로 뒀더니 거리("140m") 아래가 살짝 잘렸다(실기기 확인
-  /// 2026-08-18, 사용자 지적). 16을 더해 띄운다.
-  static const double _base = 36;
+  /// 2026-08-18, 사용자 지적). 16을 더해 띄웠다.
+  ///
+  /// 52로 다시 올린 이유: 잘리지는 않지만 거리("541m")가 하단 탭 바에 딱 붙어
+  /// 답답하다(실기기 확인 2026-08-24, 사용자 지적). 다시 16을 더한다.
+  static const double _base = 52;
 
   static double _nonNegative(double value) => value < 0 ? 0 : value;
 

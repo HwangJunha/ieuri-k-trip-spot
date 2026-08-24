@@ -38,24 +38,22 @@ class LibraryScreen extends ConsumerWidget {
         title: Text(
           tab == LibraryTab.liked ? l10n.navLiked : l10n.communityTitle,
         ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: _LibraryToggle(
-              selected: tab,
-              likedLabel: l10n.navLiked,
-              communityLabel: l10n.navCommunity,
-              onSelect: (LibraryTab next) =>
-                  ref.read(libraryTabControllerProvider.notifier).select(next),
-            ),
+        // **토글은 우측 상단 아이콘 버튼이다**(사용자 결정 2026-08-24). 예전에는
+        // 앱바 아래 폭을 꽉 채운 세그먼트 버튼이라 목록이 시작되기 전에 48px을
+        // 통째로 먹었다 — 두 곳뿐인 전환에 그만한 자리를 줄 이유가 없다.
+        actions: <Widget>[
+          // 커뮤니티를 보고 있을 때만 숨긴 글 진입점을 둔다 — 좋아요 목록과는
+          // 무관한 버튼이다.
+          if (tab == LibraryTab.community)
+            CommunityScreen.hiddenPostsAction(context),
+          _LibraryToggleAction(
+            selected: tab,
+            likedLabel: l10n.navLiked,
+            communityLabel: l10n.navCommunity,
+            onSelect: (LibraryTab next) =>
+                ref.read(libraryTabControllerProvider.notifier).select(next),
           ),
-        ),
-        // 커뮤니티를 보고 있을 때만 숨긴 글 진입점을 둔다 — 좋아요 목록과는
-        // 무관한 버튼이다.
-        actions: tab == LibraryTab.community
-            ? <Widget>[CommunityScreen.hiddenPostsAction(context)]
-            : null,
+        ],
       ),
       body: IndexedStack(
         index: tab.index,
@@ -68,9 +66,12 @@ class LibraryScreen extends ConsumerWidget {
   }
 }
 
-/// 좋아요 ↔ 커뮤니티 세그먼트 토글.
-class _LibraryToggle extends StatelessWidget {
-  const _LibraryToggle({
+/// 좋아요 ↔ 커뮤니티 토글(앱바 액션).
+///
+/// **아이콘은 "지금 무엇을 보고 있는지"가 아니라 "누르면 무엇으로 가는지"를
+/// 가리킨다.** 두 곳뿐인 전환이라 이 편이 짧고, 툴팁도 목적지를 읽어 준다.
+class _LibraryToggleAction extends StatelessWidget {
+  const _LibraryToggleAction({
     required this.selected,
     required this.likedLabel,
     required this.communityLabel,
@@ -84,30 +85,16 @@ class _LibraryToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: SegmentedButton<LibraryTab>(
-        key: const Key('library_toggle'),
-        segments: <ButtonSegment<LibraryTab>>[
-          ButtonSegment<LibraryTab>(
-            value: LibraryTab.liked,
-            label: Text(likedLabel),
-            icon: const Icon(Icons.favorite_outline, size: 18),
-          ),
-          ButtonSegment<LibraryTab>(
-            value: LibraryTab.community,
-            label: Text(communityLabel),
-            icon: const Icon(Icons.forum_outlined, size: 18),
-          ),
-        ],
-        selected: <LibraryTab>{selected},
-        onSelectionChanged: (Set<LibraryTab> next) => onSelect(next.first),
-        showSelectedIcon: false,
-        style: const ButtonStyle(
-          visualDensity: VisualDensity.compact,
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
-      ),
+    final bool onLiked = selected == LibraryTab.liked;
+    final LibraryTab target = onLiked
+        ? LibraryTab.community
+        : LibraryTab.liked;
+    return IconButton(
+      key: const Key('library_toggle'),
+      tooltip: onLiked ? communityLabel : likedLabel,
+      // 가려는 쪽의 아이콘을 보여 준다.
+      icon: Icon(onLiked ? Icons.forum_outlined : Icons.favorite_outline),
+      onPressed: () => onSelect(target),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -16,7 +17,6 @@ import '../component/swipe_card.dart';
 import '../model/retry_exhausted.dart';
 import '../../../common/category/spot_category.dart';
 import '../../../common/category/spot_category_selection.dart';
-import '../model/spot_reaction.dart';
 import '../model/swipe_card_metrics.dart';
 import '../model/swipe_drag.dart';
 import '../model/swipe_queue.dart';
@@ -144,6 +144,12 @@ class _OverlayControls extends StatelessWidget {
 ///
 /// `CategoryBar`의 높이를 바꾸면 이 값도 함께 고쳐야 한다.
 const double _overlayControlsHeight = 88 + 8 + 28;
+
+/// 확정된 카드가 화면 밖으로 날아가는 시간.
+///
+/// **짧게 잡는다** — 이 시간이 끝나야 다음 카드가 올라오므로, 길면 연속으로
+/// 넘길 때 곧바로 굼떠진다. 240ms면 모션이 보이면서도 대기가 느껴지지 않는다.
+const Duration _flyOutDuration = Duration(milliseconds: 240);
 
 /// 위치 영구거부 상태: SPEC-0001의 [PermissionBlockedNotice]를 재사용해 설정 이동
 /// 경로를 노출한다(중복 구현 없음).
@@ -331,16 +337,96 @@ class _CardStack extends ConsumerStatefulWidget {
   ConsumerState<_CardStack> createState() => _CardStackState();
 }
 
-class _CardStackState extends ConsumerState<_CardStack> {
-  /// 현재 수평 드래그 변위(px, 오른쪽 양수).
-  double _dragX = 0;
+class _CardStackState extends ConsumerState<_CardStack>
+    with SingleTickerProviderStateMixin {
+  /// 현재 드래그 변위(px). 오른쪽·아래가 양수.
+  Offset _drag = Offset.zero;
 
-  void _onReaction(SpotReaction reaction) {
-    ref
-        .read(swipeControllerProvider(widget.selection).notifier)
-        .swipe(reaction);
-    setState(() => _dragX = 0);
+  /// 스프링백과 날아가기를 굴리는 컨트롤러.
+  ///
+  /// **예전에는 애니메이션이 아예 없었다** — 손을 떼면 `_dragX = 0`으로 순간
+  /// 이동해 카드가 뚝 끊겨 보였고, 확정도 모션 없이 교체됐다. 그게 "뻑뻑하다"의
+  /// 정체다. 여기서 변위를 보간해 스프링백은 튕기듯, 확정은 화면 밖으로 날아가듯
+  /// 그린다.
+  late final AnimationController _controller =
+      AnimationController(vsync: this, duration: _flyOutDuration)
+        ..addListener(_onTick);
+
+  /// 애니메이션이 굴리는 변위. 애니메이션 중에만 non-null.
+  Animation<Offset>? _animation;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
+
+  /// 손을 뗐을 때 원위치로 튕겨 돌아간다.
+  ///
+  /// **감쇠 스프링이다** — 임계 근처까지 끌다 놓으면 살짝 오버슈트하며 제자리를
+  /// 찾는다. 선형 보간이나 순간 이동(예전 동작)보다 손맛이 산다.
+  void _springBack() {
+    if (_drag == Offset.zero) return;
+    _animation = _controller.drive(
+      Tween<Offset>(begin: _drag, end: Offset.zero),
+    );
+    _controller
+      ..value = 0
+      ..animateWith(
+        SpringSimulation(
+          const SpringDescription(mass: 1, stiffness: 420, damping: 26),
+          0,
+          1,
+          0,
+        ),
+      ).whenCompleteOrCancel(() {
+        if (!mounted) return;
+        setState(() {
+          _animation = null;
+          _drag = Offset.zero;
+        });
+      });
+  }
+
+  void _onTick() {
+    final Animation<Offset>? animation = _animation;
+    if (animation == null) return;
+    setState(() => _drag = animation.value);
+  }
+
+  /// 확정 — 카드를 그 방향으로 날려 보낸 뒤 반응을 올린다.
+  ///
+  /// **날아가는 동안 큐를 건드리지 않는다.** 반응을 먼저 보내면 큐가 즉시 다음
+  /// 장을 맨 위로 올리는데, 그 카드가 방금 민 방향으로 날아가 버린다 — 엉뚱한
+  /// 카드가 사라지는 것처럼 보인다. 모션이 끝난 뒤에 소비하고 변위를 0으로
+  /// 되돌려야 다음 장이 제자리에서 나타난다.
+  void _confirm(SwipeDirection direction, Size2D size) {
+    if (_flyingOut) return; // 연타로 두 장이 한꺼번에 소비되는 것을 막는다.
+    _flyingOut = true;
+
+    final double distance = size.width + size.height;
+    final Offset target = _drag + direction.unit * distance;
+    final Offset from = _drag;
+
+    _animation = _controller.drive(Tween<Offset>(begin: from, end: target));
+    _controller.value = 0;
+    _controller
+        .animateTo(1, duration: _flyOutDuration, curve: Curves.easeOutCubic)
+        .whenCompleteOrCancel(() {
+          if (!mounted) return;
+          ref
+              .read(swipeControllerProvider(widget.selection).notifier)
+              .swipe(direction.reaction);
+          setState(() {
+            _animation = null;
+            _drag = Offset.zero;
+            _flyingOut = false;
+          });
+        });
+  }
+
+  /// 날아가는 중인가 — 중복 확정을 막는다.
+  bool _flyingOut = false;
 
   /// 카드 탭 → 상세로 push(§5, R9). 식별자만 넘기고, Discover 스택은 셸에 보존된다.
   ///
@@ -401,8 +487,11 @@ class _CardStackState extends ConsumerState<_CardStack> {
           overlayControlsHeight: _overlayControlsHeight,
         );
 
+        final Size2D size = Size2D(width, constraints.maxHeight);
+
         // 드래그 강도에 따라 다음 카드가 0.92 → 1.0으로 스케일업(§3).
-        final double nextScale = SwipeDrag.nextCardScale(_dragX, width);
+        // 상하 스와이프도 같은 세기로 반응하도록 2차원 진행도를 쓴다.
+        final double nextScale = SwipeDrag.nextCardScale2D(_drag, size);
 
         return Stack(
           key: const Key('discover_card_stack'),
@@ -425,11 +514,14 @@ class _CardStackState extends ConsumerState<_CardStack> {
               child: _DraggableTop(
                 key: ValueKey<String>(top.id),
                 spot: top,
-                width: width,
-                dragX: _dragX,
+                size: size,
+                drag: _drag,
                 metrics: metrics,
-                onDragUpdate: (double dx) => setState(() => _dragX = dx),
-                onReaction: _onReaction,
+                onDragStart: _controller.stop,
+                onDragUpdate: (Offset d) => setState(() => _drag = d),
+                onConfirm: (SwipeDirection direction) =>
+                    _confirm(direction, size),
+                onSpringBack: _springBack,
                 onTap: () => _openDetail(top),
               ),
             ),
@@ -440,26 +532,35 @@ class _CardStackState extends ConsumerState<_CardStack> {
   }
 }
 
-/// 맨 위 카드의 드래그·기울기·확정/스프링백 처리. 확정 시 [onReaction]으로 낙관적
-/// 제거를 트리거한다. 되돌리기 UI 없음(spec §7).
+/// 맨 위 카드의 드래그·기울기·확정/스프링백 처리. 되돌리기 UI 없음(spec §7).
+///
+/// **수평 전용이 아니라 2차원 팬이다** — `onPanUpdate`로 상하 스와이프까지 받는다.
+/// 위로 밀면 좋아요, 아래로 밀면 관심 없음이고, 카드는 민 방향 그대로 따라온다.
 class _DraggableTop extends StatelessWidget {
   const _DraggableTop({
     super.key,
     required this.spot,
-    required this.width,
-    required this.dragX,
+    required this.size,
+    required this.drag,
     required this.metrics,
+    required this.onDragStart,
     required this.onDragUpdate,
-    required this.onReaction,
+    required this.onConfirm,
+    required this.onSpringBack,
     required this.onTap,
   });
 
   final TouristSpot spot;
-  final double width;
-  final double dragX;
+  final Size2D size;
+  final Offset drag;
   final SwipeCardMetrics metrics;
-  final ValueChanged<double> onDragUpdate;
-  final ValueChanged<SpotReaction> onReaction;
+
+  /// 드래그를 시작하면 진행 중인 애니메이션을 멈춘다 — 스프링백 도중 다시 잡으면
+  /// 손가락과 카드가 따로 놀지 않아야 한다.
+  final VoidCallback onDragStart;
+  final ValueChanged<Offset> onDragUpdate;
+  final ValueChanged<SwipeDirection> onConfirm;
+  final VoidCallback onSpringBack;
 
   /// 카드 탭(드래그 아님) 콜백 — 상세 진입.
   final VoidCallback onTap;
@@ -467,34 +568,34 @@ class _DraggableTop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 변위 비례 회전(최대 ±0.12rad). 카드 폭 절반에서 최대치.
-    final double angle = SwipeDrag.tilt(dragX, width);
+    final double angle = SwipeDrag.tilt(drag.dx, size.width);
 
     return GestureDetector(
       onTap: onTap,
-      onHorizontalDragUpdate: (DragUpdateDetails d) =>
-          onDragUpdate(dragX + d.delta.dx),
-      onHorizontalDragEnd: (DragEndDetails d) {
+      onPanStart: (DragStartDetails _) => onDragStart(),
+      onPanUpdate: (DragUpdateDetails d) => onDragUpdate(drag + d.delta),
+      onPanEnd: (DragEndDetails d) {
         // 판정은 순수 함수가 한다 — 같은 계산이 그대로 단위 테스트가 된다(설계 §2.4).
-        final SpotReaction? reaction = SwipeDrag.resolve(
-          dragX: dragX,
-          width: width,
-          velocity: d.primaryVelocity ?? 0,
+        final SwipeDirection? direction = SwipeDrag.resolve2D(
+          drag: drag,
+          size: size,
+          velocity: d.velocity.pixelsPerSecond,
         );
-        if (reaction != null) {
-          onReaction(reaction);
+        if (direction != null) {
+          onConfirm(direction);
         } else {
-          onDragUpdate(0); // 스프링백.
+          onSpringBack();
         }
       },
       child: Transform.translate(
-        offset: Offset(dragX, 0),
+        offset: drag,
         child: Transform.rotate(
           angle: angle,
           child: Stack(
             fit: StackFit.expand,
             children: <Widget>[
               SwipeCard(spot: spot, metrics: metrics),
-              DragFeedbackOverlay(dragX: dragX, width: width),
+              DragFeedbackOverlay(drag: drag, size: size),
             ],
           ),
         ),

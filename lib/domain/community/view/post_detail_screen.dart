@@ -196,6 +196,12 @@ class _BodyState extends ConsumerState<_Body> {
                 post: post,
                 now: now,
                 expanded: true,
+                // 상세에서도 하트가 눌려야 한다 — 넘기지 않으면 `PostCard`의
+                // `onLike`가 null이라 InkWell이 탭을 무시한다(리플조차 없다).
+                onLike: () => ref
+                    .read(postDetailProvider(post.id).notifier)
+                    .toggleLike()
+                    .catchError((Object _) {}),
                 onPhotoTap: (int at) => showPostPhotoViewer(
                   context,
                   photoKeys: post.photoKeys,

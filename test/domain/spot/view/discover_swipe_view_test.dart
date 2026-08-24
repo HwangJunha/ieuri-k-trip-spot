@@ -103,6 +103,64 @@ void main() {
     expect(find.textContaining('Spot s'), findsOneWidget);
   });
 
+  testWidgets('위로 밀어도 카드가 소비된다(좋아요)', (tester) async {
+    await _pump(tester, repo: FakeSpotRepository(feed: _spots(2)));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Spot s'), findsNWidgets(2));
+
+    final Offset start = tester.getCenter(find.byType(SwipeCard).first);
+    final TestGesture gesture = await tester.startGesture(start);
+    await gesture.moveBy(const Offset(0, -20));
+    await tester.pump();
+    await gesture.moveBy(const Offset(0, -260));
+    await tester.pump();
+    // 위로 미는 동안에도 LIKE 피드백이 뜬다.
+    expect(find.text('LIKE'), findsOneWidget);
+
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Spot s'), findsOneWidget);
+  });
+
+  testWidgets('아래로 밀어도 카드가 소비된다(관심 없음)', (tester) async {
+    await _pump(tester, repo: FakeSpotRepository(feed: _spots(2)));
+    await tester.pumpAndSettle();
+
+    final Offset start = tester.getCenter(find.byType(SwipeCard).first);
+    final TestGesture gesture = await tester.startGesture(start);
+    await gesture.moveBy(const Offset(0, 20));
+    await tester.pump();
+    await gesture.moveBy(const Offset(0, 260));
+    await tester.pump();
+    expect(find.text('NOPE'), findsOneWidget);
+
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Spot s'), findsOneWidget);
+  });
+
+  testWidgets('임계에 못 미치면 스프링백으로 되돌아가 카드가 남는다', (tester) async {
+    await _pump(tester, repo: FakeSpotRepository(feed: _spots(2)));
+    await tester.pumpAndSettle();
+
+    final Offset start = tester.getCenter(find.byType(SwipeCard).first);
+    final TestGesture gesture = await tester.startGesture(start);
+    // 탭 슬롭은 넘겨 드래그로 인식시키되(그러지 않으면 탭=상세 진입이 된다),
+    // 확정 임계(폭 28%)에는 못 미치는 거리에서 손을 뗀다.
+    await gesture.moveBy(const Offset(30, 0));
+    await tester.pump();
+    await gesture.moveBy(const Offset(20, 0));
+    await tester.pump();
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    // 두 장 모두 그대로 — 소비되지 않았다.
+    expect(find.textContaining('Spot s'), findsNWidgets(2));
+  });
+
   testWidgets('empty state renders widen-radius and change-category CTAs', (
     tester,
   ) async {

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../common/model/post_author.dart';
-import '../../../common/network/media_cdn.dart';
+import '../../../common/widget/author_avatar.dart';
 import '../../../common/widget/post_labels.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/conversation.dart';
@@ -46,7 +45,7 @@ class ConversationTile extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            _CounterpartAvatar(author: conversation.counterpart),
+            AuthorAvatar(author: conversation.counterpart),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -115,30 +114,6 @@ class ConversationTile extends StatelessWidget {
     if (last == null) return l10n.dmConversationEmpty;
     if (last.hasBody) return last.body;
     return l10n.dmPhotoMessagePreview;
-  }
-}
-
-/// 상대방 아바타. 이미지가 없거나 404여도 자리 크기가 같다.
-class _CounterpartAvatar extends StatelessWidget {
-  const _CounterpartAvatar({required this.author});
-
-  final PostAuthor author;
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final String? url = MediaCdn.profileImage(author.profileImageUrl);
-    return CircleAvatar(
-      radius: 24,
-      backgroundColor: theme.colorScheme.surfaceContainerHighest,
-      foregroundImage: (url == null || url.isEmpty) ? null : NetworkImage(url),
-      child: Text(
-        author.nickname.isEmpty ? '?' : author.nickname.characters.first,
-        style: theme.textTheme.titleMedium?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
-      ),
-    );
   }
 }
 

@@ -68,7 +68,15 @@ class _List extends ConsumerWidget {
     final DateTime now = DateTime.now().toUtc();
 
     return RefreshIndicator(
-      onRefresh: () async => ref.invalidate(myQuestionsControllerProvider),
+      // **새 값을 await 해야 한다.** invalidate만 하고 끝나면 Future가 즉시
+      // 완료돼 데이터가 도착하기 전에 스피너가 걷힌다 — 당겼는데 아무 일도
+      // 없었던 것처럼 보인다.
+      onRefresh: () async {
+        ref.invalidate(myQuestionsControllerProvider);
+        await ref
+            .read(myQuestionsControllerProvider.future)
+            .catchError((Object _) => items);
+      },
       child: ListView.separated(
         // 항목이 적어도 당겨서 새로고침이 되도록 항상 스크롤을 허용한다.
         physics: const AlwaysScrollableScrollPhysics(),

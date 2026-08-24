@@ -52,7 +52,7 @@
   "navDiscover": "Discover",
   "navLiked": "Liked",
   "navNationalMap": "Korea Map",
-  "navLibrary": "Library",
+  "navLibrary": "My Activity",
   "permissionPhotosRationaleTitle": "Fill your map from photos?",
   "permissionPhotosRationaleBody": "We read the location saved in your photos to find where you've been. Your photos never leave your device, and coordinates are used only to identify regions — they're never stored.",
   "permissionPhotosBlockedMessage": "Photo access is off, so we can't fill your map from photos. You can allow it in Settings.",

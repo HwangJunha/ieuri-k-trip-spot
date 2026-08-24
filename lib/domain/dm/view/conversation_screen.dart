@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../common/model/post_author.dart';
+import '../../../common/widget/author_avatar.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../community/component/post_moderation_sheet.dart';
 import '../component/conversation_selection_app_bar.dart';
@@ -230,8 +231,25 @@ class _ConversationAppBar extends StatelessWidget
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
+    final PostAuthor? author = counterpart;
     return AppBar(
-      title: Text(counterpart?.nickname ?? l10n.dmConversationsTitle),
+      // 아바타 + 닉네임. **상대를 아직 못 받았으면 이름만 둔다** — 빈 동그라미가
+      // 먼저 뜨면 로딩이 아니라 프로필 없는 사람처럼 보인다.
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          if (author != null) ...<Widget>[
+            AuthorAvatar(author: author, radius: 16),
+            const SizedBox(width: 8),
+          ],
+          Flexible(
+            child: Text(
+              author?.nickname ?? l10n.dmConversationsTitle,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
       actions: <Widget>[
         // **수정·삭제 메뉴는 없다**(설계 §5) — 이 메뉴가 여는 것은 선택 모드뿐이다.
         PopupMenuButton<void>(

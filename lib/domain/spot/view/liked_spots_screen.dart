@@ -105,6 +105,17 @@ class _LikedList extends ConsumerWidget {
     isLoadingMore: data.isLoadingMore,
     onLoadMore: () =>
         ref.read(likedSpotsControllerProvider(selection).notifier).loadMore(),
+    // 당겨서 새로고침 — 다른 화면에서 좋아요를 풀고 돌아와도 목록을 손으로
+    // 맞출 수 있어야 한다.
+    //
+    // **`.future`를 await 해야 한다**(공용 위젯의 계약) — invalidate만 하고
+    // 끝나면 데이터가 오기 전에 스피너가 걷혀 새로고침이 안 된 것처럼 보인다.
+    onRefresh: () async {
+      ref.invalidate(likedSpotsControllerProvider(selection));
+      await ref
+          .read(likedSpotsControllerProvider(selection).future)
+          .catchError((Object _) => data);
+    },
     itemBuilder: (BuildContext context, int index) {
       final LikedSpot spot = data.items[index];
       return LikedSpotCard(spot: spot, onTap: () => _openDetail(context, ref, spot));
