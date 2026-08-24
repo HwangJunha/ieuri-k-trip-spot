@@ -213,8 +213,11 @@ class MapOverlayPainter {
       await poi.scale(1, 1, MarkerAppearance.durationMillis.toDouble());
       // 연출은 있으면 좋은 것이지 마커 표시의 조건이 아니다(R9 > R11·R12 아님,
       // 설계 §4.1) — 실패하면 조용히 제 크기로 확정하고 지도는 계속 돌아간다.
-    } on Object catch (error, stackTrace) {
-      _log.w('마커 등장 연출 생략', error: error, stackTrace: stackTrace);
+    } on Object catch (error) {
+      // **디버그 수준이다.** 연출 실패는 설계상 정상 경로이고(위 주석), 마커는
+      // 제 크기로 표시된다. 시뮬레이터처럼 SDK가 `scalePoi`를 구현하지 않은
+      // 환경에서는 마커 수만큼 반복돼 진짜 오류를 로그에서 밀어낸다.
+      _log.d('마커 등장 연출 생략: ${error.runtimeType}');
       await _settleScale(poi);
     }
   }
