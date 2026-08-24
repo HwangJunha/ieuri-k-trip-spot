@@ -16,8 +16,11 @@
 		<false/>
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
+		<!-- flavor별로 갈린다(docs/ios-flavors.md). Build Settings의
+		     사용자 정의 설정 APP_DISPLAY_NAME이 값을 정하며, 그 설정이 없는
+		     빌드에서는 빈 이름이 되지 않도록 Xcode가 기본 구성 값을 쓴다. -->
 		<key>CFBundleDisplayName</key>
-		<string>K-Trip Spot</string>
+		<string>$(APP_DISPLAY_NAME)</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>

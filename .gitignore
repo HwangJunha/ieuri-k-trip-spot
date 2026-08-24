@@ -318,6 +318,9 @@ captures/
 android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
 macos/Runner/GoogleService-Info.plist
+# flavor별 iOS Firebase 설정. 빌드 스크립트가 여기서 골라 번들로 복사한다
+# (ios/scripts/copy_google_service_info.sh).
+ios/config/*/GoogleService-Info.plist
 
 # Android Patch
 gen-external-apklibs
