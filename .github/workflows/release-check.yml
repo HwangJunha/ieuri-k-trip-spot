@@ -4,17 +4,9 @@
 # 드러나는 종류(앱 이름이 기본값, 권한 사유 문구 누락, 다국어 키 한 언어만 빠짐)와
 # **네이티브 빌드가 실제로 되는지**다.
 #
-# **`flutter analyze`가 통과해도 네이티브 빌드는 깨진다.** 실제로 겪은 것들:
-# `resValues = true` 누락(Gradle에서만 실패), `GeneratedPluginRegistrant.java`
-# 잔재(릴리스 빌드에서만 실패), Podfile flavor 구성 누락(링크 단계 실패).
-# 이 종류는 빌드를 돌려야만 잡힌다.
-#
-# **서명은 하지 않는다.** CI에 릴리스 키를 두지 않으므로 디버그 키로 서명되고
-# 산출물은 버린다 — 여기서 확인하는 것은 "빌드가 되는가"이지 "올릴 수 있는가"가
-# 아니다. 실제 출시 빌드는 키가 있는 로컬에서 만든다.
-#
-# **iOS는 `ios/`가 바뀐 PR에서만 돈다.** macOS 러너가 분당 10배라 매번 돌리면
-# 무료 한도를 태운다 — 대부분의 PR은 iOS를 건드리지 않는다.
+# **네이티브 빌드는 여기서 하지 않는다.** 머지된 뒤 `build.yml`이 서명까지 해서
+# 받아 쓸 수 있는 산출물을 만든다 — 같은 빌드를 PR에서 한 번 더 돌리면 분만
+# 두 배로 쓴다.
 name: release check
 
 on:
@@ -144,89 +136,3 @@ jobs:
             exit 1
           fi
           echo "생성 파일 추적 없음"
-
-  # ── ② 빌드 검증 ─────────────────────────────────────────────────────────────
-  #
-  # 운영 flavor로 실제 빌드한다. `verify`가 통과한 뒤에만 돈다 — 테스트가 깨진
-  # 코드를 빌드해 봐야 분만 쓴다.
-  build-android:
-    needs: verify
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: 3.44.0
-          channel: stable
-          cache: true
-
-      - name: 의존성
-        run: flutter pub get
-
-      - name: 코드 생성
-        run: dart run build_runner build --delete-conflicting-outputs
-
-      # **`--dart-define` 없이 빌드한다.** 주입값은 전부 공개 식별자거나 개발
-      # 서버용이고, 여기서 보려는 것은 "빌드가 되는가"다. 값이 없어도 앱은
-      # 기동되도록 설계돼 있다(설계 §10 — 키가 없으면 해당 화면만 안내를 띄운다).
-      #
-      # **서명은 디버그 키로 떨어진다**(key.properties가 CI에 없다). 그 산출물은
-      # 스토어에 못 올리지만, Gradle 설정·네이티브 의존성이 성립하는지는 똑같이
-      # 검증된다.
-      - name: 운영 APK 빌드
-        run: flutter build apk --release --flavor prod
-
-  # iOS는 `ios/`가 바뀐 PR에서만 돈다 — macOS 러너가 분당 10배다.
-  changed:
-    runs-on: ubuntu-latest
-    outputs:
-      ios: ${{ steps.filter.outputs.ios }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - id: filter
-        run: |
-          base="${{ github.event.pull_request.base.sha }}"
-          head="${{ github.event.pull_request.head.sha }}"
-          if git diff --name-only "$base" "$head" | grep -qE '^(ios/|pubspec\.(yaml|lock)$)'; then
-            echo "ios=true" >> "$GITHUB_OUTPUT"
-            echo "iOS 관련 변경 있음 — 빌드한다"
-          else
-            echo "ios=false" >> "$GITHUB_OUTPUT"
-            echo "iOS 관련 변경 없음 — 빌드를 건너뛴다"
-          fi
-
-  build-ios:
-    needs: [verify, changed]
-    if: needs.changed.outputs.ios == 'true'
-    runs-on: macos-latest
-    timeout-minutes: 40
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: 3.44.0
-          channel: stable
-          cache: true
-
-      - name: 의존성
-        run: flutter pub get
-
-      - name: 코드 생성
-        run: dart run build_runner build --delete-conflicting-outputs
-
-      # 서명 없이 빌드한다 — CI에 인증서를 두지 않는다. Podfile 구성·xcconfig·
-      # 빌드 단계가 성립하는지는 이것으로 확인된다.
-      - name: 운영 iOS 빌드
-        run: flutter build ios --release --flavor prod --no-codesign

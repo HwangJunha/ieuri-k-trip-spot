@@ -1,0 +1,182 @@
+# 머지되면 설치 가능한 산출물을 만든다.
+#
+# **PR 검증(dev-check·release-check)과 역할이 다르다.** 그쪽은 "머지해도 되는가"를
+# 보고, 이쪽은 "받아서 올릴 수 있는 파일"을 만든다. 그래서 여기서는 서명하고
+# 환경값을 주입한다.
+#
+# | 브랜치 | flavor | 서명 | 받는 곳 |
+# |---|---|---|---|
+# | dev    | dev  | 릴리스 키 | Actions Artifacts (내부 테스트) |
+# | master | prod | 릴리스 키 | Actions Artifacts (스토어 업로드용) |
+#
+# **iOS는 서명하지 않는다.** 인증서·프로비저닝 프로파일을 CI에 올리는 것은
+# 별개 작업이라(Fastlane match 등) 지금은 `--no-codesign`으로 빌드만 확인하고,
+# TestFlight에 올릴 ipa는 로컬에서 만든다. 붙일 때가 되면 이 파일에 서명 단계를
+# 더하면 된다.
+name: build
+
+on:
+  push:
+    branches: [dev, master]
+  # 필요할 때 손으로도 돌린다 — 재빌드가 필요한데 커밋할 것은 없는 경우.
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.0
+          channel: stable
+          cache: true
+
+      # 브랜치로 환경을 가른다. master면 운영, 그 외에는 개발이다.
+      - name: 환경 결정
+        id: env
+        run: |
+          if [ "${{ github.ref_name }}" = "master" ]; then
+            echo "flavor=prod" >> "$GITHUB_OUTPUT"
+            echo "env_secret=ENV_PROD" >> "$GITHUB_OUTPUT"
+          else
+            echo "flavor=dev" >> "$GITHUB_OUTPUT"
+            echo "env_secret=ENV_DEV" >> "$GITHUB_OUTPUT"
+          fi
+
+      # `.env`는 커밋되지 않으므로 시크릿에서 복원한다. 없으면 빌드는 되지만
+      # 서버 주소·SNS 키가 비어 앱이 제 기능을 못 하므로 명시적으로 실패시킨다.
+      - name: 환경 파일 복원
+        env:
+          ENV_CONTENT: ${{ github.ref_name == 'master' && secrets.ENV_PROD || secrets.ENV_DEV }}
+        run: |
+          if [ -z "$ENV_CONTENT" ]; then
+            echo "::error::${{ steps.env.outputs.env_secret }} 시크릿이 비어 있다"
+            exit 1
+          fi
+          printf '%s' "$ENV_CONTENT" > ".env.${{ steps.env.outputs.flavor }}"
+          echo "복원: .env.${{ steps.env.outputs.flavor }}"
+
+      # 릴리스 키로 서명해야 스토어에 올릴 수 있다. 키는 base64로 시크릿에 넣고
+      # 여기서 되돌린다 — 바이너리를 그대로 시크릿에 넣을 수 없다.
+      - name: 서명 키 복원
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::KEYSTORE_BASE64 시크릿이 비어 있다 — 서명 없이는 올릴 수 없다"
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          cat > android/key.properties <<EOF
+          storeFile=$RUNNER_TEMP/upload.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+
+      - name: 의존성
+        run: flutter pub get
+
+      - name: 코드 생성
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      # **APK와 AAB를 둘 다 만든다.** AAB가 Play 업로드 형식이고, APK는 기기에
+      # 직접 설치해 확인할 때 쓴다.
+      - name: 빌드
+        run: |
+          F="${{ steps.env.outputs.flavor }}"
+          flutter build apk --release --flavor "$F" --dart-define-from-file=".env.$F"
+          flutter build appbundle --release --flavor "$F" --dart-define-from-file=".env.$F"
+
+      # 디버그 키로 떨어졌으면 스토어에 못 올린다 — 조용히 넘어가면 업로드
+      # 단계에서야 알게 된다.
+      - name: 서명 확인
+        run: |
+          APK=$(find build/app/outputs/flutter-apk -name "*-release.apk" | head -1)
+          DN=$("$ANDROID_HOME"/build-tools/*/apksigner verify --print-certs "$APK" 2>/dev/null \
+               | grep -m1 "certificate DN" || true)
+          echo "$DN"
+          case "$DN" in
+            *"Android Debug"*)
+              echo "::error::디버그 키로 서명됐다 — 스토어에 올릴 수 없다"; exit 1;;
+          esac
+          "$ANDROID_HOME"/build-tools/*/apksigner verify --print-certs "$APK" 2>/dev/null \
+            | grep -m1 "SHA-1" | sed 's/^/릴리스 /'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-${{ steps.env.outputs.flavor }}-${{ github.sha }}
+          path: |
+            build/app/outputs/flutter-apk/*-release.apk
+            build/app/outputs/bundle/**/*.aab
+          retention-days: 30
+          if-no-files-found: error
+
+  ios:
+    runs-on: macos-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.0
+          channel: stable
+          cache: true
+
+      - name: 환경 결정
+        id: env
+        run: |
+          if [ "${{ github.ref_name }}" = "master" ]; then
+            echo "flavor=prod" >> "$GITHUB_OUTPUT"
+          else
+            echo "flavor=dev" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 환경 파일 복원
+        env:
+          ENV_CONTENT: ${{ github.ref_name == 'master' && secrets.ENV_PROD || secrets.ENV_DEV }}
+        run: |
+          if [ -z "$ENV_CONTENT" ]; then
+            echo "::error::환경 시크릿이 비어 있다"
+            exit 1
+          fi
+          printf '%s' "$ENV_CONTENT" > ".env.${{ steps.env.outputs.flavor }}"
+
+      - name: 의존성
+        run: flutter pub get
+
+      - name: 코드 생성
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      # 서명 없이 빌드한다(위 헤더 참고). TestFlight에 올릴 ipa는 인증서가 있는
+      # 로컬에서 만든다.
+      - name: 빌드
+        run: |
+          F="${{ steps.env.outputs.flavor }}"
+          flutter build ios --release --flavor "$F" --no-codesign \
+            --dart-define-from-file=".env.$F"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-${{ steps.env.outputs.flavor }}-${{ github.sha }}
+          path: build/ios/iphoneos/Runner.app
+          retention-days: 30
+          if-no-files-found: error
