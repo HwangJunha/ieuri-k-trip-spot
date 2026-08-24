@@ -112,6 +112,7 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
       final String? idToken = account.authentication.idToken;
       if (idToken == null || idToken.isEmpty) {
         // No id_token usually means serverClientId wasn't configured.
+        _log.e('google id_token 없음 — serverClientId(웹 클라이언트) 설정을 본다');
         throw const AuthFailure(AuthFailureKind.unknown);
       }
       return SnsCredential(
@@ -128,6 +129,10 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
       if (e.code == GoogleSignInExceptionCode.canceled) {
         throw const SnsCancelledException();
       }
+      // **원인을 남긴다.** 예전에는 통째로 `unknown`으로 뭉개 화면에 "문제가
+      // 발생했습니다"만 뜨고 무엇이 잘못됐는지 알 수 없었다 — 클라이언트 id
+      // 불일치·콘솔 미등록이 전부 이 갈래로 온다.
+      _log.e('google 로그인 실패: code=${e.code} ${e.description}');
       throw const AuthFailure(AuthFailureKind.unknown);
     }
   }
@@ -206,6 +211,7 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
           );
       final String? idToken = cred.identityToken;
       if (idToken == null || idToken.isEmpty) {
+        _log.e('apple identityToken 없음 — App ID에 Sign in with Apple이 켜져 있는지 본다');
         throw const AuthFailure(AuthFailureKind.unknown);
       }
       // Apple sends name/email only on the FIRST authorization; both may be
@@ -226,6 +232,9 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
       if (e.code == AuthorizationErrorCode.canceled) {
         throw const SnsCancelledException();
       }
+      // 구글과 같은 이유로 원인을 남긴다 — App ID 미등록·entitlement 누락이
+      // 전부 이 갈래로 오는데, 뭉개면 화면에 "문제가 발생했습니다"만 뜬다.
+      _log.e('apple 로그인 실패: code=${e.code} ${e.message}');
       throw const AuthFailure(AuthFailureKind.unknown);
     }
   }
