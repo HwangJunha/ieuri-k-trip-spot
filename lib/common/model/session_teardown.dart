@@ -1,6 +1,7 @@
 import 'dart:async';
+import 'package:logger/logger.dart';
 
-import 'package:flutter/foundation.dart';
+import '../log/app_log.dart';
 
 /// 세션이 사라지기 **전에** 해야 할 정리 작업을 모으는 자리.
 ///
@@ -18,6 +19,8 @@ import 'package:flutter/foundation.dart';
 class SessionTeardown {
   SessionTeardown();
 
+  static final Logger _log = appLogger('SessionTeardown');
+
   final List<Future<void> Function()> _callbacks = <Future<void> Function()>[];
 
   /// 세션이 지워지기 전에 부를 작업을 더한다. 등록 순서대로 불린다.
@@ -28,8 +31,8 @@ class SessionTeardown {
     for (final Future<void> Function() callback in _callbacks) {
       try {
         await callback();
-      } on Object catch (error) {
-        if (kDebugMode) debugPrint('[Session] 정리 작업 실패: $error');
+      } on Object catch (error, stackTrace) {
+        _log.w('정리 작업 실패', error: error, stackTrace: stackTrace);
       }
     }
   }

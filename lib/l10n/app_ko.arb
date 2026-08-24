@@ -221,9 +221,9 @@
   "@navNationalMap": {
     "description": "하단 내비 - 전국 지도 탭"
   },
-  "navLibrary": "보관함",
+  "navLibrary": "내 활동",
   "@navLibrary": {
-    "description": "하단 내비 - 보관함 탭(좋아요/커뮤니티 토글)"
+    "description": "하단 내비 - 내 활동 탭(좋아요/커뮤니티 토글)"
   },
   "permissionPhotosRationaleTitle": "사진으로 지도를 채울까요?",
   "@permissionPhotosRationaleTitle": {
@@ -2277,5 +2277,13 @@
   "relationRemoved": "내 지도에서 뺐어요.",
   "relationRemoveFailed": "빼지 못했어요. 다시 시도해 주세요.",
   "relationMapHint": "가운데에 가까울수록 겹치는 곳이 많아요.",
-  "commonMore": "더 보기"
+  "commonMore": "더 보기",
+  "termsOpenInBrowser": "브라우저로 열기",
+  "@termsOpenInBrowser": {
+    "description": "약관 웹뷰 - 외부 브라우저로 열기 버튼"
+  },
+  "termsDocumentLoadFailed": "약관을 불러오지 못했습니다. 연결을 확인해 주세요.",
+  "@termsDocumentLoadFailed": {
+    "description": "약관 웹뷰 - 문서 로드 실패 안내"
+  }
 }

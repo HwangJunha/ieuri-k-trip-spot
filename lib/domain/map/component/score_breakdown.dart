@@ -99,9 +99,10 @@ class _ScoreRow extends StatelessWidget {
               // 값을 줘도 막대가 넘치지 않는다.
               value: score.fraction,
               minHeight: 6,
-              // 강점 라벨의 primary와 색을 나눈다 — 강점 한 줄과 항목별 막대는
-              // 다른 종류의 정보라 같은 색으로 묶이면 안 된다.
-              color: theme.colorScheme.secondary,
+              // 강점 라벨의 primary와 톤을 나눈다 — 강점 한 줄과 항목별 막대는
+              // 다른 종류의 정보라 같은 색으로 묶이면 안 된다. 브랜드색 단일화로
+              // secondary가 primary와 같아졌으므로 컨테이너 톤으로 구분한다.
+              color: theme.colorScheme.primaryContainer,
               backgroundColor: theme.colorScheme.surfaceContainerHighest,
             ),
           ),

@@ -40,10 +40,13 @@ class AppTheme {
     onPrimary: Color(0xFFFFFFFF),
     primaryContainer: Color(0xFFD53B32),
     onPrimaryContainer: Color(0xFFFFFBFF),
-    secondary: Color(0xFFB4501E),
+    // secondary 계열은 primary(브랜드 레드)와 같은 톤으로 통일한다 — 주황 계열
+    // 서브 컬러를 화면마다 섞어 쓰면 브랜드색이 흐려진다. 역할은 남겨 두되
+    // 값만 primary와 맞춰, 개별 위젯이 secondary를 참조해도 레드로 그려진다.
+    secondary: Color(0xFFB2211D),
     onSecondary: Color(0xFFFFFFFF),
-    secondaryContainer: Color(0xFFFFDBCC),
-    onSecondaryContainer: Color(0xFF7A3210),
+    secondaryContainer: Color(0xFFFFDAD5),
+    onSecondaryContainer: Color(0xFF93020A),
     tertiary: Color(0xFF805200),
     onTertiary: Color(0xFFFFFFFF),
     tertiaryContainer: Color(0xFFA16900),
@@ -72,10 +75,10 @@ class AppTheme {
     primaryFixedDim: Color(0xFFFFB4AA),
     onPrimaryFixed: Color(0xFF410002),
     onPrimaryFixedVariant: Color(0xFF93020A),
-    secondaryFixed: Color(0xFFFFDBCC),
-    secondaryFixedDim: Color(0xFFE5A183),
-    onSecondaryFixed: Color(0xFF33150A),
-    onSecondaryFixedVariant: Color(0xFF7A3210),
+    secondaryFixed: Color(0xFFFFDAD5),
+    secondaryFixedDim: Color(0xFFFFB4AA),
+    onSecondaryFixed: Color(0xFF410002),
+    onSecondaryFixedVariant: Color(0xFF93020A),
     tertiaryFixed: Color(0xFFFFDDB4),
     tertiaryFixedDim: Color(0xFFFFB955),
     onTertiaryFixed: Color(0xFF291800),
@@ -85,19 +88,19 @@ class AppTheme {
   /// Dark scheme seeded from the brand key color, with secondary/tertiary
   /// nudged to the brand values. Replace with Stitch dark tones when available.
   ///
-  /// **secondary 계열은 파생 톤까지 함께 덮는다**(SPEC-0020 R10). `copyWith`로
-  /// `secondary` 하나만 바꾸면 `onSecondary`·`secondaryContainer`는 시드(primary)
-  /// 기준으로 남아 서브 컬러와 어긋난다 — 어두운 배경에서 밝은 secondary를 쓰므로
-  /// `onSecondary`는 흰색이 아니라 어두운 톤이어야 대비가 선다.
-  static final ColorScheme _darkScheme =
-      ColorScheme.fromSeed(
-        seedColor: AppColors.primary,
-        brightness: Brightness.dark,
-      ).copyWith(
-        secondary: const Color(0xFFFFB59B),
-        onSecondary: const Color(0xFF5A2100),
-        secondaryContainer: const Color(0xFF7A3210),
-        onSecondaryContainer: const Color(0xFFFFDBCC),
-        tertiary: AppColors.tertiary,
-      );
+  /// **secondary 계열은 primary와 같은 톤으로 맞춘다** — 라이트 스킴과 같은 이유로
+  /// 주황 서브 컬러를 쓰지 않는다. 시드가 primary이므로 시드에서 파생된 primary
+  /// 톤을 그대로 secondary 자리에 넣어, 어두운 배경 대비도 함께 따라온다.
+  static final ColorScheme _darkScheme = _seededDark.copyWith(
+    secondary: _seededDark.primary,
+    onSecondary: _seededDark.onPrimary,
+    secondaryContainer: _seededDark.primaryContainer,
+    onSecondaryContainer: _seededDark.onPrimaryContainer,
+    tertiary: AppColors.tertiary,
+  );
+
+  static final ColorScheme _seededDark = ColorScheme.fromSeed(
+    seedColor: AppColors.primary,
+    brightness: Brightness.dark,
+  );
 }

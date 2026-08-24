@@ -384,6 +384,72 @@ void main() {
     expect(repo.registerSnsAuthorizationCode, 'apple-code');
   });
 
+  // 사용자 지적(2026-08-25): SNS로 가입했는데 로그인 화면으로 되돌아왔다.
+  //
+  // 서버 `registerSnsMember`가 토큰을 주지 않아(라이브 introspection 확인) 가입만으로는
+  // 세션이 서지 않고, 게이트가 온보딩을 막는다. 인증이 끝난 경우 같은 자격증명으로
+  // 로그인을 한 번 더 태워 세션을 세운다.
+  test('인증이 끝난 가입은 곧바로 로그인까지 태운다', () async {
+    final MemoryStore store = MemoryStore();
+    final FakeAuthRepository repo = FakeAuthRepository(
+      session: _tokens,
+      // verificationId가 없으면 인증 완료 — 코드 입력이 필요 없다.
+      snsRegistrationResult: const SnsRegistrationResult(
+        emailVerified: true,
+        verificationId: null,
+      ),
+    );
+    final ProviderContainer c = _container(store, repo: repo);
+    await c.read(authControllerProvider.future);
+
+    await c
+        .read(authControllerProvider.notifier)
+        .signUpSns(
+          credential: const SnsCredential(
+            provider: SnsProvider.apple,
+            idToken: 'id-token',
+          ),
+          email: 'a@b.com',
+          ageVerified: true,
+          agreements: const [],
+        );
+
+    expect(repo.loginSnsCalled, isTrue, reason: '가입 뒤 로그인이 따라와야 한다');
+    expect(
+      c.read(authControllerProvider).value?.isAuthenticated,
+      isTrue,
+      reason: '세션이 서야 라우터가 온보딩으로 보낸다',
+    );
+  });
+
+  test('코드 인증이 남은 가입은 로그인시키지 않는다', () async {
+    final MemoryStore store = MemoryStore();
+    final FakeAuthRepository repo = FakeAuthRepository(
+      session: _tokens,
+      snsRegistrationResult: const SnsRegistrationResult(
+        emailVerified: false,
+        verificationId: 'v-1',
+      ),
+    );
+    final ProviderContainer c = _container(store, repo: repo);
+    await c.read(authControllerProvider.future);
+
+    await c
+        .read(authControllerProvider.notifier)
+        .signUpSns(
+          credential: const SnsCredential(
+            provider: SnsProvider.apple,
+            idToken: 'id-token',
+          ),
+          email: 'a@b.com',
+          ageVerified: true,
+          agreements: const [],
+        );
+
+    // 인증 화면이 먼저다 — 여기서 로그인시키면 미인증 세션이 선다.
+    expect(repo.loginSnsCalled, isFalse);
+  });
+
   test(
     'signUpSns delegates to the repository and returns its result',
     () async {

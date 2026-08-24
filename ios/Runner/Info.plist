@@ -5,21 +5,33 @@
 		<key>CADisableMinimumFrameDurationOnPhone</key>
 		<true/>
 		<key>NSLocationWhenInUseUsageDescription</key>
-		<string>K-Trip Spot uses your location while you use the app to show nearby attractions and real-time crowd levels. It is never accessed in the background.</string>
+		<string>K-Trip Spot uses your location to show tourist attractions near you, sort them by distance, and display real-time crowd levels for each place. Without this, the app cannot tell which attractions are nearby. Your location is used only while the app is open and is never tracked in the background.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
-		<string>K-Trip Spot reads the location saved in your photos to fill in the regions you have visited on your map, and lets you attach photos to community posts. Your photos never leave your device, and location data is used only to identify regions — it is never stored.</string>
+		<string>K-Trip Spot reads the location tags stored in your photos to automatically fill in the regions you have visited on your travel map, and lets you attach photos to community posts and your profile. Photos are read on your device and are uploaded only when you choose to attach one to a post.</string>
+		<!-- 수출 규정(암호화) 자진 신고. 이 앱은 HTTPS만 쓰고 자체 암호화를
+		     구현하지 않으므로 면제 대상이다. **이 키가 없으면 App Store Connect가
+		     업로드할 때마다 같은 질문을 되묻는다** — 값을 박아 두면 그 단계가
+		     사라진다. 자체 암호화를 넣게 되면 이 값을 다시 판단해야 한다. -->
+		<key>ITSAppUsesNonExemptEncryption</key>
+		<false/>
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
+		<!-- flavor별로 갈린다(docs/ios-flavors.md). Build Settings의
+		     사용자 정의 설정 APP_DISPLAY_NAME이 값을 정하며, 그 설정이 없는
+		     빌드에서는 빈 이름이 되지 않도록 Xcode가 기본 구성 값을 쓴다. -->
 		<key>CFBundleDisplayName</key>
-		<string>Ieuri Flutter</string>
+		<string>$(APP_DISPLAY_NAME)</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>
 		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
+		<!-- 표시 이름과 같은 값으로 둔다. 홈 화면은 이름이 길면
+		     CFBundleDisplayName 대신 이쪽을 쓰기도 해, 여기가 고정이면
+		     dev/prod가 같은 이름으로 보인다(실기기 확인 2026-08-25). -->
 		<key>CFBundleName</key>
-		<string>ieuri_k_trip_spot</string>
+		<string>$(APP_DISPLAY_NAME)</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>
@@ -76,8 +88,8 @@
 		     this (or a bundled GoogleService-Info.plist / a clientId passed to
 		     initialize) the SDK has no client id and the sign-in throws. This is
 		     the iOS CLIENT_ID from GoogleService-Info.plist. -->
-		<key>GIDClientID</key>
-		<string>504325192446-vvqljuqs07v73fq5093ekl1ijt6q1cm7.apps.googleusercontent.com</string>
+			<key>GIDClientID</key>
+		<string>$(GOOGLE_IOS_CLIENT_ID)</string>
 		<!-- SNS login (spec §7): custom URL schemes the providers redirect back to.
 		     Google uses its REVERSED_CLIENT_ID; Kakao uses kakao{NATIVE_APP_KEY}. -->
 		<key>CFBundleURLTypes</key>
@@ -110,7 +122,7 @@
 				<string>Editor</string>
 				<key>CFBundleURLSchemes</key>
 				<array>
-					<string>com.googleusercontent.apps.504325192446-vvqljuqs07v73fq5093ekl1ijt6q1cm7</string>
+					<string>$(GOOGLE_REVERSED_CLIENT_ID)</string>
 				</array>
 			</dict>
 			<dict>

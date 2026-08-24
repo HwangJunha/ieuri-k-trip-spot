@@ -1,4 +1,7 @@
+import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../../common/log/app_log.dart';
 
 import '../../../common/model/session_teardown_provider.dart';
 import '../../../common/network/graphql_client.dart';
@@ -29,6 +32,8 @@ part 'auth_controller.g.dart';
 /// bridge points at this notifier (CLAUDE.md §5 justification).
 @Riverpod(keepAlive: true)
 class AuthController extends _$AuthController {
+  static final Logger _log = appLogger('AuthController');
+
   @override
   Future<AuthState> build() async {
     // Register the refresh hook so the network layer can renew an expired
@@ -142,12 +147,22 @@ class AuthController extends _$AuthController {
   ///     credential to the SNS sign-up screen),
   ///   - [SnsCancelled] when the user backs out (silent).
   /// A real login/network failure rethrows for the login screen to show.
-  Future<SnsSignInOutcome> signInSns(SnsProvider provider) async {
+  /// [reuse]가 있으면 SDK를 다시 부르지 않고 그 자격증명을 그대로 쓴다 —
+  /// 가입 직후 자동 로그인([signUpSns])이 그렇다. 다시 부르면 방금 인증을 마친
+  /// 사용자에게 SNS 동의 창이 한 번 더 뜬다.
+  Future<SnsSignInOutcome> signInSns(
+    SnsProvider provider, {
+    SnsCredential? reuse,
+  }) async {
     final SnsCredential credential;
-    try {
-      credential = await _snsAuth.authenticate(provider);
-    } on SnsCancelledException {
-      return const SnsCancelled();
+    if (reuse != null) {
+      credential = reuse;
+    } else {
+      try {
+        credential = await _snsAuth.authenticate(provider);
+      } on SnsCancelledException {
+        return const SnsCancelled();
+      }
     }
 
     final AsyncValue<AuthState> previous = state;
@@ -187,23 +202,47 @@ class AuthController extends _$AuthController {
     }
   }
 
-  /// SNS sign-up (spec §5.2). Like [signUp] this issues no tokens and is NOT
-  /// wrapped in `state`: it must not flip the app-global auth state. Returns the
-  /// [SnsRegistrationResult] so the caller routes to verification-or-login;
-  /// failures rethrow for the SNS sign-up view to show locally.
+  /// SNS sign-up (spec §5.2). Returns the [SnsRegistrationResult] so the caller
+  /// routes to verification-or-onboarding; failures rethrow for the SNS sign-up
+  /// view to show locally.
+  ///
+  /// **가입만으로는 로그인되지 않는다** — 서버 `registerSnsMember`는 토큰을 주지
+  /// 않는다(라이브 introspection 확인: `success`·`userErrors`·`emailVerified`·
+  /// `verificationId` 넷뿐). 그래서 인증이 이미 끝난 경우([SnsRegistrationResult]의
+  /// `needsVerification`이 거짓) **같은 자격증명으로 로그인을 한 번 더 태운다**.
+  ///
+  /// 그러지 않으면 방금 SNS 인증을 마친 사람을 로그인 화면으로 되돌리게 된다 —
+  /// 게이트가 세션 없이는 온보딩을 통과시키지 않기 때문이다(사용자 지적 2026-08-25).
+  ///
+  /// **로그인 실패는 삼킨다.** 가입 자체는 성공했으므로 결과를 그대로 돌려주고,
+  /// 화면은 지금까지처럼 로그인으로 보낸다 — 사용자는 직접 로그인하면 된다.
+  /// idToken 수명이 5분이라 이 사이에 만료될 일은 사실상 없지만, 만료됐다면
+  /// 재인증 외에 방법이 없다.
   Future<SnsRegistrationResult> signUpSns({
     required SnsCredential credential,
     required String email,
     required bool ageVerified,
     required List<Agreement> agreements,
-  }) => _repo.registerSnsMember(
-    provider: credential.provider,
-    idToken: credential.idToken,
-    email: email,
-    ageVerified: ageVerified,
-    agreements: agreements,
-    authorizationCode: credential.authorizationCode,
-  );
+  }) async {
+    final SnsRegistrationResult result = await _repo.registerSnsMember(
+      provider: credential.provider,
+      idToken: credential.idToken,
+      email: email,
+      ageVerified: ageVerified,
+      agreements: agreements,
+      authorizationCode: credential.authorizationCode,
+    );
+
+    // 코드 인증이 남았으면 아직 로그인시킬 수 없다 — 인증 화면이 먼저다.
+    if (result.needsVerification) return result;
+
+    try {
+      await signInSns(credential.provider, reuse: credential);
+    } on Object catch (error) {
+      _log.w('가입 직후 자동 로그인 실패 — 로그인 화면으로 보낸다: ${error.runtimeType}');
+    }
+    return result;
+  }
 
   /// Registers a member (spec §4.2/§5.2). Returns the [EmailVerificationHandle]
   /// so the caller routes to the verification screen. Deliberately NOT wrapped

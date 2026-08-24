@@ -1,7 +1,8 @@
-import 'dart:developer' as developer;
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:logger/logger.dart';
 
+import '../../../common/log/app_log.dart';
 import '../../../common/pagination/page.dart';
 import '../model/blocked_user.dart';
 import '../repository/community_repository.dart';
@@ -46,6 +47,8 @@ class BlockedUsersState {
 /// "글이 안 보이는데 목록에 없다"는 정상이며, 화면이 그 사실을 안내한다.
 @Riverpod(retry: communityRetryPolicy)
 class BlockedUsersController extends _$BlockedUsersController {
+  static final Logger _log = appLogger('BlockedUsersController');
+
   CommunityRepository get _repository => ref.read(communityRepositoryProvider);
 
   @override
@@ -78,10 +81,7 @@ class BlockedUsersController extends _$BlockedUsersController {
         ),
       );
     } on Object catch (error) {
-      developer.log(
-        'blockedUsers loadMore failed: ${error.runtimeType}',
-        name: 'BlockedUsersController',
-      );
+      _log.w('blockedUsers loadMore failed: ${error.runtimeType}');
       state = AsyncData<BlockedUsersState>(
         current.copyWith(isLoadingMore: false),
       );

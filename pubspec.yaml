@@ -72,6 +72,8 @@ dependencies:
   flutter_local_notifications: ^18.0.1
   photo_manager: ^3.12.0
   share_plus: ^12.0.2
+  webview_flutter: ^4.14.1
+  logger: ^2.7.0
 
 dev_dependencies:
   flutter_test:
@@ -101,7 +103,14 @@ flutter:
   assets:
     - asset/icon/
     - asset/icon/landmark/
-    - asset/geo/
+    # **폴더가 아니라 파일을 하나씩 싣는다.** `asset/geo/`로 두면 같은 폴더의
+    # `README.md`(내부 설계 메모 — SPEC·정책 번호가 적혀 있다)까지 앱에 딸려
+    # 들어간다. 실제로 릴리스 APK에 들어가 있던 것을 확인하고 좁혔다.
+    #
+    # **geo에 자산을 추가하면 여기에도 줄을 추가해야 한다.** 폴더 선언이 아니라
+    # 빠뜨리면 조용히 누락된다 — `cell-shapes.json`은 로더가 try/catch로 빈 값을
+    # 돌려주므로 특히 티가 안 난다.
+    - asset/geo/district-boundaries.geojson
 
   fonts:
     # Base multilingual family. Latin/KO glyphs from Noto Sans;

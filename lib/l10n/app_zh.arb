@@ -52,7 +52,7 @@
   "navDiscover": "發現",
   "navLiked": "收藏",
   "navNationalMap": "全国地图",
-  "navLibrary": "收藏夹",
+  "navLibrary": "我的活動",
   "permissionPhotosRationaleTitle": "用照片填充地图？",
   "permissionPhotosRationaleBody": "我们读取照片中记录的位置来找出你去过的地区。照片不会离开你的设备，坐标仅用于判定地区，不会被保存。",
   "permissionPhotosBlockedMessage": "照片访问已关闭，无法用照片填充地图。可在设置中允许。",
@@ -933,5 +933,7 @@
   "relationRemoved": "已从你的地图中移除。",
   "relationRemoveFailed": "移除失败，请重试。",
   "relationMapHint": "越靠近中心，重合的地方越多。",
-  "commonMore": "查看更多"
+  "commonMore": "查看更多",
+  "termsOpenInBrowser": "在瀏覽器中開啟",
+  "termsDocumentLoadFailed": "無法載入條款，請檢查網路連線。"
 }

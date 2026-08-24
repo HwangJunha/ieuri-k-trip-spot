@@ -118,11 +118,14 @@ class FloatingBottomNavScaffold extends StatelessWidget {
                       ),
                       label: l10n.navDiscover,
                     ),
-                    // SPEC-0030 R18: 좋아요와 커뮤니티가 보관함 한 자리로 합쳐진다.
+                    // SPEC-0030 R18: 좋아요와 커뮤니티가 한 자리로 합쳐진다.
                     NavigationDestination(
                       key: const Key('bottom_nav_library'),
-                      icon: const Icon(Icons.bookmark_outline),
-                      selectedIcon: const Icon(Icons.bookmark),
+                      // **책갈피가 아니라 사람이다**(사용자 결정 2026-08-24).
+                      // 좋아요한 장소와 커뮤니티 활동을 함께 묶은 "내 활동"이라,
+                      // 북마크 아이콘은 저장해 둔 것만 있는 보관함처럼 읽혔다.
+                      icon: const Icon(Icons.person_outline),
+                      selectedIcon: const Icon(Icons.person),
                       label: l10n.navLibrary,
                     ),
                     NavigationDestination(

@@ -1,7 +1,7 @@
-import 'dart:developer' as developer;
-
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:logger/logger.dart';
 
+import '../../../common/log/app_log.dart';
 import '../../auth/provider/auth_controller.dart';
 import '../model/profile_image_upload.dart';
 import '../model/settings_failure.dart';
@@ -63,6 +63,8 @@ class ProfileImageState {
 /// 기기 없이도 3단계 전이를 전부 검증할 수 있다.
 @riverpod
 class ProfileImageController extends _$ProfileImageController {
+  static final Logger _log = appLogger('ProfileImageController');
+
   @override
   ProfileImageState build() => const ProfileImageState();
 
@@ -137,9 +139,8 @@ class ProfileImageController extends _$ProfileImageController {
   /// 취소 오퍼레이션이 생기면 이 자리에서 부르면 된다.
   void _discard(ProfileImageUploadUrl? issued) {
     if (issued == null) return;
-    developer.log(
+    _log.i(
       'profile image upload abandoned before confirm: ${issued.objectKey}',
-      name: 'ProfileImageController',
     );
   }
 }

@@ -90,11 +90,11 @@ class _List extends ConsumerWidget {
 }
 
 /// 빈 상태(디자인 §7). 가운데 muted 아이콘 + 안내 + "첫 글 쓰기".
-class _Empty extends StatelessWidget {
+class _Empty extends ConsumerWidget {
   const _Empty();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final ThemeData theme = Theme.of(context);
     final AppLocalizations l10n = AppLocalizations.of(context);
 
@@ -119,7 +119,17 @@ class _Empty extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             FilledButton(
-              onPressed: () => context.pushNamed(postComposerRouteName),
+              // **등록하고 돌아오면 목록을 다시 받는다.** 컴포저는 성공 시
+              // `pop(true)`만 하므로(그쪽 설계), 여기서 결과를 받아 invalidate
+              // 하지 않으면 "글을 등록했어요" 토스트가 뜬 채로 빈 목록이 남는다.
+              onPressed: () async {
+                final bool? created = await context.pushNamed<bool>(
+                  postComposerRouteName,
+                );
+                if (created ?? false) {
+                  ref.invalidate(myPostsControllerProvider);
+                }
+              },
               child: Text(l10n.myPostsWriteFirst),
             ),
           ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../common/model/terms_code.dart';
+import '../../../common/widget/document_web_view.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/agreement_status.dart';
 
@@ -23,6 +24,30 @@ String termsDescription(AppLocalizations l10n, TermsCode code) =>
       TermsCode.location => l10n.termsLocationDescription,
       TermsCode.marketing => l10n.termsMarketingDescription,
     };
+
+/// 약관 전문으로 가는 버튼. 전문이 게시되지 않은 항목(마케팅)은 `null`을 돌려
+/// 아무것도 그리지 않는다.
+///
+/// **동의한 뒤에도 언제든 다시 읽을 수 있어야 한다** — 개인정보 처리방침은
+/// 가입 시점뿐 아니라 상시 열람 경로가 필요하다.
+Widget? termsDocumentButton(
+  BuildContext context,
+  AppLocalizations l10n,
+  TermsCode code,
+) {
+  final Uri? url = code.documentUrl;
+  if (url == null) return null;
+  return IconButton(
+    tooltip: l10n.agreementViewDetail,
+    icon: const Icon(Icons.article_outlined),
+    onPressed: () => Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            DocumentWebView(title: termsLabel(l10n, code), url: url),
+      ),
+    ),
+  );
+}
 
 /// 필수 약관 한 줄(디자인 참조 §5).
 ///
@@ -67,14 +92,21 @@ class RequiredAgreementRow extends StatelessWidget {
       style: theme.textTheme.bodyLarge,
     );
 
+    final Widget? document = termsDocumentButton(context, l10n, status.termsCode);
+
     // 읽기 전용이면 스위치를 그리지 않는다 — 누를 수 없는 스위치는 고장으로 읽힌다.
     if (onChanged == null) {
       return ListTile(
         title: title,
         subtitle: subtitle,
-        trailing: status.agreed
-            ? Icon(Icons.check, color: theme.colorScheme.primary)
-            : null,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            if (status.agreed)
+              Icon(Icons.check, color: theme.colorScheme.primary),
+            ?document,
+          ],
+        ),
       );
     }
 
@@ -83,6 +115,8 @@ class RequiredAgreementRow extends StatelessWidget {
       onChanged: onChanged,
       title: title,
       subtitle: subtitle,
+      // 스위치가 trailing을 차지하므로 전문 버튼은 앞쪽에 둔다.
+      secondary: document,
     );
   }
 }
@@ -109,6 +143,7 @@ class OptionalAgreementRow extends StatelessWidget {
     return SwitchListTile.adaptive(
       value: status.agreed,
       onChanged: onChanged,
+      secondary: termsDocumentButton(context, l10n, status.termsCode),
       title: Text(
         termsLabel(l10n, status.termsCode),
         style: theme.textTheme.bodyLarge,

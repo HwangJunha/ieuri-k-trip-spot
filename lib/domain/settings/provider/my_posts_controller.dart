@@ -1,7 +1,8 @@
-import 'dart:developer' as developer;
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:logger/logger.dart';
 
+import '../../../common/log/app_log.dart';
 import '../../../common/model/post.dart';
 import '../../../common/pagination/page.dart';
 import '../repository/profile_repository.dart';
@@ -50,6 +51,8 @@ class MyPostsState {
 /// `PaginationListView`가 그리고, 여기서는 누적·커서·중복 호출 억제만 한다.
 @Riverpod(retry: settingsRetryPolicy)
 class MyPostsController extends _$MyPostsController {
+  static final Logger _log = appLogger('MyPostsController');
+
   ProfileRepository get _repository => ref.read(profileRepositoryProvider);
 
   @override
@@ -86,10 +89,7 @@ class MyPostsController extends _$MyPostsController {
     } on Object catch (error) {
       // **이미 받아 둔 목록을 오류로 날리지 않는다** — 다음 장 실패로 첫 장까지
       // 사라지면 사용자는 글이 없어진 줄 안다. 인디케이터만 걷고 그대로 둔다.
-      developer.log(
-        'myPosts loadMore failed: ${error.runtimeType}',
-        name: 'MyPostsController',
-      );
+      _log.w('myPosts loadMore failed: ${error.runtimeType}');
       state = AsyncData<MyPostsState>(current.copyWith(isLoadingMore: false));
     }
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../common/network/media_cdn.dart';
+import '../../../common/widget/author_avatar.dart';
 import '../../../common/widget/image_placeholder.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/message.dart';
@@ -128,11 +129,34 @@ class MessageBubble extends StatelessWidget {
           // **자기 메시지는 선택 대상이 아니다**(AC15-5) — 체크박스 자체를
           // 그리지 않는다. 자리도 비우지 않아 정렬이 흔들리지 않는다.
           if (selectionMode && message.reportable) ...<Widget>[
-            Icon(
-              selected ? Icons.check_circle : Icons.radio_button_unchecked,
-              color: selected
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.onSurfaceVariant,
+            // **동그라미 자체가 탭 대상이어야 한다.** 예전에는 순수 Icon이라
+            // 말풍선을 눌러야만 선택됐고, 체크박스처럼 생긴 것을 눌렀는데 아무
+            // 반응이 없어 선택 모드가 고장 난 것처럼 보였다. 손가락이 닿는
+            // 48dp를 확보한다(Material 최소 터치 영역).
+            InkResponse(
+              onTap: onTap,
+              radius: 24,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Icon(
+                  selected ? Icons.check_circle : Icons.radio_button_unchecked,
+                  color: selected
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+          ],
+          // **받은 메시지에는 상대 프로필을 붙인다.** 채팅에서 말풍선만 있으면
+          // 누가 한 말인지 앱바를 봐야 알 수 있다. 보낸 메시지(오른쪽)는 내
+          // 것이 자명하므로 달지 않는다 — 양쪽에 다 붙이면 폭만 좁아진다.
+          if (!mine) ...<Widget>[
+            // 아바타는 말풍선 아래쪽에 맞춘다 — 여러 줄 메시지에서 가운데 정렬은
+            // 아바타가 공중에 뜬 것처럼 보인다.
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: AuthorAvatar(author: message.sender, radius: 16),
             ),
             const SizedBox(width: 8),
           ],
@@ -230,7 +254,10 @@ class _FailedLine extends StatelessWidget {
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 minimumSize: const Size(0, 28),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                // 시각 높이는 28로 좁게 두되 터치 영역은 48dp를
+                // 확보한다 — shrinkWrap이면 손가락이 닿는 상자까지
+                // 28px로 줄어 접근성 최소 크기에 못 미친다.
+                tapTargetSize: MaterialTapTargetSize.padded,
               ),
               child: Text(l10n.dmRetryAction),
             ),

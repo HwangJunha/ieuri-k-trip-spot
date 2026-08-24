@@ -14,6 +14,8 @@ import '../model/auth_state.dart';
 import '../model/resend_cooldown.dart';
 import '../model/verification_code_input.dart';
 import '../provider/auth_controller.dart';
+import '../model/sns_credential.dart';
+import '../provider/pending_sns_credential.dart';
 import 'login_screen.dart';
 
 /// Typed arguments for the email-verification route (spec §10 — pass values via
@@ -185,6 +187,27 @@ class _EmailVerificationScreenState
           }
         } on Object {
           // 자동 로그인 실패는 치명적이지 않다 — 로그인 화면으로 보낸다.
+          if (!mounted) return;
+        }
+      }
+
+      // **SNS 가입 경로에는 비밀번호가 없다.** 그 경우 보관해 둔 자격증명으로
+      // 로그인시킨다 — 방금 인증까지 마친 사람을 로그인 화면으로 돌려보내면
+      // provider 로그인을 처음부터 다시 시켜야 한다(사용자 지적 2026-08-25).
+      final SnsCredential? pending = ref.read(pendingSnsCredentialProvider);
+      if (pending != null) {
+        try {
+          await ref
+              .read(authControllerProvider.notifier)
+              .signInSns(pending.provider, reuse: pending);
+          if (!mounted) return;
+          if (ref.read(authControllerProvider).value?.isAuthenticated ?? false) {
+            // 라우터가 상태 변화를 보고 온보딩으로 보낸다.
+            ref.read(pendingSnsCredentialProvider.notifier).clear();
+            return;
+          }
+        } on Object {
+          // 실패하면 아래 로그인 화면으로 — 인증 자체는 이미 끝났다.
           if (!mounted) return;
         }
       }

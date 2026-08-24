@@ -63,9 +63,34 @@ class HomeScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         top: false,
-        child: ListView(
-          padding: const EdgeInsets.only(top: 16, bottom: 96),
-          children: <Widget>[
+        child: RefreshIndicator(
+          // **세 섹션을 한꺼번에 다시 받는다.** 섹션마다 재시도 버튼이 따로 있지만
+          // 그건 실패했을 때의 복구 경로다 — 성공해 있는 화면을 손으로 새로
+          // 고칠 방법이 없었다(위치를 옮겼거나 행사가 갱신됐을 때).
+          //
+          // **`.future`를 await 해야 한다** — invalidate만 하고 끝나면 데이터가
+          // 도착하기 전에 스피너가 걷혀 새로고침이 안 된 것처럼 보인다. 셋 중
+          // 하나가 실패해도 나머지를 기다리도록 각각 catchError로 받는다.
+          onRefresh: () async {
+            ref
+              ..invalidate(nearbySpotsSectionProvider)
+              ..invalidate(popularSpotsSectionProvider);
+            await Future.wait(<Future<void>>[
+              ref
+                  .read(nearbySpotsSectionProvider.future)
+                  .catchError((Object _) => const <TouristSpot>[]),
+              ref
+                  .read(popularSpotsSectionProvider.future)
+                  .catchError((Object _) => const <PopularSpot>[]),
+              // 행사 섹션은 event 도메인이 스스로 무효화한다(경계 유지).
+              HappeningNowSection.refresh(ref),
+            ]);
+          },
+          child: ListView(
+            // 항목이 적어도 당겨서 새로고침이 되도록 항상 스크롤을 허용한다.
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.only(top: 16, bottom: 96),
+            children: <Widget>[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               // 검색바를 누르면 검색 페이지로 간다(AC-10.1). `push`라서 돌아오면
@@ -74,13 +99,14 @@ class HomeScreen extends ConsumerWidget {
                 onTap: () => context.pushNamed(SearchScreen.routeName),
               ),
             ),
-            const SizedBox(height: 24),
-            const _NearYouSection(),
-            const SizedBox(height: 24),
-            const HappeningNowSection(),
-            const SizedBox(height: 24),
-            const _PopularSection(),
-          ],
+              const SizedBox(height: 24),
+              const _NearYouSection(),
+              const SizedBox(height: 24),
+              const HappeningNowSection(),
+              const SizedBox(height: 24),
+              const _PopularSection(),
+            ],
+          ),
         ),
       ),
     );

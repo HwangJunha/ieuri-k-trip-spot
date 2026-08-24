@@ -1,5 +1,8 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:logger/logger.dart';
+
+import '../../../common/log/app_log.dart';
 import '../../../common/model/post.dart';
 import 'community_providers.dart';
 
@@ -14,6 +17,51 @@ part 'post_detail_providers.g.dart';
 ///
 /// **댓글은 여기 없다** — 루트 쿼리가 되면서 `commentsControllerProvider`가 따로
 /// 받는다(가이드 §2). 덕분에 댓글 조회가 실패해도 글 본문은 그대로 뜬다.
+/// **좋아요 토글을 위해 클래스 노티파이어다.** 함수형 provider는 상태를 밖에서
+/// 바꿀 수 없어 낙관적 갱신을 할 수 없다. `postDetailProvider(id)` 이름과 family
+/// 시그니처는 그대로라 기존 호출부(watch/invalidate)는 영향받지 않는다.
 @Riverpod(retry: communityRetryPolicy)
-Future<Post?> postDetail(Ref ref, String postId) =>
-    ref.watch(communityRepositoryProvider).fetchPost(postId);
+class PostDetail extends _$PostDetail {
+  static final Logger _log = appLogger('PostDetail');
+
+  @override
+  Future<Post?> build(String postId) =>
+      ref.watch(communityRepositoryProvider).fetchPost(postId);
+
+  /// 좋아요 토글.
+  ///
+  /// **목록의 `FeedController.toggleLike`를 상세에서 쓸 수 없어 따로 둔다** — 그쪽은
+  /// `items` 리스트에서 postId를 찾아 갈아 끼우는 구조라, 상세로 딥링크 진입해 목록이
+  /// 비어 있으면 `indexWhere`가 -1이라 조용히 아무 일도 하지 않는다.
+  ///
+  /// 낙관적 갱신 → 서버 `likeCount`로 되맞춤 → 실패 시 롤백. 규약은 목록과 같다
+  /// (멱등이므로 서버 값이 정본이다).
+  Future<void> toggleLike() async {
+    final Post? original = state.value;
+    if (original == null) return;
+    final bool liking = !original.likedByViewer;
+
+    state = AsyncData<Post?>(
+      original.copyWith(
+        likedByViewer: liking,
+        likeCount: (original.likeCount + (liking ? 1 : -1)).clamp(0, 1 << 31),
+      ),
+    );
+
+    try {
+      final int? serverCount = liking
+          ? await ref.read(communityRepositoryProvider).likePost(postId)
+          : await ref.read(communityRepositoryProvider).unlikePost(postId);
+      if (serverCount != null) {
+        state = AsyncData<Post?>(
+          original.copyWith(likedByViewer: liking, likeCount: serverCount),
+        );
+      }
+    } on Object catch (error) {
+      // 실패 — 이전 값으로 롤백한다. 미인증 유도는 화면이 담당한다.
+      _log.w('toggleLike failed: ${error.runtimeType}');
+      state = AsyncData<Post?>(original);
+      rethrow;
+    }
+  }
+}

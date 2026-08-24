@@ -1,9 +1,10 @@
-import 'dart:developer' as developer;
-
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
+import 'package:logger/logger.dart';
+
+import '../../../common/log/app_log.dart';
 import '../../../common/pagination/offset_page.dart';
 import '../../../common/pagination/page.dart';
 import '../model/nearby_spot.dart';
@@ -145,6 +146,8 @@ class NearbySpotsState {
 /// 돌아 페이지 0부터 받는다** — 오프셋이 카테고리마다 다르니 이어 붙일 수 없다.
 @Riverpod(retry: communityRetryPolicy)
 class NearbySpotsController extends _$NearbySpotsController {
+  static final Logger _log = appLogger('NearbySpotsController');
+
   CommunityRepository get _repository => ref.read(communityRepositoryProvider);
 
   @override
@@ -203,10 +206,7 @@ class NearbySpotsController extends _$NearbySpotsController {
     } on Object catch (error) {
       // 추가 로딩 실패는 이미 보고 있는 목록을 지우지 않는다 — 인디케이터만 걷는다.
       // 서버 message는 PII를 담을 수 있어 싣지 않고 실패 유형만 남긴다(POL-013).
-      developer.log(
-        'nearby spots loadMore failed: ${error.runtimeType}',
-        name: 'NearbySpotsController',
-      );
+      _log.w('nearby spots loadMore failed: ${error.runtimeType}');
       state = AsyncData<NearbySpotsState>(
         current.copyWith(isLoadingMore: false),
       );
@@ -264,6 +264,8 @@ class SpotSearchListState {
 /// 키보드의 검색), 한 글자마다 호출이 나가지 않는다 — 억제할 대상이 없다.
 @Riverpod(retry: communityRetryPolicy)
 class SpotSearchList extends _$SpotSearchList {
+  static final Logger _log = appLogger('SpotSearchList');
+
   @override
   Future<SpotSearchListState> build(String query) async {
     final String trimmed = query.trim();
@@ -342,10 +344,7 @@ class SpotSearchList extends _$SpotSearchList {
       );
     } on Object catch (error) {
       // 추가 로딩 실패는 이미 보고 있는 목록을 지우지 않는다(주변 목록과 동일).
-      developer.log(
-        'spot search loadMore failed: ${error.runtimeType}',
-        name: 'SpotSearchList',
-      );
+      _log.w('spot search loadMore failed: ${error.runtimeType}');
       state = AsyncData<SpotSearchListState>(
         current.copyWith(isLoadingMore: false),
       );
@@ -405,6 +404,8 @@ class LikedSpotsState {
 /// 함께 걸린다** — 바꾸면 build가 다시 돌아 첫 페이지부터 받는다.
 @Riverpod(retry: communityRetryPolicy)
 class LikedSpotsController extends _$LikedSpotsController {
+  static final Logger _log = appLogger('LikedSpotsController');
+
   CommunityRepository get _repository => ref.read(communityRepositoryProvider);
 
   @override
@@ -448,10 +449,7 @@ class LikedSpotsController extends _$LikedSpotsController {
     } on Object catch (error) {
       // 추가 로딩 실패는 이미 보고 있는 목록을 지우지 않는다 — 인디케이터만 걷는다.
       // 서버 message는 PII를 담을 수 있어 싣지 않고 실패 유형만 남긴다(POL-013).
-      developer.log(
-        'liked spots loadMore failed: ${error.runtimeType}',
-        name: 'LikedSpotsController',
-      );
+      _log.w('liked spots loadMore failed: ${error.runtimeType}');
       state = AsyncData<LikedSpotsState>(
         current.copyWith(isLoadingMore: false),
       );

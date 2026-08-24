@@ -218,7 +218,12 @@ class _DetailBody extends ConsumerWidget {
     final ThemeData theme = Theme.of(context);
     final AppLocalizations l10n = AppLocalizations.of(context);
 
-    return SingleChildScrollView(
+    // **본문 전체를 선택·복사할 수 있게 한다**(사용자 지적 2026-08-25).
+    // 주소를 지도 앱에 붙여넣거나 소개글을 옮겨 적으려면 텍스트가 잡혀야 하는데,
+    // 기본 `Text`는 선택이 되지 않는다. 위젯마다 `SelectableText`로 바꾸는 대신
+    // 최상위를 한 번 감싸 제목·주소·소개·운영정보가 모두 한 번에 잡히게 한다.
+    return SelectionArea(
+      child: SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -351,6 +356,7 @@ class _DetailBody extends ConsumerWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

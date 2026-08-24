@@ -89,6 +89,31 @@ class MapBounds {
     );
   }
 
+  /// 고정 격자에 맞춰 **바깥쪽으로** 넓힌다.
+  ///
+  /// ## 캐시 키를 안정시키기 위한 것이다
+  ///
+  /// bbox를 그대로 캐시 키로 쓰면 적중률이 사실상 0이다 — 지도를 1픽셀만 밀어도
+  /// 소수점 아래가 달라져 매번 새 키가 된다(실기기 2026-08-25: 22초 동안 같은
+  /// 강남 일대를 9번 조회했다). 격자에 맞추면 **같은 칸 안에서 움직이는 동안은
+  /// 키가 그대로**라 요청이 나가지 않는다.
+  ///
+  /// **반올림이 아니라 바깥으로 넓힌다**(floor/ceil). 반올림하면 화면 가장자리가
+  /// 격자 밖으로 잘려 그 부분의 데이터가 오지 않는다 — 넓히면 화면은 항상 결과
+  /// 안에 들어간다.
+  ///
+  /// 격자 크기가 클수록 요청은 줄지만 한 번에 받는 범위가 넓어진다. 서울 전역이
+  /// 위경도 0.3도 남짓이므로, 0.05도(약 5km)면 서울을 6×6칸 정도로 나눈다.
+  MapBounds snappedToGrid(double cell) {
+    if (cell <= 0) return this;
+    return MapBounds(
+      minLat: ((minLat / cell).floorToDouble() * cell).clamp(-90.0, 90.0),
+      minLng: ((minLng / cell).floorToDouble() * cell).clamp(-180.0, 180.0),
+      maxLat: ((maxLat / cell).ceilToDouble() * cell).clamp(-90.0, 90.0),
+      maxLng: ((maxLng / cell).ceilToDouble() * cell).clamp(-180.0, 180.0),
+    );
+  }
+
   /// [other]가 이 영역 안에 완전히 들어오는지(R20).
   ///
   /// 새 뷰포트가 직전 조회 영역에 포함되면 **재조회하지 않는다** — 이미 받아 둔

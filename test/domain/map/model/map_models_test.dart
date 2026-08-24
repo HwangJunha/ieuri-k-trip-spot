@@ -467,6 +467,110 @@ void main() {
     });
   });
 
+  group('최소 반경 보장', () {
+    /// 실기기에서 폴리곤이 사라지던 뷰포트(2026-08-25). 강남 한복판인데 폭이
+    /// 1.3km라 구역 중심점이 하나도 안 걸려 서버가 `areas: []`를 돌려줬다.
+    const MapBounds zoomedIn = MapBounds(
+      minLat: 37.49775659520474,
+      minLng: 127.01339958857577,
+      maxLat: 37.50929903170785,
+      maxLng: 127.02011479335178,
+    );
+
+    test('좁은 화면은 최소 반경만큼 넓어진다', () {
+      final MapBounds widened = zoomedIn.withMinRadius(3);
+
+      // 반경 3km면 위도 폭은 지름 6km — 위도 1도가 약 111km이므로 0.054도다.
+      expect(widened.latSpan, closeTo(6 / 111.0, 1e-6));
+      expect(widened.latSpan, greaterThan(zoomedIn.latSpan));
+      expect(widened.lngSpan, greaterThan(zoomedIn.lngSpan));
+    });
+
+    test('중심은 그대로 둔다 — 보던 곳이 밀리면 안 된다', () {
+      final MapBounds widened = zoomedIn.withMinRadius(3);
+
+      expect(
+        (widened.minLat + widened.maxLat) / 2,
+        closeTo((zoomedIn.minLat + zoomedIn.maxLat) / 2, 1e-9),
+      );
+      expect(
+        (widened.minLng + widened.maxLng) / 2,
+        closeTo((zoomedIn.minLng + zoomedIn.maxLng) / 2, 1e-9),
+      );
+    });
+
+    test('원래 화면은 넓힌 영역 안에 들어간다', () {
+      expect(zoomedIn.withMinRadius(3).contains(zoomedIn), isTrue);
+    });
+
+    test('이미 넓으면 줄이지 않는다', () {
+      // 서울 전역을 담을 만큼 넓은 화면에 3km를 요구해도 그대로다.
+      expect(seoul.withMinRadius(0.1), same(seoul));
+    });
+  });
+
+  group('격자 스냅 (캐시 키)', () {
+    test('격자 배수로 떨어진다', () {
+      final MapBounds snapped = seoul.snappedToGrid(0.05);
+
+      for (final double v in <double>[
+        snapped.minLat,
+        snapped.minLng,
+        snapped.maxLat,
+        snapped.maxLng,
+      ]) {
+        expect((v / 0.05) - (v / 0.05).roundToDouble(), closeTo(0, 1e-9));
+      }
+    });
+
+    test('원래 화면은 스냅 결과 안에 들어간다 — 잘리면 그만큼 데이터가 안 온다', () {
+      expect(seoul.snappedToGrid(0.05).contains(seoul), isTrue);
+    });
+
+    test('같은 칸 안에서 움직이면 키가 같다 — 재조회하지 않는다', () {
+      const MapBounds a = MapBounds(
+        minLat: 37.5123,
+        minLng: 127.0111,
+        maxLat: 37.5188,
+        maxLng: 127.0177,
+      );
+      // 지도를 조금 민 상태. 같은 0.05도 칸 안이다.
+      const MapBounds b = MapBounds(
+        minLat: 37.5126,
+        minLng: 127.0114,
+        maxLat: 37.5191,
+        maxLng: 127.0180,
+      );
+
+      expect(a.snappedToGrid(0.05), b.snappedToGrid(0.05));
+    });
+
+    test('칸을 넘어가면 키가 달라진다 — 새로 받는다', () {
+      const MapBounds inCell = MapBounds(
+        minLat: 37.51,
+        minLng: 127.01,
+        maxLat: 37.54,
+        maxLng: 127.04,
+      );
+      // 위로 한 칸(0.05도) 옮긴 화면.
+      const MapBounds nextCell = MapBounds(
+        minLat: 37.56,
+        minLng: 127.01,
+        maxLat: 37.59,
+        maxLng: 127.04,
+      );
+
+      expect(
+        inCell.snappedToGrid(0.05),
+        isNot(nextCell.snappedToGrid(0.05)),
+      );
+    });
+
+    test('격자가 0 이하면 손대지 않는다', () {
+      expect(seoul.snappedToGrid(0), same(seoul));
+    });
+  });
+
   group('포함 판정 (R20)', () {
     test('안쪽 영역은 포함으로 본다 — 재조회하지 않는다', () {
       const MapBounds inner = MapBounds(

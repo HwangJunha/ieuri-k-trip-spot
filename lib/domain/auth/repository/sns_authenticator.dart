@@ -1,9 +1,10 @@
-import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:logger/logger.dart';
 
+import '../../../common/log/app_log.dart';
 import '../model/auth_failure.dart';
 import '../model/sns_credential.dart';
 import '../model/sns_provider.dart';
@@ -80,6 +81,8 @@ Future<String?> codeSilentlyOrPrompt({
 class SnsAuthenticatorImpl implements SnsAuthenticator {
   const SnsAuthenticatorImpl();
 
+  static final Logger _log = appLogger('SnsAuthenticator');
+
   @override
   Future<SnsCredential> authenticate(SnsProvider provider) =>
       switch (provider) {
@@ -109,6 +112,7 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
       final String? idToken = account.authentication.idToken;
       if (idToken == null || idToken.isEmpty) {
         // No id_token usually means serverClientId wasn't configured.
+        _log.e('google id_token 없음 — serverClientId(웹 클라이언트) 설정을 본다');
         throw const AuthFailure(AuthFailureKind.unknown);
       }
       return SnsCredential(
@@ -125,6 +129,18 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
       if (e.code == GoogleSignInExceptionCode.canceled) {
         throw const SnsCancelledException();
       }
+      // **원인을 남긴다.** 예전에는 통째로 `unknown`으로 뭉개 화면에 "문제가
+      // 발생했습니다"만 뜨고 무엇이 잘못됐는지 알 수 없었다 — 클라이언트 id
+      // 불일치·콘솔 미등록이 전부 이 갈래로 온다.
+      _log.e('google 로그인 실패: code=${e.code} ${e.description}');
+      throw const AuthFailure(AuthFailureKind.unknown);
+    } on AuthFailure {
+      rethrow; // 위에서 이미 원인을 남겼다.
+    } on Object catch (error, stackTrace) {
+      // **SDK가 다른 예외를 던지는 경로가 있다.** `GoogleSignInException`만
+      // 잡으면 그 예외는 그대로 위로 새어 화면에 "문제가 발생했습니다"만
+      // 뜨고 원인이 사라진다(실기기 확인 2026-08-25).
+      _log.e('google 로그인 실패(비 SDK 예외)', error: error, stackTrace: stackTrace);
       throw const AuthFailure(AuthFailureKind.unknown);
     }
   }
@@ -203,6 +219,7 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
           );
       final String? idToken = cred.identityToken;
       if (idToken == null || idToken.isEmpty) {
+        _log.e('apple identityToken 없음 — App ID에 Sign in with Apple이 켜져 있는지 본다');
         throw const AuthFailure(AuthFailureKind.unknown);
       }
       // Apple sends name/email only on the FIRST authorization; both may be
@@ -223,6 +240,14 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
       if (e.code == AuthorizationErrorCode.canceled) {
         throw const SnsCancelledException();
       }
+      // 구글과 같은 이유로 원인을 남긴다 — App ID 미등록·entitlement 누락이
+      // 전부 이 갈래로 오는데, 뭉개면 화면에 "문제가 발생했습니다"만 뜬다.
+      _log.e('apple 로그인 실패: code=${e.code} ${e.message}');
+      throw const AuthFailure(AuthFailureKind.unknown);
+    } on AuthFailure {
+      rethrow;
+    } on Object catch (error, stackTrace) {
+      _log.e('apple 로그인 실패(비 SDK 예외)', error: error, stackTrace: stackTrace);
       throw const AuthFailure(AuthFailureKind.unknown);
     }
   }
@@ -240,12 +265,10 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
         // Null id_token means OIDC isn't enabled for the Kakao app.
         // 로그인 자체는 성공했는데(access token은 받았다) id_token만 없는
         // 상태다 — 카카오 개발자 콘솔에서 OpenID Connect를 켜야 한다.
-        if (kDebugMode) {
-          debugPrint(
-            '[SNS] kakao id_token 없음 — 개발자 콘솔에서 OpenID Connect를 '
-            '활성화해야 한다 (accessToken은 받았다: ${token.accessToken.isNotEmpty})',
-          );
-        }
+        _log.e(
+          'kakao id_token 없음 — 개발자 콘솔에서 OpenID Connect를 '
+          '활성화해야 한다 (accessToken은 받았다: ${token.accessToken.isNotEmpty})',
+        );
         throw const AuthFailure(AuthFailureKind.unknown);
       }
       // Fetch profile for prefill; email/nickname require consent scopes and may
@@ -264,19 +287,21 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
         nickname: me.kakaoAccount?.profile?.nickname,
         profileImageUrl: me.kakaoAccount?.profile?.profileImageUrl,
       );
-    } on KakaoAuthException catch (e) {
+    } on KakaoAuthException catch (e, stackTrace) {
       if (e.error == AuthErrorCause.accessDenied) {
         throw const SnsCancelledException();
       }
       // 사용자 취소가 아닌 인증 실패 — 앱 키·redirect URI 불일치, 콘솔 설정
       // 누락 등이 여기로 온다. 원인을 남기지 않으면 화면에 "문제가
       // 발생했습니다"만 뜨고 무엇이 잘못됐는지 알 수 없다.
-      if (kDebugMode) {
-        debugPrint('[SNS] kakao 인증 실패: ${e.error} ${e.errorDescription}');
-      }
+      _log.e(
+        'kakao 인증 실패: ${e.error} ${e.errorDescription}',
+        error: e,
+        stackTrace: stackTrace,
+      );
       throw const AuthFailure(AuthFailureKind.unknown);
-    } on KakaoException catch (e) {
-      if (kDebugMode) debugPrint('[SNS] kakao SDK 오류: $e');
+    } on KakaoException catch (e, stackTrace) {
+      _log.e('kakao SDK 오류', error: e, stackTrace: stackTrace);
       throw const AuthFailure(AuthFailureKind.unknown);
     }
   }

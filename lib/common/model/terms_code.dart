@@ -21,6 +21,20 @@ enum TermsCode {
   /// Whether consent is mandatory to register (spec §5.2): everything except
   /// MARKETING, which is optional.
   bool get isRequired => this != TermsCode.marketing;
+
+  /// 약관 전문이 게시된 주소. 앱은 이 문서를 **웹뷰로 열기만 한다**.
+  ///
+  /// **본문을 앱에 넣지 않는 이유**: 약관은 앱 배포와 무관하게 개정되고, 개정본이
+  /// 즉시 효력을 갖는다. 문구를 번들에 박으면 심사를 통과한 구버전 앱이 낡은
+  /// 약관을 계속 보여 주게 되고, 그건 고지 의무 위반이다.
+  ///
+  /// 마케팅 수신 동의는 별도 문서가 없다 — 서비스 약관 안에 포함된다.
+  Uri? get documentUrl => switch (this) {
+    TermsCode.service => Uri.parse('https://www.ieuri.co.kr/terms'),
+    TermsCode.privacy => Uri.parse('https://www.ieuri.co.kr/privacy'),
+    TermsCode.location => Uri.parse('https://www.ieuri.co.kr/location-terms'),
+    TermsCode.marketing => null,
+  };
 }
 
 /// A single consent decision sent with registration (schema `AgreementInput`).

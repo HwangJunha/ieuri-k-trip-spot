@@ -1,10 +1,13 @@
+import 'dart:io' show Platform;
+import 'dart:typed_data' show Uint8List;
 import 'dart:ui' as ui;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:kakao_map_sdk/kakao_map_sdk.dart';
+import 'package:logger/logger.dart';
 
+import '../../../common/log/app_log.dart';
 import '../model/congestion_level.dart';
 import '../model/congestion_overlay.dart';
 import '../model/congestion_palette.dart';
@@ -22,6 +25,8 @@ import 'map_marker_icons.dart';
 /// 데이터를 가져오지 않으므로 repository가 아니다.
 class MapOverlayPainter {
   MapOverlayPainter(this._controller);
+
+  static final Logger _log = appLogger('MapOverlayPainter');
 
   final KakaoMapController _controller;
 
@@ -141,10 +146,8 @@ class MapOverlayPainter {
         }
 
         if (isNewcomer) await _playAppearance(poi, token);
-      } on Object catch (error) {
-        if (kDebugMode) {
-          debugPrint('[Map] 마커 갱신 실패(${marker.name}): $error');
-        }
+      } on Object catch (error, stackTrace) {
+        _log.w('마커 갱신 실패(${marker.name})', error: error, stackTrace: stackTrace);
       }
     }
 
@@ -152,8 +155,8 @@ class MapOverlayPainter {
     for (int i = markers.length; i < _markers.length; i++) {
       try {
         await _markers[i].hide();
-      } on Object catch (error) {
-        if (kDebugMode) debugPrint('[Map] 마커 숨김 실패: $error');
+      } on Object catch (error, stackTrace) {
+        _log.w('마커 숨김 실패', error: error, stackTrace: stackTrace);
       }
     }
 
@@ -167,9 +170,7 @@ class MapOverlayPainter {
       _visibleMarkers = List<MapMarker>.of(markers);
     }
 
-    if (kDebugMode) {
-      debugPrint('[Map] 마커 ${markers.length}개 표시 (풀 ${_markers.length}개)');
-    }
+    _log.d('마커 ${markers.length}개 표시 (풀 ${_markers.length}개)');
 
     // 클러스터는 그리지 않는다 — 서버가 필드를 제거했다(2026-08-10).
     // 저줌에서 마커가 몰리는 문제는 격자 솎아내기가 맡는다.
@@ -195,7 +196,31 @@ class MapOverlayPainter {
   ///
   /// [token]이 바뀌면(새 갱신) 연출을 중단하되 **크기는 1.0으로 되돌린다**(R11,
   /// 설계 §4.3) — 중간 배율로 멈추면 그 마커만 작게 남는다.
+  ///
+  /// ## 안드로이드에서는 연출하지 않는다
+  ///
+  /// SDK 1.2.6의 Dart API는 `scale(x, y, [double? millis])`로 실수를 받는데,
+  /// Android 플러그인은 같은 값을 `asInt()`로 읽는다
+  /// (`LabelControllerHandler.kt:110`). 그리고 `asInt()`는 `Long`만 변환하고
+  /// `Double`은 그대로 캐스팅한다(`PrimitiveTypeConverter.kt:12`) — Flutter 코덱이
+  /// Dart `double`을 항상 `Double`로 싣기 때문에 **값과 무관하게 반드시 터진다**:
+  ///
+  /// ```
+  /// java.lang.ClassCastException: java.lang.Double cannot be cast to java.lang.Integer
+  /// ```
+  ///
+  /// 폴리곤의 `strokeWidth`처럼 payload를 가로챌 수도 없다 — 그쪽은
+  /// `toMessageable()`이 public이라 상속으로 끼어들 수 있었지만, 이 값은 private인
+  /// `_scalePoi`가 Map에 직접 담아 보낸다(SDK `label_controller.dart:209`).
+  /// 끼어들 지점이 없다.
+  ///
+  /// 시간 없이 두 번 부르는 것(작게 → 크게)도 답이 아니다. 보간이 없어 즉시
+  /// 커지므로 연출이 아니라 깜빡임이 된다. 그래서 **아예 건너뛴다** — 마커가 제
+  /// 크기로 바로 나타나는 것은 설계 §4.4가 정한 안전한 기본값이고, 매 갱신
+  /// 15~60번씩 찍히던 네이티브 예외도 함께 사라진다(실기기 2026-08-25).
   Future<void> _playAppearance(Poi poi, int token) async {
+    if (Platform.isAndroid) return;
+
     try {
       // 작게 시작한다. 여기에는 시간을 주지 않는다 — 즉시 줄여 놓고 커지는 것만
       // 보여야 "작게 시작해 커진다"로 읽힌다.
@@ -214,7 +239,10 @@ class MapOverlayPainter {
       // 연출은 있으면 좋은 것이지 마커 표시의 조건이 아니다(R9 > R11·R12 아님,
       // 설계 §4.1) — 실패하면 조용히 제 크기로 확정하고 지도는 계속 돌아간다.
     } on Object catch (error) {
-      if (kDebugMode) debugPrint('[Map] 마커 등장 연출 생략: $error');
+      // **디버그 수준이다.** 연출 실패는 설계상 정상 경로이고(위 주석), 마커는
+      // 제 크기로 표시된다. 시뮬레이터처럼 SDK가 `scalePoi`를 구현하지 않은
+      // 환경에서는 마커 수만큼 반복돼 진짜 오류를 로그에서 밀어낸다.
+      _log.d('마커 등장 연출 생략: ${error.runtimeType}');
       await _settleScale(poi);
     }
   }
@@ -261,8 +289,8 @@ class MapOverlayPainter {
       );
       // 위치 갱신 하나가 실패해도 지도는 계속 돌아야 한다 — 다음 좌표에서 다시
       // 시도한다.
-    } on Object catch (error) {
-      if (kDebugMode) debugPrint('[Map] 내 위치 표시 실패: $error');
+    } on Object catch (error, stackTrace) {
+      _log.w('내 위치 표시 실패', error: error, stackTrace: stackTrace);
     }
   }
 
@@ -271,8 +299,8 @@ class MapOverlayPainter {
   Future<void> hideMyLocation() async {
     try {
       await _myLocation?.hide();
-    } on Object catch (error) {
-      if (kDebugMode) debugPrint('[Map] 내 위치 숨김 실패: $error');
+    } on Object catch (error, stackTrace) {
+      _log.w('내 위치 숨김 실패', error: error, stackTrace: stackTrace);
     }
   }
 
@@ -321,10 +349,8 @@ class MapOverlayPainter {
         } else {
           _polygons.add(await layer.addPolygonShape(points, style));
         }
-      } on Object catch (error) {
-        if (kDebugMode) {
-          debugPrint('[Map] 폴리곤 갱신 실패(${overlay.name}): $error');
-        }
+      } on Object catch (error, stackTrace) {
+        _log.w('폴리곤 갱신 실패(${overlay.name})', error: error, stackTrace: stackTrace);
       }
     }
 
@@ -332,14 +358,12 @@ class MapOverlayPainter {
     for (int i = drawable.length; i < _polygons.length; i++) {
       try {
         await _polygons[i].hide();
-      } on Object catch (error) {
-        if (kDebugMode) debugPrint('[Map] 폴리곤 숨김 실패: $error');
+      } on Object catch (error, stackTrace) {
+        _log.w('폴리곤 숨김 실패', error: error, stackTrace: stackTrace);
       }
     }
 
-    if (kDebugMode) {
-      debugPrint('[Map] 폴리곤 ${drawable.length}개 표시 (풀 ${_polygons.length}개)');
-    }
+    _log.d('폴리곤 ${drawable.length}개 표시 (풀 ${_polygons.length}개)');
   }
 
   /// 폴리곤만 감춘다. 줌 게이트에 걸렸거나 혼잡도가 실패했을 때 쓴다 — **마커는
@@ -356,8 +380,8 @@ class MapOverlayPainter {
     // 내 위치는 풀 밖이라 따로 지운다.
     try {
       await _myLocation?.remove();
-    } on Object catch (error) {
-      if (kDebugMode) debugPrint('[Map] 내 위치 제거 실패: $error');
+    } on Object catch (error, stackTrace) {
+      _log.w('내 위치 제거 실패', error: error, stackTrace: stackTrace);
     }
     _myLocation = null;
 
@@ -473,8 +497,8 @@ class MapOverlayPainter {
     for (final Poi poi in targets) {
       try {
         await poi.remove();
-      } on Object catch (error) {
-        if (kDebugMode) debugPrint('[Map] 마커 제거 실패: $error');
+      } on Object catch (error, stackTrace) {
+        _log.w('마커 제거 실패', error: error, stackTrace: stackTrace);
       }
     }
   }
@@ -497,14 +521,12 @@ class MapOverlayPainter {
       try {
         await polygon.remove();
         removed++;
-      } on Object catch (error) {
-        if (kDebugMode) debugPrint('[Map] 폴리곤 제거 실패: $error');
+      } on Object catch (error, stackTrace) {
+        _log.w('폴리곤 제거 실패', error: error, stackTrace: stackTrace);
       }
     }
 
-    if (kDebugMode) {
-      debugPrint('[Map] 폴리곤 $removed/${targets.length}개 제거');
-    }
+    _log.d('폴리곤 $removed/${targets.length}개 제거');
   }
 }
 
@@ -533,15 +555,31 @@ class MapOverlayPainter {
 /// 크다.
 ///
 /// `toMessageable()`은 SDK가 payload를 만들 때 다형적으로 호출하므로
-/// (`addMultiplePolygonShapeStyle`), 상속해서 그 한 값만 정수로 바꾸면 SDK를 건드리지
+/// (`addMultiplePolygonShapeStyle`), 상속해서 그 한 값만 바꾸면 SDK를 건드리지
 /// 않고 끝난다. 고쳐진 버전이 나오면 이 클래스를 지우고 `PolygonStyle`로 되돌린다.
+///
+/// ## 두 플랫폼이 정반대를 요구한다
+///
+/// **안드로이드는 실수를 요구한다.** 같은 버전의 Android 플러그인은 이 값을
+/// `asFloat()`로 읽는데(`ShapeTypeConverter.kt:33`), 정수를 보내면 캐스팅이 실패해
+/// 폴리곤이 하나도 그려지지 않는다:
+///
+/// ```
+/// java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.Float
+/// ```
+///
+/// 그래서 **iOS에서만 정수로 바꾼다.** 한쪽을 고치면 다른 쪽이 깨지므로 값을 하나로
+/// 통일할 수 없다 — 실기기에서 양쪽 다 확인했다(2026-08-25: 안드로이드 혼잡도가
+/// 통째로 비어 있던 원인이 이것이다).
 class _IntStrokePolygonStyle extends PolygonStyle {
   _IntStrokePolygonStyle(super.color, {super.strokeWidth, super.strokeColor});
 
   @override
   Map<String, dynamic> toMessageable() {
     final Map<String, dynamic> payload = super.toMessageable();
-    payload['strokeWidth'] = strokeWidth.round();
+    if (Platform.isIOS) {
+      payload['strokeWidth'] = strokeWidth.round();
+    }
     return payload;
   }
 }

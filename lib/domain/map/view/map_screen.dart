@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +7,9 @@ import 'package:kakao_map_sdk/kakao_map_sdk.dart';
 
 import '../../../common/config/map_sdk_initializer.dart';
 import '../../../common/location/coordinates.dart';
+import 'package:logger/logger.dart';
+
+import '../../../common/log/app_log.dart';
 import '../../../common/location/location_providers.dart';
 import '../../../common/navigation/picked_place.dart';
 import '../../../common/navigation/spot_detail_route.dart';
@@ -63,6 +65,8 @@ class MapScreen extends ConsumerStatefulWidget {
 }
 
 class _MapScreenState extends ConsumerState<MapScreen> {
+  static final Logger _log = appLogger('MapScreen');
+
   KakaoMapController? _controller;
 
   /// 지도 위 오버레이를 그리고 지우는 책임. SDK 호출을 화면에서 떼어 둔다.
@@ -291,14 +295,24 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         },
       );
 
-      // 혼잡도는 왔는데 조인 결과가 비면 경계 캐시와 id가 안 맞는다는 뜻이다.
-      // 조용히 빈 화면이 되면 원인을 짚을 수 없어 디버그 빌드에서 남긴다.
-      if (kDebugMode && live.areas.isNotEmpty && overlays.isEmpty) {
-        debugPrint(
-          '[Map] 혼잡도 ${live.areas.length}곳이 왔지만 경계와 조인되지 않았다 '
-          '(경계 ${boundaries.length}건). '
-          '혼잡도 id: ${live.areas.map((CongestionArea a) => a.id).take(5).toList()} / '
-          '경계 id: ${boundaries.map((CongestionAreaBoundary b) => b.id).take(5).toList()}',
+      // 혼잡도는 왔는데 경계가 없어 버려진 구역을 남긴다.
+      //
+      // **일부만 빠지는 경우도 잡는다.** 예전에는 조인 결과가 통째로 빌 때만
+      // 남겼는데, 그러면 3곳 중 1곳이 조용히 사라지는 것을 알 수 없다(실기기
+      // 2026-08-25: 서버가 3곳을 줬지만 2개만 그려졌고 로그는 조용했다). 어느
+      // id가 경계 캐시에 없는지가 원인을 짚는 유일한 단서다.
+      if (live.areas.length != overlays.length) {
+        final Set<String> joined = overlays
+            .map((CongestionOverlay o) => o.area.id)
+            .toSet();
+        final List<String> missing = live.areas
+            .map((CongestionArea a) => a.id)
+            .where((String id) => !joined.contains(id))
+            .toList();
+        _log.w(
+          '혼잡도 ${live.areas.length}곳 중 ${missing.length}곳이 경계와 '
+          '조인되지 않았다 (경계 캐시 ${boundaries.length}건). '
+          '빠진 id: ${missing.take(10).toList()}',
         );
       }
 
@@ -309,10 +323,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       // `OverlayRegistrationFailedError`처럼 `Error` 계열로 던지는데, `on Exception`은
       // 그것을 놓친다. 이 조회는 `unawaited`로 띄우므로 받아 줄 곳이 여기뿐이고,
       // 놓치면 앱이 통째로 죽는다("Lost connection to device").
-    } on Object catch (error) {
+    } on Object catch (error, stackTrace) {
       // 혼잡도 실패는 지도 전체의 실패가 아니다 — 마커는 그대로 두고 이 레이어만
       // 안내로 대체한다(R29).
-      if (kDebugMode) debugPrint('[Map] 혼잡도 레이어 실패: $error');
+      _log.w('혼잡도 레이어 실패', error: error, stackTrace: stackTrace);
       await _painter?.clearCongestion();
       if (!mounted || generation != _congestionGeneration) return;
       setState(() {
@@ -378,10 +392,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       // 주변 것이 보이고, 사용자는 그걸 이미 안다.
       // 혼잡도 쪽과 같은 이유로 `Object`를 받는다 — SDK가 던지는 `Error` 계열을
       // 놓치면 앱이 죽는다.
-    } on Object catch (error) {
+    } on Object catch (error, stackTrace) {
       // 마커 조회 실패는 화면에 알리지 않는다. 실패할 때마다 배너를 띄우면 이동
       // 중에 안내가 깜빡인다 — 다만 원인은 볼 수 있어야 한다.
-      if (kDebugMode) debugPrint('[Map] 마커 조회 실패: $error');
+      _log.w('마커 조회 실패', error: error, stackTrace: stackTrace);
     }
   }
 
@@ -430,8 +444,25 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
     // **혼잡도는 자동으로 따라간다.** 폴리곤은 지도의 배경 정보에 가까워 옮길 때마다
     // 갱신되는 편이 자연스럽고, 조회도 걸치는 구역만 오므로 가볍다.
+    //
+    // **최소 반경을 보장한 뒤 격자에 맞춘다.**
+    //
+    // 최소 반경(→[MapTuning.congestionMinRadiusKm])이 없으면 확대했을 때 구역
+    // 중심점이 하나도 안 걸려 폴리곤이 통째로 사라지고, 격자
+    // (→[MapTuning.congestionGridCell])가 없으면 캐시 키가 매번 달라져 지도를
+    // 옮길 때마다 요청이 나간다. 순서가 중요하다 — 격자를 먼저 맞추면 그 뒤 반경
+    // 확장이 다시 임의의 좌표를 만들어 캐시가 어긋난다.
     final int generation = ++_congestionGeneration;
-    unawaited(_loadCongestion(visible.expanded(), zoomLevel, generation));
+    unawaited(
+      _loadCongestion(
+        visible
+            .expanded()
+            .withMinRadius(MapTuning.congestionMinRadiusKm)
+            .snappedToGrid(MapTuning.congestionGridCell),
+        zoomLevel,
+        generation,
+      ),
+    );
 
     // **마커는 자동으로 갱신하지 않는다**(사용자 요청, 2026-08-10).
     //

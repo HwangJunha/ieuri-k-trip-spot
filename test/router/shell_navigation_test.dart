@@ -120,7 +120,8 @@ void main() {
     await tester.tap(find.byKey(const Key('bottom_nav_library')));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Community'));
+    // 토글은 앱바 우측 아이콘 버튼이다 — 세그먼트 라벨이 아니다.
+    await tester.tap(find.byKey(const Key('library_toggle')));
     await tester.pumpAndSettle();
 
     expect(find.text('Spot Talk'), findsOneWidget);
@@ -136,7 +137,8 @@ void main() {
 
     await tester.tap(find.byKey(const Key('bottom_nav_library')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Community'));
+    // 토글은 앱바 우측 아이콘 버튼이다 — 세그먼트 라벨이 아니다.
+    await tester.tap(find.byKey(const Key('library_toggle')));
     await tester.pumpAndSettle();
     expect(find.text('Spot Talk'), findsOneWidget);
 

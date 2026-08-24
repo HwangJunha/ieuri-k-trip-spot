@@ -1,3 +1,4 @@
+import 'dart:async' show Timer;
 import 'dart:ui' show Locale;
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -6,6 +7,7 @@ import '../../../common/localization/locale_controller.dart';
 import '../../../common/network/graphql_client.dart';
 import '../model/congestion_area.dart';
 import '../model/map_bounds.dart';
+import '../model/map_tuning.dart';
 import '../model/map_viewport_result.dart';
 import '../model/seoul_congestion_result.dart';
 import '../repository/map_repository.dart';
@@ -39,9 +41,39 @@ Future<MapViewportResult> mapViewport(Ref ref, MapBounds bbox, int zoom) =>
 /// **줌 게이트를 통과했을 때만 이 provider를 watch한다**(R25). 게이트 미만에서
 /// 호출하지 않는 것이 일일 쿼터 1000건을 지키는 실질적 장치다(설계 §5.1) —
 /// 게이트를 렌더링에만 두면 의미가 없다.
+///
+/// ## 결과를 [MapTuning.congestionCacheTtl] 동안 붙들어 둔다
+///
+/// **원본이 실시간이 아니다.** 서울시 열린데이터의 관측 시각은 10분 단위로 떨어지고
+/// (실기기 로그 2026-08-25: `05:10`, `05:20`), 구역에 따라 몇 시간 전 값이 그대로
+/// 오기도 한다(`02:50`, `04:30`). 그런 값을 몇 초 간격으로 다시 받아 봐야 같은
+/// 숫자가 온다.
+///
+/// 붙들지 않으면 지도를 옮길 때마다 요청이 나간다 — codegen 기본값이 `autoDispose`라
+/// 화면이 잠깐이라도 놓으면 즉시 버려지기 때문이다. 실측으로 22초에 9번이었다.
+///
+/// **호출부가 bbox를 격자에 맞춰 넘겨야 이 캐시가 실제로 맞는다**(→ `MapScreen`).
+/// family 키가 bbox 자체라, 소수점이 매번 달라지면 붙들어 둔 것과 다른 키가 되어
+/// 캐시가 있으나 마나다.
 @riverpod
-Future<SeoulCongestionResult> seoulCongestion(Ref ref, MapBounds bbox) =>
-    ref.watch(mapRepositoryProvider).fetchCongestion(bbox: bbox);
+Future<SeoulCongestionResult> seoulCongestion(Ref ref, MapBounds bbox) async {
+  // **링크는 await 전에 잡는다**(→[congestionBoundaries]의 같은 주석).
+  final link = ref.keepAlive();
+
+  // 오래된 값을 영원히 붙들지는 않는다. 만료되면 다음 조회가 서버를 다시 친다.
+  final Timer expiry = Timer(MapTuning.congestionCacheTtl, link.close);
+  ref.onDispose(expiry.cancel);
+
+  try {
+    return await ref.watch(mapRepositoryProvider).fetchCongestion(bbox: bbox);
+  } on Object {
+    // 실패한 결과는 붙들지 않는다 — 한 번 실패했다고 TTL 동안 폴리곤이 사라져
+    // 있으면 안 된다.
+    expiry.cancel();
+    link.close();
+    rethrow;
+  }
+}
 
 /// 121곳의 정적 폴리곤 경계(R17·R26).
 ///

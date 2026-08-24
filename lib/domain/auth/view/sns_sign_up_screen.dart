@@ -12,6 +12,7 @@ import '../model/sns_credential.dart';
 import '../model/sns_registration_result.dart';
 import '../../../common/model/terms_code.dart';
 import '../provider/auth_controller.dart';
+import '../provider/pending_sns_credential.dart';
 import 'email_verification_screen.dart';
 import 'login_screen.dart';
 
@@ -105,8 +106,25 @@ class _SnsSignUpScreenState extends ConsumerState<SnsSignUpScreen> {
         );
       } else {
         // provider가 이메일을 준 경우 **가입 즉시 인증 완료**이고 verificationId가
-        // null로 온다(SPEC-0024 §3). 인증 화면을 띄우지 않고 로그인으로 보낸다.
-        context.goNamed(LoginScreen.routeName, extra: email);
+        // null로 온다(SPEC-0024 §3).
+        //
+        // 컨트롤러가 같은 자격증명으로 로그인까지 태웠으므로 세션이 서 있으면
+        // **라우터가 알아서 온보딩으로 보낸다** — 여기서 목적지를 지정하지 않는다.
+        // 방금 SNS 인증을 마친 사람에게 로그인을 다시 시키지 않기 위해서다
+        // (사용자 지적 2026-08-25).
+        //
+        // 자동 로그인이 실패했다면(토큰 만료 등) 세션이 없으므로 예전처럼 로그인
+        // 화면으로 보낸다. 그쪽에서 다시 시도하면 된다.
+
+        // 가입이 끝났으니 보관해 둔 자격증명을 비운다 — 남겨 두면 다음 로그인
+        // 시도에서 남의 자격증명으로 가입 화면이 열린다.
+        ref.read(pendingSnsCredentialProvider.notifier).clear();
+
+        final bool signedIn =
+            ref.read(authControllerProvider).value?.isAuthenticated ?? false;
+        if (!signedIn) {
+          context.goNamed(LoginScreen.routeName, extra: email);
+        }
       }
     } on Object catch (error) {
       if (!mounted) return;
