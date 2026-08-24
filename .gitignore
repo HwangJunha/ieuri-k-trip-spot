@@ -314,13 +314,18 @@ captures/
 *.jks
 *.keystore
 
-# Google Services (e.g. APIs or Firebase) — SNS auth configs, keep local only
-android/app/google-services.json
-ios/Runner/GoogleService-Info.plist
+# Firebase 설정 파일은 **커밋한다**(2026-08-25 결정, 이전 무시 규칙을 걷어냄).
+#
+# Google 공식 입장이 "비밀이 아니다"이다 — API 키는 프로젝트와 앱을 *식별*할 뿐이고
+# *인가*는 Security Rules·App Check·IAM이 한다. 게다가 이 값들은 어차피 APK/IPA에
+# 컴파일되어 들어가므로, 숨겨도 앱을 뜯으면 나온다. 보안 효과 없이 클론한 사람의
+# 알림만 망가뜨리고 있었다.
+#
+# **진짜 비밀은 아래 셋이고 그것들은 계속 막는다** — `.env*`의 Cloudflare Access
+# 서비스 토큰(개발 API 전체 접근), `key.properties`의 키스토어 비밀번호, `*.jks`.
+#
+# macOS는 이 앱의 배포 대상이 아니라 규칙만 남겨 둔다.
 macos/Runner/GoogleService-Info.plist
-# flavor별 iOS Firebase 설정. 빌드 스크립트가 여기서 골라 번들로 복사한다
-# (ios/scripts/copy_google_service_info.sh).
-ios/config/*/GoogleService-Info.plist
 
 # Android Patch
 gen-external-apklibs
