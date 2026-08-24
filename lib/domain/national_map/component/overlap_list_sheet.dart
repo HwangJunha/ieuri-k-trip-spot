@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../common/analytics/analytics_events.dart';
+import '../../../common/analytics/app_analytics.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/map_cell.dart';
 import '../provider/national_map_providers.dart';
@@ -19,13 +21,18 @@ class OverlapListSheet extends ConsumerWidget {
   final List<String> cellIds;
 
   /// 이 시트를 띄운다.
-  static Future<void> show(BuildContext context, List<String> cellIds) =>
-      showModalBottomSheet<void>(
-        context: context,
-        showDragHandle: true,
-        isScrollControlled: true,
-        builder: (_) => OverlapListSheet(cellIds: cellIds),
-      );
+  static Future<void> show(BuildContext context, List<String> cellIds) {
+    // **단일 관문이다** — 관계 상세와 공유 지도 두 진입이 모두 여기로 모인다.
+    AppAnalytics.logEvent(AnalyticsEvents.overlapTripView, <String, Object>{
+      AnalyticsParams.overlapCount: cellIds.length,
+    });
+    return showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (_) => OverlapListSheet(cellIds: cellIds),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -1,6 +1,8 @@
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/analytics/analytics_events.dart';
+import '../../../common/analytics/app_analytics.dart';
 import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
 import 'package:logger/logger.dart';
@@ -243,6 +245,12 @@ class FeedController extends _$FeedController {
           original.copyWith(likedByViewer: liking, likeCount: serverCount),
         );
       }
+      // 목록과 글 상세가 **의도적으로 분리된 별개 구현**이라 양쪽에 심는다 —
+      // 한쪽만 심으면 진입 경로에 따라 좋아요가 누락된다.
+      AppAnalytics.logEvent(AnalyticsEvents.likeToggle, <String, Object>{
+        AnalyticsParams.target: 'post',
+        AnalyticsParams.liked: liking,
+      });
     } on Object catch (error) {
       // 실패 — 이전 값으로 롤백한다. 미인증이면 CommunityFailure.unauthenticated가
       // 오고, 로그인 유도는 화면이 담당한다.

@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart' show NavigatorObserver;
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../common/analytics/analytics_route_observer.dart';
 import '../common/navigation/pending_destination.dart';
 import '../common/navigation/root_navigator_key.dart';
 import '../common/storage/app_preferences.dart';
@@ -108,6 +110,9 @@ GoRouter goRouter(Ref ref) {
     initialLocation: splashPath,
     navigatorKey: rootNavigatorKey,
     refreshListenable: GoRouterRefreshStream(ref),
+    // 화면 조회를 집계한다. 화면마다 `initState`에 한 줄씩 넣는 방식은 빠뜨리기 쉽고
+    // 뒤로 가기로 되돌아온 화면을 놓친다 — 전환을 한곳에서 듣는다.
+    observers: <NavigatorObserver>[AnalyticsRouteObserver()],
     // **게이트는 이 하나뿐이다**(설계 §3). 인증 게이트(SPEC-0005)와 약관 게이트
     // (SPEC-0011)가 각자 리다이렉트하면 서로를 되돌리는 순환이 생긴다. 판정은 전부
     // `resolveGate`에 있고 여기서는 provider에서 값을 읽어 넘기기만 한다.

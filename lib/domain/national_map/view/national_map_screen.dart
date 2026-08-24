@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../common/widget/floating_bottom_nav_scaffold.dart';
+import '../../../common/analytics/analytics_events.dart';
+import '../../../common/analytics/app_analytics.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/cell_sheet.dart';
 import '../component/national_map_canvas.dart';
@@ -411,6 +413,11 @@ class _HereButton extends ConsumerWidget {
         if (!ok || !context.mounted) return;
 
         await ref.read(visitControllerProvider.notifier).record(<String>[code]);
+        // 사진 경로와 구분하기 위해 호출부에 심는다(→`photo_sync_sheet.dart`).
+        AppAnalytics.logEvent(
+          AnalyticsEvents.nationalMapRegionAdd,
+          <String, Object>{AnalyticsParams.from: 'current_location'},
+        );
         // 방문이 늘었으니 다음 판정은 "이미 방문"이 되어야 한다.
         ref.invalidate(currentLocationCheckProvider);
 

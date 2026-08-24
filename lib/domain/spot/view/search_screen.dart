@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../common/location/coordinates.dart';
 import '../../../common/navigation/picked_place.dart';
 import '../../../common/navigation/spot_detail_route.dart';
+import '../../../common/analytics/analytics_events.dart';
+import '../../../common/analytics/app_analytics.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../common/category/spot_category_bar.dart';
 import '../component/recent_searches_list.dart';
@@ -263,6 +265,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     ref
         .read(spotCategoryCodesProvider.notifier)
         .remember(spot.id, spot.category?.code);
+    // `openSpotDetail` 헬퍼를 쓰지 않는 경로라(위 `remember`가 선행돼야 한다)
+    // 여기서 직접 남긴다.
+    AppAnalytics.logEvent(AnalyticsEvents.spotDetailView, <String, Object>{
+      AnalyticsParams.from: 'search',
+    });
     context.pushNamed(
       SpotDetailView.routeName,
       pathParameters: <String, String>{'id': spot.id},

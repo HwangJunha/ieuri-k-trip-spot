@@ -5,6 +5,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../model/community_failure.dart';
 import '../../../common/localization/locale_controller.dart';
 import '../../../common/model/composer_photo.dart';
+import '../../../common/analytics/analytics_events.dart';
+import '../../../common/analytics/app_analytics.dart';
 import '../model/post_draft.dart';
 import '../../../common/model/post_image_upload.dart';
 import '../../../common/model/stored_draft.dart';
@@ -571,6 +573,11 @@ class PostComposer extends _$PostComposer {
       _debounce = null;
       _pendingSave = false;
       await _clearQuietly();
+      // **신규 작성만 잡힌다** — 수정은 `ModerationController.editPost`를 타므로
+      // 이 경로에 오지 않는다. 글 id는 싣지 않는다(콘텐츠 식별자, 카탈로그 방침).
+      AppAnalytics.logEvent(AnalyticsEvents.postCreate, <String, Object>{
+        AnalyticsParams.hasPhoto: draft.remoteKeys.isNotEmpty,
+      });
       return ComposerSucceeded(postId, failedPhotoNames: failedNames);
     } on CommunityFailure catch (failure) {
       if (failure.kind == CommunityFailureKind.unauthenticated) {

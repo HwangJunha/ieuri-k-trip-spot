@@ -141,6 +141,7 @@ class _NearYouSection extends ConsumerWidget {
             spot: items[i],
             onTap: () => openSpotDetail(
               context,
+              from: 'home_nearby',
               id: items[i].id,
               thumbnailUrl: items[i].thumbnailImageUrl,
             ),
@@ -178,6 +179,7 @@ class _PopularSection extends ConsumerWidget {
                   popular: p,
                   onTap: () => openSpotDetail(
                     context,
+                    from: 'home_popular',
                     id: p.spot.id,
                     thumbnailUrl: p.spot.thumbnailImageUrl,
                   ),

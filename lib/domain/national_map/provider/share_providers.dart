@@ -1,5 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/analytics/analytics_events.dart';
+import '../../../common/analytics/app_analytics.dart';
 import '../model/shared_map.dart';
 import '../service/share_sheet_service.dart';
 import 'national_map_providers.dart';
@@ -30,6 +32,12 @@ class ShareController extends _$ShareController {
           .read(nationalMapRepositoryProvider)
           .createShareLink();
       await ref.read(shareSheetServiceProvider).share(text: link.shareUrl);
+      // **"공유 시트를 열었다"까지만 잡힌다.** 시트에서 사용자가 취소해도
+      // `SharePlus`는 성공으로 돌아온다 — 실제 전송 여부는 알 수 없다.
+      // URL은 싣지 않는다(공유 링크에 식별자가 들어 있다).
+      AppAnalytics.logEvent(AnalyticsEvents.share, <String, Object>{
+        AnalyticsParams.contentType: 'national_map',
+      });
       return link;
     } finally {
       state = false;
