@@ -40,6 +40,20 @@ runs; everything else waits for this list, and nothing here runs twice.
 4. `flutter test` — once (§8)
 5. Update `problem/SPEC-*.md` with what you decided and what you could not verify (§10)
 
+**CI가 이 목록을 대신하지 않는다.** `.github/workflows/`가 PR에서 codegen·analyze·
+테스트를 다시 돌리지만, 그건 **빠뜨렸을 때 잡는 그물**이지 로컬에서 안 돌려도 되는
+근거가 아니다 — private 저장소라 Actions 분이 과금되고, CI가 잡아 주기를 기다리는
+왕복이 로컬 실행보다 훨씬 비싸다.
+
+| 워크플로 | 언제 | 무엇을 |
+|---|---|---|
+| `dev-check` | **모든 PR → dev** | codegen · analyze · test |
+| `release-check` | **PR dev → master** | 위 + 다국어 키 정합성 · 출시 설정(앱 이름·권한 문구) · 생성 파일 미추적 |
+
+네이티브 빌드(apk/ipa)는 **CI에서 돌리지 않는다**(사용자 결정 2026-08-25) — iOS는
+macOS 러너가 분당 10배 과금이고, 서명 없는 CI 산출물은 어차피 스토어에 못 올린다.
+출시 빌드는 키를 가진 로컬에서 만든다(§12의 `key.properties`).
+
 If a step is skipped or fails, say which and why. "Couldn't check the contract, server was down"
 is a fine report; silence that lets a green build imply a checked contract is not.
 

@@ -1,0 +1,128 @@
+# dev → master(출시 브랜치) PR의 검증.
+#
+# dev 검증에 **출시 직전에만 의미가 있는 것**을 얹는다. 여기서 걸러야 할 것은
+# 문법 오류가 아니라(그건 dev에서 이미 잡혔다) **스토어에 올라간 뒤에야 드러나는
+# 종류**다 — 앱 이름이 기본값이거나, 권한 사유 문구가 비었거나, 다국어 키가
+# 한 언어만 빠진 것.
+#
+# 네이티브 빌드(apk/ipa)는 여기서도 하지 않는다(사용자 결정 2026-08-25).
+# iOS는 macOS 러너가 분당 10배 과금이고, 실제 출시 빌드는 서명 키가 있는
+# 로컬에서 만든다. CI가 만든 서명 없는 산출물은 어차피 올릴 수 없다.
+name: release check
+
+on:
+  pull_request:
+    branches: [master]
+
+concurrency:
+  group: release-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.0
+          channel: stable
+          cache: true
+
+      - name: 의존성
+        run: flutter pub get
+
+      - name: 코드 생성
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: 정적 분석
+        run: flutter analyze lib test
+
+      - name: 테스트
+        run: flutter test
+
+      # ── 여기서부터 출시 전용 점검 ──────────────────────────────────────────
+
+      # 4개 언어(ko/en/ja/zh)의 키가 하나라도 어긋나면 그 화면만 영어로 뜬다.
+      # 외국인 대상 앱이라 이건 기능 결함에 가깝다.
+      - name: 다국어 키 정합성
+        run: |
+          python3 - <<'PY'
+          import json, sys
+
+          locales = ['ko', 'en', 'ja', 'zh']
+          keys = {}
+          for loc in locales:
+              with open(f'lib/l10n/app_{loc}.arb', encoding='utf-8') as f:
+                  data = json.load(f)
+              keys[loc] = {k for k in data if not k.startswith('@')}
+
+          base = keys['ko']
+          failed = False
+          for loc in locales[1:]:
+              missing = base - keys[loc]
+              extra = keys[loc] - base
+              if missing or extra:
+                  failed = True
+                  if missing:
+                      print(f'::error::{loc}에 없는 키 {len(missing)}개: {sorted(missing)[:5]}')
+                  if extra:
+                      print(f'::error::{loc}에만 있는 키 {len(extra)}개: {sorted(extra)[:5]}')
+
+          if failed:
+              sys.exit(1)
+          print(f'4개 언어 {len(base)}키 일치')
+          PY
+
+      # 스토어에 기본값이 올라가는 사고를 막는다. 실제로 앱 이름이
+      # `ieuri_k_trip_spot`인 채로 있었다(2026-08-24).
+      - name: 출시 설정 점검
+        run: |
+          fail=0
+
+          label=$(grep -oE 'android:label="[^"]*"' android/app/src/main/AndroidManifest.xml | head -1 | cut -d'"' -f2)
+          case "$label" in
+            ''|*example*|*_*)
+              echo "::error::Android 앱 이름이 기본값처럼 보인다: '$label'"; fail=1;;
+            *) echo "Android 앱 이름: $label";;
+          esac
+
+          appid=$(grep -oE 'applicationId = "[^"]*"' android/app/build.gradle.kts | head -1 | cut -d'"' -f2)
+          case "$appid" in
+            com.example.*|'')
+              echo "::error::Android applicationId가 기본값이다: '$appid'"; fail=1;;
+            *) echo "Android applicationId: $appid";;
+          esac
+
+          # iOS 권한 사유 문구 — 비어 있으면 앱스토어 심사에서 반려된다.
+          for key in NSLocationWhenInUseUsageDescription NSPhotoLibraryUsageDescription; do
+            if ! /usr/bin/env python3 - "$key" <<'PY'
+          import plistlib, sys
+          with open('ios/Runner/Info.plist', 'rb') as f:
+              plist = plistlib.load(f)
+          key = sys.argv[1]
+          value = plist.get(key, '')
+          if not value or len(value) < 30:
+              print(f'::error::{key}가 없거나 너무 짧다 — 심사에서 반려된다')
+              sys.exit(1)
+          print(f'{key}: {len(value)}자')
+          PY
+            then fail=1; fi
+          done
+
+          exit $fail
+
+      # 생성 파일이 실수로 다시 추적되는 것을 막는다. 커밋되면 소스를 고치고
+      # codegen을 빼먹어도 diff에 아무 표시가 안 남는다(2026-08-24 사고).
+      - name: 생성 파일이 추적되지 않는지
+        run: |
+          tracked=$(git ls-files | grep -E '\.g\.dart$|\.graphql\.dart$' || true)
+          if [ -n "$tracked" ]; then
+            echo "::error::생성 파일이 추적되고 있다:"
+            echo "$tracked" | head -5
+            exit 1
+          fi
+          echo "생성 파일 추적 없음"
