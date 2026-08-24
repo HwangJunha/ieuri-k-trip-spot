@@ -97,8 +97,18 @@ List<RouteBase> buildRoutes() => <RouteBase>[
     path: '/sns-sign-up',
     name: SnsSignUpScreen.routeName,
     // Entered after SNS auth with the verified credential passed via `extra`.
-    builder: (_, GoRouterState state) =>
-        SnsSignUpScreen(credential: state.extra! as SnsCredential),
+    //
+    // **`extra`가 없으면 로그인으로 되돌린다.** `extra`는 메모리에만 있고 URL에
+    // 실리지 않아, 이 경로에 머문 채 핫 리스타트·앱 재시작·딥링크로 라우트가
+    // 다시 만들어지면 null이다. 게이트는 `/sns-sign-up`을 미인증 허용 경로로
+    // 통과시키므로(`authPaths`) 그때 빌더까지 도달하는데, 예전에는 `state.extra!`가
+    // 그 자리에서 터져 빨간 화면이 떴다 — 자격증명 없이 SNS 가입을 이어갈 수는
+    // 없으니 크래시 대신 로그인으로 보낸다.
+    builder: (_, GoRouterState state) {
+      final Object? extra = state.extra;
+      if (extra is! SnsCredential) return const LoginScreen();
+      return SnsSignUpScreen(credential: extra);
+    },
   ),
   GoRoute(
     path: '/onboarding',
