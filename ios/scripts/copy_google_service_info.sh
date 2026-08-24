@@ -1,44 +1,23 @@
 #!/bin/sh
-# flavor에 맞는 GoogleService-Info.plist를 번들로 복사한다.
+# GoogleService-Info.plist를 앱 번들로 복사한다.
 #
-# **Android와 달리 iOS에는 폴더 규칙이 없다.** Android는
-# `src/{flavor}/google-services.json`을 Gradle이 알아서 고르지만, iOS는 아무도
-# 골라 주지 않아 이 스크립트가 한다. Xcode의 Build Phases에 "Run Script"로
-# 등록하며, **Copy Bundle Resources보다 앞에** 두어야 복사본이 번들에 들어간다.
+# **Android와 달리 iOS에는 폴더 규칙이 없다.** Android는 Gradle 플러그인이
+# `google-services.json`을 알아서 처리하지만, iOS는 아무도 해 주지 않아 이 스크립트가
+# 한다. Xcode의 Build Phases에 "Run Script"로 등록하며, **Copy Bundle Resources보다
+# 앞에** 두어야 복사본이 번들에 들어간다.
 #
-# 파일 배치:
-#   ios/config/dev/GoogleService-Info.plist
-#   ios/config/prod/GoogleService-Info.plist
+# ## flavor를 보지 않는다
 #
-# 둘 다 커밋하지 않는다(.gitignore) — 환경마다 다르고, CI는 시크릿에서 복원한다.
+# 예전에는 dev 빌드의 번들이 `kr.ieuri.ktripspot.dev`라 Firebase 앱과 plist가 flavor별로
+# 따로 있었고, 이 스크립트가 그중 하나를 골랐다. 그 접미사를 걷어내면서
+# (→ `android/app/build.gradle.kts` 주석) 두 flavor의 번들이 같아졌고 콘솔의 `.dev` 앱도
+# 지웠다(2026-08-25). 그래서 고를 것이 없다 — 파일 하나를 그대로 복사한다.
+#
+# plist의 `BUNDLE_ID`가 실제 번들과 다르면 Firebase가 런타임에 거부하므로, 파일을
+# 갈아 끼울 때는 그 값을 확인한다.
 set -e
 
-# Xcode가 넘겨주는 값. flavor를 쓰지 않고 빌드하면 비어 있다.
-FLAVOR="${FLUTTER_FLAVOR}"
-
-# `flutter build`는 FLUTTER_FLAVOR를 주지만, Xcode에서 scheme을 직접 골라
-# 실행하면 비어 있을 수 있다. 그때는 빌드 구성 이름(`Debug-dev`)에서 뽑는다.
-if [ -z "$FLAVOR" ]; then
-  case "$CONFIGURATION" in
-    *-dev)  FLAVOR="dev" ;;
-    *-prod) FLAVOR="prod" ;;
-  esac
-fi
-
-if [ -z "$FLAVOR" ]; then
-  echo "warning: flavor를 알 수 없어 GoogleService-Info.plist를 복사하지 않는다 — 알림이 동작하지 않는다"
-  exit 0
-fi
-
-# **번들이 하나라 Firebase 앱도 하나다**(2026-08-25).
-#
-# 예전에는 dev 빌드의 번들이 `kr.ieuri.ktripspot.dev`라 Firebase 앱도 따로 있었다.
-# 그 접미사를 걷어내면서(→ `android/app/build.gradle.kts` 주석) 두 flavor의 번들이
-# 같아졌고, dev용 plist는 이제 맞지 않는다 — 번들이 어긋나면 초기화가 실패한다.
-#
-# flavor는 앱 이름만 가르므로 설정은 prod 것을 함께 쓴다. `config/dev/`는 남겨 두되
-# 참조하지 않는다 — 지우지 않는 것은 접미사를 되살릴 경우를 위해서다.
-SOURCE="${PROJECT_DIR}/config/prod/GoogleService-Info.plist"
+SOURCE="${PROJECT_DIR}/config/GoogleService-Info.plist"
 
 if [ ! -f "$SOURCE" ]; then
   # **빌드를 막지 않는다.** 설정 파일이 없어도 앱은 기동되고 알림만 빠진다는 것이
@@ -49,4 +28,4 @@ fi
 
 DEST="${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/GoogleService-Info.plist"
 cp "$SOURCE" "$DEST"
-echo "GoogleService-Info.plist ← config/prod (flavor=${FLAVOR}, 번들 공용)"
+echo "GoogleService-Info.plist ← config/"
