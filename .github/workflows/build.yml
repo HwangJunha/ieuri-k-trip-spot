@@ -28,7 +28,10 @@ concurrency:
 jobs:
   android:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # **60분이다.** 30분으로 뒀다가 첫 실행이 빌드 도중 잘렸다(2026-08-24, exit 143).
+    # Gradle 캐시가 비어 있으면 의존성을 통째로 받고, 그 뒤 APK와 AAB를 각각
+    # 빌드하므로 첫 실행은 30분을 넘긴다. 캐시가 서면 10분 안쪽으로 떨어진다.
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v4
@@ -43,6 +46,16 @@ jobs:
           flutter-version: 3.44.0
           channel: stable
           cache: true
+
+      # **Gradle 캐시가 없으면 매번 의존성을 통째로 받는다.** 첫 실행이 30분
+      # 타임아웃에 걸린 주된 이유이고, 캐시가 서면 빌드가 몇 분대로 떨어진다.
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
 
       # 브랜치로 환경을 가른다. master면 운영, 그 외에는 개발이다.
       - name: 환경 결정
