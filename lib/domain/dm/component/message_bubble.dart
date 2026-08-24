@@ -254,7 +254,10 @@ class _FailedLine extends StatelessWidget {
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 minimumSize: const Size(0, 28),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                // 시각 높이는 28로 좁게 두되 터치 영역은 48dp를
+                // 확보한다 — shrinkWrap이면 손가락이 닿는 상자까지
+                // 28px로 줄어 접근성 최소 크기에 못 미친다.
+                tapTargetSize: MaterialTapTargetSize.padded,
               ),
               child: Text(l10n.dmRetryAction),
             ),
