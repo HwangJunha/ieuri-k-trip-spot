@@ -1,33 +1,28 @@
-import 'dart:math' as math;
 import 'dart:ui' show Offset;
 
 import 'spot_reaction.dart';
 
-/// 드래그가 확정된 방향. 상하 스와이프를 받으면서 "어느 쪽으로 날아갈지"가
-/// 반응(LIKE/DISLIKE)만으로는 정해지지 않아 따로 둔다 — 위로 민 것과 오른쪽으로
-/// 민 것은 **같은 LIKE지만 카드가 날아가는 방향이 다르다**.
+/// 드래그가 확정된 방향.
+///
+/// **좌우뿐이다**(사용자 결정 2026-08-24). 한때 상하까지 확정 방향으로 뒀지만,
+/// 아래로 밀면 패스가 되는 것이 직관과 어긋났다 — 좋아요는 오른쪽, 패스는
+/// 왼쪽이라는 관례가 이미 굳어 있다. 카드는 여전히 손가락을 따라 위아래로도
+/// 움직이지만(그래야 뻣뻣하지 않다), 판정은 가로 변위만 본다.
 enum SwipeDirection {
   left,
-  right,
-  up,
-  down;
+  right;
 
-  /// 이 방향이 뜻하는 반응.
-  ///
-  /// **서버 enum은 LIKE/DISLIKE 둘뿐이다**(`spot_schema.graphql:23-26`). 위/아래를
-  /// 새 반응으로 만들면 스키마를 바꿔야 하므로, 방향만 늘리고 반응은 기존 둘에
-  /// 매핑한다 — 위는 좋아요(슈퍼라이크 제스처), 아래는 관심 없음이다.
+  /// 이 방향이 뜻하는 반응. 서버 enum은 LIKE/DISLIKE 둘뿐이다
+  /// (`spot_schema.graphql:23-26`).
   SpotReaction get reaction => switch (this) {
-    SwipeDirection.right || SwipeDirection.up => SpotReaction.like,
-    SwipeDirection.left || SwipeDirection.down => SpotReaction.dislike,
+    SwipeDirection.right => SpotReaction.like,
+    SwipeDirection.left => SpotReaction.dislike,
   };
 
   /// 카드가 날아갈 단위 방향.
   Offset get unit => switch (this) {
     SwipeDirection.left => const Offset(-1, 0),
     SwipeDirection.right => const Offset(1, 0),
-    SwipeDirection.up => const Offset(0, -1),
-    SwipeDirection.down => const Offset(0, 1),
   };
 }
 
@@ -44,12 +39,6 @@ abstract final class SwipeDrag {
   /// 비율만큼 끌면 같은 결과"다(설계 §2.1, AC R3-3). 여기를 절대값으로 고정하면
   /// 화면 크기가 다른 기기에서 판정이 어긋난다.
   static const double confirmFraction = 0.28;
-
-  /// 세로 확정 임계값: 카드 높이의 비율.
-  ///
-  /// 가로보다 **작게 잡는다** — 엄지를 위아래로 미는 거리는 좌우로 미는 거리보다
-  /// 짧아, 같은 비율이면 위/아래가 훨씬 무겁게 느껴진다.
-  static const double verticalConfirmFraction = 0.18;
 
   /// fling 확정 속도 임계(px/s). 짧게 튕겨도 확정되게 한다.
   static const double flingVelocity = 800;
@@ -71,20 +60,13 @@ abstract final class SwipeDrag {
     return (dragX.abs() / threshold).clamp(0.0, 1.0);
   }
 
-  /// 2차원 변위의 확정 진행도(0~1). 가로·세로 중 **더 많이 진행된 쪽**을 쓴다.
+  /// 2차원 변위의 확정 진행도(0~1).
   ///
-  /// 다음 카드 스케일업과 라벨 강도가 이 값을 공유하므로, 어느 방향으로 밀든
-  /// 임계에 가까워질수록 같은 세기로 반응한다.
-  static double progress2D(Offset drag, Size2D size) {
-    final double h = progress(drag.dx, size.width);
-    final double v = size.height <= 0
-        ? 0
-        : (drag.dy.abs() / (size.height * verticalConfirmFraction)).clamp(
-            0.0,
-            1.0,
-          );
-    return math.max(h, v);
-  }
+  /// **가로 변위만 센다** — 판정이 가로로만 나므로(`resolveHorizontal`) 다음 카드
+  /// 스케일업과 라벨 강도도 같은 축을 따라야 한다. 세로로 들어 올렸다고 다음
+  /// 카드가 올라오면 곧 확정될 것처럼 잘못 알려주는 셈이다.
+  static double progress2D(Offset drag, Size2D size) =>
+      progress(drag.dx, size.width);
 
   /// 손을 뗐을 때 확정되는가.
   ///
@@ -119,47 +101,25 @@ abstract final class SwipeDrag {
       ? reactionFor(dragX: dragX, velocity: velocity)
       : null;
 
-  /// 2차원 판정. 확정이 아니면 null(스프링백).
+  /// 손을 뗐을 때의 판정. 확정이 아니면 null(스프링백).
   ///
-  /// **가로와 세로 중 지배적인 축 하나만 고른다** — 대각선으로 밀었을 때 두 축이
-  /// 동시에 확정되면 카드가 어디로 갈지 정해지지 않는다. 임계 대비 진행도가 더 큰
-  /// 축이 이긴다(속도도 같은 기준으로 비교).
-  static SwipeDirection? resolve2D({
+  /// **가로 변위만 본다.** 카드는 손가락을 따라 위아래로도 움직이지만 세로는
+  /// 판정에 관여하지 않는다 — 위로 스치듯 올리며 오른쪽으로 민 동작이 패스로
+  /// 뒤집히면 안 된다.
+  static SwipeDirection? resolveHorizontal({
     required Offset drag,
     required Size2D size,
     required Offset velocity,
   }) {
-    final bool horizontal = confirms(
+    if (!confirms(
       dragX: drag.dx,
       width: size.width,
       velocity: velocity.dx,
-    );
-    final bool vertical =
-        (size.height > 0 &&
-            drag.dy.abs() >= size.height * verticalConfirmFraction) ||
-        velocity.dy.abs() >= flingVelocity;
-
-    if (!horizontal && !vertical) return null;
-
-    // 둘 다 확정이면 진행도가 큰 축이 이긴다.
-    if (horizontal && vertical) {
-      final double h = progress(drag.dx, size.width);
-      final double v = size.height <= 0
-          ? 0
-          : (drag.dy.abs() / (size.height * verticalConfirmFraction));
-      if (h >= v) {
-        return drag.dx > 0 ? SwipeDirection.right : SwipeDirection.left;
-      }
-      return drag.dy > 0 ? SwipeDirection.down : SwipeDirection.up;
+    )) {
+      return null;
     }
-
-    if (horizontal) {
-      final bool right =
-          drag.dx > 0 || (drag.dx == 0 && velocity.dx > 0);
-      return right ? SwipeDirection.right : SwipeDirection.left;
-    }
-    final bool down = drag.dy > 0 || (drag.dy == 0 && velocity.dy > 0);
-    return down ? SwipeDirection.down : SwipeDirection.up;
+    final bool right = drag.dx > 0 || (drag.dx == 0 && velocity.dx > 0);
+    return right ? SwipeDirection.right : SwipeDirection.left;
   }
 
   /// 변위 비례 기울기(rad). 카드 폭 절반에서 [maxTiltRadians]에 닿는다.

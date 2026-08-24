@@ -21,6 +21,23 @@ import 'event_card.dart';
 class HappeningNowSection extends ConsumerWidget {
   const HappeningNowSection({super.key});
 
+  /// 이 섹션을 다시 받는다. 새 값이 도착할 때까지 기다린다.
+  ///
+  /// **이 섹션을 품은 화면(홈)의 당겨서 새로고침이 쓴다.** 호출부가
+  /// `happeningNowEventsProvider`를 직접 invalidate 하면 spot 도메인이 event
+  /// 도메인의 provider를 알아야 해 경계가 무너진다(CLAUDE.md §3) — 이 위젯의
+  /// 문서가 약속한 "내부를 건드리지 않고 끼워 넣는다"도 깨진다. 무효화 대상을
+  /// 아는 것은 이 도메인이므로 여기서 닫는다.
+  ///
+  /// 실패해도 던지지 않는다 — 홈은 세 섹션을 함께 새로 고치고, 한 섹션의 실패가
+  /// 나머지의 스피너를 걷어 버리면 안 된다. 오류 표시는 섹션 자신이 한다.
+  static Future<void> refresh(WidgetRef ref) async {
+    ref.invalidate(happeningNowEventsProvider);
+    await ref
+        .read(happeningNowEventsProvider.future)
+        .catchError((Object _) => const <Festival>[]);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);

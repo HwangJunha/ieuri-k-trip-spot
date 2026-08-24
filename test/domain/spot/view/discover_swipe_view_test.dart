@@ -103,7 +103,7 @@ void main() {
     expect(find.textContaining('Spot s'), findsOneWidget);
   });
 
-  testWidgets('위로 밀어도 카드가 소비된다(좋아요)', (tester) async {
+  testWidgets('왼쪽으로 밀면 패스로 카드가 소비된다', (tester) async {
     await _pump(tester, repo: FakeSpotRepository(feed: _spots(2)));
     await tester.pumpAndSettle();
 
@@ -111,35 +111,41 @@ void main() {
 
     final Offset start = tester.getCenter(find.byType(SwipeCard).first);
     final TestGesture gesture = await tester.startGesture(start);
-    await gesture.moveBy(const Offset(0, -20));
+    await gesture.moveBy(const Offset(-20, 0));
     await tester.pump();
-    await gesture.moveBy(const Offset(0, -260));
+    await gesture.moveBy(const Offset(-130, 0));
     await tester.pump();
-    // 위로 미는 동안에도 LIKE 피드백이 뜬다.
-    expect(find.text('LIKE'), findsOneWidget);
+    expect(find.text('NOPE'), findsOneWidget);
 
+    await gesture.moveBy(const Offset(-300, 0));
+    await tester.pump();
     await gesture.up();
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Spot s'), findsOneWidget);
   });
 
-  testWidgets('아래로 밀어도 카드가 소비된다(관심 없음)', (tester) async {
+  // 상하는 판정하지 않는다(사용자 결정 2026-08-24) — 카드는 손가락을 따라
+  // 움직이지만 좋아요/패스를 가르는 것은 좌우뿐이다.
+  testWidgets('위아래로만 밀면 확정되지 않고 카드가 남는다', (tester) async {
     await _pump(tester, repo: FakeSpotRepository(feed: _spots(2)));
     await tester.pumpAndSettle();
 
     final Offset start = tester.getCenter(find.byType(SwipeCard).first);
     final TestGesture gesture = await tester.startGesture(start);
-    await gesture.moveBy(const Offset(0, 20));
+    await gesture.moveBy(const Offset(0, -20));
     await tester.pump();
-    await gesture.moveBy(const Offset(0, 260));
+    await gesture.moveBy(const Offset(0, -300));
     await tester.pump();
-    expect(find.text('NOPE'), findsOneWidget);
+    // 세로로 아무리 밀어도 라벨이 뜨지 않는다 — 확정 축이 아니다.
+    expect(find.text('LIKE'), findsNothing);
+    expect(find.text('NOPE'), findsNothing);
 
     await gesture.up();
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Spot s'), findsOneWidget);
+    // 두 장 모두 그대로다.
+    expect(find.textContaining('Spot s'), findsNWidgets(2));
   });
 
   testWidgets('임계에 못 미치면 스프링백으로 되돌아가 카드가 남는다', (tester) async {

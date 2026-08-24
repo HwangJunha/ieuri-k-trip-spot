@@ -23,21 +23,18 @@ class DragFeedbackOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
 
-    // **지배적인 축 하나만 라벨을 낸다** — 대각선으로 밀 때 LIKE와 NOPE가 함께
-    // 떠오르면 어느 쪽으로 확정될지 읽히지 않는다. 판정(`resolve2D`)과 같은
-    // 기준으로 축을 고른다.
-    final double h = size.width == 0
+    // **가로 변위만 본다** — 판정(`resolveHorizontal`)이 좌우로만 나므로 라벨도
+    // 같은 축을 따라야 한다. 위로 들어 올렸다고 LIKE가 떠오르면 확정 방향을
+    // 잘못 알려주는 셈이다.
+    final double intensity = size.width == 0
         ? 0
         : (drag.dx.abs() / (size.width / 2)).clamp(0.0, 1.0);
-    final double v = size.height == 0
-        ? 0
-        : (drag.dy.abs() /
-                  (size.height * SwipeDrag.verticalConfirmFraction * 2))
-              .clamp(0.0, 1.0);
+    final bool isLike = drag.dx > 0;
 
-    final bool horizontal = h >= v;
-    final double intensity = horizontal ? h : v;
-    final bool isLike = horizontal ? drag.dx > 0 : drag.dy < 0;
+    // **가로로 안 움직였으면 라벨을 아예 만들지 않는다.** 투명도 0으로 숨기면
+    // 위젯은 트리에 남아, 세로로만 민 상태에서 "NOPE"가 존재하게 된다 —
+    // 스크린리더는 그것을 읽고, 테스트도 그것을 찾는다.
+    if (drag.dx == 0) return const SizedBox.shrink();
 
     return IgnorePointer(
       child: Padding(
