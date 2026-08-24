@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'dart:typed_data' show Uint8List;
 import 'dart:ui' as ui;
 
@@ -195,7 +196,31 @@ class MapOverlayPainter {
   ///
   /// [token]이 바뀌면(새 갱신) 연출을 중단하되 **크기는 1.0으로 되돌린다**(R11,
   /// 설계 §4.3) — 중간 배율로 멈추면 그 마커만 작게 남는다.
+  ///
+  /// ## 안드로이드에서는 연출하지 않는다
+  ///
+  /// SDK 1.2.6의 Dart API는 `scale(x, y, [double? millis])`로 실수를 받는데,
+  /// Android 플러그인은 같은 값을 `asInt()`로 읽는다
+  /// (`LabelControllerHandler.kt:110`). 그리고 `asInt()`는 `Long`만 변환하고
+  /// `Double`은 그대로 캐스팅한다(`PrimitiveTypeConverter.kt:12`) — Flutter 코덱이
+  /// Dart `double`을 항상 `Double`로 싣기 때문에 **값과 무관하게 반드시 터진다**:
+  ///
+  /// ```
+  /// java.lang.ClassCastException: java.lang.Double cannot be cast to java.lang.Integer
+  /// ```
+  ///
+  /// 폴리곤의 `strokeWidth`처럼 payload를 가로챌 수도 없다 — 그쪽은
+  /// `toMessageable()`이 public이라 상속으로 끼어들 수 있었지만, 이 값은 private인
+  /// `_scalePoi`가 Map에 직접 담아 보낸다(SDK `label_controller.dart:209`).
+  /// 끼어들 지점이 없다.
+  ///
+  /// 시간 없이 두 번 부르는 것(작게 → 크게)도 답이 아니다. 보간이 없어 즉시
+  /// 커지므로 연출이 아니라 깜빡임이 된다. 그래서 **아예 건너뛴다** — 마커가 제
+  /// 크기로 바로 나타나는 것은 설계 §4.4가 정한 안전한 기본값이고, 매 갱신
+  /// 15~60번씩 찍히던 네이티브 예외도 함께 사라진다(실기기 2026-08-25).
   Future<void> _playAppearance(Poi poi, int token) async {
+    if (Platform.isAndroid) return;
+
     try {
       // 작게 시작한다. 여기에는 시간을 주지 않는다 — 즉시 줄여 놓고 커지는 것만
       // 보여야 "작게 시작해 커진다"로 읽힌다.
@@ -530,15 +555,31 @@ class MapOverlayPainter {
 /// 크다.
 ///
 /// `toMessageable()`은 SDK가 payload를 만들 때 다형적으로 호출하므로
-/// (`addMultiplePolygonShapeStyle`), 상속해서 그 한 값만 정수로 바꾸면 SDK를 건드리지
+/// (`addMultiplePolygonShapeStyle`), 상속해서 그 한 값만 바꾸면 SDK를 건드리지
 /// 않고 끝난다. 고쳐진 버전이 나오면 이 클래스를 지우고 `PolygonStyle`로 되돌린다.
+///
+/// ## 두 플랫폼이 정반대를 요구한다
+///
+/// **안드로이드는 실수를 요구한다.** 같은 버전의 Android 플러그인은 이 값을
+/// `asFloat()`로 읽는데(`ShapeTypeConverter.kt:33`), 정수를 보내면 캐스팅이 실패해
+/// 폴리곤이 하나도 그려지지 않는다:
+///
+/// ```
+/// java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.Float
+/// ```
+///
+/// 그래서 **iOS에서만 정수로 바꾼다.** 한쪽을 고치면 다른 쪽이 깨지므로 값을 하나로
+/// 통일할 수 없다 — 실기기에서 양쪽 다 확인했다(2026-08-25: 안드로이드 혼잡도가
+/// 통째로 비어 있던 원인이 이것이다).
 class _IntStrokePolygonStyle extends PolygonStyle {
   _IntStrokePolygonStyle(super.color, {super.strokeWidth, super.strokeColor});
 
   @override
   Map<String, dynamic> toMessageable() {
     final Map<String, dynamic> payload = super.toMessageable();
-    payload['strokeWidth'] = strokeWidth.round();
+    if (Platform.isIOS) {
+      payload['strokeWidth'] = strokeWidth.round();
+    }
     return payload;
   }
 }
