@@ -73,20 +73,31 @@ android {
     // (2026-08-25 결정). 같은 id면 한쪽이 다른 쪽을 덮어써, 운영에서 난 버그를
     // 개발 빌드로 재현하려면 지웠다 깔기를 반복해야 한다.
     //
-    // **운영은 접미사를 붙이지 않는다.** applicationId는 스토어에서 앱의 정체성이라
-    // 한 번 올리면 바꿀 수 없다 — 새로 받는 쪽은 개발이다.
     // AGP 8부터 기본으로 꺼져 있다 — 아래 `resValue`를 쓰려면 명시해야 한다.
     buildFeatures {
         resValues = true
     }
 
+    // **두 flavor의 applicationId가 같다.** 예전에는 dev에 `.dev` 접미사를 붙여
+    // 한 기기에 두 앱을 함께 깔았는데, 그것을 걷어냈다(사용자 결정 2026-08-25).
+    //
+    // 이유는 **테스트 트랙에 올라가는 앱이 운영 번들이어야 하기 때문**이다. 스토어는
+    // 번들 하나를 앱 하나로 보므로, 비공개 테스트(12명·14일)로 프로덕션 자격을 쌓으려면
+    // 그 빌드의 번들이 출시할 번들과 같아야 한다. 서버는 `--dart-define-from-file`이
+    // 가르므로 번들까지 가를 이유가 없다 — 로컬 개발도 개발 서버를 본다.
+    //
+    // ```
+    // 테스트: --flavor prod --dart-define-from-file=.env.dev   (개발 서버)
+    // 출시  : --flavor prod --dart-define-from-file=.env.prod  (운영 서버)
+    // ```
+    //
+    // flavor는 앱 이름을 가르는 용도로만 남는다. 접미사를 되살리면 그 빌드는 스토어의
+    // 다른 앱이 되어 14일 카운트가 끊긴다.
     flavorDimensions += "env"
     productFlavors {
         create("dev") {
             dimension = "env"
-            applicationIdSuffix = ".dev"
-            // 홈 화면에서 바로 구분되어야 한다. 아이콘까지 다르게 하는 것은
-            // 별도 작업이고, 우선 이름으로 가른다.
+            // 홈 화면에서 구분되도록 이름만 다르다. **번들은 운영과 같다**(위 주석).
             resValue("string", "app_name", "KTS Dev")
         }
         create("prod") {

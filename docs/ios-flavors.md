@@ -3,29 +3,38 @@
 Android는 `build.gradle.kts` 한 곳으로 끝나지만, **iOS는 Xcode GUI로 해야 하는
 부분이 있다.** 이 문서는 그 순서다. 코드로 미리 해 둔 것과 직접 하실 것을 나눠 적는다.
 
+> **번들 ID는 두 flavor가 같다**(2026-08-25). 처음에는 dev에 `.dev` 접미사를 붙여
+> 한 기기에 두 앱을 함께 깔았으나, 그러면 **스토어가 둘을 다른 앱으로 봐서** Google
+> Play 비공개 테스트로 쌓은 프로덕션 자격(12명·14일)이 출시 빌드로 이어지지 않는다.
+> 그래서 접미사를 걷어냈고, flavor는 이제 **앱 이름만** 가른다.
+>
+> 환경은 `--dart-define-from-file`이 가른다 — 번들과 서버는 원래 독립된 축이다.
+> ```
+> 테스트: --flavor prod --dart-define-from-file=.env.dev   (개발 서버)
+> 출시  : --flavor prod --dart-define-from-file=.env.prod  (운영 서버)
+> ```
+
 ## 이미 되어 있는 것
 
 | 항목 | 위치 |
 |---|---|
 | Podfile에 flavor 구성 6개 등록 | `ios/Podfile` |
 | Firebase 설정 복사 스크립트 | `ios/scripts/copy_google_service_info.sh` |
-| `ios/config/*/GoogleService-Info.plist` gitignore | `.gitignore` |
+| `ios/config/GoogleService-Info.plist` (커밋됨 — 비밀이 아니다) | `ios/config/README.md` |
 
 ## 직접 하실 것
 
-### 0. Firebase 콘솔에서 iOS 앱 추가
+### 0. Firebase 설정 파일
 
-지금 `ieuri-d1127` 프로젝트에 iOS 앱이 `kr.ieuri.ktripspot` 하나 있다.
-**`kr.ieuri.ktripspot.dev`를 하나 더 등록**하고, 각각의 `GoogleService-Info.plist`를
-받아 아래에 둔다.
+`ieuri-d1127` 프로젝트의 iOS 앱은 `kr.ieuri.ktripspot` **하나뿐이다**(`.dev` 앱은
+2026-08-25에 지웠다). 받은 `GoogleService-Info.plist`를 여기 둔다.
 
 ```
-ios/config/dev/GoogleService-Info.plist    ← 번들 id kr.ieuri.ktripspot.dev
-ios/config/prod/GoogleService-Info.plist   ← 번들 id kr.ieuri.ktripspot
+ios/config/GoogleService-Info.plist   ← 번들 id kr.ieuri.ktripspot
 ```
 
-**둘을 바꿔 넣으면 안 된다.** plist 안의 `BUNDLE_ID`가 실제 번들과 다르면 Firebase가
-런타임에 거부한다.
+**파일을 갈아 끼울 때는 `BUNDLE_ID`를 확인한다.** 실제 번들과 다르면 Firebase가
+런타임에 거부한다. 이 파일은 커밋한다(→ `ios/config/README.md`).
 
 ### 1. 빌드 구성 6개 만들기
 
@@ -58,12 +67,11 @@ open ios/Runner.xcworkspace
 
 | 구성 | Bundle Identifier |
 |---|---|
-| Debug / Profile / Release | `kr.ieuri.ktripspot` |
-| `*-dev` 3개 | `kr.ieuri.ktripspot.dev` |
-| `*-prod` 3개 | `kr.ieuri.ktripspot` |
+| **전부(6개 + 기본 3개)** | `kr.ieuri.ktripspot` |
 
-**운영에는 접미사를 붙이지 않는다** — 번들 ID는 스토어에서 앱의 정체성이라 한 번
-올리면 바꿀 수 없다.
+**어느 구성에도 접미사를 붙이지 않는다.** 번들 ID는 스토어에서 앱의 정체성이라 한 번
+올리면 바꿀 수 없고, dev에 붙이면 그 빌드가 스토어의 다른 앱이 되어 테스트로 쌓은
+자격이 출시로 이어지지 않는다(위 상자).
 
 앱 이름도 같은 방식으로 가른다. **Build Settings**에서 **+ → Add User-Defined
 Setting**으로 `APP_DISPLAY_NAME`을 만들고 구성별로 채운다.
@@ -114,7 +122,9 @@ flutter run --flavor dev  --dart-define-from-file=.env.dev
 flutter run --flavor prod --dart-define-from-file=.env.prod
 ```
 
-- 홈 화면에 **KTS Dev**와 **K-Trip Spot**이 **각각 따로** 설치되면 성공이다
+- 홈 화면의 이름이 **KTS Dev** / **K-Trip Spot**으로 바뀌면 성공이다
+- **번들이 같으므로 서로 덮어쓴다** — 둘을 함께 두려면 접미사가 필요한데, 그것을
+  포기한 이유는 위 상자에 있다
 - 콘솔에 `[PushInitializer] Firebase 초기화를 건너뛴다`가 더는 뜨지 않아야 한다
 
 ## 안 될 때
@@ -123,6 +133,7 @@ flutter run --flavor prod --dart-define-from-file=.env.prod
 |---|---|
 | `Unable to find a target named Runner-dev` | scheme 이름이 소문자 `dev`가 아니다 |
 | 링크 단계에서 Pods 관련 실패 | Podfile 목록에 그 구성이 없다 — 이미 6개를 넣어 뒀으니 구성 이름 오타를 본다 |
-| 두 앱이 서로를 덮어씀 | 번들 ID가 같다 — 2번을 다시 본다 |
-| Firebase가 여전히 안 붙음 | 4번 스크립트가 `Copy Bundle Resources` 아래에 있거나, `ios/config/{flavor}/`에 파일이 없다 |
+| 두 앱이 서로를 덮어씀 | **정상이다** — 번들을 일부러 통일했다(위 상자) |
+| Firebase가 여전히 안 붙음 | 4번 스크립트가 `Copy Bundle Resources` 아래에 있거나, `ios/config/`에 파일이 없다 |
+| Firebase가 런타임에 거부 | plist의 `BUNDLE_ID`가 실제 번들과 다르다 |
 | 다른 머신에서 flavor가 없음 | scheme의 **Shared**가 꺼져 있다 |

@@ -11,6 +11,6 @@ APP_DISPLAY_NAME = KTS Dev
 // 구글 iOS OAuth 클라이언트. **flavor마다 다르다** — 번들 id가 갈리면서
 // Firebase가 dev용 클라이언트를 따로 발급했다. Info.plist가 이 값을 참조하며,
 // 잘못된 클라이언트를 쓰면 구글 로그인이 그 자리에서 실패한다.
-GOOGLE_IOS_CLIENT_ID = 504325192446-dvqlv833f9o6q8mqf2br7u08jpip2kk6.apps.googleusercontent.com
+GOOGLE_IOS_CLIENT_ID = 504325192446-vvqljuqs07v73fq5093ekl1ijt6q1cm7.apps.googleusercontent.com
 // 로그인 후 앱으로 돌아오는 URL 스킴. 위 클라이언트 id를 뒤집은 값이다.
-GOOGLE_REVERSED_CLIENT_ID = com.googleusercontent.apps.504325192446-dvqlv833f9o6q8mqf2br7u08jpip2kk6
+GOOGLE_REVERSED_CLIENT_ID = com.googleusercontent.apps.504325192446-vvqljuqs07v73fq5093ekl1ijt6q1cm7

@@ -99,12 +99,15 @@ jobs:
             *) echo "Android applicationId: $appid";;
           esac
 
-          # **운영 flavor에 접미사가 붙으면 안 된다.** 붙은 채로 스토어에 올리면
-          # 되돌릴 수 없다 — applicationId는 앱의 정체성이다.
-          if grep -A3 'create("prod")' android/app/build.gradle.kts | grep -q 'applicationIdSuffix'; then
-            echo "::error::운영 flavor에 applicationIdSuffix가 있다 — 스토어 id가 바뀐다"; fail=1
+          # **어느 flavor에도 접미사가 붙으면 안 된다**(2026-08-25).
+          #
+          # 운영에 붙으면 스토어 id가 바뀌어 되돌릴 수 없다. dev에 붙으면 그 빌드가
+          # 스토어의 다른 앱이 되어, 비공개 테스트(12명·14일)로 쌓은 프로덕션 자격이
+          # 끊긴다 — 테스트와 출시가 같은 번들이어야 한다.
+          if grep -q 'applicationIdSuffix' android/app/build.gradle.kts; then
+            echo "::error::applicationIdSuffix가 있다 — 테스트와 출시 번들이 갈라진다"; fail=1
           else
-            echo "운영 flavor 접미사 없음"
+            echo "flavor 접미사 없음"
           fi
 
           # iOS 권한 사유 문구 — 비어 있으면 앱스토어 심사에서 반려된다.
