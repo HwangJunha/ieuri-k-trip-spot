@@ -337,7 +337,7 @@ spec이 다루지 않는 경우를 만나면 구현을 멈추고 `[AMEND] SPEC-0
 | 10 | 채팅에 프로필 없음 | 데이터는 이미 도착, 위젯만 없었음 | `common/widget/author_avatar.dart`(신규) |
 | 11 | 신고 선택 동그라미가 안 눌림 | `InkWell` 밖의 순수 `Icon` | `message_bubble.dart` |
 | 12 | 홈에 당겨서 새로고침 없음 | 목록 화면만 훑어 홈을 빠뜨림 | `home_screen.dart` |
-| 13 | **앱 이름이 `ieuri_k_trip_spot`** | 번들 ID는 맞는데 표시명만 기본값 | `AndroidManifest.xml`, `Info.plist` → **KTrip Spot** |
+| 13 | **앱 이름이 `ieuri_k_trip_spot`** | 번들 ID는 맞는데 표시명만 기본값 | `AndroidManifest.xml`, `Info.plist` → **K-Trip Spot** |
 | 14 | 터치 영역 28px | `Size(0,28)`+`shrinkWrap` | 3곳 `tapTargetSize.padded` |
 | 15 | **약관 본문이 placeholder** | 전문이 앱에 없었음 | 아래 §C |
 
@@ -478,3 +478,64 @@ spec이 다루지 않는 경우를 만나면 구현을 멈추고 `[AMEND] SPEC-0
 3. **첨부 기능은 언급하지 않는다.** 이미 피커를 쓰므로 이 신청과 무관하고,
    "첨부에도 필요하다"고 쓰면 *"그건 피커로 되잖아요"* 로 반려된다.
 4. 데이터 보안 섹션의 사진 항목과 답변이 어긋나지 않는지 확인한다.
+
+---
+
+## H. 출시 전 점검 — 전수 확인 (2026-08-24)
+
+사용자 질문("이제 출시할 때 걸리는 게 없나, 권한은 다 적었나, iOS 추가분은 없나")에
+따라 코드와 설정을 전수로 훑은 결과다.
+
+### H.1 권한 — 코드와 선언이 정확히 일치한다
+
+`Permission.*` 호출을 전부 뽑아 선언과 대조했다. **빠진 것도, 남는 것도 없다.**
+
+| 코드가 요청 | iOS 선언 | Android 선언 |
+|---|---|---|
+| `locationWhenInUse` | `NSLocationWhenInUseUsageDescription` ✅ | `ACCESS_FINE/COARSE_LOCATION` ✅ |
+| `photos` | `NSPhotoLibraryUsageDescription` ✅ | `READ_MEDIA_IMAGES` + `ACCESS_MEDIA_LOCATION` ✅ |
+| `notification` | **불필요**(런타임 전용, plist 키 없음) | `POST_NOTIFICATIONS` ✅ |
+
+- 카메라·마이크·연락처·백그라운드 위치는 **코드에 없고 선언도 없다** — 일치.
+- `NSLocationAlways*` 계열 0건. 백그라운드 위치를 안 쓰므로 올바르다.
+- `NSPhotoLibraryAddUsageDescription`·`NSUserTrackingUsageDescription`은 §D에서
+  넣었다 뺐다 — 이미지 저장도 광고 추적도 없다.
+
+### H.2 iOS에서 추가로 손댄 것
+
+**`ITSAppUsesNonExemptEncryption = false`를 넣었다.** 이 키가 없으면 App Store
+Connect가 **업로드할 때마다** 수출 규정(암호화) 질문을 되묻는다. 이 앱은 HTTPS만
+쓰고 자체 암호화를 구현하지 않아 면제 대상이다. `plutil -lint` 통과 확인.
+
+ATS(`NSAppTransportSecurity`) 예외는 **없다** — 기본값(HTTPS 강제)이 그대로라 정상이다.
+약관 3종이 모두 https이므로 웹뷰도 걸리지 않는다(`terms_code_test.dart`가 스킴을 검사).
+
+### H.3 Android 릴리스 서명 — 하드 블로커였다
+
+`buildTypes.release`가 **디버그 키로 서명**하고 있었다(Flutter 기본 TODO가 그대로).
+Play는 디버그 서명 산출물을 거부하므로 이대로는 업로드 자체가 불가능하다.
+
+`key.properties`(gitignore됨)에서 키를 읽고, **없으면 디버그 키로 물러나며 그 사실을
+빌드 로그에 남기도록** 했다 — `google-services.json`을 다루는 기존 판단과 같은 결이다.
+빌드를 막으면 `flutter run --release`로 성능을 재는 흔한 작업까지 키스토어를 요구하게 된다.
+
+`android/key.properties.example`에 생성 방법을 적어 뒀다. **키스토어는 사용자가 만들고
+보관해야 한다** — 잃어버리면 같은 패키지명으로 갱신할 수 없다.
+
+`./gradlew :app:signingReport`로 현재 release가 debug 키를 쓰는 것을 확인했고,
+릴리스 APK 빌드(227.9MB)가 성공하는 것도 확인했다.
+
+### H.4 출시 전 남은 것 — 코드가 아닌 항목
+
+| # | 항목 | 누가 |
+|---|---|---|
+| 1 | **업로드 키스토어 생성 + `key.properties` 작성** | 사용자. §H.3, `key.properties.example` |
+| 2 | **Play 사진 접근 선언 양식** | 사용자. §G에 제출 문구까지 정리 |
+| 3 | 스토어 등록정보(스크린샷·설명·개인정보처리방침 URL) | 사용자 |
+| 4 | 데이터 보안(Data safety) / App Privacy 설문 | 사용자. 사진 GPS는 **기기 내 처리·미전송**(§G 근거) |
+| 5 | 크래시 리포팅 | 미도입 — 출시 후 장애 인지 수단이 없다 |
+| 6 | 온보딩 이미지 플레이스홀더 | `onboarding_screen.dart:181` |
+| 7 | 지도 무음 실패 | `map_screen.dart:312,381,731` |
+| 8 | 접근성 레이블 | `Semantics` 5곳, 이미지 대체텍스트 1곳 |
+
+1~4는 **스토어 콘솔에서만 할 수 있는 일**이고, 5~8은 코드지만 이번 범위 밖으로 남긴다.

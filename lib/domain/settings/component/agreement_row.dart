@@ -104,7 +104,7 @@ class RequiredAgreementRow extends StatelessWidget {
           children: <Widget>[
             if (status.agreed)
               Icon(Icons.check, color: theme.colorScheme.primary),
-            if (document != null) document,
+            ?document,
           ],
         ),
       );

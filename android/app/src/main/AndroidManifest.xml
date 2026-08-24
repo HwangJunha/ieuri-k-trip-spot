@@ -23,7 +23,7 @@
          지도가 빈 화면으로 뜬다. 위치 권한 2종은 위에 이미 있어 다시 넣지 않는다. -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="KTrip Spot"
+        android:label="K-Trip Spot"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

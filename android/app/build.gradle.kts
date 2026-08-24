@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -17,6 +19,22 @@ plugins {
 //
 // CI에서는 빌드 전에 시크릿에서 이 파일을 복원해 두면 그대로 붙는다:
 //   echo "$GOOGLE_SERVICES_JSON" | base64 -d > android/app/google-services.json
+
+// 릴리스 서명 키(출시 필수). `key.properties`는 키스토어 비밀번호를 담으므로
+// **커밋하지 않는다**(.gitignore). 파일이 없으면 아래 buildTypes가 디버그 키로
+// 물러나 `flutter run --release`는 계속 되지만, **그 산출물은 스토어에 올릴 수
+// 없다** — Play는 디버그 서명 AAB를 거부한다.
+//
+// 만드는 법은 `android/key.properties.example` 참고.
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties().apply {
+    if (keystorePropertiesFile.exists()) {
+        keystorePropertiesFile.inputStream().use { load(it) }
+    }
+}
+val hasReleaseKeystore = keystorePropertiesFile.exists() &&
+    keystoreProperties.getProperty("storeFile") != null
+
 val googleServicesFile = file("google-services.json")
 if (googleServicesFile.exists()) {
     apply(plugin = "com.google.gms.google-services")
@@ -51,11 +69,34 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (hasReleaseKeystore) {
+            create("release") {
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // 키가 있으면 릴리스 키로, 없으면 디버그 키로 서명한다.
+            //
+            // **디버그 키로 서명된 산출물은 스토어에 올릴 수 없다** — Play가 거부한다.
+            // 그래도 빌드를 막지 않는 이유는 `flutter run --release`로 성능을 재는
+            // 흔한 작업까지 키스토어를 요구하게 되기 때문이다(google-services.json을
+            // 다루는 방식과 같은 판단). 대신 올릴 수 없다는 사실을 빌드 로그에 남긴다.
+            signingConfig = if (hasReleaseKeystore) {
+                signingConfigs.getByName("release")
+            } else {
+                logger.lifecycle(
+                    "[release] android/key.properties가 없어 디버그 키로 서명한다 — " +
+                        "이 산출물은 Play에 업로드할 수 없다. key.properties.example 참고."
+                )
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }

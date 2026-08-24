@@ -82,18 +82,11 @@ class _DocumentWebViewState extends State<DocumentWebView> {
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        actions: <Widget>[
-          // 브라우저로도 열 수 있게 둔다 — 링크를 복사하거나 인쇄하려는
-          // 사용자에게 앱 안이 막다른 길이 되지 않는다.
-          IconButton(
-            tooltip: l10n.termsOpenInBrowser,
-            onPressed: () => _openExternally(widget.url),
-            icon: const Icon(Icons.open_in_new),
-          ),
-        ],
-      ),
+      // **외부 브라우저 버튼을 두지 않는다**(사용자 결정 2026-08-24). 약관은
+      // 여기서 다 읽히므로 밖으로 내보낼 이유가 없고, 아이콘 하나가 상단을
+      // 어지럽힌다. 문서 안의 바깥 링크는 아래 내비게이션 델리게이트가 여전히
+      // 브라우저로 넘긴다.
+      appBar: AppBar(title: Text(widget.title)),
       body: SafeArea(
         child: _failed
             ? _LoadFailed(
