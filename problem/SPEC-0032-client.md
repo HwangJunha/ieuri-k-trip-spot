@@ -539,3 +539,46 @@ Play는 디버그 서명 산출물을 거부하므로 이대로는 업로드 자
 | 8 | 접근성 레이블 | `Semantics` 5곳, 이미지 대체텍스트 1곳 |
 
 1~4는 **스토어 콘솔에서만 할 수 있는 일**이고, 5~8은 코드지만 이번 범위 밖으로 남긴다.
+
+---
+
+## I. iOS 권한 문구 현지화 (2026-08-24)
+
+사용자 질문("iOS는 영어로만 적어야 하나")으로 확인한 결과, **아니다** —
+`InfoPlist.strings`로 언어별 번역이 가능하고, 기기 언어에 맞는 문장이 OS 권한
+팝업에 뜬다([Apple 문서](https://developer.apple.com/documentation/bundleresources/information-property-list/nslocationwheninuseusagedescription)).
+
+### 무엇이 빠져 있었나
+
+`ios/Runner/ko.lproj/InfoPlist.strings`가 **이미 있었지만 위치 문구 하나뿐**이었다.
+사진 문구가 없어 한국어 기기에서도 사진 팝업만 영어로 떴다. `ja`/`zh`는 디렉토리
+자체가 없었는데, 앱은 그 두 언어를 지원한다(`supportedLocales`).
+
+### 처리
+
+- `ko`에 `NSPhotoLibraryUsageDescription`과 `CFBundleDisplayName` 추가
+- `ja.lproj`·`zh.lproj` 신규 작성(위치·사진·앱 이름)
+- **Xcode 프로젝트에 등록**했다 — 파일만 만들면 번들에 안 들어간다.
+  `project.pbxproj`의 `PBXFileReference`·`PBXVariantGroup.children`·`knownRegions`
+  세 곳을 모두 손봐야 한다.
+
+`Info.plist`의 영어 원문은 그대로 둔다 — 위 세 언어가 아닌 기기의 폴백이다.
+
+### 검증
+
+`plutil -lint` 4개 파일 통과, `flutter build ios --debug` 성공, **빌드 산출물의
+`Runner.app/{ko,ja,zh}.lproj/InfoPlist.strings`에 번역이 실제로 들어간 것까지 확인**했다.
+
+### Android에는 이런 필드가 없다
+
+같은 질문의 나머지 절반이다. Android 매니페스트에는 iOS의 `UsageDescription`에
+해당하는 필드가 **없다**(`android:description`은 커스텀 권한을 *정의*할 때 쓰는
+것이라 무관하다). OS 권한 팝업 문구는 안드로이드가 자체 문구로 띄우며 앱이 바꿀 수
+없고, 사유 설명은 **앱이 팝업 전에 직접 보여 주는 화면**으로 한다 — 이 저장소는
+`PermissionRationaleSheet`가 그 역할이고 4개 언어 ARB로 이미 관리된다.
+
+### Info.plist의 주석
+
+`plutil -convert json`으로 확인했다 — 주석은 파싱 시점에 사라져 값으로 새어 들어가지
+않는다(키 26개, 주석 유입 0건). OS도 심사자도 보지 않으므로 남겨 둔다. 이 저장소는
+다른 키(OAuth 클라이언트 id, URL 스킴, FCM)에도 같은 방식으로 근거를 적고 있다.

@@ -1,0 +1,10 @@
+/* 權限使用說明（繁體中文）。此檔案會覆寫 Info.plist 中的英文原文。 */
+
+/* SPEC-0001 R8 — 僅在使用App期間存取位置。 */
+"NSLocationWhenInUseUsageDescription" = "K-Trip Spot 僅在您使用App時取得位置，用來顯示附近的觀光景點與即時人潮狀況。我們不會在背景追蹤您的位置。";
+
+/* SPEC-0030 R25 — 依照照片的位置資訊填入造訪過的地區，並用於貼文與個人照片。 */
+"NSPhotoLibraryUsageDescription" = "我們會讀取照片中記錄的位置資訊，自動將您造訪過的地區標記在旅遊地圖上，也用於社群貼文與個人檔案照片的上傳。照片僅在您的裝置上讀取，只有您選擇附加的照片才會上傳。";
+
+/* App 顯示名稱。 */
+"CFBundleDisplayName" = "K-Trip Spot";
