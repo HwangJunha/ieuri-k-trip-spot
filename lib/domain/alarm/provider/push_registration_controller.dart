@@ -1,7 +1,9 @@
-import 'package:flutter/foundation.dart';
+import 'dart:ui' show PlatformDispatcher;
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/config/push_initializer.dart';
+import '../../../common/log/app_log.dart';
 import '../../../common/network/graphql_client.dart';
 import '../../../common/permission/model/permission_kind.dart';
 import '../../../common/permission/model/permission_state.dart';
@@ -58,6 +60,8 @@ DevicePlatform devicePlatform(Ref ref) => currentDevicePlatform();
 /// (R12·AC12.3 · POL-040).
 @Riverpod(keepAlive: true)
 class PushRegistrationController extends _$PushRegistrationController {
+  static const AppLog _log = AppLog('PushRegistrationController');
+
   /// 마지막 시도의 결과. 화면에 쓰지 않으며 테스트와 디버깅용이다.
   @override
   PushRegistrationOutcome build() => PushRegistrationOutcome.idle;
@@ -99,9 +103,9 @@ class PushRegistrationController extends _$PushRegistrationController {
       await ref.read(alarmRepositoryProvider).registerDeviceToken(registration);
       await sent.write(registration.digest);
       state = PushRegistrationOutcome.registered;
-    } on Object catch (error) {
+    } on Object catch (error, stackTrace) {
       // 조용히 실패한다 — 알림을 못 받는 것은 앱을 막을 이유가 되지 않는다(설계 §9).
-      if (kDebugMode) debugPrint('[Alarm] 기기 등록 실패: $error');
+      _log.warn('기기 등록 실패', error, stackTrace);
       state = PushRegistrationOutcome.failed;
     }
   }
@@ -126,9 +130,9 @@ class PushRegistrationController extends _$PushRegistrationController {
         .readOrCreate();
     try {
       await ref.read(alarmRepositoryProvider).deleteDeviceToken(deviceId);
-    } on Object catch (error) {
+    } on Object catch (error, stackTrace) {
       // 해제 실패도 조용하다. 서버는 다음 발송에서 무효 등록을 스스로 지운다(R4).
-      if (kDebugMode) debugPrint('[Alarm] 기기 해제 실패: $error');
+      _log.warn('기기 해제 실패', error, stackTrace);
     } finally {
       // **지문은 반드시 지운다.** 남겨 두면 다음 로그인에서 "안 바뀌었다"고 판단해
       // 등록을 건너뛰고, 그 계정은 알림을 영영 못 받는다.

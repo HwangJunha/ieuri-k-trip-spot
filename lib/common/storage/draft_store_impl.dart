@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer' as developer;
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -7,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../log/app_log.dart';
 import '../model/composer_photo.dart';
 import '../model/stored_draft.dart';
 import 'app_preferences.dart';
@@ -28,6 +28,8 @@ DraftStore draftStore(Ref ref) =>
 /// 때문이다 — 로드가 동기적으로 일어나 앱 시작이 느려진다.
 class DraftStoreImpl implements DraftStore {
   DraftStoreImpl(this._prefs);
+
+  static const AppLog _logger = AppLog('DraftStore');
 
   final SharedPreferences _prefs;
 
@@ -168,5 +170,5 @@ class DraftStoreImpl implements DraftStore {
   /// 실패를 남긴다. **초안의 내용은 절대 싣지 않는다**(POL-013) — 제목·본문·태그가
   /// 로그에 실리면 안 되므로 원인의 타입까지만 남긴다(§7).
   void _log(String what, Object error) =>
-      developer.log('$what: ${error.runtimeType}', name: 'draft');
+      _logger.warn('$what: ${error.runtimeType}');
 }

@@ -1,7 +1,7 @@
-import 'dart:developer' as developer;
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/log/app_log.dart';
 import '../../../common/pagination/page.dart';
 import '../../../common/model/post.dart';
 import '../repository/community_repository.dart';
@@ -53,6 +53,8 @@ class HiddenPostsState {
 /// 아니다. 좌표를 걸면 다른 도시에서 숨긴 글을 풀 수 없게 된다.
 @Riverpod(retry: communityRetryPolicy)
 class HiddenPostsController extends _$HiddenPostsController {
+  static const AppLog _log = AppLog('HiddenPostsController');
+
   CommunityRepository get _repository => ref.read(communityRepositoryProvider);
 
   @override
@@ -88,10 +90,7 @@ class HiddenPostsController extends _$HiddenPostsController {
       );
     } on Object catch (error) {
       // 추가 로딩 실패는 보고 있는 목록을 지우지 않는다 — 인디케이터만 걷는다.
-      developer.log(
-        'hiddenPosts loadMore failed: ${error.runtimeType}',
-        name: 'HiddenPostsController',
-      );
+      _log.warn('hiddenPosts loadMore failed: ${error.runtimeType}');
       state = AsyncData<HiddenPostsState>(
         current.copyWith(isLoadingMore: false),
       );

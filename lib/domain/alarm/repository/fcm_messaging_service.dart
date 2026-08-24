@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'dart:io' show Platform;
 
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import '../../../common/log/app_log.dart';
 import '../model/push_destination.dart';
 import 'push_messaging_service.dart';
 
@@ -22,6 +22,8 @@ class FcmMessagingService implements PushMessagingService {
     FlutterLocalNotificationsPlugin? localNotifications,
   }) : _messaging = messaging ?? FirebaseMessaging.instance,
        _local = localNotifications ?? FlutterLocalNotificationsPlugin();
+
+  static const AppLog _log = AppLog('FcmMessagingService');
 
   final FirebaseMessaging _messaging;
   final FlutterLocalNotificationsPlugin _local;
@@ -50,15 +52,13 @@ class FcmMessagingService implements PushMessagingService {
       // iOS는 APNs 토큰이 먼저 붙어야 FCM 토큰이 나온다. 아직이면 null이고, 그때는
       // 등록을 건너뛴다 — 다음 기동이나 `onTokenRefresh`에서 다시 시도한다.
       if (Platform.isIOS && await _messaging.getAPNSToken() == null) {
-        if (kDebugMode) {
-          debugPrint('[Alarm] APNs 토큰이 아직 없어 등록을 미룬다');
-        }
+        _log.debug('APNs 토큰이 아직 없어 등록을 미룬다');
         return null;
       }
       return await _messaging.getToken();
-    } on Object catch (error) {
+    } on Object catch (error, stackTrace) {
       // 조용히 실패한다. 호출부는 null을 "지금은 없음"으로 다룬다(R14).
-      if (kDebugMode) debugPrint('[Alarm] FCM 토큰 발급 실패: $error');
+      _log.warn('FCM 토큰 발급 실패', error, stackTrace);
       return null;
     }
   }
@@ -108,8 +108,8 @@ class FcmMessagingService implements PushMessagingService {
     try {
       final RemoteMessage? initial = await _messaging.getInitialMessage();
       return initial == null ? null : _destinationOf(initial);
-    } on Object catch (error) {
-      if (kDebugMode) debugPrint('[Alarm] 초기 메시지 조회 실패: $error');
+    } on Object catch (error, stackTrace) {
+      _log.warn('초기 메시지 조회 실패', error, stackTrace);
       return null;
     }
   }
@@ -128,8 +128,8 @@ class FcmMessagingService implements PushMessagingService {
       // **서버가 채널을 지정하지 않는다**(서버 안내 §1) — 클라이언트가 만들어 둔다.
       await android.createNotificationChannel(_messageChannel);
       await android.createNotificationChannel(_spotQaChannel);
-    } on Object catch (error) {
-      if (kDebugMode) debugPrint('[Alarm] 알림 채널 생성 실패: $error');
+    } on Object catch (error, stackTrace) {
+      _log.warn('알림 채널 생성 실패', error, stackTrace);
     }
   }
 
@@ -164,8 +164,8 @@ class FcmMessagingService implements PushMessagingService {
 
       // Android: 포그라운드 메시지는 시스템 트레이로 가지 않으므로 직접 띄운다.
       _foregroundMessages ??= FirebaseMessaging.onMessage.listen(_showLocal);
-    } on Object catch (error) {
-      if (kDebugMode) debugPrint('[Alarm] 포그라운드 알림 설정 실패: $error');
+    } on Object catch (error, stackTrace) {
+      _log.warn('포그라운드 알림 설정 실패', error, stackTrace);
     }
   }
 
@@ -202,8 +202,8 @@ class FcmMessagingService implements PushMessagingService {
         ),
         payload: jsonEncode(data),
       );
-    } on Object catch (error) {
-      if (kDebugMode) debugPrint('[Alarm] 포그라운드 알림 표시 실패: $error');
+    } on Object catch (error, stackTrace) {
+      _log.warn('포그라운드 알림 표시 실패', error, stackTrace);
     }
   }
 

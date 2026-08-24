@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +7,7 @@ import 'package:kakao_map_sdk/kakao_map_sdk.dart';
 
 import '../../../common/config/map_sdk_initializer.dart';
 import '../../../common/location/coordinates.dart';
+import '../../../common/log/app_log.dart';
 import '../../../common/location/location_providers.dart';
 import '../../../common/navigation/picked_place.dart';
 import '../../../common/navigation/spot_detail_route.dart';
@@ -63,6 +63,8 @@ class MapScreen extends ConsumerStatefulWidget {
 }
 
 class _MapScreenState extends ConsumerState<MapScreen> {
+  static const AppLog _log = AppLog('MapScreen');
+
   KakaoMapController? _controller;
 
   /// 지도 위 오버레이를 그리고 지우는 책임. SDK 호출을 화면에서 떼어 둔다.
@@ -292,10 +294,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       );
 
       // 혼잡도는 왔는데 조인 결과가 비면 경계 캐시와 id가 안 맞는다는 뜻이다.
-      // 조용히 빈 화면이 되면 원인을 짚을 수 없어 디버그 빌드에서 남긴다.
-      if (kDebugMode && live.areas.isNotEmpty && overlays.isEmpty) {
-        debugPrint(
-          '[Map] 혼잡도 ${live.areas.length}곳이 왔지만 경계와 조인되지 않았다 '
+      // 조용히 빈 화면이 되면 원인을 짚을 수 없어 남긴다.
+      if (live.areas.isNotEmpty && overlays.isEmpty) {
+        _log.warn(
+          '혼잡도 ${live.areas.length}곳이 왔지만 경계와 조인되지 않았다 '
           '(경계 ${boundaries.length}건). '
           '혼잡도 id: ${live.areas.map((CongestionArea a) => a.id).take(5).toList()} / '
           '경계 id: ${boundaries.map((CongestionAreaBoundary b) => b.id).take(5).toList()}',
@@ -309,10 +311,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       // `OverlayRegistrationFailedError`처럼 `Error` 계열로 던지는데, `on Exception`은
       // 그것을 놓친다. 이 조회는 `unawaited`로 띄우므로 받아 줄 곳이 여기뿐이고,
       // 놓치면 앱이 통째로 죽는다("Lost connection to device").
-    } on Object catch (error) {
+    } on Object catch (error, stackTrace) {
       // 혼잡도 실패는 지도 전체의 실패가 아니다 — 마커는 그대로 두고 이 레이어만
       // 안내로 대체한다(R29).
-      if (kDebugMode) debugPrint('[Map] 혼잡도 레이어 실패: $error');
+      _log.warn('혼잡도 레이어 실패', error, stackTrace);
       await _painter?.clearCongestion();
       if (!mounted || generation != _congestionGeneration) return;
       setState(() {
@@ -378,10 +380,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       // 주변 것이 보이고, 사용자는 그걸 이미 안다.
       // 혼잡도 쪽과 같은 이유로 `Object`를 받는다 — SDK가 던지는 `Error` 계열을
       // 놓치면 앱이 죽는다.
-    } on Object catch (error) {
+    } on Object catch (error, stackTrace) {
       // 마커 조회 실패는 화면에 알리지 않는다. 실패할 때마다 배너를 띄우면 이동
       // 중에 안내가 깜빡인다 — 다만 원인은 볼 수 있어야 한다.
-      if (kDebugMode) debugPrint('[Map] 마커 조회 실패: $error');
+      _log.warn('마커 조회 실패', error, stackTrace);
     }
   }
 

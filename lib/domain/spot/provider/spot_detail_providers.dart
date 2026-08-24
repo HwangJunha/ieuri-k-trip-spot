@@ -1,10 +1,9 @@
-import 'dart:developer' as developer;
-
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../model/retry_budget.dart';
 import '../model/retry_exhausted.dart';
 import '../../../common/category/spot_category_selection.dart';
+import '../../../common/log/app_log.dart';
 import '../model/spot_detail.dart';
 import '../model/spot_failure.dart';
 import '../model/spot_reaction.dart';
@@ -63,6 +62,8 @@ class SpotCategoryCodes extends _$SpotCategoryCodes {
 /// [retry]로 자동 재시도를 1회로 묶는다(SPEC-0006 R1) — 스와이프와 같은 정책이다.
 @Riverpod(retry: spotRetryPolicy)
 class SpotDetailController extends _$SpotDetailController {
+  static const AppLog _log = AppLog('SpotDetailController');
+
   SpotRepository get _repository => ref.read(spotRepositoryProvider);
 
   /// 사용자가 이 상세에 남긴 마지막 반응(null=아직 없음). 낙관적 델타 계산의 기준 —
@@ -178,12 +179,7 @@ class SpotDetailController extends _$SpotDetailController {
       if (error is SpotFailure && error.isSpotMissing) {
         _dropFromSwipeSessions(current.id);
       }
-      developer.log(
-        'reactToSpot failed (rolled back)',
-        name: 'SpotDetailController',
-        error: error,
-        stackTrace: stack,
-      );
+      _log.warn('reactToSpot failed (rolled back)', error, stack);
       rethrow;
     }
   }

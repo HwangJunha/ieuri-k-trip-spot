@@ -1,9 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
+import '../../../common/log/app_log.dart';
 import '../model/auth_failure.dart';
 import '../model/sns_credential.dart';
 import '../model/sns_provider.dart';
@@ -79,6 +79,8 @@ Future<String?> codeSilentlyOrPrompt({
 
 class SnsAuthenticatorImpl implements SnsAuthenticator {
   const SnsAuthenticatorImpl();
+
+  static const AppLog _log = AppLog('SnsAuthenticator');
 
   @override
   Future<SnsCredential> authenticate(SnsProvider provider) =>
@@ -240,12 +242,10 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
         // Null id_token means OIDC isn't enabled for the Kakao app.
         // 로그인 자체는 성공했는데(access token은 받았다) id_token만 없는
         // 상태다 — 카카오 개발자 콘솔에서 OpenID Connect를 켜야 한다.
-        if (kDebugMode) {
-          debugPrint(
-            '[SNS] kakao id_token 없음 — 개발자 콘솔에서 OpenID Connect를 '
-            '활성화해야 한다 (accessToken은 받았다: ${token.accessToken.isNotEmpty})',
-          );
-        }
+        _log.error(
+          'kakao id_token 없음 — 개발자 콘솔에서 OpenID Connect를 '
+          '활성화해야 한다 (accessToken은 받았다: ${token.accessToken.isNotEmpty})',
+        );
         throw const AuthFailure(AuthFailureKind.unknown);
       }
       // Fetch profile for prefill; email/nickname require consent scopes and may
@@ -264,19 +264,21 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
         nickname: me.kakaoAccount?.profile?.nickname,
         profileImageUrl: me.kakaoAccount?.profile?.profileImageUrl,
       );
-    } on KakaoAuthException catch (e) {
+    } on KakaoAuthException catch (e, stackTrace) {
       if (e.error == AuthErrorCause.accessDenied) {
         throw const SnsCancelledException();
       }
       // 사용자 취소가 아닌 인증 실패 — 앱 키·redirect URI 불일치, 콘솔 설정
       // 누락 등이 여기로 온다. 원인을 남기지 않으면 화면에 "문제가
       // 발생했습니다"만 뜨고 무엇이 잘못됐는지 알 수 없다.
-      if (kDebugMode) {
-        debugPrint('[SNS] kakao 인증 실패: ${e.error} ${e.errorDescription}');
-      }
+      _log.error(
+        'kakao 인증 실패: ${e.error} ${e.errorDescription}',
+        e,
+        stackTrace,
+      );
       throw const AuthFailure(AuthFailureKind.unknown);
-    } on KakaoException catch (e) {
-      if (kDebugMode) debugPrint('[SNS] kakao SDK 오류: $e');
+    } on KakaoException catch (e, stackTrace) {
+      _log.error('kakao SDK 오류', e, stackTrace);
       throw const AuthFailure(AuthFailureKind.unknown);
     }
   }

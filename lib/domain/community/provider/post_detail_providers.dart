@@ -1,7 +1,7 @@
-import 'dart:developer' as developer;
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/log/app_log.dart';
 import '../../../common/model/post.dart';
 import 'community_providers.dart';
 
@@ -21,6 +21,8 @@ part 'post_detail_providers.g.dart';
 /// 시그니처는 그대로라 기존 호출부(watch/invalidate)는 영향받지 않는다.
 @Riverpod(retry: communityRetryPolicy)
 class PostDetail extends _$PostDetail {
+  static const AppLog _log = AppLog('PostDetail');
+
   @override
   Future<Post?> build(String postId) =>
       ref.watch(communityRepositoryProvider).fetchPost(postId);
@@ -56,10 +58,7 @@ class PostDetail extends _$PostDetail {
       }
     } on Object catch (error) {
       // 실패 — 이전 값으로 롤백한다. 미인증 유도는 화면이 담당한다.
-      developer.log(
-        'toggleLike failed: ${error.runtimeType}',
-        name: 'PostDetail',
-      );
+      _log.warn('toggleLike failed: ${error.runtimeType}');
       state = AsyncData<Post?>(original);
       rethrow;
     }

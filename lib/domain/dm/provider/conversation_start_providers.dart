@@ -1,7 +1,6 @@
-import 'dart:developer' as developer;
-
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/log/app_log.dart';
 import '../repository/dm_repository.dart';
 import 'dm_providers.dart';
 
@@ -26,6 +25,8 @@ ConversationStarter conversationStarter(Ref ref) =>
 class ConversationStarter {
   const ConversationStarter(this._repository);
 
+  static const AppLog _log = AppLog('ConversationStarter');
+
   final DmRepository _repository;
 
   /// **인용을 받지 않는다**(2026-08-18 서버가 옮겼다). 대화를 여는 것과 인용을 붙이는
@@ -35,18 +36,12 @@ class ConversationStarter {
       final DmMutationResult<String> result = await _repository
           .startConversation(counterpartMemberId);
       if (!result.succeeded) {
-        developer.log(
-          'startConversation rejected: ${result.errorCode}',
-          name: 'ConversationStarter',
-        );
+        _log.warn('startConversation rejected: ${result.errorCode}');
         return null;
       }
       return result.value;
     } on Object catch (error) {
-      developer.log(
-        'startConversation failed: ${error.runtimeType}',
-        name: 'ConversationStarter',
-      );
+      _log.warn('startConversation failed: ${error.runtimeType}');
       return null;
     }
   }

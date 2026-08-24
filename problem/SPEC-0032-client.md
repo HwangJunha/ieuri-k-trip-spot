@@ -582,3 +582,57 @@ Play는 디버그 서명 산출물을 거부하므로 이대로는 업로드 자
 `plutil -convert json`으로 확인했다 — 주석은 파싱 시점에 사라져 값으로 새어 들어가지
 않는다(키 26개, 주석 유입 0건). OS도 심사자도 보지 않으므로 남겨 둔다. 이 저장소는
 다른 키(OAuth 클라이언트 id, URL 스킴, FCM)에도 같은 방식으로 근거를 적고 있다.
+
+---
+
+## J. 로깅 통일 (2026-08-24)
+
+사용자 지적: 서버의 logback처럼 `log.info`/`log.warn`/`log.error`를 쓰고 싶었는데,
+AI가 `if (kDebugMode)` 조건문으로 감싸는 형태로 만들어 놨다 — 그걸 걷어낸다.
+
+### 무엇이 문제였나
+
+로그 호출마다 `if (kDebugMode) { debugPrint('[Tag] ...'); }`를 손으로 둘렀다.
+문제가 셋이다 — 조건이 호출부에 흩어져 빠뜨리기 쉽고, 태그를 문자열로 매번 다시
+적어 표기가 갈리며, **수준 개념이 없어 "이건 경고인가 오류인가"가 코드에 남지 않는다.**
+게다가 `debugPrint`(39곳)와 `developer.log`(27곳) 두 가지가 섞여 있었다.
+
+### `lib/common/log/app_log.dart`
+
+`debug`/`info`/`warn`/`error` 네 메서드. **조건 판단은 로거 안 한 곳뿐이고
+호출부는 수준만 고른다.**
+
+```dart
+static const AppLog _log = AppLog('MapSdkInitializer');
+_log.error('지도 SDK 초기화 실패', error, stackTrace);
+```
+
+수준 값은 `package:logging` 관례(500/800/900/1000)를 따른다 — DevTools가 그 눈금으로
+색을 칠하므로 임의 값을 쓰면 안 된다.
+
+**릴리스는 `warn` 이상만 남긴다**(`_releaseMinimum`). `info`까지 내보내면 정상 흐름이
+전부 기기 로그(안드로이드 logcat)에 쌓여 다른 앱이 읽을 수 있고, 정작 필요한 오류가
+그 안에 묻힌다.
+
+### 결과
+
+27개 파일 61곳 교체(`kDebugMode`+`debugPrint` 34곳, `developer.log` 27곳).
+수준 분포는 error 4 · warn 52 · info 1 · debug 4. `if (kDebugMode)`와 `debugPrint`
+호출부는 **0건**이다(`app_log.dart`의 설명 주석에만 문자열로 남아 있다).
+
+### 판단한 것
+
+- **POL-013 마스킹을 살렸다.** provider 계층은 대부분 `'... failed: ${error.runtimeType}'`
+  처럼 타입만 남기고 있었고, "서버 message는 PII를 담을 수 있다"는 근거가 주석에 적혀
+  있었다. `AppLog`는 받은 값을 마스킹하지 않으므로 **이 21곳은 `error` 객체를 넘기지
+  않는다.** SDK 실패·로컬 정리처럼 서버 메시지가 없는 곳만 인자로 넘긴다.
+- **`kDebugMode`가 로그 이상을 뜻하던 2곳은 조건을 분리했다.** `map_repository_impl`의
+  경계 매핑 누락과 `map_screen`의 혼잡도 조인 실패는 **데이터가 조용히 사라지는 신호**라
+  릴리스에서도 `warn`으로 남게 했다 — §E에 적어 둔 "지도 무음 실패"를 일부 해소한다.
+- `draft_store_impl`은 같은 파일에 `_log()` 헬퍼 메서드가 이미 있어 필드명을 `_logger`로
+  했다.
+
+`graphql_debug_log.dart`는 **건드리지 않았다** — 본문 마스킹과 디버그 전용 처리를 함께
+맡는 별도 통로이고, 일반 로거로 합치면 §7 보안 규칙이 깨진다.
+
+`test/common/log/app_log_test.dart` 5개 추가(수준 순서·관례 값·조건 없는 호출·const 생성).

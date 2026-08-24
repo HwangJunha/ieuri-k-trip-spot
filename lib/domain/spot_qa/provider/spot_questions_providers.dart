@@ -1,7 +1,7 @@
-import 'dart:developer' as developer;
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/log/app_log.dart';
 import '../../../common/pagination/page.dart';
 import '../model/spot_qa_failure.dart';
 import '../model/spot_question.dart';
@@ -56,6 +56,8 @@ class SpotQuestionsState {
 /// **로그인하지 않아도 조회된다**(AC-1.4) — 읽기 화면에서 인증을 요구하지 않는다.
 @Riverpod(retry: spotQaRetryPolicy)
 class SpotQuestionsController extends _$SpotQuestionsController {
+  static const AppLog _log = AppLog('SpotQuestionsController');
+
   SpotQaRepository get _repository => ref.read(spotQaRepositoryProvider);
 
   @override
@@ -91,10 +93,7 @@ class SpotQuestionsController extends _$SpotQuestionsController {
       );
     } on Object catch (error) {
       // 추가 로딩 실패는 보고 있는 목록을 지우지 않는다 — 인디케이터만 걷는다.
-      developer.log(
-        'spotQuestions loadMore failed: ${error.runtimeType}',
-        name: 'SpotQuestionsController',
-      );
+      _log.warn('spotQuestions loadMore failed: ${error.runtimeType}');
       state = AsyncData<SpotQuestionsState>(
         current.copyWith(isLoadingMore: false),
       );

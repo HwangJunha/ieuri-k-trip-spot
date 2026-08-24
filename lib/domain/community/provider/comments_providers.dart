@@ -1,7 +1,7 @@
-import 'dart:developer' as developer;
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/log/app_log.dart';
 import '../../../common/pagination/page.dart';
 import '../../../common/model/comment.dart';
 import '../model/community_failure.dart';
@@ -59,6 +59,8 @@ class CommentsState {
 /// 반영하지 않고 목록은 반영하기 때문이다(가이드 §6).
 @Riverpod(retry: communityRetryPolicy)
 class CommentsController extends _$CommentsController {
+  static const AppLog _log = AppLog('CommentsController');
+
   CommunityRepository get _repository => ref.read(communityRepositoryProvider);
 
   @override
@@ -94,10 +96,7 @@ class CommentsController extends _$CommentsController {
       );
     } on Object catch (error) {
       // 추가 로딩 실패는 보고 있는 목록을 지우지 않는다 — 인디케이터만 걷는다.
-      developer.log(
-        'comments loadMore failed: ${error.runtimeType}',
-        name: 'CommentsController',
-      );
+      _log.warn('comments loadMore failed: ${error.runtimeType}');
       state = AsyncData<CommentsState>(current.copyWith(isLoadingMore: false));
     }
   }
