@@ -1,0 +1,219 @@
+# SPEC-0030 전국 지도 쿼리가 쓰는 서버 스키마 조각(committed codegen 입력).
+#
+# 라이브 서버 introspection에서 손으로 추린 안정 빌드 입력이며, gitignore된
+# 스냅샷을 codegen이 직접 읽지 않는다(CLAUDE.md §13).
+#
+# 여기서 정의하지 않는 것 — codegen이 조각을 하나로 병합하므로 중복 정의하면
+# 충돌한다:
+#   SpotCategory   spot_schema.graphql
+#   CopyrightType  spot_schema.graphql
+#   Coordinates    map_schema.graphql
+#   PageInfo       auth_schema.graphql
+#   UserError      auth_schema.graphql
+#   ErrorCode      auth_schema.graphql
+#
+# payload들이 계약상 `implements BaseResponse`이지만 클라이언트 조각에는 그
+# 인터페이스를 두지 않는다 — 인터페이스는 응답 형태를 바꾸지 않고 이 앱은
+# `success`·`userErrors`를 직접 고른다(alarm 조각의 선례).
+
+# 루트는 auth_schema.graphql이 소유한다 — codegen이 조각을 하나로 병합하므로
+# 여기서 `type Query`로 다시 선언하면 다른 기능의 필드가 전부 사라진다.
+extend type Query {
+  # 161칸 전체. 고정 개수라 페이지네이션하지 않는다(POL-017 예외, 스펙 §9.2).
+  # 인증은 선택이며 비인증이면 viewerVisited가 전부 false다.
+  mapCells: [MapCell!]!
+
+  # 칸 1개의 상세. 오류: MAP_CELL_NOT_FOUND.
+  mapCell(id: ID!): MapCell!
+
+  # 공유 링크 조회. 인증 없이 열린다.
+  # 오류: SHARE_LINK_NOT_FOUND(없거나 폐기됨) · SHARE_LINK_BLOCKED(차단).
+  sharedMap(token: String!): SharedMap!
+
+  # 내 관계 목록(관계 지도). 겹침은 **조회 시점에 재계산**된다.
+  # 정렬은 맺은 시각 내림차순 고정. 인증 필수(UNAUTHENTICATED).
+  mapRelations(first: Int, after: String): MapRelationConnection!
+}
+
+extend type Mutation {
+  # 방문 등록. **시군구 코드**를 보낸다(칸 id가 아니다).
+  recordVisits(input: RecordVisitsInput!): RecordVisitsPayload!
+
+  # 방문 해제. **칸 id**를 보낸다(시군구 코드가 아니다).
+  removeVisit(input: RemoveVisitInput!): RemoveVisitPayload!
+
+  # 공유 링크 발급. 유효한 링크가 있으면 같은 것을 돌려준다.
+  createMapShareLink: CreateMapShareLinkPayload!
+
+  # 공유 링크 폐기. 발급 때 받은 shareUrl을 그대로 넣는다.
+  revokeMapShareLink(input: RevokeMapShareLinkInput!): RevokeMapShareLinkPayload!
+
+  # 공유 링크로 관계를 맺는다. **양쪽 목록에 서로 추가된다.** 멱등이다.
+  # 오류: SHARE_LINK_NOT_FOUND · SHARE_LINK_BLOCKED · CANNOT_RELATE_SELF.
+  createMapRelation(input: CreateMapRelationInput!): CreateMapRelationPayload!
+
+  # 관계를 **내 목록에서만** 지운다. 상대 목록의 나는 남는다.
+  # 없는 관계의 삭제는 오류가 아니다.
+  removeMapRelation(input: RemoveMapRelationInput!): RemoveMapRelationPayload!
+}
+
+# 전국 지도의 표시 칸 1개. 252개 시군구가 161칸이 된다.
+type MapCell {
+  # 칸 id. **행정구역 코드가 아니다** — 서버가 정한 표시 단위다.
+  id: ID!
+  # 이 칸이 묶은 시군구 5자리 코드. 로컬 판정 결과를 칸에 대응시킬 때 쓴다.
+  districtCodes: [String!]!
+  # 활성 언어 표기. 없으면 EN → KO 폴백.
+  name: String!
+  provinceName: String!
+  # 시도 2자리. 진척 계산에 쓴다.
+  provinceCode: String!
+  center: Coordinates!
+  # 칸에 속한 시군구 중 하나라도 방문이면 참이다.
+  viewerVisited: Boolean!
+  # **null일 수 있다** — 그래도 칸은 반환된다.
+  representativeImage: CellImage
+  # **mapCell 상세에서만 고른다.** mapCells에서 고르면 칸마다 질의가 나가 161회다.
+  spots(first: Int = 20, after: String): CellSpotConnection!
+}
+
+# 칸의 대표 이미지. 저작권 유형에 따라 표시가 갈린다(POL-051).
+type CellImage {
+  imageUrl: String!
+  thumbnailUrl: String
+  caption: String!
+  kind: CellImageKind!
+  copyright: CopyrightType!
+  # 유형과 무관하게 항상 노출한다.
+  attributionText: String!
+}
+
+enum CellImageKind {
+  LANDMARK
+  SPECIALTY
+}
+
+# 칸에 속한 장소의 커서 연결. 좋아요 수 내림차순이다.
+type CellSpotConnection {
+  edges: [CellSpotEdge!]!
+  pageInfo: PageInfo!
+}
+
+type CellSpotEdge {
+  node: CellSpot!
+  cursor: String!
+  likeCount: Int!
+}
+
+# 칸에 속한 장소 1건. **거리 필드가 없다** — 거리 정렬이 아니다.
+type CellSpot {
+  id: ID!
+  title: String!
+  thumbnailImageUrl: String!
+  category: SpotCategory!
+  lat: Float!
+  lng: Float!
+}
+
+input RecordVisitsInput {
+  # 시군구 5자리 코드. 클라이언트가 경계 데이터로 판정한 결과다.
+  districtCodes: [String!]!
+}
+
+type RecordVisitsPayload {
+  success: Boolean!
+  # 없는 시군구 코드가 섞이면 DISTRICT_NOT_FOUND가 담긴다.
+  userErrors: [UserError!]!
+  # **이번 요청으로 방문이 된 칸만** 담긴다. 이미 방문한 칸은 빠진다.
+  updatedCells: [MapCell!]!
+}
+
+input RemoveVisitInput {
+  # 칸 id. 그 칸에 속한 모든 시군구의 기록이 함께 해제된다.
+  cellId: ID!
+}
+
+type RemoveVisitPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  # 없는 칸이면 null이다.
+  updatedCell: MapCell
+}
+
+type CreateMapShareLinkPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  shareLink: MapShareLink
+}
+
+# 공유 링크. 만료가 없으며 폐기가 유일한 무효화 수단이다.
+type MapShareLink {
+  # 완성된 링크. 시스템 공유 시트에 그대로 넘긴다 — 클라이언트가 조립하지 않는다.
+  shareUrl: String!
+  createdAt: String!
+}
+
+input RevokeMapShareLinkInput {
+  # 발급 때 받은 shareUrl을 그대로 넣는다. 토큰 추출은 서버가 한다.
+  shareUrl: String!
+}
+
+type RevokeMapShareLinkPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+# 공유 링크로 조회한 다른 회원의 지도.
+type SharedMap {
+  # 닉네임만. 이메일 등 다른 개인정보는 없다.
+  ownerNickname: String!
+  visitedCellIds: [ID!]!
+  # **비인증이면 null이다** — 빈 배열(겹침 없음)과 구분된다.
+  overlappingCellIds: [ID!]
+  # 겹치는 칸의 이름까지 담은 목록. id만으로는 어디인지 말할 수 없어 함께 받는다.
+  overlappingCells: [MapCell!]
+  visitedCount: Int!
+}
+
+# 관계 지도의 상대 한 명.
+type MapRelation {
+  memberId: ID!
+  # 닉네임만. 다른 개인정보는 없다.
+  nickname: String!
+  # **조회 시점에 재계산된 값이다.** 등록 시점의 스냅샷이 아니다.
+  overlappingCount: Int!
+  overlappingCellIds: [ID!]!
+  # 상대의 총 방문 칸 수. 겹침 비율을 보여줄 때 쓴다.
+  theirVisitedCount: Int!
+  createdAt: String!
+}
+
+type MapRelationEdge {
+  node: MapRelation!
+  cursor: String!
+}
+
+type MapRelationConnection {
+  edges: [MapRelationEdge!]!
+  pageInfo: PageInfo!
+}
+
+input CreateMapRelationInput {
+  # 공유받은 링크를 그대로 넣는다. 토큰 추출은 서버가 한다.
+  shareUrl: String!
+}
+
+type CreateMapRelationPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  counterpartMemberId: ID
+}
+
+input RemoveMapRelationInput {
+  memberId: ID!
+}
+
+type RemoveMapRelationPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}

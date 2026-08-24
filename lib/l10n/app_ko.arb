@@ -1,315 +1,830 @@
 {
   "@@locale": "ko",
   "appTitle": "K-트립스팟",
-  "@appTitle": { "description": "앱 이름 (MaterialApp title)" },
-
-  "splashTagline": "실시간으로 만나는 한국의 활기찬 여행지.",
-  "@splashTagline": { "description": "스플래시 메인 태그라인" },
-  "splashSubTagline": "서울, 그리고 그 너머로 향하는 스마트한 시작.",
-  "@splashSubTagline": { "description": "스플래시 보조 태그라인" },
-  "splashLoading": "준비 중...",
-  "@splashLoading": { "description": "스플래시 로딩 표시" },
-
-  "languageSelectionSubtitle": "언어를 선택하세요",
-  "@languageSelectionSubtitle": { "description": "언어 선택 화면 제목" },
-  "languageSelectionInstruction": "한국의 멋진 여행지를 둘러볼 언어를 선택하세요.",
-  "@languageSelectionInstruction": { "description": "언어 선택 화면 안내 문구" },
-  "languageDefaultBadge": "기본",
-  "@languageDefaultBadge": { "description": "기본 언어 배지" },
-  "confirmSelection": "선택 완료",
-  "@confirmSelection": { "description": "언어 선택 확정 버튼" },
-  "changeLaterHint": "설정에서 언제든 바꿀 수 있어요.",
-  "@changeLaterHint": { "description": "언어를 나중에 변경할 수 있다는 힌트" },
-
-  "skip": "건너뛰기",
-  "@skip": { "description": "온보딩 건너뛰기 버튼" },
-  "next": "다음",
-  "@next": { "description": "온보딩 다음 버튼" },
-  "getStarted": "시작하기",
-  "@getStarted": { "description": "온보딩 마지막 시작 버튼" },
-
-  "onboardingTitle1": "스와이프로 발견하세요",
-  "@onboardingTitle1": { "description": "온보딩 1페이지 제목" },
-  "onboardingBody1": "간단한 스와이프로 나에게 딱 맞는 한국 여행을 찾아보세요. 마음에 들면 오른쪽으로 스와이프해 저장!",
-  "@onboardingBody1": { "description": "온보딩 1페이지 본문" },
-  "onboardingTitle2": "붐비는 곳은 피하세요",
-  "@onboardingTitle2": { "description": "온보딩 2페이지 제목" },
-  "onboardingBody2": "실시간 혼잡도 데이터로 더 똑똑하게 계획하세요. 여유로운지 붐비는지 미리 확인하세요.",
-  "@onboardingBody2": { "description": "온보딩 2페이지 본문" },
-  "onboardingTitle3": "함께 여행해요",
-  "@onboardingTitle3": { "description": "온보딩 3페이지 제목" },
-  "onboardingBody3": "전 세계 여행자들과 실시간으로 연결되세요. 팁을 나누고, 만나고, 추억을 만들어요.",
-  "@onboardingBody3": { "description": "온보딩 3페이지 본문" },
-
-  "onboardingCaption1": "명동 길거리 음식",
-  "@onboardingCaption1": { "description": "온보딩 1페이지 카드 캡션 (플레이스홀더)" },
-  "onboardingLocation1": "서울, 대한민국",
-  "@onboardingLocation1": { "description": "온보딩 1페이지 카드 위치" },
-  "onboardingCaption2": "경복궁",
-  "@onboardingCaption2": { "description": "온보딩 2페이지 카드 캡션 (플레이스홀더)" },
-  "onboardingLocation2": "서울, 대한민국",
-  "@onboardingLocation2": { "description": "온보딩 2페이지 카드 위치" },
-  "onboardingCaption3": "한강 공원",
-  "@onboardingCaption3": { "description": "온보딩 3페이지 카드 캡션 (플레이스홀더)" },
-  "onboardingLocation3": "서울, 대한민국",
-  "@onboardingLocation3": { "description": "온보딩 3페이지 카드 위치" },
-
-  "homeSearchHint": "여행지, 숨은 명소를 검색하세요…",
-  "@homeSearchHint": { "description": "홈 검색바 placeholder" },
-  "homeFavoritesTooltip": "찜 목록",
-  "@homeFavoritesTooltip": { "description": "홈 앱바 찜 아이콘 툴팁" },
-  "homeSectionRecommended": "추천 여행지",
-  "@homeSectionRecommended": { "description": "홈 추천 섹션 제목" },
-  "homeSectionHappeningNow": "지금 열리는 행사",
-  "@homeSectionHappeningNow": { "description": "홈 행사 섹션 제목" },
-  "homeSectionPopular": "인기 여행지",
-  "@homeSectionPopular": { "description": "홈 인기 여행지 섹션 제목" },
-  "viewAll": "전체 보기",
-  "@viewAll": { "description": "섹션 헤더 전체 보기 링크" },
-
-  "congestionLow": "여유",
-  "@congestionLow": { "description": "혼잡도 - 여유" },
-  "congestionModerate": "보통",
-  "@congestionModerate": { "description": "혼잡도 - 보통" },
-  "congestionHigh": "혼잡",
-  "@congestionHigh": { "description": "혼잡도 - 혼잡" },
-
-  "eventCategoryFestival": "축제",
-  "@eventCategoryFestival": { "description": "행사 카테고리 - 축제" },
-  "eventCategoryLive": "공연",
-  "@eventCategoryLive": { "description": "행사 카테고리 - 라이브 공연" },
-  "eventCategoryArt": "예술",
-  "@eventCategoryArt": { "description": "행사 카테고리 - 예술" },
-
-  "distanceAway": "{distance}km 거리",
-  "@distanceAway": {
-    "description": "인기 여행지 카드 거리 표시",
-    "placeholders": { "distance": { "type": "String" } }
+  "@appTitle": {
+    "description": "앱 이름 (MaterialApp title)"
   },
-
+  "splashTagline": "실시간으로 만나는 한국의 활기찬 여행지.",
+  "@splashTagline": {
+    "description": "스플래시 메인 태그라인"
+  },
+  "splashSubTagline": "서울, 그리고 그 너머로 향하는 스마트한 시작.",
+  "@splashSubTagline": {
+    "description": "스플래시 보조 태그라인"
+  },
+  "splashLoading": "준비 중...",
+  "@splashLoading": {
+    "description": "스플래시 로딩 표시"
+  },
+  "languageSelectionSubtitle": "언어를 선택하세요",
+  "@languageSelectionSubtitle": {
+    "description": "언어 선택 화면 제목"
+  },
+  "languageSelectionInstruction": "한국의 멋진 여행지를 둘러볼 언어를 선택하세요.",
+  "@languageSelectionInstruction": {
+    "description": "언어 선택 화면 안내 문구"
+  },
+  "languageDefaultBadge": "기본",
+  "@languageDefaultBadge": {
+    "description": "기본 언어 배지"
+  },
+  "confirmSelection": "선택 완료",
+  "@confirmSelection": {
+    "description": "언어 선택 확정 버튼"
+  },
+  "changeLaterHint": "설정에서 언제든 바꿀 수 있어요.",
+  "@changeLaterHint": {
+    "description": "언어를 나중에 변경할 수 있다는 힌트"
+  },
+  "skip": "건너뛰기",
+  "@skip": {
+    "description": "온보딩 건너뛰기 버튼"
+  },
+  "next": "다음",
+  "@next": {
+    "description": "온보딩 다음 버튼"
+  },
+  "getStarted": "시작하기",
+  "@getStarted": {
+    "description": "온보딩 마지막 시작 버튼"
+  },
+  "onboardingTitle1": "스와이프로 발견하세요",
+  "@onboardingTitle1": {
+    "description": "온보딩 1페이지 제목"
+  },
+  "onboardingBody1": "간단한 스와이프로 나에게 딱 맞는 한국 여행을 찾아보세요. 마음에 들면 오른쪽으로 스와이프해 저장!",
+  "@onboardingBody1": {
+    "description": "온보딩 1페이지 본문"
+  },
+  "onboardingTitle2": "붐비는 곳은 피하세요",
+  "@onboardingTitle2": {
+    "description": "온보딩 2페이지 제목"
+  },
+  "onboardingBody2": "실시간 혼잡도 데이터로 더 똑똑하게 계획하세요. 여유로운지 붐비는지 미리 확인하세요.",
+  "@onboardingBody2": {
+    "description": "온보딩 2페이지 본문"
+  },
+  "onboardingTitle3": "함께 여행해요",
+  "@onboardingTitle3": {
+    "description": "온보딩 3페이지 제목"
+  },
+  "onboardingBody3": "전 세계 여행자들과 실시간으로 연결되세요. 팁을 나누고, 만나고, 추억을 만들어요.",
+  "@onboardingBody3": {
+    "description": "온보딩 3페이지 본문"
+  },
+  "onboardingCaption1": "명동 길거리 음식",
+  "@onboardingCaption1": {
+    "description": "온보딩 1페이지 카드 캡션 (플레이스홀더)"
+  },
+  "onboardingLocation1": "서울, 대한민국",
+  "@onboardingLocation1": {
+    "description": "온보딩 1페이지 카드 위치"
+  },
+  "onboardingCaption2": "경복궁",
+  "@onboardingCaption2": {
+    "description": "온보딩 2페이지 카드 캡션 (플레이스홀더)"
+  },
+  "onboardingLocation2": "서울, 대한민국",
+  "@onboardingLocation2": {
+    "description": "온보딩 2페이지 카드 위치"
+  },
+  "onboardingCaption3": "한강 공원",
+  "@onboardingCaption3": {
+    "description": "온보딩 3페이지 카드 캡션 (플레이스홀더)"
+  },
+  "onboardingLocation3": "서울, 대한민국",
+  "@onboardingLocation3": {
+    "description": "온보딩 3페이지 카드 위치"
+  },
+  "homeSearchHint": "여행지, 숨은 명소를 검색하세요…",
+  "@homeSearchHint": {
+    "description": "홈 검색바 placeholder"
+  },
+  "homeSectionHappeningNow": "지금 열리는 행사",
+  "festivalPeriod": "{start} ~ {end}",
+  "@festivalPeriod": {
+    "description": "축제 기간(시작–종료)",
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "@homeSectionHappeningNow": {
+    "description": "홈 행사 섹션 제목"
+  },
+  "homeSectionPopular": "인기 여행지",
+  "homeSectionNearYou": "내 주변",
+  "@homeSectionNearYou": {
+    "description": "홈 \"Near you\" 섹션 제목"
+  },
+  "homeNearYouEmpty": "검색 반경 안에 여행지가 없습니다. 설정에서 반경을 넓혀 보세요.",
+  "@homeNearYouEmpty": {
+    "description": "홈 Near you 빈 상태"
+  },
+  "homeHappeningNowEmpty": "주변에 진행 중인 축제가 없습니다.",
+  "@homeHappeningNowEmpty": {
+    "description": "홈 Happening Now 빈 상태"
+  },
+  "homePopularEmpty": "아직 주변에 인기 여행지가 없습니다.",
+  "popularLikeCount": "좋아요 {count}개",
+  "@popularLikeCount": {
+    "description": "Popular 카드 좋아요 수",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@homePopularEmpty": {
+    "description": "홈 Popular 빈 상태"
+  },
+  "homeSectionRetry": "다시 시도",
+  "@homeSectionRetry": {
+    "description": "홈 섹션 재시도 버튼"
+  },
+  "homeSectionError": "이 섹션을 불러오지 못했습니다.",
+  "@homeSectionError": {
+    "description": "홈 섹션 실패 문구"
+  },
+  "searchTitle": "검색",
+  "@searchTitle": {
+    "description": "검색 페이지 제목"
+  },
+  "searchHint": "여행지 이름이나 주소로 검색",
+  "@searchHint": {
+    "description": "검색 입력 힌트"
+  },
+  "searchRecentTitle": "최근 검색어",
+  "searchRecentOpen": "최근 검색어",
+  "@searchRecentOpen": {
+    "description": "최근 검색어를 여는 버튼"
+  },
+  "searchRecentClose": "닫기",
+  "@searchRecentClose": {
+    "description": "최근 검색어 패널 닫기"
+  },
+  "@searchRecentTitle": {
+    "description": "최근 검색어 섹션 제목"
+  },
+  "searchRecentClearAll": "전체 삭제",
+  "@searchRecentClearAll": {
+    "description": "최근 검색어 전체 삭제"
+  },
+  "searchRecentRemove": "삭제",
+  "@searchRecentRemove": {
+    "description": "최근 검색어 개별 삭제 툴팁"
+  },
+  "searchEmptyResult": "검색 결과가 없습니다.",
+  "@searchEmptyResult": {
+    "description": "검색 결과 0건"
+  },
+  "searchError": "검색에 실패했습니다.",
+  "@searchError": {
+    "description": "검색 실패"
+  },
+  "searchRetry": "다시 시도",
+  "@searchRetry": {
+    "description": "검색 재시도 버튼"
+  },
+  "@homeSectionPopular": {
+    "description": "홈 인기 여행지 섹션 제목"
+  },
+  "viewAll": "전체 보기",
+  "@viewAll": {
+    "description": "섹션 헤더 전체 보기 링크"
+  },
+  "categoryAll": "전체",
+  "@categoryAll": {
+    "description": "카테고리 바 - 필터 없음(전체) 칩"
+  },
   "navHome": "홈",
-  "@navHome": { "description": "하단 내비 - 홈 탭" },
+  "@navHome": {
+    "description": "하단 내비 - 홈 탭"
+  },
   "navMap": "지도",
-  "@navMap": { "description": "하단 내비 - 지도 탭" },
+  "@navMap": {
+    "description": "하단 내비 - 지도 탭"
+  },
   "navDiscover": "발견",
-  "@navDiscover": { "description": "하단 내비 - 발견 탭" },
-  "navEvents": "행사",
-  "@navEvents": { "description": "하단 내비 - 행사 탭" },
-  "navChat": "채팅",
-  "@navChat": { "description": "하단 내비 - 채팅 탭" },
-
-  "comingSoon": "곧 제공될 예정입니다.",
-  "@comingSoon": { "description": "미구현 탭 플레이스홀더 문구" },
-
+  "@navDiscover": {
+    "description": "하단 내비 - 발견 탭"
+  },
+  "navLiked": "좋아요",
+  "@navLiked": {
+    "description": "하단 내비 - 좋아요 목록 탭"
+  },
+  "navNationalMap": "전국 지도",
+  "@navNationalMap": {
+    "description": "하단 내비 - 전국 지도 탭"
+  },
+  "navLibrary": "내 활동",
+  "@navLibrary": {
+    "description": "하단 내비 - 내 활동 탭(좋아요/커뮤니티 토글)"
+  },
+  "permissionPhotosRationaleTitle": "사진으로 지도를 채울까요?",
+  "@permissionPhotosRationaleTitle": {
+    "description": "사진 권한 사전설명 - 제목"
+  },
+  "permissionPhotosRationaleBody": "사진에 담긴 위치로 다녀온 지역을 찾아 지도를 채웁니다. 사진은 기기 밖으로 나가지 않고, 좌표는 지역을 판정하는 데만 쓰고 저장하지 않습니다.",
+  "@permissionPhotosRationaleBody": {
+    "description": "사진 권한 사전설명 - 본문(사진 미전송·좌표 미저장을 밝힌다)"
+  },
+  "permissionPhotosBlockedMessage": "사진 접근이 꺼져 있어 사진으로 채울 수 없어요. 설정에서 허용할 수 있습니다.",
+  "@permissionPhotosBlockedMessage": {
+    "description": "사진 권한 영구거부 안내"
+  },
+  "nationalMapNationwide": "전국",
+  "@nationalMapNationwide": {
+    "description": "전국 지도 - 전체 진척 막대의 이름"
+  },
+  "nationalMapCellCount": "{total}칸 중 {visited}칸",
+  "@nationalMapCellCount": {
+    "description": "전국 지도 - 방문 진척(예: 161칸 중 12칸)",
+    "placeholders": {
+      "visited": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "nationalMapEmptyHint": "사진으로 채우거나 지금 있는 곳을 등록해 보세요.",
+  "@nationalMapEmptyHint": {
+    "description": "전국 지도 - 아직 한 칸도 없을 때 안내"
+  },
+  "nationalMapSelectHint": "지도에서 지역을 눌러 보세요.",
+  "@nationalMapSelectHint": {
+    "description": "전국 지도 - 칸을 고르지 않았을 때 하단 안내"
+  },
+  "nationalMapRecordVisit": "등록",
+  "@nationalMapRecordVisit": {
+    "description": "전국 지도 - 선택한 칸을 방문으로 등록하는 버튼"
+  },
+  "nationalMapRemoveVisit": "등록 해제",
+  "@nationalMapRemoveVisit": {
+    "description": "전국 지도 - 방문 등록을 해제하는 버튼"
+  },
+  "nationalMapRetry": "다시 시도",
+  "@nationalMapRetry": {
+    "description": "전국 지도 - 재시도 버튼"
+  },
+  "nationalMapVisited": "다녀온 곳",
+  "@nationalMapVisited": {
+    "description": "전국 지도 - 선택한 칸이 이미 방문인 상태"
+  },
+  "nationalMapOpenDetail": "자세히",
+  "@nationalMapOpenDetail": {
+    "description": "전국 지도 - 지역 상세로 가는 버튼"
+  },
+  "nationalMapSpotsTitle": "이 지역의 여행지",
+  "@nationalMapSpotsTitle": {
+    "description": "지역 상세 - 장소 목록 제목"
+  },
+  "nationalMapSpotsEmpty": "아직 등록된 여행지가 없어요.",
+  "@nationalMapSpotsEmpty": {
+    "description": "지역 상세 - 장소가 없을 때"
+  },
+  "commonCancel": "취소",
+  "@commonCancel": {
+    "description": "다이얼로그 공용 취소"
+  },
+  "commonClose": "닫기",
+  "@commonClose": {
+    "description": "공통 - 닫기 버튼"
+  },
+  "nationalMapHere": "지금 여기",
+  "@nationalMapHere": {
+    "description": "전국 지도 - 현재 위치 등록 버튼"
+  },
+  "nationalMapRegisterTitle": "이 지역을 등록할까요?",
+  "@nationalMapRegisterTitle": {
+    "description": "현재 위치 등록 확인 다이얼로그 제목"
+  },
+  "nationalMapRegisterBody": "{district}에 다녀온 것으로 기록합니다.",
+  "@nationalMapRegisterBody": {
+    "description": "현재 위치 등록 확인 다이얼로그 본문",
+    "placeholders": {
+      "district": {
+        "type": "String"
+      }
+    }
+  },
+  "nationalMapAlreadyVisited": "{cell}은(는) 이미 다녀온 곳이에요.",
+  "@nationalMapAlreadyVisited": {
+    "description": "이미 방문한 칸에서 등록을 시도했을 때",
+    "placeholders": {
+      "cell": {
+        "type": "String"
+      }
+    }
+  },
+  "nationalMapOutsideKorea": "국내 지역만 등록할 수 있어요.",
+  "@nationalMapOutsideKorea": {
+    "description": "한국 밖 좌표에서 등록을 시도했을 때"
+  },
+  "nationalMapLocationUnavailable": "현재 위치를 확인할 수 없어요.",
+  "@nationalMapLocationUnavailable": {
+    "description": "위치 획득 실패"
+  },
+  "nationalMapShare": "지도 공유",
+  "@nationalMapShare": {
+    "description": "전국 지도 - 공유 버튼"
+  },
+  "nationalMapShareFailed": "공유 링크를 만들지 못했어요.",
+  "@nationalMapShareFailed": {
+    "description": "공유 링크 발급 실패"
+  },
+  "sharedMapVisitedCount": "{count}곳을 다녀왔어요",
+  "@sharedMapVisitedCount": {
+    "description": "공유 지도 - 상대가 방문한 칸 수",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharedMapOverlapCount": "{count}곳이 겹쳐요",
+  "@sharedMapOverlapCount": {
+    "description": "공유 지도 - 나와 겹치는 칸 수",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharedMapNoOverlap": "겹치는 곳이 없네요.",
+  "@sharedMapNoOverlap": {
+    "description": "공유 지도 - 비교했는데 겹침이 없을 때(빈 배열)"
+  },
+  "sharedMapSignInToCompare": "로그인하면 겹치는 곳을 볼 수 있어요.",
+  "@sharedMapSignInToCompare": {
+    "description": "공유 지도 - 비인증이라 비교하지 못했을 때(null)"
+  },
+  "sharedMapGone": "더 이상 볼 수 없는 지도예요.",
+  "@sharedMapGone": {
+    "description": "공유 링크가 없거나 폐기됨 - 둘을 구분하지 않는다"
+  },
+  "sharedMapBlocked": "이 지도는 볼 수 없어요.",
+  "@sharedMapBlocked": {
+    "description": "차단 관계라 조회 불가"
+  },
+  "photoSyncTitle": "사진으로 채우기",
+  "@photoSyncTitle": {
+    "description": "사진 동기화 시트 제목"
+  },
+  "photoSyncBody": "사진에 담긴 위치로 다녀온 지역을 찾아요. 사진은 기기 밖으로 나가지 않습니다.",
+  "@photoSyncBody": {
+    "description": "사진 동기화 시트 설명 - 사진 미전송을 밝힌다"
+  },
+  "photoSyncStart": "시작하기",
+  "@photoSyncStart": {
+    "description": "사진 동기화 - 시작 버튼"
+  },
+  "photoSyncResume": "이어서 하기",
+  "@photoSyncResume": {
+    "description": "사진 동기화 - 중단 지점부터 재개"
+  },
+  "photoSyncStop": "멈추기",
+  "@photoSyncStop": {
+    "description": "사진 동기화 - 스캔 중단"
+  },
+  "photoSyncProgress": "{done} / {total}장 확인했어요",
+  "@photoSyncProgress": {
+    "description": "사진 동기화 진행률",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "photoSyncFoundSoFar": "지금까지 {count}곳을 찾았어요",
+  "@photoSyncFoundSoFar": {
+    "description": "스캔 중 찾은 지역 수",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoSyncFound": "{count}곳을 찾았어요",
+  "@photoSyncFound": {
+    "description": "스캔 완료 후 찾은 지역 수",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoSyncConfirmBody": "등록하면 지도가 채워집니다.",
+  "@photoSyncConfirmBody": {
+    "description": "등록 확인 안내"
+  },
+  "photoSyncRegister": "등록하기",
+  "@photoSyncRegister": {
+    "description": "사진 동기화 - 판정 결과 등록"
+  },
+  "photoSyncDone": "지도를 채웠어요.",
+  "@photoSyncDone": {
+    "description": "사진 동기화 완료"
+  },
+  "photoSyncNoCoordinates": "위치 정보가 있는 사진을 찾지 못했어요.",
+  "@photoSyncNoCoordinates": {
+    "description": "좌표가 하나도 없이 끝났을 때 - 오류가 아니다"
+  },
+  "photoSyncPermissionDenied": "사진 접근을 허용하면 지도를 채울 수 있어요.",
+  "@photoSyncPermissionDenied": {
+    "description": "사진 권한 거부 안내 - 오류가 아니다"
+  },
+  "photoSyncFailed": "사진을 읽는 중 문제가 생겼어요.",
+  "@photoSyncFailed": {
+    "description": "사진 동기화 실패"
+  },
+  "nationalMapUnavailable": "지도를 불러오지 못했어요",
+  "@nationalMapUnavailable": {
+    "description": "전국 지도 - 칸 목록을 읽지 못했을 때"
+  },
+  "navCommunity": "커뮤니티",
+  "@navCommunity": {
+    "description": "하단 내비 - 커뮤니티 탭"
+  },
+  "likedSpotsEmpty": "아직 좋아요한 여행지가 없어요.",
+  "@likedSpotsEmpty": {
+    "description": "좋아요 목록이 비었을 때 문구"
+  },
+  "likedSpotsUnavailable": "좋아요 목록을 불러오지 못했어요",
+  "@likedSpotsUnavailable": {
+    "description": "좋아요 목록 조회 실패 문구"
+  },
   "loginTitle": "다시 오신 걸 환영해요",
-  "@loginTitle": { "description": "로그인 화면 제목" },
+  "@loginTitle": {
+    "description": "로그인 화면 제목"
+  },
   "loginSubtitle": "계속하려면 로그인하세요.",
-  "@loginSubtitle": { "description": "로그인 화면 부제" },
+  "@loginSubtitle": {
+    "description": "로그인 화면 부제"
+  },
   "emailLabel": "이메일",
-  "@emailLabel": { "description": "이메일 입력 라벨" },
+  "@emailLabel": {
+    "description": "이메일 입력 라벨"
+  },
   "passwordLabel": "비밀번호",
-  "@passwordLabel": { "description": "비밀번호 입력 라벨" },
+  "@passwordLabel": {
+    "description": "비밀번호 입력 라벨"
+  },
   "confirmPasswordLabel": "비밀번호 확인",
-  "@confirmPasswordLabel": { "description": "비밀번호 확인 입력 라벨" },
+  "@confirmPasswordLabel": {
+    "description": "비밀번호 확인 입력 라벨"
+  },
   "loginButton": "로그인",
-  "@loginButton": { "description": "로그인 버튼" },
+  "@loginButton": {
+    "description": "로그인 버튼"
+  },
   "signUpButton": "가입하기",
-  "@signUpButton": { "description": "회원가입 버튼" },
+  "@signUpButton": {
+    "description": "회원가입 버튼"
+  },
   "noAccountPrompt": "계정이 없으신가요?",
-  "@noAccountPrompt": { "description": "회원가입 링크 안내" },
+  "@noAccountPrompt": {
+    "description": "회원가입 링크 안내"
+  },
   "haveAccountPrompt": "이미 계정이 있으신가요?",
-  "@haveAccountPrompt": { "description": "로그인 링크 안내" },
+  "@haveAccountPrompt": {
+    "description": "로그인 링크 안내"
+  },
   "goToSignUp": "회원가입",
-  "@goToSignUp": { "description": "회원가입 화면으로 이동 링크" },
+  "@goToSignUp": {
+    "description": "회원가입 화면으로 이동 링크"
+  },
   "goToLogin": "로그인",
-  "@goToLogin": { "description": "로그인 화면으로 이동 링크" },
+  "@goToLogin": {
+    "description": "로그인 화면으로 이동 링크"
+  },
   "forgotPassword": "비밀번호를 잊으셨나요?",
-  "@forgotPassword": { "description": "비밀번호 재설정 링크" },
+  "@forgotPassword": {
+    "description": "비밀번호 재설정 링크"
+  },
   "showPassword": "비밀번호 표시",
-  "@showPassword": { "description": "비밀번호 표시 토글" },
+  "@showPassword": {
+    "description": "비밀번호 표시 토글"
+  },
   "hidePassword": "비밀번호 숨기기",
-  "@hidePassword": { "description": "비밀번호 숨기기 토글" },
-
+  "@hidePassword": {
+    "description": "비밀번호 숨기기 토글"
+  },
   "signUpTitle": "계정 만들기",
-  "@signUpTitle": { "description": "회원가입 화면 제목" },
+  "@signUpTitle": {
+    "description": "회원가입 화면 제목"
+  },
   "signUpSubtitle": "이메일과 비밀번호로 시작하세요.",
-  "@signUpSubtitle": { "description": "회원가입 화면 부제" },
-
+  "@signUpSubtitle": {
+    "description": "회원가입 화면 부제"
+  },
   "agreementSelectAll": "약관 전체 동의",
-  "@agreementSelectAll": { "description": "약관 마스터(전체 동의) 체크박스 라벨" },
+  "@agreementSelectAll": {
+    "description": "약관 마스터(전체 동의) 체크박스 라벨"
+  },
   "agreementAge": "만 14세 이상입니다.",
-  "@agreementAge": { "description": "연령 확인 항목 라벨" },
+  "@agreementAge": {
+    "description": "연령 확인 항목 라벨"
+  },
   "agreementService": "서비스 이용 약관",
-  "@agreementService": { "description": "서비스 이용 약관 항목 라벨" },
+  "@agreementService": {
+    "description": "서비스 이용 약관 항목 라벨"
+  },
   "agreementPrivacy": "개인정보 수집·이용",
-  "@agreementPrivacy": { "description": "개인정보 수집·이용 항목 라벨" },
+  "@agreementPrivacy": {
+    "description": "개인정보 수집·이용 항목 라벨"
+  },
   "agreementLocation": "위치정보 이용 약관",
-  "@agreementLocation": { "description": "위치정보 이용 약관 항목 라벨" },
+  "@agreementLocation": {
+    "description": "위치정보 이용 약관 항목 라벨"
+  },
   "agreementMarketing": "마케팅 목적 수집·이용 동의",
-  "@agreementMarketing": { "description": "마케팅 수신 동의 항목 라벨" },
+  "@agreementMarketing": {
+    "description": "마케팅 수신 동의 항목 라벨"
+  },
   "agreementRequiredBadge": "필수",
-  "@agreementRequiredBadge": { "description": "필수 약관 배지" },
+  "@agreementRequiredBadge": {
+    "description": "필수 약관 배지"
+  },
   "agreementOptionalBadge": "선택",
-  "@agreementOptionalBadge": { "description": "선택 약관 배지" },
+  "@agreementOptionalBadge": {
+    "description": "선택 약관 배지"
+  },
   "agreementViewDetail": "내용보기",
-  "@agreementViewDetail": { "description": "약관 전문 펼치기 버튼" },
+  "@agreementViewDetail": {
+    "description": "약관 전문 펼치기 버튼"
+  },
   "agreementDetailPlaceholder": "약관 전문은 추후 제공됩니다.",
-  "@agreementDetailPlaceholder": { "description": "약관 전문 자리표시자" },
-
+  "@agreementDetailPlaceholder": {
+    "description": "약관 전문 자리표시자"
+  },
   "passwordResetTitle": "비밀번호 재설정",
-  "@passwordResetTitle": { "description": "비밀번호 재설정 화면 제목" },
-  "passwordResetSubtitle": "가입한 이메일을 입력하면 인증 코드를 보내드립니다.",
-  "@passwordResetSubtitle": { "description": "비밀번호 재설정 화면 부제" },
+  "@passwordResetTitle": {
+    "description": "비밀번호 재설정 화면 제목"
+  },
+  "passwordResetSubtitle": "가입한 이메일을 입력하시면 6자리 인증 코드를 보내드립니다.",
+  "@passwordResetSubtitle": {
+    "description": "비밀번호 재설정 화면 부제"
+  },
   "passwordResetRequestButton": "인증 코드 받기",
-  "@passwordResetRequestButton": { "description": "비밀번호 재설정 코드 요청 버튼" },
-  "passwordResetCodeSent": "인증 코드를 보냈습니다. 이메일을 확인하세요.",
-  "@passwordResetCodeSent": { "description": "재설정 코드 발송 안내" },
+  "@passwordResetRequestButton": {
+    "description": "비밀번호 재설정 코드 요청 버튼"
+  },
+  "passwordResetCodeSent": "인증 코드를 보냈습니다. 메일함을 확인해 주세요.",
+  "@passwordResetCodeSent": {
+    "description": "재설정 코드 발송 안내"
+  },
   "passwordResetConfirmButton": "비밀번호 변경",
-  "@passwordResetConfirmButton": { "description": "새 비밀번호 확정 버튼" },
+  "@passwordResetConfirmButton": {
+    "description": "새 비밀번호 확정 버튼"
+  },
   "passwordResetDone": "비밀번호가 변경되었습니다. 로그인하세요.",
-  "@passwordResetDone": { "description": "비밀번호 재설정 완료 안내" },
+  "@passwordResetDone": {
+    "description": "비밀번호 재설정 완료 안내"
+  },
   "newPasswordLabel": "새 비밀번호",
-  "@newPasswordLabel": { "description": "새 비밀번호 입력 라벨" },
+  "@newPasswordLabel": {
+    "description": "새 비밀번호 입력 라벨"
+  },
   "verificationCodeLabel": "인증 코드",
-  "@verificationCodeLabel": { "description": "인증 코드 입력 라벨" },
-
+  "@verificationCodeLabel": {
+    "description": "인증 코드 입력 라벨"
+  },
   "emailVerificationTitle": "이메일 인증",
-  "@emailVerificationTitle": { "description": "이메일 인증 화면 제목" },
+  "@emailVerificationTitle": {
+    "description": "이메일 인증 화면 제목"
+  },
   "emailVerificationSubtitle": "이메일로 받은 인증 코드를 입력하세요.",
-  "@emailVerificationSubtitle": { "description": "이메일 인증 화면 부제" },
+  "@emailVerificationSubtitle": {
+    "description": "이메일 인증 화면 부제"
+  },
   "emailVerificationButton": "인증하기",
-  "@emailVerificationButton": { "description": "이메일 인증 버튼" },
+  "@emailVerificationButton": {
+    "description": "이메일 인증 버튼"
+  },
   "emailVerificationResend": "코드 재발송",
-  "@emailVerificationResend": { "description": "인증 코드 재발송 버튼" },
+  "@emailVerificationResend": {
+    "description": "인증 코드 재발송 버튼"
+  },
   "emailVerificationResent": "인증 코드를 다시 보냈습니다.",
-  "@emailVerificationResent": { "description": "재발송 성공 안내" },
+  "@emailVerificationResent": {
+    "description": "재발송 성공 안내"
+  },
   "validationCodeRequired": "인증 코드를 입력하세요.",
-  "@validationCodeRequired": { "description": "인증 코드 미입력 검증 메시지" },
-
+  "@validationCodeRequired": {
+    "description": "인증 코드 미입력 검증 메시지"
+  },
   "validationEmailRequired": "이메일을 입력하세요.",
-  "@validationEmailRequired": { "description": "이메일 미입력 검증 메시지" },
+  "@validationEmailRequired": {
+    "description": "이메일 미입력 검증 메시지"
+  },
   "validationEmailInvalid": "올바른 이메일 형식이 아닙니다.",
-  "@validationEmailInvalid": { "description": "이메일 형식 검증 메시지" },
+  "@validationEmailInvalid": {
+    "description": "이메일 형식 검증 메시지"
+  },
   "validationPasswordRequired": "비밀번호를 입력하세요.",
-  "@validationPasswordRequired": { "description": "비밀번호 미입력 검증 메시지" },
+  "@validationPasswordRequired": {
+    "description": "비밀번호 미입력 검증 메시지"
+  },
   "validationPasswordPolicy": "영문·숫자·특수문자를 포함해 8자 이상이어야 합니다.",
-  "@validationPasswordPolicy": { "description": "비밀번호 정책 검증 메시지" },
+  "@validationPasswordPolicy": {
+    "description": "비밀번호 정책 검증 메시지"
+  },
   "validationPasswordMismatch": "비밀번호가 일치하지 않습니다.",
-  "@validationPasswordMismatch": { "description": "비밀번호 확인 불일치 메시지" },
-
+  "@validationPasswordMismatch": {
+    "description": "비밀번호 확인 불일치 메시지"
+  },
   "errorInvalidCredentials": "이메일 또는 비밀번호가 올바르지 않습니다.",
-  "@errorInvalidCredentials": { "description": "자격증명 오류 문구" },
+  "@errorInvalidCredentials": {
+    "description": "자격증명 오류 문구"
+  },
   "errorEmailAlreadyInUse": "이미 사용 중인 이메일입니다.",
-  "@errorEmailAlreadyInUse": { "description": "이메일 중복 오류 문구" },
+  "@errorEmailAlreadyInUse": {
+    "description": "이메일 중복 오류 문구"
+  },
   "errorNetwork": "네트워크 오류가 발생했습니다. 다시 시도하세요.",
-  "@errorNetwork": { "description": "네트워크 오류 문구" },
+  "@errorNetwork": {
+    "description": "네트워크 오류 문구"
+  },
   "errorUnknown": "문제가 발생했습니다. 다시 시도하세요.",
-  "@errorUnknown": { "description": "알 수 없는 오류 문구" },
-
+  "@errorUnknown": {
+    "description": "알 수 없는 오류 문구"
+  },
   "signUpSuccessLoginPrompt": "가입이 완료되었습니다. 로그인하세요.",
-  "@signUpSuccessLoginPrompt": { "description": "가입 성공 후 로그인 유도 문구" },
-
+  "@signUpSuccessLoginPrompt": {
+    "description": "가입 성공 후 로그인 유도 문구"
+  },
   "orDivider": "또는",
-  "@orDivider": { "description": "이메일 로그인과 SNS 로그인 구분선 문구" },
+  "@orDivider": {
+    "description": "이메일 로그인과 SNS 로그인 구분선 문구"
+  },
   "continueWithGoogle": "Google로 계속하기",
-  "@continueWithGoogle": { "description": "Google 로그인 버튼" },
+  "@continueWithGoogle": {
+    "description": "Google 로그인 버튼"
+  },
   "continueWithApple": "Apple로 계속하기",
-  "@continueWithApple": { "description": "Apple 로그인 버튼" },
+  "@continueWithApple": {
+    "description": "Apple 로그인 버튼"
+  },
   "continueWithKakao": "카카오로 계속하기",
-  "@continueWithKakao": { "description": "카카오 로그인 버튼" },
+  "@continueWithKakao": {
+    "description": "카카오 로그인 버튼"
+  },
   "snsSignUpTitle": "SNS 회원가입",
-  "@snsSignUpTitle": { "description": "SNS 회원가입 화면 제목" },
+  "@snsSignUpTitle": {
+    "description": "SNS 회원가입 화면 제목"
+  },
   "snsSignUpSubtitle": "SNS 계정으로 인증되었습니다. 가입을 완료하려면 이메일과 약관 동의가 필요합니다.",
-  "@snsSignUpSubtitle": { "description": "SNS 회원가입 화면 안내" },
+  "@snsSignUpSubtitle": {
+    "description": "SNS 회원가입 화면 안내"
+  },
   "snsEmailPrefillHint": "이메일을 입력해 주세요.",
-  "@snsEmailPrefillHint": { "description": "provider가 이메일을 주지 않은 경우 입력 안내" },
+  "@snsEmailPrefillHint": {
+    "description": "provider가 이메일을 주지 않은 경우 입력 안내"
+  },
   "snsSignUpButton": "가입 완료",
-  "@snsSignUpButton": { "description": "SNS 회원가입 제출 버튼" },
+  "@snsSignUpButton": {
+    "description": "SNS 회원가입 제출 버튼"
+  },
   "snsCancelled": "로그인이 취소되었습니다.",
-  "@snsCancelled": { "description": "SNS 인증 취소 문구" },
+  "@snsCancelled": {
+    "description": "SNS 인증 취소 문구"
+  },
   "errorSnsMemberNotFound": "가입되지 않은 계정입니다. 회원가입을 진행해 주세요.",
-  "@errorSnsMemberNotFound": { "description": "SNS 로그인 시 미가입 계정 문구(폴백)" },
-
+  "@errorSnsMemberNotFound": {
+    "description": "SNS 로그인 시 미가입 계정 문구(폴백)"
+  },
+  "errorSnsVerificationExpired": "인증이 만료되었습니다. 다시 로그인해 주세요.",
+  "@errorSnsVerificationExpired": {
+    "description": "SNS 가입 중 provider 토큰이 만료돼 서버 검증에 실패했을 때"
+  },
   "logoutTooltip": "로그아웃",
-  "@logoutTooltip": { "description": "홈 상단 로그아웃 버튼 툴팁" },
-
+  "@logoutTooltip": {
+    "description": "홈 상단 로그아웃 버튼 툴팁"
+  },
   "permissionLocationRationaleTitle": "주변 스팟 찾기",
-  "@permissionLocationRationaleTitle": { "description": "위치 권한 사전 설명 시트 제목" },
+  "@permissionLocationRationaleTitle": {
+    "description": "위치 권한 사전 설명 시트 제목"
+  },
   "permissionLocationRationaleBody": "K-Trip Spot은 앱 사용 중에만 위치를 사용해 주변 명소와 실시간 혼잡도를 보여드립니다. 백그라운드에서는 위치를 추적하지 않습니다.",
-  "@permissionLocationRationaleBody": { "description": "위치 권한 사전 설명 시트 본문" },
+  "@permissionLocationRationaleBody": {
+    "description": "위치 권한 사전 설명 시트 본문"
+  },
   "permissionNotificationRationaleTitle": "새 소식 받기",
-  "@permissionNotificationRationaleTitle": { "description": "알림 권한 사전 설명 시트 제목" },
+  "@permissionNotificationRationaleTitle": {
+    "description": "알림 권한 사전 설명 시트 제목"
+  },
   "permissionNotificationRationaleBody": "알림을 켜면 관심 스팟의 실시간 혼잡 알림과 소식을 받을 수 있어요. 언제든지 변경할 수 있습니다.",
-  "@permissionNotificationRationaleBody": { "description": "알림 권한 사전 설명 시트 본문" },
+  "@permissionNotificationRationaleBody": {
+    "description": "알림 권한 사전 설명 시트 본문"
+  },
   "permissionContinue": "계속",
-  "@permissionContinue": { "description": "권한 사전 설명 시트 진행 버튼" },
+  "@permissionContinue": {
+    "description": "권한 사전 설명 시트 진행 버튼"
+  },
   "permissionNotNow": "나중에",
-  "@permissionNotNow": { "description": "권한 사전 설명 시트 닫기 버튼" },
+  "@permissionNotNow": {
+    "description": "권한 사전 설명 시트 닫기 버튼"
+  },
   "permissionLocationBlockedMessage": "위치가 꺼져 있어요. 주변 스팟을 보려면 설정에서 켜 주세요.",
-  "@permissionLocationBlockedMessage": { "description": "위치 영구거부 안내 메시지" },
+  "@permissionLocationBlockedMessage": {
+    "description": "위치 영구거부 안내 메시지"
+  },
   "permissionNotificationBlockedMessage": "알림이 꺼져 있어요. 소식을 받으려면 설정에서 켜 주세요.",
-  "@permissionNotificationBlockedMessage": { "description": "알림 영구거부 안내 메시지" },
+  "@permissionNotificationBlockedMessage": {
+    "description": "알림 영구거부 안내 메시지"
+  },
   "permissionOpenSettings": "설정 열기",
-  "@permissionOpenSettings": { "description": "권한 영구거부 안내의 설정 이동 버튼" },
-
+  "@permissionOpenSettings": {
+    "description": "권한 영구거부 안내의 설정 이동 버튼"
+  },
   "splashLocationRequired": "계속하려면 위치 접근 권한이 필요해요.",
-  "@splashLocationRequired": { "description": "스플래시에서 위치 권한 대기 중 안내" },
+  "@splashLocationRequired": {
+    "description": "스플래시에서 위치 권한 대기 중 안내"
+  },
   "splashLocationBlockedHint": "위치가 꺼져 있어요. 계속하려면 설정에서 켜 주세요.",
-  "@splashLocationBlockedHint": { "description": "스플래시에서 위치 영구거부 시 설정 이동 안내" },
-
+  "@splashLocationBlockedHint": {
+    "description": "스플래시에서 위치 영구거부 시 설정 이동 안내"
+  },
   "discoverLikeLabel": "좋아요",
-  "@discoverLikeLabel": { "description": "스와이프 오른쪽 드래그 피드백 라벨 (LIKE)" },
+  "@discoverLikeLabel": {
+    "description": "스와이프 오른쪽 드래그 피드백 라벨 (LIKE)"
+  },
   "discoverNopeLabel": "패스",
-  "@discoverNopeLabel": { "description": "스와이프 왼쪽 드래그 피드백 라벨 (NOPE)" },
-
-  "discoverCategoryTouristSpot": "관광지",
-  "@discoverCategoryTouristSpot": { "description": "스팟 카테고리 - 관광지" },
-  "discoverCategoryCulturalFacility": "문화시설",
-  "@discoverCategoryCulturalFacility": { "description": "스팟 카테고리 - 문화시설" },
-  "discoverCategoryFestivalEvent": "축제·행사",
-  "@discoverCategoryFestivalEvent": { "description": "스팟 카테고리 - 축제·행사" },
-  "discoverCategoryTravelCourse": "여행코스",
-  "@discoverCategoryTravelCourse": { "description": "스팟 카테고리 - 여행코스" },
-  "discoverCategoryLeisureSports": "레포츠",
-  "@discoverCategoryLeisureSports": { "description": "스팟 카테고리 - 레포츠" },
-  "discoverCategoryLodging": "숙박",
-  "@discoverCategoryLodging": { "description": "스팟 카테고리 - 숙박" },
-  "discoverCategoryShopping": "쇼핑",
-  "@discoverCategoryShopping": { "description": "스팟 카테고리 - 쇼핑" },
-  "discoverCategoryRestaurant": "음식점",
-  "@discoverCategoryRestaurant": { "description": "스팟 카테고리 - 음식점" },
-  "discoverCategoryTransport": "교통",
-  "@discoverCategoryTransport": { "description": "스팟 카테고리 - 교통" },
-
+  "@discoverNopeLabel": {
+    "description": "스와이프 왼쪽 드래그 피드백 라벨 (NOPE)"
+  },
   "distanceKilometers": "{distance}km",
   "@distanceKilometers": {
     "description": "스와이프 카드 거리 표시 (km 단위)",
-    "placeholders": { "distance": { "type": "String" } }
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
   },
   "distanceMeters": "{distance}m",
   "@distanceMeters": {
     "description": "스와이프 카드 거리 표시 (m 단위, 1km 미만)",
-    "placeholders": { "distance": { "type": "String" } }
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
   },
-
   "discoverEmptyTitle": "이 근처는 다 둘러봤어요",
-  "@discoverEmptyTitle": { "description": "스와이프 결과 소진/0건 빈 상태 제목" },
+  "@discoverEmptyTitle": {
+    "description": "스와이프 결과 소진/0건 빈 상태 제목"
+  },
   "discoverEmptyBody": "반경을 넓히거나 카테고리를 바꿔 더 많은 여행지를 찾아보세요.",
-  "@discoverEmptyBody": { "description": "스와이프 빈 상태 본문" },
+  "@discoverEmptyBody": {
+    "description": "스와이프 빈 상태 본문"
+  },
   "discoverWidenRadius": "반경 넓히기",
-  "@discoverWidenRadius": { "description": "빈 상태 - 반경 확대 CTA" },
+  "@discoverWidenRadius": {
+    "description": "빈 상태 - 반경 확대 CTA"
+  },
   "discoverChangeCategory": "카테고리 변경",
-  "@discoverChangeCategory": { "description": "빈 상태 - 카테고리 변경 CTA" },
-
+  "@discoverChangeCategory": {
+    "description": "빈 상태 - 카테고리 변경 CTA"
+  },
   "discoverRetryBanner": "여행지를 불러오지 못했어요. 잠시 후 다시 시도합니다.",
-  "@discoverRetryBanner": { "description": "UPSTREAM_UNAVAILABLE 재시도 배너 문구" },
+  "@discoverRetryBanner": {
+    "description": "UPSTREAM_UNAVAILABLE 재시도 배너 문구"
+  },
   "discoverRetryButton": "다시 시도",
-  "@discoverRetryButton": { "description": "재시도 버튼" },
+  "@discoverRetryButton": {
+    "description": "재시도 버튼"
+  },
   "discoverLoadError": "여행지를 불러오는 중 문제가 발생했어요.",
-  "@discoverLoadError": { "description": "네트워크/조회 오류 문구" },
+  "@discoverLoadError": {
+    "description": "네트워크/조회 오류 문구"
+  },
   "discoverLoading": "주변 여행지를 찾는 중…",
-  "@discoverLoading": { "description": "초기 로딩 안내" },
-
+  "@discoverLoading": {
+    "description": "초기 로딩 안내"
+  },
+  "retryExhaustedTitle": "계속 연결되지 않아요",
+  "@retryExhaustedTitle": {
+    "description": "자동 재시도 상한 소진 상태 제목(SPEC-0006 AC-5)"
+  },
+  "retryExhaustedBody": "몇 번 시도했지만 연결하지 못했어요. 연결 상태를 확인한 뒤 다시 시도해 주세요.",
+  "@retryExhaustedBody": {
+    "description": "자동 재시도가 더 일어나지 않음을 알리는 본문"
+  },
+  "retryExhaustedAction": "다시 시도",
+  "@retryExhaustedAction": {
+    "description": "종료 상태의 명시적 재시도 버튼"
+  },
   "spotDetailOverviewTitle": "소개",
   "spotDetailContactTitle": "연락처",
   "spotDetailHomepageLabel": "웹사이트",
@@ -317,13 +832,20 @@
   "spotDetailLikeCount": "{count, plural, =0{아직 좋아요 없음} other{좋아요 {count}개}}",
   "@spotDetailLikeCount": {
     "description": "상세 좋아요 개수 배지",
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "spotDetailLikeAction": "좋아요",
   "spotDetailDislikeAction": "싫어요",
   "spotDetailLoading": "여행지를 불러오는 중…",
   "spotDetailNotFoundTitle": "여행지를 찾을 수 없어요",
-  "spotDetailNotFoundBody": "이 여행지를 찾지 못했어요. 삭제되었거나 현재 언어에서 제공되지 않을 수 있어요.",
+  "spotDetailNotFoundBody": "이 여행지를 찾지 못했어요. 삭제되었을 수 있어요.",
+  "spotDetailNotInLocaleTitle": "현재 언어에서는 볼 수 없어요",
+  "spotDetailNotInLocaleBody": "이 여행지는 있지만 지금 쓰는 언어로는 제공되지 않아요. 설정에서 언어를 바꾸면 볼 수 있어요.",
+  "spotDetailNotInLocaleAction": "홈으로 돌아가기",
   "spotDetailRateLimitedTitle": "요청이 많아요",
   "spotDetailRateLimitedBody": "지금 조금 붐벼요. 잠시 후 다시 시도해 주세요.",
   "spotDetailUnavailableTitle": "여행지를 불러오지 못했어요",
@@ -331,7 +853,6 @@
   "spotDetailRetryButton": "다시 시도",
   "spotDetailReactionFailed": "반응을 저장하지 못했어요. 다시 시도해 주세요.",
   "spotDetailLinkFailed": "링크를 열지 못했어요.",
-
   "spotDetailIntroTitle": "이용 안내",
   "spotDetailIntroBusinessHours": "이용 시간",
   "spotDetailIntroClosedDays": "휴무일",
@@ -340,5 +861,1429 @@
   "spotDetailIntroPetAllowed": "반려동물",
   "spotDetailIntroCreditCard": "신용카드",
   "spotDetailIntroInquiryPhone": "문의",
-  "spotDetailInfoTitle": "안내 사항"
+  "spotDetailInfoTitle": "안내 사항",
+  "communityTitle": "스팟 톡",
+  "@communityTitle": {
+    "description": "커뮤니티 탭 앱바 제목 (Spot Talk)"
+  },
+  "communityNearbyTitle": "내 주변",
+  "@communityNearbyTitle": {
+    "description": "지역 피드 섹션 헤더"
+  },
+  "communityFeedEmpty": "주변에 아직 글이 없어요.",
+  "@communityFeedEmpty": {
+    "description": "지역 피드에 글이 하나도 없을 때"
+  },
+  "communityFeedUnavailable": "주변 글을 불러오지 못했어요",
+  "@communityFeedUnavailable": {
+    "description": "지역 피드 조회 실패 제목"
+  },
+  "communityFeedUnavailableBody": "연결 상태를 확인한 뒤 다시 시도해 주세요.",
+  "@communityFeedUnavailableBody": {
+    "description": "지역 피드 조회 실패 안내 본문"
+  },
+  "communityLocationUnavailable": "위치를 사용할 수 없어 주변 글을 보여줄 수 없어요.",
+  "@communityLocationUnavailable": {
+    "description": "위치 권한 없음·좌표 실패 — 빈 피드와 구분되는 사유 표시"
+  },
+  "communityRetry": "다시 시도",
+  "@communityRetry": {
+    "description": "커뮤니티 오류 상태의 재시도 버튼"
+  },
+  "communityHiddenBadge": "신고가 누적되어 숨겨졌어요",
+  "@communityHiddenBadge": {
+    "description": "신고 누적으로 자동 숨김된 글·댓글 배지 (작성자에게만 보임)"
+  },
+  "communityTimeJustNow": "방금",
+  "@communityTimeJustNow": {
+    "description": "상대 시각 — 방금"
+  },
+  "communityTimeMinutes": "{count}분 전",
+  "@communityTimeMinutes": {
+    "description": "상대 시각 — n분 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeHours": "{count}시간 전",
+  "@communityTimeHours": {
+    "description": "상대 시각 — n시간 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeDays": "{count}일 전",
+  "@communityTimeDays": {
+    "description": "상대 시각 — n일 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityPostDetailTitle": "게시글",
+  "@communityPostDetailTitle": {
+    "description": "글 상세 앱바 제목"
+  },
+  "communityCommentsHeader": "댓글 · {count}",
+  "@communityCommentsHeader": {
+    "description": "상세의 댓글 섹션 헤더 (서버 commentCount 그대로)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityCommentsEmpty": "아직 댓글이 없어요.",
+  "@communityCommentsEmpty": {
+    "description": "댓글이 하나도 없을 때"
+  },
+  "communityPostUnavailable": "삭제되었거나 볼 수 없는 글이에요.",
+  "@communityPostUnavailable": {
+    "description": "차단·숨김이라 볼 수 없는 글 (post(id:)가 null)"
+  },
+  "communityPostUnavailableTitle": "볼 수 없는 글",
+  "@communityPostUnavailableTitle": {
+    "description": "볼 수 없는 글 화면의 제목"
+  },
+  "communityComposeAction": "글쓰기",
+  "@communityComposeAction": {
+    "description": "글 작성 FAB의 접근성 라벨"
+  },
+  "communityPostOptions": "게시글 옵션",
+  "@communityPostOptions": {
+    "description": "카드 우상단 오버플로 버튼의 접근성 라벨"
+  },
+  "communityViewCountLabel": "{count, plural, other{조회 {count}회}}",
+  "communityBlockAction": "이 사용자 차단하기",
+  "@communityBlockAction": {
+    "description": "모더레이션 시트의 차단 항목"
+  },
+  "communityReportAction": "신고하기",
+  "@communityReportAction": {
+    "description": "모더레이션 시트의 신고 항목"
+  },
+  "communityDeleteAction": "글 삭제하기",
+  "@communityDeleteAction": {
+    "description": "모더레이션 시트의 삭제 항목 (내 글일 때만)"
+  },
+  "communityCancel": "취소",
+  "@communityCancel": {
+    "description": "시트·다이얼로그의 취소"
+  },
+  "communityBlockConfirmTitle": "{nickname} 님을 차단할까요?",
+  "@communityBlockConfirmTitle": {
+    "description": "차단 확인 다이얼로그 제목",
+    "placeholders": {
+      "nickname": {
+        "type": "String"
+      }
+    }
+  },
+  "communityBlockConfirmBody": "차단은 양방향이에요. 상대의 글과 댓글이 보이지 않고, 상대에게도 내 글이 보이지 않아요. 나중에 해제할 수 있어요.",
+  "@communityBlockConfirmBody": {
+    "description": "차단이 양방향임을 명시하는 확인 문구 (가이드 §6)"
+  },
+  "communityBlockConfirmAction": "차단",
+  "@communityBlockConfirmAction": {
+    "description": "차단 확인 다이얼로그의 실행 버튼"
+  },
+  "communityBlockDone": "차단했어요. 이 사용자의 글이 피드에서 사라져요.",
+  "@communityBlockDone": {
+    "description": "차단 성공 안내"
+  },
+  "communityDeleteConfirmTitle": "이 글을 삭제할까요?",
+  "@communityDeleteConfirmTitle": {
+    "description": "글 삭제 확인 다이얼로그 제목"
+  },
+  "communityDeleteConfirmBody": "되돌릴 수 없어요. 글 수정 기능이 없어서 다시 쓰셔야 해요.",
+  "@communityDeleteConfirmBody": {
+    "description": "삭제 확인 문구 (글 수정이 없으므로 재작성해야 한다)"
+  },
+  "communityDeleteDone": "글을 삭제했어요.",
+  "@communityDeleteDone": {
+    "description": "삭제 성공 안내"
+  },
+  "communityReportTitle": "신고",
+  "@communityReportTitle": {
+    "description": "신고 시트 제목"
+  },
+  "communityReportReasonSpam": "스팸 또는 광고",
+  "@communityReportReasonSpam": {
+    "description": "신고 사유 SPAM"
+  },
+  "communityReportReasonAbuse": "괴롭힘 또는 폭언",
+  "@communityReportReasonAbuse": {
+    "description": "신고 사유 ABUSE"
+  },
+  "communityReportReasonInappropriate": "부적절한 내용",
+  "@communityReportReasonInappropriate": {
+    "description": "신고 사유 INAPPROPRIATE_CONTENT"
+  },
+  "communityReportReasonOther": "기타",
+  "@communityReportReasonOther": {
+    "description": "신고 사유 OTHER — 상세 입력이 필수가 된다"
+  },
+  "communityReportDetailLabel": "자세한 내용",
+  "@communityReportDetailLabel": {
+    "description": "OTHER 선택 시에만 보이는 상세 입력 라벨"
+  },
+  "communityReportDetailRequired": "기타를 선택하면 자세한 내용을 적어 주세요.",
+  "@communityReportDetailRequired": {
+    "description": "OTHER인데 상세가 비었을 때 (REPORT_DETAIL_REQUIRED를 미리 막는다)"
+  },
+  "communityReportSubmit": "제출",
+  "@communityReportSubmit": {
+    "description": "신고 제출 버튼"
+  },
+  "communityReportDone": "신고가 접수되었어요.",
+  "@communityReportDone": {
+    "description": "신고 접수 안내 — 처리 결과나 시점을 약속하지 않는다 (가이드 §9)"
+  },
+  "communityReportAlready": "이미 신고한 대상이에요.",
+  "@communityReportAlready": {
+    "description": "ALREADY_REPORTED — 오류가 아니라 안내다"
+  },
+  "communityActionFailed": "문제가 생겼어요. 다시 시도해 주세요.",
+  "@communityActionFailed": {
+    "description": "모더레이션·등록의 일반 실패 안내"
+  },
+  "communitySignInRequired": "계속하려면 로그인해 주세요.",
+  "@communitySignInRequired": {
+    "description": "미인증 사용자가 쓰기 동작을 눌렀을 때 (버튼을 숨기지 않는다)"
+  },
+  "communityComposeTitle": "새 글",
+  "@communityComposeTitle": {
+    "description": "컴포저 앱바 제목"
+  },
+  "communityComposeSubmit": "등록",
+  "@communityComposeSubmit": {
+    "description": "컴포저 앱바의 등록 액션"
+  },
+  "communityComposeBodyHint": "이곳에 대한 이야기를 들려주세요.",
+  "@communityComposeBodyHint": {
+    "description": "본문 입력 힌트"
+  },
+  "communityComposeSpotLabel": "장소",
+  "@communityComposeSpotLabel": {
+    "description": "컴포저의 대상(관광지) 라벨"
+  },
+  "communityComposeTooLong": "{count}자를 초과했어요.",
+  "@communityComposeTooLong": {
+    "description": "500자 초과분 — 입력을 자르지 않고 드러낸다",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityComposeDone": "글을 등록했어요.",
+  "@communityComposeDone": {
+    "description": "글 등록 성공 안내"
+  },
+  "communityComposeErrorSpotNotFound": "그 장소를 찾을 수 없어요.",
+  "communityComposeErrorSpotNotInLocale": "그 장소는 지금 쓰는 언어에서는 쓸 수 없어요.",
+  "@communityComposeErrorSpotNotInLocale": {
+    "description": "Shown when the selected spot is not available in the active language (SPEC-0029)."
+  },
+  "@communityComposeErrorSpotNotFound": {
+    "description": "SPOT_NOT_FOUND"
+  },
+  "communityComposeErrorTooManyPhotos": "사진은 최대 5장까지 첨부할 수 있어요.",
+  "@communityComposeErrorTooManyPhotos": {
+    "description": "TOO_MANY_PHOTOS"
+  },
+  "communityCategoryAll": "전체",
+  "communityCategoryTouristSpot": "관광지",
+  "communityCategoryCulturalFacility": "문화시설",
+  "communityCategoryFestivalEvent": "축제·행사",
+  "communityCategoryTravelCourse": "여행코스",
+  "communityCategoryLeisureSports": "레포츠",
+  "communityCategoryLodging": "숙박",
+  "communityCategoryShopping": "쇼핑",
+  "communityCategoryRestaurant": "맛집",
+  "communityCategoryTransport": "교통",
+  "communityEditedBadge": "수정됨",
+  "communityEditAction": "글 수정하기",
+  "communityEditDisabledHidden": "숨겨진 글은 수정할 수 없습니다.",
+  "communityEditTitle": "글 수정",
+  "communityEditDone": "글을 수정했습니다.",
+  "communityComposeCategoryLabel": "카테고리 선택",
+  "communityComposeTitleLabel": "제목",
+  "communityComposeTitleHint": "한 줄 제목",
+  "communityComposeBodyLabel": "내용",
+  "communityComposeTagsLabel": "태그 (선택)",
+  "communityComposeTagHint": "태그 입력 (공백 없이)",
+  "communityComposeTagInvalid": "태그에는 공백을 넣을 수 없습니다.",
+  "communityComposeTagLimit": "태그는 5개까지 넣을 수 있습니다.",
+  "communityComposeSpotOptional": "장소 추가 (선택)",
+  "communityComposeSpotClear": "장소 빼기",
+  "communityComposePhotosLabel": "사진 (선택)",
+  "communityComposePhotoAdd": "사진 추가",
+  "communityComposePhotoTooLarge": "{count, plural, other{사진 {count}장이 너무 큽니다(최대 10MB).}}",
+  "communityComposeDonePhotosFailed": "글은 등록했지만 사진 {count}장을 올리지 못했습니다.",
+  "@communityComposeDonePhotosFailed": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "communityEditDonePhotosFailed": "글은 수정했지만 사진 {count}장을 올리지 못했습니다.",
+  "@communityEditDonePhotosFailed": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "communityComposeErrorTitleRequired": "제목을 입력해 주세요.",
+  "communityComposeErrorTitleLength": "제목이 너무 깁니다. 50자 이내로 줄여 주세요.",
+  "communityComposeErrorBodyRequired": "내용을 입력해 주세요.",
+  "communityComposeErrorBodyLength": "내용이 너무 깁니다. 500자 이내로 줄여 주세요.",
+  "communityComposeErrorInvalidTag": "사용할 수 없는 태그가 있습니다.",
+  "communityComposeErrorTooManyTags": "태그는 5개까지 넣을 수 있습니다.",
+  "communityComposeErrorPhotoNotUploaded": "사진 업로드에 실패했습니다. 다시 첨부해 주세요.",
+  "communityComposeErrorNotEditable": "숨겨진 글은 수정할 수 없습니다.",
+  "communityTitleCounter": "{count} / 50",
+  "@communityTitleCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityBodyCounter": "{count} / 500",
+  "@communityBodyCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityCommentComposerHint": "댓글을 입력하세요",
+  "communityCommentSend": "등록",
+  "communityCommentDone": "댓글을 등록했습니다.",
+  "communityCommentDeleteAction": "댓글 삭제하기",
+  "communityCommentDeleteDone": "댓글을 삭제했습니다.",
+  "communityCommentReportAction": "댓글 신고하기",
+  "communityCommentsUnavailable": "댓글을 불러오지 못했습니다.",
+  "communityCommentsLoadMore": "댓글 더 보기",
+  "communityBlockedUsersTitle": "차단한 사용자",
+  "communityBlockedUsersEmpty": "차단한 사용자가 없습니다.",
+  "communityBlockedUsersNote": "내가 건 차단만 표시됩니다. 상대가 나를 차단한 경우에는 내가 풀 수 없습니다.",
+  "communityUnblockAction": "차단 해제",
+  "communityUnblockDone": "차단을 해제했습니다.",
+  "communityBlockedUsersAction": "차단한 사용자",
+  "communityHidePostAction": "이 글 숨기기",
+  "communityHidePostDone": "글을 숨겼습니다. 나에게만 보이지 않습니다.",
+  "communityHiddenPostsAction": "숨긴 글",
+  "communityHiddenPostsTitle": "숨긴 글",
+  "communityHiddenPostsEmpty": "숨긴 글이 없습니다.",
+  "communityHiddenPostsNote": "내 피드에서만 숨겨집니다. 다른 사람에게는 그대로 보입니다.",
+  "communityUnhideAction": "숨김 해제",
+  "communityUnhideDone": "다시 피드에 표시됩니다.",
+  "communitySortLatest": "최신순",
+  "communitySortDistance": "거리순",
+  "communityReplyAction": "답글 달기",
+  "communityReplyComposerHint": "{nickname}님에게 답글",
+  "@communityReplyComposerHint": {
+    "placeholders": {
+      "nickname": {
+        "type": "String"
+      }
+    }
+  },
+  "communityReplyCancel": "답글 취소",
+  "communityPhotoViewerTitle": "{total}장 중 {current}장",
+  "@communityPhotoViewerTitle": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeMonths": "{count}개월 전",
+  "@communityTimeMonths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeYears": "{count}년 전",
+  "@communityTimeYears": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communitySpotPostsTitle": "이 장소의 글",
+  "communitySpotPickerTitle": "주변 장소",
+  "communitySpotPickerSourceNearby": "주변",
+  "communitySpotPickerSourceLiked": "좋아요한 장소",
+  "communitySpotPickerSearchHint": "장소 검색",
+  "@communitySpotPickerSearchHint": {
+    "description": "장소 선택 시트 검색창 힌트"
+  },
+  "communitySpotPickerLikedEmpty": "아직 좋아요한 장소가 없어요.",
+  "communitySpotPickerLikedFailed": "좋아요한 장소를 불러오지 못했어요.",
+  "communitySpotPickerLikedNoMatch": "그 이름과 맞는 좋아요한 장소가 없어요.",
+  "communitySpotPickerEmpty": "주변에 장소가 없어요.",
+  "communitySpotPickerNoMatch": "그 이름과 맞는 주변 장소가 없어요.",
+  "communitySpotPickerLocationUnavailable": "위치를 사용할 수 없어 주변 장소를 불러올 수 없어요. 장소 없이도 글을 올릴 수 있어요.",
+  "communitySpotPickerFailed": "주변 장소를 불러오지 못했어요.",
+  "communitySpotDistanceMeters": "{meters}m",
+  "@communitySpotDistanceMeters": {
+    "placeholders": {
+      "meters": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "communitySpotDistanceKilometers": "{km}km",
+  "@communitySpotDistanceKilometers": {
+    "placeholders": {
+      "km": {
+        "type": "num",
+        "format": "decimalPattern",
+        "optionalParameters": {
+          "decimalDigits": 1
+        }
+      }
+    }
+  },
+  "communityComposeCategoryUnset": "카테고리",
+  "communityComposeTagsAction": "태그",
+  "communityComposeSpotAction": "장소",
+  "communityComposePhotosAction": "사진",
+  "communityComposeTagsSheetTitle": "태그",
+  "communityComposeSheetDone": "완료",
+  "communityDraftResumeTitle": "작성하던 글을 이어서 쓸까요?",
+  "communityDraftResumeBody": "이 기기에 저장된 작성 중인 글이 있어요.",
+  "communityDraftResumeAction": "이어쓰기",
+  "communityDraftDiscardAction": "새로 쓰기",
+  "settingsTitle": "설정",
+  "settingsTooltip": "설정",
+  "settingsSectionActivity": "활동",
+  "settingsSectionAccount": "계정",
+  "settingsSectionPreferences": "환경설정",
+  "settingsSectionLegal": "약관",
+  "settingsMyPosts": "내가 쓴 글",
+  "settingsEditProfile": "프로필 수정",
+  "settingsChangeEmail": "이메일 변경",
+  "settingsBlockedUsers": "차단한 사용자",
+  "settingsSearchRadius": "검색 반경",
+  "settingsLanguage": "언어",
+  "settingsTerms": "약관 동의 관리",
+  "settingsLogOut": "로그아웃",
+  "settingsDeleteAccount": "회원 탈퇴",
+  "preferencesTitle": "환경설정",
+  "preferencesRadiusSection": "검색 반경",
+  "preferencesLanguageSection": "언어",
+  "preferencesRadiusValue": "{km}km",
+  "preferencesRadiusHint": "0km로 두면 현재 위치만 검색합니다.",
+  "myPostsTitle": "내가 쓴 글",
+  "myPostsEmpty": "아직 작성한 글이 없습니다",
+  "myPostsWriteFirst": "첫 글 쓰기",
+  "termsTitle": "약관 동의 관리",
+  "termsIntro": "필수 약관은 서비스 이용 중에는 철회할 수 없습니다.",
+  "termsSectionRequired": "필수",
+  "termsSectionOptional": "선택",
+  "termsAgreedOn": "{date} 동의함",
+  "termsAgreedRequired": "동의함",
+  "termsService": "서비스 이용약관",
+  "termsPrivacy": "개인정보 처리방침",
+  "termsLocation": "위치정보 이용",
+  "termsMarketing": "마케팅 알림",
+  "termsServiceDescription": "서비스 이용에 관한 기본 약속입니다.",
+  "termsPrivacyDescription": "개인정보를 어떻게 다루는지 설명합니다.",
+  "termsLocationDescription": "주변 장소를 추천하는 데 사용됩니다.",
+  "termsMarketingDescription": "이벤트와 프로모션 소식을 받습니다.",
+  "termsLoadFailed": "약관 정보를 불러오지 못했습니다.",
+  "termsUpdateFailed": "변경하지 못했습니다. 다시 시도해 주세요.",
+  "termsRetry": "다시 시도",
+  "requiredTermsTitle": "약관 동의",
+  "requiredTermsIntro": "서비스를 이용하려면 아래 필수 약관에 동의해야 합니다.",
+  "requiredTermsAgree": "동의하고 계속하기",
+  "requiredTermsFailed": "동의 처리에 실패했습니다. 다시 시도해 주세요.",
+  "deleteAccountTitle": "회원 탈퇴",
+  "deleteAccountHeadline": "되돌릴 수 없습니다",
+  "deleteAccountIntro": "탈퇴하면 다음이 영구히 삭제됩니다:",
+  "deleteAccountItemPosts": "작성한 글과 댓글",
+  "deleteAccountItemLikes": "찜한 장소",
+  "deleteAccountItemProfile": "프로필과 설정",
+  "deleteAccountCaution": "삭제된 데이터는 복구할 수 없습니다.",
+  "deleteAccountCancel": "취소",
+  "deleteAccountConfirm": "탈퇴하기",
+  "deleteAccountFailed": "탈퇴하지 못했습니다. 다시 시도해 주세요.",
+  "@spotDetailOverviewTitle": {},
+  "@spotDetailContactTitle": {},
+  "@spotDetailHomepageLabel": {},
+  "@spotDetailTelLabel": {},
+  "@spotDetailLikeAction": {},
+  "@spotDetailDislikeAction": {},
+  "@spotDetailLoading": {},
+  "@spotDetailNotFoundTitle": {},
+  "@spotDetailNotFoundBody": {},
+  "@spotDetailNotInLocaleTitle": {},
+  "@spotDetailNotInLocaleBody": {},
+  "@spotDetailNotInLocaleAction": {},
+  "@spotDetailRateLimitedTitle": {},
+  "@spotDetailRateLimitedBody": {},
+  "@spotDetailUnavailableTitle": {},
+  "@spotDetailUnavailableBody": {},
+  "@spotDetailRetryButton": {},
+  "@spotDetailReactionFailed": {},
+  "@spotDetailLinkFailed": {},
+  "@spotDetailIntroTitle": {},
+  "@spotDetailIntroBusinessHours": {},
+  "@spotDetailIntroClosedDays": {},
+  "@spotDetailIntroFee": {},
+  "@spotDetailIntroParking": {},
+  "@spotDetailIntroPetAllowed": {},
+  "@spotDetailIntroCreditCard": {},
+  "@spotDetailIntroInquiryPhone": {},
+  "@spotDetailInfoTitle": {},
+  "@communityViewCountLabel": {
+    "description": "카드 하단 조회수의 접근성 라벨 — 화면에는 숫자만 그린다",
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "@communityCategoryAll": {
+    "description": "상단 칩 — 전체(선택 없음)"
+  },
+  "@communityCategoryTouristSpot": {
+    "description": "카테고리 TOURIST_SPOT 표시명"
+  },
+  "@communityCategoryCulturalFacility": {
+    "description": "카테고리 CULTURAL_FACILITY 표시명"
+  },
+  "@communityCategoryFestivalEvent": {
+    "description": "카테고리 FESTIVAL_EVENT 표시명"
+  },
+  "@communityCategoryTravelCourse": {
+    "description": "카테고리 TRAVEL_COURSE 표시명"
+  },
+  "@communityCategoryLeisureSports": {
+    "description": "카테고리 LEISURE_SPORTS 표시명"
+  },
+  "@communityCategoryLodging": {
+    "description": "카테고리 LODGING 표시명"
+  },
+  "@communityCategoryShopping": {
+    "description": "카테고리 SHOPPING 표시명"
+  },
+  "@communityCategoryRestaurant": {
+    "description": "카테고리 RESTAURANT 표시명"
+  },
+  "@communityCategoryTransport": {
+    "description": "카테고리 TRANSPORT 표시명"
+  },
+  "@communityEditedBadge": {
+    "description": "수정된 글 표시"
+  },
+  "@communityEditAction": {
+    "description": "⋮ 메뉴 — 글 수정"
+  },
+  "@communityEditDisabledHidden": {
+    "description": "숨김 글이라 수정 불가 안내"
+  },
+  "@communityEditTitle": {
+    "description": "글 수정 화면 제목"
+  },
+  "@communityEditDone": {
+    "description": "수정 완료 안내"
+  },
+  "@communityComposeCategoryLabel": {
+    "description": "컴포저 카테고리 섹션 라벨"
+  },
+  "@communityComposeTitleLabel": {
+    "description": "컴포저 제목 섹션 라벨"
+  },
+  "@communityComposeTitleHint": {
+    "description": "컴포저 제목 입력 힌트"
+  },
+  "@communityComposeBodyLabel": {
+    "description": "컴포저 본문 섹션 라벨"
+  },
+  "@communityComposeTagsLabel": {
+    "description": "컴포저 태그 섹션 라벨"
+  },
+  "@communityComposeTagHint": {
+    "description": "컴포저 태그 입력 힌트"
+  },
+  "@communityComposeTagInvalid": {
+    "description": "태그에 공백이 있을 때"
+  },
+  "@communityComposeTagLimit": {
+    "description": "태그 상한 안내"
+  },
+  "@communityComposeSpotOptional": {
+    "description": "장소 미선택 표시 — 선택 항목"
+  },
+  "@communityComposeSpotClear": {
+    "description": "선택한 장소 해제"
+  },
+  "@communityComposePhotosLabel": {
+    "description": "컴포저 사진 섹션 라벨"
+  },
+  "@communityComposePhotoAdd": {
+    "description": "사진 추가 버튼"
+  },
+  "@communityComposePhotoTooLarge": {
+    "description": "사진이 10MiB를 넘어 제외된 장 수",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "@communityComposeErrorTitleRequired": {
+    "description": "POST_TITLE_REQUIRED"
+  },
+  "@communityComposeErrorTitleLength": {
+    "description": "POST_TITLE_LENGTH_INVALID"
+  },
+  "@communityComposeErrorBodyRequired": {
+    "description": "POST_BODY_REQUIRED"
+  },
+  "@communityComposeErrorBodyLength": {
+    "description": "POST_BODY_LENGTH_INVALID"
+  },
+  "@communityComposeErrorInvalidTag": {
+    "description": "INVALID_TAG"
+  },
+  "@communityComposeErrorTooManyTags": {
+    "description": "TOO_MANY_TAGS"
+  },
+  "@communityComposeErrorPhotoNotUploaded": {
+    "description": "PHOTO_NOT_UPLOADED"
+  },
+  "@communityComposeErrorNotEditable": {
+    "description": "POST_NOT_EDITABLE"
+  },
+  "@communityCommentComposerHint": {
+    "description": "댓글 입력 힌트"
+  },
+  "@communityCommentSend": {
+    "description": "댓글 전송 버튼"
+  },
+  "@communityCommentDone": {
+    "description": "댓글 작성 완료"
+  },
+  "@communityCommentDeleteAction": {
+    "description": "댓글 삭제 메뉴"
+  },
+  "@communityCommentDeleteDone": {
+    "description": "댓글 삭제 완료"
+  },
+  "@communityCommentReportAction": {
+    "description": "댓글 신고 메뉴"
+  },
+  "@communityCommentsUnavailable": {
+    "description": "댓글 조회 실패"
+  },
+  "@communityCommentsLoadMore": {
+    "description": "댓글 더 보기"
+  },
+  "@communityBlockedUsersTitle": {
+    "description": "차단 목록 화면 제목"
+  },
+  "@communityBlockedUsersEmpty": {
+    "description": "차단 목록이 빌 때"
+  },
+  "@communityBlockedUsersNote": {
+    "description": "차단 목록 안내 — 나를 차단한 사람은 없다"
+  },
+  "@communityUnblockAction": {
+    "description": "차단 해제 버튼"
+  },
+  "@communityUnblockDone": {
+    "description": "차단 해제 완료"
+  },
+  "@communityBlockedUsersAction": {
+    "description": "오버플로 진입 — 차단 목록"
+  },
+  "@communityHidePostAction": {
+    "description": "⋮ 메뉴 — 이 글 숨기기(hidePost). 항상 노출, 내 글도 가능"
+  },
+  "@communityHidePostDone": {
+    "description": "숨김 성공 토스트 — 내 화면에서만 사라진다는 것을 밝힌다"
+  },
+  "@communityHiddenPostsAction": {
+    "description": "앱바 진입 — 숨긴 글 목록(차단 목록 옆)"
+  },
+  "@communityHiddenPostsTitle": {
+    "description": "숨긴 글 목록 화면 제목"
+  },
+  "@communityHiddenPostsEmpty": {
+    "description": "숨긴 글 목록이 빌 때"
+  },
+  "@communityHiddenPostsNote": {
+    "description": "숨김 목록 안내 — 차단·신고와 다르다는 것"
+  },
+  "@communityUnhideAction": {
+    "description": "숨김 해제 버튼"
+  },
+  "@communityUnhideDone": {
+    "description": "숨김 해제 성공 토스트"
+  },
+  "@communitySortLatest": {
+    "description": "피드 정렬 토글 — 최신순(기본)"
+  },
+  "@communitySortDistance": {
+    "description": "피드 정렬 토글 — 거리순. 장소 없는 글은 빠진다"
+  },
+  "@communityReplyAction": {
+    "description": "최상위 댓글에만 붙는 답글 달기 버튼 (답글에는 두지 않는다)"
+  },
+  "@communityReplyCancel": {
+    "description": "답글 대상을 해제하고 일반 댓글로 돌아가는 버튼"
+  },
+  "@communitySpotPostsTitle": {
+    "description": "장소 상세의 글 섹션 헤더"
+  },
+  "@communitySpotPickerTitle": {
+    "description": "컴포저 장소 선택 시트 제목"
+  },
+  "@communitySpotPickerLikedEmpty": {
+    "description": "좋아요한 장소가 하나도 없는 상태 — 오류가 아니다"
+  },
+  "@communitySpotPickerLikedFailed": {
+    "description": "좋아요한 장소 조회 실패 상태"
+  },
+  "@communitySpotPickerLikedNoMatch": {
+    "description": "좋아요한 장소 탭에서 이름 필터 결과가 비었을 때"
+  },
+  "@communitySpotPickerEmpty": {
+    "description": "반경 안에 장소가 하나도 없는 상태 — 위치 실패와 구분된다"
+  },
+  "@communitySpotPickerNoMatch": {
+    "description": "필터 결과가 비었을 때"
+  },
+  "@communitySpotPickerLocationUnavailable": {
+    "description": "장소 선택 시트의 위치 실패 상태 — 빈 시트로 두지 않는다"
+  },
+  "@communitySpotPickerFailed": {
+    "description": "장소 선택 시트의 조회 실패 상태"
+  },
+  "@communityComposeCategoryUnset": {
+    "description": "컴포저 상단 인라인 카테고리 선택기 — 미선택 상태"
+  },
+  "@communityComposeTagsAction": {
+    "description": "컴포저 하단 액션 바의 태그 버튼"
+  },
+  "@communityComposeSpotAction": {
+    "description": "컴포저 하단 액션 바의 장소 버튼"
+  },
+  "@communityComposePhotosAction": {
+    "description": "컴포저 하단 액션 바의 사진 버튼"
+  },
+  "@communityComposeTagsSheetTitle": {
+    "description": "태그 입력 시트 제목"
+  },
+  "@communityComposeSheetDone": {
+    "description": "시트를 닫는 확인 버튼"
+  },
+  "@settingsTitle": {},
+  "@settingsTooltip": {},
+  "@settingsSectionActivity": {},
+  "@settingsSectionAccount": {},
+  "@settingsSectionPreferences": {},
+  "@settingsSectionLegal": {},
+  "@settingsMyPosts": {},
+  "@settingsEditProfile": {},
+  "@settingsChangeEmail": {},
+  "@settingsBlockedUsers": {},
+  "@settingsSearchRadius": {},
+  "@settingsLanguage": {},
+  "@settingsTerms": {},
+  "@settingsLogOut": {},
+  "@settingsDeleteAccount": {},
+  "@preferencesTitle": {},
+  "@preferencesRadiusSection": {},
+  "@preferencesLanguageSection": {},
+  "@preferencesRadiusValue": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "@preferencesRadiusHint": {},
+  "@myPostsTitle": {},
+  "@myPostsEmpty": {},
+  "@myPostsWriteFirst": {},
+  "@deleteAccountTitle": {},
+  "@deleteAccountHeadline": {},
+  "@deleteAccountIntro": {},
+  "@deleteAccountItemPosts": {},
+  "@deleteAccountItemLikes": {},
+  "@deleteAccountItemProfile": {},
+  "@deleteAccountCaution": {},
+  "@deleteAccountCancel": {},
+  "@deleteAccountConfirm": {},
+  "@deleteAccountFailed": {},
+  "@termsTitle": {},
+  "@termsIntro": {},
+  "@termsSectionRequired": {},
+  "@termsSectionOptional": {},
+  "@termsAgreedOn": {
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "yMMMd"
+      }
+    }
+  },
+  "@termsAgreedRequired": {},
+  "@termsService": {},
+  "@termsPrivacy": {},
+  "@termsLocation": {},
+  "@termsMarketing": {},
+  "@termsServiceDescription": {},
+  "@termsPrivacyDescription": {},
+  "@termsLocationDescription": {},
+  "@termsMarketingDescription": {},
+  "@termsLoadFailed": {},
+  "@termsUpdateFailed": {},
+  "@termsRetry": {},
+  "@requiredTermsTitle": {},
+  "@requiredTermsIntro": {},
+  "@requiredTermsAgree": {},
+  "@requiredTermsFailed": {},
+  "profileEditTitle": "프로필 수정",
+  "profileEditSave": "저장",
+  "profileEditSaved": "프로필을 저장했습니다",
+  "profileEditNicknameLabel": "닉네임",
+  "profileEditNicknameCounter": "{count}/{max}",
+  "profileEditNicknameEmpty": "닉네임을 입력해 주세요.",
+  "profileEditNicknameTooLong": "닉네임은 {max}자를 넘을 수 없습니다.",
+  "profileEditNicknameTaken": "이미 사용 중인 닉네임입니다.",
+  "profileEditEmailLabel": "이메일",
+  "profileEditFailed": "저장하지 못했습니다. 다시 시도해 주세요.",
+  "profilePhotoChange": "사진 변경",
+  "profilePhotoRemove": "사진 삭제",
+  "profilePhotoUploading": "사진을 올리는 중…",
+  "profilePhotoUpdated": "프로필 사진을 변경했습니다",
+  "profilePhotoRemoved": "프로필 사진을 삭제했습니다",
+  "profilePhotoFailed": "사진을 변경하지 못했습니다. 다시 시도해 주세요.",
+  "profilePhotoUnavailable": "이 기기에서는 사진을 고를 수 없습니다.",
+  "myPostsFailed": "글을 불러오지 못했습니다. 다시 시도해 주세요.",
+  "myPostsRetry": "다시 시도",
+  "@profileEditTitle": {},
+  "@profileEditSave": {},
+  "@profileEditSaved": {},
+  "@profileEditNicknameLabel": {},
+  "@profileEditNicknameCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "@profileEditNicknameEmpty": {},
+  "@profileEditNicknameTooLong": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "@profileEditNicknameTaken": {},
+  "@profileEditEmailLabel": {},
+  "@profileEditFailed": {},
+  "@profilePhotoChange": {},
+  "@profilePhotoRemove": {},
+  "@profilePhotoUploading": {},
+  "@profilePhotoUpdated": {},
+  "@profilePhotoRemoved": {},
+  "@profilePhotoFailed": {},
+  "@profilePhotoUnavailable": {},
+  "@myPostsFailed": {},
+  "@myPostsRetry": {},
+  "discoverRadiusAtMax": "이미 최대 반경(100km)입니다.",
+  "@discoverRadiusAtMax": {
+    "description": "반경이 이미 상한이라 더 넓힐 수 없을 때의 안내"
+  },
+  "termsRequiredNotice": "동의하지 않으면 서비스를 이용할 수 없습니다.",
+  "@termsRequiredNotice": {
+    "description": "필수 약관을 끄면 서비스를 쓸 수 없다는 안내"
+  },
+  "profileEditEmailChange": "변경",
+  "@profileEditEmailChange": {
+    "description": "프로필 수정에서 이메일 변경 화면으로 가는 버튼"
+  },
+  "emailChangeTitle": "이메일 변경",
+  "@emailChangeTitle": {},
+  "emailChangeCurrentLabel": "현재 이메일",
+  "@emailChangeCurrentLabel": {},
+  "emailChangeNewLabel": "새 이메일 주소",
+  "@emailChangeNewLabel": {},
+  "emailChangeHint": "이 주소로 6자리 인증 코드를 보냅니다.",
+  "@emailChangeHint": {},
+  "emailChangeSendCode": "코드 보내기",
+  "@emailChangeSendCode": {},
+  "emailChangeSameAsCurrent": "현재 이메일과 같은 주소입니다.",
+  "@emailChangeSameAsCurrent": {},
+  "emailChangeVerifyTitle": "이메일 인증",
+  "@emailChangeVerifyTitle": {},
+  "emailChangePendingBanner": "인증을 마쳐야 이메일이 바뀝니다. 지금은 아직 기존 주소입니다.",
+  "@emailChangePendingBanner": {
+    "description": "검증 전이라 프로필 이메일이 아직 안 바뀌었다는 대기 안내 (R7)"
+  },
+  "emailChangeCodeSentTo": "{email}(으)로 보낸 코드를 입력해 주세요.",
+  "@emailChangeCodeSentTo": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "emailChangeCodeLabel": "인증 코드",
+  "@emailChangeCodeLabel": {},
+  "emailChangeVerifyButton": "인증하기",
+  "@emailChangeVerifyButton": {},
+  "emailChangeCodeRequired": "인증 코드를 입력해 주세요.",
+  "@emailChangeCodeRequired": {},
+  "emailChangeResend": "코드 다시 보내기",
+  "@emailChangeResend": {},
+  "emailChangeResendIn": "{seconds}초 후에 다시 보낼 수 있습니다",
+  "@emailChangeResendIn": {
+    "description": "재발송 60초 쿨다운의 남은 시간 카운트다운 (R8)",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "emailChangeResent": "인증 코드를 다시 보냈습니다.",
+  "@emailChangeResent": {},
+  "emailChangeResendCooldown": "잠시 후에 다시 시도해 주세요.",
+  "@emailChangeResendCooldown": {
+    "description": "서버가 RESEND_COOLDOWN_ACTIVE로 거절했을 때"
+  },
+  "emailChangeCodeMismatch": "코드가 일치하지 않습니다. 다시 입력해 주세요.",
+  "@emailChangeCodeMismatch": {
+    "description": "failureReason=CODE_MISMATCH — 재입력하면 된다"
+  },
+  "emailChangeCodeExpired": "코드가 만료되었습니다. 다시 보내기를 눌러 주세요.",
+  "@emailChangeCodeExpired": {
+    "description": "failureReason=EXPIRED — 재발송이 필요하다"
+  },
+  "emailChangeMaxAttempts": "시도 횟수를 모두 사용했습니다. 주소 입력부터 다시 해주세요.",
+  "@emailChangeMaxAttempts": {
+    "description": "failureReason=MAX_ATTEMPTS_EXCEEDED — 처음부터 다시"
+  },
+  "emailChangeVerifyFailed": "인증하지 못했습니다. 다시 시도해 주세요.",
+  "@emailChangeVerifyFailed": {
+    "description": "failureReason이 알려지지 않은 값일 때의 일반 실패"
+  },
+  "emailChangeFailed": "요청하지 못했습니다. 다시 시도해 주세요.",
+  "@emailChangeFailed": {},
+  "emailChangeEmailTaken": "이미 사용 중인 이메일입니다.",
+  "@emailChangeEmailTaken": {
+    "description": "서버 userErrors의 EMAIL_ALREADY_IN_USE"
+  },
+  "emailChangeSucceeded": "이메일을 변경했습니다.",
+  "@emailChangeSucceeded": {},
+  "mapCongestionRelaxed": "여유",
+  "@mapCongestionRelaxed": {},
+  "mapCongestionNormal": "보통",
+  "@mapCongestionNormal": {},
+  "mapCongestionSlightlyCrowded": "약간 붐빔",
+  "@mapCongestionSlightlyCrowded": {},
+  "mapCongestionCrowded": "붐빔",
+  "@mapCongestionCrowded": {},
+  "mapCommercialQuiet": "한산한 시간대",
+  "@mapCommercialQuiet": {},
+  "mapCommercialNormal": "보통 시간대",
+  "@mapCommercialNormal": {},
+  "mapCommercialBusy": "바쁜 시간대",
+  "@mapCommercialBusy": {},
+  "mapCommercialVeryBusy": "분주한 시간대",
+  "@mapCommercialVeryBusy": {},
+  "mapCommercialUnavailable": "정보 없음",
+  "@mapCommercialUnavailable": {},
+  "mapCommercialEstimated": "실측되지 않은 지역",
+  "@mapCommercialEstimated": {},
+  "mapCommercialLabel": "상권",
+  "@mapCommercialLabel": {},
+  "mapObservedAt": "{time} 기준",
+  "@mapObservedAt": {},
+  "mapPopulationRange": "{min} – {max}명",
+  "@mapPopulationRange": {},
+  "mapAttribution": "출처: 서울특별시 실시간 도시데이터",
+  "@mapAttribution": {},
+  "mapKeyMissing": "지도 키가 없어 지도를 불러올 수 없습니다. KAKAO_NATIVE_APP_KEY 빌드 설정을 확인하세요.",
+  "@mapKeyMissing": {},
+  "mapLoadFailed": "지도를 불러오지 못했습니다.",
+  "@mapLoadFailed": {},
+  "mapZoomIn": "확대",
+  "@mapZoomIn": {},
+  "mapZoomOut": "축소",
+  "@mapZoomOut": {},
+  "mapMyLocation": "현재 위치",
+  "@mapMyLocation": {},
+  "mapLocationUnavailable": "위치가 꺼져 있어 현재 위치로 이동할 수 없습니다.",
+  "@mapLocationUnavailable": {},
+  "mapLegendSpot": "관광지",
+  "@mapLegendSpot": {},
+  "mapLegendEvent": "행사",
+  "@mapLegendEvent": {},
+  "mapSearchThisArea": "이 지역 재검색",
+  "@mapSearchThisArea": {},
+  "mapRegionRecommendationsTitle": "추천 지역",
+  "@mapRegionRecommendationsTitle": {},
+  "mapRegionRecommendationsAction": "추천 지역 보기",
+  "@mapRegionRecommendationsAction": {},
+  "mapRegionRecommendationPartialData": "일부 데이터 기준",
+  "@mapRegionRecommendationPartialData": {},
+  "mapRegionRecommendationsGatheringTitle": "데이터를 모으는 중입니다",
+  "@mapRegionRecommendationsGatheringTitle": {},
+  "mapRegionRecommendationsGathering": "추천에 쓸 데이터를 아직 모으고 있습니다. 잠시 후 다시 확인해 주세요.",
+  "@mapRegionRecommendationsGathering": {},
+  "mapRegionRecommendationsNoMatchTitle": "조건에 맞는 지역이 없습니다",
+  "@mapRegionRecommendationsNoMatchTitle": {},
+  "mapRegionRecommendationsNoMatch": "지금은 추천 조건을 만족한 지역이 없습니다. 나중에 다시 확인해 주세요.",
+  "@mapRegionRecommendationsNoMatch": {},
+  "mapRegionRecommendationsError": "추천 지역을 불러오지 못했습니다.",
+  "@mapRegionRecommendationsError": {},
+  "mapRegionRecommendationsRetry": "다시 시도",
+  "@mapRegionRecommendationsRetry": {},
+  "mapRegionRecommendationsRetryExhausted": "여러 번 시도했지만 불러오지 못했습니다. 나중에 다시 시도해 주세요.",
+  "@mapRegionRecommendationsRetryExhausted": {},
+  "mapScoreFactorCongestion": "예상 혼잡도",
+  "@mapScoreFactorCongestion": {},
+  "mapScoreFactorVisitorVolume": "방문자 규모",
+  "@mapScoreFactorVisitorVolume": {},
+  "mapScoreFactorStayIntensity": "체류 강도",
+  "@mapScoreFactorStayIntensity": {},
+  "mapScoreFactorSpendingIntensity": "소비 강도",
+  "@mapScoreFactorSpendingIntensity": {},
+  "mapScoreFactorDistance": "거리",
+  "@mapScoreFactorDistance": {},
+  "mapRegionRecommendationsNeedsLocationTitle": "위치가 필요합니다",
+  "mapRegionRecommendationsNeedsLocation": "추천은 현재 위치 주변 지역을 기준으로 하므로 위치 정보가 필요합니다.",
+  "mapRegionRecommendationsAllowLocation": "위치 허용",
+  "mapRegionRecommendationsOriginMyLocation": "내 위치",
+  "mapRegionRecommendationsOriginMapCenter": "지도 중심",
+  "mapRegionProvinceAndDistance": "{province} · {distance}",
+  "@mapRegionRecommendationsOriginMyLocation": {
+    "description": "기준 위치 토글 — 사용자의 현재 위치"
+  },
+  "@mapRegionRecommendationsOriginMapCenter": {
+    "description": "기준 위치 토글 — 지도가 보고 있던 중심"
+  },
+  "@mapRegionProvinceAndDistance": {
+    "description": "시도명과 기준점으로부터의 거리",
+    "placeholders": {
+      "province": {
+        "type": "String"
+      },
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "@mapRegionRecommendationsNeedsLocationTitle": {
+    "description": "위치 권한이 없어 추천을 받을 수 없을 때의 제목"
+  },
+  "@mapRegionRecommendationsNeedsLocation": {
+    "description": "위치가 필요한 이유 안내"
+  },
+  "@mapRegionRecommendationsAllowLocation": {
+    "description": "위치 권한 요청/설정 이동 버튼"
+  },
+  "mapRegionStrengthCongestion": "한산할 것으로 예상",
+  "@mapRegionStrengthCongestion": {
+    "description": "강점 라벨 — 예상 혼잡도. **향후 30일 예측이라 미래 시제다**. \"지금 한산\"은 거짓이 된다."
+  },
+  "mapRegionStrengthVisitorVolume": "최근 방문이 많았던 곳",
+  "@mapRegionStrengthVisitorVolume": {
+    "description": "강점 라벨 — 방문자 규모. **약 30일 지연 공개라 과거형이어야 정직하다**."
+  },
+  "mapRegionStrengthStayIntensity": "오래 머무는 곳",
+  "@mapRegionStrengthStayIntensity": {
+    "description": "강점 라벨 — 체류 강도. 월 단위 지표이며 지역의 고유 성격이라 시제를 두지 않는다."
+  },
+  "mapRegionStrengthSpendingIntensity": "소비가 활발한 곳",
+  "@mapRegionStrengthSpendingIntensity": {
+    "description": "강점 라벨 — 소비 강도. 체류 강도와 같은 성격."
+  },
+  "mapRegionStrengthDistance": "가까운 곳",
+  "@mapRegionStrengthDistance": {
+    "description": "강점 라벨 — 거리. 요청 시점에 계산된다."
+  },
+  "mapRegionRecommendationsAbout": "데이터 기준이 궁금해요",
+  "@mapRegionRecommendationsAbout": {
+    "description": "산출 근거 고지로 가는 진입점(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutTitle": "추천 지역은 이렇게 정해져요",
+  "@mapRegionAboutTitle": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutIntro": "기준 위치가 속한 시·도 안에서, 기준 위치의 지역을 뺀 나머지를 비교해 추천 순서를 정합니다. 아래 항목을 함께 봅니다.",
+  "@mapRegionAboutIntro": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutCongestion": "한국관광공사 관광지 집중률 예측입니다. 오늘 날짜의 예측값만 쓰며, 관광지 단위로 오는 값을 시·군·구 평균으로 묶습니다.\n값이 뒤집혀 있어 덜 붐빌수록 높은 점수입니다.",
+  "@mapRegionAboutCongestion": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutVisitorVolume": "한국관광공사 지역별 방문자 수입니다. 외지인과 외국인만 합산하며, 현지인은 주민의 일상 이동이라 제외합니다.\n최근 7일 평균을 씁니다.",
+  "@mapRegionAboutVisitorVolume": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutIntensityTitle": "체류 강도 · 소비 강도",
+  "@mapRegionAboutIntensityTitle": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutIntensity": "한국관광공사 관광수요 강도 지표입니다. 해당 시·군·구의 최신 월 값을 쓰며, 월 1회 갱신이라 한 달 동안 같은 값이 유지됩니다. 둘 다 높을수록 좋은 점수입니다.\n소비 강도는 외지인 소비 기준입니다.",
+  "@mapRegionAboutIntensity": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutDistance": "기준 위치에서 그 지역까지의 거리입니다. 가까울수록 높은 점수입니다.",
+  "@mapRegionAboutDistance": {
+    "description": "추천 산출 근거 고지(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutScoringTitle": "공통 규칙",
+  "@mapRegionAboutScoringTitle": {
+    "description": "추천 산출 근거 고지 — 점수 산정 방식(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutScoringNormalize": "정규화 — 각 항목을 그 시·도 후보들의 최솟값~최댓값에 맞춰 0~100으로 폅니다. 그래서 다른 시·도의 같은 숫자와는 뜻이 다릅니다.",
+  "@mapRegionAboutScoringNormalize": {
+    "description": "추천 산출 근거 고지 — 점수 산정 방식(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutScoringCongestion": "순위 — 반환된 목록이 아니라 시·도 전체 후보 기준입니다.",
+  "@mapRegionAboutScoringCongestion": {
+    "description": "추천 산출 근거 고지 — 점수 산정 방식(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutScoringDistance": "결측 처리 — 데이터가 없는 항목은 계산에서 뺍니다.",
+  "@mapRegionAboutScoringDistance": {
+    "description": "추천 산출 근거 고지 — 점수 산정 방식(개인정보보호법 §37조의2)."
+  },
+  "mapRegionAboutScoringTotal": "후보 제한 — 기준 위치가 속한 시·도 안에서만 고르고 기준 위치의 지역은 뺍니다. 관광지가 충분하지 않은 지역은 제외합니다.",
+  "@mapRegionAboutScoringTotal": {
+    "description": "추천 산출 근거 고지 — 점수 산정 방식(개인정보보호법 §37조의2)."
+  },
+  "dmMessagesAction": "DM",
+  "@dmMessagesAction": {
+    "description": "둘러보기 헤더의 DM 재진입(대화함) 아이콘 툴팁. 작성자에게 새 대화를 거는 feedMessageAuthorAction과 다른 뜻이라 문구도 아이콘도 구분한다"
+  },
+  "dmUnreadBadgeLabel": "읽지 않은 DM 있음",
+  "@dmUnreadBadgeLabel": {
+    "description": "DM 아이콘의 점 배지 — 스크린리더용. 서버가 전체 합계를 주지 않아 숫자가 없다"
+  },
+  "dmUnavailableBody": "잠시 후 다시 시도해 주세요.",
+  "dmRetry": "다시 시도",
+  "dmReportSubmitted": "신고가 접수되었어요.",
+  "dmReportFailed": "신고를 접수하지 못했어요.",
+  "dmEmptyMessage": "더 이상 볼 수 없는 메시지예요",
+  "dmConversationsTitle": "DM",
+  "@dmConversationsTitle": {
+    "description": "대화 목록 화면 제목"
+  },
+  "dmConversationsEmptyTitle": "아직 DM이 없어요",
+  "@dmConversationsEmptyTitle": {
+    "description": "대화 목록 빈 상태 — 오류가 아니다"
+  },
+  "dmConversationsEmptyBody": "주고받은 대화가 여기에 표시돼요.",
+  "@dmConversationsEmptyBody": {
+    "description": "대화 목록 빈 상태 보조 문구 — 어디서 시작하는지 알려주는 것이 이 화면의 일이다"
+  },
+  "dmConversationsUnavailable": "DM 목록을 불러오지 못했어요",
+  "@dmConversationsUnavailable": {
+    "description": "대화 목록 조회 실패 제목"
+  },
+  "dmPhotoMessagePreview": "사진",
+  "@dmPhotoMessagePreview": {
+    "description": "본문 없는 메시지의 목록 미리보기 — 사진·인용만 있는 메시지다"
+  },
+  "dmUnreadCountLabel": "읽지 않은 DM {count}건",
+  "@dmUnreadCountLabel": {
+    "description": "대화 목록 미읽음 배지의 스크린리더 라벨",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dmUnreadCountOverflow": "9+",
+  "@dmUnreadCountOverflow": {
+    "description": "미읽음이 두 자리를 넘을 때의 배지 문구 — 관례이며 스펙에 상한 규정은 없다"
+  },
+  "dmMessageInputHint": "메시지 입력",
+  "@dmMessageInputHint": {
+    "description": "대화 입력창 힌트"
+  },
+  "dmSendAction": "보내기",
+  "@dmSendAction": {
+    "description": "메시지 전송 버튼 툴팁"
+  },
+  "dmSendFailed": "전송하지 못했어요",
+  "@dmSendFailed": {
+    "description": "전송 실패한 말풍선에 붙는 문구 — 말풍선은 사라지지 않는다"
+  },
+  "dmRetryAction": "다시 보내기",
+  "@dmRetryAction": {
+    "description": "전송 실패한 메시지의 재시도 버튼"
+  },
+  "dmRetryExhausted": "여러 번 시도했지만 보내지 못했어요",
+  "@dmRetryExhausted": {
+    "description": "재시도 상한(POL-040)에 도달한 메시지 — 자동 재시도가 끝났음을 알린다"
+  },
+  "dmSendingLabel": "보내는 중",
+  "@dmSendingLabel": {
+    "description": "전송 중인 말풍선의 상태 문구"
+  },
+  "dmTypingIndicator": "{nickname}님이 입력 중이에요…",
+  "@dmTypingIndicator": {
+    "description": "상대가 입력 중임을 알리는 문구 — 타임아웃으로 스스로 사라진다(AC10-4)",
+    "placeholders": {
+      "nickname": {
+        "type": "String"
+      }
+    }
+  },
+  "dmSyncFailedBanner": "새 메시지를 불러오지 못했어요",
+  "@dmSyncFailedBanner": {
+    "description": "서버 동기화 실패 배너 — 캐시된 대화는 그대로 남는다(AC18-4)"
+  },
+  "dmConversationEmpty": "첫 메시지를 보내보세요.",
+  "@dmConversationEmpty": {
+    "description": "메시지가 하나도 없는 대화 — 대화 시작과 첫 전송이 별개 호출이라 생길 수 있다"
+  },
+  "dmSelectMessagesAction": "메시지 선택",
+  "@dmSelectMessagesAction": {
+    "description": "대화 앱바 메뉴 — 다중 선택 신고 모드로 들어간다(R15)"
+  },
+  "dmSelectionCount": "{count}건 선택됨",
+  "@dmSelectionCount": {
+    "description": "선택 모드 앱바 제목",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dmSelectionCancel": "선택 취소",
+  "@dmSelectionCancel": {
+    "description": "선택 모드를 끄는 버튼 툴팁"
+  },
+  "dmReportSelectedAction": "신고",
+  "@dmReportSelectedAction": {
+    "description": "선택한 메시지를 신고하는 버튼 — 0건이면 비활성이다(AC15-3)"
+  },
+  "errorResendCooldownActive": "잠시 후 다시 요청해 주세요.",
+  "errorAlreadyVerified": "이미 인증된 이메일입니다.",
+  "errorNotEmailMember": "소셜 계정의 이메일은 변경할 수 없습니다.",
+  "errorInvalidEmailFormat": "올바른 이메일 주소를 입력해 주세요.",
+  "errorEmailNotVerified": "계속하려면 이메일 인증을 완료해 주세요.",
+  "errorSessionExpiredSignInAgain": "보안을 위해 세션이 종료되었습니다. 다시 로그인해 주세요.",
+  "verificationCodeExpired": "만료된 코드입니다. 새 코드를 요청해 주세요.",
+  "verificationCodeConsumed": "이미 사용된 코드입니다. 새 코드를 요청해 주세요.",
+  "verificationMaxAttempts": "시도 횟수를 초과했습니다. 새 코드를 요청해 주세요.",
+  "verificationCodeMismatch": "코드가 올바르지 않거나 만료되었습니다. 확인 후 다시 입력하거나 새 코드를 받아 주세요.",
+  "emailVerificationChangeAddress": "주소가 틀렸나요?",
+  "emailVerificationChangeAddressTitle": "이메일 주소 변경",
+  "emailVerificationChangeAddressBody": "새 주소로 인증 코드를 보냅니다. 기존 코드는 사용할 수 없게 됩니다.",
+  "emailVerificationAddressChanged": "변경한 주소로 새 코드를 보냈습니다.",
+  "emailVerificationResendCountdown": "{seconds}초 후 재발송할 수 있습니다",
+  "@emailVerificationResendCountdown": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "emailVerificationNeedsResend": "이전 인증 코드는 더 이상 사용할 수 없습니다. 새 코드를 받아 주세요.",
+  "@emailVerificationNeedsResend": {
+    "description": "핸들 없이 인증 화면에 도착한 경우의 안내"
+  },
+  "errorMemberAlreadyRegistered": "이미 가입된 이메일입니다. 로그인해 주세요.",
+  "errorInvalidInput": "입력하신 정보가 올바르지 않습니다. 확인 후 다시 시도해 주세요.",
+  "errorAccountInactive": "비활성 상태인 계정입니다. 고객센터에 문의해 주세요.",
+  "errorVerificationRateLimited": "인증 요청이 너무 잦습니다. 잠시 후 다시 시도해 주세요.",
+  "errorVerificationNotFound": "인증이 만료되었습니다. 새 코드를 받아 주세요.",
+  "errorPasswordPolicyViolation": "비밀번호가 조건에 맞지 않습니다. 8자 이상으로 설정해 주세요.",
+  "passwordResetChangeEmail": "다른 이메일로 받기",
+  "passwordResetNoCodeHint": "코드가 오지 않았다면 스팸함을 확인하거나 다시 받아 주세요.",
+  "passwordResetConfirmSubtitleWithEmail": "{email} 으로 보낸 6자리 코드를 입력하고 새 비밀번호를 정해 주세요.",
+  "@passwordResetConfirmSubtitleWithEmail": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "errorPasswordResetNoAccount": "이 이메일로 가입된 계정이 없습니다. 카카오·구글·애플로 가입하셨다면 해당 방법으로 로그인해 주세요.",
+  "spotQaEntryAction": "지금 여기 어때?",
+  "@spotQaEntryAction": {
+    "description": "장소 상세의 질문/답변 진입점. 좋아요 자격이 없고 질문도 없으면 숨긴다"
+  },
+  "spotQaQuestionsTitle": "장소 질문",
+  "spotQaQuestionsEmptyTitle": "아직 질문이 없습니다",
+  "spotQaQuestionsEmptyBody": "이 장소에 대해 궁금한 것을 먼저 물어보세요.",
+  "spotQaQuestionsUnavailable": "질문을 불러오지 못했습니다.",
+  "spotQaAnswersUnavailable": "답변을 불러오지 못했습니다.",
+  "spotQaAnswersEmpty": "아직 답변이 없습니다. 이 장소를 아신다면 알려주세요.",
+  "spotQaResolvedLabel": "해결됨",
+  "spotQaUnresolvedLabel": "미해결",
+  "spotQaResolveAction": "해결",
+  "spotQaResolveFailed": "해결 표시를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  "spotQaAskAction": "질문하기",
+  "spotQaAnswerAction": "답변하기",
+  "spotQaReplyAction": "답글 달기",
+  "spotQaAskTitle": "질문 작성",
+  "spotQaAnswerTitle": "답변 작성",
+  "spotQaReplyTitle": "답글 작성",
+  "spotQaBodyHint": "궁금한 점을 적어 주세요.",
+  "spotQaAnswerBodyHint": "아는 것을 알려주세요.",
+  "spotQaSubmitAction": "올리기",
+  "spotQaSubmitFailed": "올리지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  "spotQaDeleteAction": "삭제",
+  "spotQaDeleteFailed": "삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  "spotQaDmAction": "메시지 보내기",
+  "spotQaDmFailed": "대화를 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  "spotQaOriginCardTitle": "질문 인용",
+  "@spotQaOriginCardTitle": {
+    "description": "DM 상단 맥락 카드. 출처 없는 대화에는 그리지 않는다"
+  },
+  "spotQaAnswerCount": "{count, plural, =0{답변 없음} =1{답변 1개} other{답변 {count}개}}",
+  "@spotQaAnswerCount": {
+    "description": "질문 카드의 답변 수",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "spotQaMyQuestionsTitle": "내 질문",
+  "spotQaMyQuestionsEntry": "내 질문",
+  "spotQaMyQuestionsEmptyTitle": "아직 올린 질문이 없습니다",
+  "spotQaMyQuestionsEmptyBody": "장소 상세에서 궁금한 것을 물어보세요.",
+  "spotQaMyQuestionsUnavailable": "질문을 찾지 못했습니다. 삭제되었거나 가려졌을 수 있습니다.",
+  "@spotQaMyQuestionsUnavailable": {
+    "description": "로컬 기록에는 있으나 서버에서 못 찾은 질문(삭제·숨김·페이지 밖)"
+  },
+  "spotQaNewAnswerBadge": "{count, plural, =1{새 답변 1개} other{새 답변 {count}개}}",
+  "@spotQaNewAnswerBadge": {
+    "description": "내 질문에 못 본 답변이 있을 때의 배지. 서버에 알림이 없어 이것이 유일한 신호다",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "spotQaDmEntry": "메시지",
+  "spotQaEntryQuestionCount": "{count, plural, =0{아직 질문이 없어요} =1{질문 1개} other{질문 {count}개}}",
+  "@spotQaEntryQuestionCount": {
+    "description": "장소 상세 진입점 한 줄에 붙는 질문 수",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "spotQaComposeContext": "{spot}에 묻기",
+  "@spotQaComposeContext": {
+    "description": "작성 화면 상단에 어느 장소에 묻는지 표시. 장소명이 비면 이 줄을 생략한다",
+    "placeholders": {
+      "spot": {
+        "type": "String"
+      }
+    }
+  },
+  "spotQaSuggestTitle": "이런 걸 물어보세요",
+  "@spotQaSuggestTitle": {
+    "description": "예시 질문 칩의 머리말. 신규 장소는 질문이 0개라 무엇을 물어도 되는지 모른다(cold start)"
+  },
+  "spotQaSuggestCrowd": "혼잡도",
+  "spotQaSuggestParking": "주차",
+  "spotQaSuggestWeather": "우천 시",
+  "spotQaSuggestHours": "운영 여부",
+  "spotQaBodyHintExample": "예: 지금 사람 많은가요? 주차는 편한가요?",
+  "spotQaFillCrowd": "지금 붐비나요?",
+  "spotQaFillParking": "주차할 수 있나요?",
+  "spotQaFillWeather": "비 와도 볼만한가요?",
+  "spotQaFillHours": "지금 문 열었나요?",
+  "spotQaMyQuestionsFailed": "질문을 불러오지 못했습니다.",
+  "spotQaMyQuestionsSignInBody": "로그인하면 내가 올린 질문과 답변을 볼 수 있습니다.",
+  "@spotQaMyQuestionsSignInBody": {
+    "description": "비로그인으로 「내 질문」에 들어왔을 때. 빈 목록으로 접으면 '쓴 적 없음'으로 오해된다"
+  },
+  "spotQaPhotoUploadFailed": "{count, plural, =1{사진 1장을 올리지 못했습니다.} other{사진 {count}장을 올리지 못했습니다.}}",
+  "@spotQaPhotoUploadFailed": {
+    "description": "일부 사진만 실패했을 때. 질문 자체는 올라간다 — 사진 한 장 때문에 쓴 글을 버리게 하지 않는다",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "spotQaUnresolveAction": "미해결",
+  "spotQaUnresolveFailed": "되돌리지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  "alarmSettingsTitle": "알림",
+  "settingsNotifications": "알림",
+  "alarmCategoryMessage": "메시지",
+  "alarmCategoryMessageDescription": "새 다이렉트 메시지",
+  "alarmCategorySpotQa": "질문·답변",
+  "alarmCategorySpotQaDescription": "내 질문에 달린 답변과 내 답변에 달린 답글",
+  "alarmOsDisabledNotice": "기기 설정에서 이 앱의 알림이 꺼져 있어 알림이 오지 않습니다.",
+  "alarmSettingsLoadFailed": "알림 설정을 불러오지 못했습니다.",
+  "alarmSettingsSaveFailed": "저장하지 못했습니다. 다시 시도해 주세요.",
+  "relationConnect": "내 지도에 등록",
+  "relationConnected": "등록됨",
+  "relationConnectFailed": "등록하지 못했어요. 다시 시도해 주세요.",
+  "relationSignInToConnect": "로그인하면 이 사람을 내 지도에 등록할 수 있어요.",
+  "relationMapTitle": "나와 겹친 여행",
+  "relationMapCount": "{count}명",
+  "@relationMapCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relationMapEmpty": "아직 아무도 없어요. 내 지도를 공유하면 열어 본 사람이 스스로 등록할 수 있어요.",
+  "relationMapMe": "나",
+  "relationOverlapWith": "{count}곳 겹침",
+  "@relationOverlapWith": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relationRemove": "빼기",
+  "relationRemoved": "내 지도에서 뺐어요.",
+  "relationRemoveFailed": "빼지 못했어요. 다시 시도해 주세요.",
+  "relationMapHint": "가운데에 가까울수록 겹치는 곳이 많아요.",
+  "commonMore": "더 보기",
+  "termsOpenInBrowser": "브라우저로 열기",
+  "@termsOpenInBrowser": {
+    "description": "약관 웹뷰 - 외부 브라우저로 열기 버튼"
+  },
+  "termsDocumentLoadFailed": "약관을 불러오지 못했습니다. 연결을 확인해 주세요.",
+  "@termsDocumentLoadFailed": {
+    "description": "약관 웹뷰 - 문서 로드 실패 안내"
+  }
 }

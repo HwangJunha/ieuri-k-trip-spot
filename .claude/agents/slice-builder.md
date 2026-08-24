@@ -6,6 +6,7 @@ model: opus
 skills:
   - domain-slice-generator
   - test-strategy
+  - layer-boundary-review
 ---
 
 You are the slice-builder for the K-TripSpot Flutter app. You implement **one

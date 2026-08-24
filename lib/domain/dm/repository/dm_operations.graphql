@@ -1,0 +1,180 @@
+# DM 오퍼레이션(SPEC-0017 · SPEC-0021). 생성 타입은 이 repository 밖으로 나가지
+# 않는다(POL-020).
+
+fragment DmAuthorParts on PostAuthor {
+  id
+  nickname
+  profileImageUrl
+}
+
+# 피드 인용은 SPEC-0021에서 걷혔고, SPEC-0026이 **질문/답변 인용**을 메시지 단위로
+# 다시 들여왔다. 본문도 사진도 인용도 없이 내려오는 과거 메시지가 있으므로 표시 계층이
+# "내용 없음"을 그린다.
+fragment MessageParts on Message {
+  id
+  body
+  photoKey
+  sender {
+    ...DmAuthorParts
+  }
+  ownedByViewer
+  createdAt
+  # 이 메시지가 인용한 질문/답변(SPEC-0026). **대화가 아니라 메시지에 붙는다**
+  # (2026-08-18 서버 변경) — 한 대화에서 몇 번이든 다른 질문을 인용할 수 있다.
+  #
+  # 인용 없이 보낸 메시지는 null이고, 인용을 만들지 못한 경우(답변 삭제 등)도
+  # null이다 — 서버가 거절하지 않고 조용히 일반 메시지로 보낸다.
+  spotQaOrigin {
+    catalogId
+    spotTitle
+    questionId
+    questionBodySnapshot
+    answerId
+    answerBodySnapshot
+  }
+}
+
+fragment ConversationParts on Conversation {
+  id
+  counterpart {
+    ...DmAuthorParts
+  }
+  lastMessage {
+    ...MessageParts
+  }
+  unreadCount
+  updatedAt
+}
+
+query Conversations($first: Int, $after: String) {
+  conversations(first: $first, after: $after) {
+    edges {
+      cursor
+      node {
+        ...ConversationParts
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+# 최신순(내림차순)이며 after로 과거를 이어읽는다.
+query ConversationMessages($conversationId: ID!, $first: Int, $after: String) {
+  conversationMessages(
+    conversationId: $conversationId
+    first: $first
+    after: $after
+  ) {
+    edges {
+      cursor
+      node {
+        ...MessageParts
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+# 회원을 직접 지정한다(SPEC-0021 R11) — 피드 항목을 거치던 간접 지정이 사라졌다.
+# **인용 인자가 빠졌다**(2026-08-18). 대화를 여는 것과 인용을 붙이는 것이 분리돼,
+# 인용은 `SendMessage`가 받는다.
+mutation StartConversation($counterpartMemberId: ID!) {
+  startConversation(input: { counterpartMemberId: $counterpartMemberId }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    conversationId
+  }
+}
+
+# `sourceAnswerId`를 주면 그 질문/답변 스냅샷이 **이 메시지에** 남는다(SPEC-0026).
+# 본문 없이 인용만 보낼 수 있다(`body: ""`).
+mutation SendMessage(
+  $conversationId: ID!
+  $body: String!
+  $photoKey: String
+  $sourceAnswerId: ID
+) {
+  sendMessage(
+    input: {
+      conversationId: $conversationId
+      body: $body
+      photoKey: $photoKey
+      sourceAnswerId: $sourceAnswerId
+    }
+  ) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    messageId
+  }
+}
+
+mutation NotifyTyping($conversationId: ID!) {
+  notifyTyping(input: { conversationId: $conversationId }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+# 처리 후 잔여 수를 돌려주므로 재조회가 필요 없다.
+mutation MarkConversationRead($conversationId: ID!, $upToMessageId: ID) {
+  markConversationRead(
+    input: { conversationId: $conversationId, upToMessageId: $upToMessageId }
+  ) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    unreadCount
+  }
+}
+
+mutation ReportMessages($messageIds: [ID!]!, $reason: ReportReason!, $detail: String) {
+  reportMessages(
+    input: { messageIds: $messageIds, reason: $reason, detail: $detail }
+  ) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+# 유실 허용 — 재전송이 없으므로 클라이언트가 emittedAt 기준 타임아웃으로 표시를 내린다.
+subscription TypingIndicator($conversationId: ID!) {
+  typingIndicator(conversationId: $conversationId) {
+    sender {
+      ...DmAuthorParts
+    }
+    emittedAt
+  }
+}
+
+# 유실 불가 — 재연결 시 ConversationMessages로 공백을 메운다. 자기 메시지도 에코되므로
+# 낙관적으로 그린 말풍선과 id로 dedupe해야 한다.
+subscription NewMessage($conversationId: ID!) {
+  newMessage(conversationId: $conversationId) {
+    ...MessageParts
+  }
+}

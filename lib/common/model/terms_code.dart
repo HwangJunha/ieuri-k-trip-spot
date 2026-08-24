@@ -1,0 +1,56 @@
+/// 서버가 다루는 약관 종류(스키마 `TermsCode`). 생성된 GraphQL enum을 가져오지 않고도
+/// 하나의 출처를 공유하기 위한 순수 도메인 enum이다.
+///
+/// **왜 `common/`에 있는가.** 가입 폼(`domain/auth`)과 약관 관리·게이트
+/// (`domain/settings`) **둘 다** 쓴다(SPEC-0011 R9~R12). 기능 간 import는 금지되어
+/// 있으므로(CLAUDE.md §3), 둘 이상이 쓰는 값은 여기로 올린다(§4).
+enum TermsCode {
+  service,
+  privacy,
+  location,
+  marketing;
+
+  /// The wire string the server expects (matches the schema `TermsCode` names).
+  String get wireName => switch (this) {
+    TermsCode.service => 'SERVICE',
+    TermsCode.privacy => 'PRIVACY',
+    TermsCode.location => 'LOCATION',
+    TermsCode.marketing => 'MARKETING',
+  };
+
+  /// Whether consent is mandatory to register (spec §5.2): everything except
+  /// MARKETING, which is optional.
+  bool get isRequired => this != TermsCode.marketing;
+
+  /// 약관 전문이 게시된 주소. 앱은 이 문서를 **웹뷰로 열기만 한다**.
+  ///
+  /// **본문을 앱에 넣지 않는 이유**: 약관은 앱 배포와 무관하게 개정되고, 개정본이
+  /// 즉시 효력을 갖는다. 문구를 번들에 박으면 심사를 통과한 구버전 앱이 낡은
+  /// 약관을 계속 보여 주게 되고, 그건 고지 의무 위반이다.
+  ///
+  /// 마케팅 수신 동의는 별도 문서가 없다 — 서비스 약관 안에 포함된다.
+  Uri? get documentUrl => switch (this) {
+    TermsCode.service => Uri.parse('https://www.ieuri.co.kr/terms'),
+    TermsCode.privacy => Uri.parse('https://www.ieuri.co.kr/privacy'),
+    TermsCode.location => Uri.parse('https://www.ieuri.co.kr/location-terms'),
+    TermsCode.marketing => null,
+  };
+}
+
+/// A single consent decision sent with registration (schema `AgreementInput`).
+/// Pure value type; the repository maps it to the generated input.
+class Agreement {
+  const Agreement({required this.termsCode, required this.agreed});
+
+  final TermsCode termsCode;
+  final bool agreed;
+
+  @override
+  bool operator ==(Object other) =>
+      other is Agreement &&
+      other.termsCode == termsCode &&
+      other.agreed == agreed;
+
+  @override
+  int get hashCode => Object.hash(termsCode, agreed);
+}

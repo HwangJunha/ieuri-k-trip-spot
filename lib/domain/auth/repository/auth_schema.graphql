@@ -58,6 +58,7 @@ input LoginEmailInput {
 input LoginSnsInput {
   provider: Provider!
   idToken: String!
+  authorizationCode: String
 }
 
 input LogoutInput {
@@ -76,6 +77,10 @@ type Me {
   profileImageUrl: String
   status: MemberStatus!
   emailVerified: Boolean!
+  # 이메일 변경 가능 여부(SPEC-0024 R6). Provider.EMAIL 회원만 true다.
+  # 앱이 provider로 판정하지 않고 이 값을 그대로 쓴다 — 규칙에 조건이 붙어도
+  # 서버만 고치면 된다.
+  canChangeEmail: Boolean!
   roles: [String!]!
   permissions: [String!]!
   createdAt: String!
@@ -124,6 +129,12 @@ type Mutation {
   registerEmailMember(input: RegisterEmailMemberInput!): RegisterEmailMemberPayload!
   verifyEmail(input: VerifyEmailInput!): VerifyEmailPayload!
   resendVerification(input: ResendVerificationInput!): ResendVerificationPayload!
+  # 인증 주소 재입력(SPEC-0024 R7). 인증을 마치지 않은 회원만 쓸 수 있고,
+  # 이전 코드는 무효화되며 새 verificationId가 나온다. changeEmail과 다른
+  # 경로다 — 그쪽은 인증을 마친 Provider.EMAIL 회원 전용이다.
+  retargetEmailVerification(
+    input: RetargetEmailVerificationInput!
+  ): RetargetEmailVerificationPayload!
   loginSns(input: LoginSnsInput!): AuthTokenPayload!
   loginEmail(input: LoginEmailInput!): AuthTokenPayload!
   requestPasswordReset(input: RequestPasswordResetInput!): RequestPasswordResetPayload!
@@ -177,7 +188,7 @@ input RegisterEmailMemberInput {
 type RegisterEmailMemberPayload {
   success: Boolean!
   userErrors: [UserError!]!
-  verificationId: ID
+  verificationId: String
 }
 
 input RegisterSnsMemberInput {
@@ -186,13 +197,14 @@ input RegisterSnsMemberInput {
   email: String!
   ageVerified: Boolean!
   agreements: [AgreementInput!]!
+  authorizationCode: String
 }
 
 type RegisterSnsMemberPayload {
   success: Boolean!
   userErrors: [UserError!]!
   emailVerified: Boolean
-  verificationId: ID
+  verificationId: String
 }
 
 input RequestPasswordResetInput {
@@ -205,13 +217,27 @@ type RequestPasswordResetPayload {
 }
 
 input ResendVerificationInput {
-  verificationId: ID!
+  verificationId: String!
+}
+
+input RetargetEmailVerificationInput {
+  newEmail: String!
+}
+
+type RetargetEmailVerificationPayload {
+  success: Boolean!
+  # 실제로 오는 코드: ALREADY_VERIFIED(인증을 마친 회원), RESEND_COOLDOWN_ACTIVE
+  # (재발송과 60초 타이머를 공유한다), EMAIL_ALREADY_IN_USE, INVALID_EMAIL_FORMAT.
+  userErrors: [UserError!]!
+  # 새 핸들. 이후 verifyEmail·resendVerification은 이 값을 쓴다.
+  verificationId: String
+  expiresAt: String
 }
 
 type ResendVerificationPayload {
   success: Boolean!
   userErrors: [UserError!]!
-  verificationId: ID
+  verificationId: String
   expiresAt: String
 }
 
@@ -258,13 +284,49 @@ enum TermsCode {
 }
 
 type UserError {
+  # 정본. 서버가 스키마보다 앞선 코드를 낼 수 있으므로 이 값이 항상 채워진다.
   code: String!
+  # 같은 값의 enum(SPEC-0024 R6-6). 분기는 이쪽으로 하고, 스키마에 없는 코드가
+  # 오면 null이 되므로 그때 [code]로 폴백한다.
+  codeValue: ErrorCode
   message: String!
   field: String
 }
 
+# userErrors[].code의 알려진 값(SPEC-0024). 서버가 새 코드를 추가해도 응답이
+# 깨지지 않도록 UserError.codeValue는 nullable이다.
+enum ErrorCode {
+  INVALID_INPUT
+  # 비밀번호가 정책에 맞지 않다. 이전에는 INVALID_INPUT으로 왔다(서버 BREAKING).
+  # 이 코드가 오면 `field`가 어느 입력인지 가리킨다.
+  PASSWORD_POLICY_VIOLATION
+  MEMBER_ALREADY_REGISTERED
+  EMAIL_ALREADY_IN_USE
+  SNS_VERIFICATION_FAILED
+  INVALID_CREDENTIALS
+  MEMBER_NOT_FOUND
+  ACCOUNT_INACTIVE
+  VERIFICATION_NOT_FOUND
+  VERIFICATION_RATE_LIMITED
+  RESEND_COOLDOWN_ACTIVE
+  ALREADY_VERIFIED
+  NOT_EMAIL_MEMBER
+  SAME_AS_CURRENT_EMAIL
+  INVALID_EMAIL_FORMAT
+  INVALID_NICKNAME
+  NICKNAME_ALREADY_TAKEN
+  UNSUPPORTED_IMAGE_TYPE
+  IMAGE_TOO_LARGE
+  OBJECT_KEY_NOT_FOUND
+  PHOTO_NOT_UPLOADED
+  TERMS_NOT_FOUND
+  TERMS_CODE_NOT_REQUIRED
+  ROLE_NOT_FOUND
+  SELF_DEMOTION
+}
+
 input VerifyEmailInput {
-  verificationId: ID!
+  verificationId: String!
   code: String!
 }
 

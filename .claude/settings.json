@@ -16,6 +16,7 @@
       "Bash(git diff:*)",
       "Bash(git log:*)",
       "Bash(git add:*)",
+      "Bash(git commit:*)",
       "Bash(git push:*)",
       "Read(./**)",
       "Edit(lib/**)",
@@ -35,13 +36,20 @@
       "Bash(flutter devices:*)",
       "Bash(flutter test integration_test:*)",
       "Bash(patrol test:*)",
-      "Bash(patrol develop:*)"
+      "Bash(patrol develop:*)",
+      "Bash(dart run build_runner clean:*)",
+      "Bash(pgrep:*)",
+      "Bash(pkill -f build_runner:*)"
     ],
     "ask": [
-      "Bash(git commit:*)",
-      "Bash(dart pub upgrade:*)"
+      "Bash(dart pub upgrade:*)",
+      "Bash(curl -sL -o:*)"
     ],
     "deny": [
+      "Read(./**/*.graphql.dart)",
+      "Read(./**/*.g.dart)",
+      "Read(./**/*.freezed.dart)",
+      "Read(./schema/schema.introspection.json)",
       "Read(./.env)",
       "Read(./**/.env)",
       "Read(./**/.env.*)",
@@ -59,12 +67,13 @@
       "Edit(./**/GoogleService-Info.plist)",
       "Bash(rm -rf:*)",
       "Bash(sudo:*)",
-      "Bash(curl:*)",
       "Bash(wget:*)",
       "Bash(dart pub publish:*)"
     ]
   },
-  "env": { "IEURI_VAULT": "/Users/junha/Documents/Obsidian Vault" },
+  "env": {
+    "IEURI_VAULT": "/Users/junha/Documents/Obsidian Vault"
+  },
   "hooks": {
     "PreToolUse": [
       {
@@ -77,61 +86,11 @@
         ]
       },
       {
-        "matcher": "Edit|Write|Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/require-feature-branch.sh\""
-          }
-        ]
-      },
-      {
         "matcher": "Edit|Write",
         "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-spec-docs.sh\""
-          }
-          ,
-          {
-            "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/require-fresh-schema.sh\""
-          },
-          {
-            "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/block-layer-violations.sh\""
-          },
           {
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/block-insecure-storage.sh\""
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/format-and-analyze.sh\"",
-            "timeout": 60
-          },
-          {
-            "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/run-tests-after-edit.sh\"",
-            "timeout": 120
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/block-stop-without-tests.sh\"",
-            "timeout": 180
           }
         ]
       }

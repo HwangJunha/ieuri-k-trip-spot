@@ -1,7 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/network/graphql_client.dart';
-import '../model/tourist_spot.dart';
 import '../repository/spot_repository.dart';
 import '../repository/spot_repository_impl.dart';
 
@@ -14,13 +13,3 @@ part 'spot_providers.g.dart';
 @riverpod
 SpotRepository spotRepository(Ref ref) =>
     SpotRepositoryImpl(ref.watch(graphqlClientProvider));
-
-/// "Recommended for You" spots as an `AsyncValue` for the UI boundary.
-@riverpod
-Future<List<TouristSpot>> recommendedSpots(Ref ref) =>
-    ref.watch(spotRepositoryProvider).fetchRecommendedSpots();
-
-/// "Popular Spots" as an `AsyncValue` for the UI boundary.
-@riverpod
-Future<List<TouristSpot>> popularSpots(Ref ref) =>
-    ref.watch(spotRepositoryProvider).fetchPopularSpots();

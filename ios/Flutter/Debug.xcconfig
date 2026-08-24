@@ -1,2 +1,13 @@
 #include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"
 #include "Generated.xcconfig"
+
+// 앱 표시 이름의 **기본값**. flavor별로 다르게 하려면 Xcode의
+// Build Settings에서 구성별로 덮어쓴다(docs/ios-flavors.md §2).
+//
+// 여기 기본값을 두는 이유: Info.plist가 $(APP_DISPLAY_NAME)을 참조하므로,
+// 이 설정이 어디에도 없으면 앱 이름이 **빈 문자열**이 된다.
+APP_DISPLAY_NAME = K-Trip Spot
+
+// 기본값(flavor 없이 빌드할 때). 운영 클라이언트를 쓴다.
+GOOGLE_IOS_CLIENT_ID = 504325192446-vvqljuqs07v73fq5093ekl1ijt6q1cm7.apps.googleusercontent.com
+GOOGLE_REVERSED_CLIENT_ID = com.googleusercontent.apps.504325192446-vvqljuqs07v73fq5093ekl1ijt6q1cm7

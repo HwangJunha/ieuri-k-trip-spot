@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
-import 'congestion_colors.dart';
 
 /// Light and dark [ThemeData] for the app.
 ///
@@ -32,9 +31,6 @@ class AppTheme {
     scaffoldBackgroundColor: scheme.surface,
     fontFamily: _fontFamily,
     fontFamilyFallback: _fontFamilyFallback,
-    // Congestion badges are semantic (DESIGN.md §5) — same tokens on both
-    // brightnesses; cards read them via Theme.of(context).extension().
-    extensions: const <ThemeExtension<dynamic>>[CongestionColors.brand],
   );
 
   /// Exact Stitch light color roles.
@@ -44,10 +40,13 @@ class AppTheme {
     onPrimary: Color(0xFFFFFFFF),
     primaryContainer: Color(0xFFD53B32),
     onPrimaryContainer: Color(0xFFFFFBFF),
-    secondary: Color(0xFF006A6A),
+    // secondary 계열은 primary(브랜드 레드)와 같은 톤으로 통일한다 — 주황 계열
+    // 서브 컬러를 화면마다 섞어 쓰면 브랜드색이 흐려진다. 역할은 남겨 두되
+    // 값만 primary와 맞춰, 개별 위젯이 secondary를 참조해도 레드로 그려진다.
+    secondary: Color(0xFFB2211D),
     onSecondary: Color(0xFFFFFFFF),
-    secondaryContainer: Color(0xFF7FF2F1),
-    onSecondaryContainer: Color(0xFF006E6E),
+    secondaryContainer: Color(0xFFFFDAD5),
+    onSecondaryContainer: Color(0xFF93020A),
     tertiary: Color(0xFF805200),
     onTertiary: Color(0xFFFFFFFF),
     tertiaryContainer: Color(0xFFA16900),
@@ -76,10 +75,10 @@ class AppTheme {
     primaryFixedDim: Color(0xFFFFB4AA),
     onPrimaryFixed: Color(0xFF410002),
     onPrimaryFixedVariant: Color(0xFF93020A),
-    secondaryFixed: Color(0xFF82F5F4),
-    secondaryFixedDim: Color(0xFF63D8D8),
-    onSecondaryFixed: Color(0xFF002020),
-    onSecondaryFixedVariant: Color(0xFF004F50),
+    secondaryFixed: Color(0xFFFFDAD5),
+    secondaryFixedDim: Color(0xFFFFB4AA),
+    onSecondaryFixed: Color(0xFF410002),
+    onSecondaryFixedVariant: Color(0xFF93020A),
     tertiaryFixed: Color(0xFFFFDDB4),
     tertiaryFixedDim: Color(0xFFFFB955),
     onTertiaryFixed: Color(0xFF291800),
@@ -88,8 +87,20 @@ class AppTheme {
 
   /// Dark scheme seeded from the brand key color, with secondary/tertiary
   /// nudged to the brand values. Replace with Stitch dark tones when available.
-  static final ColorScheme _darkScheme = ColorScheme.fromSeed(
+  ///
+  /// **secondary 계열은 primary와 같은 톤으로 맞춘다** — 라이트 스킴과 같은 이유로
+  /// 주황 서브 컬러를 쓰지 않는다. 시드가 primary이므로 시드에서 파생된 primary
+  /// 톤을 그대로 secondary 자리에 넣어, 어두운 배경 대비도 함께 따라온다.
+  static final ColorScheme _darkScheme = _seededDark.copyWith(
+    secondary: _seededDark.primary,
+    onSecondary: _seededDark.onPrimary,
+    secondaryContainer: _seededDark.primaryContainer,
+    onSecondaryContainer: _seededDark.onPrimaryContainer,
+    tertiary: AppColors.tertiary,
+  );
+
+  static final ColorScheme _seededDark = ColorScheme.fromSeed(
     seedColor: AppColors.primary,
     brightness: Brightness.dark,
-  ).copyWith(secondary: AppColors.secondary, tertiary: AppColors.tertiary);
+  );
 }

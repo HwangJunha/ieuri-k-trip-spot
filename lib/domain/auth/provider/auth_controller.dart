@@ -1,5 +1,11 @@
+import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/analytics/analytics_events.dart';
+import '../../../common/analytics/app_analytics.dart';
+import '../../../common/log/app_log.dart';
+
+import '../../../common/model/session_teardown_provider.dart';
 import '../../../common/network/graphql_client.dart';
 import '../../../common/storage/secure_storage.dart';
 import '../model/auth_failure.dart';
@@ -7,11 +13,12 @@ import '../model/auth_session.dart';
 import '../model/auth_state.dart';
 import '../model/email_verification_handle.dart';
 import '../model/me.dart';
+import '../model/refresh_outcome.dart';
 import '../model/sns_credential.dart';
 import '../model/sns_provider.dart';
 import '../model/sns_registration_result.dart';
 import '../model/sns_sign_in_outcome.dart';
-import '../model/terms_code.dart';
+import '../../../common/model/terms_code.dart';
 import '../repository/auth_repository.dart';
 import '../repository/sns_authenticator.dart';
 import 'auth_repository_provider.dart';
@@ -27,11 +34,16 @@ part 'auth_controller.g.dart';
 /// bridge points at this notifier (CLAUDE.md §5 justification).
 @Riverpod(keepAlive: true)
 class AuthController extends _$AuthController {
+  static final Logger _log = appLogger('AuthController');
+
   @override
   Future<AuthState> build() async {
     // Register the refresh hook so the network layer can renew an expired
     // access token without importing this provider (breaks the cycle, §8).
-    ref.read(tokenRefreshBridgeProvider).refresher = _refreshAccessToken;
+    final TokenRefreshBridge bridge = ref.read(tokenRefreshBridgeProvider);
+    bridge.refresher = _refreshAccessToken;
+    // 같은 이유로 미인증 안전망도 콜백으로 등록한다(SPEC-0024 §2).
+    bridge.emailNotVerifiedHandler = handleEmailNotVerified;
     return _restoreSession();
   }
 
@@ -39,8 +51,12 @@ class AuthController extends _$AuthController {
   AuthRepository get _repo => ref.read(authRepositoryProvider);
 
   /// Session restore (spec §4.2): load the stored tokens. If an access token is
-  /// present, confirm it by fetching `me`; if that fails, try a refresh; if
-  /// neither works, fall back to unauthenticated.
+  /// present, confirm it by fetching `me`; if that fails, try a refresh.
+  ///
+  /// 이 경로의 실패도 §2.2 분류를 따른다(SPEC-0005 §2.6). accessToken만 만료된 경우
+  /// 갱신이 선행되어 로그인 화면을 거치지 않아야 하므로(AC-34), 갱신 시도가 끝나기
+  /// 전에는 상태를 `unauthenticated`로 넘기지 않는다 — 이 메서드는 `build()` 안에서
+  /// 돌기 때문에 반환 전까지 라우터가 보는 상태는 `loading`으로 유지된다.
   Future<AuthState> _restoreSession() async {
     final String? accessToken = await _storage.readAccessToken();
     final String? refreshToken = await _storage.readRefreshToken();
@@ -54,16 +70,30 @@ class AuthController extends _$AuthController {
     }
 
     // Access token missing or rejected — try one refresh before giving up.
-    final AuthSession? refreshed = await _repo.refresh(
-      refreshToken: refreshToken,
-    );
-    if (refreshed == null) {
-      await _storage.clearSession();
-      return AuthState.unauthenticated;
+    //
+    // 이 경로도 억제 플래그를 [_refreshAccessToken]과 동일하게 갱신해야 한다.
+    // 그러지 않으면 [retryRefresh]가 억제를 풀고 이 경로로 재시도했다가 또 실패해도
+    // 억제가 서지 않아, 화면 전환마다 갱신이 다시 나간다(AC-36 위반).
+    final TokenRefreshBridge bridge = ref.read(tokenRefreshBridgeProvider);
+    final RefreshOutcome outcome = await _refreshSession(refreshToken);
+    switch (outcome) {
+      case RefreshSucceeded(:final AuthSession session):
+        await _persist(session);
+        bridge.allowRefresh();
+        final AuthState? established = await _tryEstablish(session);
+        return established ?? AuthState.unauthenticated;
+      case RefreshRejected():
+        // 서버가 거부했으니 보관해도 쓸모없다 — 지운다(R9·R11).
+        bridge.suppressRefresh();
+        await _storage.clearSession();
+        return AuthState.unauthenticated;
+      case RefreshUnavailable():
+        // 부팅 중 네트워크가 끊겨 있으면 토큰을 지우지 않고 유지한 채 미인증으로
+        // 둔다(R10). 복구 후 재시도 시 보관된 refreshToken으로 갱신이 성공해야
+        // 한다(AC-29).
+        bridge.suppressRefresh();
+        return AuthState.unauthenticated;
     }
-    await _persist(refreshed);
-    final AuthState? established = await _tryEstablish(refreshed);
-    return established ?? AuthState.unauthenticated;
   }
 
   /// Fetches `me` for [session] and builds an authenticated [AuthState], or
@@ -89,7 +119,14 @@ class AuthController extends _$AuthController {
         email: email,
         password: password,
       );
-      return _establishSession(tokens);
+      final AuthState established = await _establishSession(tokens);
+      // **여기까지 왔으면 성공이다** — `AsyncValue.guard`가 감싸고 있어 실패는
+      // 도달하지 못한다. 세션 복원(`_restoreSession`)은 이 경로를 타지 않으므로
+      // 앱 재시작이 로그인으로 잡히지 않는다.
+      AppAnalytics.logEvent(AnalyticsEvents.login, <String, Object>{
+        AnalyticsParams.method: 'email',
+      });
+      return established;
     });
   }
 
@@ -119,12 +156,22 @@ class AuthController extends _$AuthController {
   ///     credential to the SNS sign-up screen),
   ///   - [SnsCancelled] when the user backs out (silent).
   /// A real login/network failure rethrows for the login screen to show.
-  Future<SnsSignInOutcome> signInSns(SnsProvider provider) async {
+  /// [reuse]가 있으면 SDK를 다시 부르지 않고 그 자격증명을 그대로 쓴다 —
+  /// 가입 직후 자동 로그인([signUpSns])이 그렇다. 다시 부르면 방금 인증을 마친
+  /// 사용자에게 SNS 동의 창이 한 번 더 뜬다.
+  Future<SnsSignInOutcome> signInSns(
+    SnsProvider provider, {
+    SnsCredential? reuse,
+  }) async {
     final SnsCredential credential;
-    try {
-      credential = await _snsAuth.authenticate(provider);
-    } on SnsCancelledException {
-      return const SnsCancelled();
+    if (reuse != null) {
+      credential = reuse;
+    } else {
+      try {
+        credential = await _snsAuth.authenticate(provider);
+      } on SnsCancelledException {
+        return const SnsCancelled();
+      }
     }
 
     final AsyncValue<AuthState> previous = state;
@@ -133,8 +180,29 @@ class AuthController extends _$AuthController {
       final AuthSession tokens = await _repo.loginSns(
         provider: provider,
         idToken: credential.idToken,
+        // 로그인에도 code를 실어야 한다(SPEC-0012 §3). 클라이언트 업데이트
+        // 전에 가입한 회원은 토큰이 없고 다음 로그인 때 보충되므로, 이 경로를
+        // 빠뜨리면 기존 회원이 영영 연동 해제 대상이 되지 못한다.
+        authorizationCode: credential.authorizationCode,
       );
-      state = await AsyncValue.guard(() => _establishSession(tokens));
+      // **`guard`로 삼키지 않는다.** 삼키면 `_establishSession`(=`me` 조회) 실패가
+      // error 상태로 남는데, 게이트는 error를 "판정 불가"로 접어 로그인 화면에
+      // 그대로 둔다 — 토큰은 이미 저장됐는데 사용자는 로그인이 안 된 것처럼 보여
+      // 계속 다시 시도하게 된다(실기기에서 구글 로그인이 반복된 원인).
+      //
+      // 던지면 로그인 화면이 오류를 보여 주고, 사용자는 무슨 일이 일어났는지 안다.
+      // 토큰은 저장돼 있으므로 다음 시도나 앱 재시작 때 세션 복원이 이어받는다.
+      try {
+        state = AsyncValue<AuthState>.data(await _establishSession(tokens));
+      } on Object {
+        state = previous;
+        rethrow;
+      }
+      // 미가입(`memberNotFound`)은 아래 catch에서 가입 화면으로 가므로 여기 닿지
+      // 않는다 — 실제로 세션이 선 경우만 잡힌다.
+      AppAnalytics.logEvent(AnalyticsEvents.login, <String, Object>{
+        AnalyticsParams.method: provider.name,
+      });
       return const SnsAuthenticated();
     } on AuthFailure catch (failure) {
       // Not registered yet → route to SNS sign-up. Restore the prior state so
@@ -148,22 +216,54 @@ class AuthController extends _$AuthController {
     }
   }
 
-  /// SNS sign-up (spec §5.2). Like [signUp] this issues no tokens and is NOT
-  /// wrapped in `state`: it must not flip the app-global auth state. Returns the
-  /// [SnsRegistrationResult] so the caller routes to verification-or-login;
-  /// failures rethrow for the SNS sign-up view to show locally.
+  /// SNS sign-up (spec §5.2). Returns the [SnsRegistrationResult] so the caller
+  /// routes to verification-or-onboarding; failures rethrow for the SNS sign-up
+  /// view to show locally.
+  ///
+  /// **가입만으로는 로그인되지 않는다** — 서버 `registerSnsMember`는 토큰을 주지
+  /// 않는다(라이브 introspection 확인: `success`·`userErrors`·`emailVerified`·
+  /// `verificationId` 넷뿐). 그래서 인증이 이미 끝난 경우([SnsRegistrationResult]의
+  /// `needsVerification`이 거짓) **같은 자격증명으로 로그인을 한 번 더 태운다**.
+  ///
+  /// 그러지 않으면 방금 SNS 인증을 마친 사람을 로그인 화면으로 되돌리게 된다 —
+  /// 게이트가 세션 없이는 온보딩을 통과시키지 않기 때문이다(사용자 지적 2026-08-25).
+  ///
+  /// **로그인 실패는 삼킨다.** 가입 자체는 성공했으므로 결과를 그대로 돌려주고,
+  /// 화면은 지금까지처럼 로그인으로 보낸다 — 사용자는 직접 로그인하면 된다.
+  /// idToken 수명이 5분이라 이 사이에 만료될 일은 사실상 없지만, 만료됐다면
+  /// 재인증 외에 방법이 없다.
   Future<SnsRegistrationResult> signUpSns({
     required SnsCredential credential,
     required String email,
     required bool ageVerified,
     required List<Agreement> agreements,
-  }) => _repo.registerSnsMember(
-    provider: credential.provider,
-    idToken: credential.idToken,
-    email: email,
-    ageVerified: ageVerified,
-    agreements: agreements,
-  );
+  }) async {
+    final SnsRegistrationResult result = await _repo.registerSnsMember(
+      provider: credential.provider,
+      idToken: credential.idToken,
+      email: email,
+      ageVerified: ageVerified,
+      agreements: agreements,
+      authorizationCode: credential.authorizationCode,
+    );
+
+    // **서버 등록이 끝난 시점을 가입으로 본다.** 이메일 인증이 남았을 수도 있지만,
+    // 그건 별개 단계다 — 여기서 세지 않으면 인증 화면에서 이탈한 사용자가 가입
+    // 시도에 잡히지 않아 퍼널이 끊긴다.
+    AppAnalytics.logEvent(AnalyticsEvents.signUp, <String, Object>{
+      AnalyticsParams.method: credential.provider.name,
+    });
+
+    // 코드 인증이 남았으면 아직 로그인시킬 수 없다 — 인증 화면이 먼저다.
+    if (result.needsVerification) return result;
+
+    try {
+      await signInSns(credential.provider, reuse: credential);
+    } on Object catch (error) {
+      _log.w('가입 직후 자동 로그인 실패 — 로그인 화면으로 보낸다: ${error.runtimeType}');
+    }
+    return result;
+  }
 
   /// Registers a member (spec §4.2/§5.2). Returns the [EmailVerificationHandle]
   /// so the caller routes to the verification screen. Deliberately NOT wrapped
@@ -191,6 +291,14 @@ class AuthController extends _$AuthController {
     required String verificationId,
   }) => _repo.resendVerification(verificationId: verificationId);
 
+  /// 인증 대상 주소를 바꾸고 새 코드를 받는다(SPEC-0024 R7).
+  ///
+  /// `state`를 건드리지 않는다 — 인증 전 상태가 그대로 유지돼야 하고, 주소는
+  /// **인증을 통과할 때** 확정되므로 여기서 `me`를 다시 읽어도 옛 주소가 온다.
+  Future<EmailVerificationHandle> retargetEmailVerification({
+    required String newEmail,
+  }) => _repo.retargetEmailVerification(newEmail: newEmail);
+
   Future<void> requestPasswordReset({required String email}) =>
       _repo.requestPasswordReset(email: email);
 
@@ -203,13 +311,73 @@ class AuthController extends _$AuthController {
   /// Signs out (spec §6.3): invalidate the refresh token server-side, then
   /// clear local tokens and reset state — regardless of the server call's
   /// outcome.
+  ///
+  /// **정리 훅이 가장 먼저다**(SPEC-0028 §3.2). 기기 푸시 해제처럼 인증을 요구하는
+  /// 작업은 세션이 살아 있는 동안에만 성공하므로, 저장소를 비우기 전에 부른다.
+  /// 여기서 alarm을 직접 부르지 않는 이유는 auth가 alarm을 알면 기능 간 의존이 되기
+  /// 때문이다 — 등록된 콜백만 부른다(`SessionTeardown`).
   Future<void> signOut() async {
+    await ref.read(sessionTeardownProvider).run();
     final String? refreshToken = await _storage.readRefreshToken();
     if (refreshToken != null) {
       await _repo.logout(refreshToken: refreshToken);
     }
     await _storage.clearSession();
     state = const AsyncValue<AuthState>.data(AuthState.unauthenticated);
+  }
+
+  /// 세션에 실린 `Me`를 서버 값으로 다시 맞춘다(SPEC-0011 R4~R6).
+  ///
+  /// 프로필(닉네임·이미지)이 바뀌면 설정 화면과 홈이 그리는 값은 세션의 `Me`인데,
+  /// 그 값은 로그인 시점의 것이라 저절로 갱신되지 않는다. 변경한 쪽이 여기를 부른다.
+  ///
+  /// **로딩 상태로 떨어뜨리지 않는다.** `AuthController`의 로딩은 라우터 게이트가
+  /// "판정 불가"로 읽어 화면이 스플래시로 튄다 — 프로필 한 줄 때문에 앱이 껌뻑이면
+  /// 안 된다. 그래서 성공했을 때만 데이터를 갈아 끼운다.
+  ///
+  /// **실패해도 던지지 않는다.** 서버 변경 자체는 이미 성공한 뒤라, 표시값 동기화가
+  /// 실패했다고 사용자에게 "실패했다"고 말하면 거짓이 된다.
+  Future<void> refreshMe() async {
+    final AuthState? current = state.value;
+    final AuthSession? session = current?.session;
+    if (current == null || session == null) return;
+    try {
+      final Me me = await _repo.fetchMe();
+      // **값이 그대로면 대입하지 않는다.** 같은 값이라도 새 AsyncValue를 넣으면
+      // 리스너가 깨어나고, 라우터가 리다이렉트를 다시 평가하면서 화면이 재구독한
+      // provider가 또 조회를 낸다 — 그 응답이 다시 여기로 돌아오면 앱이 서버를
+      // 무한히 두드린다(실기기에서 agreements·me가 끝없이 반복했다).
+      if (session.user == me) return;
+      state = AsyncValue<AuthState>.data(
+        current.copyWith(session: session.copyWith(user: me)),
+      );
+    } on Object {
+      // 표시값만 옛것으로 남는다 — 다음 조회에서 맞춰진다.
+    }
+  }
+
+  /// 서버가 `EMAIL_NOT_VERIFIED`를 최상위 오류로 보냈을 때의 안전망
+  /// (SPEC-0024 §2, 설계 §3).
+  ///
+  /// 라우팅 게이트가 정상 동작하면 이 오류는 원칙적으로 발생하지 않는다. 그래도
+  /// 두는 이유는 두 가지다 — 게이트가 놓친 진입점이 있거나, 인증 상태가 서버에서
+  /// 바뀐 경우다.
+  ///
+  /// **토큰을 지우지 않는다.** 토큰 자체는 유효하고 문제는 인증 상태뿐이라,
+  /// 로그아웃시키면 사용자가 이유 없이 로그인 화면으로 튕긴다. `me`를 다시 읽어
+  /// 세션의 `emailVerified`를 서버 값에 맞추면 게이트가 인증 화면으로 보낸다.
+  ///
+  /// 화면별로 잡지 않고 여기 한 곳에 둔다(설계 §3).
+  ///
+  /// **이미 미인증으로 알고 있으면 아무것도 하지 않는다.** 인증 화면에 머무는 동안
+  /// 화면들이 보내는 요청은 전부 이 오류로 거절되는데, 그때마다 `me`를 다시 읽으면
+  /// 조회가 끝없이 이어진다. 이 안전망이 필요한 경우는 앱이 인증을 마쳤다고
+  /// **잘못 알고 있을 때**뿐이고, 그때만 서버 값을 다시 읽으면 된다.
+  Future<void> handleEmailNotVerified() async {
+    final AuthState? current = state.value;
+    if (current == null || !current.isAuthenticated) return;
+    if (!current.emailVerified) return; // 이미 안다 — 게이트가 처리 중이다.
+    await refreshMe();
   }
 
   /// Marks onboarding done for the current account and updates state so the
@@ -219,6 +387,9 @@ class AuthController extends _$AuthController {
     final String? userId = current?.userId;
     if (current == null || userId == null) return;
     await _storage.setOnboardingCompleted(userId);
+    // **단일 관문이다.** 온보딩 화면의 "시작하기"와 "건너뛰기"가 모두 여기로 모이고,
+    // 다른 호출부가 없다 — 화면 쪽에 심으면 두 버튼에 각각 넣어야 한다.
+    AppAnalytics.logEvent(AnalyticsEvents.onboardingComplete);
     state = AsyncValue<AuthState>.data(
       current.copyWith(onboardingCompleted: true),
     );
@@ -233,21 +404,84 @@ class AuthController extends _$AuthController {
       _storage.writeUser(userId: me.id, userEmail: me.email);
 
   /// Called by the network refresh bridge on an auth error. Renews the token
-  /// pair; on failure clears the session and signs out (spec §6.3).
+  /// pair and returns the new access token.
+  ///
+  /// 실패 처리는 두 갈래로 갈린다(SPEC-0005 §2.2) — 이걸 뭉개면 R9와 R10 중 하나는
+  /// 반드시 위반된다:
+  ///   - 갱신 거부(E3·E4): 토큰을 제거하고 세션을 종료한다(R9·R11).
+  ///   - 전송 실패(E5): 토큰을 **유지**한 채 오류만 전파한다(R10). 네트워크가
+  ///     복구되면 보관된 refreshToken으로 갱신이 성공해야 하기 때문이다(AC-29).
+  ///
+  /// 어느 쪽이든 실패하면 억제 플래그를 세워 순차 재발화를 막는다(R14, AC-36).
   Future<String?> _refreshAccessToken() async {
+    final TokenRefreshBridge bridge = ref.read(tokenRefreshBridgeProvider);
     final String? refreshToken = await _storage.readRefreshToken();
     if (refreshToken == null) {
+      bridge.suppressRefresh();
       await signOut();
       return null;
     }
-    final AuthSession? refreshed = await _repo.refresh(
-      refreshToken: refreshToken,
-    );
-    if (refreshed == null) {
-      await signOut();
-      return null;
+
+    final RefreshOutcome outcome = await _refreshSession(refreshToken);
+    switch (outcome) {
+      case RefreshSucceeded(:final AuthSession session):
+        // 저장이 끝난 뒤에 대기 중인 요청이 풀려야 이후 요청이 새 토큰을 담는다
+        // (AC-32). 갱신 성공 시 억제는 당연히 해제된다.
+        await _persist(session);
+        bridge.allowRefresh();
+        return session.accessToken;
+      case RefreshRejected():
+        bridge.suppressRefresh();
+        await signOut();
+        return null;
+      case RefreshUnavailable():
+        // R10 — 토큰을 지우지 않는다. 세션도 강제 종료하지 않는다.
+        bridge.suppressRefresh();
+        return null;
     }
-    await _persist(refreshed);
-    return refreshed.accessToken;
+  }
+
+  /// refreshToken으로 갱신을 시도하고 결과를 세 갈래로 돌려준다. repository가 던지는
+  /// [AuthFailure] 분류를 그대로 따르며, 여기서 다시 판별하지 않는다(SPEC-0005 §2.1 —
+  /// 판별은 한 곳에서만).
+  Future<RefreshOutcome> _refreshSession(String refreshToken) async {
+    try {
+      final AuthSession? refreshed = await _repo.refresh(
+        refreshToken: refreshToken,
+      );
+      // `success: true`인데 accessToken이 null인 응답은 실패로 간주하고 R9를 따른다
+      // (AC-31). 스키마상 accessToken이 nullable이라 가능한 상태다.
+      if (refreshed == null) return const RefreshRejected();
+      return RefreshSucceeded(refreshed);
+    } on AuthFailure catch (failure) {
+      // **세션을 끝내는 사유를 나열하고, 나머지는 세션을 지킨다.**
+      //
+      // 예전에는 반대였다 — `transportFailure`가 아니면 전부 `RefreshRejected`로
+      // 보내 로그아웃시켰다. 그러면 서버가 앱이 모르는 코드를 하나만 내려도
+      // (`fromCode`가 `unknown`으로 접는다) 즉시 로그인 화면으로 튕긴다. 갱신은
+      // 사용자가 화면을 보는 중에 조용히 도는 것이라, 그 순간 아무 조작도 안 했는데
+      // 로그아웃되는 것으로 나타난다.
+      //
+      // 판정을 뒤집으면 모르는 코드는 "이번 갱신을 못 했다"로 끝나고 토큰이 남는다.
+      // 정말 만료됐다면 다음 요청에서 서버가 다시 거부하고, 그때는 아래 목록에 있는
+      // 코드로 오므로 제때 로그아웃된다 — 늦어질 뿐 놓치지 않는다.
+      return switch (failure.kind) {
+        // 서버가 refreshToken 자체를 거부했다. 재발급으로 회복되지 않는다.
+        AuthFailureKind.refreshRejected ||
+        // 회전 토큰 재사용 감지 — 재로그인만이 복구다.
+        AuthFailureKind.tokenReuseDetected ||
+        // 계정이 비활성이라 갱신해도 쓸 수 없다.
+        AuthFailureKind.accountInactive => const RefreshRejected(),
+        _ => const RefreshUnavailable(),
+      };
+    }
+  }
+
+  /// 사용자의 명시적 재시도 — 억제를 해제하고 세션 복원을 다시 시도한다(AC-38).
+  /// 시간 기반 자동 해제는 두지 않으므로 이 경로와 앱 재시작만이 해제 계기다.
+  Future<void> retryRefresh() async {
+    ref.read(tokenRefreshBridgeProvider).allowRefresh();
+    state = const AsyncValue<AuthState>.loading();
+    state = await AsyncValue.guard(_restoreSession);
   }
 }

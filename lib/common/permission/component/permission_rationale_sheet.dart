@@ -42,16 +42,19 @@ class PermissionRationaleSheet extends StatelessWidget {
   IconData get _icon => switch (kind) {
     PermissionKind.location => Icons.location_on_outlined,
     PermissionKind.notification => Icons.notifications_active_outlined,
+    PermissionKind.photos => Icons.photo_library_outlined,
   };
 
   String _title(AppLocalizations l10n) => switch (kind) {
     PermissionKind.location => l10n.permissionLocationRationaleTitle,
     PermissionKind.notification => l10n.permissionNotificationRationaleTitle,
+    PermissionKind.photos => l10n.permissionPhotosRationaleTitle,
   };
 
   String _body(AppLocalizations l10n) => switch (kind) {
     PermissionKind.location => l10n.permissionLocationRationaleBody,
     PermissionKind.notification => l10n.permissionNotificationRationaleBody,
+    PermissionKind.photos => l10n.permissionPhotosRationaleBody,
   };
 
   @override

@@ -5,8 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../common/app_assets.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../../common/navigation/discover_route.dart';
 import '../../auth/provider/auth_controller.dart';
-import '../../spot/view/home_screen.dart';
 
 /// Three-page onboarding carousel (Stitch design): a top bar with the brand
 /// logo + Skip, a large media card per page (placeholder gradient + location
@@ -62,9 +62,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   Future<void> _finish() async {
     // Account-bound completion (spec §4.3): mark the signed-in account done;
-    // the router redirect then lets it through to home.
+    // the router redirect then lets it through. 착지점은 Discover다 — 앱의 핵심
+    // 동선이 스와이프이므로 온보딩 직후 바로 카드를 보게 한다.
     await ref.read(authControllerProvider.notifier).completeOnboarding();
-    if (mounted) context.goNamed(HomeScreen.routeName);
+    if (mounted) context.goNamed(discoverRouteName);
   }
 
   void _next(int pageCount) {

@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "504325192446",
+    "project_id": "ieuri-d1127",
+    "storage_bucket": "ieuri-d1127.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:504325192446:android:c7615e527b122d783fc3af",
+        "android_client_info": {
+          "package_name": "kr.ieuri.ktripspot"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "504325192446-ujmg1s3vkvv2l2jivfb6pemarg0sujrc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "kr.ieuri.ktripspot",
+            "certificate_hash": "2727f1b765b85ad312f39aa78db80a9766a293d9"
+          }
+        },
+        {
+          "client_id": "504325192446-69cc1ljfcrl5364632mrssn1dmeh43h8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBqviW1B4RP3XYron6LK8_toTApCGX6aG8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "504325192446-69cc1ljfcrl5364632mrssn1dmeh43h8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "504325192446-dvqlv833f9o6q8mqf2br7u08jpip2kk6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "kr.ieuri.ktripspot.dev"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

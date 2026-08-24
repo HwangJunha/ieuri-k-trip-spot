@@ -2,7 +2,7 @@
 name: architecture-reviewer
 description: Read-only reviewer that verifies domain-centric structure, layer boundaries, dependency direction, and GraphQL isolation (CLAUDE.md §2–§4) for K-TripSpot Flutter changes. Use after a feature is built or edited, before it's considered done. Does NOT edit — it reports violations for slice-builder/the parent to fix.
 tools: Read, Glob, Grep, Bash
-model: opus
+model: sonnet
 skills:
   - layer-boundary-review
 ---

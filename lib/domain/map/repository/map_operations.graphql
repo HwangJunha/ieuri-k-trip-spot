@@ -1,0 +1,120 @@
+# SPEC-0014 지도 오퍼레이션.
+#
+# **세 쿼리를 하나로 합치지 않는다**(설계 §6.3). 마커와 혼잡도는 별개 최상위 필드이며,
+# 한 요청에 묶으면 한쪽 실패가 다른 쪽을 가린다 — R29가 "혼잡도가 실패해도 마커는
+# 계속 보인다"를 요구한다. 경계는 정적이라 조회 주기 자체가 다르다(R26).
+
+# 뷰포트 안의 마커(R1·R2·R3·R12).
+#
+# 응답은 spots/clusters가 상호배타적이며, 둘 다 비면 "결과 없음"이고 둘 다 차 있으면
+# 계약 위반이다(설계 §4.2).
+query MapViewport(
+  $bbox: MapBoundsInput!
+  $zoom: Int!
+  $categories: [String!]
+) {
+  mapViewport(
+    bbox: $bbox
+    zoom: $zoom
+    categories: $categories
+  ) {
+    spots {
+      id
+      title
+      thumbnailImageUrl
+      category {
+        code
+        label
+        iconUrl
+      }
+      lng
+      lat
+    }
+    events {
+      id
+      title
+      place
+      period
+      lng
+      lat
+      url
+    }
+    truncated
+  }
+}
+
+# 뷰포트에 걸치는 구역의 실시간 혼잡도(R6~R11).
+#
+# **줌 게이트를 통과했을 때만 부른다**(R25, 설계 §5.1) — 이것이 일일 쿼터 1000건을
+# 지키는 실질적 장치다. 렌더링만 막고 조회를 계속하면 의미가 없다.
+#
+# `forecast`는 받지 않는다. 12개 시간대 예보는 이번 화면이 표시하지 않는 항목이라
+# (spec §7.8이 표시 항목을 4종으로 고정) 응답 크기만 키운다.
+query SeoulCongestion($bbox: MapBoundsInput!) {
+  seoulCongestion(bbox: $bbox) {
+    areas {
+      id
+      name
+      congestion {
+        level
+        populationMin
+        populationMax
+        observedAt
+      }
+      commercial {
+        level
+        isDefaulted
+        observedAt
+      }
+    }
+    degraded
+    staleSince
+  }
+}
+
+# 121곳의 정적 폴리곤 경계(R17·R26). 앱 수명 동안 1회 조회해 캐시한다.
+#
+# **구역명이 활성 언어로 온다**(R31) — 캐시 키에 언어를 포함해야 하며, 언어를 바꾸면
+# 이전 언어의 이름이 남지 않도록 무효화한다(설계 §5.2).
+query SeoulCongestionAreas {
+  seoulCongestionAreas {
+    id
+    name
+    category
+    polygon
+  }
+}
+
+# 추천 시군구 목록(SPEC-0015).
+#
+# **origin은 필수다.** 서버가 "지금 있는 곳 말고 근처의 다른 곳"을 답하므로, 좌표가
+# 없으면 GraphQL 검증 단계에서 거절된다 — 위치 권한이 없으면 이 쿼리를 아예 부르지
+# 않고 화면이 권한 안내를 그린다(설계 §9.3).
+#
+# **`totalScore`를 받지 않는다**(계약에서 삭제). 가중평균 구조상 총점은 늘 항목 점수들
+# 사이 값이라 1위가 60점으로 나왔고, 절대 점수를 보여주는 것 자체가 이 데이터에 맞지
+# 않는다. 추천 순위는 배열 순서다 — regions[0]이 1위다.
+#
+# **`basisAt`도 받지 않는다** — 삭제 예정 필드다.
+#
+# `rank`는 항목별 순위다(1이 가장 좋음). 시도 전체 후보 기준이라 목록에 없는 지역까지
+# 셈에 들어간다.
+query RecommendedRegions($origin: CoordinatesInput!, $limit: Int) {
+  recommendedRegions(origin: $origin, limit: $limit) {
+    regions {
+      code
+      name
+      provinceName
+      scoreFactorCount
+      center {
+        lat
+        lng
+      }
+      scores {
+        factor
+        value
+        rank
+      }
+    }
+  }
+}

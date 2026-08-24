@@ -25,6 +25,9 @@ class SwipeQueue {
   final bool hasNextPage;
 
   /// 다음 선제 조회에 넘길 페이지 번호. 다음이 없으면 null.
+  ///
+  /// SPEC-0029에서 원문/번역 두 구간이 사라져 페이지 번호가 다시 한 줄로 이어진다 —
+  /// 중간에 0으로 되돌아가는 전환점이 없다.
   int? get nextPage => hasNextPage ? loadedPage + 1 : null;
 
   /// 스택이 비었고 더 가져올 게 없는 소진 상태 여부(spec §4 — 자동 재조회 안 함).
@@ -32,6 +35,15 @@ class SwipeQueue {
 
   /// 맨 위 카드, 비었으면 null.
   TouristSpot? get top => cards.isEmpty ? null : cards.first;
+
+  /// [spotId] 카드를 스택에서 제거한 큐(SPEC-0007 §4.2·§4.3). 서버에서 사라진
+  /// 축제를 만났을 때 다시 나타나지 않게 하는 용도로, 없는 id면 그대로 돌려준다.
+  SwipeQueue removeCard(String spotId) {
+    final List<TouristSpot> remaining = cards
+        .where((TouristSpot spot) => spot.id != spotId)
+        .toList(growable: false);
+    return remaining.length == cards.length ? this : copyWith(cards: remaining);
+  }
 
   SwipeQueue copyWith({
     List<TouristSpot>? cards,

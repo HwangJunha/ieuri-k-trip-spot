@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../common/model/terms_code.dart';
+import '../../../common/widget/document_web_view.dart';
 import '../../../l10n/gen/app_localizations.dart';
-import '../model/terms_code.dart';
 
 /// The consent items shown in the sign-up form. `null` [termsCode] is the
 /// age-verification item (maps to `ageVerified`, not an agreement).
@@ -57,8 +58,12 @@ class AgreementSelection {
 
 /// DANAWA-style inline consent checklist (spec §5.2): a master "agree to all"
 /// row that toggles every child and auto-checks when all children are on, plus
-/// individual rows with a required/optional badge and an expandable detail.
-class AgreementChecklist extends StatefulWidget {
+/// individual rows with a required/optional badge and a link to the full text.
+///
+/// **전문은 웹뷰로 띄운다**(2026-08-24). 예전에는 행을 펼쳐 "준비 중" 자리표시
+/// 문구를 보여 줬는데, 약관 본문 없이 동의를 받는 화면이라 심사에서 반려된다.
+/// 펼침 상태를 들고 있을 이유가 사라져 `StatelessWidget`이 됐다.
+class AgreementChecklist extends StatelessWidget {
   const AgreementChecklist({
     super.key,
     required this.selection,
@@ -69,13 +74,6 @@ class AgreementChecklist extends StatefulWidget {
   final ValueChanged<AgreementSelection> onChanged;
 
   @override
-  State<AgreementChecklist> createState() => _AgreementChecklistState();
-}
-
-class _AgreementChecklistState extends State<AgreementChecklist> {
-  final Set<AgreementItem> _expanded = <AgreementItem>{};
-
-  @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final ThemeData theme = Theme.of(context);
@@ -84,9 +82,8 @@ class _AgreementChecklistState extends State<AgreementChecklist> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         CheckboxListTile(
-          value: widget.selection.allChecked,
-          onChanged: (bool? v) =>
-              widget.onChanged(widget.selection.toggleAll(v ?? false)),
+          value: selection.allChecked,
+          onChanged: (bool? v) => onChanged(selection.toggleAll(v ?? false)),
           contentPadding: EdgeInsets.zero,
           controlAffinity: ListTileControlAffinity.leading,
           title: Text(
@@ -98,21 +95,13 @@ class _AgreementChecklistState extends State<AgreementChecklist> {
         for (final AgreementItem item in AgreementItem.all)
           _AgreementRow(
             item: item,
-            checked: widget.selection.isChecked(item),
-            expanded: _expanded.contains(item),
+            checked: selection.isChecked(item),
             label: _label(l10n, item),
             badge: item.required
                 ? l10n.agreementRequiredBadge
                 : l10n.agreementOptionalBadge,
-            detail: l10n.agreementDetailPlaceholder,
             viewLabel: l10n.agreementViewDetail,
-            onChanged: (bool v) =>
-                widget.onChanged(widget.selection.toggle(item, v)),
-            onToggleExpand: () => setState(() {
-              _expanded.contains(item)
-                  ? _expanded.remove(item)
-                  : _expanded.add(item);
-            }),
+            onChanged: (bool v) => onChanged(selection.toggle(item, v)),
           ),
       ],
     );
@@ -131,24 +120,18 @@ class _AgreementRow extends StatelessWidget {
   const _AgreementRow({
     required this.item,
     required this.checked,
-    required this.expanded,
     required this.label,
     required this.badge,
-    required this.detail,
     required this.viewLabel,
     required this.onChanged,
-    required this.onToggleExpand,
   });
 
   final AgreementItem item;
   final bool checked;
-  final bool expanded;
   final String label;
   final String badge;
-  final String detail;
   final String viewLabel;
   final ValueChanged<bool> onChanged;
-  final VoidCallback onToggleExpand;
 
   @override
   Widget build(BuildContext context) {
@@ -156,34 +139,30 @@ class _AgreementRow extends StatelessWidget {
     final Color badgeColor = item.required
         ? theme.colorScheme.primary
         : theme.colorScheme.onSurfaceVariant;
+    // 전문이 게시된 항목만 "보기"를 준다. 만 14세 확인과 마케팅 수신은 별도
+    // 문서가 없다(마케팅 조항은 서비스 약관 안에 있다).
+    final Uri? url = item.termsCode?.documentUrl;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: <Widget>[
-        Row(
-          children: <Widget>[
-            Checkbox(
-              value: checked,
-              onChanged: (bool? v) => onChanged(v ?? false),
-            ),
-            Text(
-              '[$badge]',
-              style: theme.textTheme.labelSmall?.copyWith(color: badgeColor),
-            ),
-            const SizedBox(width: 8),
-            Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
-            TextButton(onPressed: onToggleExpand, child: Text(viewLabel)),
-          ],
+        Checkbox(value: checked, onChanged: (bool? v) => onChanged(v ?? false)),
+        Text(
+          '[$badge]',
+          style: theme.textTheme.labelSmall?.copyWith(color: badgeColor),
         ),
-        if (expanded)
-          Padding(
-            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
-            child: Text(
-              detail,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+        const SizedBox(width: 8),
+        Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
+        // **웹뷰로 전문을 띄운다.** 예전에는 "전문은 준비 중"이라는 자리표시
+        // 문구를 펼쳐 보여 줬는데, 개인정보를 수집하는 앱이 약관 본문 없이
+        // 동의를 받는 셈이라 심사에서 그대로 반려된다.
+        if (url != null)
+          TextButton(
+            onPressed: () => Navigator.of(context).push<void>(
+              MaterialPageRoute<void>(
+                builder: (_) => DocumentWebView(title: label, url: url),
               ),
             ),
+            child: Text(viewLabel),
           ),
       ],
     );

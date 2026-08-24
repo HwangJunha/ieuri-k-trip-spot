@@ -1,0 +1,330 @@
+# SPEC-0010 커뮤니티 슬라이스가 쓰는 서버 스키마 조각(committed codegen 입력).
+# `schema/schema.introspection.json` 스냅샷에서 손으로 추린 안정 빌드 입력이며,
+# gitignore된 스냅샷을 codegen이 직접 읽지 않는다(CLAUDE.md §13).
+
+# `TargetCategory`·`PostAuthor`·`PostSpot`·`Comment`·`Post`·`PostEdge`·`PostConnection`은
+# **`common/network/shared_schema.graphql`로 옮겼다** — 설정의 "내가 쓴 글"(SPEC-0011 R3)이
+# 같은 타입을 쓰게 되면서, 이 파일에 두면 설정이 커뮤니티의 생성 파일을 import하게 되어
+# 기능 간 의존이 생긴다(CLAUDE.md §3·§4). codegen은 조각을 한 네임스페이스로 합치므로
+# 여기서 참조만 해도 그대로 해석된다.
+
+type CommentEdge {
+  cursor: String!
+  node: Comment!
+}
+
+type CommentConnection {
+  edges: [CommentEdge!]!
+  pageInfo: PageInfo!
+}
+
+# `PageInfo`·`UserError`는 auth 스키마 조각이 이미 선언한다. codegen이 모든 조각을
+# 한 네임스페이스에서 합치므로 여기서 다시 선언하면 중복이다.
+
+# `CommunityChip` 타입은 **서버에서 사라졌다**(2026-08-16 라이브 확인).
+# `communityChips`가 `[TargetCategory!]!` — 하위 선택이 불가능한 leaf 배열 —로 바뀌면서
+# `category`·`position` 필드를 가진 객체 타입이 없어졌다. 순서는 이제 서버가 코드
+# 알파벳순으로 줄 뿐 의미가 없어, 표시 순서는 클라이언트가 정한다
+# (`common/category/category_chip_data.dart`의 `kCategoryDisplayOrder`).
+
+type BlockedUserEdge {
+  cursor: String!
+  node: PostAuthor!
+  blockedAt: String!
+}
+
+type BlockedUserConnection {
+  edges: [BlockedUserEdge!]!
+  pageInfo: PageInfo!
+}
+
+input CreatePostInput {
+  category: TargetCategory!
+  catalogId: ID
+  tags: [String!]!
+  title: String!
+  body: String!
+  photoKeys: [String!]!
+}
+
+type CreatePostPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  postId: ID
+}
+
+# 제목·본문·사진에 더해 **카테고리·장소·태그도 바꾼다**(서버가 뒤늦게 추가했다 —
+# 1차 가이드 §5의 "못 바꾼다"는 이제 낡은 서술이다. 라이브 스키마가 정본이다).
+#
+# `changeSpot`은 **어느 가이드에도 없고 스키마에만 있다.** 기본값 false이며,
+# `catalogId: null` 하나로는 구분되지 않는 두 뜻을 가른다:
+#   - false            → 장소를 건드리지 않는다(`catalogId`는 무시된다)
+#   - true + catalogId → 그 장소로 바꾼다
+#   - true + null      → 장소를 뗀다(장소 없는 글이 된다)
+# 기본이 false라 이 값을 보내지 않던 예전 클라이언트는 동작이 그대로다.
+input EditPostInput {
+  postId: ID!
+  title: String!
+  body: String!
+  photoKeys: [String!]
+  category: TargetCategory
+  changeSpot: Boolean = false
+  catalogId: ID
+  tags: [String!]
+}
+
+type EditPostPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+input CreateCommentInput {
+  postId: ID!
+  body: String!
+  # 생략하면 최상위 댓글이다. **답글에 답글을 달아도 거부되지 않고** 그 답글의
+  # 최상위 부모에 눕혀지므로, 응답의 `parentCommentId`가 넘긴 값과 다를 수 있다
+  # (2차 가이드 §1). 그래서 앱은 답글에 "답글 달기"를 두지 않는다.
+  parentCommentId: ID
+}
+
+type CreateCommentPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  commentId: ID
+}
+
+input DeleteCommentInput {
+  commentId: ID!
+}
+
+type DeleteCommentPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+input DeletePostInput {
+  postId: ID!
+}
+
+type DeletePostPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+# 사진 업로드(가이드 §4). **서버는 이미지 바이트를 받지 않는다** — 앱이 스토리지로
+# 직접 PUT하고, 그 PUT만 GraphQL이 아니다.
+input PostImageUploadRequest {
+  contentType: String!
+  contentLength: Int!
+}
+
+input CreatePostImageUploadUrlsInput {
+  images: [PostImageUploadRequest!]!
+}
+
+type PostImageUploadUrl {
+  uploadUrl: String!
+  objectKey: String!
+  expiresAt: String!
+}
+
+type CreatePostImageUploadUrlsPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  uploadUrls: [PostImageUploadUrl!]!
+}
+
+input ConfirmPostImageUploadsInput {
+  objectKeys: [String!]!
+}
+
+type PostImageUploadFailure {
+  objectKey: String!
+  code: String!
+}
+
+type ConfirmPostImageUploadsPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  confirmed: [String!]!
+  failed: [PostImageUploadFailure!]!
+}
+
+input DeletePostImageInput {
+  objectKey: String!
+}
+
+type DeletePostImagePayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+# 모더레이션(가이드 §6). 차단은 **양방향**이라 내가 차단한 사람과 나를 차단한
+# 사람의 글이 모두 사라진다 — 서버가 걸러 주므로 앱이 필터링할 것은 없고, 차단
+# 직후에는 피드를 다시 불러온다.
+enum ReportReason {
+  SPAM
+  ABUSE
+  INAPPROPRIATE_CONTENT
+  OTHER
+}
+
+enum ReportTargetType {
+  POST
+  COMMENT
+  MEMBER
+  # SPEC-0017에서 서버가 추가했다(가산적 변경). 피드 신고가 이 값을 쓴다 —
+  # DM 신고는 다건이라 이 열거형이 아니라 `reportMessages` 뮤테이션을 쓴다.
+  FEED_ITEM
+  # SPEC-0026에서 서버가 추가했다(가산적 변경). 장소 질문/답변/답글 신고가 쓴다 —
+  # 새 신고 뮤테이션을 만들지 않고 `reportContent`를 그대로 재사용한다(R11).
+  SPOT_QUESTION
+  SPOT_ANSWER
+  SPOT_ANSWER_REPLY
+}
+
+input BlockUserInput {
+  targetMemberId: ID!
+}
+
+type BlockUserPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+input UnblockUserInput {
+  targetMemberId: ID!
+}
+
+type UnblockUserPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+# `detail`은 reason이 OTHER일 때 **필수**다. 스키마상 nullable이라 GraphQL이 막아
+# 주지 않으므로 클라이언트 폼에서 미리 거른다(가이드 §6).
+input ReportContentInput {
+  targetType: ReportTargetType!
+  targetId: ID!
+  reason: ReportReason!
+  detail: String
+}
+
+type ReportContentPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+# 게시물 숨기기(2차 가이드 §2). **신고·차단과 각각 다르다** — 글 하나를 **내
+# 화면에서만** 감추고, 되돌릴 수 있으며, 소유권을 보지 않아 내 글도 숨길 수 있다.
+# 조치가 아니라 화면 설정이다.
+#
+# **`Post.hidden`과 헷갈리면 안 된다.** 그쪽은 신고 5건 누적으로 **모두에게** 감춰진
+# 글(작성자 본인에게만 보인다)이고, 이건 내가 나에게만 감춘 것이다.
+#
+# 둘 다 멱등이며(이미 숨긴 글에 다시 불러도 success), 해제는 **삭제된 글에도**
+# 동작한다 — 그래야 숨김 목록에 남지 않는다.
+input HidePostInput {
+  postId: ID!
+}
+
+type HidePostPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+input UnhidePostInput {
+  postId: ID!
+}
+
+type UnhidePostPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+# 피드 정렬(2차 가이드 §3).
+#
+# | 값 | 무엇이 보이나 | 순서 |
+# |---|---|---|
+# | `LATEST`(기본) | 반경 안 글 + **장소 없이 쓴 글** | 최신순 |
+# | `DISTANCE` | 반경 안 장소에 붙은 글만 | 가까운 장소 순 |
+#
+# **두 정렬의 커서 형식이 다르다** — 정렬을 바꾸면 커서를 버리고 첫 페이지부터 다시
+# 조회해야 하며, 이전 커서를 그대로 넘기면 `INVALID_INPUT`이다.
+enum PostSortOrder {
+  LATEST
+  DISTANCE
+}
+
+input LikePostInput {
+  postId: ID!
+}
+
+type LikePostPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  likeCount: Int
+}
+
+input UnlikePostInput {
+  postId: ID!
+}
+
+type UnlikePostPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  likeCount: Int
+}
+
+# Query·Mutation은 auth 조각이 선언한 것을 **확장**한다(spot 조각과 같은 규약) —
+# 다시 선언하면 앞선 조각의 필드가 사라져 다른 기능의 codegen이 깨진다.
+extend type Query {
+  posts(
+    catalogId: ID
+    latitude: Float
+    longitude: Float
+    radiusMeters: Int
+    # SPEC-0020: 다중 선택. 생략은 "전체", 빈 배열은 서버가 거절한다
+    # (EmptyCategorySetException). 관광지 쪽 `categories: [String!]`와 달리
+    # 여기는 아직 닫힌 enum이라 `[TargetCategory!]`다.
+    categories: [TargetCategory!]
+    tag: String
+    sort: PostSortOrder
+    # true면 **내가 숨긴 글만** 온다(해제 화면용). 숨긴 글은 그 밖의 모든 조회에서
+    # 빠지며 `post(id:)` 단건도 null이다(2차 가이드 §2). 카테고리·태그 필터와
+    # 정렬은 여기에도 그대로 걸리므로 별도 쿼리를 두지 않았다.
+    hiddenByViewer: Boolean
+    first: Int
+    after: String
+  ): PostConnection!
+  comments(postId: ID!, first: Int, after: String): CommentConnection!
+  post(id: ID!): Post
+  blockedUsers(first: Int, after: String): BlockedUserConnection!
+  communityChips: [TargetCategory!]!
+  # SPEC-0013 R14의 `searchSpots`는 여기서 **다시 선언하지 않는다** — spot 조각이
+  # 이미 `extend type Query`에 올렸고, codegen이 모든 조각을 하나로 병합하므로
+  # 같은 필드를 두 번 선언하면 충돌한다. 커뮤니티는 오퍼레이션 이름만 달리 두어
+  # (`CommunitySearchSpots`) 자기 생성 타입을 갖는다.
+}
+
+extend type Mutation {
+  createPost(input: CreatePostInput!): CreatePostPayload!
+  editPost(input: EditPostInput!): EditPostPayload!
+  deletePost(input: DeletePostInput!): DeletePostPayload!
+  createComment(input: CreateCommentInput!): CreateCommentPayload!
+  deleteComment(input: DeleteCommentInput!): DeleteCommentPayload!
+  likePost(input: LikePostInput!): LikePostPayload!
+  unlikePost(input: UnlikePostInput!): UnlikePostPayload!
+  createPostImageUploadUrls(
+    input: CreatePostImageUploadUrlsInput!
+  ): CreatePostImageUploadUrlsPayload!
+  confirmPostImageUploads(
+    input: ConfirmPostImageUploadsInput!
+  ): ConfirmPostImageUploadsPayload!
+  deletePostImage(input: DeletePostImageInput!): DeletePostImagePayload!
+  hidePost(input: HidePostInput!): HidePostPayload!
+  unhidePost(input: UnhidePostInput!): UnhidePostPayload!
+  blockUser(input: BlockUserInput!): BlockUserPayload!
+  unblockUser(input: UnblockUserInput!): UnblockUserPayload!
+  reportContent(input: ReportContentInput!): ReportContentPayload!
+}

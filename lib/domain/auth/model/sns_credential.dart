@@ -13,6 +13,7 @@ class SnsCredential {
   const SnsCredential({
     required this.provider,
     required this.idToken,
+    this.authorizationCode,
     this.email,
     this.emailVerified = false,
     this.nickname,
@@ -21,6 +22,16 @@ class SnsCredential {
 
   final SnsProvider provider;
   final String idToken;
+
+  /// provider가 내려준 authorization code (SPEC-0012 R4). 서버가 이것으로
+  /// refresh token을 받아 탈퇴 시 연동 해제에 쓴다.
+  ///
+  /// **null이 정상 경로다** — provider가 code를 노출하지 않거나 획득에 실패해도
+  /// 인증 흐름을 막지 않는다(R7). 값이 없으면 요청에서 비워 보내고, 서버가
+  /// 토큰을 보충하지 않을 뿐이다.
+  ///
+  /// 일회용이고 짧게 만료되므로 저장하지 않는다 — 획득 즉시 요청에 실어 보낸다.
+  final String? authorizationCode;
 
   /// The email the provider volunteered, if any. Null when the provider gave
   /// none (Kakao without email scope, Apple after the first sign-in) — the
@@ -39,6 +50,7 @@ class SnsCredential {
       other is SnsCredential &&
       other.provider == provider &&
       other.idToken == idToken &&
+      other.authorizationCode == authorizationCode &&
       other.email == email &&
       other.emailVerified == emailVerified &&
       other.nickname == nickname &&
@@ -48,6 +60,7 @@ class SnsCredential {
   int get hashCode => Object.hash(
     provider,
     idToken,
+    authorizationCode,
     email,
     emailVerified,
     nickname,

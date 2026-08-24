@@ -1,0 +1,21 @@
+# 릴리스 서명 키 설정 — 이 파일을 `key.properties`로 복사해 값을 채운다.
+#
+# `key.properties`와 `.jks` 파일은 **절대 커밋하지 않는다**(.gitignore).
+# 키를 잃어버리면 같은 패키지명으로 앱을 갱신할 수 없다 — Play Console의
+# 앱 서명(App Signing)을 쓰더라도 업로드 키는 본인이 보관해야 한다.
+#
+# 키스토어 만들기:
+#
+#   keytool -genkey -v -keystore ~/ktripspot-upload.jks \
+#     -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+#
+# 그 뒤 이 파일을 복사해서 채운다:
+#
+#   cp android/key.properties.example android/key.properties
+#
+# storeFile은 절대 경로이거나 `android/` 기준 상대 경로다.
+
+storeFile=/Users/<이름>/ktripspot-upload.jks
+storePassword=<키스토어 비밀번호>
+keyAlias=upload
+keyPassword=<키 비밀번호>

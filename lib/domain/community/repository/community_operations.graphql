@@ -1,0 +1,640 @@
+# SPEC-0010 커뮤니티 오퍼레이션. 생성 타입은 repository 안에서만 쓰이고 도메인
+# 모델로 매핑된다(CLAUDE.md §3, POL-020).
+#
+# `Post`의 `tags`·`photoKeys`·`category`·`likedByViewer`·`spot`·`author`·
+# `commentPreview`는 **각각 다른 테이블에 있다** — 고르지 않으면 서버가 조회조차
+# 하지 않는다. 다만 이 조회들은 **글 개수와 무관하게 각각 1회**라서(서버가 묶어
+# 읽는다) 카드에 실제로 그리는 필드는 마음 놓고 요청한다(가이드 §3).
+
+# 목록 카드가 그리는 것만. `commentPreview`는 상세에서만 쓰므로 넣지 않는다.
+fragment PostCardFields on Post {
+  id
+  title
+  body
+  tags
+  category
+  createdAt
+  photoKeys
+  likeCount
+  commentCount
+  viewCount
+  likedByViewer
+  ownedByViewer
+  hidden
+  edited
+  spot {
+    id
+    title
+    thumbnailImageUrl
+    category
+  }
+  author {
+    id
+    nickname
+    profileImageUrl
+  }
+}
+
+# 피드는 이 쿼리 하나뿐이고 **인자 조합이 범위를 정한다**(가이드 §2):
+#   - 커뮤니티 탭   → latitude·longitude(+radiusMeters)
+#   - 장소 상세     → catalogId
+#   - 상단 칩       → categories
+#   - 태그          → tag
+#
+# 규칙: 좌표는 **둘 다** 줘야 하고(하나만 주면 둘 다 무시), `catalogId`와 좌표를 같이
+# 주면 `catalogId`가 이긴다. `categories`·`tag`는 범위와 독립이라 단독으로도 걸린다.
+#
+# **`categories`는 복수 OR 필터다**(서버 #77, 2026-08-16 라이브 확인). 단수 `category`는
+# 과도기 없이 **제거**됐으므로 클라이언트가 전환하지 않으면 조회가 전부 실패한다.
+# `[TargetCategory!]`이라 관광지 쪽 `categories: [String!]`와 달리 여전히 닫힌 enum이다.
+# **빈 배열은 보내지 않는다** — 서버가 `EmptyCategorySetException`(errorType INTERNAL,
+# 코드로 분기할 수 없음)으로 거절한다. 인자를 생략하면 전체다.
+#
+# `hasPreviousPage`는 요청하지 않는다 — 앞으로만 가는 피드라 믿을 수 없는 값이다
+# (가이드 §2).
+#
+# `sort`는 기본 `LATEST`다(2차 가이드 §3). `DISTANCE`는 반경 안 **장소에 붙은 글만**
+# 가까운 순으로 주므로 장소 없는 글이 빠지고, 좌표가 없으면 `LATEST`처럼 동작한다
+# (오류가 아니다). **두 정렬의 커서 형식이 다르므로 정렬을 바꾸면 커서를 버리고
+# 첫 페이지부터 다시 조회한다** — 이전 커서를 넘기면 `INVALID_INPUT`이다.
+#
+# `hiddenByViewer`는 기본 false다. true면 **내가 숨긴 글만** 오며 해제 화면이 쓴다
+# (2차 가이드 §2). 이때도 카테고리·태그·정렬이 그대로 걸린다.
+query Posts(
+  $catalogId: ID
+  $latitude: Float
+  $longitude: Float
+  $radiusMeters: Int
+  $categories: [TargetCategory!]
+  $tag: String
+  $sort: PostSortOrder
+  $hiddenByViewer: Boolean
+  $first: Int
+  $after: String
+) {
+  posts(
+    catalogId: $catalogId
+    latitude: $latitude
+    longitude: $longitude
+    radiusMeters: $radiusMeters
+    categories: $categories
+    tag: $tag
+    sort: $sort
+    hiddenByViewer: $hiddenByViewer
+    first: $first
+    after: $after
+  ) {
+    edges {
+      cursor
+      node {
+        ...PostCardFields
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+# 글 상세. 댓글은 **루트 쿼리로 따로 받는다**(아래 Comments) — 목록 안에 목록을
+# 중첩해 페이지네이션하면 어느 카드의 커서인지 추적하기 어렵기 때문이다(가이드 §2).
+#
+# 차단·숨김·삭제면 **오류가 아니라 null**이 온다 — errors[]를 기대하면 안 되고,
+# "삭제되었거나 볼 수 없는 글" 안내로 처리한다(가이드 §6).
+query PostDetail($id: ID!) {
+  post(id: $id) {
+    ...PostCardFields
+  }
+}
+
+# 글의 최상위 댓글 한 페이지(커서 페이징)와 각 댓글의 답글.
+#
+# **`comments(postId:)`는 최상위만 준다**(2차 가이드 §1) — 답글은 `replies`에 담겨
+# 오며 **요청해야 조회된다**. 답글은 오래된 순이고(대화 흐름이라 뒤집으면 문맥이
+# 끊긴다) 최상위 목록은 최신순이다.
+#
+# **답글의 `replies`는 요청하지 않는다** — 깊이가 2단계라 항상 빈 목록이다.
+# `replies`에는 페이지네이션도 없다.
+#
+# **`commentCount`와 이 목록의 길이는 다를 수 있다** — 숫자는 차단을 반영하지 않고
+# 목록은 반영하며(가이드 §6), 게다가 **답글까지 포함한 수**다(2차 가이드 §1).
+# 불일치를 오류로 처리하지 않는다.
+query Comments($postId: ID!, $first: Int, $after: String) {
+  comments(postId: $postId, first: $first, after: $after) {
+    edges {
+      cursor
+      node {
+        id
+        body
+        createdAt
+        ownedByViewer
+        hidden
+        parentCommentId
+        author {
+          id
+          nickname
+          profileImageUrl
+        }
+        replies {
+          id
+          body
+          createdAt
+          ownedByViewer
+          hidden
+          parentCommentId
+          author {
+            id
+            nickname
+            profileImageUrl
+          }
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+# 상단 칩 구성. **하위 선택을 붙이면 안 된다** — `[TargetCategory!]!`는 leaf라
+# `{ category position }`를 붙이면 서버가 `SubselectionNotAllowed`로 거절하고
+# 칩 줄이 통째로 사라진다(2026-08-16에 고친 실제 버그).
+#
+# **순서는 의미가 없다** — 서버는 코드 알파벳순으로 줄 뿐이라 언어를 바꾸면 같은 칩이
+# 다른 자리로 간다. 표시 순서는 클라이언트의 `kCategoryDisplayOrder`가 정한다.
+# 표시 문구는 앱이 매핑하고, **구성이 없는 앱이면 빈 목록이 정상**이다(가이드 §2).
+query CommunityChips {
+  communityChips
+}
+
+# 내가 차단한 사람 목록. **나를 차단한 사람은 여기 없다** — 남이 건 차단은 내가
+# 풀 수 없기 때문이다(가이드 §6).
+query BlockedUsers($first: Int, $after: String) {
+  blockedUsers(first: $first, after: $after) {
+    edges {
+      cursor
+      blockedAt
+      node {
+        id
+        nickname
+        profileImageUrl
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+# 좋아요/해제. 멱등이라 이미 좋아요한 글에 다시 눌러도 success: true다(가이드 §7).
+# 낙관적 업데이트는 응답의 likeCount로 **되맞춘다** — 서버 값이 정본이다.
+mutation LikePost($postId: ID!) {
+  likePost(input: { postId: $postId }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    likeCount
+  }
+}
+
+mutation UnlikePost($postId: ID!) {
+  unlikePost(input: { postId: $postId }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    likeCount
+  }
+}
+
+# 글 작성. **postId만 온다**(가이드 §5). 작성 직후 상세로 가려면 post(id:)를 한 번
+# 더 조회하고, 피드로 돌아간다면 목록을 새로 고친다.
+#
+# `category`는 필수이고 `catalogId`는 선택이다 — 장소 없는 글이 허용된다. 다만 그 글은
+# 좌표 반경 조회에 잡히지 않는다(가이드 §10).
+mutation CreatePost(
+  $category: TargetCategory!
+  $catalogId: ID
+  $tags: [String!]!
+  $title: String!
+  $body: String!
+  $photoKeys: [String!]!
+) {
+  createPost(
+    input: {
+      category: $category
+      catalogId: $catalogId
+      tags: $tags
+      title: $title
+      body: $body
+      photoKeys: $photoKeys
+    }
+  ) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    postId
+  }
+}
+
+# 글 수정. 제목·본문·사진에 더해 **카테고리·장소·태그도 바뀐다** — 서버가 뒤늦게
+# 받기 시작했다(1차 가이드 §5의 "못 바꾼다"는 낡은 서술이다).
+#
+# `photoKeys`·`tags`를 주면 **전체 목록으로 교체**하고, 생략하면 건드리지 않는다.
+#
+# **장소는 `changeSpot`이 가른다**(스키마에만 있고 문서에 없는 인자다). 기본 false라
+# 보내지 않으면 장소가 그대로 남고, true일 때만 `catalogId`가 반영된다 —
+# true + null이 "장소 떼기"다. 사용자가 장소를 만지지 않았으면 false를 보내
+# 서버가 붙어 있던 장소를 유지하게 한다.
+#
+# 숨겨진 글은 수정할 수 없어 `POST_NOT_EDITABLE`이 온다.
+mutation EditPost(
+  $postId: ID!
+  $title: String!
+  $body: String!
+  $photoKeys: [String!]
+  $category: TargetCategory
+  $changeSpot: Boolean
+  $catalogId: ID
+  $tags: [String!]
+) {
+  editPost(
+    input: {
+      postId: $postId
+      title: $title
+      body: $body
+      photoKeys: $photoKeys
+      category: $category
+      changeSpot: $changeSpot
+      catalogId: $catalogId
+      tags: $tags
+    }
+  ) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+# 댓글 작성. createPost와 같이 commentId만 온다(가이드 §5).
+#
+# `parentCommentId`를 생략하면 최상위 댓글, 주면 그 댓글의 답글이다(2차 가이드 §1).
+# **답글에 답글을 달아도 거부되지 않고** 최상위 부모로 눕혀지므로 응답의
+# `parentCommentId`가 넘긴 값과 다를 수 있다 — 그래서 화면은 답글에 "답글 달기"를
+# 두지 않고, 성공 후에는 응답으로 조립하지 않고 목록을 다시 받는다.
+mutation CreateComment($postId: ID!, $body: String!, $parentCommentId: ID) {
+  createComment(
+    input: { postId: $postId, body: $body, parentCommentId: $parentCommentId }
+  ) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    commentId
+  }
+}
+
+mutation DeleteComment($commentId: ID!) {
+  deleteComment(input: { commentId: $commentId }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+# 내 글 삭제. 남의 글이면 `NOT_POST_OWNER`가 온다 — 버튼을 숨겨도 서버는 여전히
+# 판정하므로 코드를 처리해 둔다(가이드 §7).
+mutation DeletePost($postId: ID!) {
+  deletePost(input: { postId: $postId }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+# 사진 업로드 1단계 — 서명 URL 발급(가이드 §4).
+#
+# `contentLength`는 추정치가 아니라 **실제 파일 바이트 수**여야 한다. 이 값이 서명에
+# 들어가므로 1바이트만 달라도 2단계에서 스토리지가 403으로 거부한다.
+#
+# **하나라도 어긋나면 전부 발급되지 않는다**(uploadUrls가 빈 목록) — 부분 발급은
+# 클라이언트가 추적하기 어려워서다. 응답 순서는 요청 순서와 같다.
+mutation CreatePostImageUploadUrls($images: [PostImageUploadRequest!]!) {
+  createPostImageUploadUrls(input: { images: $images }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    uploadUrls {
+      uploadUrl
+      objectKey
+      expiresAt
+    }
+  }
+}
+
+# 사진 업로드 3단계 — 확인. 서버가 실제 크기와 매직바이트를 다시 보고, 통과한 것만
+# `pending/` → `images/`로 옮긴다.
+#
+# **장별로 성패가 갈린다**: `failed`가 비어 있지 않으면 `success`는 false지만
+# `confirmed`의 키는 여전히 유효하다 — 실패한 장만 다시 올리게 하고 나머지는 살린다.
+mutation ConfirmPostImageUploads($objectKeys: [String!]!) {
+  confirmPostImageUploads(input: { objectKeys: $objectKeys }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    confirmed
+    failed {
+      objectKey
+      code
+    }
+  }
+}
+
+# 사진 오브젝트 삭제. 없는 키를 지워도 오류가 아니다(멱등).
+#
+# **글에서 사진을 빼도 오브젝트는 남는다** — `editPost(photoKeys:)`는 글과의 연결만
+# 바꾸므로 스토리지에서 지우려면 이걸 따로 부른다(가이드 §4).
+mutation DeletePostImage($objectKey: String!) {
+  deletePostImage(input: { objectKey: $objectKey }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+# 게시물 숨기기(2차 가이드 §2). **차단·신고와 각각 다르다**:
+#
+# | | 대상 | 효과 | 되돌리기 |
+# |---|---|---|---|
+# | `hidePost` | 글 하나 | **내 화면에서만** 사라짐 | 가능 |
+# | `blockUser` | 사람 | 그 사람 글·댓글 전부(양방향) | 가능 |
+# | `reportContent` | 글·댓글·사람 | 운영 조치 요청 | 불가 |
+#
+# 소유권을 보지 않아 **내 글도 숨길 수 있다** — 조치가 아니라 화면 설정이다.
+# 성공 후에는 로컬에서 지우는 것이 아니라 **피드를 다시 불러온다**(차단과 같은
+# 규약): 필터링은 서버가 한다.
+mutation HidePost($postId: ID!) {
+  hidePost(input: { postId: $postId }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+# 숨김 해제. 멱등이며 **삭제된 글에도 동작한다** — 그래야 숨김 목록에 남지 않는다.
+mutation UnhidePost($postId: ID!) {
+  unhidePost(input: { postId: $postId }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+# 사용자 차단. **양방향이다** — 이 뮤테이션 하나로 서로의 글·댓글이 모든 피드에서
+# 사라진다(가이드 §6). 이미 차단한 사람에게 다시 불러도 멱등하게 성공한다(§7).
+#
+# 성공 후에는 로컬에서 글을 지우는 것이 아니라 **피드를 다시 불러온다** — 필터링은
+# 서버가 한다.
+mutation BlockUser($targetMemberId: ID!) {
+  blockUser(input: { targetMemberId: $targetMemberId }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+mutation UnblockUser($targetMemberId: ID!) {
+  unblockUser(input: { targetMemberId: $targetMemberId }) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+# 신고. reason이 OTHER면 detail이 **필수**이며, 비면 `REPORT_DETAIL_REQUIRED`가 온다
+# — 폼에서 미리 막지만 서버 판정도 함께 처리한다(가이드 §6).
+#
+# 같은 대상 재신고는 `ALREADY_REPORTED`다. 오류로 터뜨리지 않고 "이미 신고했다"는
+# 안내로 접는다.
+mutation ReportContent(
+  $targetType: ReportTargetType!
+  $targetId: ID!
+  $reason: ReportReason!
+  $detail: String
+) {
+  reportContent(
+    input: {
+      targetType: $targetType
+      targetId: $targetId
+      reason: $reason
+      detail: $detail
+    }
+  ) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+  }
+}
+
+# 컴포저의 장소 선택 시트가 쓰는 주변 장소 목록.
+#
+# **`spots`는 좌표 기반이고 이름 검색 인자가 없다** — 반경 안의 장소를 거리 오름차순으로
+# 준다. 그래서 이름으로 좁히는 것은 이미 받아 둔 목록에 대해 클라이언트가 한다.
+#
+# 커서가 아니라 **오프셋 페이징**(`page`/`size` + `hasNext`)이라 `common/pagination`의
+# `OffsetPage`로 매핑한다(피드의 커서 페이징과 다르다).
+#
+# 오퍼레이션 이름이 `Spots`가 아닌 이유: codegen이 모든 오퍼레이션을 한 이름공간에
+# 모으므로 `domain/spot`의 `query Spots`와 부딪힌다.
+#
+# `category` 인자는 **서버가 거르는 진짜 필터다**(이름 필터와 다르다) — null이면
+# 전체다. 응답의 `category` 필드는 요청하지 않는다: 시트가 줄마다 카테고리를 그리지
+# 않고, 고른 값은 이미 앱이 알고 있다.
+#
+# `copyright`·`attributionText`·`mapX`·`mapY`도 요청하지 않는다 — 시트가 안 그린다.
+query NearbySpots(
+  $latitude: Float!
+  $longitude: Float!
+  $radiusMeters: Int
+  $categories: [String!]
+  $page: Int
+  $size: Int
+) {
+  spots(
+    latitude: $latitude
+    longitude: $longitude
+    radiusMeters: $radiusMeters
+    categories: $categories
+    page: $page
+    size: $size
+  ) {
+    items {
+      id
+      title
+      address
+      thumbnailImageUrl
+      distanceMeters
+    }
+    page
+    hasNext
+    totalCount
+  }
+}
+
+# 장소 선택 시트의 카테고리 줄 구성.
+#
+# **목록은 언어마다 다르다**(`Accept-Language` 헤더를 따른다) — 라이브 확인:
+# ko는 `TRAVEL_COURSE`가 있고 en은 그 자리에 `TRANSPORT`가 있다. 그래서 앱이 8개를
+# 하드코딩하면 안 되고, 상단 칩(`communityChips`)과 같이 **서버가 준 것만** 그린다.
+#
+# **빈 목록도 정상이다** — 그때는 줄 자체를 그리지 않는다.
+#
+# 오퍼레이션 이름이 `AvailableSpotCategories`가 아닌 이유: codegen이 모든
+# 오퍼레이션을 한 이름공간에 모으므로 `domain/spot`의 같은 이름과 부딪힌다.
+#
+# SPEC-0020: `SpotCategory`가 enum에서 객체(`code`/`label`/`iconUrl`)로 바뀌어
+# 하위 선택이 필요해졌다. 시트는 자기 도메인 enum([NearbySpotCategory])으로
+# 매핑하므로 `code`만 쓰지만, 라벨을 서버에서 받도록 넓힐 여지를 남겨 함께 받는다.
+query NearbySpotCategories {
+  availableSpotCategories {
+    code
+    label
+    iconUrl
+  }
+}
+
+# 장소 선택 시트의 두 번째 출처 — 내가 좋아요한 장소.
+#
+# **주변 장소와 페이징 방식이 다르다**: `spots`는 오프셋(`page`/`size`)이고 이쪽은
+# **커서**(`first`/`after` + `endCursor`)라 `common/pagination`의 `CursorPage`로
+# 매핑한다. 하나의 시트가 두 페이징을 다루는 이유는 서버가 그렇게 갈라 놓았기
+# 때문이고, 각 컨트롤러가 자기 페이지 모델을 쓰면 그 차이가 화면까지 새지 않는다.
+#
+# `category` 인자는 주변 장소와 **같은 필터**다 — 시트의 카테고리 줄 하나가 두 출처에
+# 함께 걸린다.
+#
+# 오퍼레이션 이름이 `LikedSpots`가 아닌 이유: codegen이 모든 오퍼레이션을 한
+# 이름공간에 모으므로 `domain/spot`의 `query LikedSpots`와 부딪힌다. 타입
+# (`LikedSpot`·`LikedSpotConnection`)도 그 스키마가 이미 선언하므로 여기서 다시
+# 선언하지 않는다.
+#
+# `copyright`·`attributionText`·`likedAt`은 요청하지 않는다 — 시트가 그리지 않는다.
+# `category`도 마찬가지다: 고른 값은 이미 앱이 알고 있다.
+query CommunityLikedSpots($categories: [String!], $first: Int, $after: String) {
+  likedSpots(categories: $categories, first: $first, after: $after) {
+    edges {
+      cursor
+      node {
+        id
+        title
+        thumbnailImageUrl
+        address
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+# SPEC-0013 R14. 장소 선택 시트의 서버 검색.
+#
+# 이전에는 `NearbySpots`로 받아 둔 목록을 `title.contains()`로 클라이언트에서
+# 걸렀다. 그래서 제목만 검색됐고, 질의가 있는 동안에는 다음 페이지를 받을 수도
+# 없었다(보이는 것이 몇 건이든 다음 페이지가 그 이름과 맞는다는 보장이 없었다).
+# 서버 검색은 제목과 **주소**를 함께 보고 오타·형태소 일치를 지원하며, 결과가
+# 페이지로 오므로 그 제약이 사라진다(AC-14.1·14.2).
+#
+# **오프셋 페이징이다**(page/size) — 서버가 커서에서 전환했다.
+#
+# `category`는 시트의 카테고리 칩과 같은 필터다 — 칩을 고른 채 검색하면 그 안에서만
+# 찾는다. 칩과 검색창이 한 시트에 있으니 둘이 함께 걸리는 것이 보이는 대로의 동작이다.
+#
+# 오퍼레이션 이름이 `SearchSpots`가 아닌 이유: codegen이 모든 오퍼레이션을 한
+# 이름공간에 모으므로 `domain/spot`의 같은 이름과 부딪힌다(`NearbySpots`와 같은 사정).
+#
+# 시트가 그리는 필드만 요청한다 — `category`·`copyright`·`mapX`/`mapY`는 안 그린다.
+query CommunitySearchSpots(
+  $query: String!
+  $latitude: Float!
+  $longitude: Float!
+  $radiusMeters: Int
+  $categories: [String!]
+  $page: Int
+  $size: Int
+) {
+  searchSpots(
+    query: $query
+    latitude: $latitude
+    longitude: $longitude
+    radiusMeters: $radiusMeters
+    categories: $categories
+    page: $page
+    size: $size
+  ) {
+    success
+    userErrors {
+      code
+      field
+    }
+    connection {
+      items {
+        id
+        title
+        address
+        thumbnailImageUrl
+        distanceMeters
+      }
+      page
+      hasNext
+      totalCount
+    }
+  }
+}

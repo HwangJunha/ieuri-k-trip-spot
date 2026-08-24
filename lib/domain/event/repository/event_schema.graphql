@@ -1,0 +1,51 @@
+# SPEC-0013 R17 ongoingFestivals가 쓰는 서버 스키마 조각(committed codegen 입력).
+# `schema/schema.introspection.json` 스냅샷에서 손으로 추린 안정 빌드 입력이며,
+# gitignore된 스냅샷을 codegen이 직접 읽지 않는다(CLAUDE.md §13).
+#
+# `SpotCategory`·`CopyrightType`·`PageInfo`는 여기서 정의하지 않는다 — 각각
+# spot_schema.graphql과 shared_schema.graphql이 소유하고, codegen이 모든 조각을
+# 하나로 병합하므로 중복 정의하면 충돌한다.
+
+# 진행 중인 축제. Spot을 재사용하지 않는 이유는 eventStartDate/eventEndDate가 축제
+# 행에만 존재해, 범용 Spot에 두면 대부분의 spot에서 영구히 null인 필드가 되기 때문이다.
+type Festival {
+  id: ID!
+  title: String!
+  address: String
+  thumbnailImageUrl: String!
+  distanceMeters: Float!
+  category: SpotCategory!
+  copyright: CopyrightType!
+  attributionText: String!
+  mapX: Float!
+  mapY: Float!
+  # ISO-8601 날짜(YYYY-MM-DD). 시각 성분이 없다 — 원본이 DATE 컬럼이다.
+  eventStartDate: String!
+  eventEndDate: String!
+}
+
+# **totalCount가 없다.** 제안(contract.graphql)에는 있었으나 라이브 스키마에는 없다 —
+# 스냅샷 기준으로 쓴다(CLAUDE.md §13).
+type FestivalConnection {
+  edges: [FestivalEdge!]!
+  pageInfo: PageInfo!
+}
+
+type FestivalEdge {
+  node: Festival!
+  cursor: String!
+}
+
+# auth_schema.graphql가 base Query를 소유하므로 여기선 extend로 이어 붙인다.
+extend type Query {
+  # 반경 내에서 오늘이 행사 기간에 포함된 축제만 반환한다(경계 포함, '오늘'은 서버 시각).
+  # 반경 내 진행 중 축제가 0건인 것은 흔한 정상 상태다 — 오류가 아니다(AC-17.4).
+  ongoingFestivals(
+    latitude: Float!
+    longitude: Float!
+    radiusMeters: Int
+    # true면 요청 언어로 쓰인 원문만, false면 번역본만, 생략하면 둘 다(SPEC-0019).
+    first: Int
+    after: String
+  ): FestivalConnection!
+}

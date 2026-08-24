@@ -15,7 +15,46 @@ targets:
             _FieldSet:
               type: Object
         generate_for:
+          # 둘 이상의 기능이 쓰는 타입 조각. codegen이 모든 조각을 한 네임스페이스로
+          # 합치므로 생성 타입의 집은 하나뿐이고, 그 집이 어느 기능 폴더에 있으면
+          # 다른 기능이 그 폴더를 import하게 된다(CLAUDE.md §3). 공용은 공용 자리에 둔다.
+          - lib/common/network/shared_schema.graphql
           - lib/domain/auth/repository/auth_operations.graphql
           - lib/domain/auth/repository/auth_schema.graphql
           - lib/domain/spot/repository/spot_operations.graphql
           - lib/domain/spot/repository/spot_schema.graphql
+          # SPEC-0013 R17. Festival 타입은 SpotCategory·CopyrightType을 참조하는데,
+          # codegen이 모든 조각을 하나로 병합하므로 spot 쪽 정의를 그대로 쓴다.
+          - lib/domain/event/repository/event_operations.graphql
+          - lib/domain/event/repository/event_schema.graphql
+          - lib/domain/community/repository/community_operations.graphql
+          - lib/domain/community/repository/community_schema.graphql
+          - lib/domain/settings/repository/settings_operations.graphql
+          - lib/domain/settings/repository/settings_schema.graphql
+          - lib/domain/settings/repository/profile_operations.graphql
+          - lib/domain/settings/repository/profile_schema.graphql
+          - lib/domain/settings/repository/email_change_operations.graphql
+          - lib/domain/settings/repository/email_change_schema.graphql
+          # SPEC-0014 지도·혼잡도. MapSpot/SpotCluster가 SpotCategory를 참조하는데,
+          # codegen이 조각을 하나로 병합하므로 spot 쪽 정의를 그대로 쓴다.
+          # SPEC-0030 전국 지도. CellSpot이 SpotCategory를, CellImage가
+          # CopyrightType을 참조하는데 codegen이 조각을 하나로 병합하므로 spot 쪽
+          # 정의를 그대로 쓴다.
+          - lib/domain/national_map/repository/national_map_operations.graphql
+          - lib/domain/national_map/repository/national_map_schema.graphql
+          - lib/domain/map/repository/map_operations.graphql
+          - lib/domain/map/repository/map_schema.graphql
+          # SPEC-0017 DM(SPEC-0021로 피드가 빠졌다). PostAuthor·PageInfo·UserError·
+          # ReportReason은 다른 조각이 이미 선언하므로 참조만 한다. Subscription 루트는
+          # 여기가 최초다.
+          - lib/domain/dm/repository/dm_operations.graphql
+          - lib/domain/dm/repository/dm_schema.graphql
+          # SPEC-0026 장소 질문/답변. PostAuthor·PostSpot·PageInfo·UserError·SpotReaction은
+          # 다른 조각이 이미 선언하므로 참조만 한다.
+          - lib/domain/spot_qa/repository/spot_qa_operations.graphql
+          - lib/domain/spot_qa/repository/spot_qa_schema.graphql
+          # SPEC-0028 FCM 푸시. UserError·Me는 auth 조각이 이미 선언하므로 참조·확장만
+          # 한다. `Locale` enum은 여기가 최초다 — 지금까지 언어는 `Accept-Language`
+          # 헤더로만 갔고 GraphQL 인자로 보낸 적이 없다.
+          - lib/domain/alarm/repository/alarm_operations.graphql
+          - lib/domain/alarm/repository/alarm_schema.graphql

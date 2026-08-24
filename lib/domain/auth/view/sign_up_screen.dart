@@ -6,9 +6,13 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../component/agreement_checklist.dart';
 import '../component/auth_failure_message.dart';
 import '../component/auth_text_field.dart';
+import '../model/auth_failure.dart';
 import '../model/email_verification_handle.dart';
+import '../../../common/analytics/analytics_events.dart';
+import '../../../common/analytics/app_analytics.dart';
+import '../../../common/model/email_format.dart';
 import '../model/password_policy.dart';
-import '../model/terms_code.dart';
+import '../../../common/model/terms_code.dart';
 import '../provider/auth_controller.dart';
 import 'email_verification_screen.dart';
 
@@ -102,18 +106,43 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             ageVerified: _agreements.ageVerified,
             agreements: _buildAgreements(),
           );
+      // **핸들을 받았으면 서버 등록이 끝난 것이다.** 이메일 인증이 남았지만 그건
+      // 별개 단계다 — 여기서 세지 않으면 인증 화면에서 이탈한 사용자가 가입 시도에
+      // 잡히지 않아 퍼널이 끊긴다.
+      AppAnalytics.logEvent(AnalyticsEvents.signUp, <String, Object>{
+        AnalyticsParams.method: 'email',
+      });
       if (!mounted) return;
       // No tokens on sign-up (§4.2) — go to email verification with the handle.
+      //
+      // 비밀번호를 함께 넘긴다. 인증에 성공하면 그것으로 자동 로그인해서 사용자를
+      // **바로 앱으로** 들여보낸다 — 방금 계정을 만든 사람에게 로그인 화면을 다시
+      // 보여 주고 같은 값을 또 치게 할 이유가 없다. 값은 메모리에만 머문다.
       context.pushNamed(
         EmailVerificationScreen.routeName,
         extra: EmailVerificationArgs(
           verificationId: handle.verificationId,
           email: email,
+          password: _password.text,
         ),
       );
     } on Object catch (error) {
       if (!mounted) return;
-      setState(() => _serverError = authFailureMessage(l10n, error));
+      // 서버가 어느 입력이 문제인지 `field`로 알려 준다. 그 칸 아래에 붙여야
+      // 사용자가 무엇을 고쳐야 할지 바로 안다 — 상단 배너에만 띄우면 긴 폼에서는
+      // 어느 칸 얘기인지 알 수 없다.
+      final String message = authFailureMessage(l10n, error);
+      setState(() {
+        if (error is AuthFailure && error.pointsAt('password')) {
+          _passwordError = message;
+          _serverError = null;
+        } else if (error is AuthFailure && error.pointsAt('email')) {
+          _emailError = message;
+          _serverError = null;
+        } else {
+          _serverError = message;
+        }
+      });
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

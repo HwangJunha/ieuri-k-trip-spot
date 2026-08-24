@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../common/navigation/auth_route.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/auth_failure_message.dart';
 import '../component/auth_text_field.dart';
 import '../component/sns_login_buttons.dart';
 import '../model/auth_state.dart';
-import '../model/password_policy.dart';
+import '../../../common/model/email_format.dart';
 import '../model/sns_provider.dart';
 import '../model/sns_sign_in_outcome.dart';
 import '../provider/auth_controller.dart';
+import '../provider/pending_sns_credential.dart';
 import 'password_reset_screen.dart';
 import 'sign_up_screen.dart';
 import 'sns_sign_up_screen.dart';
@@ -21,7 +23,10 @@ import 'sns_sign_up_screen.dart';
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key, this.prefilledEmail});
 
-  static String get routeName => 'login';
+  /// 이름은 `common/navigation`이 보유한다 — 로그인으로 보내는 곳이 auth 밖에도
+  /// 있어(언어 선택, 커뮤니티의 미인증 유도) 그쪽이 이 화면을 import하지 않아도
+  /// 되게 하기 위해서다(CLAUDE.md §3·§4). 화면 소유는 그대로 auth다.
+  static String get routeName => loginRouteName;
 
   final String? prefilledEmail;
 
@@ -64,18 +69,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         case SnsAuthenticated():
           break; // router handles navigation
         case SnsNeedsSignUp(:final credential):
-          context.pushNamed(
-            SnsSignUpScreen.routeName,
-            extra: credential,
-          );
+          // **`extra` 대신 provider에 담는다.** 인증 상태가 바뀌면 라우터가
+          // 라우트를 다시 만드는데(refreshListenable) `extra`는 그때 사라진다.
+          ref.read(pendingSnsCredentialProvider.notifier).set(credential);
+          context.pushNamed(SnsSignUpScreen.routeName);
         case SnsCancelled():
           break; // silent
       }
     } on Object catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(authFailureMessage(l10n, error))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(authFailureMessage(l10n, error))));
     } finally {
       if (mounted) setState(() => _snsBusy = false);
     }

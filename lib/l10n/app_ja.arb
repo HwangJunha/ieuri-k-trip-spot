@@ -1,60 +1,106 @@
 {
   "@@locale": "ja",
   "appTitle": "K-トリップスポット",
-
   "splashTagline": "リアルタイムで出会う、韓国の活気あるスポット。",
   "splashSubTagline": "ソウル、そしてその先へのスマートな入口。",
   "splashLoading": "準備中...",
-
   "languageSelectionSubtitle": "言語を選択",
   "languageSelectionInstruction": "韓国のおすすめスポットを楽しむための言語を選んでください。",
   "languageDefaultBadge": "デフォルト",
   "confirmSelection": "選択を確定",
   "changeLaterHint": "設定でいつでも変更できます。",
-
   "skip": "スキップ",
   "next": "次へ",
   "getStarted": "はじめる",
-
   "onboardingTitle1": "スワイプで発見",
   "onboardingBody1": "簡単なスワイプであなたにぴったりの韓国旅行を見つけよう。気に入ったら右スワイプで保存！",
   "onboardingTitle2": "混雑を避けよう",
   "onboardingBody2": "リアルタイムの混雑データで賢く計画。空いているか混んでいるか、行く前に確認できます。",
   "onboardingTitle3": "一緒に旅しよう",
   "onboardingBody3": "世界中の旅行者とリアルタイムでつながろう。情報を共有し、出会い、思い出を作ろう。",
-
   "onboardingCaption1": "明洞の屋台グルメ",
   "onboardingLocation1": "ソウル, 韓国",
   "onboardingCaption2": "景福宮",
   "onboardingLocation2": "ソウル, 韓国",
   "onboardingCaption3": "漢江公園",
   "onboardingLocation3": "ソウル, 韓国",
-
   "homeSearchHint": "スポットや隠れた名所を検索…",
-  "homeFavoritesTooltip": "お気に入り",
-  "homeSectionRecommended": "あなたへのおすすめ",
   "homeSectionHappeningNow": "開催中のイベント",
+  "festivalPeriod": "{start} ～ {end}",
   "homeSectionPopular": "人気のスポット",
+  "homeSectionNearYou": "近くのスポット",
+  "homeNearYouEmpty": "検索範囲内にスポットがありません。設定で範囲を広げてください。",
+  "homeHappeningNowEmpty": "近くで開催中のフェスティバルはありません。",
+  "homePopularEmpty": "近くの人気スポットはまだありません。",
+  "popularLikeCount": "いいね {count}件",
+  "homeSectionRetry": "再試行",
+  "homeSectionError": "このセクションを読み込めませんでした。",
+  "searchTitle": "検索",
+  "searchHint": "スポット名や住所で検索",
+  "searchRecentTitle": "最近の検索",
+  "searchRecentOpen": "最近の検索",
+  "searchRecentClose": "閉じる",
+  "searchRecentClearAll": "すべて削除",
+  "searchRecentRemove": "削除",
+  "searchEmptyResult": "検索結果がありません。",
+  "searchError": "検索に失敗しました。",
+  "searchRetry": "再試行",
   "viewAll": "すべて見る",
-
-  "congestionLow": "空いている",
-  "congestionModerate": "普通",
-  "congestionHigh": "混雑",
-
-  "eventCategoryFestival": "フェス",
-  "eventCategoryLive": "ライブ",
-  "eventCategoryArt": "アート",
-
-  "distanceAway": "{distance}km先",
-
+  "categoryAll": "すべて",
   "navHome": "ホーム",
   "navMap": "マップ",
   "navDiscover": "発見",
-  "navEvents": "イベント",
-  "navChat": "チャット",
-
-  "comingSoon": "近日公開予定です。",
-
+  "navLiked": "お気に入り",
+  "navNationalMap": "全国地図",
+  "navLibrary": "マイ活動",
+  "permissionPhotosRationaleTitle": "写真から地図を埋めますか？",
+  "permissionPhotosRationaleBody": "写真に記録された位置から訪れた地域を探します。写真が端末の外に出ることはなく、座標は地域の判定にのみ使い保存しません。",
+  "permissionPhotosBlockedMessage": "写真へのアクセスがオフのため、写真から埋められません。設定で許可できます。",
+  "nationalMapNationwide": "全国",
+  "nationalMapCellCount": "{total}区画中{visited}区画",
+  "nationalMapEmptyHint": "写真から埋めるか、今いる場所を登録してみましょう。",
+  "nationalMapSelectHint": "地図で地域をタップしてください。",
+  "nationalMapRecordVisit": "登録",
+  "nationalMapRemoveVisit": "登録を解除",
+  "nationalMapRetry": "再試行",
+  "nationalMapVisited": "訪問済み",
+  "nationalMapOpenDetail": "詳細",
+  "nationalMapSpotsTitle": "この地域の観光地",
+  "nationalMapSpotsEmpty": "まだ登録された観光地がありません。",
+  "commonCancel": "キャンセル",
+  "commonClose": "閉じる",
+  "nationalMapHere": "今ここ",
+  "nationalMapRegisterTitle": "この地域を登録しますか？",
+  "nationalMapRegisterBody": "{district}に行ったこととして記録します。",
+  "nationalMapAlreadyVisited": "{cell}はすでに訪れた場所です。",
+  "nationalMapOutsideKorea": "韓国国内の地域のみ登録できます。",
+  "nationalMapLocationUnavailable": "現在地を取得できません。",
+  "nationalMapShare": "地図を共有",
+  "nationalMapShareFailed": "共有リンクを作成できませんでした。",
+  "sharedMapVisitedCount": "{count}か所を訪れました",
+  "sharedMapOverlapCount": "{count}か所が一致",
+  "sharedMapNoOverlap": "重なる場所がありません。",
+  "sharedMapSignInToCompare": "ログインすると重なる場所が見られます。",
+  "sharedMapGone": "この地図はもう見られません。",
+  "sharedMapBlocked": "この地図は見られません。",
+  "photoSyncTitle": "写真から埋める",
+  "photoSyncBody": "写真に記録された位置から訪れた地域を探します。写真が端末の外に出ることはありません。",
+  "photoSyncStart": "開始",
+  "photoSyncResume": "続きから",
+  "photoSyncStop": "停止",
+  "photoSyncProgress": "{total}枚中{done}枚を確認しました",
+  "photoSyncFoundSoFar": "これまでに{count}か所見つかりました",
+  "photoSyncFound": "{count}か所見つかりました",
+  "photoSyncConfirmBody": "登録すると地図が埋まります。",
+  "photoSyncRegister": "登録する",
+  "photoSyncDone": "地図を更新しました。",
+  "photoSyncNoCoordinates": "位置情報のある写真が見つかりませんでした。",
+  "photoSyncPermissionDenied": "写真へのアクセスを許可すると地図を埋められます。",
+  "photoSyncFailed": "写真の読み込み中に問題が発生しました。",
+  "nationalMapUnavailable": "地図を読み込めませんでした",
+  "navCommunity": "コミュニティ",
+  "likedSpotsEmpty": "お気に入りのスポットはまだありません。",
+  "likedSpotsUnavailable": "お気に入りを読み込めませんでした",
   "loginTitle": "おかえりなさい",
   "loginSubtitle": "続けるにはログインしてください。",
   "emailLabel": "メールアドレス",
@@ -69,10 +115,8 @@
   "forgotPassword": "パスワードをお忘れですか？",
   "showPassword": "パスワードを表示",
   "hidePassword": "パスワードを非表示",
-
   "signUpTitle": "アカウント作成",
   "signUpSubtitle": "メールアドレスとパスワードで始めましょう。",
-
   "agreementSelectAll": "すべての規約に同意",
   "agreementAge": "満14歳以上です。",
   "agreementService": "サービス利用規約",
@@ -83,36 +127,30 @@
   "agreementOptionalBadge": "任意",
   "agreementViewDetail": "内容を見る",
   "agreementDetailPlaceholder": "規約の全文は後日提供されます。",
-
   "passwordResetTitle": "パスワード再設定",
-  "passwordResetSubtitle": "登録したメールアドレスを入力すると認証コードを送ります。",
+  "passwordResetSubtitle": "登録したメールアドレスを入力すると、6桁の認証コードをお送りします。",
   "passwordResetRequestButton": "認証コードを受け取る",
   "passwordResetCodeSent": "認証コードを送信しました。メールをご確認ください。",
   "passwordResetConfirmButton": "パスワードを変更",
   "passwordResetDone": "パスワードを変更しました。ログインしてください。",
   "newPasswordLabel": "新しいパスワード",
   "verificationCodeLabel": "認証コード",
-
   "emailVerificationTitle": "メール認証",
   "emailVerificationSubtitle": "メールで届いた認証コードを入力してください。",
   "emailVerificationButton": "認証する",
   "emailVerificationResend": "コードを再送信",
   "emailVerificationResent": "認証コードを再送信しました。",
   "validationCodeRequired": "認証コードを入力してください。",
-
   "validationEmailRequired": "メールアドレスを入力してください。",
   "validationEmailInvalid": "メールアドレスの形式が正しくありません。",
   "validationPasswordRequired": "パスワードを入力してください。",
   "validationPasswordPolicy": "英字・数字・記号を含む8文字以上で入力してください。",
   "validationPasswordMismatch": "パスワードが一致しません。",
-
   "errorInvalidCredentials": "メールアドレスまたはパスワードが正しくありません。",
   "errorEmailAlreadyInUse": "このメールアドレスは既に使用されています。",
   "errorNetwork": "ネットワークエラーが発生しました。もう一度お試しください。",
   "errorUnknown": "問題が発生しました。もう一度お試しください。",
-
   "signUpSuccessLoginPrompt": "登録が完了しました。ログインしてください。",
-
   "orDivider": "または",
   "continueWithGoogle": "Googleで続ける",
   "continueWithApple": "Appleで続ける",
@@ -123,8 +161,8 @@
   "snsSignUpButton": "登録を完了",
   "snsCancelled": "ログインがキャンセルされました。",
   "errorSnsMemberNotFound": "登録されていないアカウントです。会員登録を行ってください。",
+  "errorSnsVerificationExpired": "認証の有効期限が切れました。もう一度ログインしてください。",
   "logoutTooltip": "ログアウト",
-
   "permissionLocationRationaleTitle": "周辺のスポットを探す",
   "permissionLocationRationaleBody": "K-Trip Spotはアプリの使用中のみ位置情報を利用し、近くの名所やリアルタイムの混雑状況を表示します。バックグラウンドで追跡することはありません。",
   "permissionNotificationRationaleTitle": "最新情報を受け取る",
@@ -134,49 +172,43 @@
   "permissionLocationBlockedMessage": "位置情報がオフになっています。周辺のスポットを見るには設定でオンにしてください。",
   "permissionNotificationBlockedMessage": "通知がオフになっています。お知らせを受け取るには設定でオンにしてください。",
   "permissionOpenSettings": "設定を開く",
-
   "splashLocationRequired": "続けるには位置情報へのアクセスが必要です。",
   "splashLocationBlockedHint": "位置情報がオフになっています。続けるには設定でオンにしてください。",
-
   "discoverLikeLabel": "いいね",
   "discoverNopeLabel": "パス",
-
-  "discoverCategoryTouristSpot": "観光地",
-  "discoverCategoryCulturalFacility": "文化施設",
-  "discoverCategoryFestivalEvent": "祭り・イベント",
-  "discoverCategoryTravelCourse": "旅行コース",
-  "discoverCategoryLeisureSports": "レジャー・スポーツ",
-  "discoverCategoryLodging": "宿泊",
-  "discoverCategoryShopping": "ショッピング",
-  "discoverCategoryRestaurant": "飲食店",
-  "discoverCategoryTransport": "交通",
-
   "distanceKilometers": "{distance}キロ",
   "distanceMeters": "{distance}メートル",
-
   "discoverEmptyTitle": "近くはすべて見終わりました",
   "discoverEmptyBody": "範囲を広げるかカテゴリーを変えて、もっと探しましょう。",
   "discoverWidenRadius": "範囲を広げる",
   "discoverChangeCategory": "カテゴリー変更",
-
   "discoverRetryBanner": "スポットを読み込めませんでした。まもなく再試行します。",
   "discoverRetryButton": "再試行",
   "discoverLoadError": "スポットの読み込み中に問題が発生しました。",
   "discoverLoading": "近くのスポットを探しています…",
-
+  "retryExhaustedTitle": "接続できません",
+  "retryExhaustedBody": "何度か試しましたが接続できませんでした。通信環境をご確認のうえ、もう一度お試しください。",
+  "retryExhaustedAction": "もう一度試す",
   "spotDetailOverviewTitle": "紹介",
   "spotDetailContactTitle": "連絡先",
   "spotDetailHomepageLabel": "ウェブサイト",
   "spotDetailTelLabel": "電話",
   "spotDetailLikeCount": "{count, plural, =0{いいねはまだありません} other{いいね {count}件}}",
   "@spotDetailLikeCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "spotDetailLikeAction": "いいね",
   "spotDetailDislikeAction": "スキップ",
   "spotDetailLoading": "スポットを読み込んでいます…",
   "spotDetailNotFoundTitle": "スポットが見つかりません",
-  "spotDetailNotFoundBody": "このスポットが見つかりませんでした。削除されたか、現在の言語では利用できない可能性があります。",
+  "spotDetailNotFoundBody": "このスポットが見つかりませんでした。削除された可能性があります。",
+  "spotDetailNotInLocaleTitle": "現在の言語では表示できません",
+  "spotDetailNotInLocaleBody": "このスポットは存在しますが、お使いの言語では提供されていません。設定で言語を変更すると表示できます。",
+  "spotDetailNotInLocaleAction": "ホームに戻る",
   "spotDetailRateLimitedTitle": "リクエストが多すぎます",
   "spotDetailRateLimitedBody": "現在混み合っています。しばらくしてからもう一度お試しください。",
   "spotDetailUnavailableTitle": "スポットを読み込めませんでした",
@@ -184,7 +216,6 @@
   "spotDetailRetryButton": "再試行",
   "spotDetailReactionFailed": "リアクションを保存できませんでした。もう一度お試しください。",
   "spotDetailLinkFailed": "リンクを開けませんでした。",
-
   "spotDetailIntroTitle": "利用案内",
   "spotDetailIntroBusinessHours": "利用時間",
   "spotDetailIntroClosedDays": "休業日",
@@ -193,5 +224,716 @@
   "spotDetailIntroPetAllowed": "ペット同伴",
   "spotDetailIntroCreditCard": "クレジットカード",
   "spotDetailIntroInquiryPhone": "お問い合わせ",
-  "spotDetailInfoTitle": "ご案内"
+  "spotDetailInfoTitle": "ご案内",
+  "communityTitle": "スポットトーク",
+  "@communityTitle": {
+    "description": "커뮤니티 탭 앱바 제목 (Spot Talk)"
+  },
+  "communityNearbyTitle": "近くの投稿",
+  "@communityNearbyTitle": {
+    "description": "지역 피드 섹션 헤더"
+  },
+  "communityFeedEmpty": "近くにはまだ投稿がありません。",
+  "@communityFeedEmpty": {
+    "description": "지역 피드에 글이 하나도 없을 때"
+  },
+  "communityFeedUnavailable": "近くの投稿を読み込めませんでした",
+  "@communityFeedUnavailable": {
+    "description": "지역 피드 조회 실패 제목"
+  },
+  "communityFeedUnavailableBody": "接続状況を確認してからもう一度お試しください。",
+  "@communityFeedUnavailableBody": {
+    "description": "지역 피드 조회 실패 안내 본문"
+  },
+  "communityLocationUnavailable": "位置情報が利用できないため、近くの投稿を表示できません。",
+  "@communityLocationUnavailable": {
+    "description": "위치 권한 없음·좌표 실패 — 빈 피드와 구분되는 사유 표시"
+  },
+  "communityRetry": "再試行",
+  "@communityRetry": {
+    "description": "커뮤니티 오류 상태의 재시도 버튼"
+  },
+  "communityHiddenBadge": "通報が重なり非表示になっています",
+  "@communityHiddenBadge": {
+    "description": "신고 누적으로 자동 숨김된 글·댓글 배지 (작성자에게만 보임)"
+  },
+  "communityTimeJustNow": "たった今",
+  "@communityTimeJustNow": {
+    "description": "상대 시각 — 방금"
+  },
+  "communityTimeMinutes": "{count}分前",
+  "@communityTimeMinutes": {
+    "description": "상대 시각 — n분 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeHours": "{count}時間前",
+  "@communityTimeHours": {
+    "description": "상대 시각 — n시간 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeDays": "{count}日前",
+  "@communityTimeDays": {
+    "description": "상대 시각 — n일 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityPostDetailTitle": "投稿",
+  "@communityPostDetailTitle": {
+    "description": "글 상세 앱바 제목"
+  },
+  "communityCommentsHeader": "コメント · {count}",
+  "@communityCommentsHeader": {
+    "description": "상세의 댓글 섹션 헤더 (서버 commentCount 그대로)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityCommentsEmpty": "まだコメントがありません。",
+  "@communityCommentsEmpty": {
+    "description": "댓글이 하나도 없을 때"
+  },
+  "communityPostUnavailable": "この投稿は削除されたか、表示できません。",
+  "@communityPostUnavailable": {
+    "description": "차단·숨김이라 볼 수 없는 글 (post(id:)가 null)"
+  },
+  "communityPostUnavailableTitle": "表示できない投稿",
+  "@communityPostUnavailableTitle": {
+    "description": "볼 수 없는 글 화면의 제목"
+  },
+  "communityComposeAction": "投稿する",
+  "@communityComposeAction": {
+    "description": "글 작성 FAB의 접근성 라벨"
+  },
+  "communityPostOptions": "投稿オプション",
+  "@communityPostOptions": {
+    "description": "카드 우상단 오버플로 버튼의 접근성 라벨"
+  },
+  "communityViewCountLabel": "{count, plural, other{閲覧{count}回}}",
+  "communityBlockAction": "このユーザーをブロック",
+  "@communityBlockAction": {
+    "description": "모더레이션 시트의 차단 항목"
+  },
+  "communityReportAction": "報告する",
+  "@communityReportAction": {
+    "description": "모더레이션 시트의 신고 항목"
+  },
+  "communityDeleteAction": "投稿を削除",
+  "@communityDeleteAction": {
+    "description": "모더레이션 시트의 삭제 항목 (내 글일 때만)"
+  },
+  "communityCancel": "キャンセル",
+  "@communityCancel": {
+    "description": "시트·다이얼로그의 취소"
+  },
+  "communityBlockConfirmTitle": "{nickname} さんをブロックしますか？",
+  "@communityBlockConfirmTitle": {
+    "description": "차단 확인 다이얼로그 제목",
+    "placeholders": {
+      "nickname": {
+        "type": "String"
+      }
+    }
+  },
+  "communityBlockConfirmBody": "ブロックは相互に働きます。相手の投稿やコメントが表示されなくなり、相手にもあなたの投稿が表示されなくなります。あとで解除できます。",
+  "@communityBlockConfirmBody": {
+    "description": "차단이 양방향임을 명시하는 확인 문구 (가이드 §6)"
+  },
+  "communityBlockConfirmAction": "ブロック",
+  "@communityBlockConfirmAction": {
+    "description": "차단 확인 다이얼로그의 실행 버튼"
+  },
+  "communityBlockDone": "ブロックしました。この人の投稿はフィードから消えます。",
+  "@communityBlockDone": {
+    "description": "차단 성공 안내"
+  },
+  "communityDeleteConfirmTitle": "この投稿を削除しますか？",
+  "@communityDeleteConfirmTitle": {
+    "description": "글 삭제 확인 다이얼로그 제목"
+  },
+  "communityDeleteConfirmBody": "取り消せません。投稿の編集機能がないため、書き直す必要があります。",
+  "@communityDeleteConfirmBody": {
+    "description": "삭제 확인 문구 (글 수정이 없으므로 재작성해야 한다)"
+  },
+  "communityDeleteDone": "投稿を削除しました。",
+  "@communityDeleteDone": {
+    "description": "삭제 성공 안내"
+  },
+  "communityReportTitle": "報告",
+  "@communityReportTitle": {
+    "description": "신고 시트 제목"
+  },
+  "communityReportReasonSpam": "スパム・宣伝",
+  "@communityReportReasonSpam": {
+    "description": "신고 사유 SPAM"
+  },
+  "communityReportReasonAbuse": "嫌がらせ・暴言",
+  "@communityReportReasonAbuse": {
+    "description": "신고 사유 ABUSE"
+  },
+  "communityReportReasonInappropriate": "不適切な内容",
+  "@communityReportReasonInappropriate": {
+    "description": "신고 사유 INAPPROPRIATE_CONTENT"
+  },
+  "communityReportReasonOther": "その他",
+  "@communityReportReasonOther": {
+    "description": "신고 사유 OTHER — 상세 입력이 필수가 된다"
+  },
+  "communityReportDetailLabel": "詳しい内容",
+  "@communityReportDetailLabel": {
+    "description": "OTHER 선택 시에만 보이는 상세 입력 라벨"
+  },
+  "communityReportDetailRequired": "その他を選んだ場合は詳しい内容を入力してください。",
+  "@communityReportDetailRequired": {
+    "description": "OTHER인데 상세가 비었을 때 (REPORT_DETAIL_REQUIRED를 미리 막는다)"
+  },
+  "communityReportSubmit": "送信",
+  "@communityReportSubmit": {
+    "description": "신고 제출 버튼"
+  },
+  "communityReportDone": "報告を受け付けました。",
+  "@communityReportDone": {
+    "description": "신고 접수 안내 — 처리 결과나 시점을 약속하지 않는다 (가이드 §9)"
+  },
+  "communityReportAlready": "すでに報告済みです。",
+  "@communityReportAlready": {
+    "description": "ALREADY_REPORTED — 오류가 아니라 안내다"
+  },
+  "communityActionFailed": "問題が発生しました。もう一度お試しください。",
+  "@communityActionFailed": {
+    "description": "모더레이션·등록의 일반 실패 안내"
+  },
+  "communitySignInRequired": "続けるにはログインしてください。",
+  "@communitySignInRequired": {
+    "description": "미인증 사용자가 쓰기 동작을 눌렀을 때 (버튼을 숨기지 않는다)"
+  },
+  "communityComposeTitle": "新規投稿",
+  "@communityComposeTitle": {
+    "description": "컴포저 앱바 제목"
+  },
+  "communityComposeSubmit": "投稿",
+  "@communityComposeSubmit": {
+    "description": "컴포저 앱바의 등록 액션"
+  },
+  "communityComposeBodyHint": "この場所について書いてみましょう。",
+  "@communityComposeBodyHint": {
+    "description": "본문 입력 힌트"
+  },
+  "communityComposeSpotLabel": "場所",
+  "@communityComposeSpotLabel": {
+    "description": "컴포저의 대상(관광지) 라벨"
+  },
+  "communityComposeTooLong": "{count}文字オーバーしています。",
+  "@communityComposeTooLong": {
+    "description": "500자 초과분 — 입력을 자르지 않고 드러낸다",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityComposeDone": "投稿しました。",
+  "@communityComposeDone": {
+    "description": "글 등록 성공 안내"
+  },
+  "communityComposeErrorSpotNotFound": "その場所は見つかりませんでした。",
+  "communityComposeErrorSpotNotInLocale": "そのスポットはお使いの言語では利用できません。",
+  "@communityComposeErrorSpotNotInLocale": {
+    "description": "Shown when the selected spot is not available in the active language (SPEC-0029)."
+  },
+  "@communityComposeErrorSpotNotFound": {
+    "description": "SPOT_NOT_FOUND"
+  },
+  "communityComposeErrorTooManyPhotos": "写真は最大5枚まで添付できます。",
+  "@communityComposeErrorTooManyPhotos": {
+    "description": "TOO_MANY_PHOTOS"
+  },
+  "communityCategoryAll": "すべて",
+  "communityCategoryTouristSpot": "観光地",
+  "communityCategoryCulturalFacility": "文化施設",
+  "communityCategoryFestivalEvent": "祭り・イベント",
+  "communityCategoryTravelCourse": "旅行コース",
+  "communityCategoryLeisureSports": "レジャー",
+  "communityCategoryLodging": "宿泊",
+  "communityCategoryShopping": "ショッピング",
+  "communityCategoryRestaurant": "グルメ",
+  "communityCategoryTransport": "交通",
+  "communityEditedBadge": "編集済み",
+  "communityEditAction": "投稿を編集",
+  "communityEditDisabledHidden": "非表示の投稿は編集できません。",
+  "communityEditTitle": "投稿の編集",
+  "communityEditDone": "投稿を更新しました。",
+  "communityComposeCategoryLabel": "カテゴリーを選択",
+  "communityComposeTitleLabel": "タイトル",
+  "communityComposeTitleHint": "短いタイトル",
+  "communityComposeBodyLabel": "本文",
+  "communityComposeTagsLabel": "タグ（任意）",
+  "communityComposeTagHint": "タグを入力（スペースなし）",
+  "communityComposeTagInvalid": "タグにスペースは使えません。",
+  "communityComposeTagLimit": "タグは5つまでです。",
+  "communityComposeSpotOptional": "場所を追加（任意）",
+  "communityComposeSpotClear": "場所を外す",
+  "communityComposePhotosLabel": "写真（任意）",
+  "communityComposePhotoAdd": "写真を追加",
+  "communityComposePhotoTooLarge": "{count, plural, other{{count}枚の写真が大きすぎます(最大10MB)。}}",
+  "communityComposeDonePhotosFailed": "投稿しましたが、写真{count}枚をアップロードできませんでした。",
+  "@communityComposeDonePhotosFailed": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "communityEditDonePhotosFailed": "投稿を更新しましたが、写真{count}枚をアップロードできませんでした。",
+  "@communityEditDonePhotosFailed": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "communityComposeErrorTitleRequired": "タイトルを入力してください。",
+  "communityComposeErrorTitleLength": "タイトルが長すぎます。50文字以内にしてください。",
+  "communityComposeErrorBodyRequired": "本文を入力してください。",
+  "communityComposeErrorBodyLength": "本文が長すぎます。500文字以内にしてください。",
+  "communityComposeErrorInvalidTag": "使用できないタグがあります。",
+  "communityComposeErrorTooManyTags": "タグは5つまでです。",
+  "communityComposeErrorPhotoNotUploaded": "写真のアップロードに失敗しました。もう一度追加してください。",
+  "communityComposeErrorNotEditable": "非表示の投稿は編集できません。",
+  "communityTitleCounter": "{count} / 50",
+  "@communityTitleCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityBodyCounter": "{count} / 500",
+  "@communityBodyCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityCommentComposerHint": "コメントを入力",
+  "communityCommentSend": "送信",
+  "communityCommentDone": "コメントを投稿しました。",
+  "communityCommentDeleteAction": "コメントを削除",
+  "communityCommentDeleteDone": "コメントを削除しました。",
+  "communityCommentReportAction": "コメントを報告",
+  "communityCommentsUnavailable": "コメントを読み込めませんでした。",
+  "communityCommentsLoadMore": "コメントをもっと見る",
+  "communityBlockedUsersTitle": "ブロックしたユーザー",
+  "communityBlockedUsersEmpty": "ブロックしたユーザーはいません。",
+  "communityBlockedUsersNote": "自分がブロックした相手のみ表示されます。相手からのブロックは解除できません。",
+  "communityUnblockAction": "ブロック解除",
+  "communityUnblockDone": "ブロックを解除しました。",
+  "communityBlockedUsersAction": "ブロックしたユーザー",
+  "communityHidePostAction": "この投稿を非表示",
+  "communityHidePostDone": "投稿を非表示にしました。自分にだけ見えなくなります。",
+  "communityHiddenPostsAction": "非表示の投稿",
+  "communityHiddenPostsTitle": "非表示の投稿",
+  "communityHiddenPostsEmpty": "非表示にした投稿はありません。",
+  "communityHiddenPostsNote": "自分のフィードでのみ非表示になります。他の人には表示されたままです。",
+  "communityUnhideAction": "非表示を解除",
+  "communityUnhideDone": "フィードに再び表示されます。",
+  "communitySortLatest": "新着順",
+  "communitySortDistance": "近い順",
+  "communityReplyAction": "返信する",
+  "communityReplyComposerHint": "{nickname}さんに返信",
+  "@communityReplyComposerHint": {
+    "placeholders": {
+      "nickname": {
+        "type": "String"
+      }
+    }
+  },
+  "communityReplyCancel": "返信をキャンセル",
+  "communityPhotoViewerTitle": "{total}枚中{current}枚目",
+  "@communityPhotoViewerTitle": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeMonths": "{count}か月前",
+  "@communityTimeMonths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeYears": "{count}年前",
+  "@communityTimeYears": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communitySpotPostsTitle": "この場所の投稿",
+  "communitySpotPickerTitle": "近くの場所",
+  "communitySpotPickerSourceNearby": "近く",
+  "communitySpotPickerSourceLiked": "いいねした場所",
+  "communitySpotPickerSearchHint": "場所を検索",
+  "communitySpotPickerLikedEmpty": "まだいいねした場所がありません。",
+  "communitySpotPickerLikedFailed": "いいねした場所を読み込めませんでした。",
+  "communitySpotPickerLikedNoMatch": "その名前に一致するいいねした場所はありません。",
+  "communitySpotPickerEmpty": "近くに場所が見つかりません。",
+  "communitySpotPickerNoMatch": "その名前に一致する近くの場所はありません。",
+  "communitySpotPickerLocationUnavailable": "位置情報が使えないため近くの場所を表示できません。場所なしでも投稿できます。",
+  "communitySpotPickerFailed": "近くの場所を読み込めませんでした。",
+  "communitySpotDistanceMeters": "{meters}m",
+  "@communitySpotDistanceMeters": {
+    "placeholders": {
+      "meters": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "communitySpotDistanceKilometers": "{km}km",
+  "@communitySpotDistanceKilometers": {
+    "placeholders": {
+      "km": {
+        "type": "num",
+        "format": "decimalPattern",
+        "optionalParameters": {
+          "decimalDigits": 1
+        }
+      }
+    }
+  },
+  "communityComposeCategoryUnset": "カテゴリ",
+  "communityComposeTagsAction": "タグ",
+  "communityComposeSpotAction": "場所",
+  "communityComposePhotosAction": "写真",
+  "communityComposeTagsSheetTitle": "タグ",
+  "communityComposeSheetDone": "完了",
+  "communityDraftResumeTitle": "書きかけの投稿を続けますか？",
+  "communityDraftResumeBody": "この端末に書きかけの投稿が保存されています。",
+  "communityDraftResumeAction": "続きを書く",
+  "communityDraftDiscardAction": "新しく書く",
+  "settingsTitle": "設定",
+  "settingsTooltip": "設定",
+  "settingsSectionActivity": "アクティビティ",
+  "settingsSectionAccount": "アカウント",
+  "settingsSectionPreferences": "環境設定",
+  "settingsSectionLegal": "規約",
+  "settingsMyPosts": "自分の投稿",
+  "settingsEditProfile": "プロフィール編集",
+  "settingsChangeEmail": "メールアドレス変更",
+  "settingsBlockedUsers": "ブロックしたユーザー",
+  "settingsSearchRadius": "検索範囲",
+  "settingsLanguage": "言語",
+  "settingsTerms": "規約と同意",
+  "settingsLogOut": "ログアウト",
+  "settingsDeleteAccount": "退会",
+  "preferencesTitle": "環境設定",
+  "preferencesRadiusSection": "検索範囲",
+  "preferencesLanguageSection": "言語",
+  "preferencesRadiusValue": "{km}km",
+  "preferencesRadiusHint": "0kmにすると現在地のみを検索します。",
+  "myPostsTitle": "自分の投稿",
+  "myPostsEmpty": "まだ投稿がありません",
+  "myPostsWriteFirst": "最初の投稿を書く",
+  "termsTitle": "規約・同意管理",
+  "termsIntro": "必須規約はサービス利用中に撤回できません。",
+  "termsSectionRequired": "必須",
+  "termsSectionOptional": "任意",
+  "termsAgreedOn": "{date} に同意",
+  "termsAgreedRequired": "同意済み",
+  "termsService": "サービス利用規約",
+  "termsPrivacy": "プライバシーポリシー",
+  "termsLocation": "位置情報の利用",
+  "termsMarketing": "マーケティング通知",
+  "termsServiceDescription": "サービス利用に関する基本的な取り決めです。",
+  "termsPrivacyDescription": "個人情報の取り扱いについて説明します。",
+  "termsLocationDescription": "近くのスポットを提案するために使用します。",
+  "termsMarketingDescription": "イベントやプロモーションのお知らせを受け取ります。",
+  "termsLoadFailed": "規約情報を読み込めませんでした。",
+  "termsUpdateFailed": "変更できませんでした。もう一度お試しください。",
+  "termsRetry": "再試行",
+  "requiredTermsTitle": "規約への同意",
+  "requiredTermsIntro": "続けるには、以下の必須規約に同意してください。",
+  "requiredTermsAgree": "同意して続ける",
+  "requiredTermsFailed": "同意を記録できませんでした。もう一度お試しください。",
+  "deleteAccountTitle": "退会",
+  "deleteAccountHeadline": "元に戻せません",
+  "deleteAccountIntro": "退会すると以下が完全に削除されます:",
+  "deleteAccountItemPosts": "投稿とコメント",
+  "deleteAccountItemLikes": "お気に入りスポット",
+  "deleteAccountItemProfile": "プロフィールと設定",
+  "deleteAccountCaution": "削除したデータは復元できません。",
+  "deleteAccountCancel": "キャンセル",
+  "deleteAccountConfirm": "退会する",
+  "deleteAccountFailed": "退会できませんでした。もう一度お試しください。",
+  "profileEditTitle": "プロフィール編集",
+  "profileEditSave": "保存",
+  "profileEditSaved": "プロフィールを保存しました",
+  "profileEditNicknameLabel": "ニックネーム",
+  "profileEditNicknameCounter": "{count}/{max}",
+  "profileEditNicknameEmpty": "ニックネームを入力してください。",
+  "profileEditNicknameTooLong": "ニックネームは{max}文字以内で入力してください。",
+  "profileEditNicknameTaken": "このニックネームはすでに使われています。",
+  "profileEditEmailLabel": "メールアドレス",
+  "profileEditFailed": "保存できませんでした。もう一度お試しください。",
+  "profilePhotoChange": "写真を変更",
+  "profilePhotoRemove": "削除",
+  "profilePhotoUploading": "写真をアップロード中…",
+  "profilePhotoUpdated": "プロフィール写真を変更しました",
+  "profilePhotoRemoved": "プロフィール写真を削除しました",
+  "profilePhotoFailed": "写真を変更できませんでした。もう一度お試しください。",
+  "profilePhotoUnavailable": "この端末では写真を選択できません。",
+  "myPostsFailed": "投稿を読み込めませんでした。もう一度お試しください。",
+  "myPostsRetry": "再試行",
+  "discoverRadiusAtMax": "すでに最大範囲（100km）です。",
+  "termsRequiredNotice": "同意しない場合、サービスをご利用いただけません。",
+  "profileEditEmailChange": "変更",
+  "emailChangeTitle": "メールアドレスの変更",
+  "emailChangeCurrentLabel": "現在のメールアドレス",
+  "emailChangeNewLabel": "新しいメールアドレス",
+  "emailChangeHint": "このアドレスに6桁の認証コードを送信します。",
+  "emailChangeSendCode": "コードを送信",
+  "emailChangeSameAsCurrent": "現在のメールアドレスと同じです。",
+  "emailChangeVerifyTitle": "メール認証",
+  "emailChangePendingBanner": "認証が完了するまでメールアドレスは変更されません。現在はまだ以前のアドレスです。",
+  "emailChangeCodeSentTo": "{email} に送信されたコードを入力してください。",
+  "emailChangeCodeLabel": "認証コード",
+  "emailChangeVerifyButton": "認証する",
+  "emailChangeCodeRequired": "認証コードを入力してください。",
+  "emailChangeResend": "コードを再送信",
+  "emailChangeResendIn": "{seconds}秒後に再送信できます",
+  "emailChangeResent": "認証コードを再送信しました。",
+  "emailChangeResendCooldown": "しばらくしてからもう一度お試しください。",
+  "emailChangeCodeMismatch": "コードが一致しません。もう一度入力してください。",
+  "emailChangeCodeExpired": "コードの有効期限が切れました。再送信してください。",
+  "emailChangeMaxAttempts": "試行回数の上限に達しました。アドレスの入力からやり直してください。",
+  "emailChangeVerifyFailed": "認証できませんでした。もう一度お試しください。",
+  "emailChangeFailed": "リクエストできませんでした。もう一度お試しください。",
+  "emailChangeEmailTaken": "このメールアドレスは既に使用されています。",
+  "emailChangeSucceeded": "メールアドレスを変更しました。",
+  "mapCongestionRelaxed": "空いている",
+  "mapCongestionNormal": "普通",
+  "mapCongestionSlightlyCrowded": "やや混雑",
+  "mapCongestionCrowded": "混雑",
+  "mapCommercialQuiet": "閑散な時間帯",
+  "mapCommercialNormal": "普通の時間帯",
+  "mapCommercialBusy": "忙しい時間帯",
+  "mapCommercialVeryBusy": "繁忙な時間帯",
+  "mapCommercialUnavailable": "情報なし",
+  "mapCommercialEstimated": "実測されていない地域",
+  "mapCommercialLabel": "商圏",
+  "mapObservedAt": "{time} 時点",
+  "mapPopulationRange": "{min} – {max}人",
+  "mapAttribution": "出典: ソウル特別市 リアルタイム都市データ",
+  "mapKeyMissing": "地図キーがないため地図を読み込めません。KAKAO_NATIVE_APP_KEY のビルド設定を確認してください。",
+  "mapLoadFailed": "地図を読み込めませんでした。",
+  "mapZoomIn": "拡大",
+  "mapZoomOut": "縮小",
+  "mapMyLocation": "現在地",
+  "mapLocationUnavailable": "位置情報がオフのため、現在地に移動できません。",
+  "mapLegendSpot": "観光地",
+  "mapLegendEvent": "イベント",
+  "mapSearchThisArea": "このエリアで再検索",
+  "mapRegionRecommendationsTitle": "おすすめの地域",
+  "mapRegionRecommendationsAction": "おすすめの地域を見る",
+  "mapRegionRecommendationPartialData": "一部のデータに基づく",
+  "mapRegionRecommendationsGatheringTitle": "データを収集しています",
+  "mapRegionRecommendationsGathering": "おすすめに使うデータをまだ集めています。しばらくしてからご確認ください。",
+  "mapRegionRecommendationsNoMatchTitle": "条件に合う地域がありません",
+  "mapRegionRecommendationsNoMatch": "現在、おすすめの条件を満たす地域がありません。しばらくしてからご確認ください。",
+  "mapRegionRecommendationsError": "おすすめの地域を読み込めませんでした。",
+  "mapRegionRecommendationsRetry": "再試行",
+  "mapRegionRecommendationsRetryExhausted": "何度か試しましたが読み込めませんでした。しばらくしてからお試しください。",
+  "mapScoreFactorCongestion": "予想混雑度",
+  "mapScoreFactorVisitorVolume": "訪問者規模",
+  "mapScoreFactorStayIntensity": "滞在強度",
+  "mapScoreFactorSpendingIntensity": "消費強度",
+  "mapScoreFactorDistance": "距離",
+  "mapRegionRecommendationsNeedsLocationTitle": "位置情報が必要です",
+  "mapRegionRecommendationsNeedsLocation": "おすすめは現在地の周辺地域をもとに選ぶため、位置情報が必要です。",
+  "mapRegionRecommendationsAllowLocation": "位置情報を許可",
+  "mapRegionRecommendationsOriginMyLocation": "現在地",
+  "mapRegionRecommendationsOriginMapCenter": "地図の中心",
+  "mapRegionProvinceAndDistance": "{province} · {distance}",
+  "mapRegionStrengthCongestion": "空いていると予想",
+  "mapRegionStrengthVisitorVolume": "最近の訪問が多かった場所",
+  "mapRegionStrengthStayIntensity": "長く滞在する場所",
+  "mapRegionStrengthSpendingIntensity": "消費が活発な場所",
+  "mapRegionStrengthDistance": "近い場所",
+  "mapRegionRecommendationsAbout": "データの基準について",
+  "mapRegionAboutTitle": "おすすめ地域の選び方",
+  "mapRegionAboutIntro": "基準位置が属する道府県の中で、基準位置の地域を除いた残りを比較しておすすめ順を決めます。以下の項目を合わせて見ます。",
+  "mapRegionAboutCongestion": "韓国観光公社の観光地集中率予測です。本日の予測値のみを使い、観光地単位の値を市郡区の平均にまとめます。\n値が反転しており、空いているほど高い点数になります。",
+  "mapRegionAboutVisitorVolume": "韓国観光公社の地域別訪問者数です。域外と外国からの訪問のみを合算し、地元住民は日常の移動として除きます。\n直近7日間の平均を使います。",
+  "mapRegionAboutIntensityTitle": "滞在強度 · 消費強度",
+  "mapRegionAboutIntensity": "韓国観光公社の観光需要強度指標です。その市郡区の最新の月次値を使い、月1回の更新のため1か月間は同じ値が維持されます。どちらも高いほど良い点数です。\n消費強度は域外からの消費が基準です。",
+  "mapRegionAboutDistance": "基準位置からその地域までの距離です。近いほど高い点数になります。",
+  "mapRegionAboutScoringTitle": "共通ルール",
+  "mapRegionAboutScoringNormalize": "正規化 — 各項目をその道府県の候補の最小値〜最大値に合わせて0〜100に広げます。そのため他の道府県の同じ数値とは意味が異なります。",
+  "mapRegionAboutScoringCongestion": "順位 — 返された一覧ではなく道府県全体の候補が基準です。",
+  "mapRegionAboutScoringDistance": "欠測の扱い — データのない項目は計算から除きます。",
+  "mapRegionAboutScoringTotal": "候補の制限 — 基準位置が属する道府県の中だけで選び、基準位置の地域は除きます。観光地が十分でない地域は除外します。",
+  "dmMessagesAction": "DM",
+  "dmUnreadBadgeLabel": "未読のDMあり",
+  "dmUnavailableBody": "しばらくしてからもう一度お試しください。",
+  "dmRetry": "再試行",
+  "dmReportSubmitted": "報告を受け付けました。",
+  "dmReportFailed": "報告を受け付けられませんでした。",
+  "dmEmptyMessage": "このメッセージは表示できません",
+  "dmConversationsTitle": "DM",
+  "dmConversationsEmptyTitle": "まだDMがありません",
+  "dmConversationsEmptyBody": "やり取りした会話がここに表示されます。",
+  "dmConversationsUnavailable": "DM一覧を読み込めませんでした",
+  "dmPhotoMessagePreview": "写真",
+  "dmUnreadCountLabel": "未読のDM{count}件",
+  "dmUnreadCountOverflow": "9+",
+  "dmMessageInputHint": "メッセージを入力",
+  "dmSendAction": "送信",
+  "dmSendFailed": "送信できませんでした",
+  "dmRetryAction": "再送信",
+  "dmRetryExhausted": "何度か試しましたが送信できませんでした",
+  "dmSendingLabel": "送信中…",
+  "dmTypingIndicator": "{nickname}さんが入力中…",
+  "dmSyncFailedBanner": "更新できませんでした",
+  "dmConversationEmpty": "最初のメッセージを送ってみましょう。",
+  "dmSelectMessagesAction": "メッセージを選択",
+  "dmSelectionCount": "{count}件選択中",
+  "dmSelectionCancel": "選択を取消",
+  "dmReportSelectedAction": "報告",
+  "errorResendCooldownActive": "しばらくしてからもう一度お試しください。",
+  "errorAlreadyVerified": "このメールアドレスは認証済みです。",
+  "errorNotEmailMember": "ソーシャルアカウントのメールアドレスは変更できません。",
+  "errorInvalidEmailFormat": "正しいメールアドレスを入力してください。",
+  "errorEmailNotVerified": "続けるにはメール認証を完了してください。",
+  "errorSessionExpiredSignInAgain": "セキュリティのためセッションを終了しました。もう一度ログインしてください。",
+  "verificationCodeExpired": "コードの有効期限が切れています。新しいコードを取得してください。",
+  "verificationCodeConsumed": "このコードは使用済みです。新しいコードを取得してください。",
+  "verificationMaxAttempts": "試行回数を超えました。新しいコードを取得してください。",
+  "verificationCodeMismatch": "コードが正しくないか、有効期限が切れています。確認して入力し直すか、新しいコードを取得してください。",
+  "emailVerificationChangeAddress": "アドレスが違いますか？",
+  "emailVerificationChangeAddressTitle": "メールアドレスの変更",
+  "emailVerificationChangeAddressBody": "新しいアドレスに認証コードを送ります。以前のコードは使えなくなります。",
+  "emailVerificationAddressChanged": "変更したアドレスに新しいコードを送りました。",
+  "emailVerificationResendCountdown": "{seconds}秒後に再送信できます",
+  "emailVerificationNeedsResend": "以前の認証コードは使用できません。新しいコードを取得してください。",
+  "errorMemberAlreadyRegistered": "すでに登録されているメールアドレスです。ログインしてください。",
+  "errorInvalidInput": "入力された情報が正しくありません。確認して再度お試しください。",
+  "errorAccountInactive": "無効な状態のアカウントです。サポートにお問い合わせください。",
+  "errorVerificationRateLimited": "認証のリクエストが多すぎます。しばらくしてからお試しください。",
+  "errorVerificationNotFound": "認証の有効期限が切れました。新しいコードを取得してください。",
+  "errorPasswordPolicyViolation": "パスワードが条件を満たしていません。8文字以上で設定してください。",
+  "passwordResetChangeEmail": "別のメールアドレスで受け取る",
+  "passwordResetNoCodeHint": "コードが届かない場合は迷惑メールフォルダをご確認いただくか、再送信してください。",
+  "passwordResetConfirmSubtitleWithEmail": "{email} に送信した6桁のコードを入力し、新しいパスワードを設定してください。",
+  "errorPasswordResetNoAccount": "このメールアドレスで登録されたアカウントがありません。カカオ・Google・Appleで登録された場合はその方法でログインしてください。",
+  "spotQaEntryAction": "今ここはどう？",
+  "spotQaQuestionsTitle": "この場所への質問",
+  "spotQaQuestionsEmptyTitle": "まだ質問がありません",
+  "spotQaQuestionsEmptyBody": "この場所について最初に質問してみましょう。",
+  "spotQaQuestionsUnavailable": "質問を読み込めませんでした。",
+  "spotQaAnswersUnavailable": "回答を読み込めませんでした。",
+  "spotQaAnswersEmpty": "まだ回答がありません。ご存じのことを教えてください。",
+  "spotQaResolvedLabel": "解決済み",
+  "spotQaUnresolvedLabel": "未解決",
+  "spotQaResolveAction": "解決",
+  "spotQaResolveFailed": "解決済みにできませんでした。しばらくしてからお試しください。",
+  "spotQaAskAction": "質問する",
+  "spotQaAnswerAction": "回答する",
+  "spotQaReplyAction": "返信する",
+  "spotQaAskTitle": "質問を書く",
+  "spotQaAnswerTitle": "回答を書く",
+  "spotQaReplyTitle": "返信を書く",
+  "spotQaBodyHint": "知りたいことを書いてください。",
+  "spotQaAnswerBodyHint": "ご存じのことを教えてください。",
+  "spotQaSubmitAction": "投稿",
+  "spotQaSubmitFailed": "投稿できませんでした。しばらくしてからお試しください。",
+  "spotQaDeleteAction": "削除",
+  "spotQaDeleteFailed": "削除できませんでした。しばらくしてからお試しください。",
+  "spotQaDmAction": "メッセージを送る",
+  "spotQaDmFailed": "会話を開始できませんでした。しばらくしてからお試しください。",
+  "spotQaOriginCardTitle": "質問の引用",
+  "spotQaAnswerCount": "{count, plural, =0{回答なし} =1{回答1件} other{回答{count}件}}",
+  "spotQaMyQuestionsTitle": "自分の質問",
+  "spotQaMyQuestionsEntry": "自分の質問",
+  "spotQaMyQuestionsEmptyTitle": "まだ質問がありません",
+  "spotQaMyQuestionsEmptyBody": "場所の詳細から気になることを質問してみましょう。",
+  "spotQaMyQuestionsUnavailable": "この質問が見つかりませんでした。削除または非表示になった可能性があります。",
+  "spotQaNewAnswerBadge": "{count, plural, =1{新しい回答1件} other{新しい回答{count}件}}",
+  "spotQaDmEntry": "メッセージ",
+  "spotQaEntryQuestionCount": "{count, plural, =0{まだ質問がありません} =1{質問1件} other{質問{count}件}}",
+  "spotQaComposeContext": "{spot}について質問",
+  "spotQaSuggestTitle": "こんなことを聞いてみましょう",
+  "spotQaSuggestCrowd": "混雑",
+  "spotQaSuggestParking": "駐車",
+  "spotQaSuggestWeather": "雨の日",
+  "spotQaSuggestHours": "営業状況",
+  "spotQaBodyHintExample": "例：今は混んでいますか？駐車はしやすいですか？",
+  "spotQaFillCrowd": "今は混んでいますか？",
+  "spotQaFillParking": "駐車できますか？",
+  "spotQaFillWeather": "雨でも楽しめますか？",
+  "spotQaFillHours": "今は開いていますか？",
+  "spotQaMyQuestionsFailed": "質問を読み込めませんでした。",
+  "spotQaMyQuestionsSignInBody": "ログインすると、自分の質問と回答を確認できます。",
+  "spotQaPhotoUploadFailed": "{count, plural, =1{写真1枚をアップロードできませんでした。} other{写真{count}枚をアップロードできませんでした。}}",
+  "spotQaUnresolveAction": "未解決",
+  "spotQaUnresolveFailed": "戻せませんでした。しばらくしてからお試しください。",
+  "alarmSettingsTitle": "通知",
+  "settingsNotifications": "通知",
+  "alarmCategoryMessage": "メッセージ",
+  "alarmCategoryMessageDescription": "新しいダイレクトメッセージ",
+  "alarmCategorySpotQa": "質問・回答",
+  "alarmCategorySpotQaDescription": "自分の質問への回答と、自分の回答への返信",
+  "alarmOsDisabledNotice": "端末の設定でこのアプリの通知がオフになっているため、通知は届きません。",
+  "alarmSettingsLoadFailed": "通知設定を読み込めませんでした。",
+  "alarmSettingsSaveFailed": "保存できませんでした。もう一度お試しください。",
+  "relationConnect": "自分の地図に登録",
+  "relationConnected": "登録済み",
+  "relationConnectFailed": "登録できませんでした。もう一度お試しください。",
+  "relationSignInToConnect": "ログインすると、この人を自分の地図に登録できます。",
+  "relationMapTitle": "重なった旅",
+  "relationMapCount": "{count}人",
+  "@relationMapCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relationMapEmpty": "まだ誰もいません。地図を共有すると、開いた人が自分で登録できます。",
+  "relationMapMe": "自分",
+  "relationOverlapWith": "{count}か所が一致",
+  "@relationOverlapWith": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relationRemove": "外す",
+  "relationRemoved": "自分の地図から外しました。",
+  "relationRemoveFailed": "外せませんでした。もう一度お試しください。",
+  "relationMapHint": "中心に近いほど、重なる場所が多いです。",
+  "commonMore": "もっと見る",
+  "termsOpenInBrowser": "ブラウザで開く",
+  "termsDocumentLoadFailed": "規約を読み込めませんでした。接続をご確認ください。"
 }

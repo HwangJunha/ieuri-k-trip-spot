@@ -17,6 +17,7 @@ class PermissionBlockedNotice extends ConsumerWidget {
   String _message(AppLocalizations l10n) => switch (kind) {
     PermissionKind.location => l10n.permissionLocationBlockedMessage,
     PermissionKind.notification => l10n.permissionNotificationBlockedMessage,
+    PermissionKind.photos => l10n.permissionPhotosBlockedMessage,
   };
 
   @override

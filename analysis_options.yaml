@@ -9,6 +9,16 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  # 생성 파일은 분석하지 않는다. 우리가 고칠 수 있는 코드가 아니고, 커뮤니티
+  # 오퍼레이션 하나만 500KB가 넘어 분석 시간을 그쪽이 다 먹는다. 생성기가 낸
+  # 결과는 codegen이 스키마로 이미 검증한다(CLAUDE.md §13).
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.graphql.dart"
+    - "**/*.freezed.dart"
+    - "lib/l10n/gen/**"
+
 linter:
   # The lint rules applied to this project can be customized in the
   # section below to disable rules from the `package:flutter_lints/flutter.yaml`

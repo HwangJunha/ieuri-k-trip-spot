@@ -31,10 +31,19 @@ dependencies:
   # Local (non-secret) persistence: locale + onboarding flag
   shared_preferences: ^2.3.0
 
+  # 앱 전용 디렉토리 — 초안 사진 바이트를 파일로 둔다(SPEC-0022 §2).
+  # 사진 5장이면 최대 50MiB라 shared_preferences에 담을 수 없다.
+  path_provider: ^2.1.4
+
   # GraphQL data layer (repository only)
   graphql_flutter: ^5.1.2
   # DocumentNode type for the graphql_codegen-generated operations (repo only)
   gql: any
+  # HttpLink에 응답 시한을 거는 http.BaseClient용 (common/network 전용)
+  http: ^1.6.0
+  # 동의 창 없이 google server auth code를 묻기 위한 저수준 API.
+  # google_sign_in의 authorizeServer()는 prompt를 강제해 창이 두 번 뜬다(SPEC-0012).
+  google_sign_in_platform_interface: ^3.1.0
 
   # Secure storage for tokens (via common/storage wrapper only)
   flutter_secure_storage: ^9.2.2
@@ -46,6 +55,32 @@ dependencies:
   # Device GPS coordinates for the location-based spot feed (SPEC-0002)
   geolocator: ^13.0.1
   url_launcher: ^6.3.2
+  # 사진 첨부(SPEC-0010). Flutter 팀이 관리하는 사실상 표준이며, 업로드는 이 패키지가
+  # 준 바이트를 그대로 스토리지로 PUT한다 — 리사이즈·재인코딩을 하면 1단계에 선언한
+  # contentLength와 어긋나 서명이 깨진다(가이드 §4).
+  image_picker: ^1.2.3
+  kakao_map_sdk: ^1.2.6
+
+  # FCM 푸시 알림(SPEC-0028). **설정 파일이 없어도 앱은 기동된다** — Android는
+  # google-services.json이 있을 때만 Gradle 플러그인이 붙고(android/app/build.gradle.kts),
+  # 초기화가 실패하면 `PushInitializer`가 삼켜 알림만 빠진다. 알림을 못 받는 것이
+  # 앱을 막을 이유가 되지 않는다(설계 §9 · R14).
+  firebase_core: ^3.8.0
+  firebase_messaging: ^15.1.5
+  # 사용량 집계(DAU·MAU·유지율). 푸시와 같은 Firebase 앱을 쓰므로 설정 파일이 없으면
+  # 함께 조용히 빠진다 — `AnalyticsInitializer`가 `PushInitializer`와 같은 규칙이다.
+  #
+  # **11.x에 고정돼 있다.** 12.x는 `firebase_core ^4`를 요구하는데, core를 올리면
+  # `firebase_messaging`까지 연쇄로 올려야 한다. 출시 직전에 푸시를 건드릴 이유가
+  # 없어 core 3.x와 맞는 마지막 버전을 쓴다(2026-08-25).
+  firebase_analytics: ^11.6.0
+  # Android 알림 채널 2개와 포그라운드 표시 억제(설계 §5·§6). 서버가 채널을 지정하지
+  # 않으므로 클라이언트가 만든다(서버 안내 §1).
+  flutter_local_notifications: ^18.0.1
+  photo_manager: ^3.12.0
+  share_plus: ^12.0.2
+  webview_flutter: ^4.14.1
+  logger: ^2.7.0
 
 dev_dependencies:
   flutter_test:
@@ -63,7 +98,8 @@ dev_dependencies:
   flutter_native_splash: ^2.4.0
 
   # E2E: journeys that stay inside the widget tree (bundled with the SDK).
-  # Discover 스와이프→반응→다음카드 여정(integration_test/)이 사용.
+  # 현재 상시 e2e 여정은 없다 — 검증은 유닛·위젯 테스트가 맡는다(CLAUDE.md §8).
+  # SDK 번들이라 유지 비용이 없어, 여정을 추가할 때 바로 쓸 수 있게 남겨둔다.
   integration_test:
     sdk: flutter
 
@@ -73,6 +109,15 @@ flutter:
 
   assets:
     - asset/icon/
+    - asset/icon/landmark/
+    # **폴더가 아니라 파일을 하나씩 싣는다.** `asset/geo/`로 두면 같은 폴더의
+    # `README.md`(내부 설계 메모 — SPEC·정책 번호가 적혀 있다)까지 앱에 딸려
+    # 들어간다. 실제로 릴리스 APK에 들어가 있던 것을 확인하고 좁혔다.
+    #
+    # **geo에 자산을 추가하면 여기에도 줄을 추가해야 한다.** 폴더 선언이 아니라
+    # 빠뜨리면 조용히 누락된다 — `cell-shapes.json`은 로더가 try/catch로 빈 값을
+    # 돌려주므로 특히 티가 안 난다.
+    - asset/geo/district-boundaries.geojson
 
   fonts:
     # Base multilingual family. Latin/KO glyphs from Noto Sans;

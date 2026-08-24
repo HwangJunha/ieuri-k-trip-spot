@@ -1,0 +1,71 @@
+# SPEC-0011 프로필 수정(R4~R6)과 내가 쓴 글(R3)이 쓰는 서버 스키마 조각
+# (committed codegen 입력). `schema/schema.introspection.json` 스냅샷(2026-08-08
+# 갱신)에서 손으로 추린 안정 빌드 입력이며, gitignore된 스냅샷을 codegen이 직접
+# 읽지 않는다(CLAUDE.md §13).
+#
+# **여기서 다시 선언하지 않는 것들.** codegen이 모든 조각을 한 이름공간에 합치므로
+# 중복 정의는 곧 빌드 실패다:
+#   - `UserError`·`PageInfo`  → auth 조각
+#   - `Post`·`PostConnection`·`PostEdge`·`PostAuthor`·`PostSpot`·`TargetCategory`
+#     → community 조각. `myPosts`가 돌려주는 `Post`는 커뮤니티 피드의 `Post`와
+#     **같은 타입**이라 조각도 하나면 족하다(설계 §10).
+
+input ChangeNicknameInput {
+  nickname: String!
+}
+
+# 성공 시 확정된 닉네임을 돌려준다. **중복 판정은 서버가 한다** — 클라이언트는
+# 형식만 보고(R5), `NICKNAME_ALREADY_TAKEN`이 `userErrors`로 온다.
+type ChangeNicknamePayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  nickname: String
+}
+
+# 발급 요청에 선언한 값이 **실제 PUT과 정확히 일치해야** 서명이 유효하다(R6) —
+# 파일을 읽어 실제 바이트 길이를 구한 뒤 요청한다.
+input CreateProfileImageUploadUrlInput {
+  contentType: String!
+  contentLength: Int!
+}
+
+type CreateProfileImageUploadUrlPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  uploadUrl: String
+  objectKey: String
+  expiresAt: String
+}
+
+input ConfirmProfileImageUploadInput {
+  objectKey: String!
+}
+
+type ConfirmProfileImageUploadPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  profileImageKey: String
+}
+
+# 제거는 **인자가 없다** — 대상은 항상 호출자 본인의 이미지다.
+type RemoveProfileImagePayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+# Query·Mutation은 auth 조각이 선언한 것을 **확장**한다(spot·community 조각과 같은
+# 규약) — 다시 선언하면 앞선 조각의 필드가 사라져 다른 기능의 codegen이 깨진다.
+extend type Query {
+  myPosts(first: Int, after: String): PostConnection!
+}
+
+extend type Mutation {
+  changeNickname(input: ChangeNicknameInput!): ChangeNicknamePayload!
+  createProfileImageUploadUrl(
+    input: CreateProfileImageUploadUrlInput!
+  ): CreateProfileImageUploadUrlPayload!
+  confirmProfileImageUpload(
+    input: ConfirmProfileImageUploadInput!
+  ): ConfirmProfileImageUploadPayload!
+  removeProfileImage: RemoveProfileImagePayload!
+}

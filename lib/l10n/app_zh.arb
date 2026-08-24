@@ -1,197 +1,939 @@
 {
   "@@locale": "zh",
-  "appTitle": "K-韩游",
-
-  "splashTagline": "实时发现韩国的活力景点。",
-  "splashSubTagline": "通往首尔及更远方的智能入口。",
+  "appTitle": "K-韓遊",
+  "splashTagline": "即時發現韓國的活力景點。",
+  "splashSubTagline": "通往首爾及更遠方的智慧入口。",
   "splashLoading": "正在初始化...",
-
-  "languageSelectionSubtitle": "选择语言",
-  "languageSelectionInstruction": "选择您偏好的语言，探索韩国的精彩景点。",
-  "languageDefaultBadge": "默认",
-  "confirmSelection": "确认选择",
-  "changeLaterHint": "稍后可在设置中更改。",
-
-  "skip": "跳过",
+  "languageSelectionSubtitle": "選擇語言",
+  "languageSelectionInstruction": "選擇您偏好的語言，探索韓國的精彩景點。",
+  "languageDefaultBadge": "預設",
+  "confirmSelection": "確認選擇",
+  "changeLaterHint": "稍後可在設定中更改。",
+  "skip": "跳過",
   "next": "下一步",
-  "getStarted": "开始",
-
-  "onboardingTitle1": "滑动发现",
-  "onboardingBody1": "轻轻一滑，找到最适合你的韩国之旅。喜欢就右滑收藏！",
-  "onboardingTitle2": "避开人群",
-  "onboardingBody2": "借助实时拥挤数据更聪明地规划。出发前就知道景点是清静还是热闹。",
-  "onboardingTitle3": "结伴同行",
-  "onboardingBody3": "与全球旅行者实时连接。分享攻略、相约见面、共创回忆。",
-
-  "onboardingCaption1": "明洞街头美食",
-  "onboardingLocation1": "首尔, 韩国",
-  "onboardingCaption2": "景福宫",
-  "onboardingLocation2": "首尔, 韩国",
-  "onboardingCaption3": "汉江公园",
-  "onboardingLocation3": "首尔, 韩国",
-
-  "homeSearchHint": "搜索景点、隐藏胜地…",
-  "homeFavoritesTooltip": "收藏",
-  "homeSectionRecommended": "为你推荐",
-  "homeSectionHappeningNow": "正在举办",
-  "homeSectionPopular": "热门景点",
-  "viewAll": "查看全部",
-
-  "congestionLow": "空闲",
-  "congestionModerate": "适中",
-  "congestionHigh": "拥挤",
-
-  "eventCategoryFestival": "节庆",
-  "eventCategoryLive": "现场",
-  "eventCategoryArt": "艺术",
-
-  "distanceAway": "距离{distance}km",
-
-  "navHome": "首页",
-  "navMap": "地图",
-  "navDiscover": "发现",
-  "navEvents": "活动",
-  "navChat": "聊天",
-
-  "comingSoon": "敬请期待。",
-
-  "loginTitle": "欢迎回来",
-  "loginSubtitle": "登录以继续。",
-  "emailLabel": "邮箱",
-  "passwordLabel": "密码",
-  "confirmPasswordLabel": "确认密码",
-  "loginButton": "登录",
-  "signUpButton": "注册",
-  "noAccountPrompt": "还没有账户？",
-  "haveAccountPrompt": "已有账户？",
-  "goToSignUp": "注册",
-  "goToLogin": "登录",
-  "forgotPassword": "忘记密码？",
-  "showPassword": "显示密码",
-  "hidePassword": "隐藏密码",
-
-  "signUpTitle": "创建账户",
-  "signUpSubtitle": "使用邮箱和密码开始吧。",
-
+  "getStarted": "開始",
+  "onboardingTitle1": "滑動發現",
+  "onboardingBody1": "輕輕一滑，找到最適合你的韓國之旅。喜歡就右滑收藏！",
+  "onboardingTitle2": "避開人群",
+  "onboardingBody2": "藉助即時擁擠資料更聰明地規劃。出發前就知道景點是清靜還是熱鬧。",
+  "onboardingTitle3": "結伴同行",
+  "onboardingBody3": "與全球旅行者即時連線。分享攻略、相約見面、共創回憶。",
+  "onboardingCaption1": "明洞街頭美食",
+  "onboardingLocation1": "首爾, 韓國",
+  "onboardingCaption2": "景福宮",
+  "onboardingLocation2": "首爾, 韓國",
+  "onboardingCaption3": "漢江公園",
+  "onboardingLocation3": "首爾, 韓國",
+  "homeSearchHint": "搜尋景點、隱藏勝地…",
+  "homeSectionHappeningNow": "正在舉辦",
+  "festivalPeriod": "{start} – {end}",
+  "homeSectionPopular": "熱門景點",
+  "homeSectionNearYou": "附近景點",
+  "homeNearYouEmpty": "搜尋範圍內沒有景點。請在設定中擴大範圍。",
+  "homeHappeningNowEmpty": "附近暫無正在舉辦的節慶活動。",
+  "homePopularEmpty": "附近暫無熱門景點。",
+  "popularLikeCount": "{count} 個贊",
+  "homeSectionRetry": "重試",
+  "homeSectionError": "無法載入該板塊。",
+  "searchTitle": "搜尋",
+  "searchHint": "按名稱或地址搜尋景點",
+  "searchRecentTitle": "最近搜尋",
+  "searchRecentOpen": "最近搜尋",
+  "searchRecentClose": "關閉",
+  "searchRecentClearAll": "全部清除",
+  "searchRecentRemove": "刪除",
+  "searchEmptyResult": "沒有匹配的景點。",
+  "searchError": "搜尋失敗。",
+  "searchRetry": "重試",
+  "viewAll": "檢視全部",
+  "categoryAll": "全部",
+  "navHome": "首頁",
+  "navMap": "地圖",
+  "navDiscover": "發現",
+  "navLiked": "收藏",
+  "navNationalMap": "全国地图",
+  "navLibrary": "我的活動",
+  "permissionPhotosRationaleTitle": "用照片填充地图？",
+  "permissionPhotosRationaleBody": "我们读取照片中记录的位置来找出你去过的地区。照片不会离开你的设备，坐标仅用于判定地区，不会被保存。",
+  "permissionPhotosBlockedMessage": "照片访问已关闭，无法用照片填充地图。可在设置中允许。",
+  "nationalMapNationwide": "全国",
+  "nationalMapCellCount": "{total}格中{visited}格",
+  "nationalMapEmptyHint": "用照片填充，或登记你现在所在的地方。",
+  "nationalMapSelectHint": "点击地图上的地区。",
+  "nationalMapRecordVisit": "登记",
+  "nationalMapRemoveVisit": "取消登记",
+  "nationalMapRetry": "重试",
+  "nationalMapVisited": "已去过",
+  "nationalMapOpenDetail": "详情",
+  "nationalMapSpotsTitle": "该地区的景点",
+  "nationalMapSpotsEmpty": "这里还没有景点。",
+  "commonCancel": "取消",
+  "commonClose": "关闭",
+  "nationalMapHere": "我在这里",
+  "nationalMapRegisterTitle": "要登记这个地区吗？",
+  "nationalMapRegisterBody": "将把{district}记录为去过。",
+  "nationalMapAlreadyVisited": "{cell}你已经去过了。",
+  "nationalMapOutsideKorea": "只能登记韩国国内的地区。",
+  "nationalMapLocationUnavailable": "无法获取当前位置。",
+  "nationalMapShare": "分享地图",
+  "nationalMapShareFailed": "无法创建分享链接。",
+  "sharedMapVisitedCount": "去过{count}个地区",
+  "sharedMapOverlapCount": "{count}处重合",
+  "sharedMapNoOverlap": "还没有重合的地方。",
+  "sharedMapSignInToCompare": "登录后可查看重合的地方。",
+  "sharedMapGone": "这个地图已无法查看。",
+  "sharedMapBlocked": "无法查看这个地图。",
+  "photoSyncTitle": "用照片填充",
+  "photoSyncBody": "我们读取照片中记录的位置来找出你去过的地区。照片不会离开你的设备。",
+  "photoSyncStart": "开始",
+  "photoSyncResume": "继续",
+  "photoSyncStop": "停止",
+  "photoSyncProgress": "已检查{total}张中的{done}张",
+  "photoSyncFoundSoFar": "目前找到{count}个地区",
+  "photoSyncFound": "找到{count}个地区",
+  "photoSyncConfirmBody": "登记后地图就会被填充。",
+  "photoSyncRegister": "登记",
+  "photoSyncDone": "地图已更新。",
+  "photoSyncNoCoordinates": "没有找到含位置信息的照片。",
+  "photoSyncPermissionDenied": "允许访问照片即可填充地图。",
+  "photoSyncFailed": "读取照片时出现问题。",
+  "nationalMapUnavailable": "无法加载地图",
+  "navCommunity": "社群",
+  "likedSpotsEmpty": "還沒有收藏的景點。",
+  "likedSpotsUnavailable": "無法載入收藏列表",
+  "loginTitle": "歡迎回來",
+  "loginSubtitle": "登入以繼續。",
+  "emailLabel": "信箱",
+  "passwordLabel": "密碼",
+  "confirmPasswordLabel": "確認密碼",
+  "loginButton": "登入",
+  "signUpButton": "註冊",
+  "noAccountPrompt": "還沒有帳戶？",
+  "haveAccountPrompt": "已有帳戶？",
+  "goToSignUp": "註冊",
+  "goToLogin": "登入",
+  "forgotPassword": "忘記密碼？",
+  "showPassword": "顯示密碼",
+  "hidePassword": "隱藏密碼",
+  "signUpTitle": "建立帳戶",
+  "signUpSubtitle": "使用信箱和密碼開始吧。",
   "agreementSelectAll": "全部同意",
-  "agreementAge": "我已年满14周岁。",
-  "agreementService": "服务使用条款",
-  "agreementPrivacy": "收集与使用个人信息",
-  "agreementLocation": "位置信息使用条款",
-  "agreementMarketing": "同意用于营销目的的收集与使用",
-  "agreementRequiredBadge": "必选",
-  "agreementOptionalBadge": "可选",
-  "agreementViewDetail": "查看",
-  "agreementDetailPlaceholder": "条款全文即将提供。",
-
-  "passwordResetTitle": "重置密码",
-  "passwordResetSubtitle": "输入注册邮箱，我们将发送验证码。",
-  "passwordResetRequestButton": "发送验证码",
-  "passwordResetCodeSent": "验证码已发送，请查收邮件。",
-  "passwordResetConfirmButton": "更改密码",
-  "passwordResetDone": "密码已更改，请登录。",
-  "newPasswordLabel": "新密码",
-  "verificationCodeLabel": "验证码",
-
-  "emailVerificationTitle": "验证邮箱",
-  "emailVerificationSubtitle": "请输入我们发送到您邮箱的验证码。",
-  "emailVerificationButton": "验证",
-  "emailVerificationResend": "重新发送验证码",
-  "emailVerificationResent": "验证码已重新发送。",
-  "validationCodeRequired": "请输入验证码。",
-
-  "validationEmailRequired": "请输入邮箱。",
-  "validationEmailInvalid": "邮箱格式不正确。",
-  "validationPasswordRequired": "请输入密码。",
-  "validationPasswordPolicy": "需包含字母、数字和特殊字符，且至少8位。",
-  "validationPasswordMismatch": "两次输入的密码不一致。",
-
-  "errorInvalidCredentials": "邮箱或密码不正确。",
-  "errorEmailAlreadyInUse": "该邮箱已被使用。",
-  "errorNetwork": "网络错误，请重试。",
-  "errorUnknown": "出现问题，请重试。",
-
-  "signUpSuccessLoginPrompt": "账户已创建，请登录。",
-
+  "agreementAge": "我已年滿14週歲。",
+  "agreementService": "服務使用條款",
+  "agreementPrivacy": "收集與使用個人資訊",
+  "agreementLocation": "位置資訊使用條款",
+  "agreementMarketing": "同意用於營銷目的的收集與使用",
+  "agreementRequiredBadge": "必選",
+  "agreementOptionalBadge": "可選",
+  "agreementViewDetail": "檢視",
+  "agreementDetailPlaceholder": "條款全文即將提供。",
+  "passwordResetTitle": "重置密碼",
+  "passwordResetSubtitle": "請輸入註冊的電子信箱，我們會寄送 6 位數驗證碼。",
+  "passwordResetRequestButton": "傳送驗證碼",
+  "passwordResetCodeSent": "已寄送驗證碼，請查看您的信箱。",
+  "passwordResetConfirmButton": "更改密碼",
+  "passwordResetDone": "密碼已更改，請登入。",
+  "newPasswordLabel": "新密碼",
+  "verificationCodeLabel": "驗證碼",
+  "emailVerificationTitle": "驗證信箱",
+  "emailVerificationSubtitle": "請輸入我們傳送到您信箱的驗證碼。",
+  "emailVerificationButton": "驗證",
+  "emailVerificationResend": "重新傳送驗證碼",
+  "emailVerificationResent": "驗證碼已重新傳送。",
+  "validationCodeRequired": "請輸入驗證碼。",
+  "validationEmailRequired": "請輸入信箱。",
+  "validationEmailInvalid": "信箱格式不正確。",
+  "validationPasswordRequired": "請輸入密碼。",
+  "validationPasswordPolicy": "需包含字母、數字和特殊字元，且至少8位。",
+  "validationPasswordMismatch": "兩次輸入的密碼不一致。",
+  "errorInvalidCredentials": "信箱或密碼不正確。",
+  "errorEmailAlreadyInUse": "該信箱已被使用。",
+  "errorNetwork": "網路錯誤，請重試。",
+  "errorUnknown": "出現問題，請重試。",
+  "signUpSuccessLoginPrompt": "帳戶已建立，請登入。",
   "orDivider": "或",
-  "continueWithGoogle": "使用 Google 继续",
-  "continueWithApple": "使用 Apple 继续",
-  "continueWithKakao": "使用 Kakao 继续",
-  "snsSignUpTitle": "社交账号注册",
-  "snsSignUpSubtitle": "已通过社交账号验证。若要完成注册，请确认邮箱并同意条款。",
-  "snsEmailPrefillHint": "请输入您的邮箱。",
-  "snsSignUpButton": "完成注册",
-  "snsCancelled": "已取消登录。",
-  "errorSnsMemberNotFound": "该账户尚未注册，请先注册。",
-  "logoutTooltip": "退出登录",
-
-  "permissionLocationRationaleTitle": "发现你周边的景点",
-  "permissionLocationRationaleBody": "K-Trip Spot 仅在你使用应用时使用你的位置，以显示附近的景点和实时拥挤度。我们绝不会在后台追踪你。",
-  "permissionNotificationRationaleTitle": "掌握最新动态",
-  "permissionNotificationRationaleBody": "开启通知即可获取你关注景点的实时拥挤提醒和动态。你可以随时更改。",
-  "permissionContinue": "继续",
-  "permissionNotNow": "以后再说",
-  "permissionLocationBlockedMessage": "定位已关闭。请在设置中开启以查看附近景点。",
-  "permissionNotificationBlockedMessage": "通知已关闭。请在设置中开启以接收动态。",
-  "permissionOpenSettings": "打开设置",
-
-  "splashLocationRequired": "需要位置权限才能继续。",
-  "splashLocationBlockedHint": "定位已关闭。请在设置中开启以继续。",
-
-  "discoverLikeLabel": "喜欢",
-  "discoverNopeLabel": "跳过",
-
-  "discoverCategoryTouristSpot": "旅游景点",
-  "discoverCategoryCulturalFacility": "文化设施",
-  "discoverCategoryFestivalEvent": "庆典·活动",
-  "discoverCategoryTravelCourse": "旅行路线",
-  "discoverCategoryLeisureSports": "休闲·运动",
-  "discoverCategoryLodging": "住宿",
-  "discoverCategoryShopping": "购物",
-  "discoverCategoryRestaurant": "餐饮",
-  "discoverCategoryTransport": "交通",
-
+  "continueWithGoogle": "使用 Google 繼續",
+  "continueWithApple": "使用 Apple 繼續",
+  "continueWithKakao": "使用 Kakao 繼續",
+  "snsSignUpTitle": "社交帳號註冊",
+  "snsSignUpSubtitle": "已透過社交帳號驗證。若要完成註冊，請確認信箱並同意條款。",
+  "snsEmailPrefillHint": "請輸入您的信箱。",
+  "snsSignUpButton": "完成註冊",
+  "snsCancelled": "已取消登入。",
+  "errorSnsMemberNotFound": "該帳戶尚未註冊，請先註冊。",
+  "errorSnsVerificationExpired": "認證已過期，請重新登入。",
+  "logoutTooltip": "退出登入",
+  "permissionLocationRationaleTitle": "發現你周邊的景點",
+  "permissionLocationRationaleBody": "K-Trip Spot 僅在你使用 App 時使用你的位置，以顯示附近的景點和即時擁擠度。我們絕不會在背景追蹤你。",
+  "permissionNotificationRationaleTitle": "掌握最新動態",
+  "permissionNotificationRationaleBody": "開啟通知即可獲取你關注景點的即時擁擠提醒和動態。你可以隨時更改。",
+  "permissionContinue": "繼續",
+  "permissionNotNow": "以後再說",
+  "permissionLocationBlockedMessage": "定位已關閉。請在設定中開啟以檢視附近景點。",
+  "permissionNotificationBlockedMessage": "通知已關閉。請在設定中開啟以接收動態。",
+  "permissionOpenSettings": "開啟設定",
+  "splashLocationRequired": "需要位置許可權才能繼續。",
+  "splashLocationBlockedHint": "定位已關閉。請在設定中開啟以繼續。",
+  "discoverLikeLabel": "喜歡",
+  "discoverNopeLabel": "跳過",
   "distanceKilometers": "{distance}公里",
   "distanceMeters": "{distance}米",
-
   "discoverEmptyTitle": "附近的都看完啦",
-  "discoverEmptyBody": "扩大范围或切换类别，发现更多景点。",
-  "discoverWidenRadius": "扩大范围",
-  "discoverChangeCategory": "更改类别",
-
-  "discoverRetryBanner": "无法加载景点，稍后重试。",
-  "discoverRetryButton": "重试",
-  "discoverLoadError": "加载景点时出现问题。",
-  "discoverLoading": "正在查找您附近的景点…",
-
-  "spotDetailOverviewTitle": "简介",
-  "spotDetailContactTitle": "联系方式",
-  "spotDetailHomepageLabel": "网站",
-  "spotDetailTelLabel": "电话",
-  "spotDetailLikeCount": "{count, plural, =0{还没有点赞} other{{count} 个赞}}",
+  "discoverEmptyBody": "擴大範圍或切換類別，發現更多景點。",
+  "discoverWidenRadius": "擴大範圍",
+  "discoverChangeCategory": "更改類別",
+  "discoverRetryBanner": "無法載入景點，稍後重試。",
+  "discoverRetryButton": "重試",
+  "discoverLoadError": "載入景點時出現問題。",
+  "discoverLoading": "正在查詢您附近的景點…",
+  "retryExhaustedTitle": "仍然無法連線",
+  "retryExhaustedBody": "我們嘗試了幾次仍無法連線。請檢查網路後重試。",
+  "retryExhaustedAction": "重試",
+  "spotDetailOverviewTitle": "簡介",
+  "spotDetailContactTitle": "聯絡方式",
+  "spotDetailHomepageLabel": "網站",
+  "spotDetailTelLabel": "電話",
+  "spotDetailLikeCount": "{count, plural, =0{還沒有點贊} other{{count} 個贊}}",
   "@spotDetailLikeCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
-  "spotDetailLikeAction": "喜欢",
-  "spotDetailDislikeAction": "跳过",
-  "spotDetailLoading": "正在加载景点…",
-  "spotDetailNotFoundTitle": "未找到该景点",
-  "spotDetailNotFoundBody": "我们找不到这个景点。它可能已被删除，或在您的语言中不可用。",
-  "spotDetailRateLimitedTitle": "请求过多",
-  "spotDetailRateLimitedBody": "当前访问量较大，请稍后再试。",
-  "spotDetailUnavailableTitle": "无法加载该景点",
-  "spotDetailUnavailableBody": "加载详情时出现问题，请重试。",
-  "spotDetailRetryButton": "重试",
-  "spotDetailReactionFailed": "无法保存您的反应，请重试。",
-  "spotDetailLinkFailed": "无法打开此链接。",
-
-  "spotDetailIntroTitle": "参观信息",
-  "spotDetailIntroBusinessHours": "开放时间",
+  "spotDetailLikeAction": "喜歡",
+  "spotDetailDislikeAction": "跳過",
+  "spotDetailLoading": "正在載入景點…",
+  "spotDetailNotFoundTitle": "未找到該景點",
+  "spotDetailNotFoundBody": "我們找不到這個景點。它可能已被刪除。",
+  "spotDetailNotInLocaleTitle": "目前的語言無法顯示",
+  "spotDetailNotInLocaleBody": "這個景點存在，但不提供您目前使用的語言。您可以在設定中切換語言後查看。",
+  "spotDetailNotInLocaleAction": "返回首頁",
+  "spotDetailRateLimitedTitle": "請求過多",
+  "spotDetailRateLimitedBody": "當前訪問量較大，請稍後再試。",
+  "spotDetailUnavailableTitle": "無法載入該景點",
+  "spotDetailUnavailableBody": "載入詳情時出現問題，請重試。",
+  "spotDetailRetryButton": "重試",
+  "spotDetailReactionFailed": "無法儲存您的反應，請重試。",
+  "spotDetailLinkFailed": "無法開啟此連結。",
+  "spotDetailIntroTitle": "參觀資訊",
+  "spotDetailIntroBusinessHours": "開放時間",
   "spotDetailIntroClosedDays": "休息日",
-  "spotDetailIntroFee": "门票",
-  "spotDetailIntroParking": "停车",
-  "spotDetailIntroPetAllowed": "宠物",
+  "spotDetailIntroFee": "門票",
+  "spotDetailIntroParking": "停車",
+  "spotDetailIntroPetAllowed": "寵物",
   "spotDetailIntroCreditCard": "信用卡",
-  "spotDetailIntroInquiryPhone": "咨询",
-  "spotDetailInfoTitle": "须知"
+  "spotDetailIntroInquiryPhone": "諮詢",
+  "spotDetailInfoTitle": "須知",
+  "communityTitle": "景點暢聊",
+  "@communityTitle": {
+    "description": "커뮤니티 탭 앱바 제목 (Spot Talk)"
+  },
+  "communityNearbyTitle": "附近",
+  "@communityNearbyTitle": {
+    "description": "지역 피드 섹션 헤더"
+  },
+  "communityFeedEmpty": "附近還沒有帖子。",
+  "@communityFeedEmpty": {
+    "description": "지역 피드에 글이 하나도 없을 때"
+  },
+  "communityFeedUnavailable": "無法載入附近的帖子",
+  "@communityFeedUnavailable": {
+    "description": "지역 피드 조회 실패 제목"
+  },
+  "communityFeedUnavailableBody": "請檢查網路連線後重試。",
+  "@communityFeedUnavailableBody": {
+    "description": "지역 피드 조회 실패 안내 본문"
+  },
+  "communityLocationUnavailable": "未獲取到位置資訊，無法顯示附近的帖子。",
+  "@communityLocationUnavailable": {
+    "description": "위치 권한 없음·좌표 실패 — 빈 피드와 구분되는 사유 표시"
+  },
+  "communityRetry": "重試",
+  "@communityRetry": {
+    "description": "커뮤니티 오류 상태의 재시도 버튼"
+  },
+  "communityHiddenBadge": "因多次舉報已被隱藏",
+  "@communityHiddenBadge": {
+    "description": "신고 누적으로 자동 숨김된 글·댓글 배지 (작성자에게만 보임)"
+  },
+  "communityTimeJustNow": "剛剛",
+  "@communityTimeJustNow": {
+    "description": "상대 시각 — 방금"
+  },
+  "communityTimeMinutes": "{count}分鐘前",
+  "@communityTimeMinutes": {
+    "description": "상대 시각 — n분 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeHours": "{count}小時前",
+  "@communityTimeHours": {
+    "description": "상대 시각 — n시간 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeDays": "{count}天前",
+  "@communityTimeDays": {
+    "description": "상대 시각 — n일 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityPostDetailTitle": "帖子",
+  "@communityPostDetailTitle": {
+    "description": "글 상세 앱바 제목"
+  },
+  "communityCommentsHeader": "評論 · {count}",
+  "@communityCommentsHeader": {
+    "description": "상세의 댓글 섹션 헤더 (서버 commentCount 그대로)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityCommentsEmpty": "還沒有評論。",
+  "@communityCommentsEmpty": {
+    "description": "댓글이 하나도 없을 때"
+  },
+  "communityPostUnavailable": "該帖子已刪除或無法檢視。",
+  "@communityPostUnavailable": {
+    "description": "차단·숨김이라 볼 수 없는 글 (post(id:)가 null)"
+  },
+  "communityPostUnavailableTitle": "無法檢視",
+  "@communityPostUnavailableTitle": {
+    "description": "볼 수 없는 글 화면의 제목"
+  },
+  "communityComposeAction": "寫帖子",
+  "@communityComposeAction": {
+    "description": "글 작성 FAB의 접근성 라벨"
+  },
+  "communityPostOptions": "帖子選項",
+  "@communityPostOptions": {
+    "description": "카드 우상단 오버플로 버튼의 접근성 라벨"
+  },
+  "communityViewCountLabel": "{count, plural, other{{count} 次瀏覽}}",
+  "communityBlockAction": "遮蔽此使用者",
+  "@communityBlockAction": {
+    "description": "모더레이션 시트의 차단 항목"
+  },
+  "communityReportAction": "舉報",
+  "@communityReportAction": {
+    "description": "모더레이션 시트의 신고 항목"
+  },
+  "communityDeleteAction": "刪除帖子",
+  "@communityDeleteAction": {
+    "description": "모더레이션 시트의 삭제 항목 (내 글일 때만)"
+  },
+  "communityCancel": "取消",
+  "@communityCancel": {
+    "description": "시트·다이얼로그의 취소"
+  },
+  "communityBlockConfirmTitle": "要遮蔽 {nickname} 嗎？",
+  "@communityBlockConfirmTitle": {
+    "description": "차단 확인 다이얼로그 제목",
+    "placeholders": {
+      "nickname": {
+        "type": "String"
+      }
+    }
+  },
+  "communityBlockConfirmBody": "遮蔽是雙向的：您看不到對方的帖子和評論，對方也看不到您的。之後可以解除。",
+  "@communityBlockConfirmBody": {
+    "description": "차단이 양방향임을 명시하는 확인 문구 (가이드 §6)"
+  },
+  "communityBlockConfirmAction": "遮蔽",
+  "@communityBlockConfirmAction": {
+    "description": "차단 확인 다이얼로그의 실행 버튼"
+  },
+  "communityBlockDone": "已遮蔽。該使用者的帖子將從您的動態中消失。",
+  "@communityBlockDone": {
+    "description": "차단 성공 안내"
+  },
+  "communityDeleteConfirmTitle": "要刪除這篇帖子嗎？",
+  "@communityDeleteConfirmTitle": {
+    "description": "글 삭제 확인 다이얼로그 제목"
+  },
+  "communityDeleteConfirmBody": "無法撤銷。帖子不支援編輯，需要重新撰寫。",
+  "@communityDeleteConfirmBody": {
+    "description": "삭제 확인 문구 (글 수정이 없으므로 재작성해야 한다)"
+  },
+  "communityDeleteDone": "帖子已刪除。",
+  "@communityDeleteDone": {
+    "description": "삭제 성공 안내"
+  },
+  "communityReportTitle": "舉報",
+  "@communityReportTitle": {
+    "description": "신고 시트 제목"
+  },
+  "communityReportReasonSpam": "垃圾資訊或廣告",
+  "@communityReportReasonSpam": {
+    "description": "신고 사유 SPAM"
+  },
+  "communityReportReasonAbuse": "騷擾或辱罵",
+  "@communityReportReasonAbuse": {
+    "description": "신고 사유 ABUSE"
+  },
+  "communityReportReasonInappropriate": "不當內容",
+  "@communityReportReasonInappropriate": {
+    "description": "신고 사유 INAPPROPRIATE_CONTENT"
+  },
+  "communityReportReasonOther": "其他",
+  "@communityReportReasonOther": {
+    "description": "신고 사유 OTHER — 상세 입력이 필수가 된다"
+  },
+  "communityReportDetailLabel": "詳細說明",
+  "@communityReportDetailLabel": {
+    "description": "OTHER 선택 시에만 보이는 상세 입력 라벨"
+  },
+  "communityReportDetailRequired": "選擇“其他”時請填寫詳細說明。",
+  "@communityReportDetailRequired": {
+    "description": "OTHER인데 상세가 비었을 때 (REPORT_DETAIL_REQUIRED를 미리 막는다)"
+  },
+  "communityReportSubmit": "提交",
+  "@communityReportSubmit": {
+    "description": "신고 제출 버튼"
+  },
+  "communityReportDone": "已收到您的舉報。",
+  "@communityReportDone": {
+    "description": "신고 접수 안내 — 처리 결과나 시점을 약속하지 않는다 (가이드 §9)"
+  },
+  "communityReportAlready": "您已舉報過該內容。",
+  "@communityReportAlready": {
+    "description": "ALREADY_REPORTED — 오류가 아니라 안내다"
+  },
+  "communityActionFailed": "出了點問題，請重試。",
+  "@communityActionFailed": {
+    "description": "모더레이션·등록의 일반 실패 안내"
+  },
+  "communitySignInRequired": "請登入後繼續。",
+  "@communitySignInRequired": {
+    "description": "미인증 사용자가 쓰기 동작을 눌렀을 때 (버튼을 숨기지 않는다)"
+  },
+  "communityComposeTitle": "發新帖",
+  "@communityComposeTitle": {
+    "description": "컴포저 앱바 제목"
+  },
+  "communityComposeSubmit": "釋出",
+  "@communityComposeSubmit": {
+    "description": "컴포저 앱바의 등록 액션"
+  },
+  "communityComposeBodyHint": "分享一下這個地方吧。",
+  "@communityComposeBodyHint": {
+    "description": "본문 입력 힌트"
+  },
+  "communityComposeSpotLabel": "地點",
+  "@communityComposeSpotLabel": {
+    "description": "컴포저의 대상(관광지) 라벨"
+  },
+  "communityComposeTooLong": "超出 {count} 個字元。",
+  "@communityComposeTooLong": {
+    "description": "500자 초과분 — 입력을 자르지 않고 드러낸다",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityComposeDone": "已釋出。",
+  "@communityComposeDone": {
+    "description": "글 등록 성공 안내"
+  },
+  "communityComposeErrorSpotNotFound": "找不到該地點。",
+  "communityComposeErrorSpotNotInLocale": "該景點不提供您目前使用的語言。",
+  "@communityComposeErrorSpotNotInLocale": {
+    "description": "Shown when the selected spot is not available in the active language (SPEC-0029)."
+  },
+  "@communityComposeErrorSpotNotFound": {
+    "description": "SPOT_NOT_FOUND"
+  },
+  "communityComposeErrorTooManyPhotos": "最多可新增 5 張照片。",
+  "@communityComposeErrorTooManyPhotos": {
+    "description": "TOO_MANY_PHOTOS"
+  },
+  "communityCategoryAll": "全部",
+  "communityCategoryTouristSpot": "景點",
+  "communityCategoryCulturalFacility": "文化設施",
+  "communityCategoryFestivalEvent": "節慶活動",
+  "communityCategoryTravelCourse": "旅行路線",
+  "communityCategoryLeisureSports": "休閒運動",
+  "communityCategoryLodging": "住宿",
+  "communityCategoryShopping": "購物",
+  "communityCategoryRestaurant": "美食",
+  "communityCategoryTransport": "交通",
+  "communityEditedBadge": "已編輯",
+  "communityEditAction": "編輯帖子",
+  "communityEditDisabledHidden": "已隱藏的帖子無法編輯。",
+  "communityEditTitle": "編輯帖子",
+  "communityEditDone": "帖子已更新。",
+  "communityComposeCategoryLabel": "選擇分類",
+  "communityComposeTitleLabel": "標題",
+  "communityComposeTitleHint": "一句話標題",
+  "communityComposeBodyLabel": "正文",
+  "communityComposeTagsLabel": "標籤（可選）",
+  "communityComposeTagHint": "輸入標籤（不能有空格）",
+  "communityComposeTagInvalid": "標籤不能包含空格。",
+  "communityComposeTagLimit": "最多可新增 5 個標籤。",
+  "communityComposeSpotOptional": "新增地點（可選）",
+  "communityComposeSpotClear": "移除地點",
+  "communityComposePhotosLabel": "照片（可選）",
+  "communityComposePhotoAdd": "新增照片",
+  "communityComposePhotoTooLarge": "{count, plural, other{{count} 張照片過大(最大 10MB)。}}",
+  "communityComposeDonePhotosFailed": "已釋出，但有 {count} 張照片上傳失敗。",
+  "@communityComposeDonePhotosFailed": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "communityEditDonePhotosFailed": "帖子已更新，但有 {count} 張照片上傳失敗。",
+  "@communityEditDonePhotosFailed": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "communityComposeErrorTitleRequired": "請填寫標題。",
+  "communityComposeErrorTitleLength": "標題過長，請控制在 50 個字元以內。",
+  "communityComposeErrorBodyRequired": "請先寫點內容。",
+  "communityComposeErrorBodyLength": "內容過長，請控制在 500 個字元以內。",
+  "communityComposeErrorInvalidTag": "有標籤不可用。",
+  "communityComposeErrorTooManyTags": "最多可新增 5 個標籤。",
+  "communityComposeErrorPhotoNotUploaded": "照片上傳失敗，請重新新增。",
+  "communityComposeErrorNotEditable": "已隱藏的帖子無法編輯。",
+  "communityTitleCounter": "{count} / 50",
+  "@communityTitleCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityBodyCounter": "{count} / 500",
+  "@communityBodyCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityCommentComposerHint": "寫評論",
+  "communityCommentSend": "傳送",
+  "communityCommentDone": "評論已釋出。",
+  "communityCommentDeleteAction": "刪除評論",
+  "communityCommentDeleteDone": "評論已刪除。",
+  "communityCommentReportAction": "舉報評論",
+  "communityCommentsUnavailable": "無法載入評論。",
+  "communityCommentsLoadMore": "檢視更多評論",
+  "communityBlockedUsersTitle": "已遮蔽的使用者",
+  "communityBlockedUsersEmpty": "你還沒有遮蔽任何人。",
+  "communityBlockedUsersNote": "這裡只顯示你發起的遮蔽。別人遮蔽你時，你無法解除。",
+  "communityUnblockAction": "解除遮蔽",
+  "communityUnblockDone": "已解除遮蔽。",
+  "communityBlockedUsersAction": "已遮蔽的使用者",
+  "communityHidePostAction": "隱藏這篇帖子",
+  "communityHidePostDone": "已隱藏。只有你看不到這篇帖子。",
+  "communityHiddenPostsAction": "隱藏的帖子",
+  "communityHiddenPostsTitle": "隱藏的帖子",
+  "communityHiddenPostsEmpty": "你還沒有隱藏任何帖子。",
+  "communityHiddenPostsNote": "僅在你的資訊流中隱藏，其他人仍然可以看到。",
+  "communityUnhideAction": "取消隱藏",
+  "communityUnhideDone": "已重新顯示在資訊流中。",
+  "communitySortLatest": "最新",
+  "communitySortDistance": "距離最近",
+  "communityReplyAction": "回覆",
+  "communityReplyComposerHint": "回覆 {nickname}",
+  "@communityReplyComposerHint": {
+    "placeholders": {
+      "nickname": {
+        "type": "String"
+      }
+    }
+  },
+  "communityReplyCancel": "取消回覆",
+  "communityPhotoViewerTitle": "第 {current} 張，共 {total} 張",
+  "@communityPhotoViewerTitle": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeMonths": "{count} 個月前",
+  "@communityTimeMonths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeYears": "{count} 年前",
+  "@communityTimeYears": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communitySpotPostsTitle": "該地點的帖子",
+  "communitySpotPickerTitle": "附近地點",
+  "communitySpotPickerSourceNearby": "附近",
+  "communitySpotPickerSourceLiked": "收藏的地點",
+  "communitySpotPickerSearchHint": "搜尋地點",
+  "communitySpotPickerLikedEmpty": "你還沒有收藏任何地點。",
+  "communitySpotPickerLikedFailed": "無法載入收藏的地點。",
+  "communitySpotPickerLikedNoMatch": "沒有與該名稱匹配的收藏地點。",
+  "communitySpotPickerEmpty": "附近沒有找到地點。",
+  "communitySpotPickerNoMatch": "附近沒有與該名稱匹配的地點。",
+  "communitySpotPickerLocationUnavailable": "無法獲取位置，因此無法列出附近地點。你仍可以不選地點發帖。",
+  "communitySpotPickerFailed": "無法載入附近地點。",
+  "communitySpotDistanceMeters": "{meters}m",
+  "@communitySpotDistanceMeters": {
+    "placeholders": {
+      "meters": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "communitySpotDistanceKilometers": "{km}km",
+  "@communitySpotDistanceKilometers": {
+    "placeholders": {
+      "km": {
+        "type": "num",
+        "format": "decimalPattern",
+        "optionalParameters": {
+          "decimalDigits": 1
+        }
+      }
+    }
+  },
+  "communityComposeCategoryUnset": "分類",
+  "communityComposeTagsAction": "標籤",
+  "communityComposeSpotAction": "地點",
+  "communityComposePhotosAction": "照片",
+  "communityComposeTagsSheetTitle": "標籤",
+  "communityComposeSheetDone": "完成",
+  "communityDraftResumeTitle": "要继续写未完成的帖子吗？",
+  "communityDraftResumeBody": "此设备上保存了一篇未写完的帖子。",
+  "communityDraftResumeAction": "继续写",
+  "communityDraftDiscardAction": "重新开始",
+  "settingsTitle": "設定",
+  "settingsTooltip": "設定",
+  "settingsSectionActivity": "活動",
+  "settingsSectionAccount": "帳戶",
+  "settingsSectionPreferences": "偏好設定",
+  "settingsSectionLegal": "條款",
+  "settingsMyPosts": "我的帖子",
+  "settingsEditProfile": "編輯資料",
+  "settingsChangeEmail": "更改信箱",
+  "settingsBlockedUsers": "已遮蔽使用者",
+  "settingsSearchRadius": "搜尋範圍",
+  "settingsLanguage": "語言",
+  "settingsTerms": "條款與同意",
+  "settingsLogOut": "退出登入",
+  "settingsDeleteAccount": "登出帳戶",
+  "preferencesTitle": "偏好設定",
+  "preferencesRadiusSection": "搜尋範圍",
+  "preferencesLanguageSection": "語言",
+  "preferencesRadiusValue": "{km}公里",
+  "preferencesRadiusHint": "設為 0 公里則僅搜尋當前位置。",
+  "myPostsTitle": "我的帖子",
+  "myPostsEmpty": "你還沒有釋出任何帖子",
+  "myPostsWriteFirst": "寫第一篇帖子",
+  "termsTitle": "條款與同意管理",
+  "termsIntro": "使用服務期間無法撤回必需條款的同意。",
+  "termsSectionRequired": "必需",
+  "termsSectionOptional": "可選",
+  "termsAgreedOn": "已於 {date} 同意",
+  "termsAgreedRequired": "已同意",
+  "termsService": "服務條款",
+  "termsPrivacy": "隱私政策",
+  "termsLocation": "位置資訊使用",
+  "termsMarketing": "營銷通知",
+  "termsServiceDescription": "使用服務的基本約定。",
+  "termsPrivacyDescription": "說明我們如何處理你的個人資訊。",
+  "termsLocationDescription": "用於推薦附近的景點。",
+  "termsMarketingDescription": "接收活動和促銷資訊。",
+  "termsLoadFailed": "無法載入條款資訊。",
+  "termsUpdateFailed": "儲存失敗，請重試。",
+  "termsRetry": "重試",
+  "requiredTermsTitle": "同意條款",
+  "requiredTermsIntro": "要繼續使用，請同意以下必需條款。",
+  "requiredTermsAgree": "同意並繼續",
+  "requiredTermsFailed": "無法記錄你的同意，請重試。",
+  "deleteAccountTitle": "登出帳戶",
+  "deleteAccountHeadline": "此操作無法撤銷",
+  "deleteAccountIntro": "登出帳戶將永久刪除:",
+  "deleteAccountItemPosts": "你的帖子和評論",
+  "deleteAccountItemLikes": "收藏的景點",
+  "deleteAccountItemProfile": "你的資料和設定",
+  "deleteAccountCaution": "刪除後的資料無法恢復。",
+  "deleteAccountCancel": "取消",
+  "deleteAccountConfirm": "確認登出",
+  "deleteAccountFailed": "登出失敗，請重試。",
+  "profileEditTitle": "編輯資料",
+  "profileEditSave": "儲存",
+  "profileEditSaved": "資料已儲存",
+  "profileEditNicknameLabel": "暱稱",
+  "profileEditNicknameCounter": "{count}/{max}",
+  "profileEditNicknameEmpty": "請輸入暱稱。",
+  "profileEditNicknameTooLong": "暱稱最多 {max} 個字元。",
+  "profileEditNicknameTaken": "該暱稱已被使用。",
+  "profileEditEmailLabel": "信箱",
+  "profileEditFailed": "儲存失敗，請重試。",
+  "profilePhotoChange": "更換照片",
+  "profilePhotoRemove": "刪除",
+  "profilePhotoUploading": "正在上傳照片…",
+  "profilePhotoUpdated": "頭像已更新",
+  "profilePhotoRemoved": "頭像已刪除",
+  "profilePhotoFailed": "更換照片失敗，請重試。",
+  "profilePhotoUnavailable": "此裝置無法選擇照片。",
+  "myPostsFailed": "無法載入帖子，請重試。",
+  "myPostsRetry": "重試",
+  "discoverRadiusAtMax": "已是最大範圍（100 公里）。",
+  "termsRequiredNotice": "不同意則無法使用服務。",
+  "profileEditEmailChange": "更改",
+  "emailChangeTitle": "更改信箱",
+  "emailChangeCurrentLabel": "當前信箱",
+  "emailChangeNewLabel": "新信箱地址",
+  "emailChangeHint": "我們會向該地址傳送 6 位驗證碼。",
+  "emailChangeSendCode": "傳送驗證碼",
+  "emailChangeSameAsCurrent": "與當前信箱相同。",
+  "emailChangeVerifyTitle": "驗證信箱",
+  "emailChangePendingBanner": "驗證完成後信箱才會更改，目前仍是原地址。",
+  "emailChangeCodeSentTo": "請輸入傳送至 {email} 的驗證碼。",
+  "emailChangeCodeLabel": "驗證碼",
+  "emailChangeVerifyButton": "驗證",
+  "emailChangeCodeRequired": "請輸入驗證碼。",
+  "emailChangeResend": "重新傳送驗證碼",
+  "emailChangeResendIn": "{seconds} 秒後可重新傳送",
+  "emailChangeResent": "已重新傳送驗證碼。",
+  "emailChangeResendCooldown": "請稍後再試。",
+  "emailChangeCodeMismatch": "驗證碼不匹配，請重新輸入。",
+  "emailChangeCodeExpired": "驗證碼已過期，請點選重新傳送。",
+  "emailChangeMaxAttempts": "嘗試次數已用完，請從填寫地址重新開始。",
+  "emailChangeVerifyFailed": "驗證失敗，請重試。",
+  "emailChangeFailed": "傳送失敗，請重試。",
+  "emailChangeEmailTaken": "該信箱已被使用。",
+  "emailChangeSucceeded": "信箱已更改。",
+  "mapCongestionRelaxed": "空閒",
+  "mapCongestionNormal": "普通",
+  "mapCongestionSlightlyCrowded": "略微擁擠",
+  "mapCongestionCrowded": "擁擠",
+  "mapCommercialQuiet": "清閒時段",
+  "mapCommercialNormal": "普通時段",
+  "mapCommercialBusy": "繁忙時段",
+  "mapCommercialVeryBusy": "高峰時段",
+  "mapCommercialUnavailable": "暫無資料",
+  "mapCommercialEstimated": "該區域無實測資料",
+  "mapCommercialLabel": "商圈",
+  "mapObservedAt": "截至 {time}",
+  "mapPopulationRange": "{min} – {max}人",
+  "mapAttribution": "來源：首爾特別市即時城市資料",
+  "mapKeyMissing": "缺少地圖金鑰，無法載入地圖。請檢查 KAKAO_NATIVE_APP_KEY 構建配置。",
+  "mapLoadFailed": "地圖載入失敗。",
+  "mapZoomIn": "放大",
+  "mapZoomOut": "縮小",
+  "mapMyLocation": "當前位置",
+  "mapLocationUnavailable": "定位已關閉，無法移動到當前位置。",
+  "mapLegendSpot": "景點",
+  "mapLegendEvent": "活動",
+  "mapSearchThisArea": "在此區域重新搜尋",
+  "mapRegionRecommendationsTitle": "推薦地區",
+  "mapRegionRecommendationsAction": "檢視推薦地區",
+  "mapRegionRecommendationPartialData": "基於部分資料",
+  "mapRegionRecommendationsGatheringTitle": "正在收集資料",
+  "mapRegionRecommendationsGathering": "我們仍在收集用於推薦的資料，請稍後再來檢視。",
+  "mapRegionRecommendationsNoMatchTitle": "暫無符合條件的地區",
+  "mapRegionRecommendationsNoMatch": "目前沒有地區滿足推薦條件，請稍後再來檢視。",
+  "mapRegionRecommendationsError": "無法載入推薦地區。",
+  "mapRegionRecommendationsRetry": "重試",
+  "mapRegionRecommendationsRetryExhausted": "多次嘗試仍無法載入，請稍後再試。",
+  "mapScoreFactorCongestion": "預計擁擠度",
+  "mapScoreFactorVisitorVolume": "訪客規模",
+  "mapScoreFactorStayIntensity": "停留強度",
+  "mapScoreFactorSpendingIntensity": "消費強度",
+  "mapScoreFactorDistance": "距離",
+  "mapRegionRecommendationsNeedsLocationTitle": "需要位置資訊",
+  "mapRegionRecommendationsNeedsLocation": "推薦是以你目前位置周邊的地區為基準，因此需要位置資訊。",
+  "mapRegionRecommendationsAllowLocation": "允許位置存取",
+  "mapRegionRecommendationsOriginMyLocation": "我的位置",
+  "mapRegionRecommendationsOriginMapCenter": "地圖中心",
+  "mapRegionProvinceAndDistance": "{province} · {distance}",
+  "mapRegionStrengthCongestion": "預計較不擁擠",
+  "mapRegionStrengthVisitorVolume": "近期造訪較多的地區",
+  "mapRegionStrengthStayIntensity": "停留時間較長的地區",
+  "mapRegionStrengthSpendingIntensity": "消費活絡的地區",
+  "mapRegionStrengthDistance": "距離較近的地區",
+  "mapRegionRecommendationsAbout": "推薦依據說明",
+  "mapRegionAboutTitle": "推薦地區是這樣決定的",
+  "mapRegionAboutIntro": "在基準位置所屬的道（省）之中，扣除基準位置所在的地區後比較其餘地區，決定推薦順序。會一併參考以下項目。",
+  "mapRegionAboutCongestion": "韓國觀光公社的觀光地集中率預測。僅使用今日的預測值，並將觀光地層級的數值彙整為市郡區平均。\n數值經過反轉，越不擁擠分數越高。",
+  "mapRegionAboutVisitorVolume": "韓國觀光公社的各地區造訪人數。僅合計外地與外國造訪，本地居民視為日常移動而排除。\n採用最近 7 天的平均。",
+  "mapRegionAboutIntensityTitle": "停留強度 · 消費強度",
+  "mapRegionAboutIntensity": "韓國觀光公社的觀光需求強度指標。採用該市郡區最新的月份數值，每月更新一次，因此一個月內維持相同數值。兩者皆為越高越好。\n消費強度以外地消費為基準。",
+  "mapRegionAboutDistance": "從基準位置到該地區的距離。越近分數越高。",
+  "mapRegionAboutScoringTitle": "共同規則",
+  "mapRegionAboutScoringNormalize": "正規化 — 將各項目依該道（省）候選地區的最小值至最大值延展為 0~100。因此與其他道的相同數字意義並不相同。",
+  "mapRegionAboutScoringCongestion": "排名 — 基準為該道全部候選地區，而非回傳的清單。",
+  "mapRegionAboutScoringDistance": "缺漏處理 — 沒有資料的項目會從計算中排除。",
+  "mapRegionAboutScoringTotal": "候選限制 — 僅在基準位置所屬的道（省）之中挑選，並排除基準位置所在的地區。觀光地不足的地區將予以排除。",
+  "dmMessagesAction": "私訊",
+  "dmUnreadBadgeLabel": "有未讀私訊",
+  "dmUnavailableBody": "請稍後再試一次。",
+  "dmRetry": "重試",
+  "dmReportSubmitted": "已收到您的檢舉。",
+  "dmReportFailed": "無法送出檢舉。",
+  "dmEmptyMessage": "這則訊息已無法顯示",
+  "dmConversationsTitle": "私訊",
+  "dmConversationsEmptyTitle": "尚無私訊",
+  "dmConversationsEmptyBody": "你的對話會顯示在這裡。",
+  "dmConversationsUnavailable": "無法載入私訊清單",
+  "dmPhotoMessagePreview": "照片",
+  "dmUnreadCountLabel": "{count} 則未讀私訊",
+  "dmUnreadCountOverflow": "9+",
+  "dmMessageInputHint": "輸入訊息…",
+  "dmSendAction": "傳送",
+  "dmSendFailed": "未傳送",
+  "dmRetryAction": "重試",
+  "dmRetryExhausted": "多次嘗試後仍無法傳送",
+  "dmSendingLabel": "傳送中…",
+  "dmTypingIndicator": "{nickname} 正在輸入…",
+  "dmSyncFailedBanner": "無法更新",
+  "dmConversationEmpty": "傳送第一則訊息開始對話吧。",
+  "dmSelectMessagesAction": "選擇訊息",
+  "dmSelectionCount": "已選擇 {count} 則",
+  "dmSelectionCancel": "取消選擇",
+  "dmReportSelectedAction": "檢舉",
+  "errorResendCooldownActive": "請稍後再試。",
+  "errorAlreadyVerified": "此信箱已完成驗證。",
+  "errorNotEmailMember": "社群帳號的信箱無法變更。",
+  "errorInvalidEmailFormat": "請輸入有效的電子信箱。",
+  "errorEmailNotVerified": "請先完成信箱驗證再繼續。",
+  "errorSessionExpiredSignInAgain": "為了安全，工作階段已結束，請重新登入。",
+  "verificationCodeExpired": "驗證碼已過期，請重新取得。",
+  "verificationCodeConsumed": "此驗證碼已使用，請重新取得。",
+  "verificationMaxAttempts": "嘗試次數過多，請重新取得驗證碼。",
+  "verificationCodeMismatch": "驗證碼不正確或已過期，請確認後重新輸入，或重新取得驗證碼。",
+  "emailVerificationChangeAddress": "地址有誤嗎？",
+  "emailVerificationChangeAddressTitle": "變更電子信箱",
+  "emailVerificationChangeAddressBody": "我們會將新的驗證碼寄到這個地址，先前的驗證碼將失效。",
+  "emailVerificationAddressChanged": "已將新的驗證碼寄到變更後的地址。",
+  "emailVerificationResendCountdown": "{seconds} 秒後可重新傳送",
+  "emailVerificationNeedsResend": "先前的驗證碼已失效，請重新取得新的驗證碼。",
+  "errorMemberAlreadyRegistered": "此信箱已註冊，請直接登入。",
+  "errorInvalidInput": "輸入的資料不正確，請確認後再試一次。",
+  "errorAccountInactive": "此帳號已停用，請聯絡客服。",
+  "errorVerificationRateLimited": "驗證請求過於頻繁，請稍後再試。",
+  "errorVerificationNotFound": "驗證已過期，請重新取得驗證碼。",
+  "errorPasswordPolicyViolation": "密碼不符合條件，請設定 8 個字元以上。",
+  "passwordResetChangeEmail": "改用其他信箱",
+  "passwordResetNoCodeHint": "尚未收到驗證碼？請檢查垃圾郵件匣，或重新取得。",
+  "passwordResetConfirmSubtitleWithEmail": "請輸入寄送至 {email} 的 6 位數驗證碼，並設定新密碼。",
+  "errorPasswordResetNoAccount": "找不到以此信箱註冊的帳號。若您以 Kakao、Google 或 Apple 註冊，請改用該方式登入。",
+  "spotQaEntryAction": "现在这里怎么样？",
+  "spotQaQuestionsTitle": "关于该地点的提问",
+  "spotQaQuestionsEmptyTitle": "还没有提问",
+  "spotQaQuestionsEmptyBody": "来第一个提问吧。",
+  "spotQaQuestionsUnavailable": "无法加载提问。",
+  "spotQaAnswersUnavailable": "无法加载回答。",
+  "spotQaAnswersEmpty": "还没有回答。如果你了解这里，请分享。",
+  "spotQaResolvedLabel": "已解决",
+  "spotQaUnresolvedLabel": "未解决",
+  "spotQaResolveAction": "解决",
+  "spotQaResolveFailed": "无法标记为已解决，请稍后再试。",
+  "spotQaAskAction": "提问",
+  "spotQaAnswerAction": "回答",
+  "spotQaReplyAction": "回复",
+  "spotQaAskTitle": "写提问",
+  "spotQaAnswerTitle": "写回答",
+  "spotQaReplyTitle": "写回复",
+  "spotQaBodyHint": "想了解什么？",
+  "spotQaAnswerBodyHint": "分享你了解的信息。",
+  "spotQaSubmitAction": "发布",
+  "spotQaSubmitFailed": "发布失败，请稍后再试。",
+  "spotQaDeleteAction": "删除",
+  "spotQaDeleteFailed": "删除失败，请稍后再试。",
+  "spotQaDmAction": "发送私信",
+  "spotQaDmFailed": "无法开始对话，请稍后再试。",
+  "spotQaOriginCardTitle": "引用的提问",
+  "spotQaAnswerCount": "{count, plural, =0{没有回答} =1{1 条回答} other{{count} 条回答}}",
+  "spotQaMyQuestionsTitle": "我的提问",
+  "spotQaMyQuestionsEntry": "我的提问",
+  "spotQaMyQuestionsEmptyTitle": "你还没有提问",
+  "spotQaMyQuestionsEmptyBody": "在地点详情页提出你的疑问。",
+  "spotQaMyQuestionsUnavailable": "找不到该提问，可能已被删除或隐藏。",
+  "spotQaNewAnswerBadge": "{count, plural, =1{1 条新回答} other{{count} 条新回答}}",
+  "spotQaDmEntry": "私信",
+  "spotQaEntryQuestionCount": "{count, plural, =0{还没有提问} =1{1 条提问} other{{count} 条提问}}",
+  "spotQaComposeContext": "向「{spot}」提问",
+  "spotQaSuggestTitle": "可以这样问",
+  "spotQaSuggestCrowd": "拥挤程度",
+  "spotQaSuggestParking": "停车",
+  "spotQaSuggestWeather": "雨天",
+  "spotQaSuggestHours": "是否开放",
+  "spotQaBodyHintExample": "例如：现在人多吗？停车方便吗？",
+  "spotQaFillCrowd": "现在人多吗？",
+  "spotQaFillParking": "可以停车吗？",
+  "spotQaFillWeather": "下雨天也值得去吗？",
+  "spotQaFillHours": "现在开放吗？",
+  "spotQaMyQuestionsFailed": "无法加载你的提问。",
+  "spotQaMyQuestionsSignInBody": "登录后即可查看你的提问和回答。",
+  "spotQaPhotoUploadFailed": "{count, plural, =1{有 1 张照片上传失败。} other{有 {count} 张照片上传失败。}}",
+  "spotQaUnresolveAction": "未解决",
+  "spotQaUnresolveFailed": "撤销失败，请稍后再试。",
+  "alarmSettingsTitle": "通知",
+  "settingsNotifications": "通知",
+  "alarmCategoryMessage": "訊息",
+  "alarmCategoryMessageDescription": "新的私訊",
+  "alarmCategorySpotQa": "問題與回答",
+  "alarmCategorySpotQaDescription": "你的問題收到的回答，以及你的回答收到的回覆",
+  "alarmOsDisabledNotice": "裝置設定中已關閉此應用程式的通知，因此不會收到任何通知。",
+  "alarmSettingsLoadFailed": "無法載入通知設定。",
+  "alarmSettingsSaveFailed": "無法儲存，請再試一次。",
+  "relationConnect": "添加到我的地图",
+  "relationConnected": "已添加",
+  "relationConnectFailed": "添加失败，请重试。",
+  "relationSignInToConnect": "登录后可将此人添加到你的地图。",
+  "relationMapTitle": "重合的旅行",
+  "relationMapCount": "{count}人",
+  "@relationMapCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relationMapEmpty": "还没有人。分享你的地图，打开的人可以自行添加。",
+  "relationMapMe": "我",
+  "relationOverlapWith": "{count}处重合",
+  "@relationOverlapWith": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relationRemove": "移除",
+  "relationRemoved": "已从你的地图中移除。",
+  "relationRemoveFailed": "移除失败，请重试。",
+  "relationMapHint": "越靠近中心，重合的地方越多。",
+  "commonMore": "查看更多",
+  "termsOpenInBrowser": "在瀏覽器中開啟",
+  "termsDocumentLoadFailed": "無法載入條款，請檢查網路連線。"
 }

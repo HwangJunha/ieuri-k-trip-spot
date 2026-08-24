@@ -22,6 +22,11 @@ class GraphqlDebugLog {
     'password',
     'token',
     'secret',
+    // OAuth authorization code (SPEC-0012). refresh token으로 교환 가능한
+    // 값이라 토큰과 같은 급의 비밀이다. `authorizationCode`/`serverAuthCode`를
+    // 함께 덮으면서 `termsCode`는 건드리지 않는다.
+    'authorizationcode',
+    'authcode',
   ];
 
   /// Variable keys masked by an exact (case-insensitive) match only — `code`
@@ -54,7 +59,7 @@ class GraphqlDebugLog {
     if (!kDebugMode) return;
     final StringBuffer buffer = StringBuffer()
       ..writeln('[GraphQL] ← $operation');
-    buffer.writeln('  data: ${_encode(result.data)}');
+    buffer.writeln('  data: ${_truncate(_encode(result.data))}');
     final List<GraphQLError> errors =
         result.exception?.graphqlErrors ?? const <GraphQLError>[];
     for (final GraphQLError error in errors) {
@@ -75,6 +80,18 @@ class GraphqlDebugLog {
     if (value is List) return value.map(_mask).toList();
     return value;
   }
+
+  /// 콘솔에 남길 최대 길이. 넘으면 잘라 내고 남은 분량을 알린다.
+  ///
+  /// 지도 경계 조회(`seoulCongestionAreas`)가 121개 폴리곤의 좌표를 통째로 실어
+  /// 오면서 콘솔이 그 한 응답으로 뒤덮여 다른 로그를 볼 수 없었다. 응답을 확인하는
+  /// 데 앞부분이면 충분하고, 전문이 필요하면 서버에서 직접 조회하는 편이 낫다.
+  static const int _maxLoggedChars = 2000;
+
+  static String _truncate(String text) => text.length <= _maxLoggedChars
+      ? text
+      : '${text.substring(0, _maxLoggedChars)}\n'
+            '  … (${text.length - _maxLoggedChars}자 생략)';
 
   static String _encode(Object? value) {
     try {
@@ -107,6 +124,11 @@ class GraphqlDebugLog {
         buffer.writeln('  originalException: ${link.originalException}');
       } else if (link is HttpLinkParserException) {
         buffer.writeln('  parseError: ${link.originalException}');
+      } else {
+        // 타입을 특정하지 못한 경우(`UnknownException` 등)에도 원인은 남긴다.
+        // 이게 없으면 "linkException: UnknownException" 한 줄만 남아 무엇이
+        // 잘못됐는지 알 수 없다 — 실기기에서 연결 실패를 짚지 못한 원인이었다.
+        buffer.writeln('  cause: $link');
       }
     }
 

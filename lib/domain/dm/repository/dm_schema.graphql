@@ -1,0 +1,188 @@
+# DM 슬라이스가 쓰는 서버 스키마 조각(committed codegen 입력).
+# `schema/schema.introspection.json` 스냅샷에서 손으로 추린 안정 빌드 입력이며,
+# gitignore된 스냅샷을 codegen이 직접 읽지 않는다(CLAUDE.md §13).
+#
+# `PostAuthor`·`PostSpot`·`TargetCategory`·`PageInfo`·`UserError`는 이미
+# `common/network/shared_schema.graphql`과 auth 조각이 선언한다. codegen이 모든 조각을
+# 한 네임스페이스로 합치므로 **여기서 다시 선언하면 중복이다** — 참조만 한다.
+#
+# SPEC-0021로 피드 타입이 전부 빠졌고, `startConversation`이 회원 id를 받는다.
+
+# 1:1 대화.
+type Conversation {
+  id: ID!
+  counterpart: PostAuthor!
+  # 대화 시작과 첫 전송이 별개 호출이라 빈 대화가 존재할 수 있어 nullable이다.
+  lastMessage: Message
+  # 실제로 센다. `markConversationRead`를 불러야 줄어든다.
+  unreadCount: Int!
+  updatedAt: String!
+  # **`spotQaOrigin`은 여기 없다**(2026-08-18 서버가 옮겼다). 인용은 대화가 아니라
+  # 메시지에 붙는다 — `Message.spotQaOrigin` 참고.
+}
+
+# DM이 어느 장소의 어느 질문/답변에서 시작됐는지의 스냅샷(SPEC-0026 R14).
+#
+# 원본을 가리키는 링크가 아니라 **값을 복사해 둔 것**이다 — 원본 질문·답변이 삭제돼도
+# 맥락이 남아야 하기 때문이다. 따라서 questionId·answerId는 삭제 후에도 값이 있지만
+# 그 id로 다시 조회하면 없을 수 있다. 참고용 식별자이지 살아있는 참조가 아니다.
+#
+# catalogId는 예외로 항상 유효하다(장소는 삭제되지 않는다) — 맥락 카드를 눌러 장소
+# 상세로 보내는 근거가 이것이다.
+type ConversationSpotQaOrigin {
+  catalogId: ID!
+  # 스냅샷 시점의 장소명. 이후 장소명이 바뀌어도 이 값은 고정이다.
+  spotTitle: String!
+  questionId: ID!
+  # 질문 본문 앞부분(최대 100자). 맥락 카드 한 줄 표시용이다.
+  questionBodySnapshot: String!
+  answerId: ID!
+  # 답변 본문 앞부분(최대 100자).
+  answerBodySnapshot: String!
+}
+
+type ConversationEdge {
+  cursor: String!
+  node: Conversation!
+}
+
+type ConversationConnection {
+  edges: [ConversationEdge!]!
+  pageInfo: PageInfo!
+}
+
+type Message {
+  id: ID!
+  # non-null이지만 **빈 문자열일 수 있다** — 첨부만 보낸 메시지가 그렇고, 피드 인용만
+  # 있던 과거 메시지도 인용이 걷힌 뒤로는 그렇다(SPEC-0021 R4). 그때는 사진도 없어
+  # 본문·사진이 모두 빈 메시지가 내려온다.
+  body: String!
+  # 첨부 사진의 확정 키. 커뮤니티와 같은 업로드 경로를 쓴다.
+  photoKey: String
+  sender: PostAuthor!
+  ownedByViewer: Boolean!
+  createdAt: String!
+  # 이 메시지가 인용한 질문/답변(SPEC-0026). 인용 없이 보낸 메시지면 null이다.
+  #
+  # **대화가 아니라 메시지에 붙는다**(2026-08-18 서버 변경). 한 대화에서 몇 번이든
+  # 다른 질문을 인용할 수 있고 앞선 인용은 그대로 남는다 — 대화당 하나였던 예전
+  # 구조로는 두 번째 맥락을 표현할 수 없었다.
+  #
+  # **인용을 만들지 못해도 메시지는 간다**(답변 삭제·질문 사라짐·작성자가 대화
+  # 상대가 아님). 서버가 조용히 무시하고 일반 메시지로 보내므로 null을 반드시
+  # 처리해야 한다 — 거절로 오지 않는다.
+  spotQaOrigin: ConversationSpotQaOrigin
+}
+
+type MessageEdge {
+  cursor: String!
+  node: Message!
+}
+
+# 최신순(내림차순)이다 — 채팅 화면은 뒤집어 그리고 `after`로 과거를 이어읽는다.
+type MessageConnection {
+  edges: [MessageEdge!]!
+  pageInfo: PageInfo!
+}
+
+# 타이핑 이벤트. 영속화되지 않으므로 이후 조회로 다시 볼 방법이 없다.
+type TypingEvent {
+  sender: PostAuthor!
+  # 발생 시각. 클라이언트가 타임아웃으로 표시를 내리는 판단에 쓴다.
+  emittedAt: String!
+}
+
+# **회원을 직접 지정한다**(SPEC-0021 R11) — 피드 항목을 거치던 간접 지정이 사라졌다.
+# **`sourceAnswerId`가 여기서 빠졌다**(2026-08-18). 인용은 대화를 열 때가 아니라
+# 메시지를 보낼 때 붙인다 — `SendMessageInput` 참고.
+input StartConversationInput {
+  counterpartMemberId: ID!
+}
+
+type StartConversationPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  conversationId: ID
+}
+
+# `body`는 non-null이라 **사진·인용만 보낼 때도 빈 문자열을 넘긴다.** 셋 다 비면
+# 거부된다.
+input SendMessageInput {
+  conversationId: ID!
+  body: String!
+  photoKey: String
+  # 이 메시지가 인용할 답변(SPEC-0026). 주면 그 질문/답변의 스냅샷이 메시지에 남는다.
+  #
+  # **몇 번이든, 서로 다른 질문을 인용할 수 있다.** 앞선 인용은 덮이지 않는다.
+  #
+  # 인용을 만들 수 없으면(답변 삭제·질문 사라짐·작성자가 대화 상대가 아님) 서버가
+  # **조용히 무시하고 일반 메시지로 보낸다** — 거절하지 않는다.
+  sourceAnswerId: ID
+}
+
+type SendMessagePayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  messageId: ID
+}
+
+input NotifyTypingInput {
+  conversationId: ID!
+}
+
+type NotifyTypingPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+# `upToMessageId` 생략이 "모두 읽음"이다. 읽음 지점은 뒤로 가지 않아 멱등이다.
+input MarkConversationReadInput {
+  conversationId: ID!
+  upToMessageId: ID
+}
+
+# 처리 후 잔여 수를 돌려주므로 재조회가 필요 없다.
+type MarkConversationReadPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+  unreadCount: Int!
+}
+
+# DM 신고는 `ReportTargetType`을 쓰지 않는다 — 다건이라 별도 뮤테이션이다.
+input ReportMessagesInput {
+  messageIds: [ID!]!
+  reason: ReportReason!
+  detail: String
+}
+
+type ReportMessagesPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+extend type Query {
+  conversations(first: Int, after: String): ConversationConnection!
+  conversationMessages(
+    conversationId: ID!
+    first: Int
+    after: String
+  ): MessageConnection!
+}
+
+extend type Mutation {
+  startConversation(input: StartConversationInput!): StartConversationPayload!
+  sendMessage(input: SendMessageInput!): SendMessagePayload!
+  notifyTyping(input: NotifyTypingInput!): NotifyTypingPayload!
+  markConversationRead(
+    input: MarkConversationReadInput!
+  ): MarkConversationReadPayload!
+  reportMessages(input: ReportMessagesInput!): ReportMessagesPayload!
+}
+
+# `Subscription` 루트는 이 플랫폼 최초라 여기서 선언한다(다른 조각에 없다).
+type Subscription {
+  # 유실 허용. 재전송 없으며 클라이언트가 타임아웃으로 표시를 내린다.
+  typingIndicator(conversationId: ID!): TypingEvent!
+  # 유실 불가 → 재연결 시 `conversationMessages`로 공백을 메운다.
+  newMessage(conversationId: ID!): Message!
+}

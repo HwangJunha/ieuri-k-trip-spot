@@ -1,11 +1,29 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- SPEC-0001 R1/R7: foreground location + notifications only. No
-         ACCESS_BACKGROUND_LOCATION, CAMERA, RECORD_AUDIO, or media reads. -->
+    <!-- SPEC-0001 R1/R7: foreground location + notifications. No
+         ACCESS_BACKGROUND_LOCATION, CAMERA, or RECORD_AUDIO. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- SPEC-0030 R25/R31: 사진에 담긴 좌표로 방문 지역을 채운다. SPEC-0001의
+         "media reads 없음"을 뒤집는 결정이며 그 근거는 스펙 §5에 있다.
+
+         ACCESS_MEDIA_LOCATION이 **함께 있어야** EXIF의 GPS가 지워지지 않는다 —
+         Android 10+ 는 FUSE 계층에서 위치를 redact하며, READ_MEDIA_IMAGES만으로는
+         좌표가 전부 null로 온다. Photo Picker는 권한과 무관하게 GPS를 제거하므로
+         이 경로를 대체할 수 없다(설계 §4).
+
+         READ_MEDIA_IMAGES 광범위 접근은 Play 선언 심사 대상이다(스펙 §11 리스크). -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION"/>
+    <!-- Android 12 이하는 READ_MEDIA_IMAGES가 없다. -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"/>
+    <!-- SPEC-0014: 지도 SDK가 타일을 내려받는 데 필요하다. 디버그 빌드는 Flutter가
+         자동 주입해 지금까지 없어도 돌았지만, 릴리스 매니페스트에는 들어가지 않아
+         지도가 빈 화면으로 뜬다. 위치 권한 2종은 위에 이미 있어 다시 넣지 않는다. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="ieuri_k_trip_spot"
+        android:label="@string/app_name"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -28,6 +46,44 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <!-- 공유 지도 App Links (SPEC-0030). 서버가 주는
+                 `https://www.ieuri.co.kr/tour/korea-map/<token>`을 앱이 받는다.
+
+                 `autoVerify`가 있어야 브라우저를 거치지 않고 앱이 바로 열리며,
+                 그러려면 도메인에 `/.well-known/assetlinks.json`이 있어야 한다
+                 (웹 몫, problem/SPEC-0030-WEB-share-link-app-open.md).
+
+                 **다만 이것만으로는 부족하다.** 카카오톡·인스타그램은 링크를
+                 인앱 브라우저(WebView)로 여는데, App Links 가로채기는 WebView
+                 안에서 일어나지 않는다. 그래서 중간 페이지의 「앱에서 열기」
+                 버튼을 사용자가 눌러야 이 필터가 걸린다(§중간 페이지). -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https"
+                      android:host="www.ieuri.co.kr"
+                      android:pathPrefix="/tour/korea-map/" />
+                <data android:scheme="https"
+                      android:host="ieuri.co.kr"
+                      android:pathPrefix="/tour/korea-map/" />
+            </intent-filter>
+            <!-- 앱 자체의 스킴(SPEC-0030). 회사명(ieuri)이 아니라 **앱 이름**을
+                 쓴다 — applicationId `kr.ieuri.ktripspot`의 마지막 조각과 같다.
+
+                 경로를 웹과 똑같이 두어 GoRouter 라우트 하나가 둘 다 받는다:
+                   웹   https://www.ieuri.co.kr/tour/korea-map/<token>
+                   스킴 ktripspot://tour/korea-map/<token>
+
+                 **폴백이다.** 외부 링크는 App Links가 맡고, 이것은 인앱
+                 브라우저에서 App Links 버튼조차 막히는 경우를 위한 대비다.
+                 `autoVerify`를 붙이지 않는다 — 커스텀 스킴은 검증 대상이 아니다. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="ktripspot" android:host="tour" />
             </intent-filter>
         </activity>
         <!-- Kakao login redirect (spec §7): the SDK returns to this activity via

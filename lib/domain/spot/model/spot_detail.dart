@@ -1,8 +1,9 @@
+import '../../../common/location/coordinates.dart';
 import 'copyright_type.dart';
-import 'spot_category.dart';
 import 'spot_image.dart';
 import 'spot_info_item.dart';
 import 'spot_intro.dart';
+import 'spot_reaction.dart';
 import 'tour_api_text.dart';
 
 /// 관광지 상세(SPEC-0003). Discover 스와이프의 [TouristSpot]과 별개인 상세 전용
@@ -19,10 +20,10 @@ class SpotDetail {
   const SpotDetail({
     required this.id,
     required this.title,
-    required this.category,
     required this.thumbnailImageUrl,
     required this.copyright,
     required this.attributionText,
+    required this.coordinates,
     required this.gallery,
     required this.likeCount,
     this.overview,
@@ -31,12 +32,17 @@ class SpotDetail {
     this.tel,
     this.intro,
     this.infoItems = const <SpotInfoItem>[],
+    this.viewerReaction,
   });
 
   /// contentId — [TouristSpot.id]와 동일 식별자 공간(언어별로 갈림).
   final String id;
   final String title;
-  final SpotCategory? category;
+
+  // **카테고리는 여기 없다.** 서버가 `spotDetail.category`를 채우지 못해
+  // (non-null 위반이 부모로 전파돼 상세 응답 전체가 null이 된다) 쿼리에서 아예
+  // 빼야 했다. 상세 화면은 카테고리를 그리지 않고, 운영정보 조회에 필요한 코드는
+  // 목록이 넘겨준 값(`spotCategoryCodes`)을 쓰므로 이 모델에 담을 이유가 없다.
 
   /// 갤러리 폴백/헤더 이미지(항상 존재).
   final String thumbnailImageUrl;
@@ -57,6 +63,14 @@ class SpotDetail {
   /// 저작권 표준 문구 전문(AttributionBlock에 전문 노출, AC-28).
   final String attributionText;
 
+  /// 이 장소의 위치(SPEC-0027 미니 지도). 서버의 `mapX`(경도)·`mapY`(위도)가 둘 다
+  /// non-null이라 **항상 존재한다** — 지도 섹션은 좌표 부재를 다루지 않는다.
+  ///
+  /// 서버 필드명이 직관과 반대(mapX=경도, mapY=위도)라 뒤바뀜 위험이 있는데, 그
+  /// 변환은 repository 매핑 한 곳에만 두고 이후로는 이름이 분명한 이 값 객체로만
+  /// 다룬다.
+  final Coordinates coordinates;
+
   /// 갤러리(TourAPI 반환 순서, 최대 10장). 없으면 빈 배열.
   final List<SpotImage> gallery;
 
@@ -70,6 +84,16 @@ class SpotDetail {
 
   /// 이용안내 항목들(detailInfo2). 없으면 빈 리스트이고 섹션을 숨긴다.
   final List<SpotInfoItem> infoItems;
+
+  /// 내가 이 장소에 남긴 최신 반응(SPEC-0026 R3·R4). 반응한 적 없거나 **비로그인이면
+  /// null이다.**
+  ///
+  /// 질문/답변 작성 진입점을 LIKE일 때만 노출하는 데 쓴다 — null과 DISLIKE는 **둘 다**
+  /// 자격 없음이라 구분하지 않는다. 표시용이지 서버 판정을 대체하지 않는다.
+  final SpotReaction? viewerReaction;
+
+  /// 좋아요한 장소인지. 질문/답변 작성 자격의 판정 근거다(R3·R4).
+  bool get likedByViewer => viewerReaction == SpotReaction.like;
 
   // --- 표시 여부 (AC-25) ------------------------------------------------------
   // TourAPI는 값이 없을 때 null이 아니라 빈 문자열/공백을 주는 경우가 있다. null만
@@ -163,7 +187,6 @@ class SpotDetail {
       other is SpotDetail &&
       other.id == id &&
       other.title == title &&
-      other.category == category &&
       other.thumbnailImageUrl == thumbnailImageUrl &&
       other.overview == overview &&
       other.address == address &&
@@ -171,16 +194,17 @@ class SpotDetail {
       other.tel == tel &&
       other.copyright == copyright &&
       other.attributionText == attributionText &&
+      other.coordinates == coordinates &&
       _listEquals(other.gallery, gallery) &&
       other.likeCount == likeCount &&
       other.intro == intro &&
-      _listEquals(other.infoItems, infoItems);
+      _listEquals(other.infoItems, infoItems) &&
+      other.viewerReaction == viewerReaction;
 
   @override
   int get hashCode => Object.hash(
     id,
     title,
-    category,
     thumbnailImageUrl,
     overview,
     address,
@@ -188,29 +212,36 @@ class SpotDetail {
     tel,
     copyright,
     attributionText,
+    coordinates,
     Object.hashAll(gallery),
     likeCount,
     intro,
     Object.hashAll(infoItems),
+    viewerReaction,
   );
 
-  /// [likeCount]만 바꾼 사본(낙관적 갱신·롤백용). 나머지 필드는 유지한다.
-  SpotDetail copyWithLikeCount(int likeCount) => SpotDetail(
-    id: id,
-    title: title,
-    category: category,
-    thumbnailImageUrl: thumbnailImageUrl,
-    copyright: copyright,
-    attributionText: attributionText,
-    gallery: gallery,
-    likeCount: likeCount,
-    overview: overview,
-    address: address,
-    homepage: homepage,
-    tel: tel,
-    intro: intro,
-    infoItems: infoItems,
-  );
+  /// 좋아요 수만 바꾼 사본(낙관적 갱신·롤백용, AC-30).
+  ///
+  /// [viewerReaction]을 함께 넘기면 내 반응도 같이 반영한다 — 반응이 바뀌면 질문/답변
+  /// 진입점의 노출 여부가 달라지므로 수치만 갱신하면 화면이 어긋난다.
+  SpotDetail copyWithLikeCount(int likeCount, {SpotReaction? viewerReaction}) =>
+      SpotDetail(
+        id: id,
+        title: title,
+        thumbnailImageUrl: thumbnailImageUrl,
+        copyright: copyright,
+        attributionText: attributionText,
+        coordinates: coordinates,
+        gallery: gallery,
+        likeCount: likeCount,
+        overview: overview,
+        address: address,
+        homepage: homepage,
+        tel: tel,
+        intro: intro,
+        infoItems: infoItems,
+        viewerReaction: viewerReaction ?? this.viewerReaction,
+      );
 }
 
 bool _listEquals<T>(List<T> a, List<T> b) {

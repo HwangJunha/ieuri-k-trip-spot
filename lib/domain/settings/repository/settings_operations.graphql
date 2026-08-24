@@ -1,0 +1,53 @@
+# SPEC-0011 약관 관리(R9·R10)와 필수 약관 게이트(R11·R12)가 쓰는 오퍼레이션.
+# 스키마 조각은 `settings_schema.graphql`이며 생성 타입은 repository 밖으로 나가지
+# 않는다(CLAUDE.md §3).
+
+# 필수·선택을 한 번에 받는다 — 화면도 게이트도 같은 목록을 쓴다. 인자가 없다.
+query Agreements {
+  agreements {
+    termsCode
+    required
+    agreed
+    agreedAt
+    version
+  }
+}
+
+# 선택 항목 토글(R10). 낙관적 갱신은 클라이언트가 하고, 실패하면 되돌린다.
+mutation UpdateAgreement($input: UpdateAgreementInput!) {
+  updateAgreement(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    agreement {
+      termsCode
+      required
+      agreed
+      agreedAt
+      version
+    }
+  }
+}
+
+# 필수 약관 일괄 동의(R12). **전체 상태를 함께 받는다** — 이 응답으로 캐시를 갱신하면
+# 재조회 없이 게이트가 풀린다.
+mutation AgreeToRequiredTerms($input: AgreeToRequiredTermsInput!) {
+  agreeToRequiredTerms(input: $input) {
+    success
+    userErrors {
+      code
+      message
+      field
+    }
+    agreements {
+      termsCode
+      required
+      agreed
+      agreedAt
+      version
+    }
+  }
+}

@@ -7,7 +7,7 @@ query Spots(
   $latitude: Float!
   $longitude: Float!
   $radiusMeters: Int
-  $category: SpotCategory
+  $categories: [String!]
   $page: Int
   $size: Int
 ) {
@@ -15,7 +15,7 @@ query Spots(
     latitude: $latitude
     longitude: $longitude
     radiusMeters: $radiusMeters
-    category: $category
+    categories: $categories
     page: $page
     size: $size
   ) {
@@ -25,7 +25,11 @@ query Spots(
       address
       thumbnailImageUrl
       distanceMeters
-      category
+      category {
+        code
+        label
+        iconUrl
+      }
       copyright
       attributionText
     }
@@ -37,21 +41,36 @@ query Spots(
 
 # 활성 언어에서 서버가 노출하는 카테고리(spec §5). 언어는 헤더로 전달된다.
 query AvailableSpotCategories {
-  availableSpotCategories
+  availableSpotCategories {
+    code
+    label
+    iconUrl
+  }
 }
 
 # SPEC-0003 상세 단건 조회. 언어는 Accept-Language 헤더로 전달(인자 없음, spec §2).
 # 생성 타입은 repository 안에서만 쓰이고 도메인 모델(SpotDetail/SpotImage)로 매핑된다
 # (POL-020, AC-32).
 #
-# $category는 intro/infoItems가 요구하는 필수 인자다. 같은 응답의 category 필드를
-# 인자로 참조할 수 없어서(GraphQL 제약) 호출부가 넘긴다 — Discover 카드가 이미
-# 들고 있는 값이라 추가 조회는 필요 없다.
-query SpotDetail($id: ID!, $category: SpotCategory!) {
+# **카테고리 인자는 사라지지 않았다.** SPEC-0020이 "서버가 spot 자신의 카테고리로
+# 해석한다"고 보고 인자를 걷어냈으나 서버는 계속 요구하고 있었고, 이름과 타입만
+# `category: SpotCategory!` → `categoryCode: String!`으로 바뀌었다. 커밋된 SDL에도
+# 인자 없이 적혀 있어 codegen이 통과하는 바람에 상세 화면 전체가 검증 오류로 막혀
+# 있었다(MissingFieldArgument).
+#
+# **spotDetail.category.code는 쓸 수 없다** — 서버가 전 spot에서 null을 돌려준다.
+# 그래서 호출부(스와이프·검색·좋아요)가 목록에서 받은 코드를 라우트로 실어 보낸다.
+query SpotDetail($id: ID!, $categoryCode: String!) {
   spotDetail(id: $id) {
     id
     title
-    category
+    # **category를 요청하지 않는다.** 서버가 이 필드를 채우지 못해
+    # (`SpotCategory.code`가 null, 내부적으로는 String을 객체로 캐스팅하다 터진다)
+    # non-null 위반이 부모로 전파돼 spotDetail 전체가 null이 된다 — 상세 화면이
+    # 통째로 죽는 원인이었다.
+    #
+    # 상세 화면은 카테고리를 그리지 않고, 운영정보 조회에 필요한 코드는 목록이
+    # 넘겨준 값(`spotCategoryCodes`)을 쓰므로 응답에서 받을 이유가 없다.
     thumbnailImageUrl
     overview
     address
@@ -59,6 +78,10 @@ query SpotDetail($id: ID!, $category: SpotCategory!) {
     tel
     copyright
     attributionText
+    # SPEC-0027 미니 지도용 좌표. mapX가 경도, mapY가 위도다 — 이름이 직관과 반대라
+    # 매핑에서 뒤집지 않도록 주의한다.
+    mapX
+    mapY
     gallery {
       imageUrl
       thumbnailUrl
@@ -67,9 +90,13 @@ query SpotDetail($id: ID!, $category: SpotCategory!) {
       attributionText
     }
     likeCount
+    # SPEC-0026 R3·R4. 호출자가 이 장소에 남긴 최신 반응이며 **비인증이면 null이다.**
+    # 질문/답변 진입점을 LIKE일 때만 노출하는 데 쓴다 — null과 DISLIKE는 둘 다 자격
+    # 없음이다. 표시용이지 서버 판정을 대체하지 않는다(서버가 커맨드 시점에 다시 본다).
+    viewerReaction
     # 운영 정보. 카테고리마다 서버가 공통 이름으로 정규화해 주고, 해당 개념이 없는
     # 카테고리에선 필드가 null이다 — 값 있는 행만 렌더한다.
-    intro(category: $category) {
+    intro(categoryCode: $categoryCode) {
       businessHours
       closedDays
       parking
@@ -79,9 +106,43 @@ query SpotDetail($id: ID!, $category: SpotCategory!) {
       creditCardAccepted
     }
     # 이용안내 항목명/내용 쌍. 비어 있을 수 있다.
-    infoItems(category: $category) {
+    #
+    # **코드가 틀리면 오류가 아니라 빈 값이다** — 서버가 intro는 null, infoItems는
+    # 빈 배열로 준다. 카테고리를 모르고 열어도 상세 본문은 살아 있고 운영정보 섹션만
+    # 비므로, 알 수 없을 때 조회를 막지 않는다.
+    infoItems(categoryCode: $categoryCode) {
       name
       text
+    }
+  }
+}
+
+# SPEC-0008 R-18 좋아요 목록(커서 페이징). 생성 타입(LikedSpot·LikedSpotConnection·
+# LikedSpotEdge)은 repository 밖으로 누출하지 않고 도메인 모델로 매핑한다(POL-020).
+#
+# likedAt은 엣지에 있지만 조회하지 않는다 — 화면이 좋아요 시각을 표시하지 않고(요구사항에
+# 표시 요건 없음), 정렬은 서버가 보장하므로 클라이언트가 재정렬하지 않는다(§5.2).
+query LikedSpots($categories: [String!], $first: Int, $after: String) {
+  likedSpots(categories: $categories, first: $first, after: $after) {
+    edges {
+      cursor
+      node {
+        id
+        title
+        thumbnailImageUrl
+        address
+        category {
+          code
+          label
+          iconUrl
+        }
+        copyright
+        attributionText
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }
@@ -94,6 +155,136 @@ mutation ReactToSpot($input: ReactToSpotInput!) {
       code
       message
       field
+    }
+  }
+}
+
+# ── SPEC-0013 검색 · 자동완성 · Popular ────────────────────────────────────
+
+# R1–R8. 반경 내 spot 검색. 언어는 Accept-Language 헤더로 전달된다(다른 조회와 동일).
+#
+# **오프셋 페이징이다**(page/size) — 초안은 커서였으나 서버가 커서 방식에서 정확히
+# 동작하지 않아 전환됐다. 기존 `spots`와 같은 모양이며 `SpotSearchEdge`는 사라졌다.
+#
+# 정렬은 서버가 보장하므로 클라이언트가 재정렬하지 않는다(POL-019).
+#
+# userErrors는 입력 검증 실패(EMPTY_QUERY·QUERY_TOO_LONG·RADIUS_TOO_LARGE)를 데이터로
+# 돌려주는 경로다(POL-015 — HTTP는 항상 200). 결과 0건은 오류가 아니다.
+query SearchSpots(
+  $query: String!
+  $latitude: Float!
+  $longitude: Float!
+  $radiusMeters: Int
+  $categories: [String!]
+  $page: Int
+  $size: Int
+) {
+  searchSpots(
+    query: $query
+    latitude: $latitude
+    longitude: $longitude
+    radiusMeters: $radiusMeters
+    categories: $categories
+    page: $page
+    size: $size
+  ) {
+    success
+    userErrors {
+      code
+      field
+    }
+    connection {
+      items {
+        id
+        title
+        address
+        thumbnailImageUrl
+        distanceMeters
+        category {
+          code
+          label
+          iconUrl
+        }
+        copyright
+        attributionText
+        # 지도(SPEC-0014)가 검색 결과로 지도를 옮기는 데 쓴다. mapX가 경도,
+        # mapY가 위도다 — 이름이 직관과 반대라 매핑에서 뒤집지 않도록 주의한다.
+        mapX
+        mapY
+      }
+      page
+      hasNext
+      totalCount
+    }
+  }
+}
+
+# R9. 제목 접두 자동완성. 페이지네이션하지 않으며 빈 질의는 빈 목록이다.
+query SpotSearchSuggestions(
+  $query: String!
+  $latitude: Float!
+  $longitude: Float!
+  $radiusMeters: Int
+  $limit: Int
+) {
+  spotSearchSuggestions(
+    query: $query
+    latitude: $latitude
+    longitude: $longitude
+    radiusMeters: $radiusMeters
+    limit: $limit
+  ) {
+    id
+    title
+    category {
+      code
+      label
+      iconUrl
+    }
+  }
+}
+
+# R18. 좋아요 총합 내림차순. likeCount는 랭킹 근거라 edge에 실린다.
+#
+# **totalCount가 없다** — 라이브 스키마의 PopularSpotConnection에는 그 필드가 없다
+# (제안에는 있었으나 서버가 다르다). 홈 섹션은 건수를 표시하지 않으므로 문제없다.
+query PopularSpots(
+  $latitude: Float!
+  $longitude: Float!
+  $radiusMeters: Int
+  $categories: [String!]
+  $first: Int
+  $after: String
+) {
+  popularSpots(
+    latitude: $latitude
+    longitude: $longitude
+    radiusMeters: $radiusMeters
+    categories: $categories
+    first: $first
+    after: $after
+  ) {
+    edges {
+      node {
+        id
+        title
+        address
+        thumbnailImageUrl
+        distanceMeters
+        category {
+          code
+          label
+          iconUrl
+        }
+        copyright
+        attributionText
+      }
+      cursor
+      likeCount
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }

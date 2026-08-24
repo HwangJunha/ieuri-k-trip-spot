@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/gen/app_localizations.dart';
+import 'korea_icon.dart';
 
 /// The 5-tab shell chrome: renders the active tab's [StatefulNavigationShell]
 /// with a floating, rounded bottom navigation bar (DESIGN.md §8). The Discover
@@ -16,6 +17,26 @@ class FloatingBottomNavScaffold extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
   static const int _discoverIndex = 2;
+
+  /// 떠 있는 내비 바가 화면 하단에서 차지하는 높이(SafeArea 제외).
+  ///
+  /// `extendBody: true`라 **탭 화면의 body가 이 바 아래까지 그려진다.** 그래서 탭
+  /// 화면이 FAB처럼 하단에 고정된 것을 두면 바에 가려진다 — 그런 화면은 이 값만큼
+  /// 띄운다. 상수를 여기 두는 이유는 바의 높이·여백을 바꿀 때 가려짐 보정이 함께
+  /// 따라오게 하기 위해서다(값을 화면 쪽에 복사해 두면 반드시 어긋난다).
+  ///
+  /// 내역: [NavigationBar] 기본 높이 + 위아래 여백.
+  static const double barExtent =
+      _navigationBarHeight + _barVerticalPadding * 2;
+
+  /// 바를 감싼 위아래 여백. 실제 [Padding]이 이 값을 쓰므로 여백을 바꾸면
+  /// [barExtent]가 함께 따라간다.
+  static const double _barVerticalPadding = 8;
+
+  /// Material [NavigationBar]의 기본 높이.
+  ///
+  /// 64로 줄여 봤으나 얇아서 되돌렸다(사용자 결정, 2026-08-22).
+  static const double _navigationBarHeight = 80;
 
   void _onTap(int index) {
     // initialLocation:true re-taps reset the branch to its root (standard shell
@@ -36,7 +57,10 @@ class FloatingBottomNavScaffold extends StatelessWidget {
       body: navigationShell,
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: _barVerticalPadding,
+          ),
           child: Material(
             elevation: 3,
             color: theme.colorScheme.surfaceContainer,
@@ -64,6 +88,7 @@ class FloatingBottomNavScaffold extends StatelessWidget {
                 borderRadius: BorderRadius.circular(999),
                 child: NavigationBar(
                   key: const Key('bottom_nav_bar'),
+                  height: _navigationBarHeight,
                   selectedIndex: navigationShell.currentIndex,
                   onDestinationSelected: _onTap,
                   destinations: <Widget>[
@@ -73,11 +98,16 @@ class FloatingBottomNavScaffold extends StatelessWidget {
                       selectedIcon: const Icon(Icons.home),
                       label: l10n.navHome,
                     ),
+                    // SPEC-0030 R17: 1번은 전국 지도(내가 채운 기록), 4번이
+                    // 기존 뷰포트 지도(지금 주변에 뭐가 있나)다. 둘은 성격이
+                    // 달라 합치지 않는다(설계 §9).
                     NavigationDestination(
-                      key: const Key('bottom_nav_map'),
-                      icon: const Icon(Icons.map_outlined),
-                      selectedIcon: const Icon(Icons.map),
-                      label: l10n.navMap,
+                      key: const Key('bottom_nav_national_map'),
+                      // 지구본(`Icons.public`)은 "전국"이라는 뜻이 안 드러난다.
+                      // 한반도 실루엣을 직접 그린다.
+                      icon: const KoreaIcon(),
+                      selectedIcon: const KoreaIcon(filled: true),
+                      label: l10n.navNationalMap,
                     ),
                     NavigationDestination(
                       key: const Key('bottom_nav_discover'),
@@ -88,15 +118,21 @@ class FloatingBottomNavScaffold extends StatelessWidget {
                       ),
                       label: l10n.navDiscover,
                     ),
+                    // SPEC-0030 R18: 좋아요와 커뮤니티가 한 자리로 합쳐진다.
                     NavigationDestination(
-                      icon: const Icon(Icons.event_outlined),
-                      selectedIcon: const Icon(Icons.event),
-                      label: l10n.navEvents,
+                      key: const Key('bottom_nav_library'),
+                      // **책갈피가 아니라 사람이다**(사용자 결정 2026-08-24).
+                      // 좋아요한 장소와 커뮤니티 활동을 함께 묶은 "내 활동"이라,
+                      // 북마크 아이콘은 저장해 둔 것만 있는 보관함처럼 읽혔다.
+                      icon: const Icon(Icons.person_outline),
+                      selectedIcon: const Icon(Icons.person),
+                      label: l10n.navLibrary,
                     ),
                     NavigationDestination(
-                      icon: const Icon(Icons.chat_bubble_outline),
-                      selectedIcon: const Icon(Icons.chat_bubble),
-                      label: l10n.navChat,
+                      key: const Key('bottom_nav_map'),
+                      icon: const Icon(Icons.map_outlined),
+                      selectedIcon: const Icon(Icons.map),
+                      label: l10n.navMap,
                     ),
                   ],
                 ),

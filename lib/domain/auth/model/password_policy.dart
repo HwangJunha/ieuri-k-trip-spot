@@ -16,12 +16,3 @@ class PasswordPolicy {
       _digit.hasMatch(password) &&
       _special.hasMatch(password);
 }
-
-/// Minimal RFC-ish email shape check (spec §5.1/§5.2). Not exhaustive by design.
-class EmailFormat {
-  const EmailFormat._();
-
-  static final RegExp _pattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-
-  static bool isValid(String email) => _pattern.hasMatch(email.trim());
-}

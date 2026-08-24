@@ -1,60 +1,106 @@
 {
   "@@locale": "en",
   "appTitle": "K-Trip Spot",
-
   "splashTagline": "Discover Korea's vibrant spots, real-time.",
   "splashSubTagline": "Your smart gateway to Seoul & beyond.",
   "splashLoading": "Initializing...",
-
   "languageSelectionSubtitle": "Select your language",
   "languageSelectionInstruction": "Choose your preferred language to explore the best spots in South Korea.",
   "languageDefaultBadge": "Default",
   "confirmSelection": "Confirm Selection",
   "changeLaterHint": "You can change this later in Settings.",
-
   "skip": "Skip",
   "next": "Next",
   "getStarted": "Get started",
-
   "onboardingTitle1": "Swipe to Discover",
   "onboardingBody1": "Find your perfect Korean adventure with a simple swipe. Like what you see? Swipe right to save!",
   "onboardingTitle2": "Avoid the Crowds",
   "onboardingBody2": "Plan smarter with real-time congestion data. Know when spots are quiet or buzzing before you go.",
   "onboardingTitle3": "Travel Together",
   "onboardingBody3": "Connect with fellow global travelers in real-time. Share tips, meet up, and make memories.",
-
   "onboardingCaption1": "Myeongdong Street Food",
   "onboardingLocation1": "Seoul, KR",
   "onboardingCaption2": "Gyeongbokgung Palace",
   "onboardingLocation2": "Seoul, KR",
   "onboardingCaption3": "Hangang Park",
   "onboardingLocation3": "Seoul, KR",
-
   "homeSearchHint": "Search for spots, hidden gems…",
-  "homeFavoritesTooltip": "Favorites",
-  "homeSectionRecommended": "Recommended for You",
   "homeSectionHappeningNow": "Happening Now",
+  "festivalPeriod": "{start} – {end}",
   "homeSectionPopular": "Popular Spots",
+  "homeSectionNearYou": "Near You",
+  "homeNearYouEmpty": "No spots within your search radius. Try widening it in settings.",
+  "homeHappeningNowEmpty": "No festivals running near you right now.",
+  "homePopularEmpty": "No popular spots near you yet.",
+  "popularLikeCount": "{count} likes",
+  "homeSectionRetry": "Retry",
+  "homeSectionError": "Couldn't load this section.",
+  "searchTitle": "Search",
+  "searchHint": "Search spots by name or address",
+  "searchRecentTitle": "Recent searches",
+  "searchRecentOpen": "Recent searches",
+  "searchRecentClose": "Close",
+  "searchRecentClearAll": "Clear all",
+  "searchRecentRemove": "Remove",
+  "searchEmptyResult": "No spots matched your search.",
+  "searchError": "Couldn't run the search.",
+  "searchRetry": "Retry",
   "viewAll": "View all",
-
-  "congestionLow": "Low",
-  "congestionModerate": "Moderate",
-  "congestionHigh": "High",
-
-  "eventCategoryFestival": "Festival",
-  "eventCategoryLive": "Live",
-  "eventCategoryArt": "Art",
-
-  "distanceAway": "{distance}km away",
-
+  "categoryAll": "All",
   "navHome": "Home",
   "navMap": "Map",
   "navDiscover": "Discover",
-  "navEvents": "Events",
-  "navChat": "Chat",
-
-  "comingSoon": "Coming soon.",
-
+  "navLiked": "Liked",
+  "navNationalMap": "Korea Map",
+  "navLibrary": "My Activity",
+  "permissionPhotosRationaleTitle": "Fill your map from photos?",
+  "permissionPhotosRationaleBody": "We read the location saved in your photos to find where you've been. Your photos never leave your device, and coordinates are used only to identify regions — they're never stored.",
+  "permissionPhotosBlockedMessage": "Photo access is off, so we can't fill your map from photos. You can allow it in Settings.",
+  "nationalMapNationwide": "Nationwide",
+  "nationalMapCellCount": "{visited} of {total}",
+  "nationalMapEmptyHint": "Fill it from your photos, or check in where you are.",
+  "nationalMapSelectHint": "Tap a region on the map.",
+  "nationalMapRecordVisit": "Add",
+  "nationalMapRemoveVisit": "Remove",
+  "nationalMapRetry": "Try again",
+  "nationalMapVisited": "Visited",
+  "nationalMapOpenDetail": "Details",
+  "nationalMapSpotsTitle": "Places in this region",
+  "nationalMapSpotsEmpty": "No places here yet.",
+  "commonCancel": "Cancel",
+  "commonClose": "Close",
+  "nationalMapHere": "I'm here",
+  "nationalMapRegisterTitle": "Add this region?",
+  "nationalMapRegisterBody": "We'll mark {district} as visited.",
+  "nationalMapAlreadyVisited": "You've already been to {cell}.",
+  "nationalMapOutsideKorea": "Only regions in Korea can be added.",
+  "nationalMapLocationUnavailable": "Can't determine your location.",
+  "nationalMapShare": "Share map",
+  "nationalMapShareFailed": "Couldn't create a share link.",
+  "sharedMapVisitedCount": "{count} regions visited",
+  "sharedMapOverlapCount": "{count} in common",
+  "sharedMapNoOverlap": "Nothing in common yet.",
+  "sharedMapSignInToCompare": "Sign in to see what you have in common.",
+  "sharedMapGone": "This map is no longer available.",
+  "sharedMapBlocked": "You can't view this map.",
+  "photoSyncTitle": "Fill from photos",
+  "photoSyncBody": "We read the location saved in your photos to find where you've been. Your photos never leave your device.",
+  "photoSyncStart": "Start",
+  "photoSyncResume": "Resume",
+  "photoSyncStop": "Stop",
+  "photoSyncProgress": "Checked {done} of {total}",
+  "photoSyncFoundSoFar": "{count} regions found so far",
+  "photoSyncFound": "Found {count} regions",
+  "photoSyncConfirmBody": "Adding them will fill in your map.",
+  "photoSyncRegister": "Add them",
+  "photoSyncDone": "Your map is updated.",
+  "photoSyncNoCoordinates": "No photos with location info were found.",
+  "photoSyncPermissionDenied": "Allow photo access to fill in your map.",
+  "photoSyncFailed": "Something went wrong while reading your photos.",
+  "nationalMapUnavailable": "Couldn't load the map",
+  "navCommunity": "Community",
+  "likedSpotsEmpty": "No liked spots yet.",
+  "likedSpotsUnavailable": "Couldn't load your liked spots",
   "loginTitle": "Welcome back",
   "loginSubtitle": "Sign in to continue.",
   "emailLabel": "Email",
@@ -69,10 +115,8 @@
   "forgotPassword": "Forgot your password?",
   "showPassword": "Show password",
   "hidePassword": "Hide password",
-
   "signUpTitle": "Create account",
   "signUpSubtitle": "Get started with your email and password.",
-
   "agreementSelectAll": "Agree to all",
   "agreementAge": "I am 14 years or older.",
   "agreementService": "Terms of Service",
@@ -83,36 +127,30 @@
   "agreementOptionalBadge": "Optional",
   "agreementViewDetail": "View",
   "agreementDetailPlaceholder": "Full terms text coming soon.",
-
   "passwordResetTitle": "Reset password",
-  "passwordResetSubtitle": "Enter your account email and we'll send a verification code.",
+  "passwordResetSubtitle": "Enter your account email and we'll send a 6-digit code.",
   "passwordResetRequestButton": "Send code",
-  "passwordResetCodeSent": "Verification code sent. Check your email.",
+  "passwordResetCodeSent": "We sent a verification code. Check your email.",
   "passwordResetConfirmButton": "Change password",
   "passwordResetDone": "Password changed. Please log in.",
   "newPasswordLabel": "New password",
   "verificationCodeLabel": "Verification code",
-
   "emailVerificationTitle": "Verify email",
   "emailVerificationSubtitle": "Enter the verification code we emailed you.",
   "emailVerificationButton": "Verify",
   "emailVerificationResend": "Resend code",
   "emailVerificationResent": "Verification code resent.",
   "validationCodeRequired": "Enter the verification code.",
-
   "validationEmailRequired": "Enter your email.",
   "validationEmailInvalid": "That doesn't look like a valid email.",
   "validationPasswordRequired": "Enter your password.",
   "validationPasswordPolicy": "Use 8+ characters with a letter, a number, and a special character.",
   "validationPasswordMismatch": "Passwords don't match.",
-
   "errorInvalidCredentials": "Incorrect email or password.",
   "errorEmailAlreadyInUse": "That email is already in use.",
   "errorNetwork": "Network error. Please try again.",
   "errorUnknown": "Something went wrong. Please try again.",
-
   "signUpSuccessLoginPrompt": "Account created. Please log in.",
-
   "orDivider": "or",
   "continueWithGoogle": "Continue with Google",
   "continueWithApple": "Continue with Apple",
@@ -123,8 +161,8 @@
   "snsSignUpButton": "Complete sign-up",
   "snsCancelled": "Sign-in was cancelled.",
   "errorSnsMemberNotFound": "This account isn't registered yet. Please sign up.",
+  "errorSnsVerificationExpired": "Sign-in has expired. Please sign in again.",
   "logoutTooltip": "Log out",
-
   "permissionLocationRationaleTitle": "Find spots around you",
   "permissionLocationRationaleBody": "K-Trip Spot uses your location while you use the app to show nearby attractions and real-time crowd levels. We never track you in the background.",
   "permissionNotificationRationaleTitle": "Stay in the loop",
@@ -134,36 +172,23 @@
   "permissionLocationBlockedMessage": "Location is turned off. Enable it in Settings to see nearby spots.",
   "permissionNotificationBlockedMessage": "Notifications are turned off. Enable them in Settings to get updates.",
   "permissionOpenSettings": "Open Settings",
-
   "splashLocationRequired": "Location access is required to continue.",
   "splashLocationBlockedHint": "Location is turned off. Enable it in Settings to continue.",
-
   "discoverLikeLabel": "LIKE",
   "discoverNopeLabel": "NOPE",
-
-  "discoverCategoryTouristSpot": "Tourist Spots",
-  "discoverCategoryCulturalFacility": "Cultural Facilities",
-  "discoverCategoryFestivalEvent": "Festivals & Events",
-  "discoverCategoryTravelCourse": "Travel Courses",
-  "discoverCategoryLeisureSports": "Leisure & Sports",
-  "discoverCategoryLodging": "Lodging",
-  "discoverCategoryShopping": "Shopping",
-  "discoverCategoryRestaurant": "Restaurants",
-  "discoverCategoryTransport": "Transport",
-
   "distanceKilometers": "{distance} km",
   "distanceMeters": "{distance} m",
-
   "discoverEmptyTitle": "You've seen everything nearby",
   "discoverEmptyBody": "Widen your radius or switch category to find more spots.",
   "discoverWidenRadius": "Widen radius",
   "discoverChangeCategory": "Change category",
-
   "discoverRetryBanner": "Couldn't load spots. Retrying shortly.",
   "discoverRetryButton": "Retry",
   "discoverLoadError": "Something went wrong while loading spots.",
   "discoverLoading": "Finding spots near you…",
-
+  "retryExhaustedTitle": "Still not working",
+  "retryExhaustedBody": "We tried a couple of times and couldn't connect. Check your connection, then try again.",
+  "retryExhaustedAction": "Try again",
   "spotDetailOverviewTitle": "About",
   "spotDetailContactTitle": "Contact",
   "spotDetailHomepageLabel": "Website",
@@ -171,13 +196,20 @@
   "spotDetailLikeCount": "{count, plural, =0{No likes yet} =1{1 like} other{{count} likes}}",
   "@spotDetailLikeCount": {
     "description": "상세 좋아요 개수 배지 (현재 언어의 실시간 LIKE 수)",
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "spotDetailLikeAction": "Like",
   "spotDetailDislikeAction": "Nope",
   "spotDetailLoading": "Loading spot…",
   "spotDetailNotFoundTitle": "Spot not found",
-  "spotDetailNotFoundBody": "We couldn't find this spot. It may have been removed or isn't available in your language.",
+  "spotDetailNotFoundBody": "We couldn't find this spot. It may have been removed.",
+  "spotDetailNotInLocaleTitle": "Not available in English",
+  "spotDetailNotInLocaleBody": "This spot exists, but it isn't available in the language you're using. Switch languages in Settings to see it.",
+  "spotDetailNotInLocaleAction": "Back to home",
   "spotDetailRateLimitedTitle": "Too many requests",
   "spotDetailRateLimitedBody": "We're a bit busy right now. Please try again in a moment.",
   "spotDetailUnavailableTitle": "Couldn't load this spot",
@@ -185,7 +217,6 @@
   "spotDetailRetryButton": "Retry",
   "spotDetailReactionFailed": "Couldn't save your reaction. Please try again.",
   "spotDetailLinkFailed": "Couldn't open this link.",
-
   "spotDetailIntroTitle": "Visitor info",
   "spotDetailIntroBusinessHours": "Hours",
   "spotDetailIntroClosedDays": "Closed",
@@ -194,5 +225,1119 @@
   "spotDetailIntroPetAllowed": "Pets",
   "spotDetailIntroCreditCard": "Credit cards",
   "spotDetailIntroInquiryPhone": "Inquiries",
-  "spotDetailInfoTitle": "Guide"
+  "spotDetailInfoTitle": "Guide",
+  "communityTitle": "Spot Talk",
+  "@communityTitle": {
+    "description": "커뮤니티 탭 앱바 제목 (Spot Talk)"
+  },
+  "communityNearbyTitle": "Nearby",
+  "@communityNearbyTitle": {
+    "description": "지역 피드 섹션 헤더"
+  },
+  "communityFeedEmpty": "No posts around you yet.",
+  "@communityFeedEmpty": {
+    "description": "지역 피드에 글이 하나도 없을 때"
+  },
+  "communityFeedUnavailable": "Couldn't load nearby posts",
+  "@communityFeedUnavailable": {
+    "description": "지역 피드 조회 실패 제목"
+  },
+  "communityFeedUnavailableBody": "Check your connection and try again.",
+  "@communityFeedUnavailableBody": {
+    "description": "지역 피드 조회 실패 안내 본문"
+  },
+  "communityLocationUnavailable": "Location is off, so nearby posts are unavailable.",
+  "@communityLocationUnavailable": {
+    "description": "위치 권한 없음·좌표 실패 — 빈 피드와 구분되는 사유 표시"
+  },
+  "communityRetry": "Retry",
+  "@communityRetry": {
+    "description": "커뮤니티 오류 상태의 재시도 버튼"
+  },
+  "communityHiddenBadge": "Hidden after multiple reports",
+  "@communityHiddenBadge": {
+    "description": "신고 누적으로 자동 숨김된 글·댓글 배지 (작성자에게만 보임)"
+  },
+  "communityTimeJustNow": "Just now",
+  "@communityTimeJustNow": {
+    "description": "상대 시각 — 방금"
+  },
+  "communityTimeMinutes": "{count}m ago",
+  "@communityTimeMinutes": {
+    "description": "상대 시각 — n분 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeHours": "{count}h ago",
+  "@communityTimeHours": {
+    "description": "상대 시각 — n시간 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeDays": "{count}d ago",
+  "@communityTimeDays": {
+    "description": "상대 시각 — n일 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityPostDetailTitle": "Post",
+  "@communityPostDetailTitle": {
+    "description": "글 상세 앱바 제목"
+  },
+  "communityCommentsHeader": "Comments · {count}",
+  "@communityCommentsHeader": {
+    "description": "상세의 댓글 섹션 헤더 (서버 commentCount 그대로)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityCommentsEmpty": "No comments yet.",
+  "@communityCommentsEmpty": {
+    "description": "댓글이 하나도 없을 때"
+  },
+  "communityPostUnavailable": "This post was deleted or is unavailable.",
+  "@communityPostUnavailable": {
+    "description": "차단·숨김이라 볼 수 없는 글 (post(id:)가 null)"
+  },
+  "communityPostUnavailableTitle": "Post unavailable",
+  "@communityPostUnavailableTitle": {
+    "description": "볼 수 없는 글 화면의 제목"
+  },
+  "communityComposeAction": "Write a post",
+  "@communityComposeAction": {
+    "description": "글 작성 FAB의 접근성 라벨"
+  },
+  "communityPostOptions": "Post options",
+  "@communityPostOptions": {
+    "description": "카드 우상단 오버플로 버튼의 접근성 라벨"
+  },
+  "communityViewCountLabel": "{count, plural, =1{1 view} other{{count} views}}",
+  "@communityViewCountLabel": {
+    "description": "카드 하단 조회수의 접근성 라벨 — 화면에는 숫자만 그린다",
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "communityBlockAction": "Block this user",
+  "@communityBlockAction": {
+    "description": "모더레이션 시트의 차단 항목"
+  },
+  "communityReportAction": "Report",
+  "@communityReportAction": {
+    "description": "모더레이션 시트의 신고 항목"
+  },
+  "communityDeleteAction": "Delete post",
+  "@communityDeleteAction": {
+    "description": "모더레이션 시트의 삭제 항목 (내 글일 때만)"
+  },
+  "communityCancel": "Cancel",
+  "@communityCancel": {
+    "description": "시트·다이얼로그의 취소"
+  },
+  "communityBlockConfirmTitle": "Block {nickname}?",
+  "@communityBlockConfirmTitle": {
+    "description": "차단 확인 다이얼로그 제목",
+    "placeholders": {
+      "nickname": {
+        "type": "String"
+      }
+    }
+  },
+  "communityBlockConfirmBody": "Blocking works both ways: you won't see their posts or comments, and they won't see yours. You can undo this later.",
+  "@communityBlockConfirmBody": {
+    "description": "차단이 양방향임을 명시하는 확인 문구 (가이드 §6)"
+  },
+  "communityBlockConfirmAction": "Block",
+  "@communityBlockConfirmAction": {
+    "description": "차단 확인 다이얼로그의 실행 버튼"
+  },
+  "communityBlockDone": "Blocked. Their posts are hidden from your feed.",
+  "@communityBlockDone": {
+    "description": "차단 성공 안내"
+  },
+  "communityDeleteConfirmTitle": "Delete this post?",
+  "@communityDeleteConfirmTitle": {
+    "description": "글 삭제 확인 다이얼로그 제목"
+  },
+  "communityDeleteConfirmBody": "This can't be undone. Posts can't be edited, so you'd have to write it again.",
+  "@communityDeleteConfirmBody": {
+    "description": "삭제 확인 문구 (글 수정이 없으므로 재작성해야 한다)"
+  },
+  "communityDeleteDone": "Post deleted.",
+  "@communityDeleteDone": {
+    "description": "삭제 성공 안내"
+  },
+  "communityReportTitle": "Report",
+  "@communityReportTitle": {
+    "description": "신고 시트 제목"
+  },
+  "communityReportReasonSpam": "Spam or advertising",
+  "@communityReportReasonSpam": {
+    "description": "신고 사유 SPAM"
+  },
+  "communityReportReasonAbuse": "Harassment or abuse",
+  "@communityReportReasonAbuse": {
+    "description": "신고 사유 ABUSE"
+  },
+  "communityReportReasonInappropriate": "Inappropriate content",
+  "@communityReportReasonInappropriate": {
+    "description": "신고 사유 INAPPROPRIATE_CONTENT"
+  },
+  "communityReportReasonOther": "Something else",
+  "@communityReportReasonOther": {
+    "description": "신고 사유 OTHER — 상세 입력이 필수가 된다"
+  },
+  "communityReportDetailLabel": "Tell us more",
+  "@communityReportDetailLabel": {
+    "description": "OTHER 선택 시에만 보이는 상세 입력 라벨"
+  },
+  "communityReportDetailRequired": "Please add a detail for this reason.",
+  "@communityReportDetailRequired": {
+    "description": "OTHER인데 상세가 비었을 때 (REPORT_DETAIL_REQUIRED를 미리 막는다)"
+  },
+  "communityReportSubmit": "Submit",
+  "@communityReportSubmit": {
+    "description": "신고 제출 버튼"
+  },
+  "communityReportDone": "Your report was received.",
+  "@communityReportDone": {
+    "description": "신고 접수 안내 — 처리 결과나 시점을 약속하지 않는다 (가이드 §9)"
+  },
+  "communityReportAlready": "You've already reported this.",
+  "@communityReportAlready": {
+    "description": "ALREADY_REPORTED — 오류가 아니라 안내다"
+  },
+  "communityActionFailed": "Something went wrong. Please try again.",
+  "@communityActionFailed": {
+    "description": "모더레이션·등록의 일반 실패 안내"
+  },
+  "communitySignInRequired": "Sign in to continue.",
+  "@communitySignInRequired": {
+    "description": "미인증 사용자가 쓰기 동작을 눌렀을 때 (버튼을 숨기지 않는다)"
+  },
+  "communityComposeTitle": "New post",
+  "@communityComposeTitle": {
+    "description": "컴포저 앱바 제목"
+  },
+  "communityComposeSubmit": "Post",
+  "@communityComposeSubmit": {
+    "description": "컴포저 앱바의 등록 액션"
+  },
+  "communityComposeBodyHint": "Share something about this place.",
+  "@communityComposeBodyHint": {
+    "description": "본문 입력 힌트"
+  },
+  "communityComposeSpotLabel": "Where",
+  "@communityComposeSpotLabel": {
+    "description": "컴포저의 대상(관광지) 라벨"
+  },
+  "communityComposeTooLong": "{count} characters over the limit.",
+  "@communityComposeTooLong": {
+    "description": "500자 초과분 — 입력을 자르지 않고 드러낸다",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityComposeDone": "Your post is up.",
+  "@communityComposeDone": {
+    "description": "글 등록 성공 안내"
+  },
+  "communityComposeErrorSpotNotFound": "That place is no longer available.",
+  "communityComposeErrorSpotNotInLocale": "That place isn't available in the language you're using.",
+  "@communityComposeErrorSpotNotInLocale": {
+    "description": "Shown when the selected spot is not available in the active language (SPEC-0029)."
+  },
+  "@communityComposeErrorSpotNotFound": {
+    "description": "SPOT_NOT_FOUND"
+  },
+  "communityComposeErrorTooManyPhotos": "You can attach up to 5 photos.",
+  "@communityComposeErrorTooManyPhotos": {
+    "description": "TOO_MANY_PHOTOS"
+  },
+  "communityCategoryAll": "All",
+  "@communityCategoryAll": {
+    "description": "상단 칩 — 전체(선택 없음)"
+  },
+  "communityCategoryTouristSpot": "Attractions",
+  "@communityCategoryTouristSpot": {
+    "description": "카테고리 TOURIST_SPOT 표시명"
+  },
+  "communityCategoryCulturalFacility": "Culture",
+  "@communityCategoryCulturalFacility": {
+    "description": "카테고리 CULTURAL_FACILITY 표시명"
+  },
+  "communityCategoryFestivalEvent": "Festivals",
+  "@communityCategoryFestivalEvent": {
+    "description": "카테고리 FESTIVAL_EVENT 표시명"
+  },
+  "communityCategoryTravelCourse": "Courses",
+  "@communityCategoryTravelCourse": {
+    "description": "카테고리 TRAVEL_COURSE 표시명"
+  },
+  "communityCategoryLeisureSports": "Leisure",
+  "@communityCategoryLeisureSports": {
+    "description": "카테고리 LEISURE_SPORTS 표시명"
+  },
+  "communityCategoryLodging": "Stays",
+  "@communityCategoryLodging": {
+    "description": "카테고리 LODGING 표시명"
+  },
+  "communityCategoryShopping": "Shopping",
+  "@communityCategoryShopping": {
+    "description": "카테고리 SHOPPING 표시명"
+  },
+  "communityCategoryRestaurant": "Food",
+  "@communityCategoryRestaurant": {
+    "description": "카테고리 RESTAURANT 표시명"
+  },
+  "communityCategoryTransport": "Transport",
+  "@communityCategoryTransport": {
+    "description": "카테고리 TRANSPORT 표시명"
+  },
+  "communityEditedBadge": "Edited",
+  "@communityEditedBadge": {
+    "description": "수정된 글 표시"
+  },
+  "communityEditAction": "Edit post",
+  "@communityEditAction": {
+    "description": "⋮ 메뉴 — 글 수정"
+  },
+  "communityEditDisabledHidden": "Hidden posts can't be edited.",
+  "@communityEditDisabledHidden": {
+    "description": "숨김 글이라 수정 불가 안내"
+  },
+  "communityEditTitle": "Edit post",
+  "@communityEditTitle": {
+    "description": "글 수정 화면 제목"
+  },
+  "communityEditDone": "Your post was updated.",
+  "@communityEditDone": {
+    "description": "수정 완료 안내"
+  },
+  "communityComposeCategoryLabel": "Choose a category",
+  "@communityComposeCategoryLabel": {
+    "description": "컴포저 카테고리 섹션 라벨"
+  },
+  "communityComposeTitleLabel": "Title",
+  "@communityComposeTitleLabel": {
+    "description": "컴포저 제목 섹션 라벨"
+  },
+  "communityComposeTitleHint": "A short headline",
+  "@communityComposeTitleHint": {
+    "description": "컴포저 제목 입력 힌트"
+  },
+  "communityComposeBodyLabel": "Body",
+  "@communityComposeBodyLabel": {
+    "description": "컴포저 본문 섹션 라벨"
+  },
+  "communityComposeTagsLabel": "Tags (optional)",
+  "@communityComposeTagsLabel": {
+    "description": "컴포저 태그 섹션 라벨"
+  },
+  "communityComposeTagHint": "Add a tag, no spaces",
+  "@communityComposeTagHint": {
+    "description": "컴포저 태그 입력 힌트"
+  },
+  "communityComposeTagInvalid": "Tags can't contain spaces.",
+  "@communityComposeTagInvalid": {
+    "description": "태그에 공백이 있을 때"
+  },
+  "communityComposeTagLimit": "You can add up to 5 tags.",
+  "@communityComposeTagLimit": {
+    "description": "태그 상한 안내"
+  },
+  "communityComposeSpotOptional": "Add a place (optional)",
+  "@communityComposeSpotOptional": {
+    "description": "장소 미선택 표시 — 선택 항목"
+  },
+  "communityComposeSpotClear": "Remove place",
+  "@communityComposeSpotClear": {
+    "description": "선택한 장소 해제"
+  },
+  "communityComposePhotosLabel": "Photos (optional)",
+  "@communityComposePhotosLabel": {
+    "description": "컴포저 사진 섹션 라벨"
+  },
+  "communityComposePhotoAdd": "Add photo",
+  "@communityComposePhotoAdd": {
+    "description": "사진 추가 버튼"
+  },
+  "communityComposePhotoTooLarge": "{count, plural, =1{1 photo was too large (max 10MB).} other{{count} photos were too large (max 10MB).}}",
+  "@communityComposePhotoTooLarge": {
+    "description": "사진이 10MiB를 넘어 제외된 장 수",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "communityComposeDonePhotosFailed": "{count, plural, =1{Your post is up, but 1 photo couldn't be uploaded.} other{Your post is up, but {count} photos couldn't be uploaded.}}",
+  "@communityComposeDonePhotosFailed": {
+    "description": "글은 등록됐지만 사진 일부를 올리지 못한 경우 — 사진 때문에 글을 버리지 않는다",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "communityEditDonePhotosFailed": "{count, plural, =1{Your post was updated, but 1 photo couldn't be uploaded.} other{Your post was updated, but {count} photos couldn't be uploaded.}}",
+  "@communityEditDonePhotosFailed": {
+    "description": "수정은 됐지만 사진 일부를 올리지 못한 경우",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "communityComposeErrorTitleRequired": "Please add a title.",
+  "@communityComposeErrorTitleRequired": {
+    "description": "POST_TITLE_REQUIRED"
+  },
+  "communityComposeErrorTitleLength": "Your title is too long. Keep it under 50 characters.",
+  "@communityComposeErrorTitleLength": {
+    "description": "POST_TITLE_LENGTH_INVALID"
+  },
+  "communityComposeErrorBodyRequired": "Please write something first.",
+  "@communityComposeErrorBodyRequired": {
+    "description": "POST_BODY_REQUIRED"
+  },
+  "communityComposeErrorBodyLength": "Your post is too long. Keep it under 500 characters.",
+  "@communityComposeErrorBodyLength": {
+    "description": "POST_BODY_LENGTH_INVALID"
+  },
+  "communityComposeErrorInvalidTag": "One of your tags is not allowed.",
+  "@communityComposeErrorInvalidTag": {
+    "description": "INVALID_TAG"
+  },
+  "communityComposeErrorTooManyTags": "You can add up to 5 tags.",
+  "@communityComposeErrorTooManyTags": {
+    "description": "TOO_MANY_TAGS"
+  },
+  "communityComposeErrorPhotoNotUploaded": "A photo failed to upload. Please add it again.",
+  "@communityComposeErrorPhotoNotUploaded": {
+    "description": "PHOTO_NOT_UPLOADED"
+  },
+  "communityComposeErrorNotEditable": "Hidden posts can't be edited.",
+  "@communityComposeErrorNotEditable": {
+    "description": "POST_NOT_EDITABLE"
+  },
+  "communityTitleCounter": "{count} / 50",
+  "@communityTitleCounter": {
+    "description": "제목 글자 수 카운터 (코드포인트)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityBodyCounter": "{count} / 500",
+  "@communityBodyCounter": {
+    "description": "본문 글자 수 카운터 (코드포인트)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityCommentComposerHint": "Write a comment",
+  "@communityCommentComposerHint": {
+    "description": "댓글 입력 힌트"
+  },
+  "communityCommentSend": "Send",
+  "@communityCommentSend": {
+    "description": "댓글 전송 버튼"
+  },
+  "communityCommentDone": "Comment posted.",
+  "@communityCommentDone": {
+    "description": "댓글 작성 완료"
+  },
+  "communityCommentDeleteAction": "Delete comment",
+  "@communityCommentDeleteAction": {
+    "description": "댓글 삭제 메뉴"
+  },
+  "communityCommentDeleteDone": "Comment deleted.",
+  "@communityCommentDeleteDone": {
+    "description": "댓글 삭제 완료"
+  },
+  "communityCommentReportAction": "Report comment",
+  "@communityCommentReportAction": {
+    "description": "댓글 신고 메뉴"
+  },
+  "communityCommentsUnavailable": "Comments couldn't be loaded.",
+  "@communityCommentsUnavailable": {
+    "description": "댓글 조회 실패"
+  },
+  "communityCommentsLoadMore": "Load more comments",
+  "@communityCommentsLoadMore": {
+    "description": "댓글 더 보기"
+  },
+  "communityBlockedUsersTitle": "Blocked users",
+  "@communityBlockedUsersTitle": {
+    "description": "차단 목록 화면 제목"
+  },
+  "communityBlockedUsersEmpty": "You haven't blocked anyone.",
+  "@communityBlockedUsersEmpty": {
+    "description": "차단 목록이 빌 때"
+  },
+  "communityBlockedUsersNote": "Only blocks you made appear here. If someone blocked you, you can't undo it.",
+  "@communityBlockedUsersNote": {
+    "description": "차단 목록 안내 — 나를 차단한 사람은 없다"
+  },
+  "communityUnblockAction": "Unblock",
+  "@communityUnblockAction": {
+    "description": "차단 해제 버튼"
+  },
+  "communityUnblockDone": "Unblocked.",
+  "@communityUnblockDone": {
+    "description": "차단 해제 완료"
+  },
+  "communityBlockedUsersAction": "Blocked users",
+  "@communityBlockedUsersAction": {
+    "description": "오버플로 진입 — 차단 목록"
+  },
+  "communityHidePostAction": "Hide this post",
+  "@communityHidePostAction": {
+    "description": "⋮ 메뉴 — 이 글 숨기기(hidePost). 항상 노출, 내 글도 가능"
+  },
+  "communityHidePostDone": "Post hidden. Only you stop seeing it.",
+  "@communityHidePostDone": {
+    "description": "숨김 성공 토스트 — 내 화면에서만 사라진다는 것을 밝힌다"
+  },
+  "communityHiddenPostsAction": "Hidden posts",
+  "@communityHiddenPostsAction": {
+    "description": "앱바 진입 — 숨긴 글 목록(차단 목록 옆)"
+  },
+  "communityHiddenPostsTitle": "Hidden posts",
+  "@communityHiddenPostsTitle": {
+    "description": "숨긴 글 목록 화면 제목"
+  },
+  "communityHiddenPostsEmpty": "You haven't hidden any posts.",
+  "@communityHiddenPostsEmpty": {
+    "description": "숨긴 글 목록이 빌 때"
+  },
+  "communityHiddenPostsNote": "These posts are hidden from your feed only. Others still see them.",
+  "@communityHiddenPostsNote": {
+    "description": "숨김 목록 안내 — 차단·신고와 다르다는 것"
+  },
+  "communityUnhideAction": "Unhide",
+  "@communityUnhideAction": {
+    "description": "숨김 해제 버튼"
+  },
+  "communityUnhideDone": "Post is back in your feed.",
+  "@communityUnhideDone": {
+    "description": "숨김 해제 성공 토스트"
+  },
+  "communitySortLatest": "Latest",
+  "@communitySortLatest": {
+    "description": "피드 정렬 토글 — 최신순(기본)"
+  },
+  "communitySortDistance": "Nearby",
+  "@communitySortDistance": {
+    "description": "피드 정렬 토글 — 거리순. 장소 없는 글은 빠진다"
+  },
+  "communityReplyAction": "Reply",
+  "@communityReplyAction": {
+    "description": "최상위 댓글에만 붙는 답글 달기 버튼 (답글에는 두지 않는다)"
+  },
+  "communityReplyComposerHint": "Reply to {nickname}",
+  "@communityReplyComposerHint": {
+    "description": "답글 입력 중일 때의 입력창 힌트",
+    "placeholders": {
+      "nickname": {
+        "type": "String"
+      }
+    }
+  },
+  "communityReplyCancel": "Cancel reply",
+  "@communityReplyCancel": {
+    "description": "답글 대상을 해제하고 일반 댓글로 돌아가는 버튼"
+  },
+  "communityPhotoViewerTitle": "{current} of {total}",
+  "@communityPhotoViewerTitle": {
+    "description": "사진 뷰어 상단 표시",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeMonths": "{count}mo ago",
+  "@communityTimeMonths": {
+    "description": "상대 시각 — n개월 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityTimeYears": "{count}y ago",
+  "@communityTimeYears": {
+    "description": "상대 시각 — n년 전",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communitySpotPostsTitle": "Posts",
+  "@communitySpotPostsTitle": {
+    "description": "장소 상세의 글 섹션 헤더"
+  },
+  "communitySpotPickerTitle": "Nearby places",
+  "communitySpotPickerSourceNearby": "Nearby",
+  "communitySpotPickerSourceLiked": "Liked places",
+  "communitySpotPickerSearchHint": "Search places",
+  "@communitySpotPickerTitle": {
+    "description": "컴포저 장소 선택 시트 제목"
+  },
+  "communitySpotPickerLikedEmpty": "You haven't liked any places yet.",
+  "@communitySpotPickerLikedEmpty": {
+    "description": "좋아요한 장소가 하나도 없는 상태 — 오류가 아니다"
+  },
+  "communitySpotPickerLikedFailed": "Couldn't load your liked places.",
+  "@communitySpotPickerLikedFailed": {
+    "description": "좋아요한 장소 조회 실패 상태"
+  },
+  "communitySpotPickerLikedNoMatch": "No liked place matches that name.",
+  "@communitySpotPickerLikedNoMatch": {
+    "description": "좋아요한 장소 탭에서 이름 필터 결과가 비었을 때"
+  },
+  "communitySpotPickerEmpty": "No places found nearby.",
+  "@communitySpotPickerEmpty": {
+    "description": "반경 안에 장소가 하나도 없는 상태 — 위치 실패와 구분된다"
+  },
+  "communitySpotPickerNoMatch": "No nearby place matches that name.",
+  "@communitySpotPickerNoMatch": {
+    "description": "필터 결과가 비었을 때"
+  },
+  "communitySpotPickerLocationUnavailable": "Location is off, so nearby places can't be listed. You can still post without a place.",
+  "@communitySpotPickerLocationUnavailable": {
+    "description": "장소 선택 시트의 위치 실패 상태 — 빈 시트로 두지 않는다"
+  },
+  "communitySpotPickerFailed": "Couldn't load nearby places.",
+  "@communitySpotPickerFailed": {
+    "description": "장소 선택 시트의 조회 실패 상태"
+  },
+  "communitySpotDistanceMeters": "{meters} m",
+  "@communitySpotDistanceMeters": {
+    "description": "장소까지의 거리 (1km 미만)",
+    "placeholders": {
+      "meters": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "communitySpotDistanceKilometers": "{km} km",
+  "@communitySpotDistanceKilometers": {
+    "description": "장소까지의 거리 (1km 이상)",
+    "placeholders": {
+      "km": {
+        "type": "num",
+        "format": "decimalPattern",
+        "optionalParameters": {
+          "decimalDigits": 1
+        }
+      }
+    }
+  },
+  "communityComposeCategoryUnset": "Category",
+  "@communityComposeCategoryUnset": {
+    "description": "컴포저 상단 인라인 카테고리 선택기 — 미선택 상태"
+  },
+  "communityComposeTagsAction": "Tags",
+  "@communityComposeTagsAction": {
+    "description": "컴포저 하단 액션 바의 태그 버튼"
+  },
+  "communityComposeSpotAction": "Place",
+  "@communityComposeSpotAction": {
+    "description": "컴포저 하단 액션 바의 장소 버튼"
+  },
+  "communityComposePhotosAction": "Photos",
+  "@communityComposePhotosAction": {
+    "description": "컴포저 하단 액션 바의 사진 버튼"
+  },
+  "communityComposeTagsSheetTitle": "Tags",
+  "@communityComposeTagsSheetTitle": {
+    "description": "태그 입력 시트 제목"
+  },
+  "communityComposeSheetDone": "Done",
+  "@communityComposeSheetDone": {
+    "description": "시트를 닫는 확인 버튼"
+  },
+  "communityDraftResumeTitle": "Continue your draft?",
+  "@communityDraftResumeTitle": {
+    "description": "이어쓰기 제안 다이얼로그 제목(SPEC-0022 R5)"
+  },
+  "communityDraftResumeBody": "You have an unfinished post saved on this device.",
+  "@communityDraftResumeBody": {
+    "description": "이어쓰기 제안 다이얼로그 본문"
+  },
+  "communityDraftResumeAction": "Continue writing",
+  "@communityDraftResumeAction": {
+    "description": "저장된 초안으로 이어쓰기"
+  },
+  "communityDraftDiscardAction": "Start over",
+  "@communityDraftDiscardAction": {
+    "description": "저장된 초안을 버리고 빈 상태로 시작"
+  },
+  "settingsTitle": "Settings",
+  "@settingsTitle": {},
+  "settingsTooltip": "Settings",
+  "@settingsTooltip": {},
+  "settingsSectionActivity": "ACTIVITY",
+  "@settingsSectionActivity": {},
+  "settingsSectionAccount": "ACCOUNT",
+  "@settingsSectionAccount": {},
+  "settingsSectionPreferences": "PREFERENCES",
+  "@settingsSectionPreferences": {},
+  "settingsSectionLegal": "LEGAL",
+  "@settingsSectionLegal": {},
+  "settingsMyPosts": "My Posts",
+  "@settingsMyPosts": {},
+  "settingsEditProfile": "Edit Profile",
+  "@settingsEditProfile": {},
+  "settingsChangeEmail": "Change Email",
+  "@settingsChangeEmail": {},
+  "settingsBlockedUsers": "Blocked Users",
+  "@settingsBlockedUsers": {},
+  "settingsSearchRadius": "Search Radius",
+  "@settingsSearchRadius": {},
+  "settingsLanguage": "Language",
+  "@settingsLanguage": {},
+  "settingsTerms": "Terms & Agreements",
+  "@settingsTerms": {},
+  "settingsLogOut": "Log Out",
+  "@settingsLogOut": {},
+  "settingsDeleteAccount": "Delete Account",
+  "@settingsDeleteAccount": {},
+  "preferencesTitle": "Preferences",
+  "@preferencesTitle": {},
+  "preferencesRadiusSection": "SEARCH RADIUS",
+  "@preferencesRadiusSection": {},
+  "preferencesLanguageSection": "LANGUAGE",
+  "@preferencesLanguageSection": {},
+  "preferencesRadiusValue": "{km} km",
+  "@preferencesRadiusValue": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "preferencesRadiusHint": "Set to 0 km to search only your current location.",
+  "@preferencesRadiusHint": {},
+  "myPostsTitle": "My Posts",
+  "@myPostsTitle": {},
+  "myPostsEmpty": "You haven't written any posts yet",
+  "@myPostsEmpty": {},
+  "myPostsWriteFirst": "Write your first post",
+  "@myPostsWriteFirst": {},
+  "termsTitle": "Terms & Agreements",
+  "@termsTitle": {},
+  "termsIntro": "Required agreements cannot be withdrawn while using the service.",
+  "@termsIntro": {},
+  "termsSectionRequired": "REQUIRED",
+  "@termsSectionRequired": {},
+  "termsSectionOptional": "OPTIONAL",
+  "@termsSectionOptional": {},
+  "termsAgreedOn": "Agreed {date}",
+  "@termsAgreedOn": {},
+  "termsAgreedRequired": "Agreed",
+  "@termsAgreedRequired": {},
+  "termsService": "Terms of Service",
+  "@termsService": {},
+  "termsPrivacy": "Privacy Policy",
+  "@termsPrivacy": {},
+  "termsLocation": "Location Data",
+  "@termsLocation": {},
+  "termsMarketing": "Marketing Notifications",
+  "@termsMarketing": {},
+  "termsServiceDescription": "The basic rules for using the service.",
+  "@termsServiceDescription": {},
+  "termsPrivacyDescription": "How your personal data is handled.",
+  "@termsPrivacyDescription": {},
+  "termsLocationDescription": "Used to recommend nearby spots.",
+  "@termsLocationDescription": {},
+  "termsMarketingDescription": "Event and promotion updates.",
+  "@termsMarketingDescription": {},
+  "termsLoadFailed": "Couldn't load your agreements.",
+  "@termsLoadFailed": {},
+  "termsUpdateFailed": "Couldn't save the change. Please try again.",
+  "@termsUpdateFailed": {},
+  "termsRetry": "Try again",
+  "@termsRetry": {},
+  "requiredTermsTitle": "Agree to Terms",
+  "@requiredTermsTitle": {},
+  "requiredTermsIntro": "To continue, please agree to the required terms below.",
+  "@requiredTermsIntro": {},
+  "requiredTermsAgree": "Agree and continue",
+  "@requiredTermsAgree": {},
+  "requiredTermsFailed": "Couldn't record your agreement. Please try again.",
+  "@requiredTermsFailed": {},
+  "deleteAccountTitle": "Delete Account",
+  "@deleteAccountTitle": {},
+  "deleteAccountHeadline": "This cannot be undone",
+  "@deleteAccountHeadline": {},
+  "deleteAccountIntro": "Deleting your account permanently removes:",
+  "@deleteAccountIntro": {},
+  "deleteAccountItemPosts": "Your posts and comments",
+  "@deleteAccountItemPosts": {},
+  "deleteAccountItemLikes": "Your liked spots",
+  "@deleteAccountItemLikes": {},
+  "deleteAccountItemProfile": "Your profile and settings",
+  "@deleteAccountItemProfile": {},
+  "deleteAccountCaution": "You will not be able to recover this data.",
+  "@deleteAccountCaution": {},
+  "deleteAccountCancel": "Cancel",
+  "@deleteAccountCancel": {},
+  "deleteAccountConfirm": "Delete My Account",
+  "@deleteAccountConfirm": {},
+  "deleteAccountFailed": "Could not delete your account. Please try again.",
+  "@deleteAccountFailed": {},
+  "profileEditTitle": "Edit Profile",
+  "@profileEditTitle": {},
+  "profileEditSave": "Save",
+  "@profileEditSave": {},
+  "profileEditSaved": "Profile saved",
+  "@profileEditSaved": {},
+  "profileEditNicknameLabel": "Nickname",
+  "@profileEditNicknameLabel": {},
+  "profileEditNicknameCounter": "{count}/{max}",
+  "@profileEditNicknameCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "profileEditNicknameEmpty": "Please enter a nickname.",
+  "@profileEditNicknameEmpty": {},
+  "profileEditNicknameTooLong": "A nickname can be at most {max} characters.",
+  "@profileEditNicknameTooLong": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "profileEditNicknameTaken": "This nickname is already taken.",
+  "@profileEditNicknameTaken": {},
+  "profileEditEmailLabel": "Email",
+  "@profileEditEmailLabel": {},
+  "profileEditFailed": "Could not save. Please try again.",
+  "@profileEditFailed": {},
+  "profilePhotoChange": "Change Photo",
+  "@profilePhotoChange": {},
+  "profilePhotoRemove": "Remove",
+  "@profilePhotoRemove": {},
+  "profilePhotoUploading": "Uploading photo…",
+  "@profilePhotoUploading": {},
+  "profilePhotoUpdated": "Profile photo updated",
+  "@profilePhotoUpdated": {},
+  "profilePhotoRemoved": "Profile photo removed",
+  "@profilePhotoRemoved": {},
+  "profilePhotoFailed": "Could not update the photo. Please try again.",
+  "@profilePhotoFailed": {},
+  "profilePhotoUnavailable": "Choosing a photo is not available on this device.",
+  "@profilePhotoUnavailable": {},
+  "myPostsFailed": "Could not load your posts. Please try again.",
+  "@myPostsFailed": {},
+  "myPostsRetry": "Retry",
+  "@myPostsRetry": {},
+  "discoverRadiusAtMax": "You're already at the maximum radius (100 km).",
+  "termsRequiredNotice": "You can't use the service without agreeing.",
+  "profileEditEmailChange": "Change",
+  "emailChangeTitle": "Change Email",
+  "emailChangeCurrentLabel": "Current email",
+  "emailChangeNewLabel": "New Email Address",
+  "emailChangeHint": "We'll send a 6-digit code to this address.",
+  "emailChangeSendCode": "Send Code",
+  "emailChangeSameAsCurrent": "This is the same as your current email.",
+  "emailChangeVerifyTitle": "Verify Email",
+  "emailChangePendingBanner": "Your email changes only after you verify. It's still the old address for now.",
+  "emailChangeCodeSentTo": "Enter the code sent to {email}",
+  "emailChangeCodeLabel": "Verification code",
+  "emailChangeVerifyButton": "Verify",
+  "emailChangeCodeRequired": "Please enter the verification code.",
+  "emailChangeResend": "Resend code",
+  "emailChangeResendIn": "Resend code in {seconds}s",
+  "emailChangeResent": "We sent a new code.",
+  "emailChangeResendCooldown": "Please wait a moment before requesting another code.",
+  "emailChangeCodeMismatch": "The code doesn't match. Try again.",
+  "emailChangeCodeExpired": "This code has expired. Tap resend to get a new one.",
+  "emailChangeMaxAttempts": "You've used all attempts. Please start over from the address.",
+  "emailChangeVerifyFailed": "Could not verify. Please try again.",
+  "emailChangeFailed": "Could not send the code. Please try again.",
+  "emailChangeEmailTaken": "This email is already in use.",
+  "emailChangeSucceeded": "Your email has been changed.",
+  "mapCongestionRelaxed": "Not busy",
+  "mapCongestionNormal": "Normal",
+  "mapCongestionSlightlyCrowded": "Getting busy",
+  "mapCongestionCrowded": "Crowded",
+  "mapCommercialQuiet": "Quiet hours",
+  "mapCommercialNormal": "Normal hours",
+  "mapCommercialBusy": "Busy hours",
+  "mapCommercialVeryBusy": "Peak hours",
+  "mapCommercialUnavailable": "No data",
+  "mapCommercialEstimated": "Not measured here",
+  "mapCommercialLabel": "Foot traffic",
+  "mapObservedAt": "As of {time}",
+  "mapPopulationRange": "{min} – {max} people",
+  "mapAttribution": "Source: Seoul Real-time City Data",
+  "mapKeyMissing": "The map key is missing, so the map can't load. Check the KAKAO_NATIVE_APP_KEY build setting.",
+  "mapLoadFailed": "Could not load the map.",
+  "mapZoomIn": "Zoom in",
+  "mapZoomOut": "Zoom out",
+  "mapMyLocation": "My location",
+  "mapLocationUnavailable": "Location is off, so we can't center the map on you.",
+  "mapLegendSpot": "Places",
+  "mapLegendEvent": "Events",
+  "mapSearchThisArea": "Search this area",
+  "mapRegionRecommendationsTitle": "Recommended Regions",
+  "mapRegionRecommendationsAction": "Recommended regions",
+  "mapRegionRecommendationPartialData": "Based on partial data",
+  "mapRegionRecommendationsGatheringTitle": "We're still gathering data",
+  "mapRegionRecommendationsGathering": "We're still collecting the data behind these recommendations. Please check back soon.",
+  "mapRegionRecommendationsNoMatchTitle": "No regions match right now",
+  "mapRegionRecommendationsNoMatch": "No region meets the recommendation criteria at the moment. Please check back later.",
+  "mapRegionRecommendationsError": "Couldn't load recommended regions.",
+  "mapRegionRecommendationsRetry": "Retry",
+  "mapRegionRecommendationsRetryExhausted": "We tried several times and still couldn't load this. Please try again later.",
+  "mapScoreFactorCongestion": "Expected crowd",
+  "mapScoreFactorVisitorVolume": "Visitor volume",
+  "mapScoreFactorStayIntensity": "Stay intensity",
+  "mapScoreFactorSpendingIntensity": "Spending intensity",
+  "mapScoreFactorDistance": "Distance",
+  "mapRegionRecommendationsNeedsLocationTitle": "Location needed",
+  "mapRegionRecommendationsNeedsLocation": "Recommendations are based on regions near you, so we need your location to suggest places.",
+  "mapRegionRecommendationsAllowLocation": "Allow location",
+  "mapRegionRecommendationsOriginMyLocation": "My location",
+  "mapRegionRecommendationsOriginMapCenter": "Map center",
+  "mapRegionProvinceAndDistance": "{province} · {distance}",
+  "mapRegionStrengthCongestion": "Expected to be less crowded",
+  "mapRegionStrengthVisitorVolume": "Drew many visitors recently",
+  "mapRegionStrengthStayIntensity": "Visitors stay longer",
+  "mapRegionStrengthSpendingIntensity": "Lively spending",
+  "mapRegionStrengthDistance": "Close by",
+  "mapRegionRecommendationsAbout": "How are these picked?",
+  "mapRegionAboutTitle": "How these regions are picked",
+  "mapRegionAboutIntro": "Within the province of your reference location, we compare the other districts — excluding the one the reference location is in — and rank them. The following factors are considered together.",
+  "mapRegionAboutCongestion": "Korea Tourism Organization forecast of visitor concentration. Only today’s forecast is used, averaged from attraction level up to the district.\nThe value is inverted, so less crowded scores higher.",
+  "mapRegionAboutVisitorVolume": "Korea Tourism Organization regional visitor counts. Only non-resident and foreign visits are counted; residents are excluded as everyday local movement.\nA 7-day average is used.",
+  "mapRegionAboutIntensityTitle": "Stay intensity · Spending intensity",
+  "mapRegionAboutIntensity": "Korea Tourism Organization tourism demand indicators. The district’s latest monthly value is used; it updates once a month, so the value stays the same for a month. Higher is better for both.\nSpending intensity is based on non-resident spending.",
+  "mapRegionAboutDistance": "The distance from your reference location to that region. Closer scores higher.",
+  "mapRegionAboutScoringTitle": "Common rules",
+  "mapRegionAboutScoringNormalize": "Normalization — each factor is stretched to 0–100 against the minimum and maximum among that province’s candidates. The same number therefore means something different in another province.",
+  "mapRegionAboutScoringCongestion": "Rank — it covers all candidates in the province, not just the ones returned.",
+  "mapRegionAboutScoringDistance": "Missing data — factors with no data are left out of the calculation.",
+  "mapRegionAboutScoringTotal": "Candidates — chosen only within the province of your reference location, excluding the district it is in. Regions without enough attractions are excluded.",
+  "dmMessagesAction": "DM",
+  "dmUnreadBadgeLabel": "Unread DMs",
+  "dmUnavailableBody": "Please try again in a moment.",
+  "@dmUnavailableBody": {
+    "description": "Body of the DM list error state."
+  },
+  "dmRetry": "Try again",
+  "@dmRetry": {
+    "description": "Retry action in DM error states."
+  },
+  "dmReportSubmitted": "Report submitted.",
+  "@dmReportSubmitted": {
+    "description": "Confirmation after reporting DM messages."
+  },
+  "dmReportFailed": "Couldn’t submit the report.",
+  "@dmReportFailed": {
+    "description": "Shown when reporting DM messages failed."
+  },
+  "dmEmptyMessage": "This message is no longer available",
+  "@dmEmptyMessage": {
+    "description": "Placeholder inside a message bubble that has no body and no photo."
+  },
+  "dmConversationsTitle": "DM",
+  "dmConversationsEmptyTitle": "No DMs yet",
+  "dmConversationsEmptyBody": "Your conversations will show up here.",
+  "dmConversationsUnavailable": "Couldn’t load your DMs",
+  "dmPhotoMessagePreview": "Photo",
+  "dmUnreadCountLabel": "{count} unread DMs",
+  "dmUnreadCountOverflow": "9+",
+  "dmMessageInputHint": "Message…",
+  "dmSendAction": "Send",
+  "dmSendFailed": "Not sent",
+  "dmRetryAction": "Retry",
+  "dmRetryExhausted": "Couldn’t send after several tries",
+  "dmSendingLabel": "Sending…",
+  "dmTypingIndicator": "{nickname} is typing…",
+  "dmSyncFailedBanner": "Couldn’t refresh",
+  "dmConversationEmpty": "Say hello to start the conversation.",
+  "dmSelectMessagesAction": "Select messages",
+  "dmSelectionCount": "{count} selected",
+  "dmSelectionCancel": "Cancel selection",
+  "dmReportSelectedAction": "Report",
+  "errorResendCooldownActive": "Please wait a minute before requesting another code.",
+  "errorAlreadyVerified": "This email is already verified.",
+  "errorNotEmailMember": "This account's email is managed by your social provider.",
+  "errorInvalidEmailFormat": "Enter a valid email address.",
+  "errorEmailNotVerified": "Verify your email to continue.",
+  "errorSessionExpiredSignInAgain": "Your session ended for security reasons. Please sign in again.",
+  "verificationCodeExpired": "That code expired. Request a new one.",
+  "verificationCodeConsumed": "That code was already used. Request a new one.",
+  "verificationMaxAttempts": "Too many attempts. Request a new code.",
+  "verificationCodeMismatch": "That code isn't valid or has expired. Check it and try again, or request a new one.",
+  "emailVerificationChangeAddress": "Wrong address?",
+  "emailVerificationChangeAddressTitle": "Change email address",
+  "emailVerificationChangeAddressBody": "We'll send a new code to this address. Your previous code stops working.",
+  "emailVerificationAddressChanged": "New code sent to the updated address.",
+  "emailVerificationResendCountdown": "Resend available in {seconds}s",
+  "emailVerificationNeedsResend": "Your previous code is no longer valid. Send a new code to continue.",
+  "errorMemberAlreadyRegistered": "This email is already registered. Try signing in instead.",
+  "errorInvalidInput": "Some of the details you entered aren't valid. Check them and try again.",
+  "errorAccountInactive": "This account is inactive. Contact support to restore it.",
+  "errorVerificationRateLimited": "Too many verification requests. Try again later.",
+  "errorVerificationNotFound": "That verification has expired. Request a new code.",
+  "errorPasswordPolicyViolation": "Your password doesn't meet the requirements. Use at least 8 characters.",
+  "passwordResetChangeEmail": "Use a different email",
+  "passwordResetNoCodeHint": "No code yet? Check your spam folder, or send it again.",
+  "passwordResetConfirmSubtitleWithEmail": "Enter the 6-digit code sent to {email} and choose a new password.",
+  "errorPasswordResetNoAccount": "No password account found for this email. If you signed up with Kakao, Google, or Apple, sign in with that instead.",
+  "spotQaEntryAction": "How is it right now?",
+  "spotQaQuestionsTitle": "Questions",
+  "spotQaQuestionsEmptyTitle": "No questions yet",
+  "spotQaQuestionsEmptyBody": "Be the first to ask about this place.",
+  "spotQaQuestionsUnavailable": "Couldn't load questions.",
+  "spotQaAnswersUnavailable": "Couldn't load answers.",
+  "spotQaAnswersEmpty": "No answers yet. Share what you know about this place.",
+  "spotQaResolvedLabel": "Resolved",
+  "spotQaUnresolvedLabel": "Open",
+  "spotQaResolveAction": "Resolve",
+  "spotQaResolveFailed": "Couldn't mark it as resolved. Please try again.",
+  "spotQaAskAction": "Ask a question",
+  "spotQaAnswerAction": "Answer",
+  "spotQaReplyAction": "Reply",
+  "spotQaAskTitle": "Ask a question",
+  "spotQaAnswerTitle": "Write an answer",
+  "spotQaReplyTitle": "Write a reply",
+  "spotQaBodyHint": "What would you like to know?",
+  "spotQaAnswerBodyHint": "Share what you know.",
+  "spotQaSubmitAction": "Post",
+  "spotQaSubmitFailed": "Couldn't post it. Please try again.",
+  "spotQaDeleteAction": "Delete",
+  "spotQaDeleteFailed": "Couldn't delete it. Please try again.",
+  "spotQaDmAction": "Send a message",
+  "spotQaDmFailed": "Couldn't start the conversation. Please try again.",
+  "spotQaOriginCardTitle": "Quoted question",
+  "spotQaAnswerCount": "{count, plural, =0{No answers} =1{1 answer} other{{count} answers}}",
+  "spotQaMyQuestionsTitle": "My questions",
+  "spotQaMyQuestionsEntry": "My questions",
+  "spotQaMyQuestionsEmptyTitle": "You haven't asked anything yet",
+  "spotQaMyQuestionsEmptyBody": "Ask about a place from its detail page.",
+  "spotQaMyQuestionsUnavailable": "Couldn't find this question. It may have been deleted or hidden.",
+  "spotQaNewAnswerBadge": "{count, plural, =1{1 new answer} other{{count} new answers}}",
+  "spotQaDmEntry": "Messages",
+  "spotQaEntryQuestionCount": "{count, plural, =0{No questions yet} =1{1 question} other{{count} questions}}",
+  "spotQaComposeContext": "Asking about {spot}",
+  "spotQaSuggestTitle": "Not sure what to ask?",
+  "spotQaSuggestCrowd": "Crowds",
+  "spotQaSuggestParking": "Parking",
+  "spotQaSuggestWeather": "Rainy day",
+  "spotQaSuggestHours": "Open now",
+  "spotQaBodyHintExample": "e.g. How busy is it right now? Is parking easy?",
+  "spotQaFillCrowd": "Is it crowded right now?",
+  "spotQaFillParking": "Is parking available?",
+  "spotQaFillWeather": "Is it worth visiting in the rain?",
+  "spotQaFillHours": "Is it open right now?",
+  "spotQaMyQuestionsFailed": "Couldn't load your questions.",
+  "spotQaMyQuestionsSignInBody": "Sign in to see the questions you've asked and their answers.",
+  "spotQaPhotoUploadFailed": "{count, plural, =1{Couldn't upload 1 photo.} other{Couldn't upload {count} photos.}}",
+  "spotQaUnresolveAction": "Unresolve",
+  "spotQaUnresolveFailed": "Couldn't undo it. Please try again.",
+  "alarmSettingsTitle": "Notifications",
+  "@alarmSettingsTitle": {
+    "description": "Title of the notification settings screen."
+  },
+  "settingsNotifications": "Notifications",
+  "@settingsNotifications": {
+    "description": "Settings row that opens notification settings."
+  },
+  "alarmCategoryMessage": "Messages",
+  "@alarmCategoryMessage": {
+    "description": "Notification category: direct messages."
+  },
+  "alarmCategoryMessageDescription": "New direct messages",
+  "@alarmCategoryMessageDescription": {
+    "description": "Explains what the messages category covers."
+  },
+  "alarmCategorySpotQa": "Questions & answers",
+  "@alarmCategorySpotQa": {
+    "description": "Notification category: spot questions and answers."
+  },
+  "alarmCategorySpotQaDescription": "Answers to your questions and replies to your answers",
+  "@alarmCategorySpotQaDescription": {
+    "description": "Explains what the Q&A category covers."
+  },
+  "alarmOsDisabledNotice": "Notifications are turned off for this app in your device settings, so nothing will arrive.",
+  "@alarmOsDisabledNotice": {
+    "description": "Shown when the OS-level notification permission is off."
+  },
+  "alarmSettingsLoadFailed": "Couldn't load your notification settings.",
+  "@alarmSettingsLoadFailed": {
+    "description": "Shown when notification preferences fail to load."
+  },
+  "alarmSettingsSaveFailed": "Couldn't save that. Please try again.",
+  "@alarmSettingsSaveFailed": {
+    "description": "Shown when toggling a notification category fails."
+  },
+  "relationConnect": "Add to my map",
+  "relationConnected": "Added",
+  "relationConnectFailed": "Couldn't add. Please try again.",
+  "relationSignInToConnect": "Sign in to add this person to your map.",
+  "relationMapTitle": "Trips we share",
+  "relationMapCount": "{count} people",
+  "@relationMapCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relationMapEmpty": "No one yet. Share your map and whoever opens it can add themselves.",
+  "relationMapMe": "Me",
+  "relationOverlapWith": "{count} in common",
+  "@relationOverlapWith": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relationRemove": "Remove",
+  "relationRemoved": "Removed from your map.",
+  "relationRemoveFailed": "Couldn't remove. Please try again.",
+  "relationMapHint": "The closer to the center, the more you have in common.",
+  "commonMore": "Show more",
+  "termsOpenInBrowser": "Open in browser",
+  "termsDocumentLoadFailed": "Couldn't load the document. Check your connection."
 }
