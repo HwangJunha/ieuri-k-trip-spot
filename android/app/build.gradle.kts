@@ -69,6 +69,32 @@ android {
         versionName = flutter.versionName
     }
 
+    // 개발과 운영을 **한 기기에 함께 깔기 위해** applicationId를 가른다
+    // (2026-08-25 결정). 같은 id면 한쪽이 다른 쪽을 덮어써, 운영에서 난 버그를
+    // 개발 빌드로 재현하려면 지웠다 깔기를 반복해야 한다.
+    //
+    // **운영은 접미사를 붙이지 않는다.** applicationId는 스토어에서 앱의 정체성이라
+    // 한 번 올리면 바꿀 수 없다 — 새로 받는 쪽은 개발이다.
+    // AGP 8부터 기본으로 꺼져 있다 — 아래 `resValue`를 쓰려면 명시해야 한다.
+    buildFeatures {
+        resValues = true
+    }
+
+    flavorDimensions += "env"
+    productFlavors {
+        create("dev") {
+            dimension = "env"
+            applicationIdSuffix = ".dev"
+            // 홈 화면에서 바로 구분되어야 한다. 아이콘까지 다르게 하는 것은
+            // 별도 작업이고, 우선 이름으로 가른다.
+            resValue("string", "app_name", "KTS Dev")
+        }
+        create("prod") {
+            dimension = "env"
+            resValue("string", "app_name", "K-Trip Spot")
+        }
+    }
+
     signingConfigs {
         if (hasReleaseKeystore) {
             create("release") {

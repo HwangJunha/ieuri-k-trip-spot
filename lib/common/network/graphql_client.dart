@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../localization/locale_controller.dart';
 import '../storage/secure_storage.dart';
+import 'access_gateway.dart';
 import 'auth_error_classifier.dart';
 import 'graphql_endpoint.dart';
 
@@ -98,7 +99,12 @@ GraphQLClient graphqlClient(Ref ref) {
 
   final HttpLink httpLink = HttpLink(
     GraphqlEndpoint.resolve(),
-    defaultHeaders: const <String, String>{'X-App-Key': _appKey},
+    defaultHeaders: <String, String>{
+      'X-App-Key': _appKey,
+      // 개발 서버는 Cloudflare Access 뒤에 있다 — 없으면 GraphQL 응답 대신
+      // 로그인 HTML이 온다. 운영 빌드에서는 빈 맵이라 아무것도 붙지 않는다.
+      ...AccessGateway.headers,
+    },
     httpClient: _TimeoutHttpClient(),
   );
 

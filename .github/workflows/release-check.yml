@@ -83,11 +83,14 @@ jobs:
         run: |
           fail=0
 
-          label=$(grep -oE 'android:label="[^"]*"' android/app/src/main/AndroidManifest.xml | head -1 | cut -d'"' -f2)
+          # 앱 이름은 flavor별 resValue로 정해진다(매니페스트는 @string/app_name).
+          # 운영 flavor의 값만 본다 — dev는 "KTS Dev"인 게 정상이다.
+          label=$(grep -A3 'create("prod")' android/app/build.gradle.kts \
+                  | grep -oE '"app_name", "[^"]*"' | sed 's/.*, "//;s/"//')
           case "$label" in
             ''|*example*|*_*)
-              echo "::error::Android 앱 이름이 기본값처럼 보인다: '$label'"; fail=1;;
-            *) echo "Android 앱 이름: $label";;
+              echo "::error::운영 앱 이름이 비었거나 기본값처럼 보인다: '$label'"; fail=1;;
+            *) echo "운영 앱 이름: $label";;
           esac
 
           appid=$(grep -oE 'applicationId = "[^"]*"' android/app/build.gradle.kts | head -1 | cut -d'"' -f2)
@@ -96,6 +99,14 @@ jobs:
               echo "::error::Android applicationId가 기본값이다: '$appid'"; fail=1;;
             *) echo "Android applicationId: $appid";;
           esac
+
+          # **운영 flavor에 접미사가 붙으면 안 된다.** 붙은 채로 스토어에 올리면
+          # 되돌릴 수 없다 — applicationId는 앱의 정체성이다.
+          if grep -A3 'create("prod")' android/app/build.gradle.kts | grep -q 'applicationIdSuffix'; then
+            echo "::error::운영 flavor에 applicationIdSuffix가 있다 — 스토어 id가 바뀐다"; fail=1
+          else
+            echo "운영 flavor 접미사 없음"
+          fi
 
           # iOS 권한 사유 문구 — 비어 있으면 앱스토어 심사에서 반려된다.
           for key in NSLocationWhenInUseUsageDescription NSPhotoLibraryUsageDescription; do

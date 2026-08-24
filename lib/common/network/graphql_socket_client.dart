@@ -2,6 +2,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../storage/secure_storage.dart';
+import 'access_gateway.dart';
 import 'graphql_endpoint.dart';
 
 part 'graphql_socket_client.g.dart';
@@ -46,6 +47,9 @@ GraphQLClient graphqlSocketClient(Ref ref) {
     GraphqlEndpoint.resolveWebSocket(),
     subProtocol: GraphQLProtocol.graphqlTransportWs,
     config: SocketClientConfig(
+      // 웹소켓 핸드셰이크도 HTTP 업그레이드라 Cloudflare Access를 지난다 —
+      // 헤더가 없으면 개발 서버에서 연결이 거부된다. 운영 빌드에서는 빈 맵이다.
+      headers: AccessGateway.headers.isEmpty ? null : AccessGateway.headers,
       autoReconnect: true,
       delayBetweenReconnectionAttempts: _reconnectDelay,
       // **연결 유지가 목적이라 비활성 타임아웃을 두지 않는다.** 기본 30초는 조용한
