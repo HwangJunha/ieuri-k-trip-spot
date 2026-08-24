@@ -134,6 +134,14 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
       // 불일치·콘솔 미등록이 전부 이 갈래로 온다.
       _log.e('google 로그인 실패: code=${e.code} ${e.description}');
       throw const AuthFailure(AuthFailureKind.unknown);
+    } on AuthFailure {
+      rethrow; // 위에서 이미 원인을 남겼다.
+    } on Object catch (error, stackTrace) {
+      // **SDK가 다른 예외를 던지는 경로가 있다.** `GoogleSignInException`만
+      // 잡으면 그 예외는 그대로 위로 새어 화면에 "문제가 발생했습니다"만
+      // 뜨고 원인이 사라진다(실기기 확인 2026-08-25).
+      _log.e('google 로그인 실패(비 SDK 예외)', error: error, stackTrace: stackTrace);
+      throw const AuthFailure(AuthFailureKind.unknown);
     }
   }
 
@@ -235,6 +243,11 @@ class SnsAuthenticatorImpl implements SnsAuthenticator {
       // 구글과 같은 이유로 원인을 남긴다 — App ID 미등록·entitlement 누락이
       // 전부 이 갈래로 오는데, 뭉개면 화면에 "문제가 발생했습니다"만 뜬다.
       _log.e('apple 로그인 실패: code=${e.code} ${e.message}');
+      throw const AuthFailure(AuthFailureKind.unknown);
+    } on AuthFailure {
+      rethrow;
+    } on Object catch (error, stackTrace) {
+      _log.e('apple 로그인 실패(비 SDK 예외)', error: error, stackTrace: stackTrace);
       throw const AuthFailure(AuthFailureKind.unknown);
     }
   }
