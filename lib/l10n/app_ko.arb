@@ -2277,5 +2277,13 @@
   "relationRemoved": "내 지도에서 뺐어요.",
   "relationRemoveFailed": "빼지 못했어요. 다시 시도해 주세요.",
   "relationMapHint": "가운데에 가까울수록 겹치는 곳이 많아요.",
-  "commonMore": "더 보기"
+  "commonMore": "더 보기",
+  "termsOpenInBrowser": "브라우저로 열기",
+  "@termsOpenInBrowser": {
+    "description": "약관 웹뷰 - 외부 브라우저로 열기 버튼"
+  },
+  "termsDocumentLoadFailed": "약관을 불러오지 못했습니다. 연결을 확인해 주세요.",
+  "@termsDocumentLoadFailed": {
+    "description": "약관 웹뷰 - 문서 로드 실패 안내"
+  }
 }

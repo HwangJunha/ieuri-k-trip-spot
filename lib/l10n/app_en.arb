@@ -1337,5 +1337,7 @@
   "relationRemoved": "Removed from your map.",
   "relationRemoveFailed": "Couldn't remove. Please try again.",
   "relationMapHint": "The closer to the center, the more you have in common.",
-  "commonMore": "Show more"
+  "commonMore": "Show more",
+  "termsOpenInBrowser": "Open in browser",
+  "termsDocumentLoadFailed": "Couldn't load the document. Check your connection."
 }

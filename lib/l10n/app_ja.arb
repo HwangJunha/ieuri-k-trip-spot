@@ -933,5 +933,7 @@
   "relationRemoved": "自分の地図から外しました。",
   "relationRemoveFailed": "外せませんでした。もう一度お試しください。",
   "relationMapHint": "中心に近いほど、重なる場所が多いです。",
-  "commonMore": "もっと見る"
+  "commonMore": "もっと見る",
+  "termsOpenInBrowser": "ブラウザで開く",
+  "termsDocumentLoadFailed": "規約を読み込めませんでした。接続をご確認ください。"
 }
