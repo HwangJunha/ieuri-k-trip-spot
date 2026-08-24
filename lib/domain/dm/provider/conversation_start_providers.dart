@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:logger/logger.dart';
 
 import '../../../common/log/app_log.dart';
 import '../repository/dm_repository.dart';
@@ -25,7 +26,7 @@ ConversationStarter conversationStarter(Ref ref) =>
 class ConversationStarter {
   const ConversationStarter(this._repository);
 
-  static const AppLog _log = AppLog('ConversationStarter');
+  static final Logger _log = appLogger('ConversationStarter');
 
   final DmRepository _repository;
 
@@ -36,12 +37,12 @@ class ConversationStarter {
       final DmMutationResult<String> result = await _repository
           .startConversation(counterpartMemberId);
       if (!result.succeeded) {
-        _log.warn('startConversation rejected: ${result.errorCode}');
+        _log.w('startConversation rejected: ${result.errorCode}');
         return null;
       }
       return result.value;
     } on Object catch (error) {
-      _log.warn('startConversation failed: ${error.runtimeType}');
+      _log.w('startConversation failed: ${error.runtimeType}');
       return null;
     }
   }

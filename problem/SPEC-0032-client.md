@@ -597,18 +597,23 @@ AI가 `if (kDebugMode)` 조건문으로 감싸는 형태로 만들어 놨다 —
 적어 표기가 갈리며, **수준 개념이 없어 "이건 경고인가 오류인가"가 코드에 남지 않는다.**
 게다가 `debugPrint`(39곳)와 `developer.log`(27곳) 두 가지가 섞여 있었다.
 
-### `lib/common/log/app_log.dart`
+### `package:logger`를 쓴다 — 직접 만들지 않는다
 
-`debug`/`info`/`warn`/`error` 네 메서드. **조건 판단은 로거 안 한 곳뿐이고
-호출부는 수준만 고른다.**
+처음에는 `AppLog`라는 래퍼를 손으로 만들었다. 사용자 지적으로 걷어냈다 —
+**수준 체계와 필터는 이미 검증된 라이브러리에 있고, 그것을 흉내 내는 코드를
+저장소가 떠안을 이유가 없다.**
+
+`lib/common/log/app_log.dart`는 이제 팩토리 하나와 필터·프린터만 남는다.
 
 ```dart
-static const AppLog _log = AppLog('MapSdkInitializer');
-_log.error('지도 SDK 초기화 실패', error, stackTrace);
+static final Logger _log = appLogger('MapSdkInitializer');
+_log.e('지도 SDK 초기화 실패', error: error, stackTrace: stackTrace);
 ```
 
-수준 값은 `package:logging` 관례(500/800/900/1000)를 따른다 — DevTools가 그 눈금으로
-색을 칠하므로 임의 값을 쓰면 안 된다.
+메서드는 라이브러리 관례를 따른다 — `t`/`d`/`i`/`w`/`e`/`f`.
+후보 비교: `logging`(dart.dev 공식, 이미 전이 의존성)은 `severe`/`warning`/`fine`이라
+log4j 이름과 더 멀고, `logger`(좋아요 1위)가 `w`/`e`로 짧다. 이름이 한 글자인 대신
+수준 경계가 명확하고 필터가 교체 가능해 이쪽을 골랐다.
 
 **릴리스는 `warn` 이상만 남긴다**(`_releaseMinimum`). `info`까지 내보내면 정상 흐름이
 전부 기기 로그(안드로이드 logcat)에 쌓여 다른 앱이 읽을 수 있고, 정작 필요한 오류가
@@ -616,9 +621,17 @@ _log.error('지도 SDK 초기화 실패', error, stackTrace);
 
 ### 결과
 
-27개 파일 61곳 교체(`kDebugMode`+`debugPrint` 34곳, `developer.log` 27곳).
-수준 분포는 error 4 · warn 52 · info 1 · debug 4. `if (kDebugMode)`와 `debugPrint`
-호출부는 **0건**이다(`app_log.dart`의 설명 주석에만 문자열로 남아 있다).
+28개 파일이 `appLogger`를 쓴다. `if (kDebugMode)`·`debugPrint`·`developer.log`
+호출부는 **전부 0건**이고, 손으로 만들었던 `AppLog` 클래스와 `LogLevel` enum도
+**0건**이다.
+
+**릴리스에서도 `warning` 이상은 남긴다**(`_AppLogFilter`). 라이브러리 기본값
+(`DevelopmentFilter`)은 릴리스에서 전부 끄는데, 그러면 실기기에서 무엇이 잘못됐는지
+볼 방법이 사라진다 — 지도가 조용히 비는 종류의 장애가 그렇게 묻혔다. 반대로 `info`까지
+내보내면 정상 흐름이 logcat에 쌓여 다른 앱이 읽을 수 있다.
+
+출력은 `[이름] 메시지` 한 줄이다. `PrettyPrinter`의 박스·이모지는 여러 줄로 늘어나
+실기기 로그에서 다른 로그와 뒤섞인다.
 
 ### 판단한 것
 

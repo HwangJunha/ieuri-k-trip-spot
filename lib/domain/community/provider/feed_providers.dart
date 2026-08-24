@@ -3,6 +3,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
+import 'package:logger/logger.dart';
+
 import '../../../common/log/app_log.dart';
 import '../../../common/pagination/page.dart';
 import '../../../common/model/post.dart';
@@ -135,7 +137,7 @@ class FeedState {
 /// 걸리므로 좌표가 있든 없든 같은 인자로 넘어간다.
 @Riverpod(retry: communityRetryPolicy)
 class FeedController extends _$FeedController {
-  static const AppLog _log = AppLog('FeedController');
+  static final Logger _log = appLogger('FeedController');
 
   CommunityRepository get _repository => ref.read(communityRepositoryProvider);
 
@@ -195,7 +197,7 @@ class FeedController extends _$FeedController {
       // 추가 로딩 실패는 이미 보고 있는 목록을 지우지 않는다 — 인디케이터만 걷는다.
       // hasMore가 그대로라 다시 스크롤하면 재시도된다. 서버 message는 PII를 담을 수
       // 있어 싣지 않고 실패 유형만 남긴다(POL-013).
-      _log.warn('posts loadMore failed: ${error.runtimeType}');
+      _log.w('posts loadMore failed: ${error.runtimeType}');
       state = AsyncData<FeedState>(current.copyWith(isLoadingMore: false));
     }
   }
@@ -244,7 +246,7 @@ class FeedController extends _$FeedController {
     } on Object catch (error) {
       // 실패 — 이전 값으로 롤백한다. 미인증이면 CommunityFailure.unauthenticated가
       // 오고, 로그인 유도는 화면이 담당한다.
-      _log.warn('toggleLike failed: ${error.runtimeType}');
+      _log.w('toggleLike failed: ${error.runtimeType}');
       replace(original);
       rethrow;
     }

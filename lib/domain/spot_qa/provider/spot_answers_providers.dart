@@ -1,5 +1,6 @@
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:logger/logger.dart';
 
 import '../../../common/log/app_log.dart';
 import '../../../common/pagination/page.dart';
@@ -54,7 +55,7 @@ class SpotAnswersState {
 /// 답변 조회가 실패해도 질문 본문은 그대로 뜬다.
 @Riverpod(retry: spotQaRetryPolicy)
 class SpotAnswersController extends _$SpotAnswersController {
-  static const AppLog _log = AppLog('SpotAnswersController');
+  static final Logger _log = appLogger('SpotAnswersController');
 
   SpotQaRepository get _repository => ref.read(spotQaRepositoryProvider);
 
@@ -90,7 +91,7 @@ class SpotAnswersController extends _$SpotAnswersController {
         ),
       );
     } on Object catch (error) {
-      _log.warn('spotAnswers loadMore failed: ${error.runtimeType}');
+      _log.w('spotAnswers loadMore failed: ${error.runtimeType}');
       state = AsyncData<SpotAnswersState>(
         current.copyWith(isLoadingMore: false),
       );

@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:kakao_map_sdk/kakao_map_sdk.dart';
+import 'package:logger/logger.dart';
 
 import '../../../common/log/app_log.dart';
 import '../model/congestion_level.dart';
@@ -24,7 +25,7 @@ import 'map_marker_icons.dart';
 class MapOverlayPainter {
   MapOverlayPainter(this._controller);
 
-  static const AppLog _log = AppLog('MapOverlayPainter');
+  static final Logger _log = appLogger('MapOverlayPainter');
 
   final KakaoMapController _controller;
 
@@ -145,7 +146,7 @@ class MapOverlayPainter {
 
         if (isNewcomer) await _playAppearance(poi, token);
       } on Object catch (error, stackTrace) {
-        _log.warn('마커 갱신 실패(${marker.name})', error, stackTrace);
+        _log.w('마커 갱신 실패(${marker.name})', error: error, stackTrace: stackTrace);
       }
     }
 
@@ -154,7 +155,7 @@ class MapOverlayPainter {
       try {
         await _markers[i].hide();
       } on Object catch (error, stackTrace) {
-        _log.warn('마커 숨김 실패', error, stackTrace);
+        _log.w('마커 숨김 실패', error: error, stackTrace: stackTrace);
       }
     }
 
@@ -168,7 +169,7 @@ class MapOverlayPainter {
       _visibleMarkers = List<MapMarker>.of(markers);
     }
 
-    _log.debug('마커 ${markers.length}개 표시 (풀 ${_markers.length}개)');
+    _log.d('마커 ${markers.length}개 표시 (풀 ${_markers.length}개)');
 
     // 클러스터는 그리지 않는다 — 서버가 필드를 제거했다(2026-08-10).
     // 저줌에서 마커가 몰리는 문제는 격자 솎아내기가 맡는다.
@@ -213,7 +214,7 @@ class MapOverlayPainter {
       // 연출은 있으면 좋은 것이지 마커 표시의 조건이 아니다(R9 > R11·R12 아님,
       // 설계 §4.1) — 실패하면 조용히 제 크기로 확정하고 지도는 계속 돌아간다.
     } on Object catch (error, stackTrace) {
-      _log.warn('마커 등장 연출 생략', error, stackTrace);
+      _log.w('마커 등장 연출 생략', error: error, stackTrace: stackTrace);
       await _settleScale(poi);
     }
   }
@@ -261,7 +262,7 @@ class MapOverlayPainter {
       // 위치 갱신 하나가 실패해도 지도는 계속 돌아야 한다 — 다음 좌표에서 다시
       // 시도한다.
     } on Object catch (error, stackTrace) {
-      _log.warn('내 위치 표시 실패', error, stackTrace);
+      _log.w('내 위치 표시 실패', error: error, stackTrace: stackTrace);
     }
   }
 
@@ -271,7 +272,7 @@ class MapOverlayPainter {
     try {
       await _myLocation?.hide();
     } on Object catch (error, stackTrace) {
-      _log.warn('내 위치 숨김 실패', error, stackTrace);
+      _log.w('내 위치 숨김 실패', error: error, stackTrace: stackTrace);
     }
   }
 
@@ -321,7 +322,7 @@ class MapOverlayPainter {
           _polygons.add(await layer.addPolygonShape(points, style));
         }
       } on Object catch (error, stackTrace) {
-        _log.warn('폴리곤 갱신 실패(${overlay.name})', error, stackTrace);
+        _log.w('폴리곤 갱신 실패(${overlay.name})', error: error, stackTrace: stackTrace);
       }
     }
 
@@ -330,11 +331,11 @@ class MapOverlayPainter {
       try {
         await _polygons[i].hide();
       } on Object catch (error, stackTrace) {
-        _log.warn('폴리곤 숨김 실패', error, stackTrace);
+        _log.w('폴리곤 숨김 실패', error: error, stackTrace: stackTrace);
       }
     }
 
-    _log.debug('폴리곤 ${drawable.length}개 표시 (풀 ${_polygons.length}개)');
+    _log.d('폴리곤 ${drawable.length}개 표시 (풀 ${_polygons.length}개)');
   }
 
   /// 폴리곤만 감춘다. 줌 게이트에 걸렸거나 혼잡도가 실패했을 때 쓴다 — **마커는
@@ -352,7 +353,7 @@ class MapOverlayPainter {
     try {
       await _myLocation?.remove();
     } on Object catch (error, stackTrace) {
-      _log.warn('내 위치 제거 실패', error, stackTrace);
+      _log.w('내 위치 제거 실패', error: error, stackTrace: stackTrace);
     }
     _myLocation = null;
 
@@ -469,7 +470,7 @@ class MapOverlayPainter {
       try {
         await poi.remove();
       } on Object catch (error, stackTrace) {
-        _log.warn('마커 제거 실패', error, stackTrace);
+        _log.w('마커 제거 실패', error: error, stackTrace: stackTrace);
       }
     }
   }
@@ -493,11 +494,11 @@ class MapOverlayPainter {
         await polygon.remove();
         removed++;
       } on Object catch (error, stackTrace) {
-        _log.warn('폴리곤 제거 실패', error, stackTrace);
+        _log.w('폴리곤 제거 실패', error: error, stackTrace: stackTrace);
       }
     }
 
-    _log.debug('폴리곤 $removed/${targets.length}개 제거');
+    _log.d('폴리곤 $removed/${targets.length}개 제거');
   }
 }
 

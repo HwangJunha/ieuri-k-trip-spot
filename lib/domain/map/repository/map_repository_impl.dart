@@ -2,6 +2,8 @@ import 'package:gql/ast.dart' show DocumentNode;
 import 'package:graphql_flutter/graphql_flutter.dart';
 
 import '../../../common/location/coordinates.dart';
+import 'package:logger/logger.dart';
+
 import '../../../common/log/app_log.dart';
 import '../../../common/network/graphql_debug_log.dart';
 import '../../../common/network/graphql_failure.dart';
@@ -25,7 +27,7 @@ import 'map_schema.graphql.dart';
 class MapRepositoryImpl implements MapRepository {
   MapRepositoryImpl(this._client);
 
-  static const AppLog _log = AppLog('MapRepository');
+  static final Logger _log = appLogger('MapRepository');
 
   final GraphQLClient _client;
 
@@ -128,7 +130,7 @@ class MapRepositoryImpl implements MapRepository {
     // 121건이 와야 정상인데 매핑에서 걸러지면 폴리곤이 조용히 사라진다 — 실기기에서
     // 혼잡도는 왔는데 폴리곤이 하나도 안 그려진 적이 있어 남긴다.
     if (mapped.length != raw.length) {
-      _log.warn(
+      _log.w(
         '경계 ${raw.length}건 중 ${raw.length - mapped.length}건이 '
         '매핑에서 제외됐다(좌표 형식 불일치)',
       );

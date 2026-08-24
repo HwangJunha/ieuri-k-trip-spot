@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:logger/logger.dart';
 
 import '../log/app_log.dart';
 import '../model/composer_photo.dart';
@@ -29,7 +30,7 @@ DraftStore draftStore(Ref ref) =>
 class DraftStoreImpl implements DraftStore {
   DraftStoreImpl(this._prefs);
 
-  static const AppLog _logger = AppLog('DraftStore');
+  static final Logger _logger = appLogger('DraftStore');
 
   final SharedPreferences _prefs;
 
@@ -170,5 +171,5 @@ class DraftStoreImpl implements DraftStore {
   /// 실패를 남긴다. **초안의 내용은 절대 싣지 않는다**(POL-013) — 제목·본문·태그가
   /// 로그에 실리면 안 되므로 원인의 타입까지만 남긴다(§7).
   void _log(String what, Object error) =>
-      _logger.warn('$what: ${error.runtimeType}');
+      _logger.w('$what: ${error.runtimeType}');
 }

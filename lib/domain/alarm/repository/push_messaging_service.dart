@@ -1,4 +1,5 @@
 import 'dart:io' show Platform;
+import 'package:logger/logger.dart';
 
 import '../../../common/log/app_log.dart';
 import '../model/device_registration.dart';
@@ -65,11 +66,11 @@ abstract interface class PushMessagingService {
 class UnavailablePushMessagingService implements PushMessagingService {
   const UnavailablePushMessagingService();
 
-  static const AppLog _log = AppLog('UnavailablePushMessagingService');
+  static final Logger _log = appLogger('UnavailablePushMessagingService');
 
   @override
   Future<String?> token() async {
-    _log.warn(
+    _log.w(
       'Firebase 설정이 없어 FCM 토큰을 건너뛴다 — '
       '앱은 알림 없이 정상 동작한다(설계 §11)',
     );

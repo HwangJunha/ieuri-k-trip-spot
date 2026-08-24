@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:logger/logger.dart';
 
 import '../../../common/log/app_log.dart';
 import '../../../common/model/list_equality.dart';
@@ -111,7 +112,7 @@ class ConversationState {
 /// 로컬에 남아 있으면 그대로 보여준다(AC18-3).
 @riverpod
 class ConversationController extends _$ConversationController {
-  static const AppLog _log = AppLog('ConversationController');
+  static final Logger _log = appLogger('ConversationController');
 
   DmRepository get _repository => ref.read(dmRepositoryProvider);
   MessageCacheStore get _cache => ref.read(messageCacheStoreProvider);
@@ -140,7 +141,7 @@ class ConversationController extends _$ConversationController {
         .listen(
           _onRemoteMessage,
           onError: (Object error, StackTrace _) {
-            _log.warn('newMessage stream failed: ${error.runtimeType}');
+            _log.w('newMessage stream failed: ${error.runtimeType}');
             if (error is DmFailure && error.permanent) {
               // 재연결해도 같은 결과다 — 구독을 접는다.
               _subscription?.cancel();
@@ -214,7 +215,7 @@ class ConversationController extends _$ConversationController {
       return result.succeeded ? result.value : null;
     } on Object catch (error) {
       // 읽음 처리 실패는 대화를 막지 않는다 — 다음 진입에서 다시 시도된다.
-      _log.warn('markConversationRead failed: ${error.runtimeType}');
+      _log.w('markConversationRead failed: ${error.runtimeType}');
       return null;
     }
   }
@@ -247,7 +248,7 @@ class ConversationController extends _$ConversationController {
     } on Object catch (error) {
       // 조회 실패는 화면을 오류로 바꾸지 않는다 — 캐시가 있으면 그것이 계속
       // 보이는 것이 맞다(AC18-4). 캐시가 비었으면 빈 대화로 남는다.
-      _log.warn('fetchMessages failed: ${error.runtimeType}');
+      _log.w('fetchMessages failed: ${error.runtimeType}');
       state = state.copyWith(isSyncing: false, syncFailed: true);
     }
   }
@@ -276,7 +277,7 @@ class ConversationController extends _$ConversationController {
         isLoadingMore: false,
       );
     } on Object catch (error) {
-      _log.warn('loadMore failed: ${error.runtimeType}');
+      _log.w('loadMore failed: ${error.runtimeType}');
       state = state.copyWith(isLoadingMore: false);
     }
   }
@@ -362,7 +363,7 @@ class ConversationController extends _$ConversationController {
         sourceAnswerId: sourceAnswerId ?? pending.spotQaOrigin?.answerId,
       );
       if (!result.succeeded) {
-        _log.warn('sendMessage rejected: ${result.errorCode}');
+        _log.w('sendMessage rejected: ${result.errorCode}');
         _replace(
           pending.id,
           pending.copyWith(status: MessageDeliveryStatus.failed),
@@ -388,7 +389,7 @@ class ConversationController extends _$ConversationController {
       _replace(pending.id, sent);
       await _persist();
     } on Object catch (error) {
-      _log.warn('sendMessage failed: ${error.runtimeType}');
+      _log.w('sendMessage failed: ${error.runtimeType}');
       _replace(
         pending.id,
         pending.copyWith(status: MessageDeliveryStatus.failed),

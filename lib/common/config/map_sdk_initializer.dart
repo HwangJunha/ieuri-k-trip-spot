@@ -1,4 +1,5 @@
 import 'package:kakao_map_sdk/kakao_map_sdk.dart';
+import 'package:logger/logger.dart';
 
 import '../log/app_log.dart';
 import 'kakao_config.dart';
@@ -18,7 +19,7 @@ import 'kakao_config.dart';
 /// 로그인과 **같은 네이티브 앱 키**를 쓰지만 SDK가 달라 초기화도 각각 필요하다
 /// (`KakaoSdk.init`은 로그인용, 이쪽은 지도용).
 abstract final class MapSdkInitializer {
-  static const AppLog _log = AppLog('MapSdkInitializer');
+  static final Logger _log = appLogger('MapSdkInitializer');
 
   /// 초기화에 성공했는가. 지도 화면이 이 값을 보고 안내로 대체할지 정한다.
   ///
@@ -30,7 +31,7 @@ abstract final class MapSdkInitializer {
     if (!KakaoConfig.isConfigured) {
       // 키가 없으면 지도는 반드시 실패한다. `--dart-define-from-file` 인자가
       // 빠졌을 때 가장 먼저 확인할 신호다.
-      _log.warn(
+      _log.w(
         'KAKAO_NATIVE_APP_KEY가 비어 지도 SDK 초기화를 건너뛴다 — '
         '지도 화면은 안내를 표시한다',
       );
@@ -43,7 +44,7 @@ abstract final class MapSdkInitializer {
     } on Exception catch (error, stackTrace) {
       // 키 해시가 등록되지 않았거나 네트워크가 없으면 여기로 온다. 앱 기동을
       // 막지 않고 지도 화면이 안내를 띄우게 둔다.
-      _log.error('지도 SDK 초기화 실패', error, stackTrace);
+      _log.e('지도 SDK 초기화 실패', error: error, stackTrace: stackTrace);
     }
   }
 }

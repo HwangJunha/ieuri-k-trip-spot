@@ -4,6 +4,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/localization/app_language.dart';
 import '../../../common/localization/locale_controller.dart';
+import 'package:logger/logger.dart';
+
 import '../../../common/log/app_log.dart';
 import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
@@ -125,7 +127,7 @@ final Set<SpotCategorySelection> liveSwipeSessions = <SpotCategorySelection>{};
 /// 피드를 새로 받는 계기는 앱 재시작·언어 전환·로그아웃·명시적 [reload]다.
 @Riverpod(keepAlive: true, retry: spotRetryPolicy)
 class SwipeController extends _$SwipeController {
-  static const AppLog _log = AppLog('SwipeController');
+  static final Logger _log = appLogger('SwipeController');
 
   SpotRepository get _repository => ref.read(spotRepositoryProvider);
 
@@ -275,7 +277,7 @@ class SwipeController extends _$SwipeController {
       }
 
       // 좋아요 실패는 비치명적(spec §4): 조용히 로깅하고 카드 복원 안 함.
-      _log.warn('reactToSpot failed', error, stack);
+      _log.w('reactToSpot failed', error: error, stackTrace: stack);
     }
   }
 
@@ -324,7 +326,7 @@ class SwipeController extends _$SwipeController {
       );
     } catch (error, stack) {
       // 선제 조회 실패는 기존 스택을 유지하고 다음 스와이프에서 다시 시도한다.
-      _log.warn('prefetch failed', error, stack);
+      _log.w('prefetch failed', error: error, stackTrace: stack);
     } finally {
       _isPrefetching = false;
     }

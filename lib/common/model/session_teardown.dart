@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:logger/logger.dart';
 
 import '../log/app_log.dart';
 
@@ -18,7 +19,7 @@ import '../log/app_log.dart';
 class SessionTeardown {
   SessionTeardown();
 
-  static const AppLog _log = AppLog('SessionTeardown');
+  static final Logger _log = appLogger('SessionTeardown');
 
   final List<Future<void> Function()> _callbacks = <Future<void> Function()>[];
 
@@ -31,7 +32,7 @@ class SessionTeardown {
       try {
         await callback();
       } on Object catch (error, stackTrace) {
-        _log.warn('정리 작업 실패', error, stackTrace);
+        _log.w('정리 작업 실패', error: error, stackTrace: stackTrace);
       }
     }
   }

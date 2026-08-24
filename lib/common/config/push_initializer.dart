@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:logger/logger.dart';
 
 import '../log/app_log.dart';
 
@@ -20,7 +21,7 @@ import '../log/app_log.dart';
 /// `pushMessagingServiceProvider`가 스텁 구현을 골라 토큰을 발급하지 않고, 앱은 사용자가
 /// 알림 권한을 거부했을 때와 **같은 경로**를 탄다.
 abstract final class PushInitializer {
-  static const AppLog _log = AppLog('PushInitializer');
+  static final Logger _log = appLogger('PushInitializer');
 
   /// Firebase가 실제로 초기화됐는지. 설정 파일이 없으면 거짓이다.
   static bool get isReady => _isReady;
@@ -33,11 +34,11 @@ abstract final class PushInitializer {
       _isReady = true;
     } on Object catch (error, stackTrace) {
       // 앱 기동을 막지 않는다. 알림만 빠지고 나머지는 그대로 동작한다(설계 §3.1).
-      _log.warn(
+      _log.w(
         'Firebase 초기화를 건너뛴다 — 설정 파일이 없거나 잘못됐다. '
         '앱은 알림 없이 정상 동작한다(설계 §11)',
-        error,
-        stackTrace,
+        error: error,
+        stackTrace: stackTrace,
       );
     }
   }

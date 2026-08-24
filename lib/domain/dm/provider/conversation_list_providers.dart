@@ -1,4 +1,6 @@
 
+import 'package:logger/logger.dart';
+
 import '../../../common/log/app_log.dart';
 import '../../auth/model/auth_state.dart';
 import '../../auth/provider/auth_controller.dart';
@@ -121,7 +123,7 @@ bool hasUnreadConversations(Ref ref) {
 /// 메시지로 배지가 수시로 바뀐다 — 세션에 붙들어 두면 낡은 미읽음 수가 남는다.
 @Riverpod(retry: dmRetryPolicy)
 class ConversationListController extends _$ConversationListController {
-  static const AppLog _log = AppLog('ConversationListController');
+  static final Logger _log = appLogger('ConversationListController');
 
   DmRepository get _repository => ref.read(dmRepositoryProvider);
 
@@ -163,7 +165,7 @@ class ConversationListController extends _$ConversationListController {
       );
     } on Object catch (error) {
       // 이어읽기 실패는 이미 그려진 목록을 지우지 않는다 — 로딩 표시만 걷는다.
-      _log.warn('loadMore failed: ${error.runtimeType}');
+      _log.w('loadMore failed: ${error.runtimeType}');
       state = AsyncData<ConversationListState>(
         current.copyWith(isLoadingMore: false),
       );

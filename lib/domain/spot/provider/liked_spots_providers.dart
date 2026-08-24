@@ -2,6 +2,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/localization/locale_controller.dart';
+import 'package:logger/logger.dart';
+
 import '../../../common/log/app_log.dart';
 import '../../../common/pagination/page.dart';
 import '../model/liked_spot.dart';
@@ -105,7 +107,7 @@ class SelectedLikedCategory extends _$SelectedLikedCategory
 /// 재시도하지 않는 이 정책이 그것을 끊는다(R5).
 @Riverpod(retry: spotRetryPolicy)
 class LikedSpotsController extends _$LikedSpotsController {
-  static const AppLog _log = AppLog('LikedSpotsController');
+  static final Logger _log = appLogger('LikedSpotsController');
 
   SpotRepository get _repository => ref.read(spotRepositoryProvider);
 
@@ -158,7 +160,7 @@ class LikedSpotsController extends _$LikedSpotsController {
       //
       // 조용히 사라지면 디버깅할 수 없으므로 흔적은 남긴다. 서버 message는 PII를
       // 담을 수 있어 싣지 않고 실패 유형만 적는다(POL-013).
-      _log.warn('likedSpots loadMore failed: ${error.runtimeType}');
+      _log.w('likedSpots loadMore failed: ${error.runtimeType}');
       state = AsyncData<LikedSpotsState>(
         current.copyWith(isLoadingMore: false),
       );

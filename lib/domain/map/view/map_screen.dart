@@ -7,6 +7,8 @@ import 'package:kakao_map_sdk/kakao_map_sdk.dart';
 
 import '../../../common/config/map_sdk_initializer.dart';
 import '../../../common/location/coordinates.dart';
+import 'package:logger/logger.dart';
+
 import '../../../common/log/app_log.dart';
 import '../../../common/location/location_providers.dart';
 import '../../../common/navigation/picked_place.dart';
@@ -63,7 +65,7 @@ class MapScreen extends ConsumerStatefulWidget {
 }
 
 class _MapScreenState extends ConsumerState<MapScreen> {
-  static const AppLog _log = AppLog('MapScreen');
+  static final Logger _log = appLogger('MapScreen');
 
   KakaoMapController? _controller;
 
@@ -296,7 +298,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       // 혼잡도는 왔는데 조인 결과가 비면 경계 캐시와 id가 안 맞는다는 뜻이다.
       // 조용히 빈 화면이 되면 원인을 짚을 수 없어 남긴다.
       if (live.areas.isNotEmpty && overlays.isEmpty) {
-        _log.warn(
+        _log.w(
           '혼잡도 ${live.areas.length}곳이 왔지만 경계와 조인되지 않았다 '
           '(경계 ${boundaries.length}건). '
           '혼잡도 id: ${live.areas.map((CongestionArea a) => a.id).take(5).toList()} / '
@@ -314,7 +316,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     } on Object catch (error, stackTrace) {
       // 혼잡도 실패는 지도 전체의 실패가 아니다 — 마커는 그대로 두고 이 레이어만
       // 안내로 대체한다(R29).
-      _log.warn('혼잡도 레이어 실패', error, stackTrace);
+      _log.w('혼잡도 레이어 실패', error: error, stackTrace: stackTrace);
       await _painter?.clearCongestion();
       if (!mounted || generation != _congestionGeneration) return;
       setState(() {
@@ -383,7 +385,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     } on Object catch (error, stackTrace) {
       // 마커 조회 실패는 화면에 알리지 않는다. 실패할 때마다 배너를 띄우면 이동
       // 중에 안내가 깜빡인다 — 다만 원인은 볼 수 있어야 한다.
-      _log.warn('마커 조회 실패', error, stackTrace);
+      _log.w('마커 조회 실패', error: error, stackTrace: stackTrace);
     }
   }
 
