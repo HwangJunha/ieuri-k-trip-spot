@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../common/pagination/pagination_list_view.dart';
+import '../../../common/widget/skeleton_list.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/community_labels.dart';
 import '../../../common/model/post.dart';
+import '../model/community_skeleton_samples.dart';
 import '../provider/hidden_posts_providers.dart';
 import '../provider/moderation_providers.dart';
 
@@ -32,7 +34,24 @@ class HiddenPostsScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.communityHiddenPostsTitle)),
       body: SafeArea(
         child: state.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          // 데이터가 왔을 때와 같은 배치로 그린다 — 안내 문구는 목록 밖이라
+          // 로딩 중에도 그대로 있고, 뼈대는 그 아래 목록 자리에만 든다.
+          // 그래야 도착 순간에 문구가 위로 밀리지 않는다.
+          loading: () => Column(
+            children: <Widget>[
+              _Note(text: l10n.communityHiddenPostsNote),
+              Expanded(
+                child: SkeletonList(
+                  itemBuilder: (_, int index) => _HiddenPostRow(
+                    post:
+                        postSkeletonSamples[index % postSkeletonSamples.length],
+                    now: _skeletonNow,
+                    onUnhide: () {},
+                  ),
+                ),
+              ),
+            ],
+          ),
           error: (_, _) => _Notice(
             text: l10n.communityFeedUnavailable,
             onRetry: () => ref.invalidate(hiddenPostsControllerProvider),
@@ -63,7 +82,6 @@ class _List extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final AppLocalizations l10n = AppLocalizations.of(context);
     // 모든 줄이 같은 기준으로 상대 시각을 계산하도록 빌드 1회당 한 번만 읽는다.
     final DateTime now = DateTime.now().toUtc();
     return PaginationListView(
@@ -81,13 +99,10 @@ class _List extends ConsumerWidget {
       },
       itemBuilder: (BuildContext context, int index) {
         final Post post = data.items[index];
-        return ListTile(
-          title: Text(post.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: Text(relativePostTime(l10n, post.createdAt, now)),
-          trailing: TextButton(
-            onPressed: () => _unhide(context, ref, post),
-            child: Text(l10n.communityUnhideAction),
-          ),
+        return _HiddenPostRow(
+          post: post,
+          now: now,
+          onUnhide: () => _unhide(context, ref, post),
         );
       },
     );
@@ -115,6 +130,37 @@ class _List extends ConsumerWidget {
     if (outcome == ModerationOutcome.success) {
       ref.invalidate(hiddenPostsControllerProvider);
     }
+  }
+}
+
+/// 뼈대의 상대 시각 기준. **`DateTime.now()`를 쓰지 않는다** — 로딩이 길어지면
+/// 프레임마다 문구가 달라져 뼈대 아래 글자 폭이 흔들린다.
+final DateTime _skeletonNow = DateTime.utc(2026, 8, 1, 12);
+
+/// 숨긴 글 한 줄. **로딩 뼈대와 실제 목록이 같은 위젯을 쓴다** — 배치가 갈리면
+/// 데이터가 도착할 때 줄이 튄다.
+class _HiddenPostRow extends StatelessWidget {
+  const _HiddenPostRow({
+    required this.post,
+    required this.now,
+    required this.onUnhide,
+  });
+
+  final Post post;
+  final DateTime now;
+  final VoidCallback onUnhide;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    return ListTile(
+      title: Text(post.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text(relativePostTime(l10n, post.createdAt, now)),
+      trailing: TextButton(
+        onPressed: onUnhide,
+        child: Text(l10n.communityUnhideAction),
+      ),
+    );
   }
 }
 

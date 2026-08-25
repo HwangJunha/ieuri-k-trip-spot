@@ -91,13 +91,12 @@ class _FakeRepository implements NationalMapRepository {
   Future<CellDetail> fetchCellDetail({
     required String cellId,
     int? first,
-    String? after,
   }) async => CellDetail(
     cell: _cells.first,
-    spots: <CellSpot>[
+    spots: const <CellSpot>[
       CellSpot(
-        id: after == null ? 's1' : 's2',
-        title: after == null ? '첫 장소' : '다음 장소',
+        id: 's1',
+        title: '첫 장소',
         thumbnailImageUrl: '',
         categoryCode: 'c',
         categoryLabel: 'C',
@@ -106,8 +105,6 @@ class _FakeRepository implements NationalMapRepository {
         likeCount: 1,
       ),
     ],
-    hasMore: after == null,
-    endCursor: after == null ? 'cursor1' : null,
   );
 
   @override
@@ -189,7 +186,18 @@ class _FakeLibrary implements PhotoLibraryService {
   int requestCount = 0;
 
   @override
-  Future<bool> requestAccess() async => granted;
+  Future<PhotoAccess> requestAccess() async =>
+      granted ? PhotoAccess.granted : PhotoAccess.denied;
+
+  @override
+  Future<void> presentLimitedPicker() async {}
+
+  @override
+  Future<void> openSettings() async {}
+
+  @override
+  Future<PhotoAccess> currentAccess() async =>
+      granted ? PhotoAccess.granted : PhotoAccess.denied;
 
   @override
   Future<int> photoCount() async => coordinates.length;
@@ -301,9 +309,7 @@ ProviderContainer _container({
       if (library != null)
         photoLibraryServiceProvider.overrideWithValue(library),
       if (sheet != null) shareSheetServiceProvider.overrideWithValue(sheet),
-      locationServiceProvider.overrideWithValue(
-        _FakeLocationService(location),
-      ),
+      locationServiceProvider.overrideWithValue(_FakeLocationService(location)),
       if (boundaries != null)
         districtResolverProvider.overrideWith(
           (Ref ref) async => DistrictResolver(boundaries),
@@ -322,7 +328,9 @@ void main() {
   group('방문 등록 (R3·R30)', () {
     test('시군구 코드를 보내고 응답으로 캐시를 고친다', () async {
       final _FakeRepository repo = _FakeRepository(
-        cells: <MapCell>[_cell('1', <String>['11110'])],
+        cells: <MapCell>[
+          _cell('1', <String>['11110']),
+        ],
       );
       final ProviderContainer c = _container(repo: repo);
       await _readCells(c);
@@ -348,7 +356,9 @@ void main() {
 
     test('해제는 칸 id를 보낸다', () async {
       final _FakeRepository repo = _FakeRepository(
-        cells: <MapCell>[_cell('7', <String>['11110'], visited: true)],
+        cells: <MapCell>[
+          _cell('7', <String>['11110'], visited: true),
+        ],
       );
       final ProviderContainer c = _container(repo: repo);
       await _readCells(c);
@@ -401,10 +411,33 @@ void main() {
 
       await c.read(photoScanControllerProvider.notifier).start();
 
-      expect(
-        c.read(photoScanControllerProvider).resolvedCellCodes,
-        <String>['11110'],
+      expect(c.read(photoScanControllerProvider).resolvedCellCodes, <String>[
+        '11110',
+      ]);
+    });
+
+    test('등록 가드는 성공·실패 어느 쪽으로 끝나도 풀린다', () async {
+      final ProviderContainer c = _container(
+        repo: _FakeRepository(cells: <MapCell>[_cell('1', <String>['11110'])]),
+        library: _FakeLibrary(coordinates: const <GeoPoint>[]),
+        boundaries: boundaries,
       );
+      await _readCells(c);
+      final PhotoScanController controller = c.read(
+        photoScanControllerProvider.notifier,
+      );
+
+      // 한 번 잡으면 두 번째는 막힌다 — 리빌드마다 등록이 나가지 않게.
+      expect(controller.beginRegistration(), isTrue);
+      expect(controller.beginRegistration(), isFalse);
+
+      // 실패로 끝나도 풀린다. **예전에는 이걸 푸는 자리가 시트의 버튼뿐이라,
+      // awaitingConfirmation 단계에서는 영영 풀리지 않고 스피너만 돌았다.**
+      controller.registrationFailed();
+      expect(controller.beginRegistration(), isTrue);
+
+      controller.confirmed();
+      expect(controller.beginRegistration(), isTrue);
     });
 
     test('이미 방문한 시군구는 결과에서 빠진다 (R27)', () async {
@@ -428,10 +461,11 @@ void main() {
 
       await c.read(photoScanControllerProvider.notifier).start();
 
-      expect(
-        c.read(photoScanControllerProvider).resolvedCellCodes,
-        <String>['26110'],
-      );
+      final PhotoScanProgress p = c.read(photoScanControllerProvider);
+      expect(p.resolvedCellCodes, <String>['26110']);
+      // 등록 대상에서는 빠지되 **세기는 한다** — 안 그러면 이미 방문한 곳만
+      // 나온 스캔이 "0곳을 찾았어요"가 되어 실패로 읽힌다.
+      expect(p.alreadyOnMapCount, 1);
     });
 
     test('한국 밖 좌표는 판정하지 않는다 (R25)', () async {
@@ -513,10 +547,7 @@ void main() {
 
       c.read(photoScanControllerProvider.notifier).reset();
 
-      expect(
-        c.read(photoScanControllerProvider),
-        const PhotoScanProgress(),
-      );
+      expect(c.read(photoScanControllerProvider), const PhotoScanProgress());
     });
   });
 
@@ -527,7 +558,11 @@ void main() {
 
     test('미방문 지역이면 등록할 수 있다', () async {
       final ProviderContainer c = _container(
-        repo: _FakeRepository(cells: <MapCell>[_cell('1', <String>['11110'])]),
+        repo: _FakeRepository(
+          cells: <MapCell>[
+            _cell('1', <String>['11110']),
+          ],
+        ),
         location: const Coordinates(latitude: 37.5, longitude: 127.5),
         boundaries: boundaries,
       );
@@ -561,7 +596,11 @@ void main() {
 
     test('한국 밖이면 국내만 가능함을 알린다 (R35)', () async {
       final ProviderContainer c = _container(
-        repo: _FakeRepository(cells: <MapCell>[_cell('1', <String>['11110'])]),
+        repo: _FakeRepository(
+          cells: <MapCell>[
+            _cell('1', <String>['11110']),
+          ],
+        ),
         location: const Coordinates(latitude: 35.68, longitude: 139.7),
         boundaries: boundaries,
       );
@@ -574,7 +613,11 @@ void main() {
 
     test('위치를 얻지 못하면 사유를 남긴다 (R35)', () async {
       final ProviderContainer c = _container(
-        repo: _FakeRepository(cells: <MapCell>[_cell('1', <String>['11110'])]),
+        repo: _FakeRepository(
+          cells: <MapCell>[
+            _cell('1', <String>['11110']),
+          ],
+        ),
         boundaries: boundaries,
       );
 
@@ -622,41 +665,6 @@ void main() {
         throwsA(isA<Exception>()),
       );
       expect(c.read(shareControllerProvider), isFalse);
-    });
-  });
-
-  group('칸 상세 이어 읽기 (스펙 §11)', () {
-    test('다음 페이지가 뒤에 붙는다', () async {
-      final ProviderContainer c = _container(
-        repo: _FakeRepository(cells: <MapCell>[_cell('1', <String>['11110'])]),
-      );
-      final CellDetail first = await c.read(
-        cellDetailControllerProvider('1').future,
-      );
-      expect(first.spots, hasLength(1));
-      expect(first.hasMore, isTrue);
-
-      await c.read(cellDetailControllerProvider('1').notifier).loadMore();
-
-      final CellDetail after = c.read(cellDetailControllerProvider('1')).value!;
-      expect(after.spots, hasLength(2));
-      expect(after.hasMore, isFalse);
-    });
-
-    test('더 없으면 아무 일도 하지 않는다', () async {
-      final ProviderContainer c = _container(
-        repo: _FakeRepository(cells: <MapCell>[_cell('1', <String>['11110'])]),
-      );
-      await c.read(cellDetailControllerProvider('1').future);
-      await c.read(cellDetailControllerProvider('1').notifier).loadMore();
-
-      // 두 번째 loadMore는 hasMore가 false라 무시된다.
-      await c.read(cellDetailControllerProvider('1').notifier).loadMore();
-
-      expect(
-        c.read(cellDetailControllerProvider('1')).value!.spots,
-        hasLength(2),
-      );
     });
   });
 }

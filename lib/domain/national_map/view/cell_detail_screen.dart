@@ -65,84 +65,70 @@ class _Body extends ConsumerWidget {
     final ThemeData theme = Theme.of(context);
     final MapCell cell = detail.cell;
 
-    return NotificationListener<ScrollNotification>(
-      // 바닥 근처에서 다음 페이지를 당긴다. 컨트롤러가 중복 요청을 막는다.
-      onNotification: (ScrollNotification n) {
-        if (detail.hasMore &&
-            n.metrics.pixels >= n.metrics.maxScrollExtent - 240) {
-          ref.read(cellDetailControllerProvider(cellId).notifier).loadMore();
-        }
-        return false;
-      },
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-        children: <Widget>[
-          // **상세는 실사 사진이다**(SPEC-0031, 2026-08-23 결정). 지도 칸은 우리
-          // 그림이고, 확대하면 그 지역의 실제 모습을 본다. 사진이 아직 없는
-          // 칸은 그림으로 대체한다.
-          if (cell.representativeImage != null)
-            CellImageView(image: cell.representativeImage!)
-          else
-            CellArtworkView(cellId: cell.id, visited: cell.visited),
-          const SizedBox(height: 16),
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(cell.name, style: theme.textTheme.titleLarge),
-                    Text(
-                      cell.provinceName,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+    // **이어 읽기가 없다**(2026-08-25). 서버가 `spots`를 배열로 바꿔 커서가
+    // 사라졌다 — 바닥에 닿아도 더 받을 것이 없으므로 스크롤을 듣지 않는다.
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      children: <Widget>[
+        // **상세는 실사 사진이다**(SPEC-0031, 2026-08-23 결정). 지도 칸은 우리
+        // 그림이고, 확대하면 그 지역의 실제 모습을 본다. 사진이 아직 없는
+        // 칸은 그림으로 대체한다.
+        if (cell.representativeImage != null)
+          CellImageView(image: cell.representativeImage!)
+        else
+          CellArtworkView(cellId: cell.id, visited: cell.visited),
+        const SizedBox(height: 16),
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(cell.name, style: theme.textTheme.titleLarge),
+                  Text(
+                    cell.provinceName,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
-                  ],
-                ),
-              ),
-              // **해제 버튼을 두지 않는다.** 여기는 지역을 둘러보는 화면이고
-              // 해제는 지도에서 칸을 눌렀을 때 뜨는 시트에 있다. 상태만 알린다.
-              if (cell.visited)
-                Chip(
-                  avatar: Icon(
-                    Icons.check_circle,
-                    size: 18,
-                    color: theme.colorScheme.primary,
                   ),
-                  label: Text(l10n.nationalMapVisited),
-                  visualDensity: VisualDensity.compact,
-                ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Text(
-            l10n.nationalMapSpotsTitle,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          if (detail.spots.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Text(
-                l10n.nationalMapSpotsEmpty,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+                ],
               ),
-            )
-          else ...<Widget>[
-            for (final CellSpot spot in detail.spots) _SpotTile(spot: spot),
-            if (detail.hasMore)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                child: Center(child: CircularProgressIndicator()),
+            ),
+            // **해제 버튼을 두지 않는다.** 여기는 지역을 둘러보는 화면이고
+            // 해제는 지도에서 칸을 눌렀을 때 뜨는 시트에 있다. 상태만 알린다.
+            if (cell.visited)
+              Chip(
+                avatar: Icon(
+                  Icons.check_circle,
+                  size: 18,
+                  color: theme.colorScheme.primary,
+                ),
+                label: Text(l10n.nationalMapVisited),
+                visualDensity: VisualDensity.compact,
               ),
           ],
-        ],
-      ),
+        ),
+        const SizedBox(height: 24),
+        Text(
+          l10n.nationalMapSpotsTitle,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (detail.spots.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Text(
+              l10n.nationalMapSpotsEmpty,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          )
+        else
+          for (final CellSpot spot in detail.spots) _SpotTile(spot: spot),
+      ],
     );
   }
 }

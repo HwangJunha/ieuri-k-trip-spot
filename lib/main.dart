@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,12 +25,20 @@ import 'router/deep_link_parser.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SnsInitializer.ensureInitialized();
-  // 지도 SDK·푸시 초기화와 환경설정 로딩은 서로 독립이라 함께 기다린다. 키나 설정
-  // 파일이 없으면 초기화가 조용히 건너뛰어지고 해당 화면만 안내를 띄운다 — 앱 기동은
-  // 막지 않는다(설계 §10, SPEC-0028 §3.1).
-  final (SharedPreferences prefs, _, _) = await (
+  // **지도 SDK는 발사만 하고 기다리지 않는다**(2026-08-25). 지도는 5개 탭 중
+  // 하나인데 그 SDK 인증(네트워크를 탈 수 있다)이 끝나야 첫 프레임이 나왔다 —
+  // 홈·발견을 보려는 사람까지 스플래시에 묶였다. 지도 화면이 `MapSdkInitializer.ready()`를
+  // 기다리므로 초기화 순서는 그대로다.
+  unawaited(MapSdkInitializer.start());
+
+  // 나머지 둘은 서로 독립이라 함께 기다린다. 설정 파일이 없으면 초기화가 조용히
+  // 건너뛰어지고 해당 화면만 안내를 띄운다 — 앱 기동은 막지 않는다(설계 §10,
+  // SPEC-0028 §3.1).
+  //
+  // **푸시는 여기 남는다.** 뒤따르는 `AppAnalytics`가 Firebase 초기화를 전제하고,
+  // 그 순서가 깨지면 인스턴스 생성이 던진다(아래 주석).
+  final (SharedPreferences prefs, _) = await (
     SharedPreferences.getInstance(),
-    MapSdkInitializer.ensureInitialized(),
     PushInitializer.ensureInitialized(),
   ).wait;
 

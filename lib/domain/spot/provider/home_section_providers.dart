@@ -1,3 +1,4 @@
+import '../../../common/network/network_retry_policy.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/localization/locale_controller.dart';
@@ -29,7 +30,7 @@ const int homeSectionSize = 10;
 /// **세 홈 섹션은 각각 독립된 provider다**(R19). 하나로 묶으면 한 섹션의 실패가
 /// 화면 전체를 무너뜨려 AC-19.1을 위반한다. 재시도도 이 provider 하나만
 /// 무효화하므로 다른 섹션은 건드리지 않는다(AC-20.2).
-@riverpod
+@Riverpod(retry: defaultNetworkRetry)
 Future<List<TouristSpot>> nearbySpotsSection(Ref ref) async {
   // 언어를 바꾸면 다시 받는다. 제목·주소는 **서버가 Accept-Language로 번역해** 주는
   // 문장이라, 다시 받지 않으면 영어로 바꿔도 한국어 이름이 그대로 남는다.
@@ -74,7 +75,7 @@ Future<List<TouristSpot>> nearbySpotsSection(Ref ref) async {
 ///
 /// Near you와 마찬가지로 좌표·반경을 `watch`하고, 이 provider 하나만 무효화하면
 /// 이 섹션만 다시 조회된다(R19·R20).
-@riverpod
+@Riverpod(retry: defaultNetworkRetry)
 Future<List<PopularSpot>> popularSpotsSection(Ref ref) async {
   // Near you와 같은 이유로 언어도 watch 한다 — 장소 이름이 서버 번역이다.
   ref.watch(localeControllerProvider);

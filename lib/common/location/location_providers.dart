@@ -1,3 +1,4 @@
+import '../network/network_retry_policy.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'coordinates.dart';
@@ -18,7 +19,15 @@ LocationService locationService(Ref ref) => const GeolocatorLocationService();
 /// 조회 값으로 고정된다. 의도한 동작이다 — 걸어 다닐 때마다 좌표가 갱신돼 피드가 다시
 /// 조회되면 사용자에겐 목록이 제멋대로 바뀌는 것으로 보인다. 피드를 새로 받는 계기는
 /// 앱 재시작·언어 전환·명시적 재시도뿐이다.
-@riverpod
+///
+/// **재시도 정책을 붙인다**(2026-08-26). 이 provider는 화면 컨트롤러들이
+/// `watch`하는 입력인데, 여기에 정책이 없으면 Riverpod 기본값 **10회**가 돌고
+/// 그 오류가 컨트롤러로 전파된다 — 컨트롤러 쪽 5회 정책과 어긋나, 화면이 자기
+/// 재시도를 다 쓰기도 전에 오류로 넘어간다(실기기 확인).
+///
+/// `defaultNetworkRetry`는 [LocationUnavailable]을 재시도 없이 끊으므로 권한
+/// 거부·GPS 꺼짐에서는 곧바로 안내 경로로 간다.
+@Riverpod(retry: defaultNetworkRetry)
 Future<Coordinates> currentCoordinates(Ref ref) =>
     ref.watch(locationServiceProvider).currentCoordinates();
 

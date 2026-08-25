@@ -4,9 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../common/navigation/alarm_routes.dart';
 import '../../../common/permission/model/permission_kind.dart';
 import '../../../common/permission/provider/permission_providers.dart';
+import '../../../common/widget/app_skeleton.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/os_permission_notice.dart';
 import '../model/notification_preference.dart';
+import '../model/notification_preference_skeleton_samples.dart';
 import '../provider/notification_preference_controller.dart';
 
 /// 카테고리별 푸시 수신 설정(SPEC-0028 R19·R21).
@@ -57,15 +59,25 @@ class _NotificationSettingsScreenState
           children: <Widget>[
             const OsPermissionNotice(),
             ...switch (preferences) {
-              AsyncData<List<NotificationPreference>>(:final value) =>
-                _toggles(l10n, value),
+              AsyncData<List<NotificationPreference>>(:final value) => _toggles(
+                l10n,
+                value,
+              ),
               AsyncError<List<NotificationPreference>>() => <Widget>[
                 _Message(l10n.alarmSettingsLoadFailed),
               ],
-              _ => const <Widget>[
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: 48),
-                  child: Center(child: CircularProgressIndicator()),
+              // **`SkeletonList`가 아니라 `AppSkeleton`이다.** 이 갈래는 바깥
+              // `ListView`의 children으로 펼쳐지므로 여기 스크롤 목록을 또 넣으면
+              // 목록이 겹친다. 토글은 항상 정확히 둘이라(설계 §6) 실제 토글을
+              // 더미 값으로 그린 뒤 시머로 덮으면 데이터가 와도 줄 수가 그대로다.
+              _ => <Widget>[
+                AppSkeleton(
+                  child: Column(
+                    children: _toggles(
+                      l10n,
+                      notificationPreferenceSkeletonSamples,
+                    ),
+                  ),
                 ),
               ],
             },
@@ -116,9 +128,9 @@ class _NotificationSettingsScreenState
       // 사실만 알린다 — 서버 문구를 그대로 띄우지 않는다(POL-013).
       if (!mounted) return;
       final AppLocalizations l10n = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.alarmSettingsSaveFailed)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.alarmSettingsSaveFailed)));
     }
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'image_placeholder.dart';
+import 'network_photo.dart';
 
 /// 서버 썸네일 URL을 그리고, URL이 아니거나 로딩·실패면 색블록으로 폴백한다.
 ///
@@ -19,6 +20,10 @@ class SpotThumbnail extends StatelessWidget {
 
   final BoxFit fit;
 
+  /// 썸네일이 실제로 그려지는 최대 논리 폭. 카드 폭이 화면 폭을 넘지 않으므로
+  /// 이보다 크게 디코딩할 이유가 없다.
+  static const double _thumbnailDecodeWidth = 400;
+
   bool get _isUrl => imageRef.startsWith('http');
 
   @override
@@ -28,9 +33,12 @@ class SpotThumbnail extends StatelessWidget {
     // 크기 질의에 그대로 무한으로 답해, `IntrinsicHeight` 안에 놓이면
     // `height.isFinite` 단언이 깨진다(Popular 카드가 그 구조다 — 실제로 카드가
     // 렌더되지 않았다). `fit`만으로 부모가 준 제약을 채운다.
-    return Image.network(
-      imageRef,
+    // 썸네일은 **목록에서 작게 그려진다.** 원본 해상도로 디코딩하면 한 화면치 카드만
+    // 스크롤해도 이미지 캐시가 밀려 계속 재디코딩된다([NetworkPhoto] 설명 참고).
+    return NetworkPhoto(
+      url: imageRef,
       fit: fit,
+      decodeWidth: _thumbnailDecodeWidth,
       // 로딩 중에는 색블록을 보여준다(빈 흰 칸 방지).
       loadingBuilder:
           (BuildContext context, Widget child, ImageChunkEvent? progress) =>

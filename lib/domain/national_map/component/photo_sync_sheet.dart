@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logger/logger.dart';
 
 import '../../../common/permission/component/permission_blocked_notice.dart';
 import '../../../common/permission/model/permission_kind.dart';
+import '../../../common/log/app_log.dart';
 import '../../../common/analytics/analytics_events.dart';
 import '../../../common/analytics/app_analytics.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -17,10 +19,6 @@ import 'map_sheet.dart';
 /// 부르면 버튼이 탭 바 뒤로 들어간다.
 Future<void> showPhotoSyncSheet(BuildContext context) =>
     showMapSheet<void>(context, builder: (_) => const PhotoSyncSheet());
-
-/// 자동 등록이 도는 중인지. 시트가 stateless라 파일 수준에 둔다 — 한 번에
-/// 하나의 스캔만 돌므로 인스턴스별로 나눌 이유가 없다.
-bool _registering = false;
 
 /// 사진첩을 훑어 방문 지역을 찾는 시트.
 ///
@@ -55,6 +53,8 @@ class PhotoSyncSheet extends ConsumerWidget {
 }
 
 class _Content extends ConsumerWidget {
+  static final Logger _log = appLogger('PhotoSyncSheet');
+
   const _Content({required this.progress, required this.l10n});
 
   final PhotoScanProgress progress;
@@ -84,11 +84,7 @@ class _Content extends ConsumerWidget {
                 ),
               ),
             FilledButton(
-              onPressed: () {
-                // 이전 스캔의 가드가 남아 있으면 이번 등록이 막힌다.
-                _registering = false;
-                controller.start();
-              },
+              onPressed: controller.start,
               child: Text(
                 progress.isResumable
                     ? l10n.photoSyncResume
@@ -154,11 +150,15 @@ class _Content extends ConsumerWidget {
         //
         // **한 번만 보낸다.** 리빌드마다 콜백이 걸리므로 가드가 없으면 등록이
         // 여러 번 나간다(멱등이라 서버는 버티지만 요청이 낭비된다).
-        if (!_registering) {
-          _registering = true;
+        // 가드는 **컨트롤러가 들고 있다.** 시트의 전역 플래그였을 때는 푸는 자리가
+        // idle/failed 버튼뿐이라, 그대로 이 단계에 들어오면 등록이 영영 안 걸렸다.
+        if (controller.beginRegistration()) {
+          _log.i('방문 등록 시작: ${progress.resolvedCellCodes.length}곳');
           WidgetsBinding.instance.addPostFrameCallback((_) async {
-            await _register(context, ref, controller);
-            _registering = false;
+            // **`finally`여야 한다.** 순차로 두면 등록이 던졌을 때 플래그가 true로
+            // 박혀 재시도조차 막힌다 — `_register`가 예외를 삼키게 됐지만, 그
+            // 안에서 또 다른 실패가 나도 여기서는 반드시 풀린다.
+            await _register(ref, controller);
           });
         }
         return Column(
@@ -172,6 +172,15 @@ class _Content extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             const Center(child: CircularProgressIndicator()),
+            // **갇히지 않게 한다**(2026-08-26). 등록이 어떤 이유로든 끝나지
+            // 않으면 이 단계에는 누를 것이 하나도 없어 앱을 껐다 켜는 수밖에
+            // 없었다 — 실기기에서 그 상태가 나왔다. 스캔 결과는 남으므로
+            // 닫았다 다시 열어 재시도할 수 있다.
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () => Navigator.of(context).maybePop(),
+              child: Text(l10n.commonClose),
+            ),
           ],
         );
 
@@ -185,8 +194,80 @@ class _Content extends ConsumerWidget {
                   ? l10n.photoSyncNoCoordinates
                   : l10n.photoSyncDone,
             ),
+            // **결과를 수치로 밝힌다**(2026-08-26). "지도를 채웠어요"만 있으면
+            // 몇 장을 훑어 몇 곳을 찾았는지 알 수 없어, 스캔이 제대로 돌았는지
+            // 사용자가 판단할 수 없다 — 실제로 두 곳만 칠해진 것을 보고 "갤러리가
+            // 전부 스캔되지 않은 것 같다"는 의심이 나왔다.
+            if (!progress.finishedWithoutCoordinates) ...<Widget>[
+              const SizedBox(height: 4),
+              Text(
+                // **훑은 총 장수와 채운 지역 수만 말한다**(2026-08-26).
+                // 좌표가 있던 장수나 이미 있던 지역 수까지 세는 것은 사용자가
+                // 궁금해하지 않는 내부 사정이다 — 사용자 지적.
+                //
+                // 지역 수는 새로 찾은 곳과 이미 있던 곳을 합친다. 사진에서 찾아낸
+                // 지역이 곧 "채운" 것이고, 그중 무엇이 이미 있었는지는 구분할
+                // 이유가 없다.
+                l10n.photoSyncSummary(
+                  progress.total,
+                  progress.resolvedCellCodes.length + progress.alreadyOnMapCount,
+                ),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+            // **"일부만 허용"이면 그 사실을 밝힌다**(2026-08-26). 이 상태에서는
+            // 사진첩 전체가 아니라 사용자가 고른 몇 장만 훑는데, 말해 주지 않으면
+            // "왜 3장만 훑었지"에서 멈춘다 — 실기기에서 그 질문이 나왔다.
+            if (progress.limitedAccess) ...<Widget>[
+              const SizedBox(height: 12),
+              Text(
+                l10n.photoSyncLimitedNotice,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: controller.reselectPhotos,
+                child: Text(l10n.photoSyncSelectMore),
+              ),
+              // **재선택만으로는 "일부만 허용"을 벗어날 수 없다**(2026-08-26).
+              // `presentLimited`는 고른 사진 목록을 바꿀 뿐 권한 등급은 그대로다
+              // — 전체 허용으로 올리는 길은 시스템 설정뿐이다.
+              //
+              // `PermissionBlockedNotice`는 쓸 수 없다: `needsSettings`가
+              // `PermissionController`를 지난 상태에서만 서는데, 사진 스캔은
+              // `photo_manager`를 직접 부르는 별도 경로라 그 상태가 비어 있다.
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: () =>
+                    ref.read(photoLibraryServiceProvider).openSettings(),
+                child: Text(l10n.photoSyncAllowAll),
+              ),
+            ],
             const SizedBox(height: 16),
-            FilledButton(
+            // **다시 채울 수 있어야 한다**(2026-08-26). 완료 뒤에 시트를 다시 열면
+            // 결과 문구만 남아 이 기능을 두 번째로 쓸 방법이 없었다 — 사진을 더
+            // 찍은 사용자가 매번 다시 돌릴 수 있어야 한다(사용자 지적).
+            //
+            // **훑을 대상이 그대로면 감춘다**(2026-08-26). 같은 사진을 다시 훑어야
+            // 결과는 같다 — 이 버튼이 의미를 갖는 것은 대상이 늘어난 뒤,
+            // 곧 전체 허용으로 올렸을 때뿐이다(사용자 지적).
+            //
+            // 그래서 "일부만 허용"에서는 감춘다. 그 화면의 해법은 위의 두 버튼
+            // (사진 더 고르기·전체 허용)이고, 둘 다 끝나면 스캔이 자동으로 다시
+            // 돈다. 좌표를 하나도 못 찾은 경우도 같은 이유로 감춘다.
+            if (!progress.limitedAccess &&
+                !progress.finishedWithoutCoordinates) ...<Widget>[
+              FilledButton(
+                onPressed: controller.start,
+                child: Text(l10n.photoSyncRescan),
+              ),
+              const SizedBox(height: 8),
+            ],
+            OutlinedButton(
               onPressed: () => Navigator.of(context).maybePop(),
               child: Text(l10n.commonClose),
             ),
@@ -195,20 +276,42 @@ class _Content extends ConsumerWidget {
     }
   }
 
-  Future<void> _register(
-    BuildContext context,
-    WidgetRef ref,
-    PhotoScanController controller,
-  ) async {
+  Future<void> _register(WidgetRef ref, PhotoScanController controller) async {
     final List<String> codes = progress.resolvedCellCodes;
-    // 사진이 몇 장이든 요청은 1회다 — 판정 결과가 시군구 코드로 축약돼 있다.
-    await ref.read(visitControllerProvider.notifier).record(codes);
+    try {
+      // 사진이 몇 장이든 요청은 1회다 — 판정 결과가 시군구 코드로 축약돼 있다.
+      await ref.read(visitControllerProvider.notifier).record(codes);
+    } on Object catch (error, stackTrace) {
+      // **던지게 두면 스피너가 영원히 돈다**(실기기 확인 2026-08-26).
+      // `record`가 던지면 아래 `confirmed()`에 닿지 못해 단계가
+      // `awaitingConfirmation`에 머물고, "N곳을 찾았어요" 아래 스피너만 계속
+      // 돌면서 재시도 수단도 없다.
+      //
+      // 스캔 결과는 그대로 두고 실패 단계로 보낸다 — 다시 찾을 필요 없이 등록만
+      // 다시 누르면 된다.
+      //
+      // **타입과 스택을 남긴다.** 조용히 삼키면 서버 응답이 성공인데 화면만
+      // 실패인 상황에서 원인을 찾을 길이 없다 — 실제로 그랬다(2026-08-26).
+      // 서버 message는 PII를 담을 수 있어 넘기지 않는다(POL-013).
+      _log.w('방문 등록 실패: ${error.runtimeType}', stackTrace: stackTrace);
+      // **컨트롤러를 부르는 것까지 실패할 수 있다.** `photoScanController`는
+      // keepAlive라 살아 있지만, 여기서 또 던지면 단계가 `awaitingConfirmation`에
+      // 박혀 스피너가 영원히 돈다 — 원래 고치려던 그 증상으로 되돌아간다.
+      try {
+        controller.registrationFailed();
+      } on Object catch (e) {
+        _log.e('실패 단계 전환마저 실패: ${e.runtimeType}');
+      }
+      return;
+    }
     // **호출부에 심는다.** `VisitController.record`는 사진 경로와 현재 위치 경로가
     // 합류하는 자리라, 거기 심으면 둘을 구분할 수 없다.
-    AppAnalytics.logEvent(AnalyticsEvents.nationalMapRegionAdd, <String, Object>{
-      AnalyticsParams.from: 'photo',
-    });
+    AppAnalytics.logEvent(
+      AnalyticsEvents.nationalMapRegionAdd,
+      <String, Object>{AnalyticsParams.from: 'photo'},
+    );
     // 시트를 닫지 않는다 — 완료 문구를 보고 사용자가 닫는다.
+    _log.i('방문 등록 성공: ${codes.length}곳');
     controller.confirmed();
   }
 }

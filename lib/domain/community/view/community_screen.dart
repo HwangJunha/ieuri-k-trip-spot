@@ -5,12 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../../common/location/location_service.dart';
 import '../../../common/pagination/pagination_list_view.dart';
 import '../../../common/widget/floating_bottom_nav_scaffold.dart';
+import '../../../common/widget/skeleton_list.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/category_chip_row.dart';
 import '../component/feed_sort_toggle.dart';
 import '../component/post_card.dart';
 import '../component/post_photo.dart';
 import '../../../common/model/post.dart';
+import '../model/community_skeleton_samples.dart';
 import '../model/post_sort_order.dart';
 import '../model/target_category_selection.dart';
 import '../../../common/model/target_category.dart';
@@ -162,6 +164,11 @@ class _Chips extends ConsumerWidget {
       );
 }
 
+/// 뼈대의 상대 시각 기준. **`DateTime.now()`를 쓰지 않는다** — 로딩이 길어지면
+/// 프레임마다 "3시간 전"이 달라져 뼈대 아래 글자 폭이 흔들린다. 어차피 시머가 덮어
+/// 보이지 않는 값이라 고정해 둔다.
+final DateTime _skeletonNow = DateTime.utc(2026, 8, 1, 12);
+
 /// 지역 피드. 로딩·빈 피드·위치 실패·조회 실패가 **서로 다른 상태**다.
 ///
 /// 특히 위치 실패는 빈 피드와 구분해 그 사유를 보여준다 — "글이 없다"와 "위치를 못
@@ -184,7 +191,16 @@ class _Feed extends ConsumerWidget {
     );
 
     return state.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      // 실제 카드에 더미를 넣어 그린 뒤 시머로 덮는다 — 카드 디자인이 바뀌어도
+      // 뼈대가 저절로 따라간다. 구분선을 같이 줘야 데이터가 도착할 때 줄 위치가
+      // 튀지 않는다(피드는 카드 사이에 얇은 구분선을 그린다).
+      loading: () => SkeletonList(
+        separator: const Divider(height: 1, thickness: 0.5),
+        itemBuilder: (_, int index) => PostCard(
+          post: postSkeletonSamples[index % postSkeletonSamples.length],
+          now: _skeletonNow,
+        ),
+      ),
       error: (Object error, _) => _FeedError(
         // 위치 실패는 조회 실패와 다른 사유를 보여준다.
         title: error is LocationUnavailable

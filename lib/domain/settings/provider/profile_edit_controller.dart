@@ -3,14 +3,10 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../auth/provider/auth_controller.dart';
 import '../model/nickname_validation.dart';
 import '../model/settings_failure.dart';
+import '../repository/profile_repository.dart';
 import 'profile_providers.dart';
 
 part 'profile_edit_controller.g.dart';
-
-/// 서버가 닉네임 중복에 쓰는 코드(R5). 이것만 입력란 오류로 옮기고 나머지는 화면
-/// 상단의 일반 오류로 남긴다 — 원인이 입력값에 있는 것만 입력란에 붙어야 사용자가
-/// 어디를 고칠지 안다.
-const String nicknameAlreadyTakenCode = 'NICKNAME_ALREADY_TAKEN';
 
 /// 닉네임 변경 화면의 상태(SPEC-0011 R5).
 ///
@@ -18,18 +14,10 @@ const String nicknameAlreadyTakenCode = 'NICKNAME_ALREADY_TAKEN';
 /// notifier는 제출 결과만 갖는다. 매 타자에 provider를 갱신하면 화면 전체가 다시
 /// 그려진다.
 class ProfileEditState {
-  const ProfileEditState({
-    this.formatError,
-    this.nicknameTaken = false,
-    this.failure,
-    this.saved = false,
-  });
+  const ProfileEditState({this.formatError, this.failure, this.saved = false});
 
   /// 형식 오류(R5). 제출 전 클라이언트가 판정한다.
   final NicknameValidation? formatError;
-
-  /// 서버가 중복이라고 답했는지. 입력란 아래 오류로 그린다.
-  final bool nicknameTaken;
 
   /// 그 밖의 실패(네트워크·인증 등). 입력값 문제가 아니므로 입력란에 붙이지 않는다.
   final SettingsFailure? failure;
@@ -38,14 +26,14 @@ class ProfileEditState {
   final bool saved;
 
   /// 입력란 아래 오류가 있는지.
-  bool get hasFieldError => formatError != null || nicknameTaken;
+  bool get hasFieldError => formatError != null;
 }
 
 /// 닉네임 변경(R5).
 ///
-/// **중복을 미리 조회하지 않는다.** 제출 전에는 형식만 보고, 중복은 서버가
-/// `NICKNAME_ALREADY_TAKEN`으로 답한 것을 입력란 오류로 옮긴다 — 미리 조회해도 조회와
-/// 제출 사이에 선점당할 수 있어 어차피 서버 오류를 처리해야 한다(설계 §4).
+/// **중복은 허용된다**(2026-08-25 서버 변경) — 클라이언트는 형식만 보고, 서버는
+/// 형식 오류만 `userErrors`로 돌려준다. 입력란 오류는 형식 하나뿐이고, 나머지
+/// 실패(네트워크·인증 등)는 화면 상단의 일반 오류로 남는다.
 @riverpod
 class ProfileEditController extends _$ProfileEditController {
   @override
@@ -70,17 +58,21 @@ class ProfileEditController extends _$ProfileEditController {
       return;
     }
 
+    // **저장소·인증 notifier를 요청 전에 잡아 둔다.** 이 catch는
+    // `SettingsFailure`만 잡으므로, 폐기 뒤의 `ref.read`가 던지는
+    // `UnmountedRefException`은 아무 데서도 걸리지 않고 화면까지 튄다 —
+    // 닉네임은 서버에 저장됐는데 사용자에게는 실패로 보인다.
+    final ProfileRepository repository = ref.read(profileRepositoryProvider);
+    final AuthController auth = ref.read(authControllerProvider.notifier);
+
     state = const ProfileEditState();
     try {
-      await ref
-          .read(profileRepositoryProvider)
-          .changeNickname(normalizeNickname(raw));
-      await ref.read(authControllerProvider.notifier).refreshMe();
-      state = const ProfileEditState(saved: true);
+      await repository.changeNickname(normalizeNickname(raw));
+      // 저장이 끝난 뒤라 세션 갱신은 화면이 남아 있든 아니든 마친다.
+      await auth.refreshMe();
+      if (ref.mounted) state = const ProfileEditState(saved: true);
     } on SettingsFailure catch (failure) {
-      state = failure.code == nicknameAlreadyTakenCode
-          ? const ProfileEditState(nicknameTaken: true)
-          : ProfileEditState(failure: failure);
+      if (ref.mounted) state = ProfileEditState(failure: failure);
     }
   }
 }

@@ -10,6 +10,7 @@ import '../../../common/permission/provider/permission_providers.dart';
 import '../../../common/storage/search_radius_controller.dart';
 import '../../../common/widget/failure_notice.dart';
 import '../../../common/widget/floating_bottom_nav_scaffold.dart';
+import '../../../common/widget/network_photo.dart';
 import '../../../common/analytics/analytics_events.dart';
 import '../../../common/analytics/app_analytics.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -78,23 +79,43 @@ class DiscoverSwipeView extends ConsumerWidget {
             //
             // `MessagesEntryButton`은 지우지 않는다. 컴포넌트는 그대로 두고 이
             // 화면에서만 걷어낸 것이라, 단체방이 생기면 그 자리에 그대로 쓴다.
-            child: SpotCategoryBar(
-              // 사진 위에 얹히므로 라벨을 흰색으로 받는다(R14의 가독성 보조).
-              onImage: true,
-              // 스와이프의 선택 상태는 세션에 속하는 keepAlive provider다(탭을
-              // 옮겼다 와도 유지된다, AC12.3).
-              available:
-                  ref.watch(availableSpotCategoriesProvider).value ??
-                  const <SpotCategory>[],
-              selected: selected,
-              onToggle: (SpotCategory next) =>
-                  ref.read(selectedSpotCategoryProvider.notifier).toggle(next),
-              onSelectAll: () =>
-                  ref.read(selectedSpotCategoryProvider.notifier).selectAll(),
-            ),
+            child: const _DiscoverCategoryBar(),
           ),
         ),
       ],
+    );
+  }
+}
+
+/// 발견 화면의 카테고리 바. **부모에서 떼어 낸 별도 위젯이다.**
+///
+/// 예전에는 [DiscoverSwipeView.build] 안에 인라인으로 있어, 권한 상태나 카드 큐가
+/// 바뀔 때마다 칩 열 개가 통째로 다시 만들어졌다 — 칩 하나가 `Semantics`+`InkWell`
+/// +`Container`+`Icon`+`Text`이고 정렬 스캔도 매번 다시 돈다. 위젯을 분리하면 이
+/// 바가 **자기가 보는 provider가 바뀔 때만** 다시 빌드된다.
+class _DiscoverCategoryBar extends ConsumerWidget {
+  const _DiscoverCategoryBar();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return SpotCategoryBar(
+      // 사진 위에 얹히므로 라벨을 흰색으로 받는다(R14의 가독성 보조).
+      onImage: true,
+      // **`.value`만 고른다.** `AsyncValue`를 통째로 watch하면 로딩→데이터
+      // 전환처럼 값이 같은 갱신에도 바가 다시 빌드된다.
+      available: ref.watch(
+        availableSpotCategoriesProvider.select(
+          (AsyncValue<List<SpotCategory>> v) =>
+              v.value ?? const <SpotCategory>[],
+        ),
+      ),
+      // 스와이프의 선택 상태는 세션에 속하는 keepAlive provider다(탭을 옮겼다
+      // 와도 유지된다, AC12.3).
+      selected: ref.watch(selectedSpotCategoryProvider),
+      onToggle: (SpotCategory next) =>
+          ref.read(selectedSpotCategoryProvider.notifier).toggle(next),
+      onSelectAll: () =>
+          ref.read(selectedSpotCategoryProvider.notifier).selectAll(),
     );
   }
 }
@@ -114,7 +135,9 @@ class _OverlayControls extends StatelessWidget {
     // 앱바가 없으므로(→[DiscoverScreen]) 상태바만 피하면 된다. 예전에는 여기에
     // `kToolbarHeight`를 더했는데, 그 앱바가 칩과 같은 띠를 두고 다투던 것이
     // 문제였다.
-    final double topInset = MediaQuery.of(context).viewPadding.top;
+    // 통짜 `MediaQuery.of` 대신 필요한 값만 구독한다 — 키보드나 글자 크기가
+    // 바뀔 때까지 이 스크림이 다시 빌드될 이유가 없다.
+    final double topInset = MediaQuery.viewPaddingOf(context).top;
 
     return DecoratedBox(
       decoration: const BoxDecoration(
@@ -125,7 +148,12 @@ class _OverlayControls extends StatelessWidget {
           // 칩 라벨이 묻혔고, 그것을 고치자 이번에는 맨 위 시계가 밝은 사진에
           // 묻혔다(실기기 확인 2026-08-18). 위를 더 진하게 시작해 라벨이 끝나는
           // 지점까지 끌고 간 뒤 거기서만 풀어 준다.
-          colors: <Color>[Colors.black, Colors.black54, Colors.transparent],
+          //
+          // **다만 완전 불투명으로 시작하지 않는다**(사용자 지적 2026-08-25 —
+          // "어둡다"). 예전에는 카드 배경이 `black26`으로 한 번 더 눌려 있어 이
+          // 스크림이 상대적으로 덜 튀었는데, 그 눌림을 걷어내자 이쪽이 도드라졌다.
+          // 시계가 묻히지 않을 만큼만 남긴다 — 검정 87%면 흰 글자 대비가 충분하다.
+          colors: <Color>[Colors.black87, Colors.black38, Colors.transparent],
           stops: <double>[0, 0.8, 1],
         ),
       ),
@@ -223,6 +251,9 @@ class _ErrorState extends StatelessWidget {
         body: l10n.retryExhaustedBody,
         actionLabel: l10n.retryExhaustedAction,
         onAction: onRetry,
+        // 못 불러온 것은 장소다 — 네트워크 아이콘은 원인을 단정한다(2026-08-26).
+        // 발견 탭과 같은 결로 맞춘다.
+        icon: Icons.explore_off_outlined,
       );
     }
 
@@ -360,6 +391,49 @@ class _CardStackState extends ConsumerState<_CardStack>
   void initState() {
     super.initState();
     _controller = AnimationController.unbounded(vsync: this);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _precacheUpcoming();
+  }
+
+  @override
+  void didUpdateWidget(_CardStack oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 큐가 앞으로 밀렸으면 새로 세 번째가 된 카드를 미리 받는다.
+    if (oldWidget.queue != widget.queue) _precacheUpcoming();
+  }
+
+  /// 아직 화면에 없는 다음 카드의 사진을 미리 받아 둔다.
+  ///
+  /// **왜 필요한가.** 스택은 두 장만 붙여 놓으므로 세 번째 카드는 요청조차 나가
+  /// 있지 않다. 한 장을 넘기면 그 카드가 곧바로 "다음"이 되는데, 그때부터 받기
+  /// 시작하니 느린 연결에서는 회색 플레이스홀더가 먼저 보인다.
+  ///
+  /// [precacheImage]는 이미지 캐시에만 채워 넣는다 — 위젯이 나중에 같은 URL로
+  /// `Image.network`를 부르면 이미 디코딩된 것을 즉시 받는다.
+  ///
+  /// **디코딩 폭을 카드와 맞춰야 한다.** 다르게 주면 캐시 키가 갈려 미리 받아 둔
+  /// 것을 못 쓰고 두 벌이 메모리에 남는다.
+  void _precacheUpcoming() {
+    final List<TouristSpot> cards = widget.queue.cards;
+    if (cards.length < 3) return;
+
+    final String ref = cards[2].thumbnailImageUrl ?? cards[2].imageRef;
+    if (!ref.startsWith('http')) return;
+
+    precacheImage(
+      // **`NetworkPhoto`와 같은 계산을 쓴다.** 폭이 다르면 캐시 키가 갈려 미리
+      // 받아 둔 것을 못 쓰고 두 벌이 메모리에 남는다. `Image.network`의
+      // `cacheWidth`도 내부적으로 `ResizeImage`를 만드므로 형태가 일치한다.
+      ResizeImage(NetworkImage(ref), width: decodeWidthFor(context)),
+      context,
+      // 미리 받는 것이라 실패해도 화면에 영향이 없다 — 카드가 실제로 뜰 때
+      // `errorBuilder`가 플레이스홀더로 받아 준다.
+      onError: (Object _, StackTrace? _) {},
+    );
   }
 
   @override
@@ -505,7 +579,11 @@ class _CardStackState extends ConsumerState<_CardStack>
     final TouristSpot? next = cards.length > 1 ? cards[1] : null;
 
     // 하단 인셋은 기기가 정한다 — 고정 픽셀값은 기기별로 어긋난다(설계 §2.2).
-    final MediaQueryData media = MediaQuery.of(context);
+    //
+    // **`MediaQuery.of`가 아니라 `viewPaddingOf`다.** 통짜로 구독하면 키보드가
+    // 오르내릴 때(`viewInsets`)나 글자 크기·밝기가 바뀔 때도 카드 스택 전체가
+    // 다시 빌드된다 — 여기서 실제로 읽는 것은 `viewPadding` 하나뿐이다.
+    final EdgeInsets viewPadding = MediaQuery.viewPaddingOf(context);
 
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
@@ -524,8 +602,8 @@ class _CardStackState extends ConsumerState<_CardStack>
           // 값을 여기 복사하지 않고 셸의 상수를 쓴다 — 바 높이가 바뀌면 이
           // 보정도 함께 따라와야 한다(그 파일의 주석이 명시한 계약이다).
           bottomViewPadding:
-              media.viewPadding.bottom + FloatingBottomNavScaffold.barExtent,
-          topViewPadding: media.viewPadding.top,
+              viewPadding.bottom + FloatingBottomNavScaffold.barExtent,
+          topViewPadding: viewPadding.top,
           overlayControlsHeight: _overlayControlsHeight,
         );
 
@@ -545,10 +623,16 @@ class _CardStackState extends ConsumerState<_CardStack>
                 // 모양이 비쳐 카드가 바뀌는 순간 화면이 튄다.
                 child: ValueListenableBuilder<Offset>(
                   valueListenable: _drag,
-                  child: SwipeCard(
-                    key: ValueKey<String>(next.id),
-                    spot: next,
-                    metrics: metrics,
+                  // **`RepaintBoundary`가 `child`를 레이어로 굳힌다.** `child`는
+                  // 프레임마다 다시 *빌드*되지 않지만, 경계가 없으면 바깥
+                  // `Transform`이 움직일 때마다 다시 *래스터화*된다 — 사진 한 장을
+                  // 옮기는 대신 카드를 통째로 다시 그리는 셈이다.
+                  child: RepaintBoundary(
+                    child: SwipeCard(
+                      key: ValueKey<String>(next.id),
+                      spot: next,
+                      metrics: metrics,
+                    ),
                   ),
                   builder: (BuildContext context, Offset drag, Widget? child) =>
                       Transform.scale(
@@ -641,7 +725,10 @@ class _DraggableTop extends StatelessWidget {
       // 그린다. 오버레이 라벨은 변위에 따라 투명도가 변하므로 안쪽에 둔다.
       child: ValueListenableBuilder<Offset>(
         valueListenable: drag,
-        child: SwipeCard(spot: spot, metrics: metrics),
+        // `child`는 다시 빌드되지 않지만, 경계가 없으면 바깥 `Transform`이 움직일
+        // 때마다 사진·블러 배경이 다시 래스터화된다. 경계를 두면 굳은 레이어를
+        // 옮기기만 한다 — 드래그가 부드러워지는 핵심이다.
+        child: RepaintBoundary(child: SwipeCard(spot: spot, metrics: metrics)),
         builder: (BuildContext context, Offset value, Widget? child) =>
             Transform.translate(
               offset: value,

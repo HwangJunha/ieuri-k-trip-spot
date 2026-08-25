@@ -16,10 +16,19 @@ import 'permission_test_doubles.dart';
 /// sheets, and the provider all run together, only the OS plugin is faked.
 Future<ProviderContainer> _bootApp(
   WidgetTester tester,
-  FakePermissionService service,
-) async {
+  FakePermissionService service, {
+  FakeRationaleShownStore? shownStore,
+}) async {
   final container = ProviderContainer(
-    overrides: [permissionServiceProvider.overrideWithValue(service)],
+    overrides: [
+      permissionServiceProvider.overrideWithValue(service),
+      // 사전설명은 한 번만 뜬다 — 디스크 대신 메모리 기록으로 매 테스트를
+      // "아직 안 물어본" 상태에서 시작한다. 재부팅을 흉내 내는 테스트는 같은
+      // 저장소를 두 번의 부팅에 건네 기록이 살아남는 것을 확인한다.
+      rationaleShownStoreProvider.overrideWithValue(
+        shownStore ?? FakeRationaleShownStore(),
+      ),
+    ],
   );
   addTearDown(container.dispose);
 
@@ -262,4 +271,36 @@ void main() {
       );
     },
   );
+
+  testWidgets('선택 권한 사전설명은 한 번 보여 주면 다시 뜨지 않는다', (tester) async {
+    // "나중에"는 OS에 남지 않는다 — 요청 자체를 안 했으므로 다음 부팅에서도
+    // 상태가 여전히 미결정이다. 그래서 앱을 켤 때마다 같은 시트가 떴다.
+    final FakeRationaleShownStore shown = FakeRationaleShownStore();
+    FakePermissionService newService() => FakePermissionService(
+      initial: {
+        PermissionKind.location: PermissionState.granted,
+        PermissionKind.notification: PermissionState.denied,
+      },
+    );
+
+    await _bootApp(tester, newService(), shownStore: shown);
+    expect(find.text('Stay in the loop'), findsOneWidget);
+    await tester.tap(find.text('Not now'));
+    await tester.pumpAndSettle();
+
+    // 물어봤다는 사실이 남는다 — 이것이 다음 부팅의 판단 근거다.
+    expect(shown.wasShown(PermissionKind.notification), isTrue);
+
+    // 두 번째 부팅 — 같은 기기이므로 기록이 살아 있다. 위젯 트리를 완전히
+    // 버리고 새로 세워야 게이트의 initState가 다시 돈다.
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+
+    final FakePermissionService second = newService();
+    await _bootApp(tester, second, shownStore: shown);
+
+    expect(find.text('Stay in the loop'), findsNothing);
+    // 상태는 조회하되 OS 요청은 하지 않는다.
+    expect(second.calls, isNot(contains('request:notification')));
+  });
 }

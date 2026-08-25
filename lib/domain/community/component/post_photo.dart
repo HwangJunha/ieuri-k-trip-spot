@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../common/network/media_cdn.dart';
 import '../../../common/widget/image_placeholder.dart';
+import '../../../common/widget/network_photo.dart';
 import '../../../l10n/gen/app_localizations.dart';
 
 /// 사진 키 하나를 그린다.
@@ -25,9 +26,12 @@ class PostPhoto extends StatelessWidget {
       fit: StackFit.expand,
       children: <Widget>[
         ImagePlaceholder(imageRef: photoKey),
-        Image.network(
-          MediaCdn.urlFor(photoKey),
+        NetworkPhoto(
+          url: MediaCdn.urlFor(photoKey),
           fit: BoxFit.cover,
+          // 목록 안 작은 사진이라 원본 해상도로 디코딩할 이유가 없다. 글 하나에
+          // 사진이 다섯 장까지 붙으므로 피드를 훑을 때 그대로 쌓인다.
+          decodeWidth: 400,
           // 404여도 아래 플레이스홀더가 그대로 남는다.
           errorBuilder: (_, _, _) => const SizedBox.shrink(),
         ),
@@ -91,6 +95,9 @@ class _PostPhotoViewerState extends State<PostPhotoViewer> {
         onPageChanged: (int next) => setState(() => _index = next),
         itemBuilder: (BuildContext context, int index) => InteractiveViewer(
           child: Center(
+            // **여기는 `NetworkPhoto`를 쓰지 않는다.** [InteractiveViewer]가 확대를
+            // 허용하므로 디코딩을 줄이면 확대했을 때 뭉개진다 — 목록 썸네일과 달리
+            // 이 화면은 원본 화질이 목적이다.
             child: Image.network(
               MediaCdn.urlFor(widget.photoKeys[index]),
               fit: BoxFit.contain,

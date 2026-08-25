@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../common/widget/image_placeholder.dart';
+import '../../../common/widget/network_photo.dart';
 import '../model/cell_image.dart';
 
 /// 칸 대표 이미지와 출처 표기(R23·R24).
@@ -29,8 +31,8 @@ class CellImageView extends StatelessWidget {
             height: height,
             width: double.infinity,
             color: theme.colorScheme.surfaceContainerHighest,
-            child: Image.network(
-              image.imageUrl,
+            child: NetworkPhoto(
+              url: image.imageUrl,
               // 여기가 R23이다. 잘라도 되는지는 모델이 정한다.
               fit: image.allowsCrop ? BoxFit.cover : BoxFit.contain,
               errorBuilder: (_, _, _) => Center(
@@ -39,10 +41,13 @@ class CellImageView extends StatelessWidget {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
+              // **스피너가 아니라 색블록이다.** 앱의 다른 모든 이미지가
+              // `ImagePlaceholder`로 폴백하는데 여기만 스피너였다 — 사진 자리에
+              // 스피너가 돌면 로딩 모양이 화면마다 달라 보인다.
               loadingBuilder: (_, Widget child, ImageChunkEvent? progress) =>
                   progress == null
                   ? child
-                  : const Center(child: CircularProgressIndicator()),
+                  : ImagePlaceholder(imageRef: image.imageUrl),
             ),
           ),
         ),

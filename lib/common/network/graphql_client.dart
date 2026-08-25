@@ -306,6 +306,16 @@ class _RefreshLink extends Link {
 
   /// 인증 실패 판별은 공용 분류 함수 하나에만 의존한다(SPEC-0005 §2.1). 두 곳에
   /// 문자열 매칭을 흩어 두면 서버가 형태를 바꿀 때 한쪽만 고쳐진다.
+  ///
+  /// **`unauthenticated` 하나에만 발화한다.** 서버가 2026-08-25에 더한
+  /// `UNAUTHENTICATED_TOKEN_REJECTED`는 분류기가 이 값으로 접어 주므로 여기가
+  /// 저절로 받는다 — 예전에는 그 응답이 조용히 비로그인으로 처리돼 갱신이 아예
+  /// 돌지 않았다.
+  ///
+  /// **`AUTH_STORE_UNAVAILABLE`은 일부러 여기 걸리지 않는다.** 걸리면 갱신이
+  /// 발화하고, 저장소가 죽어 있으니 그것도 실패해 `suppressRefresh()`가 선다 —
+  /// 그 억제는 앱 재시작이나 사용자의 명시적 재시도로만 풀리므로 **일시 장애가
+  /// 반영구적 갱신 불능이 된다.** 별도 분류 값을 둔 실질적 이유가 이것이다.
   bool _isAuthError(Response response) {
     final List<GraphQLError>? errors = response.errors;
     if (errors == null || errors.isEmpty) return false;

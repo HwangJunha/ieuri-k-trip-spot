@@ -121,11 +121,18 @@ class FloatingBottomNavScaffold extends StatelessWidget {
                     // SPEC-0030 R18: 좋아요와 커뮤니티가 한 자리로 합쳐진다.
                     NavigationDestination(
                       key: const Key('bottom_nav_library'),
-                      // **책갈피가 아니라 사람이다**(사용자 결정 2026-08-24).
-                      // 좋아요한 장소와 커뮤니티 활동을 함께 묶은 "내 활동"이라,
-                      // 북마크 아이콘은 저장해 둔 것만 있는 보관함처럼 읽혔다.
-                      icon: const Icon(Icons.person_outline),
-                      selectedIcon: const Icon(Icons.person),
+                      // **하트다**(사용자 결정 2026-08-25).
+                      //
+                      // 북마크 → 사람 → 하트로 두 번 바뀌었다. 북마크는 저장해 둔
+                      // 것만 있는 보관함처럼 읽혔고(2026-08-24), 사람은 이번엔
+                      // 프로필·계정으로 읽혀 설정과 헷갈렸다 — 설정은 홈 앱바에
+                      // 따로 있다.
+                      //
+                      // 하트는 이 탭의 주역인 좋아요와 **스와이프 오른쪽**이 이미
+                      // 쓰는 기호다. 기호가 이어져 "내가 하트한 것들이 여기 모인다"가
+                      // 곧바로 읽힌다.
+                      icon: const Icon(Icons.favorite_outline),
+                      selectedIcon: const Icon(Icons.favorite),
                       label: l10n.navLibrary,
                     ),
                     NavigationDestination(

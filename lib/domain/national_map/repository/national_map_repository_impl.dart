@@ -38,38 +38,33 @@ class NationalMapRepositoryImpl implements NationalMapRepository {
   Future<CellDetail> fetchCellDetail({
     required String cellId,
     int? first,
-    String? after,
   }) async {
     final Map<String, dynamic> data = await _query(
       documentNodeQueryMapCellDetail,
-      Variables$Query$MapCellDetail(
-        id: cellId,
-        first: first,
-        after: after,
-      ).toJson(),
+      Variables$Query$MapCellDetail(id: cellId, first: first).toJson(),
       'mapCell',
     );
     final Query$MapCellDetail$mapCell cell = Query$MapCellDetail.fromJson(
       data,
     ).mapCell;
 
+    // **커서 연결이 아니라 배열이다**(2026-08-25). `likeCount`가 edge에서
+    // `CellSpot` 안으로 옮겨졌고, 이어 읽을 수단이 없어 페이지네이션도 사라졌다.
     return CellDetail(
       cell: _cell(cell, image: _image(cell.representativeImage)),
       spots: <CellSpot>[
-        for (final Query$MapCellDetail$mapCell$spots$edges e in cell.spots.edges)
+        for (final Query$MapCellDetail$mapCell$spots s in cell.spots)
           CellSpot(
-            id: e.node.id,
-            title: e.node.title,
-            thumbnailImageUrl: e.node.thumbnailImageUrl,
-            categoryCode: e.node.category.code,
-            categoryLabel: e.node.category.label,
-            lat: e.node.lat,
-            lng: e.node.lng,
-            likeCount: e.likeCount,
+            id: s.id,
+            title: s.title,
+            thumbnailImageUrl: s.thumbnailImageUrl,
+            categoryCode: s.category.code,
+            categoryLabel: s.category.label,
+            lat: s.lat,
+            lng: s.lng,
+            likeCount: s.likeCount,
           ),
       ],
-      hasMore: cell.spots.pageInfo.hasNextPage,
-      endCursor: cell.spots.pageInfo.endCursor,
     );
   }
 

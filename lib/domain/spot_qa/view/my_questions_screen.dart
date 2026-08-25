@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../common/navigation/spot_qa_routes.dart';
+import '../../../common/widget/skeleton_list.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/my_question_tile.dart';
+import '../model/spot_qa_skeleton_samples.dart';
+import '../model/spot_question.dart';
 import '../provider/my_questions_providers.dart';
 
 /// 「내 질문」 화면 — 내가 올린 질문과 거기 달린 답변을 보는 유일한 곳.
@@ -50,11 +53,37 @@ class MyQuestionsScreen extends ConsumerWidget {
           AsyncError<List<MyQuestionItem>>() => _Failed(
             onRetry: () => ref.invalidate(myQuestionsControllerProvider),
           ),
-          _ => const Center(child: CircularProgressIndicator()),
+          // 실제 타일에 더미를 넣어 그린 뒤 시머로 덮는다. 구분선도 실제 목록과
+          // 같이 둬야 데이터가 도착할 때 줄 위치가 튀지 않는다.
+          _ => SkeletonList(
+            separator: const Divider(height: 1),
+            itemBuilder: (_, int index) => MyQuestionTile(
+              item: _skeletonItem(index),
+              now: spotQaSkeletonNow,
+              onTap: () {},
+            ),
+          ),
         },
       ),
     );
   }
+}
+
+/// 뼈대 한 줄이 쓸 더미 항목.
+///
+/// `MyQuestionItem`은 provider 층의 타입이라 모델의 샘플 파일이 만들 수 없다
+/// (모델은 Riverpod에 의존하지 않는다 — CLAUDE.md §3). 그래서 질문만 모델에서
+/// 가져와 여기서 「본 답변 수」와 묶는다.
+///
+/// 첫 줄만 `seenAnswerCount`를 답변 수보다 낮게 둔다 — 새 답변 배지가 있는 줄과
+/// 없는 줄의 폭이 달라서, 둘이 섞여야 뼈대가 실제 목록과 같은 모양이 된다.
+MyQuestionItem _skeletonItem(int index) {
+  final SpotQuestion question =
+      spotQuestionSkeletonSamples[index % spotQuestionSkeletonSamples.length];
+  return MyQuestionItem(
+    question: question,
+    seenAnswerCount: index.isEven ? 0 : question.answerCount,
+  );
 }
 
 class _List extends ConsumerWidget {

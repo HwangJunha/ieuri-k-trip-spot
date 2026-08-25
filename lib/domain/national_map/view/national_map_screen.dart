@@ -57,6 +57,11 @@ class NationalMapScreen extends ConsumerWidget {
           AsyncData<List<CellGeometry>>(value: final List<CellGeometry> g),
         ) =>
           _Body(cells: c, geometries: g, l10n: l10n),
+        // **여기는 뼈대를 두지 않는다**(사용자 지적 2026-08-25). 한때 한반도
+        // 실루엣을 시머로 그렸는데, 목록 화면의 뼈대가 "화면이 채워진 느낌"을
+        // 주는 것과 달리 이쪽은 실루엣 하나에서 250여 칸 지도로 **그림이 통째로
+        // 바뀌어** 오히려 튀었다. 뼈대의 목적은 올 것을 미리 보여 주는 것인데
+        // 그 역할을 못 하면 없는 편이 낫다.
         _ => const Center(child: CircularProgressIndicator()),
       },
     );

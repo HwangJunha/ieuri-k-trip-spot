@@ -11,31 +11,26 @@ query MapCells {
 }
 
 # 칸 상세 — 대표 이미지와 장소 목록.
-query MapCellDetail($id: ID!, $first: Int, $after: String) {
+#
+# **장소는 커서 연결이 아니라 배열이다**(2026-08-25). 페이지네이션이 필요 없다는
+# 서버 판단이고 `first`는 상한 50으로 잘린다 — 더 받을 것이 없으므로 `after`도
+# 없앴다. `likeCount`는 edge에서 `CellSpot` 안으로 옮겨졌다.
+query MapCellDetail($id: ID!, $first: Int) {
   mapCell(id: $id) {
     ...MapCellCore
     representativeImage {
       ...CellImageFields
     }
-    spots(first: $first, after: $after) {
-      edges {
-        cursor
-        likeCount
-        node {
-          id
-          title
-          thumbnailImageUrl
-          lat
-          lng
-          category {
-            code
-            label
-          }
-        }
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
+    spots(first: $first) {
+      id
+      title
+      thumbnailImageUrl
+      lat
+      lng
+      likeCount
+      category {
+        code
+        label
       }
     }
   }

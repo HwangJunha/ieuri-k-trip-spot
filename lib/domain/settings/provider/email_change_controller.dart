@@ -175,6 +175,12 @@ class EmailChangeController extends _$EmailChangeController {
     final String? verificationId = state.verificationId;
     if (state.busy || verificationId == null) return;
 
+    // **검증이 도는 동안 화면을 나갈 수 있다.** 이 뒤로는 서버에서 주소가 이미
+    // 바뀐 시점이 나오므로, 여기서 `UnmountedRefException`이 나면 사용자는 실패로
+    // 보는데 이메일은 바뀌어 있는 최악의 어긋남이 된다. 인증 notifier는
+    // keepAlive라 미리 읽어 두면 폐기 뒤에도 갱신을 마칠 수 있다.
+    final AuthController auth = ref.read(authControllerProvider.notifier);
+
     state = state.copyWith(busy: true, clearReason: true, clearFailure: true);
     try {
       final EmailChangeConfirmation result = await _repository
@@ -185,6 +191,7 @@ class EmailChangeController extends _$EmailChangeController {
 
       if (!result.succeeded) {
         final EmailChangeFailureReason reason = result.reason!;
+        if (!ref.mounted) return;
         state = reason.canRetryHere
             ? state.copyWith(busy: false, reason: reason)
             : EmailChangeState(
@@ -196,15 +203,20 @@ class EmailChangeController extends _$EmailChangeController {
       }
 
       // 여기서 비로소 프로필 이메일이 바뀌었다. 세션을 다시 맞춰야 설정 홈이
-      // 새 주소를 그린다.
-      await ref.read(authControllerProvider.notifier).refreshMe();
-      state = EmailChangeState(
-        step: EmailChangeStep.done,
-        confirmedEmail: result.email,
-        pendingEmail: state.pendingEmail,
-      );
+      // 새 주소를 그린다. **화면을 나갔어도 갱신은 마친다** — 바뀐 주소를 세션에
+      // 반영하지 않으면 다시 들어왔을 때 옛 주소가 남는다.
+      await auth.refreshMe();
+      if (ref.mounted) {
+        state = EmailChangeState(
+          step: EmailChangeStep.done,
+          confirmedEmail: result.email,
+          pendingEmail: state.pendingEmail,
+        );
+      }
     } on Object catch (error) {
-      state = state.copyWith(busy: false, failure: _asFailure(error));
+      if (ref.mounted) {
+        state = state.copyWith(busy: false, failure: _asFailure(error));
+      }
     }
   }
 

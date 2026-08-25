@@ -1,4 +1,5 @@
 
+import '../../../common/network/network_retry_policy.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/localization/locale_controller.dart';
@@ -10,7 +11,6 @@ import '../model/liked_spot.dart';
 import '../../../common/category/spot_category.dart';
 import '../../../common/category/spot_category_selection.dart';
 import '../repository/spot_repository.dart';
-import 'retry_counting.dart';
 import '../../../common/category/spot_category_toggle.dart';
 import 'spot_providers.dart';
 import '../../auth/provider/session_scope.dart';
@@ -101,11 +101,11 @@ class SelectedLikedCategory extends _$SelectedLikedCategory
 /// 속하고 서버가 정렬을 보장하므로, 탭을 떠났다 오면 다시 받는 것이 오히려 맞다 —
 /// 상세에서 좋아요를 해제하고 돌아왔을 때 최신 목록을 보게 된다.
 ///
-/// [spotRetryPolicy]로 자동 재시도를 묶는다(SPEC-0006 R1). Riverpod 기본값은 실패한
+/// 공통 정책으로 자동 재시도를 묶는다. Riverpod 기본값은 실패한
 /// provider를 최대 10회 지수 백오프로 재조회하는데, 미인증 실패는 여기서 다시 조회해
 /// 봐야 같은 실패가 날 뿐이고 그 폭주가 세션 갱신 경로와 겹친다 — 인증 실패에는
 /// 재시도하지 않는 이 정책이 그것을 끊는다(R5).
-@Riverpod(retry: spotRetryPolicy)
+@Riverpod(retry: defaultNetworkRetry)
 class LikedSpotsController extends _$LikedSpotsController {
   static final Logger _log = appLogger('LikedSpotsController');
 

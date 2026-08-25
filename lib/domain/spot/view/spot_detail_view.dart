@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../common/navigation/spot_qa_routes.dart';
+import '../../../common/widget/app_skeleton.dart';
 import '../../../common/widget/failure_notice.dart';
 import '../../spot_qa/component/spot_qa_entry_button.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -98,33 +99,107 @@ class _LoadingState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AppLocalizations l10n = AppLocalizations.of(context);
-    final Widget spinner = Column(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        const CircularProgressIndicator(),
-        const SizedBox(height: 16),
-        Text(l10n.spotDetailLoading),
-      ],
-    );
-
-    if (thumbnailUrl == null) return Center(child: spinner);
-
-    // 갤러리와 같은 컴포넌트를 쓴다 — 조회 완료 후 교체될 위젯과 같은 형이라야 같은
-    // 자리·같은 크기에 그려지고, 이미지 캐시도 같은 URL로 적중한다.
-    //
     // 스크롤 가능한 컨테이너에 담는 이유는 본문(`_DetailBody`)도 스크롤이기 때문이다.
-    // 화면이 좁으면 갤러리 + 스피너가 세로를 넘겨 오버플로한다.
+    // 화면이 좁으면 갤러리 + 뼈대가 세로를 넘겨 오버플로한다.
     return SingleChildScrollView(
       child: Column(
         children: <Widget>[
-          SpotGallery(
-            images: const <SpotImage>[],
-            fallbackImageUrl: thumbnailUrl!,
-          ),
-          const SizedBox(height: 32),
-          spinner,
+          // **넘겨받은 썸네일이 있으면 갤러리 자리를 진짜 이미지로 채운다**(R8,
+          // AC-24). 이건 뼈대로 덮지 않는다 — 리스트에서 보던 그 이미지가 그대로
+          // 이어져야 조회 완료 후 같은 URL을 다시 로드하며 깜빡이지 않는다.
+          //
+          // 값이 없으면(직접 진입) 갤러리도 뼈대다.
+          if (thumbnailUrl != null)
+            SpotGallery(
+              images: const <SpotImage>[],
+              fallbackImageUrl: thumbnailUrl!,
+            )
+          else
+            const AppSkeleton(child: _DetailBodySkeletonGallery()),
+          const _DetailBodySkeleton(),
         ],
+      ),
+    );
+  }
+}
+
+/// 직접 진입이라 보여 줄 썸네일이 없을 때의 갤러리 자리.
+///
+/// [SpotGallery]와 같은 높이를 차지해야 조회가 끝났을 때 본문이 위아래로 튀지
+/// 않는다. 이미지를 그리는 대신 자리만 잡는다 — 뼈대가 실패할 요청을 내면 안 된다.
+class _DetailBodySkeletonGallery extends StatelessWidget {
+  const _DetailBodySkeletonGallery();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 260,
+      width: double.infinity,
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+    );
+  }
+}
+
+/// 상세 본문의 뼈대.
+///
+/// **`_DetailBody`를 더미로 그리지 않는다.** 그 위젯은 `_LikeCount`·
+/// `SpotQaEntryButton`처럼 `contentId`로 provider를 watch하는 자식을 품고 있어,
+/// 가짜 id로 그리면 뼈대가 실제 서버 요청을 낸다. 그래서 **정적인 부분만** 같은
+/// 간격으로 세운다 — 제목, 주소 한 줄, 소개 문단, 섹션 둘.
+///
+/// 실제 상세는 값이 없는 섹션을 숨기므로(AC-25) 뼈대와 정확히 같을 수는 없다.
+/// 흔한 형태에 맞춰 두고, 도착하면 그 화면의 실제 구성으로 바뀐다.
+class _DetailBodySkeleton extends StatelessWidget {
+  const _DetailBodySkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    return AppSkeleton(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text('경복궁 근정전', style: theme.textTheme.headlineSmall),
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Icon(
+                  Icons.place_outlined,
+                  size: 18,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    '서울특별시 종로구 사직로 161',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Text(
+              '조선의 법궁으로 지어진 궁궐입니다. 근정전은 국왕이 신하들의 하례를 '
+              '받거나 공식 행사를 치르던 곳으로, 넓은 마당과 품계석이 함께 남아 '
+              '있습니다.',
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 24),
+            Text('운영 정보', style: theme.textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Text('매일 09:00 - 18:00', style: theme.textTheme.bodyMedium),
+            const SizedBox(height: 4),
+            Text('성인 3,000원 / 청소년 1,500원', style: theme.textTheme.bodyMedium),
+            const SizedBox(height: 24),
+            Text('연락처', style: theme.textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Text('02-3700-3900', style: theme.textTheme.bodyMedium),
+          ],
+        ),
       ),
     );
   }
@@ -151,6 +226,9 @@ class _ErrorState extends StatelessWidget {
         body: l10n.retryExhaustedBody,
         actionLabel: l10n.retryExhaustedAction,
         onAction: onRetry,
+        // 못 불러온 것은 장소다 — 네트워크 아이콘은 원인을 단정한다(2026-08-26).
+        // 발견 탭과 같은 결로 맞춘다.
+        icon: Icons.explore_off_outlined,
       );
     }
 

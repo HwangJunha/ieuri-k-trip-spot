@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../common/navigation/settings_routes.dart';
 import '../../../common/pagination/pagination_list_view.dart';
+import '../../../common/widget/skeleton_list.dart';
 import '../../../common/analytics/analytics_events.dart';
 import '../../../common/analytics/app_analytics.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -11,6 +12,7 @@ import '../../../common/category/spot_category_bar.dart';
 import '../component/liked_spot_card.dart';
 import '../provider/swipe_providers.dart';
 import '../model/liked_spot.dart';
+import '../model/spot_skeleton_samples.dart';
 import '../../../common/category/spot_category.dart';
 import '../../../common/category/spot_category_selection.dart';
 import '../provider/spot_detail_providers.dart';
@@ -72,7 +74,14 @@ class LikedSpotsScreen extends ConsumerWidget {
             // 있어야 다른 카테고리로 이어서 옮길 수 있다.
             Expanded(
               child: state.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
+                // 실제 카드에 더미를 넣어 그린 뒤 시머로 덮는다 — 카드 디자인이
+                // 바뀌어도 뼈대가 저절로 따라간다.
+                loading: () => SkeletonList(
+                  itemBuilder: (_, _) => LikedSpotCard(
+                    spot: likedSpotSkeletonSample,
+                    onTap: () {},
+                  ),
+                ),
                 // 미인증(UNAUTHENTICATED)은 SPEC-0005의 세션 갱신 경로가 처리한다 —
                 // 여기선 일반 오류와 같게 다루고 재시도만 제공한다(§5.2).
                 error: (_, _) => _ErrorBody(

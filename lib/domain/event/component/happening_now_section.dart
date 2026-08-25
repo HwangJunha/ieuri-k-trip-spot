@@ -5,6 +5,7 @@ import '../../../common/navigation/spot_detail_route.dart';
 import '../../../common/widget/home_section.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/festival.dart';
+import '../model/festival_skeleton_samples.dart';
 import '../provider/event_providers.dart';
 import 'event_card.dart';
 
@@ -50,6 +51,7 @@ class HappeningNowSection extends ConsumerWidget {
       value: events,
       emptyMessage: l10n.homeHappeningNowEmpty,
       onRetry: () => ref.invalidate(happeningNowEventsProvider),
+      skeletonItems: festivalSkeletonSamples,
       builder: (List<Festival> items) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(

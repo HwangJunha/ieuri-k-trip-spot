@@ -238,11 +238,13 @@ class SpotQaComposer extends _$SpotQaComposer {
     }
 
     state = state.copyWith(
-      photos: state.photos.map((ComposerPhoto p) {
-        if (p is! LocalPhoto) return p;
-        final String? key = confirmedByLocalId[p.id];
-        return key == null ? p : RemotePhoto(key);
-      }).toList(growable: false),
+      photos: state.photos
+          .map((ComposerPhoto p) {
+            if (p is! LocalPhoto) return p;
+            final String? key = confirmedByLocalId[p.id];
+            return key == null ? p : RemotePhoto(key);
+          })
+          .toList(growable: false),
     );
 
     return SpotQaPhotoUploadResult(
@@ -255,10 +257,19 @@ class SpotQaComposer extends _$SpotQaComposer {
   ///
   /// **정리하지 않으면 서버에 고아 파일이 남는다.** 실패해도 조용히 넘어간다 —
   /// 화면을 떠나는 길을 막을 이유가 없고, 남은 오브젝트는 서버 lifecycle의 몫이다.
+  ///
+  /// **키와 저장소를 루프 전에 스냅샷한다.** 화면이 이것을 `unawaited`로 띄워 놓고
+  /// 곧바로 닫으므로(`_close()`), 첫 `deleteImage`가 끝나기도 전에 이 provider는
+  /// 구독자가 0이 되어 폐기된다. 그 뒤 `state`나 `ref.read`를 만지면
+  /// `UnmountedRefException`이 나는데, `unawaited`라 아무도 잡지 않고 zone으로
+  /// 샌다 — 지울 키 목록은 진입 시점에 이미 확정돼 있으니 들고 들어가면 된다.
   Future<void> discardUploaded() async {
-    for (final String key in _confirmedKeys()) {
+    final List<String> keys = _confirmedKeys();
+    if (keys.isEmpty) return;
+    final SpotQaRepository repository = _repository;
+    for (final String key in keys) {
       try {
-        await _repository.deleteImage(key);
+        await repository.deleteImage(key);
       } on Object {
         // 정리 실패는 사용자가 할 수 있는 일이 없다.
       }

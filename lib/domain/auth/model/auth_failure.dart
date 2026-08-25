@@ -33,6 +33,15 @@ enum AuthFailureKind {
   /// 위반되므로 [refreshRejected]와 반드시 구분한다.
   transportFailure,
 
+  /// 인증 저장소 일시 장애(서버 `AUTH_STORE_UNAVAILABLE`, 2026-08-25).
+  ///
+  /// **세션을 끝내지 않는다.** 토큰은 멀쩡하고 서버 쪽이 잠시 아픈 것이라, 잠시
+  /// 후 다시 시도하면 된다 — 재로그인을 시키면 멀쩡한 세션을 버리는 셈이다.
+  ///
+  /// [transportFailure]와 나누는 이유는 안내가 달라서다. 네트워크가 끊긴 것이
+  /// 아니므로 "연결을 확인하세요"는 틀린 말이 된다.
+  authStoreUnavailable,
+
   /// 재발송·주소 정정의 60초 쿨다운에 걸렸다(SPEC-0024 R7). 두 버튼이 **하나의**
   /// 타이머를 공유하므로 재발송 직후 주소 정정도 이 코드로 막힌다.
   resendCooldownActive,
@@ -185,6 +194,11 @@ class AuthFailure implements Exception {
   /// refresh 재사용 감지 — 재발급 불가, 재로그인만이 복구다(SPEC-0024 §6).
   static const AuthFailure tokenReuseDetected = AuthFailure(
     AuthFailureKind.tokenReuseDetected,
+  );
+
+  /// 인증 저장소 일시 장애 — 세션을 유지한 채 잠시 후 재시도한다(2026-08-25).
+  static const AuthFailure authStoreUnavailable = AuthFailure(
+    AuthFailureKind.authStoreUnavailable,
   );
 
   @override

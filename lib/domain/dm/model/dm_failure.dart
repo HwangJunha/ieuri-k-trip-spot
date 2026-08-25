@@ -30,6 +30,14 @@ class DmFailure implements Exception {
   /// 상한까지 헛돌지 않는다.
   static const DmFailure forbidden = DmFailure(DmFailureKind.forbidden);
 
+  /// 소켓 신원 만료(`SUBSCRIPTION_UNAUTHENTICATED`, 2026-08-25).
+  ///
+  /// **재연결로 풀리지 않는다.** 신원은 `connection_init` 시점에 고정되어 같은
+  /// 토큰으로 다시 붙으면 결과가 같다 — 무한 재연결의 원인이던 자리다.
+  static const DmFailure subscriptionUnauthenticated = DmFailure(
+    DmFailureKind.subscriptionUnauthenticated,
+  );
+
   /// 뮤테이션 `userErrors`의 서버 코드로 만든 실패.
   factory DmFailure.userError(String code) =>
       DmFailure(DmFailureKind.userError, code: code);
@@ -44,14 +52,26 @@ class DmFailure implements Exception {
   static DmFailure fromQueryErrorCode(String? code) =>
       switch (code?.toUpperCase()) {
         'UNAUTHENTICATED' => DmFailure.unauthenticated,
+        // 토큰 거부(2026-08-25). 갱신으로 회복되는 자리라 위와 같게 다룬다.
+        'UNAUTHENTICATED_TOKEN_REJECTED' => DmFailure.unauthenticated,
         'FORBIDDEN' => DmFailure.forbidden,
+        // **소켓 신원 만료.** 재연결로 풀리지 않는다 — 아래 [permanent] 참고.
+        'SUBSCRIPTION_UNAUTHENTICATED' => DmFailure.subscriptionUnauthenticated,
+        // 저장소 일시 장애(2026-08-25). **재시도로 풀린다** — `permanent`가 아니라
+        // 네트워크 실패와 같은 갈래로 두어 정상 백오프를 타게 한다.
+        'AUTH_STORE_UNAVAILABLE' => DmFailure.network,
         _ => DmFailure.network,
       };
 
   /// 재시도해도 소용없는 실패인지. 구독 재연결·provider 재시도가 이 값을 본다.
+  ///
+  /// **[subscriptionUnauthenticated]도 참이다.** 같은 토큰으로 다시 붙으면 결과가
+  /// 같으므로 재시도는 낭비다. 다만 "그래서 포기한다"가 아니라 **갱신 후 새 연결로
+  /// 간다** — 그 갈래는 구독을 여는 쪽이 따로 본다(`conversation_providers.dart`).
   bool get permanent =>
       kind == DmFailureKind.forbidden ||
-      kind == DmFailureKind.unauthenticated;
+      kind == DmFailureKind.unauthenticated ||
+      kind == DmFailureKind.subscriptionUnauthenticated;
 
   @override
   bool operator ==(Object other) =>
@@ -65,4 +85,13 @@ class DmFailure implements Exception {
       'DmFailure(${kind.name}${code == null ? '' : ', $code'})';
 }
 
-enum DmFailureKind { network, unknown, unauthenticated, forbidden, userError }
+enum DmFailureKind {
+  network,
+  unknown,
+  unauthenticated,
+  forbidden,
+
+  /// 소켓 신원 만료. 갱신 → 재연결 → 재구독으로만 풀린다.
+  subscriptionUnauthenticated,
+  userError,
+}

@@ -18,6 +18,9 @@ analyzer:
     - "**/*.graphql.dart"
     - "**/*.freezed.dart"
     - "lib/l10n/gen/**"
+    # iOS 빌드가 여기에 Firebase SDK 소스를 통째로 받아 둔다. 우리 코드가 아닌데
+    # 분석 대상에 들어와 오류 2만여 건을 뿜어, 진짜 문제가 묻힌다(2026-08-26).
+    - "build/**"
 
 linter:
   # The lint rules applied to this project can be customized in the

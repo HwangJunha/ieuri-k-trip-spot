@@ -1,11 +1,11 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 
 import '../../../common/widget/image_placeholder.dart';
+import '../../../common/widget/network_photo.dart';
 import '../model/copyright_type.dart';
 import '../model/spot_image.dart';
 import '../model/swipe_card_display.dart';
+import 'blur_backdrop.dart';
 
 /// 상세 헤더 갤러리(SPEC-0003 §3). [images]를 가로 페이저로 보여준다.
 ///
@@ -148,8 +148,8 @@ class _GalleryImage extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!_isUrl) return ImagePlaceholder(imageRef: entry.imageRef);
 
-    final Widget image = Image.network(
-      entry.imageRef,
+    final Widget image = NetworkPhoto(
+      url: entry.imageRef,
       // TYPE1만 채운다. 나머지는 잘리지 않게 넣는다(R13) — 포스터 제목이 위에서
       // 잘려 나가던 자리다.
       fit: entry.fit == SwipeCardFit.cover ? BoxFit.cover : BoxFit.contain,
@@ -167,35 +167,9 @@ class _GalleryImage extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: <Widget>[
-        _BlurBackdrop(imageRef: entry.imageRef),
+        BlurBackdrop(imageRef: entry.imageRef),
         image,
       ],
-    );
-  }
-}
-
-/// `contain`으로 그릴 때 남는 여백을 채우는 블러 배경(스와이프 카드와 같은 방식).
-class _BlurBackdrop extends StatelessWidget {
-  const _BlurBackdrop({required this.imageRef});
-
-  final String imageRef;
-
-  @override
-  Widget build(BuildContext context) {
-    return ImageFiltered(
-      imageFilter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-      child: ColorFiltered(
-        colorFilter: const ColorFilter.mode(Colors.black26, BlendMode.darken),
-        child: Image.network(
-          imageRef,
-          fit: BoxFit.cover,
-          width: double.infinity,
-          height: double.infinity,
-          errorBuilder:
-              (BuildContext context, Object error, StackTrace? stack) =>
-                  ColoredBox(color: Theme.of(context).colorScheme.surface),
-        ),
-      ),
     );
   }
 }

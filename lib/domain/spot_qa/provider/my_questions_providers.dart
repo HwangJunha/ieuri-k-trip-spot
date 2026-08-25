@@ -49,7 +49,7 @@ class MyQuestionItem {
 ///
 /// **인증이 필요하다.** 비로그인이면 repository가 실패를 던지고 화면이 그대로
 /// 오류/로그인 안내로 분기한다 — 빈 목록으로 접으면 "쓴 적 없음"으로 오해된다.
-@riverpod
+@Riverpod(retry: spotQaRetryPolicy)
 class MyQuestionsController extends _$MyQuestionsController {
   SpotQaRepository get _repository => ref.read(spotQaRepositoryProvider);
   SeenAnswerCountsStore get _seen => ref.read(seenAnswerCountsStoreProvider);
