@@ -2,8 +2,18 @@ import 'dart:math' as math;
 
 import 'cell_geometry.dart';
 import 'district_boundary.dart';
+import 'district_boundary_source.dart';
 import 'landmark_icon_binding.dart';
 import 'map_cell.dart';
+
+/// [CellShapeBuilder.parseAndBuild]에 넘길 것들. `compute`가 인자를 하나만 받는다.
+class CellShapeBuildRequest {
+  const CellShapeBuildRequest({required this.geoJson, required this.cells});
+
+  /// `district-boundaries.geojson` 원문.
+  final String geoJson;
+  final List<MapCell> cells;
+}
 
 /// 서버가 정한 칸([MapCell])과 원본 시군구 경계로 **칸 도형을 조립한다.**
 ///
@@ -47,6 +57,24 @@ class CellShapeBuilder {
     final double h = maxLat - minLat;
     return w < h ? w : h;
   }
+
+  /// GeoJSON 원문을 파싱해 곧바로 칸 도형을 조립한다. **isolate에서 통째로 돌리기
+  /// 위한 진입점이다.**
+  ///
+  /// ## 왜 파싱과 조립을 함께 하는가
+  ///
+  /// 예전에는 파싱만 `compute`로 넘기고 조립은 메인에서 했다. 그러면 **중간 산물이
+  /// 경계를 두 번 넘는다** — 파싱 결과인 13만 개가 넘는 [GeoPoint]를 메인으로
+  /// 복사해 받은 뒤, 그것을 태워 결국 1만여 점을 만든다. 복사 비용이 파싱만큼 크고,
+  /// 조립(dissolve + 단순화, 이 클래스 문서의 ~250ms)이 그대로 UI 스레드에 얹혔다.
+  ///
+  /// 원문 문자열 하나만 넘기고 **완성된 결과만 돌려받으면** 무거운 중간 산물이
+  /// 메인 isolate에 아예 존재하지 않는다.
+  static List<CellGeometry> parseAndBuild(CellShapeBuildRequest request) =>
+      build(
+        cells: request.cells,
+        boundaries: DistrictBoundarySource.parse(request.geoJson),
+      );
 
   /// 미리 만들어 둔 도형으로 [cells]를 조립한다(SPEC-0031 방식 1).
   ///
@@ -298,20 +326,25 @@ class CellShapeBuilder {
     ];
   }
 
+  /// 점 [p]에서 선분 [a]-[b]까지의 거리.
+  ///
+  /// **`math.pow`를 쓰지 않는다.** 이 함수는 Douglas-Peucker의 최내부에서 수백만 번
+  /// 불리는데, `pow`는 임의 지수를 다루는 일반 함수라 단순 곱셈보다 한참 느리고
+  /// 인라인되지도 않는다. 제곱은 곱셈으로 쓴다.
   static double _perpendicular(GeoPoint p, GeoPoint a, GeoPoint b) {
     final double dx = b.lng - a.lng;
     final double dy = b.lat - a.lat;
     if (dx == 0 && dy == 0) {
-      return math.sqrt(
-        math.pow(p.lng - a.lng, 2) + math.pow(p.lat - a.lat, 2),
-      );
+      final double ux = p.lng - a.lng;
+      final double uy = p.lat - a.lat;
+      return math.sqrt(ux * ux + uy * uy);
     }
     double t =
         ((p.lng - a.lng) * dx + (p.lat - a.lat) * dy) / (dx * dx + dy * dy);
     t = t.clamp(0.0, 1.0);
-    final double cx = a.lng + t * dx;
-    final double cy = a.lat + t * dy;
-    return math.sqrt(math.pow(p.lng - cx, 2) + math.pow(p.lat - cy, 2));
+    final double ux = p.lng - (a.lng + t * dx);
+    final double uy = p.lat - (a.lat + t * dy);
+    return math.sqrt(ux * ux + uy * uy);
   }
 
   /// 링의 면적(제곱도). 크기 비교에만 쓴다.

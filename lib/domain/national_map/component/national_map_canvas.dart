@@ -263,10 +263,16 @@ class _NationalMapCanvasState extends State<NationalMapCanvas>
     ];
     if (keys.isEmpty) return;
 
+    // **묶음마다 다시 그린다.** 예전에는 161장이 전부 끝난 뒤 한 번만 그려서,
+    // 그때까지 회색 면만 보이다가 아이콘이 한꺼번에 나타났다 — 지도는 떴는데
+    // 그림이 늦게 뜨는 것으로 읽혔다.
     unawaited(
-      _iconCache.preload(keys).then((_) {
-        if (mounted) setState(() {});
-      }),
+      _iconCache.preload(
+        keys,
+        onBatch: () {
+          if (mounted) setState(() {});
+        },
+      ),
     );
   }
 

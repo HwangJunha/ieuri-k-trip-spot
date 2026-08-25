@@ -8,7 +8,6 @@ import '../model/cell_detail.dart';
 import '../model/cell_geometry.dart';
 import '../model/cell_shape_builder.dart';
 import '../model/cell_shape_source.dart';
-import '../model/district_boundary.dart';
 import '../model/map_cell.dart';
 import '../model/province_progress.dart';
 import '../repository/national_map_repository.dart';
@@ -106,10 +105,19 @@ Future<List<CellGeometry>> cellGeometries(Ref ref) async {
     if (out.isNotEmpty) return out;
   }
 
-  final List<DistrictBoundary> boundaries = await ref.watch(
-    districtBoundariesProvider.future,
+  // **파싱과 조립을 한 isolate에서 끝낸다.** 예전에는 파싱만 `compute`로 넘기고
+  // 조립은 메인에서 했는데, 그러면 13만 개가 넘는 중간 좌표가 메인으로 복사돼 오고
+  // 조립(~250ms)이 UI 스레드에 그대로 얹혔다. 원문만 넘기고 완성된 1만여 점만
+  // 돌려받으면 그 무게가 메인에 아예 오지 않는다.
+  //
+  // **원문을 여기서 읽는다** — `districtBoundariesProvider`를 watch하면 파싱된
+  // 결과를 받게 되어 다시 그 복사 비용이 생긴다. 그쪽은 위치 판정·사진 스캔이
+  // 쓰는 별개 경로로 남는다.
+  final String raw = await rootBundle.loadString(districtBoundaryAssetPath);
+  return compute(
+    CellShapeBuilder.parseAndBuild,
+    CellShapeBuildRequest(geoJson: raw, cells: cells),
   );
-  return CellShapeBuilder.build(cells: cells, boundaries: boundaries);
 }
 
 /// 시도별 진척(R21). **클라이언트가 센다** — 161칸을 이미 갖고 있다.
