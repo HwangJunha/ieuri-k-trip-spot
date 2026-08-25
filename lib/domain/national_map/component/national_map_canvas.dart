@@ -252,14 +252,25 @@ class _NationalMapCanvasState extends State<NationalMapCanvas>
     final Set<String> filled =
         widget.overlappingCellIds ?? widget.visitedCellIds;
     final LandmarkDetail detail = _detailFor(_zoomScale);
+    // **방문한 칸을 먼저 싣는다**(사용자 지적 2026-08-25). 161장을 순서 없이
+    // 실으면 컬러로 채워진 칸이 목록 뒤쪽에 걸릴 때 "내가 채운 지도"가 한참
+    // 뒤에야 드러난다 — 그 사이 화면은 회색 덩어리다.
+    //
+    // 방문 칸은 보통 몇 개에서 몇십 개라 첫 묶음 한두 번이면 끝난다. 그것만
+    // 먼저 떠도 지도가 살아나 보이고, 무채색 칸은 뒤따라 채워져도 티가 덜 난다.
+    final List<LandmarkIconKey> visitedKeys = <LandmarkIconKey>[];
+    final List<LandmarkIconKey> restKeys = <LandmarkIconKey>[];
+    for (final CellGeometry cell in widget.cells) {
+      final String? slug = cell.landmarkSlug;
+      if (slug == null) continue;
+      final bool isFilled = filled.contains(cell.cellId);
+      (isFilled ? visitedKeys : restKeys).add(
+        LandmarkIconKey(slug, visited: isFilled, detail: detail),
+      );
+    }
     final List<LandmarkIconKey> keys = <LandmarkIconKey>[
-      for (final CellGeometry cell in widget.cells)
-        if (cell.landmarkSlug != null)
-          LandmarkIconKey(
-            cell.landmarkSlug!,
-            visited: filled.contains(cell.cellId),
-            detail: detail,
-          ),
+      ...visitedKeys,
+      ...restKeys,
     ];
     if (keys.isEmpty) return;
 
