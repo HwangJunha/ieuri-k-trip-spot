@@ -14,8 +14,8 @@ input ChangeNicknameInput {
   nickname: String!
 }
 
-# 성공 시 확정된 닉네임을 돌려준다. **중복 판정은 서버가 한다** — 클라이언트는
-# 형식만 보고(R5), `NICKNAME_ALREADY_TAKEN`이 `userErrors`로 온다.
+# 성공 시 확정된 닉네임을 돌려준다. **중복은 허용된다**(2026-08-25 서버 변경) —
+# 형식 오류(`INVALID_NICKNAME`, 2~20자)만 `userErrors`로 온다(R5).
 type ChangeNicknamePayload {
   success: Boolean!
   userErrors: [UserError!]!

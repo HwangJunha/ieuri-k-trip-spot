@@ -245,6 +245,10 @@ class AuthController extends _$AuthController {
       ageVerified: ageVerified,
       agreements: agreements,
       authorizationCode: credential.authorizationCode,
+      // provider가 준 닉네임을 그대로 넘긴다(2026-08-25). 카카오는 이 값이
+      // `id_token`에 없어 넘기지 않으면 서버가 알 수 없다. 형식은 서버가 보고
+      // 어긋나면 자동 생성 이름으로 조용히 대체하므로 여기서 판단하지 않는다.
+      nickname: credential.nickname,
     );
 
     // **서버 등록이 끝난 시점을 가입으로 본다.** 이메일 인증이 남았을 수도 있지만,
@@ -412,6 +416,19 @@ class AuthController extends _$AuthController {
   ///   - 전송 실패(E5): 토큰을 **유지**한 채 오류만 전파한다(R10). 네트워크가
   ///     복구되면 보관된 refreshToken으로 갱신이 성공해야 하기 때문이다(AC-29).
   ///
+  /// 소켓 신원을 되살리기 위한 갱신(2026-08-25, SPEC-0032 R13).
+  ///
+  /// 서버가 `SUBSCRIPTION_UNAUTHENTICATED`를 내면 재연결로는 풀리지 않는다 —
+  /// 신원이 `connection_init` 시점에 고정되기 때문이다. 구독 쪽이 **갱신 → 소켓
+  /// 재연결 → 재구독** 순서로 복구하는데, 그 첫 단계가 이것이다.
+  ///
+  /// [_refreshAccessToken]을 그대로 쓴다 — 갱신 규칙(단일 비행·억제·세션 종료
+  /// 판정)을 두 벌로 만들면 반드시 어긋난다. 새 토큰을 돌려주지 않고 **성공 여부만**
+  /// 알리는 이유는, 소켓이 토큰을 인자로 받지 않고 연결할 때 저장소에서 직접 읽기
+  /// 때문이다(`graphql_socket_client.dart`의 `initialPayload`).
+  Future<bool> refreshAccessTokenForSocket() async =>
+      await _refreshAccessToken() != null;
+
   /// 어느 쪽이든 실패하면 억제 플래그를 세워 순차 재발화를 막는다(R14, AC-36).
   Future<String?> _refreshAccessToken() async {
     final TokenRefreshBridge bridge = ref.read(tokenRefreshBridgeProvider);

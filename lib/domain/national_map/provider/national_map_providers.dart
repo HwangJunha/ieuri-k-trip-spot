@@ -136,26 +136,6 @@ class CellDetailController extends _$CellDetailController {
   Future<CellDetail> build(String cellId) =>
       ref.watch(nationalMapRepositoryProvider).fetchCellDetail(cellId: cellId);
 
-  /// 다음 페이지를 이어 붙인다.
-  ///
-  /// 이미 읽는 중이거나 더 없으면 아무 일도 하지 않는다 — 스크롤 끝에서 여러 번
-  /// 불려도 요청이 겹치지 않는다.
-  Future<void> loadMore() async {
-    final CellDetail? current = state.value;
-    if (_loading || current == null || !current.hasMore) return;
-
-    _loading = true;
-    try {
-      final CellDetail next = await ref
-          .read(nationalMapRepositoryProvider)
-          .fetchCellDetail(cellId: cellId, after: current.endCursor);
-      state = AsyncData<CellDetail>(current.copyWithMore(next));
-    } on Object {
-      // 이어 읽기 실패는 이미 보이는 목록을 지우지 않는다 — 다시 시도하면 된다.
-    } finally {
-      _loading = false;
-    }
-  }
-
-  bool _loading = false;
+  // **`loadMore`가 없다**(2026-08-25). 서버가 `spots`를 배열로 바꾸면서 커서가
+  // 사라져 이어 읽을 수단 자체가 없다 — `first` 상한 50이 전부다.
 }

@@ -10,11 +10,10 @@ abstract interface class NationalMapRepository {
   Future<List<MapCell>> fetchCells();
 
   /// 칸 상세 — 대표 이미지와 장소 목록(R11·R22).
-  Future<CellDetail> fetchCellDetail({
-    required String cellId,
-    int? first,
-    String? after,
-  });
+  ///
+  /// **이어 읽을 수단이 없다**(2026-08-25). 서버가 `spots`를 커서 연결에서 배열로
+  /// 바꿔 `after`가 사라졌고, [first]는 상한 50으로 잘린다.
+  Future<CellDetail> fetchCellDetail({required String cellId, int? first});
 
   /// 방문 등록(R30·R33).
   ///

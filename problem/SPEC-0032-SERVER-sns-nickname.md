@@ -3,7 +3,9 @@
 > 대상 오퍼레이션: `registerSnsMember`
 > 확인 환경: `lib/domain/auth/repository/auth_schema.graphql`(커밋된 SDL).
 > 라이브 서버는 확인하지 못했다 — 작성 시점에 `localhost:8888`이 내려가 있었다.
-> **상태: 서버가 작업 중(사용자, 2026-08-25). 계약이 나오면 클라이언트를 잇는다.**
+> **상태: 해소됨(2026-08-25).** 서버가 `RegisterSnsMemberInput.nickname`(선택)을
+> 추가했고 라이브 introspection으로 확인했다. 클라이언트도 이어 붙였다 —
+> `SnsCredential.nickname`을 그대로 넘긴다(형식 검증 없이).
 
 ## 무엇이 비어 있나
 

@@ -73,8 +73,12 @@ type MapCell {
   viewerVisited: Boolean!
   # **null일 수 있다** — 그래도 칸은 반환된다.
   representativeImage: CellImage
-  # **mapCell 상세에서만 고른다.** mapCells에서 고르면 칸마다 질의가 나가 161회다.
-  spots(first: Int = 20, after: String): CellSpotConnection!
+  # **mapCell 상세에서만 고른다.** mapCells에서 고르면 칸마다 질의가 나가 161회다
+  # (최악 칸 41ms × 161 ≈ 3초, 서버 안내 2026-08-25).
+  #
+  # **커서 연결이 아니라 배열이다**(2026-08-25). 페이지네이션이 필요 없다는
+  # 서버 판단이고, `first`는 상한 50으로 잘린다.
+  spots(first: Int): [CellSpot!]!
 }
 
 # 칸의 대표 이미지. 저작권 유형에 따라 표시가 갈린다(POL-051).
@@ -93,19 +97,10 @@ enum CellImageKind {
   SPECIALTY
 }
 
-# 칸에 속한 장소의 커서 연결. 좋아요 수 내림차순이다.
-type CellSpotConnection {
-  edges: [CellSpotEdge!]!
-  pageInfo: PageInfo!
-}
-
-type CellSpotEdge {
-  node: CellSpot!
-  cursor: String!
-  likeCount: Int!
-}
-
 # 칸에 속한 장소 1건. **거리 필드가 없다** — 거리 정렬이 아니다.
+#
+# 좋아요 수 내림차순으로 온다. `likeCount`는 예전에 edge에 있었으나 연결이
+# 사라지면서 이 타입 안으로 옮겨졌다(2026-08-25).
 type CellSpot {
   id: ID!
   title: String!
@@ -113,6 +108,7 @@ type CellSpot {
   category: SpotCategory!
   lat: Float!
   lng: Float!
+  likeCount: Int!
 }
 
 input RecordVisitsInput {

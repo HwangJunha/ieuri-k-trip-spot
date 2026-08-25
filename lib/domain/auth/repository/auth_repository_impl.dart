@@ -176,7 +176,7 @@ class AuthRepositoryImpl implements AuthRepository {
         input: Input$LoginSnsInput(
           provider: _provider(provider),
           idToken: idToken,
-          authorizationCode: _codeOrNull(authorizationCode),
+          authorizationCode: _nullIfEmpty(authorizationCode),
         ),
       ).toJson(),
       'loginSns',
@@ -200,6 +200,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required bool ageVerified,
     required List<Agreement> agreements,
     String? authorizationCode,
+    String? nickname,
   }) async {
     final Map<String, dynamic> data = await _mutate(
       documentNodeMutationRegisterSnsMember,
@@ -217,7 +218,11 @@ class AuthRepositoryImpl implements AuthRepository {
                 ),
               )
               .toList(),
-          authorizationCode: _codeOrNull(authorizationCode),
+          authorizationCode: _nullIfEmpty(authorizationCode),
+          // **자르거나 검증하지 않고 그대로 넘긴다**(서버 안내 2026-08-25).
+          // 형식이 어긋나면 서버가 조용히 자동 생성 닉네임으로 대체하고 오류를
+          // 내지 않는다 — 클라이언트가 미리 판단하면 그 규칙을 두 곳에서 갖게 된다.
+          nickname: _nullIfEmpty(nickname),
         ),
       ).toJson(),
       'registerSnsMember',
@@ -352,10 +357,12 @@ class AuthRepositoryImpl implements AuthRepository {
   ///
   /// provider가 빈 code를 줄 이유는 없지만, 준다면 그것은 "없음"이지 "빈 값을
   /// 보내라"가 아니다. 필드를 아예 빼는 쪽이 R7의 정상 경로와 같은 모양이다.
-  static String? _codeOrNull(String? authorizationCode) =>
-      (authorizationCode == null || authorizationCode.isEmpty)
-      ? null
-      : authorizationCode;
+  /// 빈 문자열을 null로 바꾼다.
+  ///
+  /// 서버는 "값 없음"을 null로 받는데, 획득에 실패한 자리에서 빈 문자열이 올 수
+  /// 있다 — 그대로 보내면 서버가 빈 값을 유효한 값으로 읽는다.
+  static String? _nullIfEmpty(String? value) =>
+      (value == null || value.isEmpty) ? null : value;
 
   AuthSession _sessionFrom({
     required String? accessToken,
@@ -432,8 +439,16 @@ class AuthRepositoryImpl implements AuthRepository {
         // 토큰은 유효하다 — 갱신하거나 지우지 않고 인증 화면으로 보낼 신호만
         // 올린다(SPEC-0024 §2).
         AuthErrorClass.emailNotVerified => AuthFailure.emailNotVerified,
+        // 저장소 장애는 **세션을 끝내지 않는다**(2026-08-25). 토큰은 멀쩡하고
+        // 서버 쪽이 잠시 아픈 것이라, 갱신을 발화하거나 재로그인시키면 멀쩡한
+        // 세션을 버리게 된다.
+        AuthErrorClass.authStoreUnavailable => AuthFailure.authStoreUnavailable,
         // 권한 문제는 인증 계열이 아니다. 토큰을 건드리지 않고 전파한다.
+        //
+        // 소켓 신원 만료는 HTTP 경로로 올 일이 없다 — 구독 쪽에서 처리한다.
+        // 여기 닿는다면 그냥 전송 실패로 다룬다.
         AuthErrorClass.forbidden ||
+        AuthErrorClass.subscriptionUnauthenticated ||
         AuthErrorClass.transport ||
         AuthErrorClass.none => AuthFailure.transportFailure,
       };

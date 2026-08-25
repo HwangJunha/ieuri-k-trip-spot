@@ -30,6 +30,26 @@ enum AuthErrorClass {
   /// 권한 없음. 인증은 됐으나 이 오퍼레이션을 부를 자격이 없다.
   forbidden,
 
+  /// 인증 저장소 일시 장애(서버 `AUTH_STORE_UNAVAILABLE`, 2026-08-25).
+  ///
+  /// **[unauthenticated]로 접으면 안 된다.** 접으면 갱신 링크가 갱신을 발화하고,
+  /// 저장소가 죽어 있으니 그것도 실패해 `suppressRefresh()`가 선다 — 그 억제는
+  /// 사용자가 명시적으로 재시도하거나 앱을 재시작해야만 풀린다. **일시 장애가
+  /// 반영구적 갱신 불능으로 승격된다.**
+  ///
+  /// 토큰은 멀쩡하다. 재로그인시키지 말고 잠시 후 다시 시도하면 된다 — 그래서
+  /// 재시도 예산에서 **면제하지 않는다**(정상 백오프를 타야 한다).
+  authStoreUnavailable,
+
+  /// 소켓 신원 만료(서버 `SUBSCRIPTION_UNAUTHENTICATED`, 2026-08-25).
+  ///
+  /// **재연결로 풀리지 않는다.** 신원은 `connection_init` 시점에 고정되어 같은
+  /// 토큰으로 다시 붙으면 결과가 같다 — 무한 재연결의 원인이던 자리다.
+  ///
+  /// 갱신 → 소켓 재연결 → 재구독 순서로 가야 하고, 그동안 재연결 시도를 세지
+  /// 않는다(세어 봐야 낭비다).
+  subscriptionUnauthenticated,
+
   /// 전송 실패 — 네트워크가 끊겼거나 서버에 닿지 못함. 토큰을 유지한 채 오류만
   /// 전파한다(E5, R10).
   transport,
@@ -125,10 +145,16 @@ AuthErrorClass? _classifyByCode(String code) => switch (code) {
   'UNAUTHENTICATED' => AuthErrorClass.unauthenticated,
   // 서명·만료·타입 불일치 — 갱신으로 회복될 수 있다.
   'INVALID_TOKEN' => AuthErrorClass.unauthenticated,
+  // 토큰 거부(2026-08-25 신설). 예전에는 조용히 비로그인으로 처리돼 갱신이 아예
+  // 돌지 않았다 — 서버가 이 코드를 붙여 주면서 갱신 경로에 올릴 수 있게 됐다.
+  'UNAUTHENTICATED_TOKEN_REJECTED' => AuthErrorClass.unauthenticated,
   // 재사용 감지 — 갱신으로 회복되지 않는다. 반드시 위와 구분한다.
   'TOKEN_REUSE_DETECTED' => AuthErrorClass.tokenReuseDetected,
   'EMAIL_NOT_VERIFIED' => AuthErrorClass.emailNotVerified,
   'FORBIDDEN' => AuthErrorClass.forbidden,
+  // **인증 실패로 접지 않는다** — 이유는 열거 값 문서 참고.
+  'AUTH_STORE_UNAVAILABLE' => AuthErrorClass.authStoreUnavailable,
+  'SUBSCRIPTION_UNAUTHENTICATED' => AuthErrorClass.subscriptionUnauthenticated,
   _ => null,
 };
 

@@ -85,6 +85,12 @@ class SpotFailure implements Exception {
         'UPSTREAM_RATE_LIMITED' => SpotFailure.rateLimited,
         'UPSTREAM_UNAVAILABLE' => SpotFailure.upstreamUnavailable,
         'UNAUTHENTICATED' => SpotFailure.unauthenticated,
+        // 토큰 거부(2026-08-25). 갱신으로 회복되는 자리라 위와 같게 다룬다.
+        'UNAUTHENTICATED_TOKEN_REJECTED' => SpotFailure.unauthenticated,
+        // 인증 저장소 일시 장애. **인증 실패로 접지 않는다** — 재로그인이
+        // 아니라 잠시 후 재시도가 맞고, 재시도 예산에 계상돼야 정상
+        // 백오프를 탄다.
+        'AUTH_STORE_UNAVAILABLE' => SpotFailure.network,
         _ => SpotFailure.network,
       };
 

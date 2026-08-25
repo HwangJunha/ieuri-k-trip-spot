@@ -49,8 +49,8 @@ query MyPosts($first: Int, $after: String) {
   }
 }
 
-# 닉네임 변경(R5). 중복은 `userErrors`의 `NICKNAME_ALREADY_TAKEN`으로 온다 —
-# 클라이언트가 미리 조회하지 않는다(조회와 제출 사이에 선점당한다).
+# 닉네임 변경(R5). 중복은 허용된다(2026-08-25 서버 변경) — 형식 오류만
+# `userErrors`로 온다.
 mutation ChangeNickname($input: ChangeNicknameInput!) {
   changeNickname(input: $input) {
     success

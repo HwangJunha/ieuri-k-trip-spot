@@ -181,10 +181,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  /// 입력란 아래 오류. **형식 오류와 서버 중복을 구분해 보여준다** — 둘을 한 문구로
-  /// 묶으면 사용자가 무엇을 고쳐야 할지 모른다(R5).
+  /// 입력란 아래 오류. 형식 오류만 여기 붙는다 — 중복은 허용되고(2026-08-25 서버
+  /// 변경), 그 밖의 실패는 입력값 문제가 아니라 화면 상단의 일반 오류로 간다(R5).
   String? _fieldError(AppLocalizations l10n, ProfileEditState edit) {
-    if (edit.nicknameTaken) return l10n.profileEditNicknameTaken;
     return switch (edit.formatError) {
       NicknameValidation.empty => l10n.profileEditNicknameEmpty,
       NicknameValidation.tooLong => l10n.profileEditNicknameTooLong(

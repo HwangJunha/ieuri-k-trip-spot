@@ -122,6 +122,10 @@ class FakeAuthRepository implements AuthRepository {
   String? registerSnsAuthorizationCode;
   bool registerSnsCalled = false;
 
+  /// 가입 요청에 실려 온 닉네임. code와 같은 이유로 호출 여부와 따로 둔다 —
+  /// null이 "안 불렸다"가 아니라 "닉네임 없이 불렸다"여야 한다.
+  String? registerSnsNickname;
+
   @override
   Future<EmailVerificationHandle> registerEmailMember({
     required String email,
@@ -163,7 +167,9 @@ class FakeAuthRepository implements AuthRepository {
     retargetedEmails.add(newEmail);
     if (failure != null) throw failure!;
     // 서버는 정정 시 **새** 핸들을 낸다 — 이전 코드가 무효화되기 때문이다.
-    return EmailVerificationHandle(verificationId: 'retargeted-$verificationId');
+    return EmailVerificationHandle(
+      verificationId: 'retargeted-$verificationId',
+    );
   }
 
   @override
@@ -198,8 +204,10 @@ class FakeAuthRepository implements AuthRepository {
     required bool ageVerified,
     required List<Agreement> agreements,
     String? authorizationCode,
+    String? nickname,
   }) async {
     registerSnsAuthorizationCode = authorizationCode;
+    registerSnsNickname = nickname;
     registerSnsCalled = true;
     final AuthFailure? f = snsFailure ?? failure;
     if (f != null) throw f;

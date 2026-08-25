@@ -1064,6 +1064,119 @@ Android 5종 재생성, 전량 크기 검증·iOS 알파 없음 확인.
 직접 읽는다는 전제였는데, **카카오는 그 전제가 성립하지 않는다**(닉네임이 표준 클레임이
 아니라 별도 프로필 API에 있다).
 
-`problem/SPEC-0032-SERVER-sns-nickname.md`로 요청을 정리했다. **서버가 작업 중이며**
-(사용자, 2026-08-25) 계약이 나오면 클라이언트를 잇는다 — 오퍼레이션에 인자 추가,
-repository 전달, codegen, 라이브 스윕.
+`problem/SPEC-0032-SERVER-sns-nickname.md`로 요청을 정리했고 **서버가 반영했다**
+(2026-08-25). 아래 §N에 이은 작업이 있다.
+
+---
+
+## N. 서버 계약 반영 (2026-08-25)
+
+서버가 SPEC-0032 몫을 배포했다. **라이브 introspection으로 전부 대조했다** —
+안내받은 내용과 실제 스키마가 일치한다.
+
+### N.0 먼저 — 무한 재연결이 정말 남아 있었다
+
+사용자 질문("무한 시도 하는 것이 앱에 남아 있나?")에 답하자면 **그렇다.** 세 겹으로
+확인했다.
+
+| 확인한 것 | 상태 |
+|---|---|
+| `autoReconnect: true` + 5초 간격 | 상한 없음 |
+| `subscriptionReconnectAttempts = 5` | **선언만 되고 읽는 코드가 0곳** |
+| `resetSocketConnection()` | **정의만 있고 호출부가 0곳** |
+
+거기에 `SUBSCRIPTION_UNAUTHENTICATED`가 오면 `DmFailure`가 모르는 코드라
+`network`로 떨어지고 → `permanent == false` → 구독을 닫지 않고 `sync()`만 돌린다
+→ **소켓은 같은 만료 토큰으로 5초마다 영원히 재연결한다.** 본문 §4·§5.1이 예측한
+상태 그대로였다.
+
+셋 다 이번에 배선했다(아래 §N.3).
+
+### N.1 새 에러 코드 4종
+
+`errors[].extensions.code`로 온다 — `ErrorCode` enum은 `userErrors`용이라 여기에
+없는 것이 정상이다(라이브에서 `UNAUTHENTICATED`가 top-level로 오는 것을 확인했다).
+
+| 코드 | 분류 | 왜 그렇게 |
+|---|---|---|
+| `UNAUTHENTICATED_TOKEN_REJECTED` | `unauthenticated`로 접음 | 갱신으로 회복되는 자리다. 갱신 링크가 이 분류만 보고 발화하므로 접어야 돈다 — 예전에는 조용히 비로그인 처리돼 갱신이 아예 안 돌았다 |
+| `AUTH_STORE_UNAVAILABLE` | **새 분류값** | 접으면 안 된다(아래) |
+| `SUBSCRIPTION_UNAUTHENTICATED` | **새 분류값** | 재연결로 안 풀린다 |
+| `TOKEN_REUSE_DETECTED` | 기존 | 이미 알고 있었다 |
+
+**`AUTH_STORE_UNAVAILABLE`을 `unauthenticated`로 접으면 안 되는 이유가 크다.**
+접으면 갱신이 발화하고, 저장소가 죽어 있으니 그것도 실패해 `suppressRefresh()`가
+선다. 그 억제는 **앱 재시작이나 사용자의 명시적 재시도로만** 풀린다 —
+**일시 장애가 반영구적 갱신 불능으로 승격된다.** 별도 분류값을 둔 실질적 이유가
+이것이고, `_isAuthError`가 `== unauthenticated`만 보므로 값을 나누는 것만으로
+갱신이 발화하지 않는다.
+
+재시도 예산에서도 **면제하지 않는다** — "잠시 후 재시도"가 요구사항이라 정상
+백오프를 타야 한다. 그래서 도메인 실패 모델에서는 `network`로 접었다.
+
+문구도 나눴다(`errorAuthStoreUnavailable`, 4개 언어). 재로그인을 안내하면 멀쩡한
+세션을 버리게 되고, "연결을 확인하세요"는 연결이 되고 있으니 틀린 말이다.
+
+### N.2 코드 추출의 구멍 — `errors.first`
+
+`settings`·`alarm` 저장소가 `errors.first`만 보고 있었다. `ErrorPolicy.all` 이후로는
+여러 오류가 한 배열에 실려 오는데 **코드가 붙은 것이 앞자리라는 보장이 없다** —
+공용 헬퍼(`graphql_failure.dart`의 `firstRootError`)가 같은 위험을 문서에 적어 두었는데
+이 둘에는 그 교훈이 적용되지 않았다.
+
+새 코드를 switch에 넣어도 이 구멍이 있으면 놓치므로 함께 고쳤다: 코드가 붙은 첫
+오류를 고르고, 하나도 없을 때만 메시지 폴백으로 내려간다.
+
+### N.3 소켓 신원 복구 — 죽어 있던 부품 셋을 배선했다
+
+`SUBSCRIPTION_UNAUTHENTICATED`는 **재연결이 아니라 갱신 → 소켓 재연결 → 재구독**이다.
+신원이 `connection_init` 시점에 고정되어 같은 토큰으로 다시 붙으면 결과가 같다.
+
+- `DmFailureKind.subscriptionUnauthenticated` 신설. `permanent`에는 포함하되
+  (재시도 낭비이므로) `onError`에서는 **세 번째 분기**로 다룬다 — `permanent`는
+  "구독을 닫고 끝낸다"는 처리라 그대로 쓰면 복구가 안 된다.
+- `AuthController.refreshAccessTokenForSocket()` 신설. 기존 `_refreshAccessToken`을
+  그대로 쓴다 — 갱신 규칙(단일 비행·억제·세션 종료 판정)을 두 벌로 만들면 어긋난다.
+  새 토큰을 돌려주지 않고 성공 여부만 알리는 이유는 소켓이 연결할 때 저장소에서
+  직접 읽기 때문이다.
+- `resetSocketConnection(ref)`를 **처음으로 실제 호출**한다.
+
+**재연결 시도도 이제 센다.** 선언만 돼 있던 `subscriptionReconnectAttempts = 5`를
+구독 쪽에서 실제로 세고, 상한에 닿으면 `autoReconnect`에 맡기지 않고 구독을 닫는다.
+메시지가 도착하면 0으로 되돌린다 — 리셋하지 않으면 오래 켜 둔 앱이 누적 5회로
+구독을 닫아 버린다. 신원 복구 경로는 카운터를 태우지 않는다(연결 불안정이 아니라
+신원 문제라서다).
+
+### N.4 `MapCell.spots`가 배열이 됐다
+
+`spots(first:, after:): CellSpotConnection!` → `spots(first:): [CellSpot!]!`.
+`CellSpotConnection`·`CellSpotEdge`가 사라지고 `likeCount`가 `CellSpot` 안으로
+옮겨졌다. `first`는 상한 50으로 잘린다.
+
+**페이지네이션이 통째로 사라졌다** — `CellDetail`의 `hasMore`·`endCursor`·
+`copyWithMore`, `CellDetailController.loadMore`, 화면의 스크롤 리스너와 하단 스피너를
+전부 걷어냈다. 이어 읽을 수단 자체가 없으므로 남길 것이 없다.
+
+`mapCells`에서는 원래부터 `spots`를 고르지 않았다(오퍼레이션 주석이 161회 질의를
+경고하고 있었다) — 서버 안내와 이미 일치했다.
+
+### N.5 SNS 가입에 닉네임을 싣는다
+
+`RegisterSnsMemberInput.nickname`(선택)이 생겼다. 카카오 닉네임을 이미 받아
+`SnsCredential.nickname`에 담고 있었으므로 그대로 넘긴다.
+
+**형식을 검증하지 않는다**(서버 안내) — 1자든 21자든 그대로 보내면 서버가 조용히
+자동 생성 닉네임으로 대체하고 오류를 내지 않는다. 클라이언트가 미리 판단하면 그
+규칙을 두 곳에서 갖게 된다.
+
+### N.6 닉네임 중복이 허용된다
+
+`ErrorCode`에서 `NICKNAME_ALREADY_TAKEN`이 사라졌다(라이브 확인). 중복 분기가
+도달 불가능해져 상수·상태 플래그·화면 표시·ARB 4개 언어를 제거했다.
+**`INVALID_NICKNAME`과 형식 검증(2~20자)은 남는다** — 중복과 무관하다.
+
+### N.7 탈퇴 soft delete — 앱 작업 없음
+
+글·댓글·질문·답변·답글·메시지가 남는다. 스키마 변경이 없고 작성자는 기존대로
+"탈퇴한 회원"으로 표시되므로 **분기할 대상이 아니다.** 문구는 §M.11에서 이미
+고쳐 두었다.

@@ -144,6 +144,10 @@
   "errorEmailAlreadyInUse": "That email is already in use.",
   "errorNetwork": "Network error. Please try again.",
   "errorUnknown": "Something went wrong. Please try again.",
+  "errorAuthStoreUnavailable": "The service is briefly unavailable. Please try again in a moment — you are still signed in.",
+  "@errorAuthStoreUnavailable": {
+    "description": "Shown when the auth store is temporarily down; the session is NOT ended."
+  },
   "signUpSuccessLoginPrompt": "Account created. Please log in.",
   "orDivider": "or",
   "continueWithGoogle": "Continue with Google",
@@ -1036,8 +1040,6 @@
       }
     }
   },
-  "profileEditNicknameTaken": "This nickname is already taken.",
-  "@profileEditNicknameTaken": {},
   "profileEditEmailLabel": "Email",
   "@profileEditEmailLabel": {},
   "profileEditFailed": "Could not save. Please try again.",

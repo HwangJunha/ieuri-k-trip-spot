@@ -4,10 +4,12 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:logger/logger.dart';
 
 import '../../../common/log/app_log.dart';
+import '../../../common/network/graphql_socket_client.dart';
 import '../../../common/model/list_equality.dart';
 import '../../../common/model/post_author.dart';
 import '../../../common/pagination/page.dart';
 import '../../../common/storage/app_preferences.dart';
+import '../../auth/provider/auth_controller.dart';
 import '../model/dm_failure.dart';
 import '../model/message.dart';
 import '../repository/dm_repository.dart';
@@ -134,6 +136,9 @@ class ConversationController extends _$ConversationController {
   ///
   /// **권한 실패(`FORBIDDEN`)에는 재연결하지 않는다** — 재시도로 풀리지 않고
   /// 상한까지 헛돌 뿐이다.
+  ///
+  /// **소켓 신원 만료는 세 번째 갈래다**(2026-08-25). 재연결이 아니라 갱신 →
+  /// 소켓 재연결 → 재구독으로 간다 — 자세한 이유는 [_recoverSocketIdentity].
   void listenForNewMessages() {
     if (_subscription != null) return;
     _subscription = _repository
@@ -142,12 +147,31 @@ class ConversationController extends _$ConversationController {
           _onRemoteMessage,
           onError: (Object error, StackTrace _) {
             _log.w('newMessage stream failed: ${error.runtimeType}');
+
+            if (error is DmFailure &&
+                error.kind == DmFailureKind.subscriptionUnauthenticated) {
+              unawaited(_recoverSocketIdentity());
+              return;
+            }
+
             if (error is DmFailure && error.permanent) {
               // 재연결해도 같은 결과다 — 구독을 접는다.
               _subscription?.cancel();
               _subscription = null;
               return;
             }
+
+            // **재연결 시도를 여기서 센다.** 라이브러리의 `autoReconnect`는 상한이
+            // 없어 5초마다 영원히 붙으려 든다 — 상한을 선언만 해 두고 아무도 세지
+            // 않던 것이 무한 호출의 실체였다(SPEC-0032 §5.1).
+            _reconnectAttempts++;
+            if (_reconnectAttempts >= subscriptionReconnectAttempts) {
+              _log.w('구독 재연결 상한($subscriptionReconnectAttempts) 도달 — 구독을 닫는다');
+              _subscription?.cancel();
+              _subscription = null;
+              return;
+            }
+
             // 끊겼다가 다시 붙는 동안의 메시지는 오지 않으므로 조회로 메운다.
             unawaited(sync());
           },
@@ -158,7 +182,49 @@ class ConversationController extends _$ConversationController {
     });
   }
 
+  /// 소켓 신원이 만료됐을 때의 복구(서버 `SUBSCRIPTION_UNAUTHENTICATED`).
+  ///
+  /// **재연결로는 풀리지 않는다.** 신원은 `connection_init` 시점에 고정되므로 같은
+  /// 토큰으로 다시 붙으면 결과가 같다 — 그래서 재연결 횟수를 세지도 않는다(세어
+  /// 봐야 낭비다).
+  ///
+  /// 순서가 중요하다: **갱신이 먼저**여야 새 연결이 새 토큰을 싣는다. 소켓 설정의
+  /// `initialPayload`가 연결할 때마다 저장소를 다시 읽으므로, 갱신이 끝난 뒤
+  /// 소켓을 버리면 그다음 연결이 새 토큰으로 붙는다.
+  ///
+  /// 갱신이 실패하면 여기서 멈춘다 — 그때는 세션 자체가 끝난 것이고, 그 처리는
+  /// 인증 계층(SPEC-0005 경로)의 몫이다.
+  Future<void> _recoverSocketIdentity() async {
+    _subscription?.cancel();
+    _subscription = null;
+
+    try {
+      final bool refreshed = await ref
+          .read(authControllerProvider.notifier)
+          .refreshAccessTokenForSocket();
+      if (!refreshed) {
+        _log.w('소켓 신원 복구 실패 — 갱신이 되지 않았다');
+        return;
+      }
+
+      // 소켓을 버린다. 다음 구독이 새 토큰으로 새 연결을 연다.
+      await resetSocketConnection(ref);
+
+      // 재연결 카운터를 되돌린다 — 신원 문제였지 연결 불안정이 아니었다.
+      _reconnectAttempts = 0;
+
+      listenForNewMessages();
+      // 끊긴 동안의 메시지를 메운다.
+      unawaited(sync());
+    } on Object catch (error) {
+      _log.w('소켓 신원 복구 중 실패: ${error.runtimeType}');
+    }
+  }
+
   StreamSubscription<Message>? _subscription;
+
+  /// 연속 재연결 시도 횟수. 성공적으로 메시지를 받으면 0으로 돌아간다.
+  int _reconnectAttempts = 0;
 
   /// 구독으로 들어온 메시지를 반영한다.
   ///
@@ -168,6 +234,11 @@ class ConversationController extends _$ConversationController {
   /// 2. 아직 서버 id를 못 받은 내 말풍선 중 **본문·첨부가 같은 것**이 있으면 그것을
   ///    확정 처리한다 — 전송 응답보다 에코가 먼저 도착할 수 있다
   void _onRemoteMessage(Message incoming) {
+    // 메시지가 실제로 도착했다는 것은 연결이 살아 있다는 뜻이다 — 앞서 몇 번
+    // 끊겼든 지금은 정상이므로 상한을 처음부터 다시 센다. 리셋하지 않으면 오래
+    // 켜 둔 앱이 누적 5회로 구독을 닫아 버린다.
+    _reconnectAttempts = 0;
+
     final List<Message> messages = <Message>[...state.messages];
 
     final int sameId = messages.indexWhere((Message m) => m.id == incoming.id);
