@@ -677,7 +677,7 @@
   "deleteAccountItemPosts": "アカウントとプロフィール",
   "deleteAccountItemLikes": "お気に入りスポットと訪問履歴",
   "deleteAccountItemProfile": "通知設定とブロックリスト",
-  "deleteAccountCaution": "コミュニティに残した投稿・コメント・メッセージは、他の人の会話の流れを保つために残る場合がありますが、投稿者は表示されなくなります。削除したアカウントは復元できません。",
+  "deleteAccountCaution": "コミュニティに残した投稿とメッセージは、投稿者を表示せずに残ります。アカウントは復元できません。",
   "deleteAccountCancel": "キャンセル",
   "deleteAccountConfirm": "退会する",
   "deleteAccountFailed": "退会できませんでした。もう一度お試しください。",
@@ -940,8 +940,8 @@
   "onboardingBody4": "いいねしたスポットとコミュニティに残した投稿が、ひとつのタブに。",
   "@onboardingTitle4": {},
   "@onboardingBody4": {},
-  "onboardingTitle5": "混み具合を確かめよう",
-  "onboardingBody5": "行く前に混雑状況を確認して、いい場所をいいタイミングで選べます。",
+  "onboardingTitle5": "地図で探そう",
+  "onboardingBody5": "周辺のスポットを地図で一覧でき、混雑データがある場所では混み具合も確認できます。",
   "@onboardingTitle5": {},
   "@onboardingBody5": {}
 }

@@ -288,6 +288,19 @@ class PhotoScanController extends _$PhotoScanController {
   void confirmed() =>
       state = state.copyWith(stage: PhotoScanStage.completed);
 
+  /// 등록이 실패했다(2026-08-26).
+  ///
+  /// **이 창구가 없어서 스피너가 영원히 돌았다.** 화면이 `VisitController.record`를
+  /// 부르는데 그것이 던지면 [confirmed]에 닿지 못하고, 단계가 `awaitingConfirmation`에
+  /// 머물러 "N곳을 찾았어요" 아래 스피너만 계속 돈다(실기기 확인).
+  ///
+  /// 스캔 결과는 그대로 두고 단계만 실패로 돌린다 — 다시 찾을 필요 없이 등록만
+  /// 다시 시도하면 된다.
+  void registrationFailed() => state = state.copyWith(
+    stage: PhotoScanStage.failed,
+    retryCount: state.retryCount + 1,
+  );
+
   /// 처음부터 다시 훑는다.
   void reset() {
     _cancelled = true;

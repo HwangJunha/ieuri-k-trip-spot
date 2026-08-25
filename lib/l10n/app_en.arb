@@ -1003,7 +1003,7 @@
   "@deleteAccountItemLikes": {},
   "deleteAccountItemProfile": "Your notification settings and block list",
   "@deleteAccountItemProfile": {},
-  "deleteAccountCaution": "Posts, comments and messages you left in the community may remain so other people’s conversations still make sense, but they will no longer show you as the author. A deleted account cannot be recovered.",
+  "deleteAccountCaution": "Posts and messages you left stay, but no longer show you as the author. Your account cannot be recovered.",
   "@deleteAccountCaution": {},
   "deleteAccountCancel": "Cancel",
   "@deleteAccountCancel": {},
@@ -1361,8 +1361,8 @@
   "@onboardingBody4": {
     "description": "Onboarding page 4 body"
   },
-  "onboardingTitle5": "See how busy it is",
-  "onboardingBody5": "Check crowd levels before you go, so you can pick the right place at the right time.",
+  "onboardingTitle5": "Find spots on the map",
+  "onboardingBody5": "See what is around you on the map, and how busy it is where crowd data is available.",
   "@onboardingTitle5": {
     "description": "Onboarding page 5 title"
   },

@@ -677,7 +677,7 @@
   "deleteAccountItemPosts": "你的帳戶和個人資料",
   "deleteAccountItemLikes": "收藏的景點和造訪紀錄",
   "deleteAccountItemProfile": "通知設定和封鎖名單",
-  "deleteAccountCaution": "你在社群留下的貼文、留言和訊息可能會保留，以維持他人對話的脈絡，但不會再顯示作者。已刪除的帳戶無法復原。",
+  "deleteAccountCaution": "你在社群留下的貼文和訊息會保留，但不再顯示作者。帳戶無法復原。",
   "deleteAccountCancel": "取消",
   "deleteAccountConfirm": "確認登出",
   "deleteAccountFailed": "登出失敗，請重試。",
@@ -940,8 +940,8 @@
   "onboardingBody4": "按過讚的景點和在社群留下的貼文，都在同一個分頁。",
   "@onboardingTitle4": {},
   "@onboardingBody4": {},
-  "onboardingTitle5": "看看有多擁擠",
-  "onboardingBody5": "出發前先確認擁擠度，在對的時間選對的地方。",
+  "onboardingTitle5": "在地圖上探索",
+  "onboardingBody5": "在地圖上一覽周邊景點，有擁擠資料的地方還能看到人潮狀況。",
   "@onboardingTitle5": {},
   "@onboardingBody5": {}
 }

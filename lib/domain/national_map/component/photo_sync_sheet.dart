@@ -157,8 +157,14 @@ class _Content extends ConsumerWidget {
         if (!_registering) {
           _registering = true;
           WidgetsBinding.instance.addPostFrameCallback((_) async {
-            await _register(context, ref, controller);
-            _registering = false;
+            // **`finally`여야 한다.** 순차로 두면 등록이 던졌을 때 플래그가 true로
+            // 박혀 재시도조차 막힌다 — `_register`가 예외를 삼키게 됐지만, 그
+            // 안에서 또 다른 실패가 나도 여기서는 반드시 풀린다.
+            try {
+              await _register(context, ref, controller);
+            } finally {
+              _registering = false;
+            }
           });
         }
         return Column(
@@ -201,8 +207,20 @@ class _Content extends ConsumerWidget {
     PhotoScanController controller,
   ) async {
     final List<String> codes = progress.resolvedCellCodes;
-    // 사진이 몇 장이든 요청은 1회다 — 판정 결과가 시군구 코드로 축약돼 있다.
-    await ref.read(visitControllerProvider.notifier).record(codes);
+    try {
+      // 사진이 몇 장이든 요청은 1회다 — 판정 결과가 시군구 코드로 축약돼 있다.
+      await ref.read(visitControllerProvider.notifier).record(codes);
+    } on Object {
+      // **던지게 두면 스피너가 영원히 돈다**(실기기 확인 2026-08-26).
+      // `record`가 던지면 아래 `confirmed()`에 닿지 못해 단계가
+      // `awaitingConfirmation`에 머물고, "N곳을 찾았어요" 아래 스피너만 계속
+      // 돌면서 재시도 수단도 없다.
+      //
+      // 스캔 결과는 그대로 두고 실패 단계로 보낸다 — 다시 찾을 필요 없이 등록만
+      // 다시 누르면 된다.
+      controller.registrationFailed();
+      return;
+    }
     // **호출부에 심는다.** `VisitController.record`는 사진 경로와 현재 위치 경로가
     // 합류하는 자리라, 거기 심으면 둘을 구분할 수 없다.
     AppAnalytics.logEvent(AnalyticsEvents.nationalMapRegionAdd, <String, Object>{
