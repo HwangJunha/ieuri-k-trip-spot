@@ -88,6 +88,17 @@
   "photoSyncConfirmBody": "登録すると地図が埋まります。",
   "photoSyncRegister": "登録する",
   "photoSyncDone": "地図を更新しました。",
+  "photoSyncSummary": "位置情報のある写真{photos}枚から{regions}か所を見つけました。",
+  "@photoSyncSummary": {
+    "placeholders": {
+      "photos": {
+        "type": "int"
+      },
+      "regions": {
+        "type": "int"
+      }
+    }
+  },
   "photoSyncNoCoordinates": "位置情報のある写真が見つかりませんでした。",
   "photoSyncPermissionDenied": "写真へのアクセスを許可すると地図を埋められます。",
   "photoSyncFailed": "問題が発生しました。もう一度お試しください。",

@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart' show AppLifecycleListener;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:logger/logger.dart';
 
 import '../model/cell_geometry.dart';
 import '../model/coordinate_reduction.dart';
 import '../model/district_resolver.dart';
 import '../model/map_cell.dart';
 import '../model/national_map_config.dart';
+import '../../../common/log/app_log.dart';
 import '../../../common/analytics/analytics_events.dart';
 import '../../../common/analytics/app_analytics.dart';
 import '../model/photo_scan_progress.dart';
@@ -41,6 +43,8 @@ PhotoLibraryService photoLibraryService(Ref ref) => const PhotoLibraryService();
 /// 쓸 수 있다(R29) — 이 컨트롤러는 UI를 막지 않는다.
 @Riverpod(keepAlive: true)
 class PhotoScanController extends _$PhotoScanController {
+  static final Logger _log = appLogger('PhotoScanController');
+
   @override
   PhotoScanProgress build() {
     // 로그아웃하면 스캔 결과를 버린다 — 이전 사용자의 사진에서 나온 지역이다.
@@ -121,7 +125,18 @@ class PhotoScanController extends _$PhotoScanController {
     }
 
     // 이어서 하는 경우 이미 읽은 지점부터 간다. 사진이 줄었으면 처음부터.
-    final int from = state.processed <= total ? state.processed : 0;
+    //
+    // **끝까지 훑은 상태면 처음부터 다시 한다**(실기기 확인 2026-08-26).
+    // 완료 시 `processed = total`이 남는데, 그대로 이어받으면 `from == total`이
+    // 되어 `while (processed < total)`이 한 번도 돌지 않는다 — **두 번째 실행부터
+    // 아무것도 스캔하지 않고 "지도를 채웠어요"만 뜬다.** 사용자는 사진을 더
+    // 찍었는데도 아무 반응이 없는 것으로 겪는다.
+    //
+    // 이어하기가 성립하는 조건은 [PhotoScanProgress.isResumable]이 이미 알고
+    // 있다 — 중간에 멈춘 상태(`processed < total`)일 때만이다.
+    final int from = state.isResumable && state.processed <= total
+        ? state.processed
+        : 0;
     state = state.copyWith(
       stage: PhotoScanStage.scanning,
       total: total,
@@ -145,9 +160,14 @@ class PhotoScanController extends _$PhotoScanController {
         for (final String code in c.districtCodes) code: c.id,
     };
 
-    final Set<String> found = <String>{...state.resolvedCellCodes};
+    // **처음부터 다시 훑으면 이전 결과를 이어받지 않는다.** 이어하기(`from > 0`)일
+    // 때만 누적한다 — 안 그러면 이미 등록을 마친 코드를 다시 모아 보내게 된다.
+    final bool resuming = from > 0;
+    final Set<String> found = <String>{
+      if (resuming) ...state.resolvedCellCodes,
+    };
     int processed = from;
-    int withCoordinates = state.foundCoordinates;
+    int withCoordinates = resuming ? state.foundCoordinates : 0;
 
     while (processed < total) {
       if (_cancelled) {
@@ -171,7 +191,9 @@ class PhotoScanController extends _$PhotoScanController {
 
       final int size = NationalMapConfig.photoScanBatchSize;
       final int batchStart = processed;
-      final int batchEnd = (processed + size) > total ? total : processed + size;
+      final int batchEnd = (processed + size) > total
+          ? total
+          : processed + size;
 
       // **사진 한 장씩 읽으며 진행률을 올린다.**
       //
@@ -271,6 +293,14 @@ class PhotoScanController extends _$PhotoScanController {
       foundCoordinates: withCoordinates,
       resolvedCellCodes: found.toList()..sort(),
     );
+    // **무엇을 훑고 무엇이 걸러졌는지 남긴다**(2026-08-26). "왜 두 곳만
+    // 찾았나"를 판단하려면 세 수가 다 필요하다 — 훑은 장수, 좌표가 있던 장수,
+    // 그리고 새로 찾은 지역 수(이미 방문한 시군구는 R27에 따라 빠진다).
+    _log.i(
+      '사진 스캔 완료: 훑음 $total장 · 좌표 있음 $withCoordinates장 · '
+      '새 지역 ${found.length}곳(이미 방문한 곳은 제외)',
+    );
+
     // **좌표가 있던 사진 수를 센다.** 훑은 총량(`total`)은 사진첩 크기에 좌우돼
     // 기능 사용량을 나타내지 못하고, 찾아낸 지역 수는 아래 등록 이벤트가 센다.
     AppAnalytics.logEvent(AnalyticsEvents.nationalMapPhotoAdd, <String, Object>{
@@ -285,8 +315,7 @@ class PhotoScanController extends _$PhotoScanController {
   void stop() => _cancelled = true;
 
   /// 등록이 끝났다. 등록 자체는 화면이 `VisitController`로 한다.
-  void confirmed() =>
-      state = state.copyWith(stage: PhotoScanStage.completed);
+  void confirmed() => state = state.copyWith(stage: PhotoScanStage.completed);
 
   /// 등록이 실패했다(2026-08-26).
   ///

@@ -195,6 +195,22 @@ class _Content extends ConsumerWidget {
                   ? l10n.photoSyncNoCoordinates
                   : l10n.photoSyncDone,
             ),
+            // **결과를 수치로 밝힌다**(2026-08-26). "지도를 채웠어요"만 있으면
+            // 몇 장을 훑어 몇 곳을 찾았는지 알 수 없어, 스캔이 제대로 돌았는지
+            // 사용자가 판단할 수 없다 — 실제로 두 곳만 칠해진 것을 보고 "갤러리가
+            // 전부 스캔되지 않은 것 같다"는 의심이 나왔다.
+            if (!progress.finishedWithoutCoordinates) ...<Widget>[
+              const SizedBox(height: 4),
+              Text(
+                l10n.photoSyncSummary(
+                  progress.foundCoordinates,
+                  progress.resolvedCellCodes.length,
+                ),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
             FilledButton(
               onPressed: () => Navigator.of(context).maybePop(),

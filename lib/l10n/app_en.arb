@@ -88,6 +88,18 @@
   "photoSyncConfirmBody": "Adding them will fill in your map.",
   "photoSyncRegister": "Add them",
   "photoSyncDone": "Your map is updated.",
+  "photoSyncSummary": "{photos} photos had location info, and {regions} regions were added to your map.",
+  "@photoSyncSummary": {
+    "description": "Shown when the photo scan finishes. photos = photos that had GPS, regions = districts added.",
+    "placeholders": {
+      "photos": {
+        "type": "int"
+      },
+      "regions": {
+        "type": "int"
+      }
+    }
+  },
   "photoSyncNoCoordinates": "No photos with location info were found.",
   "photoSyncPermissionDenied": "Allow photo access to fill in your map.",
   "photoSyncFailed": "Something went wrong. Please try again.",

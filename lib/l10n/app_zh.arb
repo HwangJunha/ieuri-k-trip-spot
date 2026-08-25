@@ -88,6 +88,17 @@
   "photoSyncConfirmBody": "登记后地图就会被填充。",
   "photoSyncRegister": "登记",
   "photoSyncDone": "地图已更新。",
+  "photoSyncSummary": "從{photos}張含位置資訊的照片中找到{regions}個地區。",
+  "@photoSyncSummary": {
+    "placeholders": {
+      "photos": {
+        "type": "int"
+      },
+      "regions": {
+        "type": "int"
+      }
+    }
+  },
   "photoSyncNoCoordinates": "没有找到含位置信息的照片。",
   "photoSyncPermissionDenied": "允许访问照片即可填充地图。",
   "photoSyncFailed": "發生問題。請再試一次。",
