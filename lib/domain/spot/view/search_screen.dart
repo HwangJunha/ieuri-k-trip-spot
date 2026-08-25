@@ -161,9 +161,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         query: _typed,
                         onSelect: _searchFromSuggestion,
                       ),
-              SpotSearchLoading() => const Center(
-                child: CircularProgressIndicator(),
-              ),
+              SpotSearchLoading() => const SearchResultSkeleton(),
               SpotSearchLoaded(:final result, :final isLoadingMore) =>
                 SearchResultList(
                   result: result,
