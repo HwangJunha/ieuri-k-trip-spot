@@ -408,17 +408,20 @@
     "description": "사진 동기화 - 판정 결과 등록"
   },
   "photoSyncDone": "지도를 채웠어요.",
-  "photoSyncLimitedNotice": "사진을 일부만 허용해서 그 사진들만 훑었어요.",
+  "photoSyncLimitedNotice": "고른 사진만 훑어요. 사진첩 전체를 훑으려면 설정에서 전체 접근을 허용해 주세요.",
   "@photoSyncLimitedNotice": {},
   "photoSyncSelectMore": "사진 더 고르기",
   "@photoSyncSelectMore": {},
-  "photoSyncSummary": "위치 정보가 있는 사진 {photos}장에서 {regions}곳을 찾았어요.",
+  "photoSyncSummary": "위치 정보가 있는 사진 {photos}장에서 새 지역 {regions}곳, 이미 있던 지역 {known}곳을 확인했어요.",
   "@photoSyncSummary": {
     "placeholders": {
       "photos": {
         "type": "int"
       },
       "regions": {
+        "type": "int"
+      },
+      "known": {
         "type": "int"
       }
     }
@@ -2282,5 +2285,6 @@
   "onboardingTitle5": "지도에서 찾아보세요",
   "onboardingBody5": "주변 여행지를 지도에서 한눈에 보고, 혼잡도가 제공되는 곳은 얼마나 붐비는지도 확인하세요.",
   "@onboardingTitle5": {},
-  "@onboardingBody5": {}
+  "@onboardingBody5": {},
+  "photoSyncAllowAll": "설정에서 전체 허용"
 }

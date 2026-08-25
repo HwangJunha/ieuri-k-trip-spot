@@ -88,17 +88,20 @@
   "photoSyncConfirmBody": "登録すると地図が埋まります。",
   "photoSyncRegister": "登録する",
   "photoSyncDone": "地図を更新しました。",
-  "photoSyncLimitedNotice": "一部の写真のみ許可されているため、その写真だけを確認しました。",
+  "photoSyncLimitedNotice": "選んだ写真のみを確認します。ライブラリ全体を確認するには、設定でフルアクセスを許可してください。",
   "@photoSyncLimitedNotice": {},
   "photoSyncSelectMore": "写真をさらに選ぶ",
   "@photoSyncSelectMore": {},
-  "photoSyncSummary": "位置情報のある写真{photos}枚から{regions}か所を見つけました。",
+  "photoSyncSummary": "位置情報のある写真{photos}枚から、新しい地域{regions}か所と既にある地域{known}か所を確認しました。",
   "@photoSyncSummary": {
     "placeholders": {
       "photos": {
         "type": "int"
       },
       "regions": {
+        "type": "int"
+      },
+      "known": {
         "type": "int"
       }
     }
@@ -958,5 +961,6 @@
   "onboardingTitle5": "地図で探そう",
   "onboardingBody5": "周辺のスポットを地図で一覧でき、混雑データがある場所では混み具合も確認できます。",
   "@onboardingTitle5": {},
-  "@onboardingBody5": {}
+  "@onboardingBody5": {},
+  "photoSyncAllowAll": "設定で全体を許可"
 }

@@ -35,6 +35,7 @@ class PhotoScanProgress {
     this.resolvedCellCodes = const <String>[],
     this.retryCount = 0,
     this.limitedAccess = false,
+    this.alreadyOnMapCount = 0,
   });
 
   final PhotoScanStage stage;
@@ -63,6 +64,12 @@ class PhotoScanProgress {
   /// 사실을 알리고 재선택 수단을 줘야, 사용자가 "왜 3장만 훑었지"에서 멈추지 않는다.
   final bool limitedAccess;
 
+  /// 사진에서 찾았으나 **이미 지도에 있던** 지역 수(2026-08-26).
+  ///
+  /// 등록 대상은 아니지만 결과를 말할 때는 세야 한다 — 빼고 말하면 "1장에서
+  /// 0곳을 찾았어요"가 되어 실패로 읽힌다(사용자 지적).
+  final int alreadyOnMapCount;
+
   /// 0.0~1.0. 전체를 모르면 0이다.
   double get ratio => total == 0 ? 0 : (processed / total).clamp(0.0, 1.0);
 
@@ -86,6 +93,7 @@ class PhotoScanProgress {
     List<String>? resolvedCellCodes,
     int? retryCount,
     bool? limitedAccess,
+    int? alreadyOnMapCount,
   }) => PhotoScanProgress(
     stage: stage ?? this.stage,
     processed: processed ?? this.processed,
@@ -94,6 +102,7 @@ class PhotoScanProgress {
     resolvedCellCodes: resolvedCellCodes ?? this.resolvedCellCodes,
     retryCount: retryCount ?? this.retryCount,
     limitedAccess: limitedAccess ?? this.limitedAccess,
+    alreadyOnMapCount: alreadyOnMapCount ?? this.alreadyOnMapCount,
   );
 
   @override
@@ -105,6 +114,7 @@ class PhotoScanProgress {
       other.foundCoordinates == foundCoordinates &&
       other.retryCount == retryCount &&
       other.limitedAccess == limitedAccess &&
+      other.alreadyOnMapCount == alreadyOnMapCount &&
       _sameCodes(other.resolvedCellCodes, resolvedCellCodes);
 
   @override
@@ -115,6 +125,7 @@ class PhotoScanProgress {
     foundCoordinates,
     retryCount,
     limitedAccess,
+    alreadyOnMapCount,
     Object.hashAll(resolvedCellCodes),
   );
 

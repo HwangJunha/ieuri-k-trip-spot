@@ -430,9 +430,11 @@ void main() {
 
       await c.read(photoScanControllerProvider.notifier).start();
 
-      expect(c.read(photoScanControllerProvider).resolvedCellCodes, <String>[
-        '26110',
-      ]);
+      final PhotoScanProgress p = c.read(photoScanControllerProvider);
+      expect(p.resolvedCellCodes, <String>['26110']);
+      // 등록 대상에서는 빠지되 **세기는 한다** — 안 그러면 이미 방문한 곳만
+      // 나온 스캔이 "0곳을 찾았어요"가 되어 실패로 읽힌다.
+      expect(p.alreadyOnMapCount, 1);
     });
 
     test('한국 밖 좌표는 판정하지 않는다 (R25)', () async {

@@ -88,17 +88,20 @@
   "photoSyncConfirmBody": "登记后地图就会被填充。",
   "photoSyncRegister": "登记",
   "photoSyncDone": "地图已更新。",
-  "photoSyncLimitedNotice": "你僅允許存取部分照片，因此只掃描了那些照片。",
+  "photoSyncLimitedNotice": "僅掃描您選擇的照片。若要掃描整個相簿，請在設定中允許完整存取。",
   "@photoSyncLimitedNotice": {},
   "photoSyncSelectMore": "選擇更多照片",
   "@photoSyncSelectMore": {},
-  "photoSyncSummary": "從{photos}張含位置資訊的照片中找到{regions}個地區。",
+  "photoSyncSummary": "從{photos}張含位置資訊的照片中，確認新地區{regions}個、已有地區{known}個。",
   "@photoSyncSummary": {
     "placeholders": {
       "photos": {
         "type": "int"
       },
       "regions": {
+        "type": "int"
+      },
+      "known": {
         "type": "int"
       }
     }
@@ -958,5 +961,6 @@
   "onboardingTitle5": "在地圖上探索",
   "onboardingBody5": "在地圖上一覽周邊景點，有擁擠資料的地方還能看到人潮狀況。",
   "@onboardingTitle5": {},
-  "@onboardingBody5": {}
+  "@onboardingBody5": {},
+  "photoSyncAllowAll": "在設定中允許全部"
 }

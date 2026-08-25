@@ -88,7 +88,7 @@
   "photoSyncConfirmBody": "Adding them will fill in your map.",
   "photoSyncRegister": "Add them",
   "photoSyncDone": "Your map is updated.",
-  "photoSyncLimitedNotice": "You've allowed access to only some photos, so only those are scanned.",
+  "photoSyncLimitedNotice": "Only the photos you picked are scanned. To scan your whole library, allow full access in Settings.",
   "@photoSyncLimitedNotice": {
     "description": "iOS limited photo access notice/action"
   },
@@ -96,14 +96,17 @@
   "@photoSyncSelectMore": {
     "description": "iOS limited photo access notice/action"
   },
-  "photoSyncSummary": "{photos} photos had location info, and {regions} regions were added to your map.",
+  "photoSyncSummary": "{photos} photos had location info: {regions} new, {known} already on your map.",
   "@photoSyncSummary": {
-    "description": "Shown when the photo scan finishes. photos = photos that had GPS, regions = districts added.",
+    "description": "Scan result. photos = had GPS, regions = newly added, known = already on the map.",
     "placeholders": {
       "photos": {
         "type": "int"
       },
       "regions": {
+        "type": "int"
+      },
+      "known": {
         "type": "int"
       }
     }
@@ -1388,5 +1391,9 @@
   },
   "@onboardingBody5": {
     "description": "Onboarding page 5 body"
+  },
+  "photoSyncAllowAll": "Allow all photos",
+  "@photoSyncAllowAll": {
+    "description": "Opens system settings to raise limited photo access to full."
   }
 }

@@ -171,6 +171,9 @@ class PhotoScanController extends _$PhotoScanController {
     final Set<String> found = <String>{
       if (resuming) ...state.resolvedCellCodes,
     };
+    // 사진에서 찾았으나 **이미 지도에 있던** 지역. 등록 대상은 아니지만 "몇 곳을
+    // 확인했는가"를 말하려면 이것도 세야 한다.
+    final Set<String> alreadyOnMap = <String>{};
     int processed = from;
     int withCoordinates = resuming ? state.foundCoordinates : 0;
 
@@ -250,7 +253,14 @@ class PhotoScanController extends _$PhotoScanController {
       final Set<String> newCellIds = <String>{};
       for (final GeoPoint p in CoordinateReduction.reduce(raw)) {
         final String? code = resolver.districtAt(p)?.code;
-        if (code == null || alreadyVisited.contains(code)) continue;
+        if (code == null) continue;
+        // **이미 등록된 지역도 센다**(2026-08-26). 여기서 그냥 건너뛰면 "1장에서
+        // 0곳을 찾았어요"가 되어 실패로 읽힌다 — 실제로는 좌표를 찾았고 그 지역이
+        // 이미 지도에 있었을 뿐이다(사용자 지적).
+        if (alreadyVisited.contains(code)) {
+          alreadyOnMap.add(code);
+          continue;
+        }
         // 이번에 **새로** 찾은 것만 모은다. 이미 찾은 코드를 다시 칠할 필요는 없다.
         if (found.add(code)) {
           final String? cellId = cellIdOf[code];
@@ -297,13 +307,14 @@ class PhotoScanController extends _$PhotoScanController {
       processed: total,
       foundCoordinates: withCoordinates,
       resolvedCellCodes: found.toList()..sort(),
+      alreadyOnMapCount: alreadyOnMap.length,
     );
     // **무엇을 훑고 무엇이 걸러졌는지 남긴다**(2026-08-26). "왜 두 곳만
     // 찾았나"를 판단하려면 세 수가 다 필요하다 — 훑은 장수, 좌표가 있던 장수,
     // 그리고 새로 찾은 지역 수(이미 방문한 시군구는 R27에 따라 빠진다).
     _log.i(
       '사진 스캔 완료: 훑음 $total장 · 좌표 있음 $withCoordinates장 · '
-      '새 지역 ${found.length}곳(이미 방문한 곳은 제외)',
+      '새 지역 ${found.length}곳 · 이미 있던 지역 ${alreadyOnMap.length}곳',
     );
 
     // **좌표가 있던 사진 수를 센다.** 훑은 총량(`total`)은 사진첩 크기에 좌우돼

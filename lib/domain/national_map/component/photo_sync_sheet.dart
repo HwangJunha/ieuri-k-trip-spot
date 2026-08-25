@@ -4,6 +4,7 @@ import 'package:logger/logger.dart';
 
 import '../../../common/permission/component/permission_blocked_notice.dart';
 import '../../../common/permission/model/permission_kind.dart';
+import '../../../common/permission/provider/permission_providers.dart';
 import '../../../common/log/app_log.dart';
 import '../../../common/analytics/analytics_events.dart';
 import '../../../common/analytics/app_analytics.dart';
@@ -205,6 +206,7 @@ class _Content extends ConsumerWidget {
                 l10n.photoSyncSummary(
                   progress.foundCoordinates,
                   progress.resolvedCellCodes.length,
+                  progress.alreadyOnMapCount,
                 ),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
@@ -226,6 +228,19 @@ class _Content extends ConsumerWidget {
               OutlinedButton(
                 onPressed: controller.reselectPhotos,
                 child: Text(l10n.photoSyncSelectMore),
+              ),
+              // **재선택만으로는 "일부만 허용"을 벗어날 수 없다**(2026-08-26).
+              // `presentLimited`는 고른 사진 목록을 바꿀 뿐 권한 등급은 그대로다
+              // — 전체 허용으로 올리는 길은 시스템 설정뿐이다.
+              //
+              // `PermissionBlockedNotice`는 쓸 수 없다: `needsSettings`가
+              // `PermissionController`를 지난 상태에서만 서는데, 사진 스캔은
+              // `photo_manager`를 직접 부르는 별도 경로라 그 상태가 비어 있다.
+              TextButton(
+                onPressed: () => ref
+                    .read(permissionControllerProvider.notifier)
+                    .openSettings(),
+                child: Text(l10n.photoSyncAllowAll),
               ),
             ],
             const SizedBox(height: 16),
