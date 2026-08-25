@@ -125,6 +125,13 @@ flutter:
     # 돌려주므로 특히 티가 안 난다.
     - asset/geo/district-boundaries.geojson
 
+    # 온보딩 다섯 장의 일러스트(2026-08-25). 탭 순서와 파일명이 1:1이라 화면이
+    # 늘거나 줄면 여기도 함께 본다.
+    #
+    # **폴더로 선언한다** — geo와 달리 이 폴더에는 설계 메모가 없고 파일이 전부
+    # 앱에 필요하다. 다섯 장 합쳐 204KB다.
+    - asset/onboarding/
+
   fonts:
     # Base multilingual family. Latin/KO glyphs from Noto Sans;
     # CJK fallbacks (KR/JP/SC) are declared as separate families and

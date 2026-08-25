@@ -4,16 +4,15 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../common/app_assets.dart';
-import '../../../common/widget/korea_icon.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../common/navigation/discover_route.dart';
 import '../../auth/provider/auth_controller.dart';
 
-/// Three-page onboarding carousel (Stitch design): a top bar with the brand
-/// logo + Skip, a large media card per page (placeholder gradient + location
-/// label + heart badge), a primary-colored title, page dots and a full-width
-/// Next / Get-started action. Media is a placeholder to be replaced by real
-/// photos later; all text is localized.
+/// 온보딩 다섯 장. 상단에 로고 + Skip, 장마다 큰 일러스트, primary 색 제목,
+/// 설명 한 줄, 페이지 점, 하단 전체 폭 버튼(마지막은 "시작하기").
+///
+/// **하단 탭과 같은 순서다** — 넘기고 나면 곧바로 그 순서로 탭 바가 보인다.
+/// 문구는 전부 l10n이다.
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -42,38 +41,32 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   /// 온보딩은 앱을 처음 여는 사람이 **어디에 무엇이 있는지** 배우는 자리다.
   /// 넘기고 나면 곧바로 그 순서로 탭 바가 보이므로, 아이콘이 같아야 방금 본
   /// 그림과 탭이 이어진다.
-  List<_OnboardingPage> _pages(AppLocalizations l10n, ColorScheme scheme) =>
+  List<_OnboardingPage> _pages(AppLocalizations l10n) =>
       <_OnboardingPage>[
         _OnboardingPage(
-          icon: Icons.home_outlined,
+          image: AppAssets.onboarding[0],
           title: l10n.onboardingTitle1,
           body: l10n.onboardingBody1,
-          color: scheme.primary,
         ),
         _OnboardingPage(
-          // 전국 지도 탭과 같은 한반도 실루엣.
-          icon: null,
+          image: AppAssets.onboarding[1],
           title: l10n.onboardingTitle2,
           body: l10n.onboardingBody2,
-          color: scheme.secondary,
         ),
         _OnboardingPage(
-          icon: Icons.explore_outlined,
+          image: AppAssets.onboarding[2],
           title: l10n.onboardingTitle3,
           body: l10n.onboardingBody3,
-          color: scheme.primary,
         ),
         _OnboardingPage(
-          icon: Icons.favorite_outline,
+          image: AppAssets.onboarding[3],
           title: l10n.onboardingTitle4,
           body: l10n.onboardingBody4,
-          color: scheme.tertiary,
         ),
         _OnboardingPage(
-          icon: Icons.map_outlined,
+          image: AppAssets.onboarding[4],
           title: l10n.onboardingTitle5,
           body: l10n.onboardingBody5,
-          color: scheme.secondary,
         ),
       ];
 
@@ -100,7 +93,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final ThemeData theme = Theme.of(context);
-    final List<_OnboardingPage> pages = _pages(l10n, theme.colorScheme);
+    final List<_OnboardingPage> pages = _pages(l10n);
     final bool isLast = _index == pages.length - 1;
 
     return Scaffold(
@@ -179,28 +172,27 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
 class _OnboardingPage {
   const _OnboardingPage({
-    required this.icon,
+    required this.image,
     required this.title,
     required this.body,
-    required this.color,
   });
 
-  /// 이 탭의 아이콘. **null이면 한반도 실루엣**([KoreaIcon])을 그린다 — 전국
-  /// 지도 탭이 `Icons.*`에 없는 도형을 쓰기 때문이다.
-  final IconData? icon;
+  /// 이 장의 일러스트 에셋 경로([AppAssets.onboarding]).
+  final String image;
   final String title;
   final String body;
-  final Color color;
 }
 
-/// 이 탭이 무엇인지 한눈에 보여 주는 카드.
+/// 이 장이 무엇을 말하는지 보여 주는 일러스트.
 ///
-/// **사진이 아니라 탭 아이콘이다.** 예전에는 사진 자리에 그라디언트를 깔고 그 위에
-/// 장소 이름·위치를 얹었는데, 실제 사진이 들어온 적이 없어 **있지도 않은 장소를
-/// 소개하는 카드**가 되어 있었다(명동 길거리 음식 · 서울, 대한민국).
+/// **다섯 장이 한 세트다.** 같은 결(플랫 벡터·얇은 외곽선·따뜻한 배경)로 그려져
+/// 있어 넘길 때 그림체가 튀지 않는다 — 한 장만 다른 스타일로 갈아 끼우면 그 장이
+/// 도드라진다.
 ///
-/// 온보딩이 가르치려는 것은 특정 장소가 아니라 **탭의 쓰임**이다. 그 탭에서 쓰는
-/// 아이콘을 크게 보여 주면, 넘기고 나서 하단 바의 같은 아이콘과 곧바로 이어진다.
+/// 예전에는 사진 자리에 그라디언트를 깔고 장소 이름·위치를 얹었는데, 실제 사진이
+/// 들어온 적이 없어 **있지도 않은 장소를 소개하는 카드**가 되어 있었다(명동 길거리
+/// 음식 · 서울, 대한민국). 그 뒤로는 탭 아이콘을 크게 그렸고, 지금은 장마다 그린
+/// 일러스트가 그 자리를 대신한다.
 class _MediaCard extends StatelessWidget {
   const _MediaCard({required this.page});
 
@@ -208,30 +200,19 @@ class _MediaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(28),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: <Color>[
-              page.color,
-              Color.lerp(page.color, Colors.black, 0.35)!,
-            ],
-          ),
-        ),
-        child: Center(
-          // 아이콘이 없는 장(전국 지도)은 한반도 실루엣을 그린다 — 그 탭이
-          // `Icons.*`에 없는 도형을 쓰기 때문이다.
-          child: page.icon == null
-              ? const KoreaIcon(size: 104, color: Colors.white70, filled: true)
-              : Icon(page.icon, size: 104, color: Colors.white70),
-        ),
-      ),
+    // **배경을 깔지 않는다.** 일러스트 자체가 따뜻한 오프화이트 배경을 갖고 있어
+    // 화면과 이어진다 — 카드 테두리를 두르면 그림이 액자에 갇힌 것처럼 보인다.
+    return Image.asset(
+      page.image,
+      fit: BoxFit.contain,
+      // 원본이 343x512로 작다. 화면 폭에 맞춰 늘리므로 보간 품질이 곧 선명도다.
+      filterQuality: FilterQuality.medium,
+      // 에셋이 빠져도 온보딩이 막히지 않는다 — 글자만으로도 뜻은 전해진다.
+      errorBuilder: (_, _, _) => const SizedBox.shrink(),
     );
   }
 }
+
 
 class _PageIndicator extends StatelessWidget {
   const _PageIndicator({required this.count, required this.index});
