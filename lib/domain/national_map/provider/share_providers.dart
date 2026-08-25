@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/analytics/analytics_events.dart';
 import '../../../common/analytics/app_analytics.dart';
+import '../../../common/network/network_retry_policy.dart';
 import '../model/shared_map.dart';
 import '../service/share_sheet_service.dart';
 import 'national_map_providers.dart';
@@ -56,6 +57,6 @@ class ShareController extends _$ShareController {
 }
 
 /// 공유 링크로 조회한 남의 지도(R37·R38).
-@riverpod
+@Riverpod(retry: defaultNetworkRetry)
 Future<SharedMap> sharedMap(Ref ref, String token) =>
     ref.watch(nationalMapRepositoryProvider).fetchSharedMap(token);

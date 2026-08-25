@@ -14,6 +14,7 @@ import '../model/spot_search_state.dart';
 import '../model/spot_suggestion.dart';
 import 'recent_searches_providers.dart';
 import '../../../common/category/spot_category_toggle.dart';
+import 'retry_counting.dart';
 import 'spot_providers.dart';
 import '../../auth/provider/session_scope.dart';
 
@@ -215,7 +216,7 @@ const Duration suggestionDebounce = Duration(milliseconds: 250);
 ///
 /// `autoDispose`(codegen 기본)라 질의가 바뀌면 이전 provider가 폐기된다. 디바운스가
 /// 그 폐기를 이용한다 — 대기 중에 버려지면 조회를 내보내지 않는다.
-@riverpod
+@Riverpod(retry: spotRetryPolicy)
 Future<List<SpotSuggestion>> spotSearchSuggestions(
   Ref ref,
   String query,

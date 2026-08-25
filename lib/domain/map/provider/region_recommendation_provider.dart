@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
 import '../../../common/location/location_service.dart';
+import '../../../common/network/network_retry_policy.dart';
 import '../model/region_recommendation.dart';
 import 'map_providers.dart';
 import '../../auth/provider/session_scope.dart';
@@ -49,7 +50,7 @@ class RegionRecommendationNeedsLocation implements Exception {
 /// 사용자가 화면에서 기준을 바꿀 수 있으므로 인자로 받아 family가 된다 — 기준이
 /// 바뀌면 새 인자가 되어 이전 조회는 자동으로 버려지고, 두 기준의 결과가 각각
 /// 캐시된다(왔다 갔다 해도 다시 받지 않는다).
-@riverpod
+@Riverpod(retry: defaultNetworkRetry)
 Future<RegionRecommendationResult> regionRecommendations(
   Ref ref,
   Coordinates? mapCenter,

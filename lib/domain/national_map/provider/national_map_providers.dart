@@ -3,6 +3,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/network/graphql_client.dart';
+import '../../../common/network/network_retry_policy.dart';
 import '../../auth/provider/session_scope.dart';
 import '../model/cell_detail.dart';
 import '../model/cell_geometry.dart';
@@ -28,7 +29,7 @@ NationalMapRepository nationalMapRepository(Ref ref) =>
 /// **인증 상태를 watch한다.** `keepAlive`라 로그아웃해도 캐시가 남는데, 여기 담긴
 /// `viewerVisited`는 사용자의 것이라 다음 사용자에게 이전 사람의 방문 칸이
 /// 보였다(실기기 확인). watch가 그 순간 이 provider를 다시 만든다.
-@Riverpod(keepAlive: true)
+@Riverpod(keepAlive: true, retry: defaultNetworkRetry)
 class MapCells extends _$MapCells {
   @override
   Future<List<MapCell>> build() async {
@@ -130,7 +131,7 @@ Future<List<ProvinceProgress>> provinceProgress(Ref ref) async {
 /// 칸 상세(R11·R22). 칸 id로 부르는 family다.
 ///
 /// 광역시 칸은 장소가 수천 건이라 커서로 이어 읽는다(스펙 §11).
-@riverpod
+@Riverpod(retry: defaultNetworkRetry)
 class CellDetailController extends _$CellDetailController {
   @override
   Future<CellDetail> build(String cellId) =>

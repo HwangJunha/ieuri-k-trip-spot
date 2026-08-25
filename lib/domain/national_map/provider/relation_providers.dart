@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/network/network_retry_policy.dart';
 import '../../auth/provider/session_scope.dart';
 import '../model/map_relation.dart';
 import 'national_map_providers.dart';
@@ -16,7 +17,7 @@ const int _relationPageSize = 30;
 /// (사용자 결정, 2026-08-22).
 ///
 /// 로그아웃하면 비운다 — 남의 관계 목록이 다음 사용자에게 보이면 안 된다.
-@riverpod
+@Riverpod(retry: defaultNetworkRetry)
 class MapRelations extends _$MapRelations {
   @override
   Future<MapRelationPage> build() async {
@@ -31,7 +32,9 @@ class MapRelations extends _$MapRelations {
   /// 다음 페이지를 뒤에 붙인다. 더 없으면 아무 일도 하지 않는다.
   Future<void> loadMore() async {
     final MapRelationPage? current = state.value;
-    if (current == null || !current.hasMore || current.endCursor == null) return;
+    if (current == null || !current.hasMore || current.endCursor == null) {
+      return;
+    }
 
     final MapRelationPage next = await ref
         .read(nationalMapRepositoryProvider)
@@ -105,4 +108,3 @@ bool isRelatedNickname(Ref ref, String nickname) {
   if (page == null) return false;
   return page.relations.any((MapRelation r) => r.nickname == nickname);
 }
-

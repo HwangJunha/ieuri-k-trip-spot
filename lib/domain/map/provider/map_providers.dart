@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/localization/locale_controller.dart';
 import '../../../common/network/graphql_client.dart';
+import '../../../common/network/network_retry_policy.dart';
 import '../model/congestion_area.dart';
 import '../model/map_bounds.dart';
 import '../model/map_tuning.dart';
@@ -32,7 +33,7 @@ MapRepository mapRepository(Ref ref) =>
 ///
 /// **카테고리 필터를 받지 않는다**(사용자 결정, 2026-08-16). 서버 인자는 있지만
 /// 지도는 오버레이가 가장 많은 화면이라 바를 하나 더 얹으면 가독성이 떨어진다.
-@riverpod
+@Riverpod(retry: defaultNetworkRetry)
 Future<MapViewportResult> mapViewport(Ref ref, MapBounds bbox, int zoom) =>
     ref.watch(mapRepositoryProvider).fetchViewport(bbox: bbox, zoom: zoom);
 
@@ -55,7 +56,7 @@ Future<MapViewportResult> mapViewport(Ref ref, MapBounds bbox, int zoom) =>
 /// **호출부가 bbox를 격자에 맞춰 넘겨야 이 캐시가 실제로 맞는다**(→ `MapScreen`).
 /// family 키가 bbox 자체라, 소수점이 매번 달라지면 붙들어 둔 것과 다른 키가 되어
 /// 캐시가 있으나 마나다.
-@riverpod
+@Riverpod(retry: defaultNetworkRetry)
 Future<SeoulCongestionResult> seoulCongestion(Ref ref, MapBounds bbox) async {
   // **링크는 await 전에 잡는다**(→[congestionBoundaries]의 같은 주석).
   final link = ref.keepAlive();
@@ -87,7 +88,7 @@ Future<SeoulCongestionResult> seoulCongestion(Ref ref, MapBounds bbox) async {
 ///
 /// 좌표만 공유하고 이름만 다시 받는 방식도 가능하지만, 121건 한 번의 왕복이라
 /// 복잡도를 더할 이득이 없다.
-@riverpod
+@Riverpod(retry: defaultNetworkRetry)
 Future<List<CongestionAreaBoundary>> congestionBoundaries(
   Ref ref,
   String languageTag,

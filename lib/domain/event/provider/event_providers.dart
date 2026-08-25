@@ -4,6 +4,7 @@ import '../../../common/localization/locale_controller.dart';
 import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
 import '../../../common/network/graphql_client.dart';
+import '../../../common/network/network_retry_policy.dart';
 import '../../../common/pagination/page.dart';
 import '../../../common/storage/search_radius_controller.dart';
 import '../model/festival.dart';
@@ -29,7 +30,7 @@ EventRepository eventRepository(Ref ref) =>
 ///
 /// **홈의 세 섹션은 각각 독립된 provider다**(R19). 이 provider의 실패나 빈 결과가
 /// 다른 섹션에 번지지 않고, 재시도도 이것 하나만 무효화한다(AC-20.2).
-@riverpod
+@Riverpod(retry: defaultNetworkRetry)
 Future<List<Festival>> happeningNowEvents(Ref ref) async {
   // 축제 이름도 서버 번역이라 언어를 바꾸면 다시 받아야 한다(Near you와 같은 이유).
   ref.watch(localeControllerProvider);
