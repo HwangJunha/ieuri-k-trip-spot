@@ -81,7 +81,8 @@ class PermissionController extends _$PermissionController {
     // (`PhotoScanController.start`).
     AppAnalytics.logEvent(AnalyticsEvents.permissionResult, <String, Object>{
       AnalyticsParams.permission: kind.name,
-      AnalyticsParams.granted: result == PermissionState.granted,
+      AnalyticsParams.granted:
+          result == PermissionState.granted ? 'true' : 'false',
     });
     return result;
   }

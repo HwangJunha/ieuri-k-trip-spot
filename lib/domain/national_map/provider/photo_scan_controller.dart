@@ -93,7 +93,7 @@ class PhotoScanController extends _$PhotoScanController {
     // 부르므로 여기 심지 않으면 사진 권한 결과가 통째로 빠진다.
     AppAnalytics.logEvent(AnalyticsEvents.permissionResult, <String, Object>{
       AnalyticsParams.permission: 'photo',
-      AnalyticsParams.granted: granted,
+      AnalyticsParams.granted: granted ? 'true' : 'false',
     });
     if (!granted) {
       state = state.copyWith(stage: PhotoScanStage.permissionDenied);

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logger/logger.dart';
 
 import '../../../common/permission/component/permission_blocked_notice.dart';
 import '../../../common/permission/model/permission_kind.dart';
+import '../../../common/log/app_log.dart';
 import '../../../common/analytics/analytics_events.dart';
 import '../../../common/analytics/app_analytics.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -55,6 +57,8 @@ class PhotoSyncSheet extends ConsumerWidget {
 }
 
 class _Content extends ConsumerWidget {
+  static final Logger _log = appLogger('PhotoSyncSheet');
+
   const _Content({required this.progress, required this.l10n});
 
   final PhotoScanProgress progress;
@@ -210,7 +214,7 @@ class _Content extends ConsumerWidget {
     try {
       // 사진이 몇 장이든 요청은 1회다 — 판정 결과가 시군구 코드로 축약돼 있다.
       await ref.read(visitControllerProvider.notifier).record(codes);
-    } on Object {
+    } on Object catch (error, stackTrace) {
       // **던지게 두면 스피너가 영원히 돈다**(실기기 확인 2026-08-26).
       // `record`가 던지면 아래 `confirmed()`에 닿지 못해 단계가
       // `awaitingConfirmation`에 머물고, "N곳을 찾았어요" 아래 스피너만 계속
@@ -218,14 +222,20 @@ class _Content extends ConsumerWidget {
       //
       // 스캔 결과는 그대로 두고 실패 단계로 보낸다 — 다시 찾을 필요 없이 등록만
       // 다시 누르면 된다.
+      //
+      // **타입과 스택을 남긴다.** 조용히 삼키면 서버 응답이 성공인데 화면만
+      // 실패인 상황에서 원인을 찾을 길이 없다 — 실제로 그랬다(2026-08-26).
+      // 서버 message는 PII를 담을 수 있어 넘기지 않는다(POL-013).
+      _log.w('방문 등록 실패: ${error.runtimeType}', stackTrace: stackTrace);
       controller.registrationFailed();
       return;
     }
     // **호출부에 심는다.** `VisitController.record`는 사진 경로와 현재 위치 경로가
     // 합류하는 자리라, 거기 심으면 둘을 구분할 수 없다.
-    AppAnalytics.logEvent(AnalyticsEvents.nationalMapRegionAdd, <String, Object>{
-      AnalyticsParams.from: 'photo',
-    });
+    AppAnalytics.logEvent(
+      AnalyticsEvents.nationalMapRegionAdd,
+      <String, Object>{AnalyticsParams.from: 'photo'},
+    );
     // 시트를 닫지 않는다 — 완료 문구를 보고 사용자가 닫는다.
     controller.confirmed();
   }

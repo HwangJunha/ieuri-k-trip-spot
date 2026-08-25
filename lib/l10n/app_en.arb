@@ -90,7 +90,7 @@
   "photoSyncDone": "Your map is updated.",
   "photoSyncNoCoordinates": "No photos with location info were found.",
   "photoSyncPermissionDenied": "Allow photo access to fill in your map.",
-  "photoSyncFailed": "Something went wrong while reading your photos.",
+  "photoSyncFailed": "Something went wrong. Please try again.",
   "nationalMapUnavailable": "Couldn't load the map",
   "navCommunity": "Community",
   "likedSpotsEmpty": "No liked spots yet.",

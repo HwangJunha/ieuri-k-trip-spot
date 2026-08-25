@@ -90,7 +90,7 @@
   "photoSyncDone": "地図を更新しました。",
   "photoSyncNoCoordinates": "位置情報のある写真が見つかりませんでした。",
   "photoSyncPermissionDenied": "写真へのアクセスを許可すると地図を埋められます。",
-  "photoSyncFailed": "写真の読み込み中に問題が発生しました。",
+  "photoSyncFailed": "問題が発生しました。もう一度お試しください。",
   "nationalMapUnavailable": "地図を読み込めませんでした",
   "navCommunity": "コミュニティ",
   "likedSpotsEmpty": "お気に入りのスポットはまだありません。",

@@ -90,7 +90,7 @@
   "photoSyncDone": "地图已更新。",
   "photoSyncNoCoordinates": "没有找到含位置信息的照片。",
   "photoSyncPermissionDenied": "允许访问照片即可填充地图。",
-  "photoSyncFailed": "读取照片时出现问题。",
+  "photoSyncFailed": "發生問題。請再試一次。",
   "nationalMapUnavailable": "无法加载地图",
   "navCommunity": "社群",
   "likedSpotsEmpty": "還沒有收藏的景點。",

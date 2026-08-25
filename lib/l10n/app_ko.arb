@@ -419,7 +419,7 @@
   "@photoSyncPermissionDenied": {
     "description": "사진 권한 거부 안내 - 오류가 아니다"
   },
-  "photoSyncFailed": "사진을 읽는 중 문제가 생겼어요.",
+  "photoSyncFailed": "문제가 생겼어요. 다시 시도해 주세요.",
   "@photoSyncFailed": {
     "description": "사진 동기화 실패"
   },
