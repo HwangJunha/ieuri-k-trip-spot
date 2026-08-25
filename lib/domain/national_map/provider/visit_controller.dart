@@ -35,10 +35,22 @@ class VisitController extends _$VisitController {
       final RecordVisitsResult result = await ref
           .read(nationalMapRepositoryProvider)
           .recordVisits(districtCodes);
-      ref.read(mapCellsProvider.notifier).applyUpdated(result.updatedCells);
+      // **폐기됐으면 캐시를 건드리지 않는다.** `mapCells`는 keepAlive라 살아
+      // 있지만, 그것을 읽는 `ref`가 죽었으면 `read` 자체가 던진다.
+      if (ref.mounted) {
+        ref.read(mapCellsProvider.notifier).applyUpdated(result.updatedCells);
+      }
       return result;
     } finally {
-      state = false;
+      // **`ref.mounted`를 본다**(실기기 확인 2026-08-26 — `UnmountedRefException`).
+      //
+      // 이 provider는 autoDispose라 서버 응답을 기다리는 동안 구독이 끊기면
+      // 폐기된다(시트를 닫거나 리빌드로 `ref.read`가 사라질 때). 그 뒤 도착한
+      // 응답이 `finally`에 오면 **죽은 provider의 state를 건드려 던진다** —
+      // 등록은 이미 성공했는데 호출부는 실패로 받는다.
+      //
+      // 상태는 "요청이 도는 중인지"뿐이라 폐기됐다면 되돌릴 대상도 없다.
+      if (ref.mounted) state = false;
     }
   }
 
@@ -56,11 +68,13 @@ class VisitController extends _$VisitController {
           .removeVisit(cellId);
       if (updated != null) notifier.applyUpdated(<MapCell>[updated]);
     } on Object {
-      // 되돌린다.
+      // 되돌린다. **`notifier`는 미리 잡아 둔 참조라** 이 provider가 폐기된 뒤에도
+      // 안전하다 — `mapCells`는 keepAlive다.
       notifier.setVisitedOptimistically(<String>{cellId}, visited: true);
       rethrow;
     } finally {
-      state = false;
+      // [record]와 같은 이유로 `mounted`를 본다.
+      if (ref.mounted) state = false;
     }
   }
 }
