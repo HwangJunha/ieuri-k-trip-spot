@@ -69,6 +69,18 @@ class MapScreen extends ConsumerStatefulWidget {
 class _MapScreenState extends ConsumerState<MapScreen> {
   static final Logger _log = appLogger('MapScreen');
 
+  /// 지도 SDK 초기화가 끝났는가.
+  ///
+  /// **`build`가 아니라 여기서 기다린다.** `main`이 더 이상 초기화를 기다리지
+  /// 않으므로(첫 프레임을 막지 않기 위해 — `map_sdk_initializer.dart`) 이 화면에
+  /// 도착했을 때 아직 진행 중일 수 있다. 그렇다고 `build`를 `FutureBuilder`로
+  /// 감싸면 **`ref.watch`·`ref.listen`이 빌드 콜백 안으로 들어가 단언에 걸린다** —
+  /// 실제로 그렇게 만들었다가 지도 진입이 터졌다(2026-08-25).
+  ///
+  /// `MapSdkInitializer.isReady`만 보면 "초기화 중"과 "키 없음"을 구별하지 못해
+  /// 안내 문구가 스쳤다가 지도로 바뀐다. 그래서 대기 여부를 따로 들고 있는다.
+  bool _sdkSettled = false;
+
   KakaoMapController? _controller;
 
   /// 지도 위 오버레이를 그리고 지우는 책임. SDK 호출을 화면에서 떼어 둔다.
@@ -155,6 +167,18 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   /// 폴리곤은 없는데 범례만 뜨거나, 아무것도 안 그리면서 출처만 떠 있는 조합이
   /// 생긴다 — 후자는 실제로 한 번 났던 문제다.
   bool get _showsCongestionLayer => _congestionState.showsAttribution;
+
+  @override
+  void initState() {
+    super.initState();
+    // 이미 끝났으면 곧바로 참이라 스피너가 한 프레임도 보이지 않는다. 진행 중이면
+    // 끝날 때 한 번만 다시 그린다.
+    unawaited(
+      MapSdkInitializer.ready().whenComplete(() {
+        if (mounted) setState(() => _sdkSettled = true);
+      }),
+    );
+  }
 
   @override
   void dispose() {
@@ -734,25 +758,16 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     // 카테고리 최초 상태는 "전체"다(사용자 결정, 2026-08-15) — 다른 화면과 같은
     // 규칙이라 심는 것이 없다.
 
-    // **초기화가 끝나기를 먼저 기다린다**(2026-08-25). `main`이 더 이상 이것을
-    // 기다리지 않으므로(첫 프레임을 막지 않기 위해) 여기 도착했을 때 아직 진행
-    // 중일 수 있다 — `isReady`만 보면 "초기화 중"을 "키 없음"으로 오인해 안내가
-    // 잠깐 스쳤다가 지도로 바뀐다.
-    return FutureBuilder<void>(
-      future: MapSdkInitializer.ready(),
-      builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return Scaffold(
-            appBar: AppBar(title: Text(l10n.navMap)),
-            body: const Center(child: CircularProgressIndicator()),
-          );
-        }
-        return _buildMap(context, l10n);
-      },
-    );
-  }
+    // 초기화가 아직 진행 중이면 기다린다([_sdkSettled] 주석 — `build`를
+    // `FutureBuilder`로 감싸면 아래 `ref.watch`·`ref.listen`이 빌드 콜백 안으로
+    // 들어가 터진다).
+    if (!_sdkSettled) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.navMap)),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
-  Widget _buildMap(BuildContext context, AppLocalizations l10n) {
     // 키가 없거나 SDK 인증에 실패하면 지도를 띄울 수 없다. 앱을 죽이지 않고 이
     // 화면만 안내로 대체한다(설계 §10).
     if (!MapSdkInitializer.isReady) {
@@ -872,30 +887,36 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           // **세로 중앙에 붙인다**(사용자 요청, 2026-08-10). 하단 기준으로 띄웠더니
           // 기기 높이에 따라 위치가 흔들렸고, 네비에 가까워 오조작도 났다. 중앙이면
           // 어느 기기에서나 같은 자리이고 엄지도 닿는다.
+          // **`RepaintBoundary`로 지도와 갈라 둔다**(2026-08-25). 지도는 네이티브
+          // 뷰라 손가락을 따라 매 프레임 갱신되는데, 경계가 없으면 같은 레이어에
+          // 얹힌 이 컨트롤들이 그때마다 함께 재합성된다 — 버튼은 하나도 안 바뀌는데
+          // 지도가 움직인다는 이유로 다시 그려지는 셈이다.
           Positioned(
             right: 12,
             top: 0,
             bottom: 0,
-            child: Column(
-              // `min`을 두면 Column이 내용만큼만 차지해 중앙 정렬이 먹지 않는다.
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                MapZoomControls(
-                  onZoomIn: () => _zoom(zoomIn: true),
-                  onZoomOut: () => _zoom(zoomIn: false),
-                ),
-                const SizedBox(height: 12),
-                MyLocationButton(
-                  isLocating: _isLocating,
-                  onPressed: _moveToCurrentLocation,
-                ),
-                // 추천 지역 진입(SPEC-0015). **여기에 두는 이유**: 이 화면에는 앱바가
-                // 없고, 상단은 검색창과 재검색 버튼이, 좌상단은 혼잡도 범례가 이미
-                // 쓰고 있다. 남는 자리는 이 컨트롤 열뿐이고, 셋 다 "지도를 어디로 볼
-                // 것인가"를 다루는 조작이라 한 그룹으로 읽혀도 어색하지 않다.
-                const SizedBox(height: 12),
-                RegionRecommendationButton(onPressed: _onRecommendationsTap),
-              ],
+            child: RepaintBoundary(
+              child: Column(
+                // `min`을 두면 Column이 내용만큼만 차지해 중앙 정렬이 먹지 않는다.
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  MapZoomControls(
+                    onZoomIn: () => _zoom(zoomIn: true),
+                    onZoomOut: () => _zoom(zoomIn: false),
+                  ),
+                  const SizedBox(height: 12),
+                  MyLocationButton(
+                    isLocating: _isLocating,
+                    onPressed: _moveToCurrentLocation,
+                  ),
+                  // 추천 지역 진입(SPEC-0015). **여기에 두는 이유**: 이 화면에는 앱바가
+                  // 없고, 상단은 검색창과 재검색 버튼이, 좌상단은 혼잡도 범례가 이미
+                  // 쓰고 있다. 남는 자리는 이 컨트롤 열뿐이고, 셋 다 "지도를 어디로 볼
+                  // 것인가"를 다루는 조작이라 한 그룹으로 읽혀도 어색하지 않다.
+                  const SizedBox(height: 12),
+                  RegionRecommendationButton(onPressed: _onRecommendationsTap),
+                ],
+              ),
             ),
           ),
           // 상단 오버레이. **하나의 세로 흐름으로 쌓는다** — 배너와 범례를 각각
@@ -907,41 +928,43 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             top: 0,
             left: 12,
             right: 12,
-            child: SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  // 검색창. 누르면 기존 검색 화면으로 보낸다 — 지도에서 입력을 받지
-                  // 않는 이유는 컴포넌트 주석 참조.
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: MapSearchBar(onTap: _onSearchTap),
-                  ),
-                  // **혼잡도 실패는 배너로 알리지 않는다**(사용자 결정, 2026-08-12).
-                  //
-                  // 부가 데이터라 없어도 지도는 제 역할을 다 하고, 사용자가 할 수
-                  // 있는 일도 없다 — 알려 봐야 검색창 아래 자리만 차지한다. 폴리곤과
-                  // 범례가 조용히 빠지는 것으로 충분하다(그 판정은 아래
-                  // `_showsCongestionLayer`가 쥔다).
-                  // **범례를 검색창 바로 아래 고정한다.**
-                  //
-                  // 재검색 버튼과 같은 흐름에 두었더니 버튼이 뜰 때마다 범례가 아래로
-                  // 밀려 구조가 흔들렸다(실기기 지적). 범례는 늘 같은 자리에 있어야
-                  // 눈이 찾기 쉽고, 버튼은 그 아래 가운데에서 따로 뜬다.
-                  //
-                  // 색이 실제로 그려질 때만 띄운다 — 판정은 레이어 상태 하나가 쥔다.
-                  if (_showsCongestionLayer)
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Padding(
-                        padding: EdgeInsets.only(top: 8),
-                        child: CongestionLegend(),
-                      ),
+            child: RepaintBoundary(
+              child: SafeArea(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    // 검색창. 누르면 기존 검색 화면으로 보낸다 — 지도에서 입력을 받지
+                    // 않는 이유는 컴포넌트 주석 참조.
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: MapSearchBar(onTap: _onSearchTap),
                     ),
-                  // 잘림 안내와 마커 종류 범례는 두지 않는다(사용자 결정,
-                  // 2026-08-10) — 사진 마커가 어떤 장소인지 이미 보여 주고, 배너는
-                  // 상시 떠 있어 방해만 됐다.
-                ],
+                    // **혼잡도 실패는 배너로 알리지 않는다**(사용자 결정, 2026-08-12).
+                    //
+                    // 부가 데이터라 없어도 지도는 제 역할을 다 하고, 사용자가 할 수
+                    // 있는 일도 없다 — 알려 봐야 검색창 아래 자리만 차지한다. 폴리곤과
+                    // 범례가 조용히 빠지는 것으로 충분하다(그 판정은 아래
+                    // `_showsCongestionLayer`가 쥔다).
+                    // **범례를 검색창 바로 아래 고정한다.**
+                    //
+                    // 재검색 버튼과 같은 흐름에 두었더니 버튼이 뜰 때마다 범례가 아래로
+                    // 밀려 구조가 흔들렸다(실기기 지적). 범례는 늘 같은 자리에 있어야
+                    // 눈이 찾기 쉽고, 버튼은 그 아래 가운데에서 따로 뜬다.
+                    //
+                    // 색이 실제로 그려질 때만 띄운다 — 판정은 레이어 상태 하나가 쥔다.
+                    if (_showsCongestionLayer)
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: EdgeInsets.only(top: 8),
+                          child: CongestionLegend(),
+                        ),
+                      ),
+                    // 잘림 안내와 마커 종류 범례는 두지 않는다(사용자 결정,
+                    // 2026-08-10) — 사진 마커가 어떤 장소인지 이미 보여 주고, 배너는
+                    // 상시 떠 있어 방해만 됐다.
+                  ],
+                ),
               ),
             ),
           ),
@@ -954,15 +977,17 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             Positioned(
               right: 12,
               top: 0,
-              child: SafeArea(
-                child: Padding(
-                  // 검색창(높이 약 46 + 위 여백 8)과 **카테고리 바**(높이 48 + 위
-                  // 여백 8) 아래로 내린다. 값이 상단 Column의 구성과 묶여 있으므로
-                  // 둘 중 하나를 바꾸면 여기도 함께 봐야 한다(SPEC-0020 R7).
-                  padding: const EdgeInsets.only(top: _searchThisAreaTop),
-                  child: SearchThisAreaButton(
-                    isSearching: _isSearchingArea,
-                    onPressed: _onSearchThisArea,
+              child: RepaintBoundary(
+                child: SafeArea(
+                  child: Padding(
+                    // 검색창(높이 약 46 + 위 여백 8)과 **카테고리 바**(높이 48 + 위
+                    // 여백 8) 아래로 내린다. 값이 상단 Column의 구성과 묶여 있으므로
+                    // 둘 중 하나를 바꾸면 여기도 함께 봐야 한다(SPEC-0020 R7).
+                    padding: const EdgeInsets.only(top: _searchThisAreaTop),
+                    child: SearchThisAreaButton(
+                      isSearching: _isSearchingArea,
+                      onPressed: _onSearchThisArea,
+                    ),
                   ),
                 ),
               ),
