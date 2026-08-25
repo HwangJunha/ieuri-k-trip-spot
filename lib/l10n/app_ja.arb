@@ -88,20 +88,17 @@
   "photoSyncConfirmBody": "登録すると地図が埋まります。",
   "photoSyncRegister": "登録する",
   "photoSyncDone": "地図を更新しました。",
-  "photoSyncLimitedNotice": "選んだ写真のみを確認します。ライブラリ全体を確認するには、設定でフルアクセスを許可してください。",
+  "photoSyncLimitedNotice": "設定 > K-Trip Spot > 写真 > すべての写真 を選ぶと、ライブラリ全体を確認します。",
   "@photoSyncLimitedNotice": {},
   "photoSyncSelectMore": "写真をさらに選ぶ",
   "@photoSyncSelectMore": {},
-  "photoSyncSummary": "位置情報のある写真{photos}枚から、新しい地域{regions}か所と既にある地域{known}か所を確認しました。",
+  "photoSyncSummary": "写真{photos}枚から{regions}か所を埋めました。",
   "@photoSyncSummary": {
     "placeholders": {
       "photos": {
         "type": "int"
       },
       "regions": {
-        "type": "int"
-      },
-      "known": {
         "type": "int"
       }
     }
@@ -962,5 +959,6 @@
   "onboardingBody5": "周辺のスポットを地図で一覧でき、混雑データがある場所では混み具合も確認できます。",
   "@onboardingTitle5": {},
   "@onboardingBody5": {},
-  "photoSyncAllowAll": "設定で全体を許可"
+  "photoSyncAllowAll": "設定で全体を許可",
+  "photoSyncRescan": "もう一度確認"
 }

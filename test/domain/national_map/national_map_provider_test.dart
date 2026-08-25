@@ -193,6 +193,9 @@ class _FakeLibrary implements PhotoLibraryService {
   Future<void> presentLimitedPicker() async {}
 
   @override
+  Future<void> openSettings() async {}
+
+  @override
   Future<int> photoCount() async => coordinates.length;
 
   @override

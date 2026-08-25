@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,6 +7,7 @@ import '../../navigation/root_navigator_key.dart';
 import '../model/permission_kind.dart';
 import '../model/permission_state.dart';
 import '../provider/permission_providers.dart';
+import '../repository/rationale_shown_store.dart';
 import 'permission_rationale_sheet.dart';
 
 /// 최초 실행 권한 시퀀스를 구동한다 (SPEC-0001 §최초실행). `MaterialApp.router`의
@@ -116,8 +119,25 @@ class _PermissionBootGateState extends ConsumerState<PermissionBootGate>
     );
     if (current.isDecided) return;
 
+    // **한 번 물어봤으면 다시 묻지 않는다**(2026-08-26).
+    //
+    // 알림은 선택 권한이라 "나중에"도 정당한 답이다. 그런데 그 답은 OS에 남지
+    // 않아(요청 자체를 안 했으므로) 다음 부팅에서 `isDecided`가 여전히 거짓이고,
+    // 사용자는 앱을 켤 때마다 같은 시트를 봤다 — 사용자 지적.
+    //
+    // 마음이 바뀌면 설정에서 켤 수 있다. 앱을 지웠다 다시 깔면 기록도 사라져
+    // 새로 한 번 물어본다.
+    final RationaleShownStore shown = ref.read(rationaleShownStoreProvider);
+    if (shown.wasShown(PermissionKind.notification)) return;
+
     final BuildContext? navContext = widget.navigatorKey.currentContext;
     if (navContext == null || !navContext.mounted) return;
+    // **띄우기 직전에 적는다.** 버튼을 누르지 않고 배리어 탭이나 뒤로가기로 닫아도
+    // "물어본" 것이다 — 누른 경우만 적으면 그 경로로 매번 다시 뜬다.
+    //
+    // 기다리지 않는다 — 여기서 `await`하면 그 뒤 `navContext` 사용이 async gap을
+    // 건너뛰게 된다. 디스크 기록이 늦어져도 이 세션의 판단에는 영향이 없다.
+    unawaited(shown.markShown(PermissionKind.notification));
     final bool proceed = await PermissionRationaleSheet.show(
       navContext,
       PermissionKind.notification,

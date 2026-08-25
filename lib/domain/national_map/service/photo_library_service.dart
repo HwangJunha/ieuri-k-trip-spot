@@ -27,6 +27,13 @@ abstract interface class PhotoLibraryService {
   /// iOS 14+ 전용이며 다른 플랫폼에서는 아무 일도 하지 않는다.
   Future<void> presentLimitedPicker();
 
+  /// 앱의 시스템 설정 화면을 연다(2026-08-26).
+  ///
+  /// **`permission_handler`가 아니라 `photo_manager`로 연다.** 사진 권한은
+  /// `PermissionController`를 지나지 않는 별도 경로라(이 파일이 그 경계다),
+  /// 같은 플러그인으로 열어야 상태와 화면이 어긋나지 않는다.
+  Future<void> openSettings();
+
   /// 훑을 사진 총 개수.
   Future<int> photoCount();
 
@@ -99,6 +106,9 @@ class PhotoManagerLibraryService implements PhotoLibraryService {
 
   @override
   Future<void> presentLimitedPicker() => pm.PhotoManager.presentLimited();
+
+  @override
+  Future<void> openSettings() => pm.PhotoManager.openSetting();
 
   @override
   Future<int> photoCount() => pm.PhotoManager.getAssetCount(type: _images);

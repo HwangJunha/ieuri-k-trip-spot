@@ -1,4 +1,5 @@
 import 'package:ieuri_k_trip_spot/common/permission/model/permission_kind.dart';
+import 'package:ieuri_k_trip_spot/common/permission/repository/rationale_shown_store.dart';
 import 'package:ieuri_k_trip_spot/common/permission/model/permission_state.dart';
 import 'package:ieuri_k_trip_spot/common/permission/service/permission_service.dart';
 
@@ -72,4 +73,18 @@ class FakePermissionService implements PermissionService {
     openSettingsCount++;
     return true;
   }
+}
+
+/// 메모리에만 담는 [RationaleShownStore].
+///
+/// 각 테스트는 "아직 아무것도 물어보지 않은" 상태에서 시작한다 — 디스크를 쓰면
+/// 테스트끼리 기록이 새어 순서에 따라 결과가 달라진다.
+class FakeRationaleShownStore implements RationaleShownStore {
+  final Set<PermissionKind> shown = <PermissionKind>{};
+
+  @override
+  bool wasShown(PermissionKind kind) => shown.contains(kind);
+
+  @override
+  Future<void> markShown(PermissionKind kind) async => shown.add(kind);
 }

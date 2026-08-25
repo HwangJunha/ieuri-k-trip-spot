@@ -88,7 +88,7 @@
   "photoSyncConfirmBody": "Adding them will fill in your map.",
   "photoSyncRegister": "Add them",
   "photoSyncDone": "Your map is updated.",
-  "photoSyncLimitedNotice": "Only the photos you picked are scanned. To scan your whole library, allow full access in Settings.",
+  "photoSyncLimitedNotice": "Only the photos you picked are scanned. For your whole library: Settings > K-Trip Spot > Photos > All Photos.",
   "@photoSyncLimitedNotice": {
     "description": "iOS limited photo access notice/action"
   },
@@ -96,17 +96,14 @@
   "@photoSyncSelectMore": {
     "description": "iOS limited photo access notice/action"
   },
-  "photoSyncSummary": "{photos} photos had location info: {regions} new, {known} already on your map.",
+  "photoSyncSummary": "Scanned {photos} photos and filled in {regions} regions.",
   "@photoSyncSummary": {
-    "description": "Scan result. photos = had GPS, regions = newly added, known = already on the map.",
+    "description": "Scan result: total photos scanned and regions filled.",
     "placeholders": {
       "photos": {
         "type": "int"
       },
       "regions": {
-        "type": "int"
-      },
-      "known": {
         "type": "int"
       }
     }
@@ -1395,5 +1392,9 @@
   "photoSyncAllowAll": "Allow all photos",
   "@photoSyncAllowAll": {
     "description": "Opens system settings to raise limited photo access to full."
+  },
+  "photoSyncRescan": "Scan again",
+  "@photoSyncRescan": {
+    "description": "Runs the photo scan again after it finished."
   }
 }

@@ -4,7 +4,6 @@ import 'package:logger/logger.dart';
 
 import '../../../common/permission/component/permission_blocked_notice.dart';
 import '../../../common/permission/model/permission_kind.dart';
-import '../../../common/permission/provider/permission_providers.dart';
 import '../../../common/log/app_log.dart';
 import '../../../common/analytics/analytics_events.dart';
 import '../../../common/analytics/app_analytics.dart';
@@ -202,10 +201,16 @@ class _Content extends ConsumerWidget {
             if (!progress.finishedWithoutCoordinates) ...<Widget>[
               const SizedBox(height: 4),
               Text(
+                // **훑은 총 장수와 채운 지역 수만 말한다**(2026-08-26).
+                // 좌표가 있던 장수나 이미 있던 지역 수까지 세는 것은 사용자가
+                // 궁금해하지 않는 내부 사정이다 — 사용자 지적.
+                //
+                // 지역 수는 새로 찾은 곳과 이미 있던 곳을 합친다. 사진에서 찾아낸
+                // 지역이 곧 "채운" 것이고, 그중 무엇이 이미 있었는지는 구분할
+                // 이유가 없다.
                 l10n.photoSyncSummary(
-                  progress.foundCoordinates,
-                  progress.resolvedCellCodes.length,
-                  progress.alreadyOnMapCount,
+                  progress.total,
+                  progress.resolvedCellCodes.length + progress.alreadyOnMapCount,
                 ),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
@@ -236,14 +241,21 @@ class _Content extends ConsumerWidget {
               // `PermissionController`를 지난 상태에서만 서는데, 사진 스캔은
               // `photo_manager`를 직접 부르는 별도 경로라 그 상태가 비어 있다.
               TextButton(
-                onPressed: () => ref
-                    .read(permissionControllerProvider.notifier)
-                    .openSettings(),
+                onPressed: () =>
+                    ref.read(photoLibraryServiceProvider).openSettings(),
                 child: Text(l10n.photoSyncAllowAll),
               ),
             ],
             const SizedBox(height: 16),
+            // **다시 훑을 수 있어야 한다**(2026-08-26). 완료 뒤에 시트를 다시 열면
+            // 결과 문구만 남아 이 기능을 두 번째로 쓸 방법이 없었다 — 사진을 더
+            // 찍은 사용자가 매번 다시 돌릴 수 있어야 한다(사용자 지적).
             FilledButton(
+              onPressed: controller.start,
+              child: Text(l10n.photoSyncRescan),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
               onPressed: () => Navigator.of(context).maybePop(),
               child: Text(l10n.commonClose),
             ),
