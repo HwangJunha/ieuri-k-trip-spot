@@ -505,7 +505,11 @@ class _CardStackState extends ConsumerState<_CardStack>
     final TouristSpot? next = cards.length > 1 ? cards[1] : null;
 
     // 하단 인셋은 기기가 정한다 — 고정 픽셀값은 기기별로 어긋난다(설계 §2.2).
-    final MediaQueryData media = MediaQuery.of(context);
+    //
+    // **`MediaQuery.of`가 아니라 `viewPaddingOf`다.** 통짜로 구독하면 키보드가
+    // 오르내릴 때(`viewInsets`)나 글자 크기·밝기가 바뀔 때도 카드 스택 전체가
+    // 다시 빌드된다 — 여기서 실제로 읽는 것은 `viewPadding` 하나뿐이다.
+    final EdgeInsets viewPadding = MediaQuery.viewPaddingOf(context);
 
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
@@ -524,8 +528,8 @@ class _CardStackState extends ConsumerState<_CardStack>
           // 값을 여기 복사하지 않고 셸의 상수를 쓴다 — 바 높이가 바뀌면 이
           // 보정도 함께 따라와야 한다(그 파일의 주석이 명시한 계약이다).
           bottomViewPadding:
-              media.viewPadding.bottom + FloatingBottomNavScaffold.barExtent,
-          topViewPadding: media.viewPadding.top,
+              viewPadding.bottom + FloatingBottomNavScaffold.barExtent,
+          topViewPadding: viewPadding.top,
           overlayControlsHeight: _overlayControlsHeight,
         );
 
@@ -545,10 +549,16 @@ class _CardStackState extends ConsumerState<_CardStack>
                 // 모양이 비쳐 카드가 바뀌는 순간 화면이 튄다.
                 child: ValueListenableBuilder<Offset>(
                   valueListenable: _drag,
-                  child: SwipeCard(
-                    key: ValueKey<String>(next.id),
-                    spot: next,
-                    metrics: metrics,
+                  // **`RepaintBoundary`가 `child`를 레이어로 굳힌다.** `child`는
+                  // 프레임마다 다시 *빌드*되지 않지만, 경계가 없으면 바깥
+                  // `Transform`이 움직일 때마다 다시 *래스터화*된다 — 사진 한 장을
+                  // 옮기는 대신 카드를 통째로 다시 그리는 셈이다.
+                  child: RepaintBoundary(
+                    child: SwipeCard(
+                      key: ValueKey<String>(next.id),
+                      spot: next,
+                      metrics: metrics,
+                    ),
                   ),
                   builder: (BuildContext context, Offset drag, Widget? child) =>
                       Transform.scale(
@@ -641,7 +651,10 @@ class _DraggableTop extends StatelessWidget {
       // 그린다. 오버레이 라벨은 변위에 따라 투명도가 변하므로 안쪽에 둔다.
       child: ValueListenableBuilder<Offset>(
         valueListenable: drag,
-        child: SwipeCard(spot: spot, metrics: metrics),
+        // `child`는 다시 빌드되지 않지만, 경계가 없으면 바깥 `Transform`이 움직일
+        // 때마다 사진·블러 배경이 다시 래스터화된다. 경계를 두면 굳은 레이어를
+        // 옮기기만 한다 — 드래그가 부드러워지는 핵심이다.
+        child: RepaintBoundary(child: SwipeCard(spot: spot, metrics: metrics)),
         builder: (BuildContext context, Offset value, Widget? child) =>
             Transform.translate(
               offset: value,

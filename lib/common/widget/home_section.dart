@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/gen/app_localizations.dart';
+import 'app_skeleton.dart';
 
 /// 홈 섹션 하나의 상태 경계(R19). 로딩·결과·빈 상태·실패를 **섹션 안에서** 그린다.
 ///
@@ -24,6 +25,7 @@ class HomeSection<T> extends ConsumerWidget {
     required this.emptyMessage,
     required this.onRetry,
     required this.builder,
+    this.skeletonItems = const <Never>[],
   });
 
   final String title;
@@ -36,6 +38,13 @@ class HomeSection<T> extends ConsumerWidget {
   final VoidCallback onRetry;
 
   final Widget Function(List<T> items) builder;
+
+  /// 로딩 중 뼈대로 그릴 더미 항목들. **[builder]에 그대로 넘겨 진짜 카드를 그린 뒤**
+  /// 시머로 덮으므로, 섹션마다 다른 레이아웃(가로 스크롤 / 세로 카드)이 저절로 맞는다.
+  ///
+  /// 비워 두면 예전처럼 스피너를 그린다 — 더미를 만들 수 없는 섹션이 남아도 이 위젯을
+  /// 계속 쓸 수 있게 한다.
+  final List<T> skeletonItems;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -53,12 +62,16 @@ class HomeSection<T> extends ConsumerWidget {
         value.when(
           data: (List<T> items) =>
               items.isEmpty ? _Message(text: emptyMessage) : builder(items),
-          loading: () => const Center(
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: CircularProgressIndicator(),
-            ),
-          ),
+          // 더미를 받았으면 **진짜 카드 레이아웃 그대로** 뼈대를 그린다. 스피너는
+          // "무언가 돌고 있다"만 말하지만 뼈대는 무엇이 올지까지 말한다.
+          loading: () => skeletonItems.isEmpty
+              ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: CircularProgressIndicator(),
+                  ),
+                )
+              : AppSkeleton(child: builder(skeletonItems)),
           // 실패는 빈 상태와 달리 재시도 수단을 함께 준다(AC-20.1).
           error: (Object error, _) => Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

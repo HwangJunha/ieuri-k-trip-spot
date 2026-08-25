@@ -5,6 +5,7 @@ import '../../../common/location/location_service.dart';
 import '../../../common/pagination/pagination_list_view.dart';
 import '../../../common/widget/highlighted_text.dart';
 import '../../../common/model/distance_format.dart';
+import '../../../common/widget/network_photo.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/nearby_spot.dart';
 import '../model/nearby_spot_category.dart';
@@ -430,9 +431,11 @@ class _SpotTile extends StatelessWidget {
             ? const Icon(Icons.place_outlined)
             : ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  spot.thumbnailImageUrl!,
+                child: NetworkPhoto(
+                  url: spot.thumbnailImageUrl!,
                   fit: BoxFit.cover,
+                  // 44px 아이콘 자리다.
+                  decodeWidth: 44,
                   // 이미지 하나가 실패해도 줄은 그대로 고를 수 있어야 한다.
                   errorBuilder: (_, _, _) => const Icon(Icons.place_outlined),
                 ),
