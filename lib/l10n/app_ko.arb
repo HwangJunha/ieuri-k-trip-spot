@@ -4,7 +4,7 @@
   "@appTitle": {
     "description": "앱 이름 (MaterialApp title)"
   },
-  "splashTagline": "실시간으로 만나는 한국의 활기찬 여행지.",
+  "splashTagline": "한국의 활기찬 여행지를 만나 보세요.",
   "@splashTagline": {
     "description": "스플래시 메인 태그라인"
   },
@@ -48,53 +48,29 @@
   "@getStarted": {
     "description": "온보딩 마지막 시작 버튼"
   },
-  "onboardingTitle1": "스와이프로 발견하세요",
+  "onboardingTitle1": "지금 내 주변",
   "@onboardingTitle1": {
     "description": "온보딩 1페이지 제목"
   },
-  "onboardingBody1": "간단한 스와이프로 나에게 딱 맞는 한국 여행을 찾아보세요. 마음에 들면 오른쪽으로 스와이프해 저장!",
+  "onboardingBody1": "앱을 열면 지금 가까운 여행지와 오늘 열리는 축제가 바로 보여요.",
   "@onboardingBody1": {
     "description": "온보딩 1페이지 본문"
   },
-  "onboardingTitle2": "붐비는 곳은 피하세요",
+  "onboardingTitle2": "나만의 한국 지도를 채우세요",
   "@onboardingTitle2": {
     "description": "온보딩 2페이지 제목"
   },
-  "onboardingBody2": "실시간 혼잡도 데이터로 더 똑똑하게 계획하세요. 여유로운지 붐비는지 미리 확인하세요.",
+  "onboardingBody2": "다녀온 곳마다 지역이 색으로 채워져요. 여행할수록 내 지도가 완성됩니다.",
   "@onboardingBody2": {
     "description": "온보딩 2페이지 본문"
   },
-  "onboardingTitle3": "함께 여행해요",
+  "onboardingTitle3": "스와이프로 찾아보세요",
   "@onboardingTitle3": {
     "description": "온보딩 3페이지 제목"
   },
-  "onboardingBody3": "전 세계 여행자들과 실시간으로 연결되세요. 팁을 나누고, 만나고, 추억을 만들어요.",
+  "onboardingBody3": "마음에 들면 오른쪽, 아니면 왼쪽으로. 넘길수록 취향에 가까워집니다.",
   "@onboardingBody3": {
     "description": "온보딩 3페이지 본문"
-  },
-  "onboardingCaption1": "명동 길거리 음식",
-  "@onboardingCaption1": {
-    "description": "온보딩 1페이지 카드 캡션 (플레이스홀더)"
-  },
-  "onboardingLocation1": "서울, 대한민국",
-  "@onboardingLocation1": {
-    "description": "온보딩 1페이지 카드 위치"
-  },
-  "onboardingCaption2": "경복궁",
-  "@onboardingCaption2": {
-    "description": "온보딩 2페이지 카드 캡션 (플레이스홀더)"
-  },
-  "onboardingLocation2": "서울, 대한민국",
-  "@onboardingLocation2": {
-    "description": "온보딩 2페이지 카드 위치"
-  },
-  "onboardingCaption3": "한강 공원",
-  "@onboardingCaption3": {
-    "description": "온보딩 3페이지 카드 캡션 (플레이스홀더)"
-  },
-  "onboardingLocation3": "서울, 대한민국",
-  "@onboardingLocation3": {
-    "description": "온보딩 3페이지 카드 위치"
   },
   "homeSearchHint": "여행지, 숨은 명소를 검색하세요…",
   "@homeSearchHint": {
@@ -715,7 +691,7 @@
   "@permissionLocationRationaleTitle": {
     "description": "위치 권한 사전 설명 시트 제목"
   },
-  "permissionLocationRationaleBody": "K-Trip Spot은 앱 사용 중에만 위치를 사용해 주변 명소와 실시간 혼잡도를 보여드립니다. 백그라운드에서는 위치를 추적하지 않습니다.",
+  "permissionLocationRationaleBody": "K-Trip Spot은 앱 사용 중에만 위치를 사용해 주변 명소와 혼잡도를 보여드립니다. 백그라운드에서는 위치를 추적하지 않습니다.",
   "@permissionLocationRationaleBody": {
     "description": "위치 권한 사전 설명 시트 본문"
   },
@@ -723,7 +699,7 @@
   "@permissionNotificationRationaleTitle": {
     "description": "알림 권한 사전 설명 시트 제목"
   },
-  "permissionNotificationRationaleBody": "알림을 켜면 관심 스팟의 실시간 혼잡 알림과 소식을 받을 수 있어요. 언제든지 변경할 수 있습니다.",
+  "permissionNotificationRationaleBody": "알림을 켜면 관심 스팟의 혼잡 알림과 소식을 받을 수 있어요. 언제든지 변경할 수 있습니다.",
   "@permissionNotificationRationaleBody": {
     "description": "알림 권한 사전 설명 시트 본문"
   },
@@ -1317,11 +1293,11 @@
   "requiredTermsFailed": "동의 처리에 실패했습니다. 다시 시도해 주세요.",
   "deleteAccountTitle": "회원 탈퇴",
   "deleteAccountHeadline": "되돌릴 수 없습니다",
-  "deleteAccountIntro": "탈퇴하면 다음이 영구히 삭제됩니다:",
-  "deleteAccountItemPosts": "작성한 글과 댓글",
-  "deleteAccountItemLikes": "찜한 장소",
-  "deleteAccountItemProfile": "프로필과 설정",
-  "deleteAccountCaution": "삭제된 데이터는 복구할 수 없습니다.",
+  "deleteAccountIntro": "탈퇴하면 다음이 삭제됩니다:",
+  "deleteAccountItemPosts": "계정과 프로필",
+  "deleteAccountItemLikes": "찜한 장소와 방문 기록",
+  "deleteAccountItemProfile": "알림 설정과 차단 목록",
+  "deleteAccountCaution": "커뮤니티에 남긴 글·댓글·메시지는 다른 사람의 대화 맥락을 위해 남을 수 있으며, 작성자는 더 이상 표시되지 않습니다. 삭제된 계정은 복구할 수 없습니다.",
   "deleteAccountCancel": "취소",
   "deleteAccountConfirm": "탈퇴하기",
   "deleteAccountFailed": "탈퇴하지 못했습니다. 다시 시도해 주세요.",
@@ -2283,5 +2259,13 @@
   "termsDocumentLoadFailed": "약관을 불러오지 못했습니다. 연결을 확인해 주세요.",
   "@termsDocumentLoadFailed": {
     "description": "약관 웹뷰 - 문서 로드 실패 안내"
-  }
+  },
+  "onboardingTitle4": "좋아요와 내 이야기",
+  "onboardingBody4": "좋아요한 장소와 커뮤니티에 남긴 글이 한 탭에 모여 있어요.",
+  "@onboardingTitle4": {},
+  "@onboardingBody4": {},
+  "onboardingTitle5": "얼마나 붐비는지 확인하세요",
+  "onboardingBody5": "가기 전에 혼잡도를 확인하고, 좋은 곳을 좋은 때에 골라 보세요.",
+  "@onboardingTitle5": {},
+  "@onboardingBody5": {}
 }

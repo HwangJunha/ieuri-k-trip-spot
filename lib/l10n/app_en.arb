@@ -1,7 +1,7 @@
 {
   "@@locale": "en",
   "appTitle": "K-Trip Spot",
-  "splashTagline": "Discover Korea's vibrant spots, real-time.",
+  "splashTagline": "Discover Korea's vibrant spots.",
   "splashSubTagline": "Your smart gateway to Seoul & beyond.",
   "splashLoading": "Initializing...",
   "languageSelectionSubtitle": "Select your language",
@@ -12,18 +12,12 @@
   "skip": "Skip",
   "next": "Next",
   "getStarted": "Get started",
-  "onboardingTitle1": "Swipe to Discover",
-  "onboardingBody1": "Find your perfect Korean adventure with a simple swipe. Like what you see? Swipe right to save!",
-  "onboardingTitle2": "Avoid the Crowds",
-  "onboardingBody2": "Plan smarter with real-time congestion data. Know when spots are quiet or buzzing before you go.",
-  "onboardingTitle3": "Travel Together",
-  "onboardingBody3": "Connect with fellow global travelers in real-time. Share tips, meet up, and make memories.",
-  "onboardingCaption1": "Myeongdong Street Food",
-  "onboardingLocation1": "Seoul, KR",
-  "onboardingCaption2": "Gyeongbokgung Palace",
-  "onboardingLocation2": "Seoul, KR",
-  "onboardingCaption3": "Hangang Park",
-  "onboardingLocation3": "Seoul, KR",
+  "onboardingTitle1": "Today around you",
+  "onboardingBody1": "Open the app and see what's near you right now — nearby spots and festivals happening today.",
+  "onboardingTitle2": "Fill in your Korea",
+  "onboardingBody2": "Every place you visit colors in a district. Watch your own map of Korea fill up as you travel.",
+  "onboardingTitle3": "Swipe to find your place",
+  "onboardingBody3": "Swipe right to save a spot, left to pass. The more you swipe, the better it knows you.",
   "homeSearchHint": "Search for spots, hidden gems…",
   "homeSectionHappeningNow": "Happening Now",
   "festivalPeriod": "{start} – {end}",
@@ -164,9 +158,9 @@
   "errorSnsVerificationExpired": "Sign-in has expired. Please sign in again.",
   "logoutTooltip": "Log out",
   "permissionLocationRationaleTitle": "Find spots around you",
-  "permissionLocationRationaleBody": "K-Trip Spot uses your location while you use the app to show nearby attractions and real-time crowd levels. We never track you in the background.",
+  "permissionLocationRationaleBody": "K-Trip Spot uses your location while you use the app to show nearby attractions and crowd levels. We never track you in the background.",
   "permissionNotificationRationaleTitle": "Stay in the loop",
-  "permissionNotificationRationaleBody": "Turn on notifications to get real-time crowd alerts and updates for the spots you care about. You can change this anytime.",
+  "permissionNotificationRationaleBody": "Turn on notifications to get crowd alerts and updates for the spots you care about. You can change this anytime.",
   "permissionContinue": "Continue",
   "permissionNotNow": "Not now",
   "permissionLocationBlockedMessage": "Location is turned off. Enable it in Settings to see nearby spots.",
@@ -997,15 +991,15 @@
   "@deleteAccountTitle": {},
   "deleteAccountHeadline": "This cannot be undone",
   "@deleteAccountHeadline": {},
-  "deleteAccountIntro": "Deleting your account permanently removes:",
+  "deleteAccountIntro": "Deleting your account removes:",
   "@deleteAccountIntro": {},
-  "deleteAccountItemPosts": "Your posts and comments",
+  "deleteAccountItemPosts": "Your account and profile",
   "@deleteAccountItemPosts": {},
-  "deleteAccountItemLikes": "Your liked spots",
+  "deleteAccountItemLikes": "Your liked spots and visit history",
   "@deleteAccountItemLikes": {},
-  "deleteAccountItemProfile": "Your profile and settings",
+  "deleteAccountItemProfile": "Your notification settings and block list",
   "@deleteAccountItemProfile": {},
-  "deleteAccountCaution": "You will not be able to recover this data.",
+  "deleteAccountCaution": "Posts, comments and messages you left in the community may remain so other people’s conversations still make sense, but they will no longer show you as the author. A deleted account cannot be recovered.",
   "@deleteAccountCaution": {},
   "deleteAccountCancel": "Cancel",
   "@deleteAccountCancel": {},
@@ -1338,5 +1332,39 @@
   "relationMapHint": "The closer to the center, the more you have in common.",
   "commonMore": "Show more",
   "termsOpenInBrowser": "Open in browser",
-  "termsDocumentLoadFailed": "Couldn't load the document. Check your connection."
+  "termsDocumentLoadFailed": "Couldn't load the document. Check your connection.",
+  "@onboardingTitle1": {
+    "description": "Onboarding page 1 title"
+  },
+  "@onboardingBody1": {
+    "description": "Onboarding page 1 body"
+  },
+  "@onboardingTitle2": {
+    "description": "Onboarding page 2 title"
+  },
+  "@onboardingBody2": {
+    "description": "Onboarding page 2 body"
+  },
+  "@onboardingTitle3": {
+    "description": "Onboarding page 3 title"
+  },
+  "@onboardingBody3": {
+    "description": "Onboarding page 3 body"
+  },
+  "onboardingTitle4": "Your saves and your people",
+  "onboardingBody4": "Spots you liked and everything you shared with the community, all in one tab.",
+  "@onboardingTitle4": {
+    "description": "Onboarding page 4 title"
+  },
+  "@onboardingBody4": {
+    "description": "Onboarding page 4 body"
+  },
+  "onboardingTitle5": "See how busy it is",
+  "onboardingBody5": "Check crowd levels before you go, so you can pick the right place at the right time.",
+  "@onboardingTitle5": {
+    "description": "Onboarding page 5 title"
+  },
+  "@onboardingBody5": {
+    "description": "Onboarding page 5 body"
+  }
 }

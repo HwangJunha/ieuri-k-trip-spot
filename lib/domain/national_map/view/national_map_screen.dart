@@ -4,9 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../common/widget/app_skeleton.dart';
 import '../../../common/widget/floating_bottom_nav_scaffold.dart';
-import '../../../common/widget/korea_icon.dart';
 import '../../../common/analytics/analytics_events.dart';
 import '../../../common/analytics/app_analytics.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -59,7 +57,12 @@ class NationalMapScreen extends ConsumerWidget {
           AsyncData<List<CellGeometry>>(value: final List<CellGeometry> g),
         ) =>
           _Body(cells: c, geometries: g, l10n: l10n),
-        _ => const _MapSkeleton(),
+        // **여기는 뼈대를 두지 않는다**(사용자 지적 2026-08-25). 한때 한반도
+        // 실루엣을 시머로 그렸는데, 목록 화면의 뼈대가 "화면이 채워진 느낌"을
+        // 주는 것과 달리 이쪽은 실루엣 하나에서 250여 칸 지도로 **그림이 통째로
+        // 바뀌어** 오히려 튀었다. 뼈대의 목적은 올 것을 미리 보여 주는 것인데
+        // 그 역할을 못 하면 없는 편이 낫다.
+        _ => const Center(child: CircularProgressIndicator()),
       },
     );
   }
@@ -439,36 +442,6 @@ class _HereButton extends ConsumerWidget {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
-  }
-}
-
-/// 칸 도형이 조립되기 전 자리를 지키는 뼈대.
-///
-/// **목록이 아니라 지도라 `SkeletonList`가 맞지 않는다.** 대신 하단 탭이 쓰는 것과
-/// 같은 한반도 실루엣을 크게 그려, 무엇이 올 자리인지 그대로 알린다 — 스피너는
-/// "무언가 돌고 있다"까지만 말한다.
-///
-/// 이 화면의 대기는 짧지 않다(칸 조회 + 도형 조립 + 아이콘 161장). 그 시간을
-/// 빈 화면으로 두지 않는 것이 이 위젯의 전부다.
-class _MapSkeleton extends StatelessWidget {
-  const _MapSkeleton();
-
-  @override
-  Widget build(BuildContext context) {
-    final ColorScheme scheme = Theme.of(context).colorScheme;
-    return AppSkeleton(
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 96),
-          child: KoreaIcon(
-            // 화면을 채우되 가장자리에 여백을 남긴다.
-            size: MediaQuery.sizeOf(context).width * 0.72,
-            color: scheme.surfaceContainerHighest,
-            filled: true,
-          ),
-        ),
-      ),
-    );
   }
 }
 
