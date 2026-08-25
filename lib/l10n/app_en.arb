@@ -1393,7 +1393,7 @@
   "@photoSyncAllowAll": {
     "description": "Opens system settings to raise limited photo access to full."
   },
-  "photoSyncRescan": "Scan again",
+  "photoSyncRescan": "Fill again",
   "@photoSyncRescan": {
     "description": "Runs the photo scan again after it finished."
   }

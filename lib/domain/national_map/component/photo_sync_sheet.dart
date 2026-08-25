@@ -240,22 +240,29 @@ class _Content extends ConsumerWidget {
               // `PermissionBlockedNotice`는 쓸 수 없다: `needsSettings`가
               // `PermissionController`를 지난 상태에서만 서는데, 사진 스캔은
               // `photo_manager`를 직접 부르는 별도 경로라 그 상태가 비어 있다.
-              TextButton(
+              const SizedBox(height: 8),
+              OutlinedButton(
                 onPressed: () =>
                     ref.read(photoLibraryServiceProvider).openSettings(),
                 child: Text(l10n.photoSyncAllowAll),
               ),
             ],
             const SizedBox(height: 16),
-            // **다시 훑을 수 있어야 한다**(2026-08-26). 완료 뒤에 시트를 다시 열면
+            // **다시 채울 수 있어야 한다**(2026-08-26). 완료 뒤에 시트를 다시 열면
             // 결과 문구만 남아 이 기능을 두 번째로 쓸 방법이 없었다 — 사진을 더
             // 찍은 사용자가 매번 다시 돌릴 수 있어야 한다(사용자 지적).
-            FilledButton(
-              onPressed: controller.start,
-              child: Text(l10n.photoSyncRescan),
-            ),
-            const SizedBox(height: 8),
-            TextButton(
+            //
+            // **좌표를 하나도 못 찾았으면 감춘다.** 사진첩이 그대로인데 다시 돌려도
+            // 결과가 같다 — 그 화면의 해법은 사진을 더 고르거나 전체 허용으로
+            // 올리는 것이고, 두 버튼은 위에 이미 있다.
+            if (!progress.finishedWithoutCoordinates) ...<Widget>[
+              FilledButton(
+                onPressed: controller.start,
+                child: Text(l10n.photoSyncRescan),
+              ),
+              const SizedBox(height: 8),
+            ],
+            OutlinedButton(
               onPressed: () => Navigator.of(context).maybePop(),
               child: Text(l10n.commonClose),
             ),
