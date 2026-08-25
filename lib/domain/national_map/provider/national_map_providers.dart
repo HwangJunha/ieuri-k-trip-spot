@@ -91,7 +91,9 @@ Future<Map<String, List<List<GeoPoint>>>> cellShapes(Ref ref) async {
 ///
 /// 조립 결과는 붙들어 둔다. 방문 여부는 여기 없다(도형은 방문과 무관하다) —
 /// 색칠은 [mapCellsProvider]가 정한다.
-@Riverpod(keepAlive: true)
+// **재시도하지 않는다**(2026-08-26). `mapCells`를 기다릴 뿐 자기가 서버를 부르지
+// 않는다 — 여기서 재시도하면 이미 소진된 상위를 다시 깨워 왕복이 곱해진다.
+@Riverpod(keepAlive: true, retry: neverRetry)
 Future<List<CellGeometry>> cellGeometries(Ref ref) async {
   final List<MapCell> cells = await ref.watch(mapCellsProvider.future);
 
@@ -122,7 +124,8 @@ Future<List<CellGeometry>> cellGeometries(Ref ref) async {
 }
 
 /// 시도별 진척(R21). **클라이언트가 센다** — 161칸을 이미 갖고 있다.
-@riverpod
+// [cellGeometries]와 같은 이유로 재시도하지 않는다 — `mapCells`의 파생이다.
+@Riverpod(retry: neverRetry)
 Future<List<ProvinceProgress>> provinceProgress(Ref ref) async {
   final List<MapCell> cells = await ref.watch(mapCellsProvider.future);
   return provinceProgressOf(cells);

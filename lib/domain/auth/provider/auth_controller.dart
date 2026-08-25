@@ -32,6 +32,15 @@ part 'auth_controller.g.dart';
 /// keepAlive: the auth state must survive navigation and outlive any single
 /// screen — the router reads it on every redirect and the GraphQL refresh
 /// bridge points at this notifier (CLAUDE.md §5 justification).
+///
+/// **재시도 정책을 붙이지 않는다**(2026-08-26). 정책 공백을 메우다 여기까지
+/// 손댔는데, 확인해 보니 [_restoreSession]이 **모든 실패 경로를 값으로 처리하고
+/// 던지지 않는다** — 거부는 `RefreshRejected`, 네트워크 끊김은
+/// `RefreshUnavailable`이며 둘 다 `AuthState.unauthenticated`를 반환한다.
+///
+/// 재시도할 오류가 애초에 발생하지 않으므로 정책은 이득 없이 타이머만 남긴다
+/// (실제로 라우터 테스트가 pending timer로 깨졌다). 복구 실패 뒤의 재시도는
+/// `retryRefresh` 같은 명시적 경로가 맡는다.
 @Riverpod(keepAlive: true)
 class AuthController extends _$AuthController {
   static final Logger _log = appLogger('AuthController');

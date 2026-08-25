@@ -30,6 +30,11 @@ bool countsTowardRetryBudget(Object error) => switch (error) {
 /// 계상하지 않는 실패에는 `null`을 돌려 **자동 재시도를 하지 않는다.** 인증 실패는
 /// SPEC-0005의 갱신 경로가, 위치 실패는 SPEC-0001의 안내 경로가 처리할 문제이며,
 /// 여기서 다시 조회해 봐야 같은 실패가 날 뿐이다(R5·AC-14).
+/// **이제 SwipeController와 상세만 쓴다**(2026-08-26). 홈 섹션·좋아요·검색은
+/// 공통 정책(`common/network/network_retry_policy.dart`, 5회)으로 옮겼다 — 같은
+/// 홈 화면 안에서 spot 섹션은 2회, 이벤트 섹션은 5회로 갈려 오류 화면이 뜨는
+/// 시점이 3배 차이 났다(실기기 지적). SPEC-0006 AC-1·AC-2가 총 2회로 못박은
+/// 대상은 `SwipeController`이지 그 화면들이 아니다.
 Duration? spotRetryPolicy(int retryCount, Object error) {
   if (!countsTowardRetryBudget(error)) return null;
   if (retryCount >= maxAutoRetries) return null;

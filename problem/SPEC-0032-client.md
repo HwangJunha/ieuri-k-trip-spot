@@ -1384,3 +1384,43 @@ return AsyncError(error, stackTrace, retrying: false);
 것을 보고 지적이 나왔다. 아이콘을 호출부가 넘길 수 있게 열고 기본값은 원인을
 단정하지 않는 `error_outline`으로, 장소 상세·스와이프는 발견 탭과 같은 결의
 `explore_off_outlined`를 넘긴다.
+
+### N.10 재시도 횟수가 화면마다 제각각이었다 (2026-08-26)
+
+"다시 시도가 5회 끝나고 나오지 않는다, 제각각인 느낌"이라는 지적에 전 화면의
+재시도 경로를 훑었다. 실제로 **2회 / 6회 / 11회**가 뒤섞여 있었다.
+
+**같은 홈 화면 안에서도 갈렸다.** Near you·Popular는 `spotRetryPolicy`(2회),
+Happening Now는 공통 정책(5회) — 나란히 붙은 세 섹션이 각각 다른 시점에 오류로
+넘어갔다. SPEC-0006 AC-1·AC-2가 "총 2회"로 못박은 대상은 **`SwipeController`**
+이지 홈 섹션이 아니다. 홈 두 섹션·좋아요·검색을 공통 정책으로 옮겼고,
+`spotRetryPolicy`는 스펙이 지목한 스와이프·상세에만 남는다.
+
+**파생 provider가 재시도를 하고 있었다.** `cellGeometries`는 `mapCells`를
+`await ref.watch(...)` 할 뿐 자기가 서버를 부르지 않는데, 정책이 없어 Riverpod
+기본 10회가 돌았다. 상위가 이미 5회를 쓰고 실패한 뒤 하위가 다시 10회를 얹으니
+왕복이 더해지는 게 아니라 **곱해진다.** `keepAlive`라 화면에 오류가 떠 있는
+동안에도 뒤에서 요청이 계속 나갔다.
+
+게다가 `element.dart:651`의 `if (_didChangeDependency) _retryCount = 0` 때문에
+상위가 상태를 바꿀 때마다 하위 카운터가 리셋되어 실제 횟수는 예측조차 어렵다.
+
+그래서 `neverRetry`를 만들어 파생 계층에 붙였다(`cellGeometries`·
+`provinceProgress`). **재시도는 실제로 I/O를 하는 계층 한 곳에서만 한다.**
+
+**`authController`는 손대지 않기로 했다.** 정책 공백이라 붙였다가 라우터 테스트가
+pending timer로 깨졌고, 확인해 보니 `_restoreSession`이 **모든 실패를 값으로
+처리하고 던지지 않는다** — 거부는 `RefreshRejected`, 네트워크 끊김은
+`RefreshUnavailable`이며 둘 다 `unauthenticated`를 반환한다. 재시도할 오류가
+발생하지 않으므로 정책은 이득 없이 타이머만 남긴다. 되돌리고 그 이유를 주석에
+남겼다.
+
+정리된 상태:
+
+| 계층 | 정책 | 횟수 |
+|---|---|---|
+| 실제 조회(홈·피드·좋아요·검색·지도·DM·전국지도·이벤트) | `defaultNetworkRetry` | 5회 |
+| 스와이프·장소 상세 | `spotRetryPolicy` + `RetryBudget` | 2회 (SPEC-0006 AC-2) |
+| 파생(`cellGeometries`·`provinceProgress`) | `neverRetry` | 0회 |
+| 좌표(`currentCoordinates`) | `defaultNetworkRetry` | 5회 (§N.9) |
+| 인증(`authController`) | 없음 | 던지지 않으므로 불필요 |

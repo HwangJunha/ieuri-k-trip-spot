@@ -79,3 +79,21 @@ Duration? defaultNetworkRetry(int retryCount, Object error) {
   if (retryCount >= defaultMaxAutoRetries) return null;
   return defaultRetryDelayOf(retryCount);
 }
+
+/// **재시도하지 않는다.** 파생(derived) provider가 쓴다.
+///
+/// ## 왜 파생 provider는 재시도하면 안 되는가
+///
+/// `cellGeometries`처럼 다른 provider를 `await ref.watch(X.future)` 하기만 하는
+/// provider는 **자기가 서버를 부르지 않는다.** 그런데 상위 X가 실패하면 그 오류가
+/// 그대로 전파되고, 여기에 재시도 정책이 있으면(없으면 Riverpod 기본 10회다)
+/// 이미 6회를 쓰고 실패한 X를 다시 깨운다 — **왕복이 더해지는 게 아니라 곱해진다.**
+///
+/// 게다가 `element.dart:651`의 `if (_didChangeDependency) _retryCount = 0`
+/// 때문에 상위가 상태를 바꿀 때마다 하위 카운터가 리셋되어, 실제 횟수는 예측조차
+/// 어렵다. 전국 지도에서 화면에 오류가 떠 있는 동안에도 뒤에서 요청이 계속 나가던
+/// 것이 이 경로였다(2026-08-26).
+///
+/// **재시도는 실제로 I/O를 하는 계층 한 곳에서만 한다.** 파생 계층은 상위가 낸
+/// 결론을 그대로 전달한다.
+Duration? neverRetry(int retryCount, Object error) => null;
