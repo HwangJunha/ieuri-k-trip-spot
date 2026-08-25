@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../common/navigation/spot_qa_routes.dart';
 import '../../../common/pagination/pagination_list_view.dart';
+import '../../../common/widget/app_skeleton.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../community/model/report_reason.dart';
 import '../component/spot_answer_tile.dart';
 import '../component/spot_qa_author_line.dart';
 import '../component/spot_qa_inline_composer.dart';
+import '../model/spot_qa_skeleton_samples.dart';
 import '../model/spot_answer.dart';
 import '../model/spot_answer_reply.dart';
 import '../model/spot_qa_failure.dart';
@@ -162,8 +164,9 @@ class _SpotQuestionDetailScreenState
             onReplyTarget: (String? id) => setState(() => _replyTargetId = id),
           ),
           // 목록에도 없고 id 조회도 아직인 상태.
-          (null, AsyncLoading<SpotQuestion?>()) =>
-            const Center(child: CircularProgressIndicator()),
+          (null, AsyncLoading<SpotQuestion?>()) => const Center(
+            child: CircularProgressIndicator(),
+          ),
           // id 조회가 전송 실패한 것이라 재시도가 의미 있다.
           (null, AsyncError<SpotQuestion?>()) => _Notice(
             message: l10n.spotQaQuestionsUnavailable,
@@ -510,9 +513,18 @@ class _AnswersStatus extends ConsumerWidget {
     final ThemeData theme = Theme.of(context);
 
     if (state.isLoading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 32),
-        child: Center(child: CircularProgressIndicator()),
+      // **`SkeletonList`가 아니라 `AppSkeleton`이다.** 이 칸은 상세 본문 아래에
+      // 붙는 `PaginationListView`의 한 항목이라, 여기에 스크롤 목록을 또 넣으면
+      // 목록 안에 목록이 겹쳐 어느 쪽이 움직이는지 알 수 없게 된다. 실제 답변
+      // 타일 두 개를 그대로 그리고 시머로 덮는다.
+      return AppSkeleton(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            for (final SpotAnswer answer in spotAnswerSkeletonSamples)
+              SpotAnswerTile(answer: answer, now: spotQaSkeletonNow),
+          ],
+        ),
       );
     }
 

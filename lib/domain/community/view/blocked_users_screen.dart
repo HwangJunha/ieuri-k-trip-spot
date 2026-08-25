@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../common/model/post_author.dart';
 import '../../../common/network/media_cdn.dart';
 import '../../../common/navigation/settings_routes.dart';
 import '../../../common/pagination/pagination_list_view.dart';
+import '../../../common/widget/skeleton_list.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/blocked_user.dart';
+import '../model/community_skeleton_samples.dart';
 import '../provider/blocked_users_providers.dart';
 import '../provider/moderation_providers.dart';
 
@@ -30,7 +33,23 @@ class BlockedUsersScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.communityBlockedUsersTitle)),
       body: SafeArea(
         child: state.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          // 데이터가 왔을 때와 같은 배치다 — 안내 문구는 목록 밖이라 로딩 중에도
+          // 그대로 있고, 뼈대는 그 아래 목록 자리에만 든다.
+          loading: () => Column(
+            children: <Widget>[
+              _Note(text: l10n.communityBlockedUsersNote),
+              Expanded(
+                child: SkeletonList(
+                  itemBuilder: (_, int index) => _BlockedUserRow(
+                    member:
+                        blockedUserSkeletonSamples[index %
+                            blockedUserSkeletonSamples.length],
+                    onUnblock: () {},
+                  ),
+                ),
+              ),
+            ],
+          ),
           error: (_, _) => _Notice(
             text: l10n.communityFeedUnavailable,
             onRetry: () => ref.invalidate(blockedUsersControllerProvider),
@@ -59,8 +78,6 @@ class _List extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final AppLocalizations l10n = AppLocalizations.of(context);
-    final ThemeData theme = Theme.of(context);
     return PaginationListView(
       itemCount: data.items.length,
       hasMore: data.hasMore,
@@ -78,25 +95,9 @@ class _List extends ConsumerWidget {
       },
       itemBuilder: (BuildContext context, int index) {
         final BlockedUser blocked = data.items[index];
-        // 서버 값은 키일 수 있다 — 그대로 넘기면 페인트 중에 터진다.
-        final String? avatar = MediaCdn.profileImage(
-          blocked.member.profileImageUrl,
-        );
-        return ListTile(
-          leading: CircleAvatar(
-            backgroundColor: theme.colorScheme.surfaceContainerHighest,
-            foregroundImage: avatar == null ? null : NetworkImage(avatar),
-            child: Text(
-              blocked.member.nickname.isEmpty
-                  ? '?'
-                  : blocked.member.nickname.characters.first,
-            ),
-          ),
-          title: Text(blocked.member.nickname),
-          trailing: TextButton(
-            onPressed: () => _unblock(context, ref, blocked),
-            child: Text(l10n.communityUnblockAction),
-          ),
+        return _BlockedUserRow(
+          member: blocked.member,
+          onUnblock: () => _unblock(context, ref, blocked),
         );
       },
     );
@@ -127,6 +128,37 @@ class _List extends ConsumerWidget {
     if (outcome == ModerationOutcome.success) {
       ref.invalidate(blockedUsersControllerProvider);
     }
+  }
+}
+
+/// 차단한 사람 한 줄. **로딩 뼈대와 실제 목록이 같은 위젯을 쓴다** — 배치가 갈리면
+/// 데이터가 도착할 때 줄이 튄다.
+class _BlockedUserRow extends StatelessWidget {
+  const _BlockedUserRow({required this.member, required this.onUnblock});
+
+  final PostAuthor member;
+  final VoidCallback onUnblock;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final ThemeData theme = Theme.of(context);
+    // 서버 값은 키일 수 있다 — 그대로 넘기면 페인트 중에 터진다.
+    final String? avatar = MediaCdn.profileImage(member.profileImageUrl);
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundColor: theme.colorScheme.surfaceContainerHighest,
+        foregroundImage: avatar == null ? null : NetworkImage(avatar),
+        child: Text(
+          member.nickname.isEmpty ? '?' : member.nickname.characters.first,
+        ),
+      ),
+      title: Text(member.nickname),
+      trailing: TextButton(
+        onPressed: onUnblock,
+        child: Text(l10n.communityUnblockAction),
+      ),
+    );
   }
 }
 

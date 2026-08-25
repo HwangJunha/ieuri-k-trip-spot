@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../common/analytics/analytics_events.dart';
 import '../../../common/analytics/app_analytics.dart';
+import '../../../common/widget/skeleton_list.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/map_cell.dart';
+import '../model/national_map_skeleton_samples.dart';
 import '../provider/national_map_providers.dart';
 
 /// 겹치는 칸이 **어디인지** 보여 주는 시트.
@@ -66,9 +68,18 @@ class OverlapListSheet extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(vertical: 24),
                     child: Text(l10n.nationalMapUnavailable),
                   ),
-                  _ => const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Center(child: CircularProgressIndicator()),
+                  // 실제 줄(`_NameList`)을 더미 칸으로 그린 뒤 시머로 덮는다.
+                  // 구분선도 실제 목록과 같이 둬야 값이 도착할 때 줄 위치가
+                  // 튀지 않는다.
+                  _ => SkeletonList(
+                    itemCount: 4,
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    separator: const Divider(height: 1),
+                    itemBuilder: (_, int i) => _NameTile(
+                      cell:
+                          mapCellSkeletonSamples[i %
+                              mapCellSkeletonSamples.length],
+                    ),
                   ),
                 },
               ),
@@ -94,32 +105,38 @@ class _NameList extends StatelessWidget {
     // 시도 → 칸 이름 순으로 정렬한다. id 순은 사람에게 아무 뜻이 없다.
     final List<MapCell> found =
         <MapCell>[
-            for (final String id in cellIds)
-              if (byId[id] case final MapCell c) c,
-          ]
-          ..sort((MapCell a, MapCell b) {
-            final int p = a.provinceName.compareTo(b.provinceName);
-            return p != 0 ? p : a.name.compareTo(b.name);
-          });
+          for (final String id in cellIds)
+            if (byId[id] case final MapCell c) c,
+        ]..sort((MapCell a, MapCell b) {
+          final int p = a.provinceName.compareTo(b.provinceName);
+          return p != 0 ? p : a.name.compareTo(b.name);
+        });
 
-    final ThemeData theme = Theme.of(context);
     return ListView.separated(
       shrinkWrap: true,
       itemCount: found.length,
       separatorBuilder: (_, _) => const Divider(height: 1),
-      itemBuilder: (BuildContext context, int i) {
-        final MapCell c = found[i];
-        return ListTile(
-          contentPadding: EdgeInsets.zero,
-          dense: true,
-          title: Text(c.name),
-          subtitle: c.provinceName.isEmpty ? null : Text(c.provinceName),
-          leading: Icon(
-            Icons.place_outlined,
-            color: theme.colorScheme.primary,
-          ),
-        );
-      },
+      itemBuilder: (BuildContext context, int i) => _NameTile(cell: found[i]),
+    );
+  }
+}
+
+/// 칸 한 줄. **로딩 뼈대도 이 위젯을 그린다** — 줄 모양을 한곳에 두어야 뼈대와
+/// 실제 목록이 어긋나지 않는다.
+class _NameTile extends StatelessWidget {
+  const _NameTile({required this.cell});
+
+  final MapCell cell;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      dense: true,
+      title: Text(cell.name),
+      subtitle: cell.provinceName.isEmpty ? null : Text(cell.provinceName),
+      leading: Icon(Icons.place_outlined, color: theme.colorScheme.primary),
     );
   }
 }

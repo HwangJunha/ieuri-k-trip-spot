@@ -5,11 +5,17 @@ import 'package:go_router/go_router.dart';
 import '../../../common/navigation/dm_routes.dart';
 import '../../../common/pagination/pagination_list_view.dart';
 import '../../../common/widget/failure_notice.dart';
+import '../../../common/widget/skeleton_list.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/conversation_tile.dart';
 import '../model/conversation.dart';
+import '../model/dm_skeleton_samples.dart';
 import '../provider/conversation_list_providers.dart';
 import 'conversation_screen.dart';
+
+/// 뼈대의 상대 시각 기준. **`DateTime.now()`를 쓰지 않는다** — 로딩이 길어지면
+/// 프레임마다 문구가 달라져 뼈대 아래 글자 폭이 흔들린다.
+final DateTime _skeletonNow = DateTime.utc(2026, 8, 1, 12);
 
 /// 대화 목록(R8) — DM 재진입의 착지점.
 ///
@@ -32,7 +38,19 @@ class ConversationListScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.dmConversationsTitle)),
       body: SafeArea(
         child: state.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          // 실제 행에 더미를 넣어 그린 뒤 시머로 덮는다 — 행 디자인이 바뀌어도
+          // 뼈대가 저절로 따라간다. 구분선까지 같이 줘야 데이터가 도착할 때 줄
+          // 위치가 튀지 않는다.
+          loading: () => SkeletonList(
+            separator: const Divider(height: 1, thickness: 0.5),
+            itemBuilder: (_, int index) => ConversationTile(
+              conversation:
+                  conversationSkeletonSamples[index %
+                      conversationSkeletonSamples.length],
+              now: _skeletonNow,
+              onTap: () {},
+            ),
+          ),
           error: (Object error, _) => FailureNotice.retryable(
             title: l10n.dmConversationsUnavailable,
             body: l10n.dmUnavailableBody,
