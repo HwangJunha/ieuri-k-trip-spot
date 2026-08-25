@@ -78,23 +78,43 @@ class DiscoverSwipeView extends ConsumerWidget {
             //
             // `MessagesEntryButton`은 지우지 않는다. 컴포넌트는 그대로 두고 이
             // 화면에서만 걷어낸 것이라, 단체방이 생기면 그 자리에 그대로 쓴다.
-            child: SpotCategoryBar(
-              // 사진 위에 얹히므로 라벨을 흰색으로 받는다(R14의 가독성 보조).
-              onImage: true,
-              // 스와이프의 선택 상태는 세션에 속하는 keepAlive provider다(탭을
-              // 옮겼다 와도 유지된다, AC12.3).
-              available:
-                  ref.watch(availableSpotCategoriesProvider).value ??
-                  const <SpotCategory>[],
-              selected: selected,
-              onToggle: (SpotCategory next) =>
-                  ref.read(selectedSpotCategoryProvider.notifier).toggle(next),
-              onSelectAll: () =>
-                  ref.read(selectedSpotCategoryProvider.notifier).selectAll(),
-            ),
+            child: const _DiscoverCategoryBar(),
           ),
         ),
       ],
+    );
+  }
+}
+
+/// 발견 화면의 카테고리 바. **부모에서 떼어 낸 별도 위젯이다.**
+///
+/// 예전에는 [DiscoverSwipeView.build] 안에 인라인으로 있어, 권한 상태나 카드 큐가
+/// 바뀔 때마다 칩 열 개가 통째로 다시 만들어졌다 — 칩 하나가 `Semantics`+`InkWell`
+/// +`Container`+`Icon`+`Text`이고 정렬 스캔도 매번 다시 돈다. 위젯을 분리하면 이
+/// 바가 **자기가 보는 provider가 바뀔 때만** 다시 빌드된다.
+class _DiscoverCategoryBar extends ConsumerWidget {
+  const _DiscoverCategoryBar();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return SpotCategoryBar(
+      // 사진 위에 얹히므로 라벨을 흰색으로 받는다(R14의 가독성 보조).
+      onImage: true,
+      // **`.value`만 고른다.** `AsyncValue`를 통째로 watch하면 로딩→데이터
+      // 전환처럼 값이 같은 갱신에도 바가 다시 빌드된다.
+      available: ref.watch(
+        availableSpotCategoriesProvider.select(
+          (AsyncValue<List<SpotCategory>> v) =>
+              v.value ?? const <SpotCategory>[],
+        ),
+      ),
+      // 스와이프의 선택 상태는 세션에 속하는 keepAlive provider다(탭을 옮겼다
+      // 와도 유지된다, AC12.3).
+      selected: ref.watch(selectedSpotCategoryProvider),
+      onToggle: (SpotCategory next) =>
+          ref.read(selectedSpotCategoryProvider.notifier).toggle(next),
+      onSelectAll: () =>
+          ref.read(selectedSpotCategoryProvider.notifier).selectAll(),
     );
   }
 }
@@ -114,7 +134,9 @@ class _OverlayControls extends StatelessWidget {
     // 앱바가 없으므로(→[DiscoverScreen]) 상태바만 피하면 된다. 예전에는 여기에
     // `kToolbarHeight`를 더했는데, 그 앱바가 칩과 같은 띠를 두고 다투던 것이
     // 문제였다.
-    final double topInset = MediaQuery.of(context).viewPadding.top;
+    // 통짜 `MediaQuery.of` 대신 필요한 값만 구독한다 — 키보드나 글자 크기가
+    // 바뀔 때까지 이 스크림이 다시 빌드될 이유가 없다.
+    final double topInset = MediaQuery.viewPaddingOf(context).top;
 
     return DecoratedBox(
       decoration: const BoxDecoration(
