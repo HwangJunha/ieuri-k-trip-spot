@@ -34,6 +34,7 @@ class PhotoScanProgress {
     this.foundCoordinates = 0,
     this.resolvedCellCodes = const <String>[],
     this.retryCount = 0,
+    this.limitedAccess = false,
   });
 
   final PhotoScanStage stage;
@@ -54,6 +55,13 @@ class PhotoScanProgress {
 
   /// 지금까지 쓴 재시도 횟수(POL-040).
   final int retryCount;
+
+  /// 사진첩을 **일부만** 볼 수 있는 상태인지(iOS "선택한 사진만", 2026-08-26).
+  ///
+  /// 이때 훑는 대상은 사진첩 전체가 아니라 사용자가 고른 몇 장뿐이다 —
+  /// `photo_manager`의 `getAssetCount`가 그 몇 장만 센다(공식 문서). 화면이 이
+  /// 사실을 알리고 재선택 수단을 줘야, 사용자가 "왜 3장만 훑었지"에서 멈추지 않는다.
+  final bool limitedAccess;
 
   /// 0.0~1.0. 전체를 모르면 0이다.
   double get ratio => total == 0 ? 0 : (processed / total).clamp(0.0, 1.0);
@@ -77,6 +85,7 @@ class PhotoScanProgress {
     int? foundCoordinates,
     List<String>? resolvedCellCodes,
     int? retryCount,
+    bool? limitedAccess,
   }) => PhotoScanProgress(
     stage: stage ?? this.stage,
     processed: processed ?? this.processed,
@@ -84,6 +93,7 @@ class PhotoScanProgress {
     foundCoordinates: foundCoordinates ?? this.foundCoordinates,
     resolvedCellCodes: resolvedCellCodes ?? this.resolvedCellCodes,
     retryCount: retryCount ?? this.retryCount,
+    limitedAccess: limitedAccess ?? this.limitedAccess,
   );
 
   @override
@@ -94,6 +104,7 @@ class PhotoScanProgress {
       other.total == total &&
       other.foundCoordinates == foundCoordinates &&
       other.retryCount == retryCount &&
+      other.limitedAccess == limitedAccess &&
       _sameCodes(other.resolvedCellCodes, resolvedCellCodes);
 
   @override
@@ -103,6 +114,7 @@ class PhotoScanProgress {
     total,
     foundCoordinates,
     retryCount,
+    limitedAccess,
     Object.hashAll(resolvedCellCodes),
   );
 

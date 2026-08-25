@@ -186,7 +186,11 @@ class _FakeLibrary implements PhotoLibraryService {
   int requestCount = 0;
 
   @override
-  Future<bool> requestAccess() async => granted;
+  Future<PhotoAccess> requestAccess() async =>
+      granted ? PhotoAccess.granted : PhotoAccess.denied;
+
+  @override
+  Future<void> presentLimitedPicker() async {}
 
   @override
   Future<int> photoCount() async => coordinates.length;

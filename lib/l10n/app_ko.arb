@@ -408,6 +408,10 @@
     "description": "사진 동기화 - 판정 결과 등록"
   },
   "photoSyncDone": "지도를 채웠어요.",
+  "photoSyncLimitedNotice": "사진을 일부만 허용해서 그 사진들만 훑었어요.",
+  "@photoSyncLimitedNotice": {},
+  "photoSyncSelectMore": "사진 더 고르기",
+  "@photoSyncSelectMore": {},
   "photoSyncSummary": "위치 정보가 있는 사진 {photos}장에서 {regions}곳을 찾았어요.",
   "@photoSyncSummary": {
     "placeholders": {

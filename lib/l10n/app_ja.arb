@@ -88,6 +88,10 @@
   "photoSyncConfirmBody": "登録すると地図が埋まります。",
   "photoSyncRegister": "登録する",
   "photoSyncDone": "地図を更新しました。",
+  "photoSyncLimitedNotice": "一部の写真のみ許可されているため、その写真だけを確認しました。",
+  "@photoSyncLimitedNotice": {},
+  "photoSyncSelectMore": "写真をさらに選ぶ",
+  "@photoSyncSelectMore": {},
   "photoSyncSummary": "位置情報のある写真{photos}枚から{regions}か所を見つけました。",
   "@photoSyncSummary": {
     "placeholders": {

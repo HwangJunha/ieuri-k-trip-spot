@@ -211,6 +211,23 @@ class _Content extends ConsumerWidget {
                 ),
               ),
             ],
+            // **"일부만 허용"이면 그 사실을 밝힌다**(2026-08-26). 이 상태에서는
+            // 사진첩 전체가 아니라 사용자가 고른 몇 장만 훑는데, 말해 주지 않으면
+            // "왜 3장만 훑었지"에서 멈춘다 — 실기기에서 그 질문이 나왔다.
+            if (progress.limitedAccess) ...<Widget>[
+              const SizedBox(height: 12),
+              Text(
+                l10n.photoSyncLimitedNotice,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: controller.reselectPhotos,
+                child: Text(l10n.photoSyncSelectMore),
+              ),
+            ],
             const SizedBox(height: 16),
             FilledButton(
               onPressed: () => Navigator.of(context).maybePop(),

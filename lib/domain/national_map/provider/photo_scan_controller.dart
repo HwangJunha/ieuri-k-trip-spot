@@ -92,17 +92,22 @@ class PhotoScanController extends _$PhotoScanController {
 
     // 1) 권한(R31). 거부해도 오류가 아니다 — 안내만 하고 끝낸다(R32).
     state = state.copyWith(stage: PhotoScanStage.requestingPermission);
-    final bool granted = await library.requestAccess();
+    final PhotoAccess access = await library.requestAccess();
     // **`PermissionController`를 지나지 않는 경로다.** `photo_manager`를 직접
     // 부르므로 여기 심지 않으면 사진 권한 결과가 통째로 빠진다.
     AppAnalytics.logEvent(AnalyticsEvents.permissionResult, <String, Object>{
       AnalyticsParams.permission: 'photo',
-      AnalyticsParams.granted: granted ? 'true' : 'false',
+      // **`limited`를 따로 센다** — 허용/거부로만 뭉치면 "일부만 허용"이 얼마나
+      // 흔한지 알 수 없고, 그것이 곧 "왜 몇 장만 훑였나"의 답이다.
+      AnalyticsParams.granted: access.name,
     });
-    if (!granted) {
+    if (access == PhotoAccess.denied) {
       state = state.copyWith(stage: PhotoScanStage.permissionDenied);
       return;
     }
+    // **"일부만 허용"을 상태에 남긴다.** 훑는 흐름은 같지만 대상이 사진첩 전체가
+    // 아니라는 것을 화면이 알려 줘야 한다.
+    state = state.copyWith(limitedAccess: access == PhotoAccess.limited);
 
     final int total;
     try {
@@ -313,6 +318,25 @@ class PhotoScanController extends _$PhotoScanController {
 
   /// 진행 중인 스캔을 멈춘다. 처리 지점은 남는다(R28).
   void stop() => _cancelled = true;
+
+  /// "일부만 허용"일 때 사진을 다시 고르게 한다(2026-08-26).
+  ///
+  /// 시스템 화면에서 사진을 더 고르면 **훑을 대상이 늘어난다.** 돌아온 뒤 스캔을
+  /// 처음부터 다시 돌린다 — 이전 진행 지점은 예전 목록 기준이라 그대로 이어받으면
+  /// 새로 고른 사진을 건너뛴다.
+  Future<void> reselectPhotos() async {
+    await ref.read(photoLibraryServiceProvider).presentLimitedPicker();
+    // 진행 지점을 지운다. `isResumable`이 거짓이 되어 [start]가 처음부터 훑는다.
+    state = state.copyWith(
+      stage: PhotoScanStage.idle,
+      processed: 0,
+      total: 0,
+      foundCoordinates: 0,
+      resolvedCellCodes: const <String>[],
+    );
+    await ref.read(photoScanCheckpointStoreProvider).clear();
+    await start();
+  }
 
   /// 등록이 끝났다. 등록 자체는 화면이 `VisitController`로 한다.
   void confirmed() => state = state.copyWith(stage: PhotoScanStage.completed);

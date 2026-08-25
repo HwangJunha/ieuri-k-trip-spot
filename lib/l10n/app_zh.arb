@@ -88,6 +88,10 @@
   "photoSyncConfirmBody": "登记后地图就会被填充。",
   "photoSyncRegister": "登记",
   "photoSyncDone": "地图已更新。",
+  "photoSyncLimitedNotice": "你僅允許存取部分照片，因此只掃描了那些照片。",
+  "@photoSyncLimitedNotice": {},
+  "photoSyncSelectMore": "選擇更多照片",
+  "@photoSyncSelectMore": {},
   "photoSyncSummary": "從{photos}張含位置資訊的照片中找到{regions}個地區。",
   "@photoSyncSummary": {
     "placeholders": {

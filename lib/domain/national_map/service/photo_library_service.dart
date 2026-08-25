@@ -13,9 +13,19 @@ abstract interface class PhotoLibraryService {
 
   /// 사진 접근 권한을 요청한다(R31).
   ///
-  /// iOS의 "일부만 허용"(limited)도 허용으로 본다 — 고른 사진만 훑을 뿐 흐름은
-  /// 같고, 거부로 다루면 사용자가 허용했는데 막히는 것으로 보인다.
-  Future<bool> requestAccess();
+  /// **"일부만 허용"을 따로 알린다**(2026-08-26). 예전에는 그것도 그냥 허용으로
+  /// 봤는데, 그러면 사용자는 사진첩 전체를 훑었다고 믿지만 실제로는 **고른 몇
+  /// 장만** 훑는다 — 실기기에서 사진이 여러 장인데 "훑음 3장"으로 끝났다.
+  ///
+  /// `photo_manager` 공식 문서가 이 동작을 명시한다: limited 권한에서
+  /// `getAssetCount`·`getAssetListRange`는 사용자가 고른 것만 돌려주고, 권장
+  /// 대응은 [presentLimitedPicker]로 재선택을 띄우는 것이다.
+  Future<PhotoAccess> requestAccess();
+
+  /// "일부만 허용"일 때 고른 사진을 다시 정하도록 시스템 화면을 띄운다.
+  ///
+  /// iOS 14+ 전용이며 다른 플랫폼에서는 아무 일도 하지 않는다.
+  Future<void> presentLimitedPicker();
 
   /// 훑을 사진 총 개수.
   Future<int> photoCount();
@@ -43,6 +53,22 @@ abstract interface class PhotoLibraryService {
   });
 }
 
+/// 사진첩 접근 상태.
+///
+/// **`limited`를 `granted`와 나누는 것이 핵심이다.** 둘을 뭉치면 "일부만 허용"인
+/// 사용자가 전체를 훑었다고 오해한다 — 화면이 그 사실을 알려 줄 수 있어야 한다.
+enum PhotoAccess {
+  /// 사진첩 전체를 볼 수 있다.
+  granted,
+
+  /// 사용자가 고른 사진만 볼 수 있다(iOS 14+). 훑는 흐름은 같지만 **대상이
+  /// 사진첩 전체가 아니다.**
+  limited,
+
+  /// 거부. 오류가 아니라 안내 대상이다(R32).
+  denied,
+}
+
 /// 사진 한 장을 읽은 결과.
 ///
 /// 좌표가 없으면 [point]가 null이다. 그래도 흘려보내는 이유는 진행률이 "읽은
@@ -61,11 +87,18 @@ class PhotoManagerLibraryService implements PhotoLibraryService {
   static const pm.RequestType _images = pm.RequestType.image;
 
   @override
-  Future<bool> requestAccess() async {
-    final pm.PermissionState state = await pm.PhotoManager.requestPermissionExtend();
-    return state == pm.PermissionState.authorized ||
-        state == pm.PermissionState.limited;
+  Future<PhotoAccess> requestAccess() async {
+    final pm.PermissionState state =
+        await pm.PhotoManager.requestPermissionExtend();
+    return switch (state) {
+      pm.PermissionState.authorized => PhotoAccess.granted,
+      pm.PermissionState.limited => PhotoAccess.limited,
+      _ => PhotoAccess.denied,
+    };
   }
+
+  @override
+  Future<void> presentLimitedPicker() => pm.PhotoManager.presentLimited();
 
   @override
   Future<int> photoCount() => pm.PhotoManager.getAssetCount(type: _images);

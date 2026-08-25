@@ -88,6 +88,14 @@
   "photoSyncConfirmBody": "Adding them will fill in your map.",
   "photoSyncRegister": "Add them",
   "photoSyncDone": "Your map is updated.",
+  "photoSyncLimitedNotice": "You've allowed access to only some photos, so only those are scanned.",
+  "@photoSyncLimitedNotice": {
+    "description": "iOS limited photo access notice/action"
+  },
+  "photoSyncSelectMore": "Select more photos",
+  "@photoSyncSelectMore": {
+    "description": "iOS limited photo access notice/action"
+  },
   "photoSyncSummary": "{photos} photos had location info, and {regions} regions were added to your map.",
   "@photoSyncSummary": {
     "description": "Shown when the photo scan finishes. photos = photos that had GPS, regions = districts added.",
