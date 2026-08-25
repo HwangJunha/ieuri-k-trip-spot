@@ -1341,3 +1341,46 @@ limit도 없는 상황에서는 이쪽이 더 위험하다.
 
 `test/common/network/network_retry_policy_test.dart`가 횟수·간격·총합·위치 면제를
 고정한다 — 이 수치는 조용히 바뀌면 그대로 서버 부하가 되기 때문이다.
+
+### N.9 재시도가 끝나기 전에 오류 화면이 뜨던 것 (2026-08-26)
+
+"내 활동(스팟 톡)은 한두 번 실패에 바로 오류가 뜨고, 전국 지도는 반대로 로딩만
+계속 돌다 화면을 다시 들어와야 오류가 뜬다"는 지적. 두 증상의 원인이 달랐다.
+
+**먼저 라이브러리 동작을 확인했다**(`riverpod-3.0.3/lib/src/core/element.dart:702`):
+
+```dart
+if (retrying) {
+  return AsyncLoading<ValueT>._(..., error: (err: error, ..., retrying: true));
+}
+return AsyncError(error, stackTrace, retrying: false);
+```
+
+재시도 중에는 `AsyncLoading`(내부에 error를 담음), 소진했을 때만 `AsyncError`다.
+**화면이 `AsyncError`만 오류로 그리면 원하는 동작이 저절로 나온다** — 실제로
+`.when`의 `error:`나 `switch`의 `AsyncError<T>()`를 쓰는 화면들은 구조가 맞았다.
+
+**진짜 원인은 `currentCoordinatesProvider`에 정책이 없던 것이다.** 화면 컨트롤러
+(`FeedController` 등)는 `build()`에서 이 provider를 `await`하는데, 여기에는
+`retry:`가 없어 **Riverpod 기본값 10회**가 돌았다. 의존 쪽이 실패하면 그 오류가
+컨트롤러로 전파되므로, 컨트롤러 자신의 5회 정책과 무관하게 상태가 결정된다.
+`defaultNetworkRetry`를 붙였다 — `LocationUnavailable`은 재시도 없이 끊으므로
+권한 거부·GPS 꺼짐에서는 곧바로 안내 경로로 간다.
+
+**전국 지도의 "계속 로딩"은 정상 동작이었다.** 두 provider를 함께 보는 `switch`가
+둘 다 `AsyncData`일 때만 본문을 그리므로, 재시도가 도는 동안은 로딩이 맞다.
+다만 **간격에 상한이 없어 마지막이 8초, 총 15.5초**였다 — 그동안 화면은 로딩만
+보여주니 사용자에게는 멈춘 것으로 보인다.
+
+간격 상한을 3초로 두어 **같은 5회를 약 9.5초에 끝낸다**(사용자 결정: 화면은
+그대로 두고 간격을 줄인다).
+
+| 재시도 | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| 간격 | 0.5초 | 1초 | 2초 | 3초 | 3초 |
+
+**아이콘**: `FailureNotice.terminal`의 기본 아이콘이 `wifi_off`였는데, 재시도
+소진의 원인이 늘 네트워크인 것은 아니다 — 장소 상세에서 와이파이 아이콘이 뜨는
+것을 보고 지적이 나왔다. 아이콘을 호출부가 넘길 수 있게 열고 기본값은 원인을
+단정하지 않는 `error_outline`으로, 장소 상세·스와이프는 발견 탭과 같은 결의
+`explore_off_outlined`를 넘긴다.

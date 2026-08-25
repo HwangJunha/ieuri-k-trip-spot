@@ -17,22 +17,24 @@ void main() {
       expect(defaultNetworkRetry(defaultMaxAutoRetries, error), isNull);
     });
 
-    test('간격은 0.5초에서 두 배씩 늘어난다', () {
+    test('간격은 0.5초에서 두 배씩 늘어나되 3초에서 잘린다', () {
       // 서버가 잠깐 밀렸을 때 회복할 틈을 준다 — 고정 간격이면 같은 횟수로도
       // 몰아치게 된다(사용자 결정, 2026-08-26).
       expect(defaultRetryDelayOf(0), const Duration(milliseconds: 500));
       expect(defaultRetryDelayOf(1), const Duration(seconds: 1));
       expect(defaultRetryDelayOf(2), const Duration(seconds: 2));
-      expect(defaultRetryDelayOf(3), const Duration(seconds: 4));
-      expect(defaultRetryDelayOf(4), const Duration(seconds: 8));
+      // 상한이 없으면 4초·8초가 되어 총 15.5초 — 그동안 화면은 로딩만 보여
+      // 사용자는 멈춘 것으로 겪는다(실기기 지적, 2026-08-26).
+      expect(defaultRetryDelayOf(3), maxRetryDelay);
+      expect(defaultRetryDelayOf(4), maxRetryDelay);
     });
 
-    test('다 써도 15.5초를 넘지 않는다', () {
+    test('다 써도 9.5초를 넘지 않는다', () {
       Duration total = Duration.zero;
       for (int i = 0; i < defaultMaxAutoRetries; i++) {
         total += defaultRetryDelayOf(i);
       }
-      expect(total, const Duration(milliseconds: 15500));
+      expect(total, const Duration(milliseconds: 9500));
     });
 
     test('위치 실패는 재시도하지 않는다', () {

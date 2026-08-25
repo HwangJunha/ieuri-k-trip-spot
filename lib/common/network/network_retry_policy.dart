@@ -31,10 +31,17 @@ const int defaultMaxAutoRetries = 5;
 /// 첫 재시도까지 기다리는 시간. 이후 [defaultRetryDelayOf]가 두 배씩 늘린다.
 const Duration defaultRetryDelay = Duration(milliseconds: 500);
 
-/// [retryCount]번째 재시도(0부터)까지 기다릴 시간. **두 배씩 늘어난다.**
+/// 간격의 상한. 이 값에 닿으면 더 늘리지 않는다.
+///
+/// **상한이 없으면 마지막 간격이 8초가 되어 총 15.5초가 걸린다**(2026-08-26).
+/// 그동안 화면은 로딩만 보여주므로 사용자는 "멈춘 것"으로 겪는다 — 실기기에서
+/// 그 지적이 나왔다. 3초로 자르면 같은 5회를 약 9.5초에 끝낸다.
+const Duration maxRetryDelay = Duration(seconds: 3);
+
+/// [retryCount]번째 재시도(0부터)까지 기다릴 시간. **두 배씩 늘어나되 잘린다.**
 ///
 /// ```
-/// 0.5s -> 1s -> 2s -> 4s -> 8s   (5회를 다 쓰면 약 15.5초)
+/// 0.5s -> 1s -> 2s -> 3s -> 3s   (5회를 다 쓰면 약 9.5초)
 /// ```
 ///
 /// ## 왜 고정 간격이 아닌가 — POL-040의 예외다
@@ -50,10 +57,11 @@ const Duration defaultRetryDelay = Duration(milliseconds: 500);
 /// 간격을 벌리면 같은 횟수로도 서버에 회복할 틈을 준다(사용자 결정, 2026-08-26).
 ///
 /// 수치의 근거: 첫 간격은 사용자가 기다림을 느끼기 전에 한 번 더 시도할 수 있는
-/// 0.5초, 배수는 이 방식의 통상값인 2다. 상한을 따로 두지 않는 이유는 5회에서
-/// 어차피 멈추기 때문이다 — 마지막 간격 8초가 실질 상한이다.
-Duration defaultRetryDelayOf(int retryCount) =>
-    defaultRetryDelay * (1 << retryCount);
+/// 0.5초, 배수는 이 방식의 통상값인 2, 상한은 [maxRetryDelay]다.
+Duration defaultRetryDelayOf(int retryCount) {
+  final Duration delay = defaultRetryDelay * (1 << retryCount);
+  return delay > maxRetryDelay ? maxRetryDelay : delay;
+}
 
 /// 정책이 따로 없는 provider가 쓰는 재시도 정책.
 ///

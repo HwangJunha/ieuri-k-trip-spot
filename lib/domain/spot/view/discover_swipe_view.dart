@@ -251,6 +251,9 @@ class _ErrorState extends StatelessWidget {
         body: l10n.retryExhaustedBody,
         actionLabel: l10n.retryExhaustedAction,
         onAction: onRetry,
+        // 못 불러온 것은 장소다 — 네트워크 아이콘은 원인을 단정한다(2026-08-26).
+        // 발견 탭과 같은 결로 맞춘다.
+        icon: Icons.explore_off_outlined,
       );
     }
 
