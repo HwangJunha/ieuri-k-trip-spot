@@ -166,9 +166,7 @@ class ConversationController extends _$ConversationController {
             // 않던 것이 무한 호출의 실체였다(SPEC-0032 §5.1).
             _reconnectAttempts++;
             if (_reconnectAttempts >= subscriptionReconnectAttempts) {
-              _log.w(
-                '구독 재연결 상한($subscriptionReconnectAttempts) 도달 — 소켓을 끊는다',
-              );
+              _log.w('구독 재연결 상한($subscriptionReconnectAttempts) 도달 — 소켓을 끊는다');
               _subscription?.cancel();
               _subscription = null;
               // **구독만 닫으면 소켓은 계속 붙으려 한다.** 라이브러리의 재연결
@@ -452,8 +450,15 @@ class ConversationController extends _$ConversationController {
   /// 때문이다(스냅샷의 출처는 서버다). 그 값이 없으면 인용 id도 사라져 서버에 인용이
   /// 전달되지 않는다 — 실제로 그렇게 새어 나갔다.
   Future<void> _deliver(Message pending, {String? sourceAnswerId}) async {
+    // **저장소·캐시를 await 전에 잡아 둔다.** 장소 Q&A에서 「메시지 보내기」를 누르면
+    // 호출부가 이 전송을 `unawaited`로 띄우고 곧바로 대화 화면으로 이동한다
+    // (`spot_qa_actions.dart`) — 그 시점 이 provider의 구독자는 0이라, 전송이 도는
+    // 동안 폐기된다. 그 뒤 `ref.read`를 부르면 `UnmountedRefException`이고,
+    // `unawaited`라 잡히지 않은 채 zone으로 샌다.
+    final DmRepository repository = _repository;
+    final MessageCacheStore cache = _cache;
     try {
-      final DmMutationResult<String> result = await _repository.sendMessage(
+      final DmMutationResult<String> result = await repository.sendMessage(
         conversationId: conversationId,
         // 사진·인용만 보낼 때도 빈 문자열이 실린다 — non-null이라 생략할 수 없다.
         body: pending.body,
@@ -462,6 +467,10 @@ class ConversationController extends _$ConversationController {
         // 그쪽에서, 아니면 처음 넘겨받은 id에서 온다.
         sourceAnswerId: sourceAnswerId ?? pending.spotQaOrigin?.answerId,
       );
+      // 폐기됐으면 고쳐 그릴 말풍선도, 남길 캐시도 없다 — 화면이 다시 열리면
+      // 서버 조회(`sync`)가 이 메시지를 가져온다.
+      if (!ref.mounted) return;
+
       if (!result.succeeded) {
         _log.w('sendMessage rejected: ${result.errorCode}');
         _replace(
@@ -476,7 +485,7 @@ class ConversationController extends _$ConversationController {
       // 같은 메시지가 두 번 뜬다.
       if (serverId != null && _contains(serverId)) {
         _remove(pending.id);
-        await _persist();
+        await cache.write(conversationId, state.messages);
         return;
       }
 
@@ -487,13 +496,16 @@ class ConversationController extends _$ConversationController {
         localId: serverId == null,
       );
       _replace(pending.id, sent);
-      await _persist();
+      await cache.write(conversationId, state.messages);
     } on Object catch (error) {
       _log.w('sendMessage failed: ${error.runtimeType}');
-      _replace(
-        pending.id,
-        pending.copyWith(status: MessageDeliveryStatus.failed),
-      );
+      // 실패 표시도 살아 있을 때만 의미가 있다.
+      if (ref.mounted) {
+        _replace(
+          pending.id,
+          pending.copyWith(status: MessageDeliveryStatus.failed),
+        );
+      }
     }
   }
 

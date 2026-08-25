@@ -90,9 +90,15 @@ class RelationRegistration extends _$RelationRegistration {
     state = true;
     try {
       await ref.read(nationalMapRepositoryProvider).createRelation(shareUrl);
-      ref.invalidate(mapRelationsProvider);
+      // **폐기됐으면 무효화할 것도 없다.** 이 provider가 죽었다는 것은 화면이
+      // 닫혔다는 뜻이고, `mapRelations`도 캐시하지 않으므로 다음에 관계 지도를
+      // 열 때 어차피 새로 받는다. 죽은 `ref`로 `invalidate`를 부르면 던진다.
+      if (ref.mounted) ref.invalidate(mapRelationsProvider);
     } finally {
-      state = false;
+      // 공유 지도는 딥링크로 들어오는 화면이라 **등록을 누르고 바로 나가는 흐름이
+      // 흔하다** — 그때 폐기된 provider의 state를 건드리면, 관계는 서버에 맺혔는데
+      // 호출부는 실패로 받는다.
+      if (ref.mounted) state = false;
     }
   }
 }

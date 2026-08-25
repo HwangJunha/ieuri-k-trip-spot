@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../auth/provider/auth_controller.dart';
 import '../model/nickname_validation.dart';
 import '../model/settings_failure.dart';
+import '../repository/profile_repository.dart';
 import 'profile_providers.dart';
 
 part 'profile_edit_controller.g.dart';
@@ -57,15 +58,21 @@ class ProfileEditController extends _$ProfileEditController {
       return;
     }
 
+    // **저장소·인증 notifier를 요청 전에 잡아 둔다.** 이 catch는
+    // `SettingsFailure`만 잡으므로, 폐기 뒤의 `ref.read`가 던지는
+    // `UnmountedRefException`은 아무 데서도 걸리지 않고 화면까지 튄다 —
+    // 닉네임은 서버에 저장됐는데 사용자에게는 실패로 보인다.
+    final ProfileRepository repository = ref.read(profileRepositoryProvider);
+    final AuthController auth = ref.read(authControllerProvider.notifier);
+
     state = const ProfileEditState();
     try {
-      await ref
-          .read(profileRepositoryProvider)
-          .changeNickname(normalizeNickname(raw));
-      await ref.read(authControllerProvider.notifier).refreshMe();
-      state = const ProfileEditState(saved: true);
+      await repository.changeNickname(normalizeNickname(raw));
+      // 저장이 끝난 뒤라 세션 갱신은 화면이 남아 있든 아니든 마친다.
+      await auth.refreshMe();
+      if (ref.mounted) state = const ProfileEditState(saved: true);
     } on SettingsFailure catch (failure) {
-      state = ProfileEditState(failure: failure);
+      if (ref.mounted) state = ProfileEditState(failure: failure);
     }
   }
 }
