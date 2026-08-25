@@ -204,7 +204,6 @@
   },
   "spotDetailLikeAction": "Like",
   "spotDetailDislikeAction": "Nope",
-  "spotDetailLoading": "Loading spot…",
   "spotDetailNotFoundTitle": "Spot not found",
   "spotDetailNotFoundBody": "We couldn't find this spot. It may have been removed.",
   "spotDetailNotInLocaleTitle": "Not available in English",

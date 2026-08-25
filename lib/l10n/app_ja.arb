@@ -203,7 +203,6 @@
   },
   "spotDetailLikeAction": "いいね",
   "spotDetailDislikeAction": "スキップ",
-  "spotDetailLoading": "スポットを読み込んでいます…",
   "spotDetailNotFoundTitle": "スポットが見つかりません",
   "spotDetailNotFoundBody": "このスポットが見つかりませんでした。削除された可能性があります。",
   "spotDetailNotInLocaleTitle": "現在の言語では表示できません",

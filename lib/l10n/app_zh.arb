@@ -203,7 +203,6 @@
   },
   "spotDetailLikeAction": "喜歡",
   "spotDetailDislikeAction": "跳過",
-  "spotDetailLoading": "正在載入景點…",
   "spotDetailNotFoundTitle": "未找到該景點",
   "spotDetailNotFoundBody": "我們找不到這個景點。它可能已被刪除。",
   "spotDetailNotInLocaleTitle": "目前的語言無法顯示",
