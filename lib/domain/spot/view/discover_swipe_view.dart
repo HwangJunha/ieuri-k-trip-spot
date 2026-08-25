@@ -148,7 +148,12 @@ class _OverlayControls extends StatelessWidget {
           // 칩 라벨이 묻혔고, 그것을 고치자 이번에는 맨 위 시계가 밝은 사진에
           // 묻혔다(실기기 확인 2026-08-18). 위를 더 진하게 시작해 라벨이 끝나는
           // 지점까지 끌고 간 뒤 거기서만 풀어 준다.
-          colors: <Color>[Colors.black, Colors.black54, Colors.transparent],
+          //
+          // **다만 완전 불투명으로 시작하지 않는다**(사용자 지적 2026-08-25 —
+          // "어둡다"). 예전에는 카드 배경이 `black26`으로 한 번 더 눌려 있어 이
+          // 스크림이 상대적으로 덜 튀었는데, 그 눌림을 걷어내자 이쪽이 도드라졌다.
+          // 시계가 묻히지 않을 만큼만 남긴다 — 검정 87%면 흰 글자 대비가 충분하다.
+          colors: <Color>[Colors.black87, Colors.black38, Colors.transparent],
           stops: <double>[0, 0.8, 1],
         ),
       ),

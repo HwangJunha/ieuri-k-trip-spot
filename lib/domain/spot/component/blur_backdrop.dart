@@ -44,23 +44,26 @@ class BlurBackdrop extends StatelessWidget {
     // 카드 대부분이 이 경로를 탄다 — 저작권 미지정·TYPE3가 `contain`이고, 실제
     // 데이터에서 거의 모든 항목이 "공공누리 제3유형"이다(실기기 영상 확인,
     // 2026-08-25). 전체화면 블러 두 장(위 카드 + 다음 카드)이 매 프레임 돌고 있었다.
+    // **어둡게 덮지 않는다**(사용자 지적 2026-08-25). 예전에는 `black26`을
+    // `darken`으로 얹었는데, 강한 가우시안이 그 어두움까지 뭉개 놔서 티가 안 났다.
+    // 필터를 걷어내자 **어두움만 선명하게 남아 화면 전체가 칙칙해졌다.**
+    //
+    // 배경과 원본을 가르는 일은 어둡게 누르는 것 말고도 된다 — 확대 보간으로 이미
+    // 형체가 없어져 원본과 충분히 구별된다.
     return RepaintBoundary(
-      child: ColorFiltered(
-        colorFilter: const ColorFilter.mode(Colors.black26, BlendMode.darken),
-        child: NetworkPhoto(
-          url: imageRef,
-          fit: BoxFit.cover,
-          width: double.infinity,
-          height: double.infinity,
-          decodeWidth: _decodeWidth,
-          // 작은 그림을 크게 늘리므로 보간 품질이 곧 흐림의 결이 된다. `low`는
-          // 바이리니어라 사실상 공짜이고, 이 용도에는 부드러운 편이 오히려 맞다.
-          filterQuality: FilterQuality.low,
-          // 배경이 실패해도 카드는 성립한다 — 빈 색으로 떨어뜨린다.
-          errorBuilder:
-              (BuildContext context, Object error, StackTrace? stack) =>
-                  ColoredBox(color: Theme.of(context).colorScheme.surface),
-        ),
+      child: NetworkPhoto(
+        url: imageRef,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        decodeWidth: _decodeWidth,
+        // 작은 그림을 크게 늘리므로 보간 품질이 곧 흐림의 결이 된다. `low`는
+        // 바이리니어라 사실상 공짜이고, 이 용도에는 부드러운 편이 오히려 맞다.
+        filterQuality: FilterQuality.low,
+        // 배경이 실패해도 카드는 성립한다 — 빈 색으로 떨어뜨린다.
+        errorBuilder:
+            (BuildContext context, Object error, StackTrace? stack) =>
+                ColoredBox(color: Theme.of(context).colorScheme.surface),
       ),
     );
   }
