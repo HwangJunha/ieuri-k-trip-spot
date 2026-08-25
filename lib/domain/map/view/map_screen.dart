@@ -734,6 +734,25 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     // 카테고리 최초 상태는 "전체"다(사용자 결정, 2026-08-15) — 다른 화면과 같은
     // 규칙이라 심는 것이 없다.
 
+    // **초기화가 끝나기를 먼저 기다린다**(2026-08-25). `main`이 더 이상 이것을
+    // 기다리지 않으므로(첫 프레임을 막지 않기 위해) 여기 도착했을 때 아직 진행
+    // 중일 수 있다 — `isReady`만 보면 "초기화 중"을 "키 없음"으로 오인해 안내가
+    // 잠깐 스쳤다가 지도로 바뀐다.
+    return FutureBuilder<void>(
+      future: MapSdkInitializer.ready(),
+      builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return Scaffold(
+            appBar: AppBar(title: Text(l10n.navMap)),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
+        return _buildMap(context, l10n);
+      },
+    );
+  }
+
+  Widget _buildMap(BuildContext context, AppLocalizations l10n) {
     // 키가 없거나 SDK 인증에 실패하면 지도를 띄울 수 없다. 앱을 죽이지 않고 이
     // 화면만 안내로 대체한다(설계 §10).
     if (!MapSdkInitializer.isReady) {

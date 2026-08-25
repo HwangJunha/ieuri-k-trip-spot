@@ -129,14 +129,27 @@ flutter:
     # Base multilingual family. Latin/KO glyphs from Noto Sans;
     # CJK fallbacks (KR/JP/SC) are declared as separate families and
     # wired via fontFamilyFallback in AppTheme.
+    #
+    # **웨이트는 400/500/600/700/800 다섯 종만 싣는다**(2026-08-25).
+    # 코드가 실제로 쓰는 것이 그게 전부다 — `FontWeight.w500`(2곳)·`w600`(20곳)·
+    # `w700`(21곳)·`w800`(1곳)·`bold`(1곳)이고, 나머지는 본문 기본값 400이다.
+    # Thin(100)·ExtraLight(200)·Light(300)·Black(900)은 **한 번도 쓰이지 않았다.**
+    #
+    # 지우기 전에는 선언된 폰트가 40개 198.5MB였고, CJK 한 종이 5~10MB다.
+    # **안드로이드에서 이 무게가 그대로 초기 버벅임이 된다** — APK는 폰트를
+    # deflate로 넣는데(`unzip -v`로 확인: 폰트는 `Defl:N`, `libapp.so`는 `Stored`)
+    # Android `AssetManager`는 압축된 asset을 mmap하지 못해 **쓸 때마다 통째로
+    # 메모리에 푼다.** iOS는 `.app` 안에 압축 없이 들어가 mmap되므로 실제로 읽히는
+    # 것은 글리프가 있는 페이지뿐이다 — 같은 폰트인데 비용이 구조적으로 다르고,
+    # "아이폰은 괜찮은데 안드로이드만 처음에 느리다"가 정확히 여기서 나온다.
+    #
+    # 폴백 체인이 KR→JP→SC라(`app_theme.dart`) 한국어 기기는 스플래시 첫 프레임부터
+    # CJK를 건드린다. 한 번 로드되면 엔진이 캐시하므로 그 뒤로는 공짜다 —
+    # "시간이 지나면 괜찮아진다"도 같은 이유다.
+    #
+    # **이탤릭은 남긴다** — `area_info_card.dart`·`message_bubble.dart`가 쓴다.
     - family: NotoSans
       fonts:
-        - asset: asset/fonts/Latin/NotoSans-Thin.ttf
-          weight: 100
-        - asset: asset/fonts/Latin/NotoSans-ExtraLight.ttf
-          weight: 200
-        - asset: asset/fonts/Latin/NotoSans-Light.ttf
-          weight: 300
         - asset: asset/fonts/Latin/NotoSans-Regular.ttf
           weight: 400
         - asset: asset/fonts/Latin/NotoSans-Medium.ttf
@@ -147,8 +160,6 @@ flutter:
           weight: 700
         - asset: asset/fonts/Latin/NotoSans-ExtraBold.ttf
           weight: 800
-        - asset: asset/fonts/Latin/NotoSans-Black.ttf
-          weight: 900
         - asset: asset/fonts/Latin/NotoSans-Italic.ttf
           weight: 400
           style: italic
@@ -163,12 +174,6 @@ flutter:
           style: italic
     - family: NotoSansKR
       fonts:
-        - asset: asset/fonts/KR/NotoSansKR-Thin.ttf
-          weight: 100
-        - asset: asset/fonts/KR/NotoSansKR-ExtraLight.ttf
-          weight: 200
-        - asset: asset/fonts/KR/NotoSansKR-Light.ttf
-          weight: 300
         - asset: asset/fonts/KR/NotoSansKR-Regular.ttf
           weight: 400
         - asset: asset/fonts/KR/NotoSansKR-Medium.ttf
@@ -179,16 +184,8 @@ flutter:
           weight: 700
         - asset: asset/fonts/KR/NotoSansKR-ExtraBold.ttf
           weight: 800
-        - asset: asset/fonts/KR/NotoSansKR-Black.ttf
-          weight: 900
     - family: NotoSansJP
       fonts:
-        - asset: asset/fonts/JP/NotoSansJP-Thin.ttf
-          weight: 100
-        - asset: asset/fonts/JP/NotoSansJP-ExtraLight.ttf
-          weight: 200
-        - asset: asset/fonts/JP/NotoSansJP-Light.ttf
-          weight: 300
         - asset: asset/fonts/JP/NotoSansJP-Regular.ttf
           weight: 400
         - asset: asset/fonts/JP/NotoSansJP-Medium.ttf
@@ -199,16 +196,8 @@ flutter:
           weight: 700
         - asset: asset/fonts/JP/NotoSansJP-ExtraBold.ttf
           weight: 800
-        - asset: asset/fonts/JP/NotoSansJP-Black.ttf
-          weight: 900
     - family: NotoSansSC
       fonts:
-        - asset: asset/fonts/SC/NotoSansSC-Thin.ttf
-          weight: 100
-        - asset: asset/fonts/SC/NotoSansSC-ExtraLight.ttf
-          weight: 200
-        - asset: asset/fonts/SC/NotoSansSC-Light.ttf
-          weight: 300
         - asset: asset/fonts/SC/NotoSansSC-Regular.ttf
           weight: 400
         - asset: asset/fonts/SC/NotoSansSC-Medium.ttf
@@ -219,8 +208,6 @@ flutter:
           weight: 700
         - asset: asset/fonts/SC/NotoSansSC-ExtraBold.ttf
           weight: 800
-        - asset: asset/fonts/SC/NotoSansSC-Black.ttf
-          weight: 900
 
 # Native splash: coral brand background (matches the in-app splash).
 # Logo mark needs a PNG export — follow-up.
