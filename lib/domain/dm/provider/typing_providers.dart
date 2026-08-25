@@ -65,6 +65,11 @@ class TypingIndicatorController extends _$TypingIndicatorController {
 
   /// 구독이 끊겨도 **표시를 켠 채 두지 않는다.** 스트림 오류는 재연결 대상이지
   /// 입력 중 상태의 근거가 아니다.
+  ///
+  /// **여기서 재구독을 시도하지 않는다.** 소켓이 다시 붙으면 라이브러리가 구독을
+  /// 자동으로 복원하므로 이쪽이 따로 셀 것이 없고, 재연결 상한은 소켓 계층이
+  /// 쥔다(`graphql_socket_client.dart`의 `pauseSocketReconnect`) — 상한에 닿으면
+  /// 소켓이 멈추므로 이 구독도 함께 조용해진다.
   void _onStreamError(Object error, StackTrace stackTrace) {
     _expiry?.cancel();
     state = null;

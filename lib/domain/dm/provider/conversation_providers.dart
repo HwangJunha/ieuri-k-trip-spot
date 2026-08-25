@@ -166,9 +166,15 @@ class ConversationController extends _$ConversationController {
             // 않던 것이 무한 호출의 실체였다(SPEC-0032 §5.1).
             _reconnectAttempts++;
             if (_reconnectAttempts >= subscriptionReconnectAttempts) {
-              _log.w('구독 재연결 상한($subscriptionReconnectAttempts) 도달 — 구독을 닫는다');
+              _log.w(
+                '구독 재연결 상한($subscriptionReconnectAttempts) 도달 — 소켓을 끊는다',
+              );
               _subscription?.cancel();
               _subscription = null;
+              // **구독만 닫으면 소켓은 계속 붙으려 한다.** 라이브러리의 재연결
+              // 중단 조건에 "열린 구독 개수"가 없어서다 — 서버에는 그 시도가
+              // 그대로 도착한다. 재연결 자체를 멈춘다.
+              pauseSocketReconnect();
               return;
             }
 
