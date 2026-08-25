@@ -21,10 +21,6 @@ import 'map_sheet.dart';
 Future<void> showPhotoSyncSheet(BuildContext context) =>
     showMapSheet<void>(context, builder: (_) => const PhotoSyncSheet());
 
-/// 자동 등록이 도는 중인지. 시트가 stateless라 파일 수준에 둔다 — 한 번에
-/// 하나의 스캔만 돌므로 인스턴스별로 나눌 이유가 없다.
-bool _registering = false;
-
 /// 사진첩을 훑어 방문 지역을 찾는 시트.
 ///
 /// **스캔 중에도 시트를 닫고 앱을 쓸 수 있다**(R29) — 진행 상태는 provider가
@@ -89,11 +85,7 @@ class _Content extends ConsumerWidget {
                 ),
               ),
             FilledButton(
-              onPressed: () {
-                // 이전 스캔의 가드가 남아 있으면 이번 등록이 막힌다.
-                _registering = false;
-                controller.start();
-              },
+              onPressed: controller.start,
               child: Text(
                 progress.isResumable
                     ? l10n.photoSyncResume
@@ -159,17 +151,15 @@ class _Content extends ConsumerWidget {
         //
         // **한 번만 보낸다.** 리빌드마다 콜백이 걸리므로 가드가 없으면 등록이
         // 여러 번 나간다(멱등이라 서버는 버티지만 요청이 낭비된다).
-        if (!_registering) {
-          _registering = true;
+        // 가드는 **컨트롤러가 들고 있다.** 시트의 전역 플래그였을 때는 푸는 자리가
+        // idle/failed 버튼뿐이라, 그대로 이 단계에 들어오면 등록이 영영 안 걸렸다.
+        if (controller.beginRegistration()) {
+          _log.i('방문 등록 시작: ${progress.resolvedCellCodes.length}곳');
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             // **`finally`여야 한다.** 순차로 두면 등록이 던졌을 때 플래그가 true로
             // 박혀 재시도조차 막힌다 — `_register`가 예외를 삼키게 됐지만, 그
             // 안에서 또 다른 실패가 나도 여기서는 반드시 풀린다.
-            try {
-              await _register(context, ref, controller);
-            } finally {
-              _registering = false;
-            }
+            await _register(ref, controller);
           });
         }
         return Column(
@@ -183,6 +173,15 @@ class _Content extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             const Center(child: CircularProgressIndicator()),
+            // **갇히지 않게 한다**(2026-08-26). 등록이 어떤 이유로든 끝나지
+            // 않으면 이 단계에는 누를 것이 하나도 없어 앱을 껐다 켜는 수밖에
+            // 없었다 — 실기기에서 그 상태가 나왔다. 스캔 결과는 남으므로
+            // 닫았다 다시 열어 재시도할 수 있다.
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () => Navigator.of(context).maybePop(),
+              child: Text(l10n.commonClose),
+            ),
           ],
         );
 
@@ -253,11 +252,7 @@ class _Content extends ConsumerWidget {
     }
   }
 
-  Future<void> _register(
-    BuildContext context,
-    WidgetRef ref,
-    PhotoScanController controller,
-  ) async {
+  Future<void> _register(WidgetRef ref, PhotoScanController controller) async {
     final List<String> codes = progress.resolvedCellCodes;
     try {
       // 사진이 몇 장이든 요청은 1회다 — 판정 결과가 시군구 코드로 축약돼 있다.
@@ -275,7 +270,14 @@ class _Content extends ConsumerWidget {
       // 실패인 상황에서 원인을 찾을 길이 없다 — 실제로 그랬다(2026-08-26).
       // 서버 message는 PII를 담을 수 있어 넘기지 않는다(POL-013).
       _log.w('방문 등록 실패: ${error.runtimeType}', stackTrace: stackTrace);
-      controller.registrationFailed();
+      // **컨트롤러를 부르는 것까지 실패할 수 있다.** `photoScanController`는
+      // keepAlive라 살아 있지만, 여기서 또 던지면 단계가 `awaitingConfirmation`에
+      // 박혀 스피너가 영원히 돈다 — 원래 고치려던 그 증상으로 되돌아간다.
+      try {
+        controller.registrationFailed();
+      } on Object catch (e) {
+        _log.e('실패 단계 전환마저 실패: ${e.runtimeType}');
+      }
       return;
     }
     // **호출부에 심는다.** `VisitController.record`는 사진 경로와 현재 위치 경로가
@@ -285,6 +287,7 @@ class _Content extends ConsumerWidget {
       <String, Object>{AnalyticsParams.from: 'photo'},
     );
     // 시트를 닫지 않는다 — 완료 문구를 보고 사용자가 닫는다.
+    _log.i('방문 등록 성공: ${codes.length}곳');
     controller.confirmed();
   }
 }

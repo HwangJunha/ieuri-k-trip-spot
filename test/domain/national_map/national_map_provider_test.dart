@@ -409,6 +409,30 @@ void main() {
       ]);
     });
 
+    test('등록 가드는 성공·실패 어느 쪽으로 끝나도 풀린다', () async {
+      final ProviderContainer c = _container(
+        repo: _FakeRepository(cells: <MapCell>[_cell('1', <String>['11110'])]),
+        library: _FakeLibrary(coordinates: const <GeoPoint>[]),
+        boundaries: boundaries,
+      );
+      await _readCells(c);
+      final PhotoScanController controller = c.read(
+        photoScanControllerProvider.notifier,
+      );
+
+      // 한 번 잡으면 두 번째는 막힌다 — 리빌드마다 등록이 나가지 않게.
+      expect(controller.beginRegistration(), isTrue);
+      expect(controller.beginRegistration(), isFalse);
+
+      // 실패로 끝나도 풀린다. **예전에는 이걸 푸는 자리가 시트의 버튼뿐이라,
+      // awaitingConfirmation 단계에서는 영영 풀리지 않고 스피너만 돌았다.**
+      controller.registrationFailed();
+      expect(controller.beginRegistration(), isTrue);
+
+      controller.confirmed();
+      expect(controller.beginRegistration(), isTrue);
+    });
+
     test('이미 방문한 시군구는 결과에서 빠진다 (R27)', () async {
       final _FakeLibrary library = _FakeLibrary(
         coordinates: <GeoPoint>[

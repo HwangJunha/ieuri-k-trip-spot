@@ -84,6 +84,8 @@ class PhotoScanController extends _$PhotoScanController {
   Future<void> start() async {
     if (state.isRunning) return;
     _cancelled = false;
+    // 새 스캔이다 — 이전 등록의 가드가 남아 있으면 이번 결과를 등록하지 못한다.
+    _registering = false;
 
     final PhotoLibraryService library = ref.read(photoLibraryServiceProvider);
     final PhotoScanCheckpointStore checkpoints = ref.read(
@@ -349,8 +351,31 @@ class PhotoScanController extends _$PhotoScanController {
     await start();
   }
 
+  /// 등록 요청이 도는 중인지. **시트가 아니라 여기가 들고 있다**(2026-08-26).
+  ///
+  /// 예전에는 시트 파일의 전역 `bool`이었는데, 그것을 푸는 자리가 idle/failed
+  /// 분기의 버튼뿐이었다. `awaitingConfirmation` 단계에는 그 버튼이 없으므로
+  /// 플래그가 true로 남은 채 이 단계에 들어오면 **등록 콜백이 아예 걸리지 않고
+  /// 스피너만 영원히 돈다** — 화면에 탈출구가 없다(실기기 확인).
+  ///
+  /// 상태와 가드를 한 곳에 두면 어긋날 수 없다. [beginRegistration]이 세우고
+  /// [confirmed]·[registrationFailed]·[reset]이 푼다.
+  bool _registering = false;
+
+  /// 등록을 시작해도 되는지 묻고, 되면 표시한다.
+  ///
+  /// 리빌드마다 콜백이 걸리므로 이 가드가 없으면 등록이 여러 번 나간다.
+  bool beginRegistration() {
+    if (_registering) return false;
+    _registering = true;
+    return true;
+  }
+
   /// 등록이 끝났다. 등록 자체는 화면이 `VisitController`로 한다.
-  void confirmed() => state = state.copyWith(stage: PhotoScanStage.completed);
+  void confirmed() {
+    _registering = false;
+    state = state.copyWith(stage: PhotoScanStage.completed);
+  }
 
   /// 등록이 실패했다(2026-08-26).
   ///
@@ -360,14 +385,18 @@ class PhotoScanController extends _$PhotoScanController {
   ///
   /// 스캔 결과는 그대로 두고 단계만 실패로 돌린다 — 다시 찾을 필요 없이 등록만
   /// 다시 시도하면 된다.
-  void registrationFailed() => state = state.copyWith(
-    stage: PhotoScanStage.failed,
-    retryCount: state.retryCount + 1,
-  );
+  void registrationFailed() {
+    _registering = false;
+    state = state.copyWith(
+      stage: PhotoScanStage.failed,
+      retryCount: state.retryCount + 1,
+    );
+  }
 
   /// 처음부터 다시 훑는다.
   void reset() {
     _cancelled = true;
+    _registering = false;
     state = const PhotoScanProgress();
     // 디스크에 남은 지점도 지운다 — 안 지우면 다시 켰을 때 되살아난다.
     unawaited(ref.read(photoScanCheckpointStoreProvider).clear());
