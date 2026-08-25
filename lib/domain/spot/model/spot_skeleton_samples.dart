@@ -11,6 +11,9 @@
 ///   빌드 비용만 든다.
 library;
 
+import '../../../common/category/spot_category.dart';
+import 'copyright_type.dart';
+import 'liked_spot.dart';
 import 'popular_spot.dart';
 import 'tourist_spot.dart';
 
@@ -53,3 +56,14 @@ const List<PopularSpot> popularSpotSkeletonSamples = <PopularSpot>[
   PopularSpot(spot: _sample1, likeCount: 96),
   PopularSpot(spot: _sample2, likeCount: 74),
 ];
+
+/// 좋아요 목록용. 카드가 제목·카테고리·주소 세 줄이라 길이를 다르게 둔다.
+const LikedSpot likedSpotSkeletonSample = LikedSpot(
+  id: '_skeleton_liked',
+  title: '경복궁 근정전',
+  thumbnailImageUrl: '',
+  category: SpotCategory(code: 'TOURIST_SPOT', label: '관광지'),
+  copyright: CopyrightType.unspecified,
+  attributionText: '',
+  address: '서울특별시 종로구 사직로 161',
+);
