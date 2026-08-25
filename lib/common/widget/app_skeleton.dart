@@ -51,7 +51,8 @@ class AppSkeleton extends StatelessWidget {
       textBoneBorderRadius: const TextBoneBorderRadius(
         BorderRadius.all(Radius.circular(4)),
       ),
-      // 뼈대를 누르면 그 아래 진짜 위젯의 콜백이 돈다 — 로딩 중 오작동을 막는다.
+      // 뼈대는 탭을 먹지 않는다. 더미 모델로 그린 진짜 위젯이라 그대로 두면 아직
+      // 오지도 않은 항목의 `onTap`이 돌아 엉뚱한 상세로 들어간다.
       ignorePointers: true,
       child: child,
     );
