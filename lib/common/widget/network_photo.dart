@@ -50,6 +50,7 @@ class NetworkPhoto extends StatelessWidget {
     this.loadingBuilder,
     this.errorBuilder,
     this.decodeWidth,
+    this.filterQuality = FilterQuality.medium,
   });
 
   final String url;
@@ -68,6 +69,12 @@ class NetworkPhoto extends StatelessWidget {
   /// 뭉개지므로 40px로 디코딩해도 눈에 띄지 않고 비용은 수백 분의 일이 된다.
   final double? decodeWidth;
 
+  /// 확대·축소 시 보간 품질.
+  ///
+  /// [decodeWidth]로 작게 디코딩한 그림을 크게 늘리는 자리(블러 배경 등)에서는
+  /// `low`가 맞다 — 바이리니어라 사실상 공짜이고, 부드럽게 뭉개지는 것이 목적이다.
+  final FilterQuality filterQuality;
+
   @override
   Widget build(BuildContext context) {
     return Image.network(
@@ -76,6 +83,7 @@ class NetworkPhoto extends StatelessWidget {
       width: width,
       height: height,
       cacheWidth: decodeWidthFor(context, decodeWidth: decodeWidth),
+      filterQuality: filterQuality,
       // 디코딩된 프레임이 준비되기 전 한 프레임 깜빡이는 것을 막는다. 같은 위젯이
       // 다른 URL로 바뀔 때 이전 사진을 유지해 흰 칸이 끼지 않게 한다.
       gaplessPlayback: true,
