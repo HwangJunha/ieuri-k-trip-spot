@@ -36,7 +36,14 @@ Duration? spotRetryPolicy(int retryCount, Object error) {
   return retryDelay;
 }
 
-/// 허용하는 자동 재시도 횟수. [RetryBudget.defaultMaxAttempts]에서 파생한다 —
+/// 허용하는 자동 재시도 횟수. **여기만 1회로 남는다**(2026-08-26).
+///
+/// 다른 도메인은 공통 정책(`common/network/network_retry_policy.dart`)을 따라
+/// 5회 지수 백오프로 올렸지만, spot은 **SPEC-0006 AC-2가 "최초 1회 + 자동
+/// 재시도 1회 = 총 2회"를 수용 기준으로 못박은 영역**이다. 여기를 바꾸면 그
+/// 스펙의 기준을 깨는 것이므로 값을 올리려면 SPEC-0006부터 고쳐야 한다.
+///
+/// [RetryBudget.defaultMaxAttempts]에서 파생한다 —
 /// 상한은 "최초 시도 + 자동 재시도"이므로 자동 재시도 허용 횟수는 그보다 1 적다.
 /// 두 값을 따로 적으면 한쪽만 고쳤을 때 예산과 재시도 정책이 조용히 어긋난다.
 const int maxAutoRetries = RetryBudget.defaultMaxAttempts - 1;

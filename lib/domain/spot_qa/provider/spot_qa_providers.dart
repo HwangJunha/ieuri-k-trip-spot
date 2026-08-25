@@ -1,3 +1,4 @@
+import '../../../common/network/network_retry_policy.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/network/graphql_client.dart';
@@ -13,11 +14,10 @@ part 'spot_qa_providers.g.dart';
 SpotQaRepository spotQaRepository(Ref ref) =>
     SpotQaRepositoryImpl(ref.watch(graphqlClientProvider));
 
-/// 자동 재시도 1회 뒤 멈추는 재시도 정책(community·spot과 같은 이유).
+/// 공통 상한을 쓰는 재시도 정책(간격·횟수는 `network_retry_policy`가 정한다).
 ///
-/// Riverpod 3 기본값은 실패한 provider를 지수 백오프로 **최대 10회** 재조회한다.
-/// 재시도로 풀리지 않는 실패에서는 그 폭주가 그대로 낭비이고, 사용자에게는 오류
-/// 화면이 뜨기까지의 지연으로만 보인다.
+/// Riverpod 3 기본값은 **최대 10회**라 그대로 두면 한 번의 실패가 11번의 왕복이
+/// 된다. 멈추는 조건은 여전히 횟수다(POL-040) — 간격만 지수로 벌린다.
 ///
 /// 인증 실패는 **아예 재시도하지 않는다** — SPEC-0005의 갱신·로그아웃 경로가
 /// 소관이며 여기서 다시 조회해 봐야 같은 실패가 난다.
@@ -26,6 +26,6 @@ Duration? spotQaRetryPolicy(int retryCount, Object error) {
       error.kind == SpotQaFailureKind.unauthenticated) {
     return null;
   }
-  if (retryCount >= 1) return null;
-  return const Duration(milliseconds: 400);
+  if (retryCount >= defaultMaxAutoRetries) return null;
+  return defaultRetryDelayOf(retryCount);
 }

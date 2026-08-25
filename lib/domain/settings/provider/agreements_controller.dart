@@ -1,3 +1,4 @@
+import '../../../common/network/network_retry_policy.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/model/terms_code.dart';
@@ -19,14 +20,14 @@ SettingsRepository settingsRepository(Ref ref) =>
     SettingsRepositoryImpl(ref.watch(graphqlClientProvider));
 
 /// 인증 실패는 재시도하지 않는다 — SPEC-0005의 갱신·로그아웃 경로가 소관이며 여기서
-/// 다시 조회해 봐야 같은 실패가 난다. 나머지는 1회만 재시도한다(커뮤니티와 같은 이유).
+/// 다시 조회해 봐야 같은 실패가 난다. 나머지는 공통 상한을 따른다.
 Duration? settingsRetryPolicy(int retryCount, Object error) {
   if (error is SettingsFailure &&
       error.kind == SettingsFailureKind.unauthenticated) {
     return null;
   }
-  if (retryCount >= 1) return null;
-  return const Duration(milliseconds: 400);
+  if (retryCount >= defaultMaxAutoRetries) return null;
+  return defaultRetryDelayOf(retryCount);
 }
 
 /// 약관 동의 상태(SPEC-0011 R9~R12).

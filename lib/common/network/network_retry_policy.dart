@@ -16,23 +16,44 @@
 /// 통째로 빠졌다. 하나를 두고 쓰면 빠뜨릴 자리가 없다.
 ///
 /// 도메인 고유의 면제 조건이 있으면(예: spot의 `SpotFailureKind.unauthenticated`)
-/// 그 도메인이 자기 정책을 계속 쓰면 된다 — 이것은 **정책이 없던 자리**를 위한 것이다.
+/// 그 도메인이 자기 판별 함수를 쓰되 **간격과 횟수는 여기서 가져간다**.
 library;
 
 import '../location/location_service.dart';
 
-/// 허용하는 자동 재시도 횟수. 최초 시도 + 이 횟수만큼 재시도한다.
+/// 허용하는 자동 재시도 횟수. 최초 시도 + 이 횟수만큼 재시도한다(총 6회).
 ///
-/// 도메인 정책들이 이미 1회로 정해 두었으므로 그에 맞춘다 — 전역만 다르게 두면
-/// 같은 실패가 화면에 따라 다른 횟수로 재시도된다.
-const int defaultMaxAutoRetries = 1;
+/// **1회는 너무 적다**(사용자 결정, 2026-08-26). 일시적인 네트워크 끊김은 한 번
+/// 더 시도해서 안 되면 대개 두세 번째에 붙는데, 1회로 끊으면 사용자가 직접 다시
+/// 누르게 된다. 아래 백오프 덕에 5회를 다 써도 서버를 몰아치지 않는다.
+const int defaultMaxAutoRetries = 5;
 
-/// 자동 재시도 간격.
+/// 첫 재시도까지 기다리는 시간. 이후 [defaultRetryDelayOf]가 두 배씩 늘린다.
+const Duration defaultRetryDelay = Duration(milliseconds: 500);
+
+/// [retryCount]번째 재시도(0부터)까지 기다릴 시간. **두 배씩 늘어난다.**
 ///
-/// **지수 백오프를 쓰지 않는다**(POL-040 — 재시도는 횟수로 제한한다). 기존 도메인
-/// 정책이 쓰는 400ms 고정을 따르며, 이 수치를 늘리거나 지수화하지 않는다 — 근거가
-/// 없는 수치를 새로 만들지 않기 위해서다.
-const Duration defaultRetryDelay = Duration(milliseconds: 400);
+/// ```
+/// 0.5s -> 1s -> 2s -> 4s -> 8s   (5회를 다 쓰면 약 15.5초)
+/// ```
+///
+/// ## 왜 고정 간격이 아닌가 — POL-040의 예외다
+///
+/// POL-040은 "재시도는 시간이 아니라 **횟수로** 제한한다, 시간 기반 백오프 수치는
+/// 근거가 없다"고 정한다. 이 정책은 그 취지를 따르되 **간격만** 지수로 둔다 —
+/// 멈추는 조건은 여전히 [defaultMaxAutoRetries]라는 횟수이며, 시간은 상한이
+/// 아니라 왕복 사이의 간격일 뿐이다.
+///
+/// 근거는 **서버에 WAF도 rate limit도 없다는 것**(사용자, 2026-08-25)이다.
+/// 400ms 고정으로 5회를 돌리면 2초 안에 6번을 두드리고, 화면이 여러 개면 그
+/// 파도가 겹친다 — 서버가 잠깐 밀렸을 때 그것을 더 밀어붙이는 모양이 된다.
+/// 간격을 벌리면 같은 횟수로도 서버에 회복할 틈을 준다(사용자 결정, 2026-08-26).
+///
+/// 수치의 근거: 첫 간격은 사용자가 기다림을 느끼기 전에 한 번 더 시도할 수 있는
+/// 0.5초, 배수는 이 방식의 통상값인 2다. 상한을 따로 두지 않는 이유는 5회에서
+/// 어차피 멈추기 때문이다 — 마지막 간격 8초가 실질 상한이다.
+Duration defaultRetryDelayOf(int retryCount) =>
+    defaultRetryDelay * (1 << retryCount);
 
 /// 정책이 따로 없는 provider가 쓰는 재시도 정책.
 ///
@@ -45,9 +66,8 @@ const Duration defaultRetryDelay = Duration(milliseconds: 400);
 ///
 /// **인증 실패는 여기서 거르지 않는다.** 도메인마다 실패 타입이 달라 공통 코드가
 /// 알 수 없기 때문이다 — 인증 갈래를 가진 도메인은 자기 정책을 쓰는 편이 정확하다.
-/// 다만 상한이 1회이므로 걸러지지 않아도 최악이 2회다.
 Duration? defaultNetworkRetry(int retryCount, Object error) {
   if (error is LocationUnavailable) return null;
   if (retryCount >= defaultMaxAutoRetries) return null;
-  return defaultRetryDelay;
+  return defaultRetryDelayOf(retryCount);
 }
