@@ -174,7 +174,7 @@ class ConversationController extends _$ConversationController {
               // **구독만 닫으면 소켓은 계속 붙으려 한다.** 라이브러리의 재연결
               // 중단 조건에 "열린 구독 개수"가 없어서다 — 서버에는 그 시도가
               // 그대로 도착한다. 재연결 자체를 멈춘다.
-              pauseSocketReconnect();
+              unawaited(stopSocketReconnect());
               return;
             }
 
@@ -200,9 +200,21 @@ class ConversationController extends _$ConversationController {
   ///
   /// 갱신이 실패하면 여기서 멈춘다 — 그때는 세션 자체가 끝난 것이고, 그 처리는
   /// 인증 계층(SPEC-0005 경로)의 몫이다.
+  ///
+  /// **복구 자체에도 상한을 둔다.** 서버가 계속 `SUBSCRIPTION_UNAUTHENTICATED`를
+  /// 돌려주면서 갱신은 성공하는 조합이면 이 함수가 영원히 돈다 — 한 바퀴마다 갱신
+  /// 뮤테이션 + 소켓 재연결 + 재구독 + `sync()` 조회를 낸다. 사용자 조작 없이
+  /// 자동으로 도는 순환이라 가장 위험한 형태다.
   Future<void> _recoverSocketIdentity() async {
     _subscription?.cancel();
     _subscription = null;
+
+    if (_identityRecoveries >= _maxIdentityRecoveries) {
+      _log.w('소켓 신원 복구 상한($_maxIdentityRecoveries) 도달 — 구독을 포기한다');
+      unawaited(stopSocketReconnect());
+      return;
+    }
+    _identityRecoveries++;
 
     try {
       final bool refreshed = await ref
@@ -216,7 +228,9 @@ class ConversationController extends _$ConversationController {
       // 소켓을 버린다. 다음 구독이 새 토큰으로 새 연결을 연다.
       await resetSocketConnection(ref);
 
-      // 재연결 카운터를 되돌린다 — 신원 문제였지 연결 불안정이 아니었다.
+      // **재연결 카운터만 되돌린다.** 신원 문제였지 연결 불안정이 아니었다.
+      // 복구 횟수(`_identityRecoveries`)는 **되돌리지 않는다** — 그것이 순환을
+      // 끊는 유일한 장치다.
       _reconnectAttempts = 0;
 
       listenForNewMessages();
@@ -226,6 +240,15 @@ class ConversationController extends _$ConversationController {
       _log.w('소켓 신원 복구 중 실패: ${error.runtimeType}');
     }
   }
+
+  /// 신원 복구를 몇 번까지 시도할지.
+  ///
+  /// 갱신은 보통 한 번이면 된다. 두 번째까지 실패한다면 토큰이 아니라 다른 것이
+  /// 잘못된 것이므로 더 시도해도 같은 결과다.
+  static const int _maxIdentityRecoveries = 2;
+
+  /// 이 대화에서 신원 복구를 시도한 횟수. **리셋하지 않는다.**
+  int _identityRecoveries = 0;
 
   StreamSubscription<Message>? _subscription;
 
