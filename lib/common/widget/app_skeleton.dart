@@ -37,13 +37,27 @@ class AppSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     final ColorScheme scheme = Theme.of(context).colorScheme;
 
+    // **밝기 순서를 색 이름에 맡길 수 없다.** 이 앱의 라이트 스킴은 손으로 지정한
+    // 값이라 `surfaceContainerHighest`가 `surfaceContainerLow`보다 어둡고, 시드에서
+    // 파생되는 다크 스킴은 반대다. 이름만 보고 고르면 한쪽 모드에서 시머가 어두운
+    // 쪽으로 흘러 얼룩처럼 보인다.
+    //
+    // 그래서 두 색을 밝기로 정렬해 **어두운 쪽을 바탕, 밝은 쪽을 빛**으로 쓴다 —
+    // 어느 모드에서도 빛이 지나가는 방향이 같아진다.
+    final Color a = scheme.surfaceContainerHighest;
+    final Color b = scheme.surfaceContainerLow;
+    final bool aIsDarker =
+        a.computeLuminance() < b.computeLuminance();
+    final Color base = aIsDarker ? a : b;
+    final Color highlight = aIsDarker ? b : a;
+
     return Skeletonizer(
       enabled: enabled,
-      // 시머는 표면색에서 살짝 밝은 쪽으로만 흐른다. 대비를 키우면 뼈대가 실제
-      // 콘텐츠보다 눈에 띄어 로딩이 더 길게 느껴진다.
+      // 대비를 키우지 않는다. 뼈대가 실제 콘텐츠보다 눈에 띄면 로딩이 더 길게
+      // 느껴진다.
       effect: ShimmerEffect(
-        baseColor: scheme.surfaceContainerHighest,
-        highlightColor: scheme.surfaceContainerLow,
+        baseColor: base,
+        highlightColor: highlight,
         duration: const Duration(milliseconds: 1200),
       ),
       // 텍스트 뼈대의 모서리. 본문 글자 높이에 맞춰 완전한 알약이 되지 않을 만큼만
