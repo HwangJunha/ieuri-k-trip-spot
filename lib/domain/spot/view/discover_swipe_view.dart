@@ -10,6 +10,7 @@ import '../../../common/permission/provider/permission_providers.dart';
 import '../../../common/storage/search_radius_controller.dart';
 import '../../../common/widget/failure_notice.dart';
 import '../../../common/widget/floating_bottom_nav_scaffold.dart';
+import '../../../common/widget/network_photo.dart';
 import '../../../common/analytics/analytics_events.dart';
 import '../../../common/analytics/app_analytics.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -382,6 +383,49 @@ class _CardStackState extends ConsumerState<_CardStack>
   void initState() {
     super.initState();
     _controller = AnimationController.unbounded(vsync: this);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _precacheUpcoming();
+  }
+
+  @override
+  void didUpdateWidget(_CardStack oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 큐가 앞으로 밀렸으면 새로 세 번째가 된 카드를 미리 받는다.
+    if (oldWidget.queue != widget.queue) _precacheUpcoming();
+  }
+
+  /// 아직 화면에 없는 다음 카드의 사진을 미리 받아 둔다.
+  ///
+  /// **왜 필요한가.** 스택은 두 장만 붙여 놓으므로 세 번째 카드는 요청조차 나가
+  /// 있지 않다. 한 장을 넘기면 그 카드가 곧바로 "다음"이 되는데, 그때부터 받기
+  /// 시작하니 느린 연결에서는 회색 플레이스홀더가 먼저 보인다.
+  ///
+  /// [precacheImage]는 이미지 캐시에만 채워 넣는다 — 위젯이 나중에 같은 URL로
+  /// `Image.network`를 부르면 이미 디코딩된 것을 즉시 받는다.
+  ///
+  /// **디코딩 폭을 카드와 맞춰야 한다.** 다르게 주면 캐시 키가 갈려 미리 받아 둔
+  /// 것을 못 쓰고 두 벌이 메모리에 남는다.
+  void _precacheUpcoming() {
+    final List<TouristSpot> cards = widget.queue.cards;
+    if (cards.length < 3) return;
+
+    final String ref = cards[2].thumbnailImageUrl ?? cards[2].imageRef;
+    if (!ref.startsWith('http')) return;
+
+    precacheImage(
+      // **`NetworkPhoto`와 같은 계산을 쓴다.** 폭이 다르면 캐시 키가 갈려 미리
+      // 받아 둔 것을 못 쓰고 두 벌이 메모리에 남는다. `Image.network`의
+      // `cacheWidth`도 내부적으로 `ResizeImage`를 만드므로 형태가 일치한다.
+      ResizeImage(NetworkImage(ref), width: decodeWidthFor(context)),
+      context,
+      // 미리 받는 것이라 실패해도 화면에 영향이 없다 — 카드가 실제로 뜰 때
+      // `errorBuilder`가 플레이스홀더로 받아 준다.
+      onError: (Object _, StackTrace? _) {},
+    );
   }
 
   @override

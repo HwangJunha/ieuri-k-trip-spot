@@ -1,5 +1,24 @@
 import 'package:flutter/material.dart';
 
+/// 네트워크 사진을 디코딩할 **물리 픽셀** 폭.
+///
+/// [NetworkPhoto]와 [precacheImage] 호출부가 **반드시 같은 값을 써야 한다** —
+/// 이미지 캐시는 (URL, 디코딩 크기)로 키를 잡으므로, 미리 받을 때와 그릴 때 폭이
+/// 다르면 캐시가 갈려 두 벌이 메모리에 남고 프리캐시는 헛수고가 된다. 그래서 계산을
+/// 위젯 안이 아니라 여기 둔다.
+///
+/// [decodeWidth]는 논리 폭이며, 주지 않으면 화면 폭을 쓴다. **배치용 `width`는
+/// 쓰지 않는다** — `double.infinity`가 흔히 들어오는 값이라 디코딩 힌트가 될 수 없다.
+int decodeWidthFor(BuildContext context, {double? decodeWidth}) {
+  final double logical = decodeWidth ?? MediaQuery.sizeOf(context).width;
+  // 디코딩은 물리 픽셀 기준이라 DPR을 곱한다. 논리 폭 그대로 주면 고DPI 기기에서
+  // 흐릿해진다.
+  final double physical = logical * MediaQuery.devicePixelRatioOf(context);
+  // 유한하지 않은 값(`double.infinity`)이 흘러들면 `round()`가 터진다.
+  if (!physical.isFinite) return 4096;
+  return physical.round().clamp(1, 4096);
+}
+
 /// 네트워크 사진을 **화면에 그릴 크기로만 디코딩해서** 그린다.
 ///
 /// ## 왜 `Image.network`를 직접 부르지 않는가
@@ -51,18 +70,12 @@ class NetworkPhoto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 디코딩은 물리 픽셀 기준이라 DPR을 곱한다. 논리 폭 그대로 주면 고DPI 기기에서
-    // 흐릿해진다.
-    final double dpr = MediaQuery.devicePixelRatioOf(context);
-    final double logicalWidth =
-        decodeWidth ?? width ?? MediaQuery.sizeOf(context).width;
-
     return Image.network(
       url,
       fit: fit,
       width: width,
       height: height,
-      cacheWidth: (logicalWidth * dpr).round().clamp(1, 4096),
+      cacheWidth: decodeWidthFor(context, decodeWidth: decodeWidth),
       // 디코딩된 프레임이 준비되기 전 한 프레임 깜빡이는 것을 막는다. 같은 위젯이
       // 다른 URL로 바뀔 때 이전 사진을 유지해 흰 칸이 끼지 않게 한다.
       gaplessPlayback: true,
