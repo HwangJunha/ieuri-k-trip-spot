@@ -1272,3 +1272,31 @@ Android 5종 재생성, 전량 크기 검증·iOS 알파 없음 확인.
 **좌표를 하나도 못 찾은 화면에서는 "다시 채우기"를 감춘다.** 사진첩이 그대로인데
 다시 돌려도 결과가 같다 — 그 화면의 해법은 사진을 더 고르거나 전체 허용으로
 올리는 것이고, 두 버튼은 이미 위에 있다.
+
+### O.5 "다시 채우기"는 대상이 늘어났을 때만 의미가 있다 (2026-08-26)
+
+"일부만 허용" 상태에서도 다시 채우기 버튼이 떴다. **같은 사진을 다시 훑으면
+결과는 같다** — 이 버튼이 의미를 갖는 것은 훑을 대상이 늘어난 뒤, 곧 전체
+허용으로 올렸을 때뿐이다(사용자 지적). `limitedAccess`일 때는 감춘다.
+
+그런데 감추기만 하면 **막다른 길이 생긴다.** 설정에서 전체 접근으로 바꾸고
+돌아와도 앱은 아무 일도 하지 않는데, 그 화면에는 다시 돌릴 버튼이 없다.
+
+그래서 **복귀 시 등급이 올라갔으면 스스로 다시 훑는다.** `AppLifecycleListener`에
+`onRestart`를 달고, `limitedAccess`였다가 `granted`가 됐을 때만 처음부터 다시
+스캔한다(등급이 그대로면 아무것도 하지 않는다).
+
+근거를 확인해 두었다:
+
+- iOS에서 다른 앱으로 전환하면 `paused`까지 내려가고 복귀 시
+  `paused → hidden → inactive → resumed`를 거친다 —
+  `onRestart`가 불린다([AppLifecycleState 문서][als]). 이미 같은 경로에서
+  동작하던 `onPause`와 짝이 맞는다.
+- 등급 확인은 `PhotoManager.getPermissionState(requestOption:)`을 쓴다.
+  **현재 값만 읽고 프롬프트를 띄우지 않는다**([API 문서][gps]) —
+  `requestPermissionExtend`를 부르면 시스템 창이 다시 뜬다.
+
+설정 경로 안내에는 "앱" 단계를 넣었다: `설정 > 앱 > K-Trip Spot > 사진 > 전체 접근`.
+
+[als]: https://api.flutter.dev/flutter/dart-ui/AppLifecycleState.html
+[gps]: https://pub.dev/documentation/photo_manager/latest/photo_manager/PhotoManager/getPermissionState.html

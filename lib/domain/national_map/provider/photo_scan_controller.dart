@@ -61,6 +61,15 @@ class PhotoScanController extends _$PhotoScanController {
       onPause: () {
         if (state.isRunning) stop();
       },
+      // **설정에서 돌아오면 권한이 올라갔는지 본다**(2026-08-26).
+      //
+      // "일부만 허용"에서 설정으로 보내 전체 접근으로 바꿔도, 돌아왔을 때
+      // 아무 일도 일어나지 않으면 막다른 길이 된다 — 그 화면에서는 다시 채우기
+      // 버튼도 감춰 두기 때문이다(같은 사진을 다시 훑는 것은 무의미하므로).
+      //
+      // 그래서 돌아온 시점에 등급이 올라갔으면 스스로 다시 훑는다. 등급이
+      // 그대로면 아무것도 하지 않는다.
+      onRestart: _rescanIfAccessWidened,
     );
     ref.onDispose(listener.dispose);
 
@@ -327,6 +336,22 @@ class PhotoScanController extends _$PhotoScanController {
     // 끝까지 훑었으니 중단 지점은 필요 없다. 남겨 두면 다음에 켰을 때
     // "이어하기"가 뜬다.
     await checkpoints.clear();
+  }
+
+  /// 사진 접근 등급이 "일부만 허용"에서 올라갔으면 처음부터 다시 훑는다.
+  ///
+  /// 훑을 대상이 늘어났을 때만 의미가 있다 — 같은 사진을 다시 훑어야 결과는
+  /// 같으므로, 등급이 그대로면 아무것도 하지 않는다.
+  Future<void> _rescanIfAccessWidened() async {
+    if (!state.limitedAccess || state.isRunning) return;
+    final PhotoAccess access = await ref
+        .read(photoLibraryServiceProvider)
+        .currentAccess();
+    if (access != PhotoAccess.granted) return;
+    _log.i('사진 접근이 전체로 바뀌었다 — 처음부터 다시 훑는다');
+    reset();
+    _cancelled = false;
+    await start();
   }
 
   /// 진행 중인 스캔을 멈춘다. 처리 지점은 남는다(R28).

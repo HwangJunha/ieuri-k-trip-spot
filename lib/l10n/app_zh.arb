@@ -88,7 +88,7 @@
   "photoSyncConfirmBody": "登记后地图就会被填充。",
   "photoSyncRegister": "登记",
   "photoSyncDone": "地图已更新。",
-  "photoSyncLimitedNotice": "選擇 設定 > K-Trip Spot > 照片 > 所有照片，即可掃描整個相簿。",
+  "photoSyncLimitedNotice": "選擇 設定 > App > K-Trip Spot > 照片 > 所有照片，即可掃描整個相簿。",
   "@photoSyncLimitedNotice": {},
   "photoSyncSelectMore": "選擇更多照片",
   "@photoSyncSelectMore": {},

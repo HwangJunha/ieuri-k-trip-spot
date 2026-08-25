@@ -408,7 +408,7 @@
     "description": "사진 동기화 - 판정 결과 등록"
   },
   "photoSyncDone": "지도를 채웠어요.",
-  "photoSyncLimitedNotice": "설정 > K-Trip Spot > 사진 > 전체 접근을 선택하면 사진첩 전체를 훑어요.",
+  "photoSyncLimitedNotice": "설정 > 앱 > K-Trip Spot > 사진 > 전체 접근을 선택하면 사진첩 전체를 훑어요.",
   "@photoSyncLimitedNotice": {},
   "photoSyncSelectMore": "사진 더 고르기",
   "@photoSyncSelectMore": {},

@@ -88,7 +88,7 @@
   "photoSyncConfirmBody": "Adding them will fill in your map.",
   "photoSyncRegister": "Add them",
   "photoSyncDone": "Your map is updated.",
-  "photoSyncLimitedNotice": "Only the photos you picked are scanned. For your whole library: Settings > K-Trip Spot > Photos > All Photos.",
+  "photoSyncLimitedNotice": "Only the photos you picked are scanned. For your whole library: Settings > Apps > K-Trip Spot > Photos > All Photos.",
   "@photoSyncLimitedNotice": {
     "description": "iOS limited photo access notice/action"
   },

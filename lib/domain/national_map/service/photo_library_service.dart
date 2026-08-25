@@ -27,6 +27,12 @@ abstract interface class PhotoLibraryService {
   /// iOS 14+ 전용이며 다른 플랫폼에서는 아무 일도 하지 않는다.
   Future<void> presentLimitedPicker();
 
+  /// 지금의 접근 등급. **요청하지 않고 묻기만 한다**(2026-08-26).
+  ///
+  /// 설정에서 돌아왔을 때 등급이 올라갔는지 확인하는 데 쓴다 — 여기서
+  /// [requestAccess]를 부르면 시스템 프롬프트가 다시 뜰 수 있다.
+  Future<PhotoAccess> currentAccess();
+
   /// 앱의 시스템 설정 화면을 연다(2026-08-26).
   ///
   /// **`permission_handler`가 아니라 `photo_manager`로 연다.** 사진 권한은
@@ -106,6 +112,24 @@ class PhotoManagerLibraryService implements PhotoLibraryService {
 
   @override
   Future<void> presentLimitedPicker() => pm.PhotoManager.presentLimited();
+
+  @override
+  Future<PhotoAccess> currentAccess() async {
+    // `requestPermissionExtend`와 달리 프롬프트를 띄우지 않고 현재 값만 읽는다.
+    final pm.PermissionState state = await pm.PhotoManager.getPermissionState(
+      requestOption: const pm.PermissionRequestOption(
+        androidPermission: pm.AndroidPermission(
+          type: _images,
+          mediaLocation: true,
+        ),
+      ),
+    );
+    return switch (state) {
+      pm.PermissionState.authorized => PhotoAccess.granted,
+      pm.PermissionState.limited => PhotoAccess.limited,
+      _ => PhotoAccess.denied,
+    };
+  }
 
   @override
   Future<void> openSettings() => pm.PhotoManager.openSetting();

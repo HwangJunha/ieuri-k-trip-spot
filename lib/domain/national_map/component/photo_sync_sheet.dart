@@ -252,10 +252,15 @@ class _Content extends ConsumerWidget {
             // 결과 문구만 남아 이 기능을 두 번째로 쓸 방법이 없었다 — 사진을 더
             // 찍은 사용자가 매번 다시 돌릴 수 있어야 한다(사용자 지적).
             //
-            // **좌표를 하나도 못 찾았으면 감춘다.** 사진첩이 그대로인데 다시 돌려도
-            // 결과가 같다 — 그 화면의 해법은 사진을 더 고르거나 전체 허용으로
-            // 올리는 것이고, 두 버튼은 위에 이미 있다.
-            if (!progress.finishedWithoutCoordinates) ...<Widget>[
+            // **훑을 대상이 그대로면 감춘다**(2026-08-26). 같은 사진을 다시 훑어야
+            // 결과는 같다 — 이 버튼이 의미를 갖는 것은 대상이 늘어난 뒤,
+            // 곧 전체 허용으로 올렸을 때뿐이다(사용자 지적).
+            //
+            // 그래서 "일부만 허용"에서는 감춘다. 그 화면의 해법은 위의 두 버튼
+            // (사진 더 고르기·전체 허용)이고, 둘 다 끝나면 스캔이 자동으로 다시
+            // 돈다. 좌표를 하나도 못 찾은 경우도 같은 이유로 감춘다.
+            if (!progress.limitedAccess &&
+                !progress.finishedWithoutCoordinates) ...<Widget>[
               FilledButton(
                 onPressed: controller.start,
                 child: Text(l10n.photoSyncRescan),
