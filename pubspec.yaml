@@ -2,7 +2,7 @@ name: ieuri_k_trip_spot
 description: "Real-time, location-based tourism app for foreign visitors to Korea."
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: ^3.12.0
