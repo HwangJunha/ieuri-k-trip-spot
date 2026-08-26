@@ -67,6 +67,28 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // **x86_64를 빼고 실기기 ABI만 싣는다**(사용자 결정 2026-08-26).
+        // 네이티브 라이브러리가 ABI마다 통째로 들어가 셋이면 ~101MB다. x86_64는
+        // 에뮬레이터 전용이라 스토어 배포본에 있을 이유가 없다.
+        //
+        // **에뮬레이터로 개발한다면 이 줄이 문제가 된다** — 디버그 빌드도 함께
+        // 걸리므로 x86_64 에뮬레이터에서는 앱이 설치되지 않는다. Apple Silicon
+        // 맥의 기본 에뮬레이터 이미지는 arm64라 대개 그대로 돌아간다.
+        //
+        // AAB로 올리면 Play가 기기별로 쪼개 주므로 이 필터가 없어도 사용자
+        // 다운로드는 작다. 그래도 두는 이유는 APK를 직접 돌리는 경우
+        // (`flutter run --release`, 사내 배포)까지 함께 줄이기 위해서다.
+        //
+        // **`clear()`가 먼저다.** Flutter 3.35+가 non-debuggable 빌드에 기본
+        // `abiFilters`(armeabi-v7a·arm64-v8a·x86_64)를 스스로 넣기 때문에,
+        // `+=`로는 그 위에 더해질 뿐이라 x86_64가 그대로 남는다 — 실제로 처음
+        // 빌드했을 때 24MB가 남아 있었다. 공식 문서가 지정한 방법이다:
+        // docs.flutter.dev/release/breaking-changes/default-abi-filters-android
+        ndk {
+            abiFilters.clear()
+            abiFilters.addAll(listOf("arm64-v8a", "armeabi-v7a"))
+        }
     }
 
     // 개발과 운영을 **한 기기에 함께 깔기 위해** applicationId를 가른다
@@ -119,6 +141,19 @@ android {
 
     buildTypes {
         release {
+            // **R8과 리소스 축소를 켠다**(사용자 결정 2026-08-26). 지금까지 꺼져
+            // 있어 dex가 그대로 실리고 안 쓰는 리소스도 남았다.
+            //
+            // 난독화가 크래시 로그를 바꾸므로 매핑 파일을 Play에 올려야 스택
+            // 트레이스를 되돌릴 수 있다 —
+            // `build/app/outputs/mapping/prodRelease/mapping.txt`.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+
             // 키가 있으면 릴리스 키로, 없으면 디버그 키로 서명한다.
             //
             // **디버그 키로 서명된 산출물은 스토어에 올릴 수 없다** — Play가 거부한다.

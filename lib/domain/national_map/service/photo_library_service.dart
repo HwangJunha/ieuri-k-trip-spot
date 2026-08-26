@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:photo_manager/photo_manager.dart' as pm;
 
 import '../model/cell_geometry.dart';
@@ -13,9 +14,34 @@ abstract interface class PhotoLibraryService {
 
   /// 사진 접근 권한을 요청한다(R31).
   ///
-  /// iOS의 "일부만 허용"(limited)도 허용으로 본다 — 고른 사진만 훑을 뿐 흐름은
-  /// 같고, 거부로 다루면 사용자가 허용했는데 막히는 것으로 보인다.
-  Future<bool> requestAccess();
+  /// **"일부만 허용"을 따로 알린다**(2026-08-26). 예전에는 그것도 그냥 허용으로
+  /// 봤는데, 그러면 사용자는 사진첩 전체를 훑었다고 믿지만 실제로는 **고른 몇
+  /// 장만** 훑는다 — 실기기에서 사진이 여러 장인데 "훑음 3장"으로 끝났다.
+  ///
+  /// `photo_manager` 공식 문서가 이 동작을 명시한다: limited 권한에서
+  /// `getAssetCount`·`getAssetListRange`는 사용자가 고른 것만 돌려주고, 권장
+  /// 대응은 [presentLimitedPicker]로 재선택을 띄우는 것이다.
+  Future<PhotoAccess> requestAccess();
+
+  /// "일부만 허용"일 때 고른 사진을 다시 정하도록 시스템 화면을 띄운다.
+  ///
+  /// **iOS 14+와 Android 14+ 양쪽에 있다**(2026-08-26 확인). `photo_manager`
+  /// 3.12.0의 `PermissionDelegate34.presentLimited`가 안드로이드 구현이다.
+  /// 그보다 낮은 버전에서는 아무 일도 하지 않는다.
+  Future<void> presentLimitedPicker();
+
+  /// 지금의 접근 등급. **요청하지 않고 묻기만 한다**(2026-08-26).
+  ///
+  /// 설정에서 돌아왔을 때 등급이 올라갔는지 확인하는 데 쓴다 — 여기서
+  /// [requestAccess]를 부르면 시스템 프롬프트가 다시 뜰 수 있다.
+  Future<PhotoAccess> currentAccess();
+
+  /// 앱의 시스템 설정 화면을 연다(2026-08-26).
+  ///
+  /// **`permission_handler`가 아니라 `photo_manager`로 연다.** 사진 권한은
+  /// `PermissionController`를 지나지 않는 별도 경로라(이 파일이 그 경계다),
+  /// 같은 플러그인으로 열어야 상태와 화면이 어긋나지 않는다.
+  Future<void> openSettings();
 
   /// 훑을 사진 총 개수.
   Future<int> photoCount();
@@ -27,7 +53,10 @@ abstract interface class PhotoLibraryService {
   ///
   /// **사진 자체를 읽지 않는다.** iOS는 Photos DB의 인덱스를, Android는
   /// `ACCESS_MEDIA_LOCATION` 하에서 EXIF를 패키지가 읽어 준다.
-  Future<List<GeoPoint>> coordinatesOf({required int start, required int count});
+  Future<List<GeoPoint>> coordinatesOf({
+    required int start,
+    required int count,
+  });
 
   /// [start]부터 [count]장을 읽되 **한 장씩 흘려보낸다**(R29).
   ///
@@ -41,6 +70,22 @@ abstract interface class PhotoLibraryService {
     required int start,
     required int count,
   });
+}
+
+/// 사진첩 접근 상태.
+///
+/// **`limited`를 `granted`와 나누는 것이 핵심이다.** 둘을 뭉치면 "일부만 허용"인
+/// 사용자가 전체를 훑었다고 오해한다 — 화면이 그 사실을 알려 줄 수 있어야 한다.
+enum PhotoAccess {
+  /// 사진첩 전체를 볼 수 있다.
+  granted,
+
+  /// 사용자가 고른 사진만 볼 수 있다(iOS 14+). 훑는 흐름은 같지만 **대상이
+  /// 사진첩 전체가 아니다.**
+  limited,
+
+  /// 거부. 오류가 아니라 안내 대상이다(R32).
+  denied,
 }
 
 /// 사진 한 장을 읽은 결과.
@@ -60,12 +105,61 @@ class PhotoManagerLibraryService implements PhotoLibraryService {
   /// 이미지만 본다. 동영상은 좌표가 있어도 훑을 대상이 아니다.
   static const pm.RequestType _images = pm.RequestType.image;
 
+  /// 권한을 묻고 답할 때 쓰는 옵션. **요청과 조회가 같아야 한다.**
+  ///
+  /// `type`을 주지 않으면 기본값이 `RequestType.common`, 곧 **이미지+동영상**이다
+  /// (`photo_manager` 3.12.0 `PermissionRequestOption` 기본값). 우리는 매니페스트에
+  /// `READ_MEDIA_IMAGES`만 선언했으므로 Android 14+에서 동영상은 언제나 거부로
+  /// 판정되고, 패키지의 `PermissionDelegate34.getAuthValue`가 "하나는 허용 · 하나는
+  /// 거부"를 **`Limited`로 합친다** — 사용자가 전체 허용을 했는데도 "일부만
+  /// 허용" 안내가 떴다(사용자 지적 2026-08-26, iOS는 정상). 이미지만 묻게 하면
+  /// 이미지 권한 하나로 `Authorized`가 나온다.
+  ///
+  /// 테스트가 매니페스트와 대조할 수 있도록 공개한다 — 이 값과
+  /// `AndroidManifest.xml`이 어긋난 것이 그 버그의 원인이었다.
+  @visibleForTesting
+  static const pm.PermissionRequestOption permissionOption =
+      pm.PermissionRequestOption(
+        androidPermission: pm.AndroidPermission(
+          type: _images,
+          mediaLocation: true,
+        ),
+      );
+
   @override
-  Future<bool> requestAccess() async {
-    final pm.PermissionState state = await pm.PhotoManager.requestPermissionExtend();
-    return state == pm.PermissionState.authorized ||
-        state == pm.PermissionState.limited;
+  Future<PhotoAccess> requestAccess() async {
+    final pm.PermissionState state = await pm
+        .PhotoManager.requestPermissionExtend(requestOption: permissionOption);
+    return switch (state) {
+      pm.PermissionState.authorized => PhotoAccess.granted,
+      pm.PermissionState.limited => PhotoAccess.limited,
+      _ => PhotoAccess.denied,
+    };
   }
+
+  // **`type`을 준다.** 기본값이 `RequestType.all`이라 그냥 부르면 동영상·오디오까지
+  // 재선택 대상이 된다 — 우리가 훑는 것은 이미지뿐이다.
+  @override
+  Future<void> presentLimitedPicker() =>
+      pm.PhotoManager.presentLimited(type: _images);
+
+  @override
+  Future<PhotoAccess> currentAccess() async {
+    // `requestPermissionExtend`와 달리 프롬프트를 띄우지 않고 현재 값만 읽는다.
+    // **옵션은 요청과 같은 것을 쓴다**([permissionOption] 문서) — 다르면 요청과
+    // 조회가 서로 다른 등급을 답한다.
+    final pm.PermissionState state = await pm.PhotoManager.getPermissionState(
+      requestOption: permissionOption,
+    );
+    return switch (state) {
+      pm.PermissionState.authorized => PhotoAccess.granted,
+      pm.PermissionState.limited => PhotoAccess.limited,
+      _ => PhotoAccess.denied,
+    };
+  }
+
+  @override
+  Future<void> openSettings() => pm.PhotoManager.openSetting();
 
   @override
   Future<int> photoCount() => pm.PhotoManager.getAssetCount(type: _images);

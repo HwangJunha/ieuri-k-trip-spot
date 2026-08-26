@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../common/model/post.dart';
 import '../../../common/network/media_cdn.dart';
 import '../../../common/widget/image_placeholder.dart';
+import '../../../common/widget/network_photo.dart';
 import '../../../common/widget/post_labels.dart';
 import '../../../l10n/gen/app_localizations.dart';
 
@@ -185,9 +186,11 @@ class _Thumbnail extends StatelessWidget {
         fit: StackFit.expand,
         children: <Widget>[
           ImagePlaceholder(imageRef: photoKey),
-          Image.network(
-            MediaCdn.urlFor(photoKey),
+          NetworkPhoto(
+            url: MediaCdn.urlFor(photoKey),
             fit: BoxFit.cover,
+            // 72px 자리에 그린다 — 원본 해상도로 디코딩할 이유가 없다.
+            decodeWidth: 72,
             // 404여도 아래 플레이스홀더가 그대로 남는다.
             errorBuilder: (_, _, _) => const SizedBox.shrink(),
           ),

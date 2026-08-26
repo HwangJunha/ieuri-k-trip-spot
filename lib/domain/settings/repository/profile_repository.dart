@@ -18,8 +18,8 @@ abstract interface class ProfileRepository {
 
   /// 닉네임 변경(R5). 성공하면 서버가 확정한 닉네임을 돌려준다.
   ///
-  /// **중복은 예외로 온다** — `NICKNAME_ALREADY_TAKEN` 코드를 단
-  /// `SettingsFailure.userError`이며, 화면이 그것을 입력란 오류로 옮긴다.
+  /// **중복은 허용된다**(2026-08-25 서버 변경) — 형식 오류(`INVALID_NICKNAME`,
+  /// 2~20자)만 `SettingsFailure.userError`로 온다.
   Future<String> changeNickname(String nickname);
 
   /// 프로필 이미지 업로드 1단계 — 서명 URL 발급(R6).

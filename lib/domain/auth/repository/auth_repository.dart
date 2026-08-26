@@ -71,6 +71,12 @@ abstract interface class AuthRepository {
   /// still needed. [email] is required (provider-prefilled but user-editable).
   /// Throws `AuthFailure` on e.g. a taken email or an invalid/expired idToken.
   /// [authorizationCode]는 [loginSns]와 같은 규약이다 — null이 정상이다.
+  /// [nickname]은 provider가 준 표시 이름이다(2026-08-25). 카카오는 `id_token`
+  /// 클레임이 아니라 별도 프로필 API에 있어, 클라이언트가 넘기지 않으면 서버가 알
+  /// 수 없다.
+  ///
+  /// **형식을 검증하지 않고 그대로 넘긴다** — 어긋나면 서버가 조용히 자동 생성
+  /// 닉네임으로 대체하고 오류를 내지 않는다(서버 안내). null이면 서버가 정한다.
   Future<SnsRegistrationResult> registerSnsMember({
     required SnsProvider provider,
     required String idToken,
@@ -78,6 +84,7 @@ abstract interface class AuthRepository {
     required bool ageVerified,
     required List<Agreement> agreements,
     String? authorizationCode,
+    String? nickname,
   });
 
   /// Fetches the authenticated account via the `me` query (spec §6.2). Throws

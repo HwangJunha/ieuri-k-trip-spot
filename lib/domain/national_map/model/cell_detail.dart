@@ -1,39 +1,26 @@
 import 'map_cell.dart';
 
-/// 칸 상세 — 칸 자체와 그 칸에 속한 장소 한 페이지(R11·R22).
+/// 칸 상세 — 칸 자체와 그 칸에 속한 장소 목록(R11·R22).
+///
+/// **페이지네이션이 없다**(2026-08-25). 서버가 `spots`를 커서 연결에서 배열로
+/// 바꾸면서 이어 읽을 수단이 사라졌다 — `first`는 상한 50으로 잘리고 그게 전부다.
+/// 한 칸에 50곳이면 훑어보기에 충분하다는 서버 판단이다.
 class CellDetail {
-  const CellDetail({
-    required this.cell,
-    required this.spots,
-    required this.hasMore,
-    this.endCursor,
-  });
+  const CellDetail({required this.cell, required this.spots});
 
   final MapCell cell;
 
   /// 좋아요 수 내림차순. **거리순이 아니다.**
   final List<CellSpot> spots;
 
-  final bool hasMore;
-  final String? endCursor;
-
-  CellDetail copyWithMore(CellDetail next) => CellDetail(
-    cell: next.cell,
-    spots: <CellSpot>[...spots, ...next.spots],
-    hasMore: next.hasMore,
-    endCursor: next.endCursor,
-  );
-
   @override
   bool operator ==(Object other) =>
       other is CellDetail &&
       other.cell == cell &&
-      other.hasMore == hasMore &&
-      other.endCursor == endCursor &&
       other.spots.length == spots.length;
 
   @override
-  int get hashCode => Object.hash(cell, hasMore, endCursor, spots.length);
+  int get hashCode => Object.hash(cell, spots.length);
 }
 
 /// 칸에 속한 장소 1건.

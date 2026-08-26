@@ -2,8 +2,10 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../analytics/analytics_events.dart';
 import '../../analytics/app_analytics.dart';
+import '../../storage/app_preferences.dart';
 import '../model/permission_kind.dart';
 import '../model/permission_state.dart';
+import '../repository/rationale_shown_store.dart';
 import '../service/permission_service.dart';
 
 part 'permission_providers.g.dart';
@@ -14,6 +16,11 @@ part 'permission_providers.g.dart';
 /// 무상태 래퍼라 살아남을 게 없다.
 @riverpod
 PermissionService permissionService(Ref ref) => const PermissionService();
+
+/// 사전설명을 보여 준 적이 있는지 적어 두는 저장소.
+@Riverpod(keepAlive: true)
+RationaleShownStore rationaleShownStore(Ref ref) =>
+    SharedPreferencesRationaleShownStore(ref.watch(sharedPreferencesProvider));
 
 /// 최초 실행 권한 시퀀스(위치 → 알림)가 끝까지 실행됐는지 여부. 스플래시는 라우팅 전에
 /// 이 값을 기다린다 — 그래야 위치가 허용되는 순간(시퀀스 중간, 선택 권한인 알림 프롬프트가
@@ -81,7 +88,8 @@ class PermissionController extends _$PermissionController {
     // (`PhotoScanController.start`).
     AppAnalytics.logEvent(AnalyticsEvents.permissionResult, <String, Object>{
       AnalyticsParams.permission: kind.name,
-      AnalyticsParams.granted: result == PermissionState.granted,
+      AnalyticsParams.granted:
+          result == PermissionState.granted ? 'true' : 'false',
     });
     return result;
   }

@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/network/network_retry_policy.dart';
 import '../../auth/provider/session_scope.dart';
 import '../model/map_relation.dart';
 import 'national_map_providers.dart';
@@ -16,7 +17,7 @@ const int _relationPageSize = 30;
 /// (사용자 결정, 2026-08-22).
 ///
 /// 로그아웃하면 비운다 — 남의 관계 목록이 다음 사용자에게 보이면 안 된다.
-@riverpod
+@Riverpod(retry: defaultNetworkRetry)
 class MapRelations extends _$MapRelations {
   @override
   Future<MapRelationPage> build() async {
@@ -31,7 +32,9 @@ class MapRelations extends _$MapRelations {
   /// 다음 페이지를 뒤에 붙인다. 더 없으면 아무 일도 하지 않는다.
   Future<void> loadMore() async {
     final MapRelationPage? current = state.value;
-    if (current == null || !current.hasMore || current.endCursor == null) return;
+    if (current == null || !current.hasMore || current.endCursor == null) {
+      return;
+    }
 
     final MapRelationPage next = await ref
         .read(nationalMapRepositoryProvider)
@@ -87,9 +90,15 @@ class RelationRegistration extends _$RelationRegistration {
     state = true;
     try {
       await ref.read(nationalMapRepositoryProvider).createRelation(shareUrl);
-      ref.invalidate(mapRelationsProvider);
+      // **폐기됐으면 무효화할 것도 없다.** 이 provider가 죽었다는 것은 화면이
+      // 닫혔다는 뜻이고, `mapRelations`도 캐시하지 않으므로 다음에 관계 지도를
+      // 열 때 어차피 새로 받는다. 죽은 `ref`로 `invalidate`를 부르면 던진다.
+      if (ref.mounted) ref.invalidate(mapRelationsProvider);
     } finally {
-      state = false;
+      // 공유 지도는 딥링크로 들어오는 화면이라 **등록을 누르고 바로 나가는 흐름이
+      // 흔하다** — 그때 폐기된 provider의 state를 건드리면, 관계는 서버에 맺혔는데
+      // 호출부는 실패로 받는다.
+      if (ref.mounted) state = false;
     }
   }
 }
@@ -105,4 +114,3 @@ bool isRelatedNickname(Ref ref, String nickname) {
   if (page == null) return false;
   return page.relations.any((MapRelation r) => r.nickname == nickname);
 }
-

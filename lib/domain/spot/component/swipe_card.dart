@@ -1,8 +1,8 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 
 import '../../../common/widget/image_placeholder.dart';
+import '../../../common/widget/network_photo.dart';
+import 'blur_backdrop.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/distance.dart';
 import '../model/swipe_card_display.dart';
@@ -96,8 +96,8 @@ class _CardImage extends StatelessWidget {
 
     final bool crops = display.fit == SwipeCardFit.cover;
 
-    final Widget image = Image.network(
-      display.imageRef,
+    final Widget image = NetworkPhoto(
+      url: display.imageRef,
       // 크롭이 허용되면 영역을 채운다. 아니면 `contain`이라 **어느 쪽으로도 잘리지
       // 않는다** — 가로 사진은 폭이 꽉 차고 세로 포스터는 높이가 꽉 찬다.
       fit: crops ? BoxFit.cover : BoxFit.contain,
@@ -126,7 +126,7 @@ class _CardImage extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: <Widget>[
-        _BlurBackdrop(imageRef: display.imageRef),
+        BlurBackdrop(imageRef: display.imageRef),
         _inset(image),
       ],
     );
@@ -144,39 +144,6 @@ class _CardImage extends StatelessWidget {
     final double top = metrics?.topScrimHeight ?? 0;
     if (top <= 0) return child;
     return Padding(padding: EdgeInsets.only(top: top), child: child);
-  }
-}
-
-/// `contain`으로 그릴 때 남는 여백을 채우는 블러 배경.
-///
-/// 원본을 확대·블러해 뒤에 깔고 그 위에 원본을 온전히 얹는다 — **원본은 변형되지
-/// 않는다**(TYPE3 변경금지를 지키는 방식, SPEC-0002 §4.7).
-///
-/// 강하게 어둡게 덮지 않는다. 여백이 화면의 상당 부분을 차지하므로 과하게 누르면
-/// 그 자체가 시커먼 띠로 읽힌다 — 원본과 갈릴 만큼만 눌러 준다.
-class _BlurBackdrop extends StatelessWidget {
-  const _BlurBackdrop({required this.imageRef});
-
-  final String imageRef;
-
-  @override
-  Widget build(BuildContext context) {
-    return ImageFiltered(
-      imageFilter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-      child: ColorFiltered(
-        colorFilter: const ColorFilter.mode(Colors.black26, BlendMode.darken),
-        child: Image.network(
-          imageRef,
-          fit: BoxFit.cover,
-          width: double.infinity,
-          height: double.infinity,
-          // 배경이 실패해도 카드는 성립한다 — 빈 색으로 떨어뜨린다.
-          errorBuilder:
-              (BuildContext context, Object error, StackTrace? stack) =>
-                  ColoredBox(color: Theme.of(context).colorScheme.surface),
-        ),
-      ),
-    );
   }
 }
 

@@ -15,12 +15,14 @@ import 'package:ieuri_k_trip_spot/domain/settings/model/agreement_status.dart';
 import 'package:ieuri_k_trip_spot/domain/settings/provider/agreements_controller.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/spot_providers.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
+import 'package:ieuri_k_trip_spot/common/permission/provider/permission_providers.dart';
 import 'package:ieuri_k_trip_spot/router/app_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../domain/auth/auth_test_doubles.dart';
 import '../domain/settings/settings_test_doubles.dart';
 import '../domain/spot/spot_test_doubles.dart';
+import '../common/permission/permission_test_doubles.dart';
 
 Future<ProviderContainer> _container({
   required bool authed,
@@ -37,6 +39,7 @@ Future<ProviderContainer> _container({
 
   final ProviderContainer container = ProviderContainer(
     overrides: [
+      permissionServiceProvider.overrideWithValue(grantedPermissionService()),
       sharedPreferencesProvider.overrideWithValue(prefs),
       secureStorageProvider.overrideWithValue(secure),
       authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
@@ -60,6 +63,7 @@ Future<ProviderContainer> _container({
   addTearDown(container.dispose);
   // Resolve auth state before redirects evaluate.
   await container.read(authControllerProvider.future);
+  await seedGrantedPermissions(container);
   return container;
 }
 

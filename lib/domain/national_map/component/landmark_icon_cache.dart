@@ -171,9 +171,39 @@ class LandmarkIconCache {
     return task;
   }
 
+  /// 한 번에 몇 장까지 동시에 디코딩할지.
+  ///
+  /// **무제한으로 발사하면 안 된다.** `flutter_svg`는 릴리스에서 SVG 한 장마다
+  /// `compute`(= isolate 스폰)를 쓴다 — 161장을 한꺼번에 던지면 isolate를 그만큼
+  /// 만들려 들고, 중저가 안드로이드에서 그 자체가 스파이크가 된다.
+  ///
+  /// **8에서 16으로 올렸다**(사용자 지적 2026-08-25 — "아이콘 없는 중간 상태가
+  /// 길다"). 8은 스파이크를 확실히 없앴지만 161장을 20묶음으로 나눠 지도가
+  /// 회색으로 있는 시간이 길었다. 16이면 묶음이 절반으로 줄고, 요즘 기기의 코어
+  /// 수를 생각하면 여전히 한꺼번에 터뜨리는 것과는 거리가 멀다.
+  static const int _decodeConcurrency = 16;
+
   /// 여러 칸을 한꺼번에 준비한다. 지도 진입 시 부른다.
-  Future<void> preload(Iterable<LandmarkIconKey> keys) =>
-      Future.wait<void>(keys.map(load)).then((_) {});
+  ///
+  /// [onBatch]가 있으면 한 묶음이 끝날 때마다 부른다 — 화면이 그때그때 다시
+  /// 그리면 아이콘이 **점진적으로 나타난다.** 예전에는 161장이 전부 끝나야 한 번에
+  /// 나타나, 그동안 회색 면만 보였다.
+  Future<void> preload(
+    Iterable<LandmarkIconKey> keys, {
+    VoidCallback? onBatch,
+  }) async {
+    final List<LandmarkIconKey> pending = <LandmarkIconKey>[
+      for (final LandmarkIconKey key in keys)
+        if (!_pictures.containsKey(key)) key,
+    ];
+    if (pending.isEmpty) return;
+
+    for (int i = 0; i < pending.length; i += _decodeConcurrency) {
+      final int end = (i + _decodeConcurrency).clamp(0, pending.length);
+      await Future.wait<void>(pending.sublist(i, end).map(load));
+      onBatch?.call();
+    }
+  }
 
   /// 캐시를 비우고 그림을 해제한다.
   void dispose() {

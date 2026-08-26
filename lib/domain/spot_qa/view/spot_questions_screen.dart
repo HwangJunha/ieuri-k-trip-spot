@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../common/navigation/spot_qa_routes.dart';
 import '../../../common/pagination/pagination_list_view.dart';
+import '../../../common/widget/skeleton_list.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/spot_question_card.dart';
+import '../model/spot_qa_skeleton_samples.dart';
 import '../model/spot_question.dart';
 import '../provider/spot_questions_providers.dart';
 import 'spot_qa_composer_screen.dart';
@@ -64,7 +66,19 @@ class SpotQuestionsScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         child: state.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          // 실제 카드에 더미를 넣어 그린 뒤 시머로 덮는다 — 카드 디자인이 바뀌어도
+          // 뼈대가 저절로 따라간다. 구분선도 실제 목록과 같이 둬야 데이터가
+          // 도착할 때 줄 위치가 튀지 않는다.
+          loading: () => SkeletonList(
+            separator: const Divider(height: 1),
+            itemBuilder: (_, int index) => SpotQuestionCard(
+              question:
+                  spotQuestionSkeletonSamples[index %
+                      spotQuestionSkeletonSamples.length],
+              now: spotQaSkeletonNow,
+              onTap: () {},
+            ),
+          ),
           error: (_, _) => _Notice(
             message: l10n.spotQaQuestionsUnavailable,
             actionLabel: l10n.communityRetry,

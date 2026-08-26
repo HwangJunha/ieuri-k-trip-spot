@@ -4,10 +4,12 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:logger/logger.dart';
 
 import '../../../common/log/app_log.dart';
+import '../../../common/network/graphql_socket_client.dart';
 import '../../../common/model/list_equality.dart';
 import '../../../common/model/post_author.dart';
 import '../../../common/pagination/page.dart';
 import '../../../common/storage/app_preferences.dart';
+import '../../auth/provider/auth_controller.dart';
 import '../model/dm_failure.dart';
 import '../model/message.dart';
 import '../repository/dm_repository.dart';
@@ -134,6 +136,9 @@ class ConversationController extends _$ConversationController {
   ///
   /// **권한 실패(`FORBIDDEN`)에는 재연결하지 않는다** — 재시도로 풀리지 않고
   /// 상한까지 헛돌 뿐이다.
+  ///
+  /// **소켓 신원 만료는 세 번째 갈래다**(2026-08-25). 재연결이 아니라 갱신 →
+  /// 소켓 재연결 → 재구독으로 간다 — 자세한 이유는 [_recoverSocketIdentity].
   void listenForNewMessages() {
     if (_subscription != null) return;
     _subscription = _repository
@@ -142,12 +147,35 @@ class ConversationController extends _$ConversationController {
           _onRemoteMessage,
           onError: (Object error, StackTrace _) {
             _log.w('newMessage stream failed: ${error.runtimeType}');
+
+            if (error is DmFailure &&
+                error.kind == DmFailureKind.subscriptionUnauthenticated) {
+              unawaited(_recoverSocketIdentity());
+              return;
+            }
+
             if (error is DmFailure && error.permanent) {
               // 재연결해도 같은 결과다 — 구독을 접는다.
               _subscription?.cancel();
               _subscription = null;
               return;
             }
+
+            // **재연결 시도를 여기서 센다.** 라이브러리의 `autoReconnect`는 상한이
+            // 없어 5초마다 영원히 붙으려 든다 — 상한을 선언만 해 두고 아무도 세지
+            // 않던 것이 무한 호출의 실체였다(SPEC-0032 §5.1).
+            _reconnectAttempts++;
+            if (_reconnectAttempts >= subscriptionReconnectAttempts) {
+              _log.w('구독 재연결 상한($subscriptionReconnectAttempts) 도달 — 소켓을 끊는다');
+              _subscription?.cancel();
+              _subscription = null;
+              // **구독만 닫으면 소켓은 계속 붙으려 한다.** 라이브러리의 재연결
+              // 중단 조건에 "열린 구독 개수"가 없어서다 — 서버에는 그 시도가
+              // 그대로 도착한다. 재연결 자체를 멈춘다.
+              unawaited(stopSocketReconnect());
+              return;
+            }
+
             // 끊겼다가 다시 붙는 동안의 메시지는 오지 않으므로 조회로 메운다.
             unawaited(sync());
           },
@@ -158,7 +186,72 @@ class ConversationController extends _$ConversationController {
     });
   }
 
+  /// 소켓 신원이 만료됐을 때의 복구(서버 `SUBSCRIPTION_UNAUTHENTICATED`).
+  ///
+  /// **재연결로는 풀리지 않는다.** 신원은 `connection_init` 시점에 고정되므로 같은
+  /// 토큰으로 다시 붙으면 결과가 같다 — 그래서 재연결 횟수를 세지도 않는다(세어
+  /// 봐야 낭비다).
+  ///
+  /// 순서가 중요하다: **갱신이 먼저**여야 새 연결이 새 토큰을 싣는다. 소켓 설정의
+  /// `initialPayload`가 연결할 때마다 저장소를 다시 읽으므로, 갱신이 끝난 뒤
+  /// 소켓을 버리면 그다음 연결이 새 토큰으로 붙는다.
+  ///
+  /// 갱신이 실패하면 여기서 멈춘다 — 그때는 세션 자체가 끝난 것이고, 그 처리는
+  /// 인증 계층(SPEC-0005 경로)의 몫이다.
+  ///
+  /// **복구 자체에도 상한을 둔다.** 서버가 계속 `SUBSCRIPTION_UNAUTHENTICATED`를
+  /// 돌려주면서 갱신은 성공하는 조합이면 이 함수가 영원히 돈다 — 한 바퀴마다 갱신
+  /// 뮤테이션 + 소켓 재연결 + 재구독 + `sync()` 조회를 낸다. 사용자 조작 없이
+  /// 자동으로 도는 순환이라 가장 위험한 형태다.
+  Future<void> _recoverSocketIdentity() async {
+    _subscription?.cancel();
+    _subscription = null;
+
+    if (_identityRecoveries >= _maxIdentityRecoveries) {
+      _log.w('소켓 신원 복구 상한($_maxIdentityRecoveries) 도달 — 구독을 포기한다');
+      unawaited(stopSocketReconnect());
+      return;
+    }
+    _identityRecoveries++;
+
+    try {
+      final bool refreshed = await ref
+          .read(authControllerProvider.notifier)
+          .refreshAccessTokenForSocket();
+      if (!refreshed) {
+        _log.w('소켓 신원 복구 실패 — 갱신이 되지 않았다');
+        return;
+      }
+
+      // 소켓을 버린다. 다음 구독이 새 토큰으로 새 연결을 연다.
+      await resetSocketConnection(ref);
+
+      // **재연결 카운터만 되돌린다.** 신원 문제였지 연결 불안정이 아니었다.
+      // 복구 횟수(`_identityRecoveries`)는 **되돌리지 않는다** — 그것이 순환을
+      // 끊는 유일한 장치다.
+      _reconnectAttempts = 0;
+
+      listenForNewMessages();
+      // 끊긴 동안의 메시지를 메운다.
+      unawaited(sync());
+    } on Object catch (error) {
+      _log.w('소켓 신원 복구 중 실패: ${error.runtimeType}');
+    }
+  }
+
+  /// 신원 복구를 몇 번까지 시도할지.
+  ///
+  /// 갱신은 보통 한 번이면 된다. 두 번째까지 실패한다면 토큰이 아니라 다른 것이
+  /// 잘못된 것이므로 더 시도해도 같은 결과다.
+  static const int _maxIdentityRecoveries = 2;
+
+  /// 이 대화에서 신원 복구를 시도한 횟수. **리셋하지 않는다.**
+  int _identityRecoveries = 0;
+
   StreamSubscription<Message>? _subscription;
+
+  /// 연속 재연결 시도 횟수. 성공적으로 메시지를 받으면 0으로 돌아간다.
+  int _reconnectAttempts = 0;
 
   /// 구독으로 들어온 메시지를 반영한다.
   ///
@@ -168,6 +261,11 @@ class ConversationController extends _$ConversationController {
   /// 2. 아직 서버 id를 못 받은 내 말풍선 중 **본문·첨부가 같은 것**이 있으면 그것을
   ///    확정 처리한다 — 전송 응답보다 에코가 먼저 도착할 수 있다
   void _onRemoteMessage(Message incoming) {
+    // 메시지가 실제로 도착했다는 것은 연결이 살아 있다는 뜻이다 — 앞서 몇 번
+    // 끊겼든 지금은 정상이므로 상한을 처음부터 다시 센다. 리셋하지 않으면 오래
+    // 켜 둔 앱이 누적 5회로 구독을 닫아 버린다.
+    _reconnectAttempts = 0;
+
     final List<Message> messages = <Message>[...state.messages];
 
     final int sameId = messages.indexWhere((Message m) => m.id == incoming.id);
@@ -352,8 +450,15 @@ class ConversationController extends _$ConversationController {
   /// 때문이다(스냅샷의 출처는 서버다). 그 값이 없으면 인용 id도 사라져 서버에 인용이
   /// 전달되지 않는다 — 실제로 그렇게 새어 나갔다.
   Future<void> _deliver(Message pending, {String? sourceAnswerId}) async {
+    // **저장소·캐시를 await 전에 잡아 둔다.** 장소 Q&A에서 「메시지 보내기」를 누르면
+    // 호출부가 이 전송을 `unawaited`로 띄우고 곧바로 대화 화면으로 이동한다
+    // (`spot_qa_actions.dart`) — 그 시점 이 provider의 구독자는 0이라, 전송이 도는
+    // 동안 폐기된다. 그 뒤 `ref.read`를 부르면 `UnmountedRefException`이고,
+    // `unawaited`라 잡히지 않은 채 zone으로 샌다.
+    final DmRepository repository = _repository;
+    final MessageCacheStore cache = _cache;
     try {
-      final DmMutationResult<String> result = await _repository.sendMessage(
+      final DmMutationResult<String> result = await repository.sendMessage(
         conversationId: conversationId,
         // 사진·인용만 보낼 때도 빈 문자열이 실린다 — non-null이라 생략할 수 없다.
         body: pending.body,
@@ -362,6 +467,10 @@ class ConversationController extends _$ConversationController {
         // 그쪽에서, 아니면 처음 넘겨받은 id에서 온다.
         sourceAnswerId: sourceAnswerId ?? pending.spotQaOrigin?.answerId,
       );
+      // 폐기됐으면 고쳐 그릴 말풍선도, 남길 캐시도 없다 — 화면이 다시 열리면
+      // 서버 조회(`sync`)가 이 메시지를 가져온다.
+      if (!ref.mounted) return;
+
       if (!result.succeeded) {
         _log.w('sendMessage rejected: ${result.errorCode}');
         _replace(
@@ -376,7 +485,7 @@ class ConversationController extends _$ConversationController {
       // 같은 메시지가 두 번 뜬다.
       if (serverId != null && _contains(serverId)) {
         _remove(pending.id);
-        await _persist();
+        await cache.write(conversationId, state.messages);
         return;
       }
 
@@ -387,13 +496,16 @@ class ConversationController extends _$ConversationController {
         localId: serverId == null,
       );
       _replace(pending.id, sent);
-      await _persist();
+      await cache.write(conversationId, state.messages);
     } on Object catch (error) {
       _log.w('sendMessage failed: ${error.runtimeType}');
-      _replace(
-        pending.id,
-        pending.copyWith(status: MessageDeliveryStatus.failed),
-      );
+      // 실패 표시도 살아 있을 때만 의미가 있다.
+      if (ref.mounted) {
+        _replace(
+          pending.id,
+          pending.copyWith(status: MessageDeliveryStatus.failed),
+        );
+      }
     }
   }
 

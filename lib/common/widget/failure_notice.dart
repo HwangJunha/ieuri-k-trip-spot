@@ -20,18 +20,23 @@ class FailureNotice extends StatelessWidget {
     required this.body,
     required this.actionLabel,
     required this.onAction,
-  }) : icon = Icons.cloud_off_outlined,
-       isTerminal = false;
+    this.icon = Icons.cloud_off_outlined,
+  }) : isTerminal = false;
 
   /// 자동 재시도 상한을 소진한 종료 상태. 아이콘과 문구로 일반 오류와 구분된다.
+  ///
+  /// **[icon]은 화면이 정한다**(2026-08-26). 기본값이 `wifi_off`였는데, 소진의
+  /// 원인이 늘 네트워크인 것은 아니라 화면과 어긋났다 — 장소 상세에서 와이파이
+  /// 아이콘이 뜨는 것을 보고 지적이 나왔다. 무엇을 못 불러왔는지는 그 화면이
+  /// 가장 잘 아므로 거기서 넘기고, 기본값은 원인을 단정하지 않는 것으로 둔다.
   const FailureNotice.terminal({
     super.key,
     required this.title,
     required this.body,
     required this.actionLabel,
     required this.onAction,
-  }) : icon = Icons.wifi_off_outlined,
-       isTerminal = true;
+    this.icon = Icons.error_outline,
+  }) : isTerminal = true;
 
   final String title;
   final String body;

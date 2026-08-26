@@ -132,8 +132,9 @@ class _LanguageTile extends StatelessWidget {
               : scheme.onSurfaceVariant,
           child: Text(language.badge, style: theme.textTheme.labelMedium),
         ),
+        // **영어 이름을 함께 적지 않는다**(사용자 지적 2026-08-26). 자기 언어를
+        // 자기 문자로 보여 주는 것으로 충분하다 — 자세한 이유는 `AppLanguage`에.
         title: Text(language.nativeName),
-        subtitle: Text(language.englishName),
         trailing: Icon(
           selected ? Icons.check_circle : Icons.circle_outlined,
           color: selected ? scheme.primary : scheme.outline,

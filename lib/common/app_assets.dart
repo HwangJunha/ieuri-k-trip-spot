@@ -24,4 +24,18 @@ class AppAssets {
   /// light-theme variant; `lockup-dark` is the dark-theme variant.
   static String lockupFor(Brightness brightness) =>
       brightness == Brightness.dark ? lockupDark : lockupLight;
+
+  static const String _onboarding = 'asset/onboarding';
+
+  /// 온보딩 다섯 장의 일러스트. **하단 탭과 같은 순서다**(2026-08-25).
+  ///
+  /// 한 세트로 보여야 하므로 다섯이 같은 결(플랫 벡터·얇은 외곽선·따뜻한 배경)로
+  /// 그려져 있다 — 한 장만 다른 스타일로 갈아 끼우면 그 장이 튄다.
+  static const List<String> onboarding = <String>[
+    '$_onboarding/home.png',
+    '$_onboarding/national_map.png',
+    '$_onboarding/discover.png',
+    '$_onboarding/activity.png',
+    '$_onboarding/map.png',
+  ];
 }

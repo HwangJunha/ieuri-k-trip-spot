@@ -1,13 +1,16 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/widgets.dart' show AppLifecycleListener;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:logger/logger.dart';
 
 import '../model/cell_geometry.dart';
 import '../model/coordinate_reduction.dart';
 import '../model/district_resolver.dart';
 import '../model/map_cell.dart';
 import '../model/national_map_config.dart';
+import '../../../common/log/app_log.dart';
 import '../../../common/analytics/analytics_events.dart';
 import '../../../common/analytics/app_analytics.dart';
 import '../model/photo_scan_progress.dart';
@@ -41,6 +44,8 @@ PhotoLibraryService photoLibraryService(Ref ref) => const PhotoLibraryService();
 /// 쓸 수 있다(R29) — 이 컨트롤러는 UI를 막지 않는다.
 @Riverpod(keepAlive: true)
 class PhotoScanController extends _$PhotoScanController {
+  static final Logger _log = appLogger('PhotoScanController');
+
   @override
   PhotoScanProgress build() {
     // 로그아웃하면 스캔 결과를 버린다 — 이전 사용자의 사진에서 나온 지역이다.
@@ -57,6 +62,12 @@ class PhotoScanController extends _$PhotoScanController {
       onPause: () {
         if (state.isRunning) stop();
       },
+      // **설정에서 돌아오면 권한이 올라갔는지 본다**(2026-08-26).
+      //
+      // 설정으로 보내 접근을 넓혀도 돌아왔을 때 아무 일도 일어나지 않으면
+      // 막다른 길이 된다 — 앱을 껐다 켜야 반영됐다. 돌아온 시점에 등급이
+      // 넓어졌으면 스스로 다시 훑고, 그대로면 아무것도 하지 않는다.
+      onRestart: _rescanIfAccessWidened,
     );
     ref.onDispose(listener.dispose);
 
@@ -80,6 +91,8 @@ class PhotoScanController extends _$PhotoScanController {
   Future<void> start() async {
     if (state.isRunning) return;
     _cancelled = false;
+    // 새 스캔이다 — 이전 등록의 가드가 남아 있으면 이번 결과를 등록하지 못한다.
+    _registering = false;
 
     final PhotoLibraryService library = ref.read(photoLibraryServiceProvider);
     final PhotoScanCheckpointStore checkpoints = ref.read(
@@ -88,17 +101,24 @@ class PhotoScanController extends _$PhotoScanController {
 
     // 1) 권한(R31). 거부해도 오류가 아니다 — 안내만 하고 끝낸다(R32).
     state = state.copyWith(stage: PhotoScanStage.requestingPermission);
-    final bool granted = await library.requestAccess();
+    final PhotoAccess access = await library.requestAccess();
+    // 설정에서 돌아왔을 때의 비교 기준이다(`_rescanIfAccessWidened`).
+    _lastKnownAccess = access;
     // **`PermissionController`를 지나지 않는 경로다.** `photo_manager`를 직접
     // 부르므로 여기 심지 않으면 사진 권한 결과가 통째로 빠진다.
     AppAnalytics.logEvent(AnalyticsEvents.permissionResult, <String, Object>{
       AnalyticsParams.permission: 'photo',
-      AnalyticsParams.granted: granted,
+      // **`limited`를 따로 센다** — 허용/거부로만 뭉치면 "일부만 허용"이 얼마나
+      // 흔한지 알 수 없고, 그것이 곧 "왜 몇 장만 훑였나"의 답이다.
+      AnalyticsParams.granted: access.name,
     });
-    if (!granted) {
+    if (access == PhotoAccess.denied) {
       state = state.copyWith(stage: PhotoScanStage.permissionDenied);
       return;
     }
+    // **"일부만 허용"을 상태에 남긴다.** 훑는 흐름은 같지만 대상이 사진첩 전체가
+    // 아니라는 것을 화면이 알려 줘야 한다.
+    state = state.copyWith(limitedAccess: access == PhotoAccess.limited);
 
     final int total;
     try {
@@ -121,7 +141,18 @@ class PhotoScanController extends _$PhotoScanController {
     }
 
     // 이어서 하는 경우 이미 읽은 지점부터 간다. 사진이 줄었으면 처음부터.
-    final int from = state.processed <= total ? state.processed : 0;
+    //
+    // **끝까지 훑은 상태면 처음부터 다시 한다**(실기기 확인 2026-08-26).
+    // 완료 시 `processed = total`이 남는데, 그대로 이어받으면 `from == total`이
+    // 되어 `while (processed < total)`이 한 번도 돌지 않는다 — **두 번째 실행부터
+    // 아무것도 스캔하지 않고 "지도를 채웠어요"만 뜬다.** 사용자는 사진을 더
+    // 찍었는데도 아무 반응이 없는 것으로 겪는다.
+    //
+    // 이어하기가 성립하는 조건은 [PhotoScanProgress.isResumable]이 이미 알고
+    // 있다 — 중간에 멈춘 상태(`processed < total`)일 때만이다.
+    final int from = state.isResumable && state.processed <= total
+        ? state.processed
+        : 0;
     state = state.copyWith(
       stage: PhotoScanStage.scanning,
       total: total,
@@ -145,9 +176,17 @@ class PhotoScanController extends _$PhotoScanController {
         for (final String code in c.districtCodes) code: c.id,
     };
 
-    final Set<String> found = <String>{...state.resolvedCellCodes};
+    // **처음부터 다시 훑으면 이전 결과를 이어받지 않는다.** 이어하기(`from > 0`)일
+    // 때만 누적한다 — 안 그러면 이미 등록을 마친 코드를 다시 모아 보내게 된다.
+    final bool resuming = from > 0;
+    final Set<String> found = <String>{
+      if (resuming) ...state.resolvedCellCodes,
+    };
+    // 사진에서 찾았으나 **이미 지도에 있던** 지역. 등록 대상은 아니지만 "몇 곳을
+    // 확인했는가"를 말하려면 이것도 세야 한다.
+    final Set<String> alreadyOnMap = <String>{};
     int processed = from;
-    int withCoordinates = state.foundCoordinates;
+    int withCoordinates = resuming ? state.foundCoordinates : 0;
 
     while (processed < total) {
       if (_cancelled) {
@@ -171,7 +210,9 @@ class PhotoScanController extends _$PhotoScanController {
 
       final int size = NationalMapConfig.photoScanBatchSize;
       final int batchStart = processed;
-      final int batchEnd = (processed + size) > total ? total : processed + size;
+      final int batchEnd = (processed + size) > total
+          ? total
+          : processed + size;
 
       // **사진 한 장씩 읽으며 진행률을 올린다.**
       //
@@ -223,7 +264,14 @@ class PhotoScanController extends _$PhotoScanController {
       final Set<String> newCellIds = <String>{};
       for (final GeoPoint p in CoordinateReduction.reduce(raw)) {
         final String? code = resolver.districtAt(p)?.code;
-        if (code == null || alreadyVisited.contains(code)) continue;
+        if (code == null) continue;
+        // **이미 등록된 지역도 센다**(2026-08-26). 여기서 그냥 건너뛰면 "1장에서
+        // 0곳을 찾았어요"가 되어 실패로 읽힌다 — 실제로는 좌표를 찾았고 그 지역이
+        // 이미 지도에 있었을 뿐이다(사용자 지적).
+        if (alreadyVisited.contains(code)) {
+          alreadyOnMap.add(code);
+          continue;
+        }
         // 이번에 **새로** 찾은 것만 모은다. 이미 찾은 코드를 다시 칠할 필요는 없다.
         if (found.add(code)) {
           final String? cellId = cellIdOf[code];
@@ -270,7 +318,16 @@ class PhotoScanController extends _$PhotoScanController {
       processed: total,
       foundCoordinates: withCoordinates,
       resolvedCellCodes: found.toList()..sort(),
+      alreadyOnMapCount: alreadyOnMap.length,
     );
+    // **무엇을 훑고 무엇이 걸러졌는지 남긴다**(2026-08-26). "왜 두 곳만
+    // 찾았나"를 판단하려면 세 수가 다 필요하다 — 훑은 장수, 좌표가 있던 장수,
+    // 그리고 새로 찾은 지역 수(이미 방문한 시군구는 R27에 따라 빠진다).
+    _log.i(
+      '사진 스캔 완료: 훑음 $total장 · 좌표 있음 $withCoordinates장 · '
+      '새 지역 ${found.length}곳 · 이미 있던 지역 ${alreadyOnMap.length}곳',
+    );
+
     // **좌표가 있던 사진 수를 센다.** 훑은 총량(`total`)은 사진첩 크기에 좌우돼
     // 기능 사용량을 나타내지 못하고, 찾아낸 지역 수는 아래 등록 이벤트가 센다.
     AppAnalytics.logEvent(AnalyticsEvents.nationalMapPhotoAdd, <String, Object>{
@@ -281,16 +338,122 @@ class PhotoScanController extends _$PhotoScanController {
     await checkpoints.clear();
   }
 
+  /// 설정에서 돌아왔을 때 **사진 접근 등급이 넓어졌으면** 처음부터 다시 훑는다.
+  ///
+  /// 훑을 대상이 늘어났을 때만 의미가 있다 — 같은 사진을 다시 훑어야 결과는
+  /// 같으므로, 등급이 그대로면 아무것도 하지 않는다.
+  ///
+  /// **`limitedAccess`가 아니라 등급 변화를 본다**(사용자 지적 2026-08-26).
+  /// 예전에는 `state.limitedAccess`가 참일 때만 다시 훑었는데, 그러면 **거부에서
+  /// 허용으로 바꾼 경우와 좌표를 못 찾고 끝난 경우가 통째로 빠진다.** 실제로
+  /// "위치 정보가 있는 사진을 찾지 못했어요" 화면에서 설정만 바꾸고 돌아오면
+  /// 화면이 그대로 굳어 있었다 — 그 화면에는 다시 채우기 버튼도 없어 앱을 껐다
+  /// 켜는 수밖에 없었다.
+  /// [_rescanIfAccessWidened]를 테스트에서 부르기 위한 진입점.
+  ///
+  /// 실제 계기는 `AppLifecycleListener.onRestart`라 위젯 없이는 흉내 낼 수 없다.
+  @visibleForTesting
+  Future<void> handleAppRestart() => _rescanIfAccessWidened();
+
+  Future<void> _rescanIfAccessWidened() async {
+    if (state.isRunning) return;
+
+    final PhotoAccess access = await ref
+        .read(photoLibraryServiceProvider)
+        .currentAccess();
+    final PhotoAccess? before = _lastKnownAccess;
+    _lastKnownAccess = access;
+
+    // 아직 한 번도 물어본 적 없으면 비교할 것이 없다 — 시작 자체를 사용자가 한다.
+    if (before == null || !_widened(from: before, to: access)) return;
+
+    _log.i('사진 접근이 ${before.name} → ${access.name}으로 넓어졌다 — 다시 훑는다');
+    reset();
+    _cancelled = false;
+    await start();
+  }
+
+  /// 마지막으로 확인한 사진 접근 등급. 설정에서 돌아왔을 때 비교 기준이 된다.
+  PhotoAccess? _lastKnownAccess;
+
+  /// 접근 등급이 넓어졌는지. `denied < limited < granted` 순으로 본다.
+  static bool _widened({required PhotoAccess from, required PhotoAccess to}) =>
+      _accessRank(to) > _accessRank(from);
+
+  static int _accessRank(PhotoAccess a) => switch (a) {
+    PhotoAccess.denied => 0,
+    PhotoAccess.limited => 1,
+    PhotoAccess.granted => 2,
+  };
+
   /// 진행 중인 스캔을 멈춘다. 처리 지점은 남는다(R28).
   void stop() => _cancelled = true;
 
+  /// "일부만 허용"일 때 사진을 다시 고르게 한다(2026-08-26).
+  ///
+  /// 시스템 화면에서 사진을 더 고르면 **훑을 대상이 늘어난다.** 돌아온 뒤 스캔을
+  /// 처음부터 다시 돌린다 — 이전 진행 지점은 예전 목록 기준이라 그대로 이어받으면
+  /// 새로 고른 사진을 건너뛴다.
+  Future<void> reselectPhotos() async {
+    await ref.read(photoLibraryServiceProvider).presentLimitedPicker();
+    // 진행 지점을 지운다. `isResumable`이 거짓이 되어 [start]가 처음부터 훑는다.
+    state = state.copyWith(
+      stage: PhotoScanStage.idle,
+      processed: 0,
+      total: 0,
+      foundCoordinates: 0,
+      resolvedCellCodes: const <String>[],
+    );
+    await ref.read(photoScanCheckpointStoreProvider).clear();
+    await start();
+  }
+
+  /// 등록 요청이 도는 중인지. **시트가 아니라 여기가 들고 있다**(2026-08-26).
+  ///
+  /// 예전에는 시트 파일의 전역 `bool`이었는데, 그것을 푸는 자리가 idle/failed
+  /// 분기의 버튼뿐이었다. `awaitingConfirmation` 단계에는 그 버튼이 없으므로
+  /// 플래그가 true로 남은 채 이 단계에 들어오면 **등록 콜백이 아예 걸리지 않고
+  /// 스피너만 영원히 돈다** — 화면에 탈출구가 없다(실기기 확인).
+  ///
+  /// 상태와 가드를 한 곳에 두면 어긋날 수 없다. [beginRegistration]이 세우고
+  /// [confirmed]·[registrationFailed]·[reset]이 푼다.
+  bool _registering = false;
+
+  /// 등록을 시작해도 되는지 묻고, 되면 표시한다.
+  ///
+  /// 리빌드마다 콜백이 걸리므로 이 가드가 없으면 등록이 여러 번 나간다.
+  bool beginRegistration() {
+    if (_registering) return false;
+    _registering = true;
+    return true;
+  }
+
   /// 등록이 끝났다. 등록 자체는 화면이 `VisitController`로 한다.
-  void confirmed() =>
-      state = state.copyWith(stage: PhotoScanStage.completed);
+  void confirmed() {
+    _registering = false;
+    state = state.copyWith(stage: PhotoScanStage.completed);
+  }
+
+  /// 등록이 실패했다(2026-08-26).
+  ///
+  /// **이 창구가 없어서 스피너가 영원히 돌았다.** 화면이 `VisitController.record`를
+  /// 부르는데 그것이 던지면 [confirmed]에 닿지 못하고, 단계가 `awaitingConfirmation`에
+  /// 머물러 "N곳을 찾았어요" 아래 스피너만 계속 돈다(실기기 확인).
+  ///
+  /// 스캔 결과는 그대로 두고 단계만 실패로 돌린다 — 다시 찾을 필요 없이 등록만
+  /// 다시 시도하면 된다.
+  void registrationFailed() {
+    _registering = false;
+    state = state.copyWith(
+      stage: PhotoScanStage.failed,
+      retryCount: state.retryCount + 1,
+    );
+  }
 
   /// 처음부터 다시 훑는다.
   void reset() {
     _cancelled = true;
+    _registering = false;
     state = const PhotoScanProgress();
     // 디스크에 남은 지점도 지운다 — 안 지우면 다시 켰을 때 되살아난다.
     unawaited(ref.read(photoScanCheckpointStoreProvider).clear());

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../../common/pagination/pagination_list_view.dart';
 import '../../../common/widget/highlighted_text.dart';
+import '../../../common/widget/skeleton_list.dart';
 import '../../../common/widget/spot_thumbnail.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/distance.dart';
 import '../model/spot_search_result.dart';
+import '../model/spot_skeleton_samples.dart';
 import '../model/tourist_spot.dart';
 import 'spot_display.dart';
 
@@ -52,6 +54,28 @@ class SearchResultList extends StatelessWidget {
       onLoadMore: onLoadMore,
       itemBuilder: (BuildContext context, int index) =>
           _ResultTile(spot: result.spots[index], query: query, onTap: onSelect),
+    );
+  }
+}
+
+/// 검색 결과가 오기 전 자리를 지키는 뼈대.
+///
+/// **실제 [_ResultTile]을 더미로 그린다.** 뼈대를 따로 그리면 줄 높이·썸네일 크기가
+/// 어긋나 결과가 도착할 때 목록이 튄다. 그 타일이 private이라 같은 파일에 둔다 —
+/// 화면 쪽에서 배치를 흉내 내는 것보다 안전하다.
+class SearchResultSkeleton extends StatelessWidget {
+  const SearchResultSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SkeletonList(
+      padding: EdgeInsets.zero,
+      itemBuilder: (_, _) => _ResultTile(
+        spot: spotSkeletonSamples.first,
+        // 강조할 질의가 없다 — 뼈대는 어차피 글자가 덮인다.
+        query: '',
+        onTap: (_) {},
+      ),
     );
   }
 }

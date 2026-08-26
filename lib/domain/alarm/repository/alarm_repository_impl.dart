@@ -174,11 +174,22 @@ class AlarmRepositoryImpl implements AlarmRepository {
     final List<GraphQLError> errors =
         result.exception?.graphqlErrors ?? const <GraphQLError>[];
     if (errors.isEmpty) return null;
-    final GraphQLError error = errors.first;
-    final Object? code = error.extensions?['code'];
-    if (code is String && code.isNotEmpty) return code;
-    final String message = error.message;
-    return RegExp(r'^[A-Z][A-Z0-9_]+$').hasMatch(message) ? message : null;
+
+    // **첫 오류만 보지 않는다**(2026-08-25). `ErrorPolicy.all` 이후로는 여러 오류가
+    // 한 배열에 실려 오는데, 코드가 붙은 것이 앞자리라는 보장이 없다 — 첫 항목만
+    // 보면 인증 실패가 네트워크 실패로 둔갑해 재시도 예산을 태운다
+    // (`graphql_failure.dart`의 `firstRootError` 문서가 같은 위험을 적고 있다).
+    //
+    // 코드가 붙은 첫 오류를 고르고, 하나도 없을 때만 메시지 폴백으로 내려간다.
+    for (final GraphQLError error in errors) {
+      final Object? code = error.extensions?['code'];
+      if (code is String && code.isNotEmpty) return code;
+    }
+    for (final GraphQLError error in errors) {
+      final String message = error.message;
+      if (RegExp(r'^[A-Z][A-Z0-9_]+$').hasMatch(message)) return message;
+    }
+    return null;
   }
 
   /// 도메인 실패 검사: `userErrors`가 비어 있지 않거나 `success == false`면 실패.

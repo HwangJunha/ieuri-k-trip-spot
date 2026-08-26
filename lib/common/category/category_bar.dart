@@ -67,26 +67,35 @@ class CategoryBar extends StatelessWidget {
     final List<CategoryChipData> ordered = orderedCategoryChips(available);
     return SizedBox(
       height: 88,
-      child: ListView(
+      child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12),
-        children: <Widget>[
-          CategoryBarEntry(
-            icon: Icons.grid_view_rounded,
-            label: allLabel,
-            selected: selectedIds.isEmpty,
-            onTap: onSelectAll,
-            onImage: onImage,
-          ),
-          for (final CategoryChipData chip in ordered)
-            CategoryBarEntry(
-              icon: chip.icon,
-              label: chip.label,
-              selected: selectedIds.contains(chip.id),
-              onTap: () => onToggle(chip.id),
+        // **`children:`이 아니라 `builder`다.** 통짜 목록을 주면 화면 밖 칩까지
+        // 매 빌드마다 즉시 만들어진다 — 칩 하나가 `Semantics`+`InkWell`+`Container`
+        // +`Icon`+`Text`라 열 개면 그대로 열 배다. 이 바는 부모가 다시 빌드될
+        // 때마다 함께 도는 자리라 그 비용이 반복된다.
+        //
+        // 0번은 "전체"이고 그 뒤가 개별 카테고리라 인덱스를 하나 민다.
+        itemCount: ordered.length + 1,
+        itemBuilder: (BuildContext context, int index) {
+          if (index == 0) {
+            return CategoryBarEntry(
+              icon: Icons.grid_view_rounded,
+              label: allLabel,
+              selected: selectedIds.isEmpty,
+              onTap: onSelectAll,
               onImage: onImage,
-            ),
-        ],
+            );
+          }
+          final CategoryChipData chip = ordered[index - 1];
+          return CategoryBarEntry(
+            icon: chip.icon,
+            label: chip.label,
+            selected: selectedIds.contains(chip.id),
+            onTap: () => onToggle(chip.id),
+            onImage: onImage,
+          );
+        },
       ),
     );
   }

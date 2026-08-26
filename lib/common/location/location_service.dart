@@ -60,9 +60,31 @@ class GeolocatorLocationService implements LocationService {
       );
     }
 
+    // **캐시된 위치가 있으면 그것을 먼저 쓴다**(2026-08-25).
+    //
+    // `getCurrentPosition`은 **새 fix를 기다린다.** 콜드 스타트나 실내에서는 그것이
+    // 수 초가 되고, 홈 세 섹션이 전부 이 좌표를 기다리므로 그동안 화면이 통째로
+    // 뼈대다 — 사용자가 "안드로이드는 시간이 좀 지나야 된다"고 한 증상이다.
+    // (안드로이드 전용 문제는 아니지만 GPS 하드웨어 편차가 커 더 자주 드러난다.)
+    //
+    // 마지막으로 알려진 위치는 즉시 돌아온다(없으면 null). 반경 기반 추천에
+    // 쓰기에 몇십 미터 오차는 무의미하고, 정확한 좌표가 필요한 지도는 별도로
+    // [watchCoordinates]를 구독해 곧 갱신된 값을 받는다.
+    final Position? lastKnown = await _lastKnownOrNull();
+    if (lastKnown != null) {
+      return Coordinates(
+        latitude: lastKnown.latitude,
+        longitude: lastKnown.longitude,
+      );
+    }
+
+    // 캐시가 없으면(기기 첫 부팅 등) 새로 잡되 **무한정 기다리지 않는다.**
+    // 시한을 넘기면 `TimeoutException`이 오고, 호출부는 위치 실패와 같은 경로로
+    // 처리한다 — 영원히 도는 스켈레톤보다 사유가 보이는 편이 낫다.
     final Position position = await Geolocator.getCurrentPosition(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.medium,
+        timeLimit: _fixTimeout,
       ),
     );
     return Coordinates(
@@ -71,10 +93,28 @@ class GeolocatorLocationService implements LocationService {
     );
   }
 
+  /// 새 fix를 기다리는 최대 시간. 넘기면 예외가 되어 화면이 실패를 그린다.
+  static const Duration _fixTimeout = Duration(seconds: 10);
+
+  /// 마지막으로 알려진 위치. **실패를 삼킨다** — 이것은 최적화일 뿐이라, 못 얻으면
+  /// 새 fix 경로로 넘어가면 된다. 여기서 던지면 캐시가 없는 기기에서 위치 자체를
+  /// 못 쓰게 된다.
+  Future<Position?> _lastKnownOrNull() async {
+    try {
+      return await Geolocator.getLastKnownPosition();
+    } on Exception {
+      return null;
+    }
+  }
+
   @override
   Stream<Coordinates> watchCoordinates() async* {
     // 권한 확인을 한 번 얻기와 공유한다 — 규칙이 갈리면 버튼은 되는데 점은 안
     // 나오는(혹은 반대) 상태가 생긴다. 여기서 던진 예외는 스트림 오류가 된다.
+    //
+    // **반환값은 쓰지 않는다.** 한 번 얻기가 캐시된 위치를 돌려줄 수 있게 됐지만
+    // (2026-08-25) 지도에 찍히는 점은 아래 `getPositionStream`이 주는 실시간
+    // 좌표라, 낡은 값이 화면에 새는 경로가 아니다.
     await currentCoordinates();
 
     yield* Geolocator.getPositionStream(

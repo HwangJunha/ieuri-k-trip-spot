@@ -5,12 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../../common/navigation/auth_route.dart';
 import '../../../common/navigation/settings_routes.dart';
 import '../../../common/pagination/pagination_list_view.dart';
+import '../../../common/widget/app_skeleton.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/comment_tile.dart';
 import '../component/post_card.dart';
 import '../component/post_photo.dart';
 import '../../../common/model/comment.dart';
 import '../../../common/model/post.dart';
+import '../model/community_skeleton_samples.dart';
 import '../model/post_draft.dart';
 import '../provider/comments_providers.dart';
 import '../provider/post_detail_providers.dart';
@@ -238,6 +240,10 @@ class _BodyState extends ConsumerState<_Body> {
   void _replyTo(Comment parent) => setState(() => _replyTarget = parent);
 }
 
+/// 뼈대의 상대 시각 기준. **`DateTime.now()`를 쓰지 않는다** — 로딩이 길어지면
+/// 프레임마다 문구가 달라져 뼈대 아래 글자 폭이 흔들린다.
+final DateTime _skeletonNow = DateTime.utc(2026, 8, 1, 12);
+
 /// 댓글 목록의 로딩·실패·빈 상태 한 칸.
 ///
 /// **글 본문과 분리돼 있다** — 댓글 조회가 실패해도 위의 글은 그대로 보인다.
@@ -253,9 +259,21 @@ class _CommentsStatus extends ConsumerWidget {
     final ThemeData theme = Theme.of(context);
 
     if (state.isLoading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 32),
-        child: Center(child: CircularProgressIndicator()),
+      // **[SkeletonList]가 아니라 [AppSkeleton]이다.** 이 위젯은 바깥
+      // `PaginationListView`의 한 칸으로 들어가므로, 안에 또 스크롤되는 목록을
+      // 넣으면 스크롤이 중첩되고 높이가 정해지지 않는다. 대신 실제 댓글 위젯을
+      // 몇 줄 세로로 세워 그대로 덮는다.
+      //
+      // 개수를 목록 기본값(6)보다 적게 두는 이유는 여기가 화면 전체가 아니라
+      // **글 본문 아래에 붙는 인라인 자리**라서다 — 화면을 채울 만큼 그리면 글보다
+      // 뼈대가 커 보인다.
+      return AppSkeleton(
+        child: Column(
+          children: <Widget>[
+            for (final Comment sample in commentSkeletonSamples)
+              CommentTile(comment: sample, now: _skeletonNow),
+          ],
+        ),
       );
     }
 

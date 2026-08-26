@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../common/network/media_cdn.dart';
 import '../../../common/widget/author_avatar.dart';
 import '../../../common/widget/image_placeholder.dart';
+import '../../../common/widget/network_photo.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../model/message.dart';
 import 'message_quote_card.dart';
@@ -281,9 +282,12 @@ class _MessagePhoto extends StatelessWidget {
       fit: StackFit.expand,
       children: <Widget>[
         ImagePlaceholder(imageRef: photoKey),
-        Image.network(
-          MediaCdn.urlFor(photoKey),
+        NetworkPhoto(
+          url: MediaCdn.urlFor(photoKey),
           fit: BoxFit.cover,
+          // 대화 버블 안이라 화면 폭의 일부만 차지한다. 대화를 위로 훑으면 사진
+          // 버블이 계속 쌓이므로 여기서 줄이는 효과가 크다.
+          decodeWidth: 400,
           errorBuilder: (_, _, _) => const SizedBox.shrink(),
         ),
       ],

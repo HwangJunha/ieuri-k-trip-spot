@@ -5,9 +5,15 @@ import 'package:go_router/go_router.dart';
 import '../../../common/model/post.dart';
 import '../../../common/navigation/settings_routes.dart';
 import '../../../common/pagination/pagination_list_view.dart';
+import '../../../common/widget/skeleton_list.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../component/my_post_row.dart';
+import '../model/settings_skeleton_samples.dart';
 import '../provider/my_posts_controller.dart';
+
+/// 뼈대의 상대 시각 기준. **`DateTime.now()`를 쓰지 않는다** — 로딩이 길어지면
+/// 프레임마다 문구가 달라져 뼈대 아래 글자 폭이 흔들린다.
+final DateTime _skeletonNow = DateTime.utc(2026, 8, 1, 12);
 
 /// 내가 쓴 글 목록(SPEC-0011 R3, 디자인 §7).
 ///
@@ -31,7 +37,16 @@ class MyPostsScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.myPostsTitle)),
       body: SafeArea(
         child: posts.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          // 실제 행에 더미를 넣어 그린 뒤 시머로 덮는다 — 행 디자인이 바뀌어도
+          // 뼈대가 저절로 따라간다. 실제 목록이 행마다 구분선을 그리므로 뼈대도
+          // 같이 줘야 데이터가 도착할 때 줄 위치가 튀지 않는다.
+          loading: () => SkeletonList(
+            separator: const Divider(height: 1, indent: 16, endIndent: 16),
+            itemBuilder: (_, int index) => MyPostRow(
+              post: myPostSkeletonSamples[index % myPostSkeletonSamples.length],
+              now: _skeletonNow,
+            ),
+          ),
           error: (Object error, _) => _Failure(
             message: l10n.myPostsFailed,
             retryLabel: l10n.myPostsRetry,

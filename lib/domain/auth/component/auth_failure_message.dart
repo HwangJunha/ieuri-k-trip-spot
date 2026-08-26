@@ -31,6 +31,12 @@ String authFailureMessage(AppLocalizations l10n, Object error) {
     // 직접 다시 로그인해야 하므로, 그 사실을 말해 주지 않으면 왜 튕겼는지 모른다.
     case AuthFailureKind.tokenReuseDetected:
       return l10n.errorSessionExpiredSignInAgain;
+    // 저장소 일시 장애는 **재로그인 안내를 하면 안 된다**(2026-08-25). 토큰은
+    // 멀쩡하고 서버 쪽이 잠시 아픈 것이라, 세션이 끝난 것처럼 말하면 사용자가
+    // 멀쩡한 세션을 버리고 다시 로그인한다. 네트워크 오류와도 다르다 — 연결은
+    // 되고 있으므로 "연결을 확인하세요"는 틀린 말이다.
+    case AuthFailureKind.authStoreUnavailable:
+      return l10n.errorAuthStoreUnavailable;
     case AuthFailureKind.emailNotVerified:
       return l10n.errorEmailNotVerified;
     case AuthFailureKind.resendCooldownActive:

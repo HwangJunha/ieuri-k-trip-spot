@@ -1,3 +1,4 @@
+import '../../../common/network/network_retry_policy.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../auth/model/auth_state.dart';
@@ -9,14 +10,14 @@ import 'push_registration_controller.dart';
 part 'notification_preference_controller.g.dart';
 
 /// 인증 실패는 재시도하지 않는다 — 세션 갱신은 SPEC-0005의 소관이고, 여기서 다시
-/// 불러 봐야 같은 실패가 돌아온다. 그 밖의 실패는 한 번만 다시 시도한다.
+/// 불러 봐야 같은 실패가 돌아온다. 그 밖의 실패는 공통 상한을 따른다.
 Duration? alarmRetryPolicy(int retryCount, Object error) {
   if (error is AlarmFailure &&
       error.kind == AlarmFailureKind.unauthenticated) {
     return null;
   }
-  if (retryCount >= 1) return null;
-  return const Duration(milliseconds: 400);
+  if (retryCount >= defaultMaxAutoRetries) return null;
+  return defaultRetryDelayOf(retryCount);
 }
 
 /// 카테고리별 푸시 수신 설정(SPEC-0028 R19).

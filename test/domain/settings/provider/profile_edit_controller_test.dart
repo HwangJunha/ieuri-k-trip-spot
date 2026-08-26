@@ -10,7 +10,7 @@ import 'package:ieuri_k_trip_spot/domain/settings/provider/profile_providers.dar
 import '../../auth/auth_test_doubles.dart';
 import '../profile_test_doubles.dart';
 
-/// SPEC-0011 R5 — 닉네임 성공·중복·형식 오류 상태.
+/// SPEC-0011 R5 — 닉네임 성공·형식 오류 상태.
 
 /// `submit` 성공 경로가 세션의 `Me`를 다시 맞추므로(`refreshMe`) auth 의존까지
 /// override해야 컨테이너가 선다 — 빠뜨리면 provider가 오류 상태로 떠서 매달린다.
@@ -68,24 +68,7 @@ void main() {
     expect(repo.submittedNickname, isNull);
   });
 
-  test('서버가 중복이라고 하면 입력란 오류가 된다', () async {
-    final FakeProfileRepository repo = FakeProfileRepository()
-      ..nicknameFailure = SettingsFailure.userError(nicknameAlreadyTakenCode);
-    final ProviderContainer container = _container(repo);
-
-    await container
-        .read(profileEditControllerProvider.notifier)
-        .submit('Traveler');
-
-    final ProfileEditState state = container.read(
-      profileEditControllerProvider,
-    );
-    expect(state.nicknameTaken, isTrue);
-    // 중복은 입력값 문제라 일반 오류로도 새어 나가면 안 된다.
-    expect(state.failure, isNull);
-  });
-
-  test('중복이 아닌 실패는 입력란이 아니라 일반 오류로 남는다', () async {
+  test('서버 실패는 입력란이 아니라 일반 오류로 남는다', () async {
     final FakeProfileRepository repo = FakeProfileRepository()
       ..nicknameFailure = SettingsFailure.network;
     final ProviderContainer container = _container(repo);
@@ -97,17 +80,14 @@ void main() {
     final ProfileEditState state = container.read(
       profileEditControllerProvider,
     );
-    expect(state.nicknameTaken, isFalse);
+    expect(state.hasFieldError, isFalse);
     expect(state.failure, isNotNull);
   });
 
   test('입력을 고치면 직전 오류가 지워진다', () async {
-    final FakeProfileRepository repo = FakeProfileRepository()
-      ..nicknameFailure = SettingsFailure.userError(nicknameAlreadyTakenCode);
+    final FakeProfileRepository repo = FakeProfileRepository();
     final ProviderContainer container = _container(repo);
-    await container
-        .read(profileEditControllerProvider.notifier)
-        .submit('Traveler');
+    await container.read(profileEditControllerProvider.notifier).submit('   ');
 
     container.read(profileEditControllerProvider.notifier).clearErrors();
 

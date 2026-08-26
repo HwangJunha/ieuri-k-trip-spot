@@ -13,6 +13,7 @@ import '../component/home_search_bar.dart';
 import '../component/popular_spot_card.dart';
 import '../component/spot_card.dart';
 import '../model/popular_spot.dart';
+import '../model/spot_skeleton_samples.dart';
 import '../model/tourist_spot.dart';
 import '../provider/home_section_providers.dart';
 import 'search_screen.dart';
@@ -130,6 +131,7 @@ class _NearYouSection extends ConsumerWidget {
       emptyMessage: l10n.homeNearYouEmpty,
       // 이 섹션의 provider만 무효화한다 — 다른 두 섹션은 그대로다(AC-20.2).
       onRetry: () => ref.invalidate(nearbySpotsSectionProvider),
+      skeletonItems: spotSkeletonSamples,
       builder: (List<TouristSpot> items) => SizedBox(
         height: 236,
         child: ListView.separated(
@@ -168,6 +170,7 @@ class _PopularSection extends ConsumerWidget {
       value: spots,
       emptyMessage: l10n.homePopularEmpty,
       onRetry: () => ref.invalidate(popularSpotsSectionProvider),
+      skeletonItems: popularSpotSkeletonSamples,
       builder: (List<PopularSpot> items) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(

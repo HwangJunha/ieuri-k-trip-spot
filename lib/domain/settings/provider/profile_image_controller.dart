@@ -75,41 +75,61 @@ class ProfileImageController extends _$ProfileImageController {
   Future<void> replace(ProfileImageBytes image) async {
     if (state.isBusy) return;
 
+    // **저장소와 인증 notifier를 첫 요청 전에 잡아 둔다.** 아래는 네트워크가 네 번
+    // 연속으로 도는 가장 긴 경로다(발급 → PUT → 확정 → 세션 갱신). 사진 업로드
+    // 도중 사용자가 설정 화면을 나가면 autoDispose인 이 provider는 폐기되는데,
+    // 그 뒤의 `ref.read`는 곧바로 `UnmountedRefException`이다.
+    // `authController`는 keepAlive라 미리 읽어 둔 notifier 자체는 계속 유효하다.
+    final ProfileRepository repository = _repository;
+    final AuthController auth = ref.read(authControllerProvider.notifier);
+
     state = const ProfileImageState(step: ProfileImageStep.creatingUrl);
     ProfileImageUploadUrl? issued;
     try {
       // 1단계 — 실제 바이트 길이로 발급받는다. 여기서 어림값을 쓰면 2단계 서명이 깨진다.
-      issued = await _repository.createProfileImageUploadUrl(
+      issued = await repository.createProfileImageUploadUrl(
         contentType: image.contentType,
         contentLength: image.contentLength,
       );
 
       // 2단계 — 서버를 거치지 않고 스토리지로 직접 보낸다.
-      state = const ProfileImageState(step: ProfileImageStep.uploading);
-      await _repository.uploadProfileImage(
+      // 단계 표시는 **살아 있을 때만** 의미가 있다 — 화면이 없으면 그릴 곳도 없다.
+      if (ref.mounted) {
+        state = const ProfileImageState(step: ProfileImageStep.uploading);
+      }
+      await repository.uploadProfileImage(
         uploadUrl: issued.uploadUrl,
         contentType: image.contentType,
         bytes: image.bytes,
       );
 
       // 3단계 — 확정. 이 시점부터 키는 더 이상 임시가 아니다.
-      state = const ProfileImageState(step: ProfileImageStep.confirming);
-      final String? key = await _repository.confirmProfileImageUpload(
+      if (ref.mounted) {
+        state = const ProfileImageState(step: ProfileImageStep.confirming);
+      }
+      final String? key = await repository.confirmProfileImageUpload(
         issued.objectKey,
       );
 
       // 세션의 `Me`를 다시 맞춘다 — 설정 홈의 아바타가 그 값을 그린다.
-      await ref.read(authControllerProvider.notifier).refreshMe();
-      state = ProfileImageState(confirmedKey: key ?? issued.objectKey);
+      // **화면을 나갔어도 이것은 부른다.** 이미지는 서버에서 확정됐으므로 세션을
+      // 맞추지 않으면 다시 들어왔을 때 옛 아바타가 남는다.
+      await auth.refreshMe();
+      if (ref.mounted) {
+        state = ProfileImageState(confirmedKey: key ?? issued.objectKey);
+      }
     } on Object catch (error) {
       // **`SettingsFailure`만 잡으면 안 된다.** 매핑 중의 `TypeError`처럼 예상 밖의
       // 예외가 새어 나가면 state가 `uploading`/`confirming`에 멈춘 채로 남고,
       // `isBusy`가 영영 true라 사용자가 **다시 시도조차 못 한다** — 화면을 나갔다
       // 와야 풀린다. 어떤 실패든 idle로 돌아오는 것이 재시도 가능성보다 우선이다.
       _discard(issued);
-      state = ProfileImageState(
-        failure: error is SettingsFailure ? error : SettingsFailure.unknown,
-      );
+      // 폐기됐다면 `isBusy`가 굳을 화면 자체가 없다 — 다음 진입은 새 상태로 시작한다.
+      if (ref.mounted) {
+        state = ProfileImageState(
+          failure: error is SettingsFailure ? error : SettingsFailure.unknown,
+        );
+      }
     }
   }
 
@@ -117,16 +137,24 @@ class ProfileImageController extends _$ProfileImageController {
   Future<void> remove() async {
     if (state.isBusy) return;
 
+    // [replace]와 같은 이유로 미리 잡아 둔다 — 제거 요청 중에 화면을 나가면
+    // 그 뒤의 `ref.read`가 던진다.
+    final ProfileRepository repository = _repository;
+    final AuthController auth = ref.read(authControllerProvider.notifier);
+
     state = const ProfileImageState(step: ProfileImageStep.removing);
     try {
-      await _repository.removeProfileImage();
-      await ref.read(authControllerProvider.notifier).refreshMe();
-      state = const ProfileImageState(removed: true);
+      await repository.removeProfileImage();
+      // 제거는 서버에서 이미 끝났으므로 세션 갱신은 화면과 무관하게 마친다.
+      await auth.refreshMe();
+      if (ref.mounted) state = const ProfileImageState(removed: true);
     } on Object catch (error) {
       // 위와 같은 이유 — 어떤 실패든 idle로 돌아와야 다시 시도할 수 있다.
-      state = ProfileImageState(
-        failure: error is SettingsFailure ? error : SettingsFailure.unknown,
-      );
+      if (ref.mounted) {
+        state = ProfileImageState(
+          failure: error is SettingsFailure ? error : SettingsFailure.unknown,
+        );
+      }
     }
   }
 
