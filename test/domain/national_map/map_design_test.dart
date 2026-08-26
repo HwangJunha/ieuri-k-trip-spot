@@ -311,6 +311,19 @@ void main() {
       expect(manifest, contains('android.permission.ACCESS_MEDIA_LOCATION'));
     });
 
+    test('부분 허용을 알아볼 수 있게 선언한다', () {
+      // 이 선언이 없으면 시스템이 호환 모드로 돌려 "사진 선택" 상태를 앱이
+      // 구분하지 못한다 — 안드로이드에서만 재선택 버튼이 안 나온 원인이다.
+      final String manifest = File(
+        'android/app/src/main/AndroidManifest.xml',
+      ).readAsStringSync();
+
+      expect(
+        manifest,
+        contains('android.permission.READ_MEDIA_VISUAL_USER_SELECTED'),
+      );
+    });
+
     test('동영상 권한은 선언하지 않는다', () {
       // 선언하면 스토어에 불필요한 권한이 노출되고, 위 요청 타입과도 어긋난다.
       final String manifest = File(
