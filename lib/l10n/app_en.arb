@@ -92,6 +92,10 @@
   "@photoSyncLimitedNotice": {
     "description": "iOS limited photo access notice/action"
   },
+  "photoSyncLimitedNoticeAndroid": "Only the photos you picked were scanned. To scan your whole library, change the permission to \"Allow all\".",
+  "@photoSyncLimitedNoticeAndroid": {
+    "description": "Android partial photo access notice"
+  },
   "photoSyncSelectMore": "Select more photos",
   "@photoSyncSelectMore": {
     "description": "iOS limited photo access notice/action"

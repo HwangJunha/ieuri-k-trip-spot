@@ -354,6 +354,53 @@ provider와 도메인 모델만 대상이다. 위젯·통합 테스트는 작성
 칠하므로 `MapCell.districtCodes`로 변환해 `setVisitedOptimistically`를 부른다.
 서버 등록 요청은 종전대로 **끝날 때 한 번만** 나간다.
 
+## 9.7 안드로이드에서 전체 허용이 "일부만 허용"으로 잡히던 것 (2026-08-26)
+
+같은 조건(둘 다 사진 전체 허용)에서 **iOS는 정상인데 안드로이드만** "일부만
+허용" 안내가 떴다(사용자 스크린샷 비교).
+
+원인은 **권한 요청 타입의 기본값**이다.
+
+- `requestAccess()`가 `requestPermissionExtend()`를 옵션 없이 불렀다.
+  `PermissionRequestOption`의 기본 `androidPermission.type`은
+  **`RequestType.common`, 곧 이미지+동영상**이다(`photo_manager` 3.12.0
+  `lib/src/types/types.dart`).
+- 매니페스트에는 `READ_MEDIA_IMAGES`만 있고 `READ_MEDIA_VIDEO`는 없다 —
+  우리가 훑는 것은 사진뿐이라 당연하다.
+- Android 14+ 경로인 `PermissionDelegate34.getAuthValue`는 이미지·동영상을 각각
+  판정한 뒤 `changeResult`로 합치는데, **"하나는 Authorized · 하나는 Denied"를
+  `Limited`로 만든다.** 그래서 사진을 전체 허용해도 결과가 `limited`였다.
+- iOS는 이 합산 로직을 타지 않고 `PHAuthorizationStatus`를 그대로 쓰므로 정상이었다.
+
+`requestAccess()`와 `currentAccess()`가 **같은 옵션**(`permissionOption`,
+`type: image` + `mediaLocation: true`)을 쓰도록 고쳤다. 요청과 조회가 다른 타입을
+쓰면 서로 다른 등급을 답하므로 한 상수로 묶었다.
+
+`presentLimitedPicker()`도 같은 종류의 문제가 있었다 — `presentLimited()`의 기본
+`type`이 `RequestType.all`(이미지+동영상+오디오)이라 재선택 화면이 동영상까지
+대상으로 잡았다. `type: image`를 명시한다.
+
+**인터페이스 주석도 틀렸다.** `presentLimitedPicker`를 "iOS 14+ 전용"이라고 적어
+두었는데 `PermissionDelegate34.presentLimited`가 안드로이드 구현이다. 바로잡았다.
+
+### 안내 문구가 iOS 경로를 그대로 썼다
+
+"설정 > 앱 > K-Trip Spot > 사진 > 전체 접근"은 **iOS 경로인데 안드로이드에도 그대로
+나왔다**(사용자 지적). 안드로이드용 `photoSyncLimitedNoticeAndroid`를 4개 언어에
+추가하고 `Platform.isIOS`로 고른다.
+
+안드로이드 문구에는 **설정 경로를 적지 않는다.** 제조사 스킨마다 메뉴 이름이 달라
+틀린 길을 알려 줄 위험이 크고, 바로 아래 "설정에서 전체 허용" 버튼이 설정 화면을
+직접 열어 준다. 문구는 무엇이 일어났고 무엇을 바꾸면 되는지만 말한다.
+
+회귀 테스트는 `map_design_test.dart`에 넣었다 — 요청 타입이 이미지만인지, 요청하는
+권한이 매니페스트에 전부 있는지, 동영상 권한을 선언하지 않았는지를 본다. 요청 타입을
+`common`으로 되돌리면 실제로 실패하는 것까지 확인했다.
+
+**확인하지 못한 것:** 실기기 재현은 사용자만 할 수 있다. 여기서 증명한 것은 요청
+타입과 매니페스트가 맞물린다는 것까지이고, 전체 허용한 안드로이드 기기가 이제
+`granted`로 잡히는지는 기기에서 봐야 한다.
+
 ## 10. 이 스펙이 건드리지 않는 것
 
 - `LikedSpotsScreen`과 `CommunityScreen`의 **내부 동작** — 배치만 바뀐다

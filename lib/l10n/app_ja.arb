@@ -90,6 +90,10 @@
   "photoSyncDone": "地図を更新しました。",
   "photoSyncLimitedNotice": "設定 > アプリ > K-Trip Spot > 写真 > すべての写真 を選ぶと、ライブラリ全体を確認します。",
   "@photoSyncLimitedNotice": {},
+  "photoSyncLimitedNoticeAndroid": "選んだ写真のみを確認しました。ライブラリ全体を確認するには、権限を「すべて許可」に変更してください。",
+  "@photoSyncLimitedNoticeAndroid": {
+    "description": "Android partial photo access notice"
+  },
   "photoSyncSelectMore": "写真をさらに選ぶ",
   "@photoSyncSelectMore": {},
   "photoSyncSummary": "写真{photos}枚から{regions}か所を埋めました。",

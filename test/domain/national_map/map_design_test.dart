@@ -9,6 +9,8 @@ import 'package:ieuri_k_trip_spot/domain/national_map/component/landmark_icon_ro
 import 'package:ieuri_k_trip_spot/domain/national_map/component/landmark_luminance.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/landmark_category.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/landmark_icon_binding.dart';
+import 'package:ieuri_k_trip_spot/domain/national_map/service/photo_library_service.dart';
+import 'package:photo_manager/photo_manager.dart' show RequestType;
 
 void main() {
   group('아이콘 결합 테이블', () {
@@ -271,6 +273,51 @@ void main() {
           if (!File(landmarkIconAssetOf(b.slug)).existsSync()) b.slug,
       ];
       expect(missing, isEmpty, reason: '에셋이 없다: ${missing.join(', ')}');
+    });
+  });
+
+  // 전체 허용을 한 안드로이드 기기가 "일부만 허용"으로 안내됐다(사용자 지적
+  // 2026-08-26). 권한 요청 타입과 매니페스트 선언이 어긋난 것이 원인이다.
+  group('사진 권한 요청이 매니페스트와 맞는다', () {
+    test('이미지만 요청한다', () {
+      // 기본값 `RequestType.common`은 이미지+동영상이다. 매니페스트에
+      // `READ_MEDIA_VIDEO`가 없으므로 Android 14+에서 동영상이 거부로 잡히고,
+      // photo_manager가 "허용+거부"를 `Limited`로 합쳐 버린다.
+      final RequestType type =
+          PhotoManagerLibraryService.permissionOption.androidPermission.type;
+
+      expect(type.containsImage(), isTrue);
+      expect(
+        type.containsVideo(),
+        isFalse,
+        reason: '동영상을 함께 요청하면 전체 허용이 limited로 잡힌다',
+      );
+      expect(type.containsAudio(), isFalse);
+    });
+
+    test('요청하는 권한이 전부 매니페스트에 있다', () {
+      final String manifest = File(
+        'android/app/src/main/AndroidManifest.xml',
+      ).readAsStringSync();
+
+      expect(manifest, contains('android.permission.READ_MEDIA_IMAGES'));
+
+      // `mediaLocation: true`로 요청하므로 이 선언이 없으면 EXIF 좌표를 못 읽는다.
+      expect(
+        PhotoManagerLibraryService.permissionOption.androidPermission
+            .mediaLocation,
+        isTrue,
+      );
+      expect(manifest, contains('android.permission.ACCESS_MEDIA_LOCATION'));
+    });
+
+    test('동영상 권한은 선언하지 않는다', () {
+      // 선언하면 스토어에 불필요한 권한이 노출되고, 위 요청 타입과도 어긋난다.
+      final String manifest = File(
+        'android/app/src/main/AndroidManifest.xml',
+      ).readAsStringSync();
+
+      expect(manifest, isNot(contains('android.permission.READ_MEDIA_VIDEO')));
     });
   });
 }

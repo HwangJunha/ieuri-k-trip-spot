@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
@@ -223,7 +225,14 @@ class _Content extends ConsumerWidget {
             if (progress.limitedAccess) ...<Widget>[
               const SizedBox(height: 12),
               Text(
-                l10n.photoSyncLimitedNotice,
+                // **설정 경로는 플랫폼마다 다르다**(사용자 지적 2026-08-26).
+                // "설정 > 앱 > K-Trip Spot > 사진 > 전체 접근"은 iOS 경로인데
+                // 안드로이드에도 그대로 나왔다. 안드로이드 문구는 경로를 적지
+                // 않는다 — 제조사 스킨마다 메뉴 이름이 달라 틀린 길을 알려 줄
+                // 위험이 크고, 아래 버튼이 설정 화면을 직접 열어 준다.
+                Platform.isIOS
+                    ? l10n.photoSyncLimitedNotice
+                    : l10n.photoSyncLimitedNoticeAndroid,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
