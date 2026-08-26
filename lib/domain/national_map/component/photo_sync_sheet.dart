@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
@@ -223,7 +225,17 @@ class _Content extends ConsumerWidget {
             if (progress.limitedAccess) ...<Widget>[
               const SizedBox(height: 12),
               Text(
-                l10n.photoSyncLimitedNotice,
+                // **설정 경로는 플랫폼마다 다르다**(사용자 지적 2026-08-26).
+                // "설정 > 앱 > K-Trip Spot > 사진 > 전체 접근"은 iOS 경로인데
+                // 안드로이드에도 그대로 나왔다.
+                //
+                // 안드로이드 경로는 **삼성 갤럭시(One UI) 기준이다**(사용자 결정
+                // 2026-08-26) — 주 사용자층이 갤럭시다. 다른 제조사는 메뉴 이름이
+                // 조금씩 다르지만, 아래 "설정에서 전체 허용" 버튼이 설정 화면을
+                // 직접 열어 주므로 길을 잃지는 않는다.
+                Platform.isIOS
+                    ? l10n.photoSyncLimitedNotice
+                    : l10n.photoSyncLimitedNoticeAndroid,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -252,15 +264,8 @@ class _Content extends ConsumerWidget {
             // 결과 문구만 남아 이 기능을 두 번째로 쓸 방법이 없었다 — 사진을 더
             // 찍은 사용자가 매번 다시 돌릴 수 있어야 한다(사용자 지적).
             //
-            // **훑을 대상이 그대로면 감춘다**(2026-08-26). 같은 사진을 다시 훑어야
-            // 결과는 같다 — 이 버튼이 의미를 갖는 것은 대상이 늘어난 뒤,
-            // 곧 전체 허용으로 올렸을 때뿐이다(사용자 지적).
-            //
-            // 그래서 "일부만 허용"에서는 감춘다. 그 화면의 해법은 위의 두 버튼
-            // (사진 더 고르기·전체 허용)이고, 둘 다 끝나면 스캔이 자동으로 다시
-            // 돈다. 좌표를 하나도 못 찾은 경우도 같은 이유로 감춘다.
-            if (!progress.limitedAccess &&
-                !progress.finishedWithoutCoordinates) ...<Widget>[
+            // 언제 보여 줄지는 [PhotoScanProgress.canRescan]이 정한다.
+            if (progress.canRescan) ...<Widget>[
               FilledButton(
                 onPressed: controller.start,
                 child: Text(l10n.photoSyncRescan),

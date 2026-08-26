@@ -354,6 +354,198 @@ provider와 도메인 모델만 대상이다. 위젯·통합 테스트는 작성
 칠하므로 `MapCell.districtCodes`로 변환해 `setVisitedOptimistically`를 부른다.
 서버 등록 요청은 종전대로 **끝날 때 한 번만** 나간다.
 
+## 9.7 안드로이드에서 전체 허용이 "일부만 허용"으로 잡히던 것 (2026-08-26)
+
+같은 조건(둘 다 사진 전체 허용)에서 **iOS는 정상인데 안드로이드만** "일부만
+허용" 안내가 떴다(사용자 스크린샷 비교).
+
+원인은 **권한 요청 타입의 기본값**이다.
+
+- `requestAccess()`가 `requestPermissionExtend()`를 옵션 없이 불렀다.
+  `PermissionRequestOption`의 기본 `androidPermission.type`은
+  **`RequestType.common`, 곧 이미지+동영상**이다(`photo_manager` 3.12.0
+  `lib/src/types/types.dart`).
+- 매니페스트에는 `READ_MEDIA_IMAGES`만 있고 `READ_MEDIA_VIDEO`는 없다 —
+  우리가 훑는 것은 사진뿐이라 당연하다.
+- Android 14+ 경로인 `PermissionDelegate34.getAuthValue`는 이미지·동영상을 각각
+  판정한 뒤 `changeResult`로 합치는데, **"하나는 Authorized · 하나는 Denied"를
+  `Limited`로 만든다.** 그래서 사진을 전체 허용해도 결과가 `limited`였다.
+- iOS는 이 합산 로직을 타지 않고 `PHAuthorizationStatus`를 그대로 쓰므로 정상이었다.
+
+`requestAccess()`와 `currentAccess()`가 **같은 옵션**(`permissionOption`,
+`type: image` + `mediaLocation: true`)을 쓰도록 고쳤다. 요청과 조회가 다른 타입을
+쓰면 서로 다른 등급을 답하므로 한 상수로 묶었다.
+
+`presentLimitedPicker()`도 같은 종류의 문제가 있었다 — `presentLimited()`의 기본
+`type`이 `RequestType.all`(이미지+동영상+오디오)이라 재선택 화면이 동영상까지
+대상으로 잡았다. `type: image`를 명시한다.
+
+**인터페이스 주석도 틀렸다.** `presentLimitedPicker`를 "iOS 14+ 전용"이라고 적어
+두었는데 `PermissionDelegate34.presentLimited`가 안드로이드 구현이다. 바로잡았다.
+
+### 안내 문구가 iOS 경로를 그대로 썼다
+
+"설정 > 앱 > K-Trip Spot > 사진 > 전체 접근"은 **iOS 경로인데 안드로이드에도 그대로
+나왔다**(사용자 지적). 안드로이드용 `photoSyncLimitedNoticeAndroid`를 4개 언어에
+추가하고 `Platform.isIOS`로 고른다.
+
+안드로이드 경로는 **삼성 갤럭시(One UI) 기준으로 적는다**(사용자 결정 2026-08-26).
+주 사용자층이 갤럭시이고, 경로 없이 "권한을 모두 허용으로 바꾸세요"라고만 하면
+어디서 바꾸는지 찾지 못한다는 판단이다.
+
+```
+설정 > 애플리케이션 > K-Trip Spot > 권한 > 사진 및 동영상 > 항상 모두 허용
+```
+
+Android 14(One UI 6.0)가 '사진 및 동영상 선택' 권한을 도입하면서 생긴 메뉴다.
+경로와 문구는 삼성 공식 안내에서 확인했다
+([Samsung Members](https://r1.community.samsung.com/t5/손쉬운-해결-방법/갤럭시-안드로이드-14-os-업데이트-후-메시지-메신저-앱에서-사진-동영상이-안-보이거나-첨부되지-않습니다/ba-p/24295610),
+[Samsung 공식 지원](https://www.samsung.com/sg/support/mobile-devices/how-to-manage-the-notifications-and-permissions-of-apps-through-settings-on-a-galaxy-phone/)).
+
+다른 제조사는 메뉴 이름이 조금씩 다르지만(예: '앱' vs '애플리케이션'), 바로 아래
+"설정에서 전체 허용" 버튼이 앱 설정 화면을 직접 열어 주므로 길을 잃지는 않는다.
+
+앱 이름은 릴리스 빌드 기준 `K-Trip Spot`이다(`build.gradle.kts`의 `resValue`).
+dev 빌드는 `KTS Dev`로 보이지만 문구는 출시본을 기준으로 적는다.
+
+회귀 테스트는 `map_design_test.dart`에 넣었다 — 요청 타입이 이미지만인지, 요청하는
+권한이 매니페스트에 전부 있는지, 동영상 권한을 선언하지 않았는지를 본다. 요청 타입을
+`common`으로 되돌리면 실제로 실패하는 것까지 확인했다.
+
+**확인하지 못한 것:** 실기기 재현은 사용자만 할 수 있다. 여기서 증명한 것은 요청
+타입과 매니페스트가 맞물린다는 것까지이고, 전체 허용한 안드로이드 기기가 이제
+`granted`로 잡히는지는 기기에서 봐야 한다.
+
+## 9.8 좌표를 못 찾으면 막다른 길이 됐다 (2026-08-26)
+
+"위치 정보가 있는 사진을 찾지 못했어요" 화면에 **닫기 버튼 하나만** 남았고, 앱을
+끄지 않고 설정만 바꾸고 돌아와도 그 화면이 그대로 굳어 있었다(사용자 지적).
+안드로이드에는 "다시 채우기"도 없었다.
+
+원인이 두 군데였다.
+
+**1. 시트가 다시 채우기를 감췄다.** 조건이
+`!limitedAccess && !finishedWithoutCoordinates`였다. "같은 사진을 다시 훑어야
+결과는 같다"는 전제였는데, **좌표를 못 찾은 화면에서는 그 전제가 틀리다** — 그
+사이 사진을 새로 찍었을 수도, 설정에서 권한을 넓혔을 수도 있다. `limitedAccess`
+에서만 감춘다(그 화면의 해법은 사진 재선택·전체 허용 버튼이고, 끝나면 스캔이
+자동으로 다시 돈다). 판단은 `PhotoScanProgress.canRescan`이 갖는다.
+
+**2. 설정 복귀 감지가 `limitedAccess`에만 걸려 있었다.**
+`_rescanIfAccessWidened`의 첫 줄이 `if (!state.limitedAccess ...) return;`이라
+**거부→허용과 "전체 허용인데 좌표를 못 찾음"이 통째로 빠졌다.** 플래그가 아니라
+**등급 변화**를 본다: 마지막으로 확인한 등급(`_lastKnownAccess`)을 들고 있다가
+복귀 시점의 등급과 비교해 `denied < limited < granted` 순으로 넓어졌을 때만 다시
+훑는다. 등급이 그대로면 아무것도 하지 않는다(같은 사진 재스캔은 낭비다).
+
+생명주기 콜백은 위젯 없이 부를 수 없어 `handleAppRestart()`를 `@visibleForTesting`
+으로 열어 두었다. 회귀 테스트는 세 가지를 본다 — 좌표를 못 찾은 뒤 권한을 넓혀
+복귀하면 다시 훑는지, 거부→허용도 잡히는지, 등급이 그대로면 훑지 않는지. 옛
+가드로 되돌리면 "거부에서 허용" 테스트가 실제로 실패하는 것을 확인했다.
+
+**확인하지 못한 것:** 실기기에서 설정을 바꾸고 돌아왔을 때 화면이 실제로 갱신되는지는
+사용자만 볼 수 있다. 여기서 증명한 것은 등급 비교 로직과 버튼 노출 조건까지다.
+
+## 9.9 안드로이드가 부분 허용을 알아보지 못했다 (2026-08-26)
+
+아이폰은 "일부만 허용"에서 **사진 더 고르기 / 설정에서 전체 허용**이 제대로
+떴는데, 같은 조건의 안드로이드는 **다시 채우기 / 닫기**만 떴다(사용자 스크린샷
+비교). `limitedAccess`가 false로 잡힌다는 뜻이다.
+
+원인은 매니페스트에 **`READ_MEDIA_VISUAL_USER_SELECTED`가 없었던 것**이다.
+
+- 이 권한이 없으면 시스템이 앱을 **호환 모드**로 돌린다. Android 공식 문서가
+  targetSdk 34+ 앱에 이 선언을 요구한다
+  ([partial photo/video access](https://developer.android.com/about/versions/14/changes/partial-photo-video-access)).
+- `photo_manager`도 **매니페스트 선언과 사용자 승인을 함께** 본다
+  (`PermissionDelegate.havePermission` = `havePermissionInManifest` &&
+  `havePermissionForUser`). 선언이 없으면 `getAuthValue`의 `Limited` 분기에
+  닿지 못한다.
+
+`READ_MEDIA_VIDEO`는 넣지 않았다 — §9.7에서 본 대로 동영상을 함께 요청하면 그
+거부가 이미지 허용과 합쳐져 **전체 허용이 `Limited`로 오판된다.** 두 문제가 서로
+반대 방향이라 헷갈리기 쉽다:
+
+| | 잘못된 설정 | 증상 |
+|---|---|---|
+| §9.7 | 요청 타입에 동영상 포함 | 전체 허용인데 `limited`로 뜬다 |
+| §9.9 | 매니페스트에 부분 허용 권한 없음 | 부분 허용인데 `granted`로 뜬다 |
+
+즉 **요청은 이미지만, 매니페스트에는 부분 허용 권한까지** 있어야 둘 다 맞는다.
+
+## 9.10 폰트를 가변 폰트로 바꾸고 중국어를 번체로 통일했다 (2026-08-26)
+
+사용자가 앱이 453MB를 쓴다고 지적했다. 측정하니 **폰트가 압축 해제 기준 202MB**로
+거의 전부였다(네이티브 .so 101MB가 그다음, 랜드마크 아이콘 322개는 다 합쳐 2.2MB에
+불과했다).
+
+**가변 폰트(variable font)로 바꿨다.** 웨이트마다 정적 파일을 싣던 것을 `wght`
+축을 담은 파일 하나로 대체한다. Flutter가 `TextStyle.fontWeight`를 그 축의 값으로
+그대로 넘기므로(공식 문서
+[font-weight-variation](https://docs.flutter.dev/release/breaking-changes/font-weight-variation))
+pubspec에 웨이트를 여러 줄 적을 필요가 없고, 400~800 다섯 종에 갇히지도 않는다.
+
+| | 정적 | 가변 |
+|---|---|---|
+| Latin(+이탤릭) | ~5.6MB | 4.17MB |
+| KR | 29.5MB | 9.93MB |
+| JP | 26.1MB | 9.15MB |
+| 중국어 | 50MB(SC) | 11.39MB(TC) |
+| **합계** | **111MB** | **34.6MB** |
+
+저장소에서는 선언조차 되지 않은 채 남아 있던 것까지 포함해 **99개 234MB를 지웠다**
+(235MB → 35MB).
+
+**중국어는 SC(간체)에서 TC(번체)로 바꿨다**(사용자 지적). 앱은 스스로 '繁體中文'이라
+표시하고 서버에도 `TW`를 보내는데(`app_language.dart:12`) 폰트만 간체였다. ARB도
+번체 297개·간체 79개로 **뒤섞여 있었다** — 한 화면에 두 자체가 섞여 나오던 상태다.
+
+TC 폰트에는 간체 글리프가 없으므로(`关`·`闭`·`简` 부재를 cmap에서 직접 확인) 폰트만
+바꾸면 그 79개가 **두부(□)로 깨진다.** `opencc`(s2twp)로 번체로 옮겼고, `權限`처럼
+과잉 치환된 어휘는 기존 ARB 표기에 맞춰 되돌렸다.
+
+**검증은 글자 목록이 아니라 폰트 cmap으로 한다.** 처음에는 간체 글자를 손으로 적어
+판정했는데 `详`·`没`·`写`·`载` 같은 것이 새어 10개가 남았다. 번들 폰트가 실제로 그릴
+수 있는 코드포인트와 대조하니 0건이 됐다. 이 검사는 `nav_arb_keys_test.dart`에
+남겼다 — 간체를 하나 심으면 실제로 실패하는 것까지 확인했다.
+
+### 빌드 설정
+
+- **R8·리소스 축소를 켰다.** `proguard-rules.pro`는 이미 카카오 지도 규칙을 담고
+  "난독화를 켜는 시점에 연결하라"고 적어 둔 상태였다. 난독화된 크래시 로그를
+  되돌리려면 `build/app/outputs/mapping/prodRelease/mapping.txt`를 Play에 올린다.
+- **ABI를 arm64-v8a·armeabi-v7a로 좁혔다.** x86_64는 에뮬레이터 전용이다. 다만
+  **x86_64 에뮬레이터에서는 앱이 설치되지 않는다** — Apple Silicon 맥의 기본
+  이미지는 arm64라 대개 문제없다.
+
+  **`abiFilters.clear()`가 먼저다.** Flutter 3.35+가 non-debuggable 빌드에 기본
+  `abiFilters`를 스스로 넣어서, `+=`로는 그 위에 더해질 뿐이다 — 처음 빌드했을 때
+  x86_64가 24MB 그대로 남아 있었다. 공식 문서가 `clear()` 후 `addAll()`을 지정한다
+  ([default-abi-filters-android](https://docs.flutter.dev/release/breaking-changes/default-abi-filters-android)).
+
+### 측정 결과
+
+빌드해서 실제로 쟀다(`--release --flavor prod`).
+
+| | 이전 | 이후 |
+|---|---|---|
+| **APK** | 217.8MB | **104.7MB** |
+| **AAB** | 192.3MB | **83.1MB** |
+| 폰트(압축 해제) | 202MB | 38MB |
+| 네이티브 .so | 101MB(3 ABI) | 77MB(2 ABI) |
+| 저장소 `asset/fonts` | 235MB | 35MB |
+
+R8이 실제로 돌았음은 `mapping.txt`(28.8MB)로 확인했고, 카카오 지도 클래스가
+`com.kakao.vectormap.AppKey -> com.kakao.vectormap.AppKey`로 이름을 유지하는 것도
+매핑에서 확인했다 — `-keep` 규칙이 먹었다는 뜻이라 지도가 깨지지 않는다.
+
+**남은 것:** 네이티브 77MB가 이제 가장 크다. 그중 카카오 지도 SDK
+(`libK3fAndroid.so`)가 ABI당 16~18MB다. AAB로 올리면 Play가 기기별로 쪼개므로
+사용자 다운로드는 이보다 훨씬 작다.
+
+**CJK 웨이트 축소는 하지 않았다**(사용자 결정) — 가변 폰트로 이미 목표를 넘겼고,
+웨이트를 줄이면 500/600/800이 뭉뚱그려져 디자인이 달라진다.
+
 ## 10. 이 스펙이 건드리지 않는 것
 
 - `LikedSpotsScreen`과 `CommunityScreen`의 **내부 동작** — 배치만 바뀐다

@@ -4,16 +4,9 @@
 -keep class com.kakao.vectormap.** { *; }
 -keep interface com.kakao.vectormap.**
 
-# 현재 release 빌드는 `minifyEnabled`를 켜지 않아 이 파일이 적용되지 않는다.
-# 난독화를 켜는 시점에 build.gradle.kts의 release 블록에서 연결해야 한다:
+# **2026-08-26부터 실제로 적용된다** — release에서 `isMinifyEnabled`와
+# `isShrinkResources`를 켰다(사용자 결정). 위 카카오 규칙이 없으면 지도가 뜨지
+# 않으므로 함께 확인해야 한다.
 #
-#   release {
-#       isMinifyEnabled = true
-#       proguardFiles(
-#           getDefaultProguardFile("proguard-android-optimize.txt"),
-#           "proguard-rules.pro",
-#       )
-#   }
-#
-# 규칙을 미리 두는 이유는, 난독화를 켜는 사람이 지도 SDK의 요구사항까지 함께
-# 기억해야 하는 상황을 만들지 않기 위해서다.
+# 난독화된 크래시 로그를 되돌리려면 매핑 파일을 Play에 올린다:
+#   build/app/outputs/mapping/prodRelease/mapping.txt

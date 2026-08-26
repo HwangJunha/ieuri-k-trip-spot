@@ -410,6 +410,10 @@
   "photoSyncDone": "지도를 채웠어요.",
   "photoSyncLimitedNotice": "설정 > 앱 > K-Trip Spot > 사진 > 전체 접근을 선택하면 사진첩 전체를 훑어요.",
   "@photoSyncLimitedNotice": {},
+  "photoSyncLimitedNoticeAndroid": "고른 사진만 훑었어요. 설정 > 애플리케이션 > K-Trip Spot > 권한 > 사진 및 동영상 > 항상 모두 허용을 선택하면 사진첩 전체를 훑어요.",
+  "@photoSyncLimitedNoticeAndroid": {
+    "description": "Android partial photo access notice. Path is Samsung One UI (Android 14+)."
+  },
   "photoSyncSelectMore": "사진 더 고르기",
   "@photoSyncSelectMore": {},
   "photoSyncSummary": "사진 {photos}장을 훑어 {regions}곳을 채웠어요.",

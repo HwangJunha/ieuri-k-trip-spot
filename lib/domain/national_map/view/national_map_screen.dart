@@ -14,6 +14,7 @@ import '../component/photo_sync_sheet.dart';
 import '../model/cell_geometry.dart';
 import '../model/current_location_check.dart';
 import '../model/map_cell.dart';
+import '../model/map_screen_view_state.dart';
 import '../model/province_progress.dart';
 import '../provider/current_location_provider.dart';
 import '../provider/national_map_providers.dart';
@@ -40,29 +41,44 @@ class NationalMapScreen extends ConsumerWidget {
       cellGeometriesProvider,
     );
 
+    // **이미 받은 값이 있으면 그것으로 그린다.** `AsyncData` 타입으로 매칭하면
+    // 갱신 때 잠깐 `AsyncLoading`이 되는 동안(값은 그대로 들고 있는데도) 매칭이
+    // 빗나가 지도가 통째로 사라졌다 — 사진 스캔 중 지역이 칠해질 때마다 화면이
+    // 깜빡인 원인이다(사용자 지적 2026-08-26). 로딩 스피너는 **보여 줄 것이 아직
+    // 아무것도 없을 때만** 띄운다.
+    final List<MapCell>? loadedCells = cells.value;
+    final List<CellGeometry>? loadedGeometries = geometries.value;
+
+    final MapScreenViewState view = MapScreenViewState.of(
+      hasCells: loadedCells != null,
+      hasGeometries: loadedGeometries != null,
+      failed: cells is AsyncError || geometries is AsyncError,
+    );
+
     return Scaffold(
       // 지도를 화면 끝까지 쓰기 위해 AppBar를 두지 않는다. 제목·동작은 지도 위에
       // 떠 있는 얇은 바가 대신한다.
-      body: switch ((cells, geometries)) {
-        (AsyncError<List<MapCell>>(), _) ||
-        (_, AsyncError<List<CellGeometry>>()) => SafeArea(
+      body: switch (view) {
+        MapScreenViewState.map => _Body(
+          cells: loadedCells!,
+          geometries: loadedGeometries!,
+          l10n: l10n,
+        ),
+        MapScreenViewState.error => SafeArea(
           child: _ErrorBody(
             message: l10n.nationalMapUnavailable,
             retryLabel: l10n.nationalMapRetry,
             onRetry: () => ref.invalidate(mapCellsProvider),
           ),
         ),
-        (
-          AsyncData<List<MapCell>>(value: final List<MapCell> c),
-          AsyncData<List<CellGeometry>>(value: final List<CellGeometry> g),
-        ) =>
-          _Body(cells: c, geometries: g, l10n: l10n),
         // **여기는 뼈대를 두지 않는다**(사용자 지적 2026-08-25). 한때 한반도
         // 실루엣을 시머로 그렸는데, 목록 화면의 뼈대가 "화면이 채워진 느낌"을
         // 주는 것과 달리 이쪽은 실루엣 하나에서 250여 칸 지도로 **그림이 통째로
         // 바뀌어** 오히려 튀었다. 뼈대의 목적은 올 것을 미리 보여 주는 것인데
         // 그 역할을 못 하면 없는 편이 낫다.
-        _ => const Center(child: CircularProgressIndicator()),
+        MapScreenViewState.loading => const Center(
+          child: CircularProgressIndicator(),
+        ),
       },
     );
   }
@@ -358,19 +374,26 @@ class _HereButton extends ConsumerWidget {
     );
     final bool busy = ref.watch(visitControllerProvider);
 
+    // **판정을 다시 하는 동안에도 직전 결과를 쓴다.** 이 판정은 칸 목록을
+    // watch하므로 사진 스캔이 지역을 하나 찾을 때마다 다시 도는데, 그때마다
+    // `isLoading`으로 버튼을 잠그면 스캔 내내 스피너가 돈다(사용자 지적
+    // 2026-08-26). 값이 아직 한 번도 없을 때만 로딩으로 본다.
+    final CurrentLocationCheck? decided = check.value;
+    final bool firstLoad = decided == null && check.isLoading;
+
     // 위치를 얻지 못하면 버튼을 비활성화한다(R35).
     final bool disabled =
         busy ||
-        check.isLoading ||
-        check.value is LocationNotAvailable ||
-        check.value is LocationOutsideKorea;
+        firstLoad ||
+        decided is LocationNotAvailable ||
+        decided is LocationOutsideKorea;
 
     final ColorScheme scheme = Theme.of(context).colorScheme;
 
     // **브랜드 코럴로 칠한다.** 지도를 채우는 주 동작이라 다른 아이콘과 구분되어야
     // 한다. 비활성일 때는 색을 빼 눌러도 안 된다는 것을 보여준다.
     return IconButton(
-      icon: check.isLoading
+      icon: firstLoad
           ? const SizedBox(
               width: 18,
               height: 18,
@@ -379,7 +402,7 @@ class _HereButton extends ConsumerWidget {
           : const Icon(Icons.my_location),
       color: scheme.primary,
       tooltip: l10n.nationalMapHere,
-      onPressed: disabled ? null : () => _onPressed(context, ref, check.value),
+      onPressed: disabled ? null : () => _onPressed(context, ref, decided),
     );
   }
 

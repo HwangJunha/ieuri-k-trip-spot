@@ -8,6 +8,7 @@ import '../../auth/provider/session_scope.dart';
 import '../model/cell_detail.dart';
 import '../model/cell_geometry.dart';
 import '../model/cell_shape_builder.dart';
+import '../model/cell_shape_key.dart';
 import '../model/cell_shape_source.dart';
 import '../model/map_cell.dart';
 import '../model/province_progress.dart';
@@ -31,12 +32,36 @@ NationalMapRepository nationalMapRepository(Ref ref) =>
 /// 보였다(실기기 확인). watch가 그 순간 이 provider를 다시 만든다.
 @Riverpod(keepAlive: true, retry: defaultNetworkRetry)
 class MapCells extends _$MapCells {
+  /// 도형 조립에 넘길 키. **서버에서 칸을 받을 때 한 번 만들고 그대로 둔다** —
+  /// 방문 표시가 바뀌어도 이 인스턴스는 바뀌지 않는다([cellShapeKeysProvider]).
+  List<CellShapeKey>? _shapeKeys;
+
   @override
   Future<List<MapCell>> build() async {
+    // 로그인이 바뀌어 다시 조회하는 경우다 — 이전 사용자의 키를 남기지 않는다.
+    _shapeKeys = null;
+
     // 비인증에서도 서버는 161칸을 주지만(viewerVisited 전부 false) 굳이 부르지
     // 않는다 — 로그인하면 watch가 다시 부른다.
-    if (!ref.watchSignedIn()) return const <MapCell>[];
-    return ref.watch(nationalMapRepositoryProvider).fetchCells();
+    if (!ref.watchSignedIn()) {
+      _shapeKeys = const <CellShapeKey>[];
+      return const <MapCell>[];
+    }
+    final List<MapCell> cells = await ref
+        .watch(nationalMapRepositoryProvider)
+        .fetchCells();
+    _shapeKeys = <CellShapeKey>[
+      for (final MapCell c in cells) CellShapeKey.of(c),
+    ];
+    return cells;
+  }
+
+  /// 도형용 키를 준다. 아직 칸을 받지 못했으면 받을 때까지 기다린다.
+  Future<List<CellShapeKey>> shapeKeys() async {
+    final List<CellShapeKey>? ready = _shapeKeys;
+    if (ready != null) return ready;
+    await future;
+    return _shapeKeys ?? const <CellShapeKey>[];
   }
 
   /// 뮤테이션이 돌려준 칸으로 캐시를 고친다(계약 §7.1).
@@ -78,6 +103,23 @@ Future<Map<String, List<List<GeoPoint>>>> cellShapes(Ref ref) async {
   }
 }
 
+/// 도형 조립에 쓰이는 칸 정보만 추린 것.
+///
+/// **[mapCellsProvider]와 [cellGeometriesProvider] 사이의 차단막이다.** 사진
+/// 스캔은 지역을 찾을 때마다 방문 표시를 바꾸는데, 도형은 그 값을 쓰지 않는다.
+/// 그런데도 도형이 칸 목록을 통째로 watch하던 탓에 **지역 하나가 칠해질 때마다
+/// 161칸 도형이 다시 만들어지고 화면이 로딩으로 떨어졌다**(사용자 지적
+/// 2026-08-26). [CellShapeKey]의 동등성이 id·시도·시군구코드로만 정해지므로,
+/// 방문 표시만 바뀐 갱신은 여기까지 내려오지 않는다.
+///
+/// **[MapCells]가 이 목록을 직접 들고 있다.** 방문 표시를 바꾸는 두 메서드는 칸의
+/// 묶음도 시도도 건드리지 않으므로 키는 처음 만든 그대로다 — 그래서 여기서는
+/// 그 인스턴스를 꺼내 오기만 하면 되고, 동등성 비교로 새 목록을 걸러 낼 필요조차
+/// 없다.
+@Riverpod(keepAlive: true, retry: neverRetry)
+Future<List<CellShapeKey>> cellShapeKeys(Ref ref) =>
+    ref.watch(mapCellsProvider.notifier).shapeKeys();
+
 /// 칸 도형(R20).
 ///
 /// **크기가 고른 다각형을 쓴다**(SPEC-0031). 실제 시군구 경계를 합치면 폰 화면에서
@@ -91,11 +133,17 @@ Future<Map<String, List<List<GeoPoint>>>> cellShapes(Ref ref) async {
 ///
 /// 조립 결과는 붙들어 둔다. 방문 여부는 여기 없다(도형은 방문과 무관하다) —
 /// 색칠은 [mapCellsProvider]가 정한다.
-// **재시도하지 않는다**(2026-08-26). `mapCells`를 기다릴 뿐 자기가 서버를 부르지
+///
+/// **그래서 [cellShapeKeysProvider]를 watch한다.** 칸 목록을 직접 watch하면
+/// 방문 표시가 바뀔 때마다 여기까지 다시 돌아 화면이 로딩으로 떨어진다.
+// **재시도하지 않는다**(2026-08-26). 상위를 기다릴 뿐 자기가 서버를 부르지
 // 않는다 — 여기서 재시도하면 이미 소진된 상위를 다시 깨워 왕복이 곱해진다.
 @Riverpod(keepAlive: true, retry: neverRetry)
 Future<List<CellGeometry>> cellGeometries(Ref ref) async {
-  final List<MapCell> cells = await ref.watch(mapCellsProvider.future);
+  final List<MapCell> cells = <MapCell>[
+    for (final CellShapeKey k in await ref.watch(cellShapeKeysProvider.future))
+      k.toCell(),
+  ];
 
   final Map<String, List<List<GeoPoint>>> shapes = await ref.watch(
     cellShapesProvider.future,

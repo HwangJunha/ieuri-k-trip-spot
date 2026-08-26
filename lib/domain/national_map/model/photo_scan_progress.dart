@@ -85,6 +85,19 @@ class PhotoScanProgress {
   bool get finishedWithoutCoordinates =>
       stage == PhotoScanStage.completed && foundCoordinates == 0;
 
+  /// 완료 화면에 "다시 채우기"를 보여 줄지.
+  ///
+  /// **"일부만 허용"에서만 감춘다.** 그 화면의 해법은 사진 재선택과 전체 허용
+  /// 버튼이고, 둘 다 끝나면 스캔이 자동으로 다시 돈다 — 같은 몇 장을 다시 훑는
+  /// 버튼은 군더더기다.
+  ///
+  /// **좌표를 못 찾은 경우에는 보여 준다**(사용자 지적 2026-08-26). 한때 이쪽도
+  /// 감췄는데, 그러면 "위치 정보가 있는 사진을 찾지 못했어요" 화면에 닫기 하나만
+  /// 남아 **막다른 길이 됐다.** 같은 사진을 다시 훑어야 결과가 같다는 전제가
+  /// 여기서는 틀리다 — 그 사이 사진을 새로 찍었을 수도, 설정에서 권한을 넓혔을
+  /// 수도 있다.
+  bool get canRescan => !limitedAccess;
+
   PhotoScanProgress copyWith({
     PhotoScanStage? stage,
     int? processed,
