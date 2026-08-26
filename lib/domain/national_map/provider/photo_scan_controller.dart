@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/widgets.dart' show AppLifecycleListener;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:logger/logger.dart';
@@ -63,12 +64,9 @@ class PhotoScanController extends _$PhotoScanController {
       },
       // **설정에서 돌아오면 권한이 올라갔는지 본다**(2026-08-26).
       //
-      // "일부만 허용"에서 설정으로 보내 전체 접근으로 바꿔도, 돌아왔을 때
-      // 아무 일도 일어나지 않으면 막다른 길이 된다 — 그 화면에서는 다시 채우기
-      // 버튼도 감춰 두기 때문이다(같은 사진을 다시 훑는 것은 무의미하므로).
-      //
-      // 그래서 돌아온 시점에 등급이 올라갔으면 스스로 다시 훑는다. 등급이
-      // 그대로면 아무것도 하지 않는다.
+      // 설정으로 보내 접근을 넓혀도 돌아왔을 때 아무 일도 일어나지 않으면
+      // 막다른 길이 된다 — 앱을 껐다 켜야 반영됐다. 돌아온 시점에 등급이
+      // 넓어졌으면 스스로 다시 훑고, 그대로면 아무것도 하지 않는다.
       onRestart: _rescanIfAccessWidened,
     );
     ref.onDispose(listener.dispose);
@@ -104,6 +102,8 @@ class PhotoScanController extends _$PhotoScanController {
     // 1) 권한(R31). 거부해도 오류가 아니다 — 안내만 하고 끝낸다(R32).
     state = state.copyWith(stage: PhotoScanStage.requestingPermission);
     final PhotoAccess access = await library.requestAccess();
+    // 설정에서 돌아왔을 때의 비교 기준이다(`_rescanIfAccessWidened`).
+    _lastKnownAccess = access;
     // **`PermissionController`를 지나지 않는 경로다.** `photo_manager`를 직접
     // 부르므로 여기 심지 않으면 사진 권한 결과가 통째로 빠진다.
     AppAnalytics.logEvent(AnalyticsEvents.permissionResult, <String, Object>{
@@ -338,21 +338,53 @@ class PhotoScanController extends _$PhotoScanController {
     await checkpoints.clear();
   }
 
-  /// 사진 접근 등급이 "일부만 허용"에서 올라갔으면 처음부터 다시 훑는다.
+  /// 설정에서 돌아왔을 때 **사진 접근 등급이 넓어졌으면** 처음부터 다시 훑는다.
   ///
   /// 훑을 대상이 늘어났을 때만 의미가 있다 — 같은 사진을 다시 훑어야 결과는
   /// 같으므로, 등급이 그대로면 아무것도 하지 않는다.
+  ///
+  /// **`limitedAccess`가 아니라 등급 변화를 본다**(사용자 지적 2026-08-26).
+  /// 예전에는 `state.limitedAccess`가 참일 때만 다시 훑었는데, 그러면 **거부에서
+  /// 허용으로 바꾼 경우와 좌표를 못 찾고 끝난 경우가 통째로 빠진다.** 실제로
+  /// "위치 정보가 있는 사진을 찾지 못했어요" 화면에서 설정만 바꾸고 돌아오면
+  /// 화면이 그대로 굳어 있었다 — 그 화면에는 다시 채우기 버튼도 없어 앱을 껐다
+  /// 켜는 수밖에 없었다.
+  /// [_rescanIfAccessWidened]를 테스트에서 부르기 위한 진입점.
+  ///
+  /// 실제 계기는 `AppLifecycleListener.onRestart`라 위젯 없이는 흉내 낼 수 없다.
+  @visibleForTesting
+  Future<void> handleAppRestart() => _rescanIfAccessWidened();
+
   Future<void> _rescanIfAccessWidened() async {
-    if (!state.limitedAccess || state.isRunning) return;
+    if (state.isRunning) return;
+
     final PhotoAccess access = await ref
         .read(photoLibraryServiceProvider)
         .currentAccess();
-    if (access != PhotoAccess.granted) return;
-    _log.i('사진 접근이 전체로 바뀌었다 — 처음부터 다시 훑는다');
+    final PhotoAccess? before = _lastKnownAccess;
+    _lastKnownAccess = access;
+
+    // 아직 한 번도 물어본 적 없으면 비교할 것이 없다 — 시작 자체를 사용자가 한다.
+    if (before == null || !_widened(from: before, to: access)) return;
+
+    _log.i('사진 접근이 ${before.name} → ${access.name}으로 넓어졌다 — 다시 훑는다');
     reset();
     _cancelled = false;
     await start();
   }
+
+  /// 마지막으로 확인한 사진 접근 등급. 설정에서 돌아왔을 때 비교 기준이 된다.
+  PhotoAccess? _lastKnownAccess;
+
+  /// 접근 등급이 넓어졌는지. `denied < limited < granted` 순으로 본다.
+  static bool _widened({required PhotoAccess from, required PhotoAccess to}) =>
+      _accessRank(to) > _accessRank(from);
+
+  static int _accessRank(PhotoAccess a) => switch (a) {
+    PhotoAccess.denied => 0,
+    PhotoAccess.limited => 1,
+    PhotoAccess.granted => 2,
+  };
 
   /// 진행 중인 스캔을 멈춘다. 처리 지점은 남는다(R28).
   void stop() => _cancelled = true;

@@ -412,6 +412,45 @@ void main() {
     });
   });
 
+  // "위치 정보가 있는 사진을 찾지 못했어요" 화면에 닫기 하나만 남아 막다른
+  // 길이 됐다(사용자 지적 2026-08-26).
+  group('완료 화면의 다시 채우기 (canRescan)', () {
+    test('좌표를 못 찾고 끝나도 다시 채울 수 있다', () {
+      const PhotoScanProgress p = PhotoScanProgress(
+        stage: PhotoScanStage.completed,
+        total: 100,
+        processed: 100,
+      );
+
+      // 이 화면이 막다른 길이었다 — 그 사이 사진을 새로 찍었을 수 있다.
+      expect(p.finishedWithoutCoordinates, isTrue);
+      expect(p.canRescan, isTrue);
+    });
+
+    test('지역을 채우고 끝나면 다시 채울 수 있다', () {
+      const PhotoScanProgress p = PhotoScanProgress(
+        stage: PhotoScanStage.completed,
+        total: 100,
+        processed: 100,
+        foundCoordinates: 10,
+      );
+
+      expect(p.canRescan, isTrue);
+    });
+
+    test('"일부만 허용"에서는 감춘다', () {
+      const PhotoScanProgress p = PhotoScanProgress(
+        stage: PhotoScanStage.completed,
+        total: 3,
+        processed: 3,
+        limitedAccess: true,
+      );
+
+      // 해법은 사진 재선택·전체 허용이고, 끝나면 스캔이 자동으로 다시 돈다.
+      expect(p.canRescan, isFalse);
+    });
+  });
+
   // 사진 스캔 중 지역이 칠해질 때마다 지도가 사라지고 스피너가 떴다(사용자 지적
   // 2026-08-26). 갱신 중 잠깐 로딩이 되는 것과 보여 줄 값이 아직 없는 것을
   // 화면이 구분하지 못한 탓이다.

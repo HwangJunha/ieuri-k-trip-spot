@@ -178,7 +178,8 @@ class _FakeLibrary implements PhotoLibraryService {
     this.throwsAt = -1,
   });
 
-  final List<GeoPoint> coordinates;
+  /// 훑을 좌표. 등급을 바꿔 가며 대상이 늘어나는 것을 흉내 내려고 쓰기 가능하다.
+  List<GeoPoint> coordinates;
   final bool granted;
 
   /// 이 start 값에서 예외를 던진다. -1이면 던지지 않는다.
@@ -186,9 +187,15 @@ class _FakeLibrary implements PhotoLibraryService {
 
   int requestCount = 0;
 
+  /// 지금 등급. 설정에서 권한을 바꾼 것을 흉내 낼 때 테스트가 갈아 끼운다.
+  /// null이면 [granted]를 따른다.
+  PhotoAccess? access;
+
+  PhotoAccess get _access =>
+      access ?? (granted ? PhotoAccess.granted : PhotoAccess.denied);
+
   @override
-  Future<PhotoAccess> requestAccess() async =>
-      granted ? PhotoAccess.granted : PhotoAccess.denied;
+  Future<PhotoAccess> requestAccess() async => _access;
 
   @override
   Future<void> presentLimitedPicker() async {}
@@ -197,8 +204,7 @@ class _FakeLibrary implements PhotoLibraryService {
   Future<void> openSettings() async {}
 
   @override
-  Future<PhotoAccess> currentAccess() async =>
-      granted ? PhotoAccess.granted : PhotoAccess.denied;
+  Future<PhotoAccess> currentAccess() async => _access;
 
   @override
   Future<int> photoCount() async => coordinates.length;
@@ -488,6 +494,98 @@ void main() {
       // 좌표가 하나도 안 잡혀도 오류가 아니다(R32).
       expect(p.stage, PhotoScanStage.completed);
       expect(p.resolvedCellCodes, isEmpty);
+    });
+
+    // "위치 정보가 있는 사진을 찾지 못했어요" 화면에서 설정만 바꾸고 돌아오면
+    // 화면이 굳어 있었다 — 그 화면에는 다시 채우기 버튼도 없었다(사용자 지적
+    // 2026-08-26).
+    test('설정에서 권한을 넓혀 돌아오면 좌표를 못 찾았어도 다시 훑는다', () async {
+      // 좌표가 하나도 없는 사진첩 — 화면에 "위치 정보가 있는 사진을 찾지
+      // 못했어요"가 뜨는 그 상태다.
+      final _FakeLibrary library = _FakeLibrary(coordinates: const <GeoPoint>[])
+        ..access = PhotoAccess.limited;
+      final ProviderContainer c = _container(
+        repo: _FakeRepository(
+          cells: <MapCell>[_cell('1', <String>['11110'])],
+        ),
+        library: library,
+        boundaries: boundaries,
+      );
+
+      final PhotoScanController controller = c.read(
+        photoScanControllerProvider.notifier,
+      );
+      await controller.start();
+      expect(
+        c.read(photoScanControllerProvider).finishedWithoutCoordinates,
+        isTrue,
+      );
+
+      // 설정에서 전체 허용으로 바꾸고, 그 사이 국내 좌표 사진이 대상에 들어왔다.
+      library
+        ..access = PhotoAccess.granted
+        ..coordinates = <GeoPoint>[const GeoPoint(127.0, 37.5)];
+
+      await controller.handleAppRestart();
+
+      final PhotoScanProgress p = c.read(photoScanControllerProvider);
+      expect(p.stage, PhotoScanStage.awaitingConfirmation);
+      expect(p.resolvedCellCodes, <String>['11110']);
+    });
+
+    test('거부에서 허용으로 바뀌어 돌아와도 다시 훑는다', () async {
+      final _FakeLibrary library = _FakeLibrary(
+        coordinates: const <GeoPoint>[],
+      )..access = PhotoAccess.denied;
+      final ProviderContainer c = _container(
+        repo: _FakeRepository(
+          cells: <MapCell>[_cell('1', <String>['11110'])],
+        ),
+        library: library,
+        boundaries: boundaries,
+      );
+
+      final PhotoScanController controller = c.read(
+        photoScanControllerProvider.notifier,
+      );
+      await controller.start();
+      expect(
+        c.read(photoScanControllerProvider).stage,
+        PhotoScanStage.permissionDenied,
+      );
+
+      library
+        ..access = PhotoAccess.granted
+        ..coordinates = <GeoPoint>[const GeoPoint(127.0, 37.5)];
+
+      await controller.handleAppRestart();
+
+      expect(
+        c.read(photoScanControllerProvider).resolvedCellCodes,
+        <String>['11110'],
+      );
+    });
+
+    test('등급이 그대로면 돌아와도 다시 훑지 않는다', () async {
+      final _FakeLibrary library = _FakeLibrary(
+        coordinates: <GeoPoint>[const GeoPoint(139.7, 35.68)],
+      );
+      final ProviderContainer c = _container(
+        repo: _FakeRepository(),
+        library: library,
+        boundaries: boundaries,
+      );
+
+      final PhotoScanController controller = c.read(
+        photoScanControllerProvider.notifier,
+      );
+      await controller.start();
+      final int before = library.requestCount;
+
+      await controller.handleAppRestart();
+
+      // 같은 사진을 다시 훑는 것은 낭비다.
+      expect(library.requestCount, before);
     });
 
     test('권한을 거부하면 오류가 아니라 안내 상태다 (R31·R32)', () async {
