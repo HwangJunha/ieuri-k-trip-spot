@@ -19,8 +19,8 @@ class AppTheme {
 
   /// CJK 폴백. 라틴 폰트에 없는 글리프를 이 순서로 찾는다.
   ///
-  /// **중국어는 TC(번체)다**(사용자 지적 2026-08-26). 앱이 스스로 '繁體中文'이라
-  /// 표시하고 서버에도 `TW`를 보내는데(`app_language.dart`) 폰트만 SC(간체)였다.
+  /// **중국어는 TC(번체)다**(사용자 지적 2026-08-26). 앱이 스스로 번체라 표시하고
+  /// 서버에도 `TW`를 보내는데(`app_language.dart`) 폰트만 SC(간체)였다.
   /// TC 폰트에는 간체 글리프가 없으므로 문자열도 번체로 통일해야 한다.
   static const List<String> _fontFamilyFallback = <String>[
     'NotoSansKR',
