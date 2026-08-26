@@ -18,6 +18,7 @@ import 'package:ieuri_k_trip_spot/domain/event/provider/event_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/settings/provider/agreements_controller.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/spot_providers.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
+import 'package:ieuri_k_trip_spot/common/permission/provider/permission_providers.dart';
 import 'package:ieuri_k_trip_spot/router/app_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -26,6 +27,7 @@ import '../domain/community/community_test_doubles.dart';
 import '../domain/event/event_test_doubles.dart';
 import '../domain/settings/settings_test_doubles.dart';
 import '../domain/spot/spot_test_doubles.dart';
+import '../common/permission/permission_test_doubles.dart';
 
 Future<ProviderContainer> _homeContainer() async {
   SharedPreferences.setMockInitialValues(<String, Object>{'locale': 'en'});
@@ -37,6 +39,7 @@ Future<ProviderContainer> _homeContainer() async {
 
   final ProviderContainer container = ProviderContainer(
     overrides: [
+      permissionServiceProvider.overrideWithValue(grantedPermissionService()),
       sharedPreferencesProvider.overrideWithValue(prefs),
       secureStorageProvider.overrideWithValue(secure),
       authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
@@ -66,6 +69,7 @@ Future<ProviderContainer> _homeContainer() async {
   );
   addTearDown(container.dispose);
   await container.read(authControllerProvider.future);
+  await seedGrantedPermissions(container);
   return container;
 }
 

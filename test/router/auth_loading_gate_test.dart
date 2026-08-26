@@ -17,10 +17,12 @@ import 'package:ieuri_k_trip_spot/domain/auth/provider/auth_controller.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/provider/auth_repository_provider.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/view/home_screen.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
+import 'package:ieuri_k_trip_spot/common/permission/provider/permission_providers.dart';
 import 'package:ieuri_k_trip_spot/router/app_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../domain/auth/auth_test_doubles.dart';
+import '../common/permission/permission_test_doubles.dart';
 
 /// 라우터 인증 게이트(SPEC-0005 §2.5, R1·R2·AC-1·AC-4).
 ///
@@ -77,6 +79,7 @@ void main() {
 
     final ProviderContainer container = ProviderContainer(
       overrides: [
+        permissionServiceProvider.overrideWithValue(grantedPermissionService()),
         sharedPreferencesProvider.overrideWithValue(prefs),
         secureStorageProvider.overrideWithValue(secure),
         authRepositoryProvider.overrideWithValue(repo),
@@ -92,6 +95,7 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
+    await seedGrantedPermissions(container);
 
     final GoRouter router = await _pumpApp(tester, container: container);
 
@@ -132,6 +136,7 @@ void main() {
 
     final ProviderContainer container = ProviderContainer(
       overrides: [
+        permissionServiceProvider.overrideWithValue(grantedPermissionService()),
         sharedPreferencesProvider.overrideWithValue(prefs),
         secureStorageProvider.overrideWithValue(secure),
         authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
@@ -147,8 +152,10 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
+    await seedGrantedPermissions(container);
     // 게이트가 통과 상태가 되도록 인증을 먼저 해소한다.
     await container.read(authControllerProvider.future);
+  await seedGrantedPermissions(container);
 
     final GoRouter router = await _pumpApp(tester, container: container);
     router.go('/home');
@@ -166,6 +173,7 @@ void main() {
 
     final ProviderContainer container = ProviderContainer(
       overrides: [
+        permissionServiceProvider.overrideWithValue(grantedPermissionService()),
         sharedPreferencesProvider.overrideWithValue(prefs),
         secureStorageProvider.overrideWithValue(secure),
         authRepositoryProvider.overrideWithValue(repo),
@@ -181,6 +189,7 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
+    await seedGrantedPermissions(container);
 
     final GoRouter router = await _pumpApp(tester, container: container);
     router.go('/login');
