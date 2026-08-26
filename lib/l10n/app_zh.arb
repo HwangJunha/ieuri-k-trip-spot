@@ -175,7 +175,7 @@
   "errorSnsVerificationExpired": "認證已過期，請重新登入。",
   "logoutTooltip": "退出登入",
   "permissionLocationRationaleTitle": "發現你周邊的景點",
-  "permissionLocationRationaleBody": "K-Trip Spot 僅在你使用 App 時使用你的位置，以顯示附近的景點和擁擠度。我們絕不會在背景追蹤你。",
+  "permissionLocationRationaleBody": "K-Trip Spot 僅在你使用 App 時使用你的位置，以顯示附近的地點。我們絕不會在背景追蹤你。",
   "permissionNotificationRationaleTitle": "掌握最新動態",
   "permissionNotificationRationaleBody": "開啟通知即可獲取你關注景點的擁擠提醒和動態。你可以隨時更改。",
   "permissionContinue": "繼續",
