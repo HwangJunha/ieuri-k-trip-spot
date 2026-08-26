@@ -9,6 +9,7 @@ import 'package:ieuri_k_trip_spot/domain/auth/model/me.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/provider/auth_controller.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/cell_detail.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/cell_geometry.dart';
+import 'package:ieuri_k_trip_spot/domain/national_map/model/cell_shape_key.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/current_location_check.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/district_boundary.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/district_resolver.dart';
@@ -665,6 +666,95 @@ void main() {
         throwsA(isA<Exception>()),
       );
       expect(c.read(shareControllerProvider), isFalse);
+    });
+  });
+
+  // 사진 스캔이 지역을 하나 찾을 때마다 지도가 통째로 사라지고 로딩 스피너가
+  // 떴다(사용자 지적 2026-08-26). 도형이 칸 목록을 통째로 watch한 탓에 방문
+  // 표시만 바뀌어도 161칸이 다시 조립됐다.
+  group('방문 표시가 도형을 다시 만들지 않는다', () {
+    test('낙관적 방문 표시 뒤에도 도형 키가 같은 인스턴스다', () async {
+      final ProviderContainer c = _container(
+        repo: _FakeRepository(
+          cells: <MapCell>[
+            _cell('1', <String>['11110']),
+            _cell('2', <String>['26110']),
+          ],
+        ),
+      );
+
+      await c.read(authControllerProvider.future);
+      final List<CellShapeKey> before = await c.read(
+        cellShapeKeysProvider.future,
+      );
+
+      c
+          .read(mapCellsProvider.notifier)
+          .setVisitedOptimistically(<String>{'1'}, visited: true);
+
+      final List<CellShapeKey> after = await c.read(
+        cellShapeKeysProvider.future,
+      );
+
+      // 인스턴스가 같아야 한다 — 내용만 같으면 아래 도형 provider가 또 돈다.
+      expect(identical(before, after), isTrue);
+    });
+
+    test('뮤테이션 응답을 반영해도 도형 키가 같은 인스턴스다', () async {
+      final ProviderContainer c = _container(
+        repo: _FakeRepository(
+          cells: <MapCell>[
+            _cell('1', <String>['11110']),
+          ],
+        ),
+      );
+
+      await c.read(authControllerProvider.future);
+      final List<CellShapeKey> before = await c.read(
+        cellShapeKeysProvider.future,
+      );
+
+      c.read(mapCellsProvider.notifier).applyUpdated(<MapCell>[
+        _cell('1', <String>['11110'], visited: true),
+      ]);
+
+      expect(
+        identical(before, await c.read(cellShapeKeysProvider.future)),
+        isTrue,
+      );
+    });
+
+    test('방문 표시는 칸 쪽에 그대로 반영된다', () async {
+      final ProviderContainer c = _container(
+        repo: _FakeRepository(
+          cells: <MapCell>[
+            _cell('1', <String>['11110']),
+          ],
+        ),
+      );
+
+      await c.read(authControllerProvider.future);
+      await c.read(cellShapeKeysProvider.future);
+
+      c
+          .read(mapCellsProvider.notifier)
+          .setVisitedOptimistically(<String>{'1'}, visited: true);
+
+      // 도형이 안 바뀐다고 색칠까지 멈추면 기능이 죽은 것이다.
+      final List<MapCell> cells = await c.read(mapCellsProvider.future);
+      expect(cells.single.visited, isTrue);
+    });
+
+    test('도형 키는 방문 여부를 담지 않는다', () {
+      final CellShapeKey unvisited = CellShapeKey.of(
+        _cell('1', <String>['11110']),
+      );
+      final CellShapeKey visited = CellShapeKey.of(
+        _cell('1', <String>['11110'], visited: true),
+      );
+
+      expect(unvisited, visited);
+      expect(unvisited.hashCode, visited.hashCode);
     });
   });
 }

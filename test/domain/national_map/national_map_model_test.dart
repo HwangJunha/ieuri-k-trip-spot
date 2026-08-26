@@ -5,6 +5,7 @@ import 'package:ieuri_k_trip_spot/domain/national_map/model/cell_image.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/cell_projection.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/coordinate_reduction.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/map_cell.dart';
+import 'package:ieuri_k_trip_spot/domain/national_map/model/map_screen_view_state.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/national_map_config.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/photo_scan_progress.dart';
 import 'package:ieuri_k_trip_spot/domain/national_map/model/province_progress.dart';
@@ -411,4 +412,64 @@ void main() {
     });
   });
 
+  // 사진 스캔 중 지역이 칠해질 때마다 지도가 사라지고 스피너가 떴다(사용자 지적
+  // 2026-08-26). 갱신 중 잠깐 로딩이 되는 것과 보여 줄 값이 아직 없는 것을
+  // 화면이 구분하지 못한 탓이다.
+  group('지도 화면이 무엇을 그릴지 (MapScreenViewState)', () {
+    test('값이 둘 다 있으면 지도를 그린다', () {
+      expect(
+        MapScreenViewState.of(
+          hasCells: true,
+          hasGeometries: true,
+          failed: false,
+        ),
+        MapScreenViewState.map,
+      );
+    });
+
+    test('갱신이 실패해도 값을 들고 있으면 지도를 그린다', () {
+      // 이미 그려 둔 지도를 치울 이유가 없다.
+      expect(
+        MapScreenViewState.of(
+          hasCells: true,
+          hasGeometries: true,
+          failed: true,
+        ),
+        MapScreenViewState.map,
+      );
+    });
+
+    test('아무것도 못 받았으면 로딩이다', () {
+      expect(
+        MapScreenViewState.of(
+          hasCells: false,
+          hasGeometries: false,
+          failed: false,
+        ),
+        MapScreenViewState.loading,
+      );
+    });
+
+    test('한쪽만 있으면 아직 로딩이다', () {
+      expect(
+        MapScreenViewState.of(
+          hasCells: true,
+          hasGeometries: false,
+          failed: false,
+        ),
+        MapScreenViewState.loading,
+      );
+    });
+
+    test('아무것도 못 받은 채 실패했으면 오류다', () {
+      expect(
+        MapScreenViewState.of(
+          hasCells: false,
+          hasGeometries: false,
+          failed: true,
+        ),
+        MapScreenViewState.error,
+      );
+    });
+  });
 }
