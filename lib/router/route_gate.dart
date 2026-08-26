@@ -18,6 +18,13 @@ const String onboardingPath = '/onboarding';
 /// 필수 약관 미동의 상태에서 사용자를 보내는 곳(R11).
 const String requiredTermsPath = '/required-terms';
 
+/// 위치 권한이 없을 때 사용자를 보내는 곳(2026-08-26).
+///
+/// 탭마다 안내 문구를 띄우는 대신 **화면 하나로 막는다.** 문구만 띄우면 탭은
+/// 계속 열려 있어 사용자가 홈·지도·스팟톡을 돌아다니며 빈 화면을 보게 되고,
+/// 그때마다 좌표 없이도 되는 조회(전국 지도·좋아요·스팟톡)는 실제로 나간다.
+const String locationRequiredPath = '/location-required';
+
 /// 이메일 인증 미완 상태에서 사용자를 보내는 곳(SPEC-0024 R10-1).
 const String emailVerificationPath = '/email-verification';
 
@@ -74,6 +81,22 @@ enum AuthGateState {
   ready,
 }
 
+/// 위치 권한 상태를 세 갈래로 나눈 게이트 입력(2026-08-26).
+///
+/// **위치는 필수 권한이다**([AMEND] SPEC-0001). 이 앱이 보여 주는 것이 전부 "내
+/// 주변"이라, 좌표가 없으면 홈·발견·스팟톡이 전부 빈 화면이 된다 — 그 상태로
+/// 탭을 돌아다니게 두면 사용자는 앱이 고장 난 것으로 읽는다.
+enum LocationGateState {
+  /// 아직 조회되지 않음/부트 시퀀스 진행 중.
+  loading,
+
+  /// 거부·영구거부·restricted. 앱을 쓸 수 없다.
+  denied,
+
+  /// 허용됨 → 게이트가 열린다.
+  granted,
+}
+
 /// 필수 약관 상태를 세 갈래로 나눈 게이트 입력.
 enum TermsGateState {
   /// 아직 조회되지 않음/조회 중.
@@ -88,7 +111,8 @@ enum TermsGateState {
 
 /// 게이트 판정(SPEC-0005 §10 + SPEC-0011 R11·R12).
 ///
-/// 판정 순서는 **언어 → 인증 → 온보딩 → 필수 약관 → 목적지**다(설계 §3). 게이트가
+/// 판정 순서는 **언어 → 위치 → 인증 → 온보딩 → 필수 약관 → 목적지**다(설계 §3).
+/// 위치가 인증보다 앞인 이유는 아래 2)에 적었다. 게이트가
 /// 하나뿐이어야 하는 이유는 순환이다 — 둘이 각자 리다이렉트하면 서로를 되돌리며
 /// 무한히 튕긴다.
 ///
@@ -106,6 +130,7 @@ String? resolveGate({
   required bool languageChosen,
   required AuthGateState auth,
   required TermsGateState terms,
+  required LocationGateState locationPermission,
   bool emailVerificationHoldsHandle = false,
 }) {
   // 스플래시는 자기 초기 내비게이션을 스스로 몬다.
@@ -121,7 +146,24 @@ String? resolveGate({
     return location == languagePath ? null : languagePath;
   }
 
-  // 2) 인증이 아직 판정되지 않았으면 보호 화면을 그리지 않는다(SPEC-0005 AC-1·AC-2).
+  // 2) 위치 권한(2026-08-26). **인증보다 앞이다.**
+  //
+  //    순서가 중요하다 — 뒤에 두면 미인증 사용자가 3)에서 `/login`으로 빠져나가
+  //    위치 판정에 아예 도달하지 않는다. 그러면 위치를 거부한 채 로그인·가입을
+  //    끝내고 앱에 들어올 수 있고, 그때부터는 게이트가 이미 지나가 있어 막을
+  //    자리가 없다(실제로 테스트가 `/login`으로 새는 것을 잡았다).
+  //
+  //    위치는 계정과 무관한 **기기 상태**라 로그인 전에 판정해도 이상하지 않다.
+  //    이 앱이 보여 주는 것이 전부 "내 주변"이라, 좌표가 없으면 로그인해도
+  //    성립하는 화면이 없다.
+  if (locationPermission != LocationGateState.granted) {
+    if (_locationAllows(location)) return null;
+    return locationPermission == LocationGateState.loading
+        ? splashPath
+        : locationRequiredPath;
+  }
+
+  // 3) 인증이 아직 판정되지 않았으면 보호 화면을 그리지 않는다(SPEC-0005 AC-1·AC-2).
   //    대기 화면은 빈 화면이나 에러 화면이 아니어야 하므로 스플래시로 보낸다. 인증이
   //    필요 없는 경로는 그대로 두어 로그인 흐름을 막지 않는다.
   if (auth == AuthGateState.loading) {
@@ -129,7 +171,7 @@ String? resolveGate({
     return splashPath;
   }
 
-  // 3) 미인증은 인증 경로에 고정한다(§10.2).
+  // 4) 미인증은 인증 경로에 고정한다(§10.2).
   if (auth == AuthGateState.unauthenticated) {
     // **인증 화면은 예외다.** 이 경로는 두 역할을 겸한다 — 가입 직후(토큰 없음)와
     // 게이트에 걸린 미인증 세션(토큰 있음). 뒤쪽에서 로그아웃하면 세션이 사라져
@@ -145,7 +187,7 @@ String? resolveGate({
     return authPaths.contains(location) ? null : loginPath;
   }
 
-  // 4) 이메일 인증 미완 → 인증 화면(SPEC-0024 R10-1·R10-4). 온보딩·약관보다
+  // 5) 이메일 인증 미완 → 인증 화면(SPEC-0024 R10-1·R10-4). 온보딩·약관보다
   //    앞이다 — 서버가 미인증 토큰의 비허용 오퍼레이션을 거부하므로(R9) 그 뒤의
   //    화면들은 어차피 데이터를 못 읽는다.
   //
@@ -155,12 +197,12 @@ String? resolveGate({
     return _emailVerificationAllows(location) ? null : emailVerificationPath;
   }
 
-  // 5) 인증했지만 온보딩 미완 → 온보딩(§10.3).
+  // 6) 인증했지만 온보딩 미완 → 온보딩(§10.3).
   if (auth == AuthGateState.onboardingRequired) {
     return location == onboardingPath ? null : onboardingPath;
   }
 
-  // 6) 필수 약관 게이트(SPEC-0011 R11). 온보딩 다음이고 목적지 앞이다.
+  // 7) 필수 약관 게이트(SPEC-0011 R11). 온보딩 다음이고 목적지 앞이다.
   if (terms != TermsGateState.satisfied) {
     // 조회 중에는 **통과시키지 않는다** — 통과시키면 미동의 사용자가 홈을 보게 되고,
     // 조회가 끝난 뒤 튕겨 나가 화면이 깜빡인다. 인증 대기와 같은 자리(스플래시)에
@@ -169,15 +211,26 @@ String? resolveGate({
     return terms == TermsGateState.loading ? splashPath : requiredTermsPath;
   }
 
-  // 7) 통과한 사용자를 진입 전 화면(로그인·온보딩·언어·동의)에 두지 않는다(§10.4).
+  // 8) 통과한 사용자를 진입 전 화면(로그인·온보딩·언어·동의·위치)에 두지 않는다(§10.4).
   if (authPaths.contains(location) ||
       location == onboardingPath ||
       location == languagePath ||
-      location == requiredTermsPath) {
+      location == requiredTermsPath ||
+      location == locationRequiredPath) {
     return discoverPath;
   }
   return null;
 }
+
+/// 위치 권한이 없을 때 허용되는 목적지.
+///
+/// **설정 계열을 연다** — 약관 게이트와 같은 이유다(`_termsAllows`). 위치를
+/// 끝내 켜지 않기로 한 사용자에게도 로그아웃·탈퇴·언어 변경으로 빠져나갈 길은
+/// 남아 있어야 한다. 막아 두면 앱을 지우는 것 말고는 방법이 없다.
+bool _locationAllows(String location) =>
+    location == locationRequiredPath ||
+    location == settingsPath ||
+    location.startsWith('$settingsPath/');
 
 /// 이메일 인증 미완 상태에서 허용되는 목적지(SPEC-0024 R10-2).
 ///

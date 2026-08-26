@@ -53,9 +53,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   void _routeIfReady() {
     if (_routed || !_minDelayElapsed) return;
     if (!ref.read(permissionBootCompleteProvider)) return;
-    if (!ref.read(permissionControllerProvider.notifier).isLocationGranted) {
-      return;
-    }
+    // **위치 허용 여부로 막지 않는다**(2026-08-26). 예전에는 여기서 허용될 때까지
+    // 스플래시에 세워 뒀는데, 그러면 거부한 사용자는 설정으로 갈 길이 스플래시의
+    // 작은 안내뿐이고 로그아웃·언어 변경 같은 탈출구가 아예 없었다.
+    //
+    // 이제는 라우터 게이트(`route_gate.dart`)가 `/location-required`로 보낸다 —
+    // 판정이 한곳에 모이고, 설정에서 위치를 켜고 돌아오면 게이트가 다시 평가돼
+    // 앱이 그대로 열린다.
     _routed = true;
     // 라우터에 넘긴다: redirect(스펙 §10)가 auth/온보딩 상태로부터 언어 → 로그인 →
     // 온보딩 → 홈을 해소한다.

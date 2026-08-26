@@ -182,7 +182,7 @@
   "errorSnsVerificationExpired": "Sign-in has expired. Please sign in again.",
   "logoutTooltip": "Log out",
   "permissionLocationRationaleTitle": "Find spots around you",
-  "permissionLocationRationaleBody": "K-Trip Spot uses your location while you use the app to show nearby attractions and crowd levels. We never track you in the background.",
+  "permissionLocationRationaleBody": "K-Trip Spot uses your location while you use the app to show nearby places. We never track you in the background.",
   "permissionNotificationRationaleTitle": "Stay in the loop",
   "permissionNotificationRationaleBody": "Turn on notifications to get crowd alerts and updates for the spots you care about. You can change this anytime.",
   "permissionContinue": "Continue",

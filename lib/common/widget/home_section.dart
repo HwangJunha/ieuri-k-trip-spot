@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/gen/app_localizations.dart';
+import '../location/location_service.dart';
 import 'app_skeleton.dart';
 
 /// 홈 섹션 하나의 상태 경계(R19). 로딩·결과·빈 상태·실패를 **섹션 안에서** 그린다.
@@ -73,27 +74,43 @@ class HomeSection<T> extends ConsumerWidget {
                 )
               : AppSkeleton(child: builder(skeletonItems)),
           // 실패는 빈 상태와 달리 재시도 수단을 함께 준다(AC-20.1).
+          //
+          // **위치 실패는 조회 실패와 다르게 그린다**(2026-08-26). 좌표를 못 얻은
+          // 것은 서버가 준 결과가 아니라 기기 상태이고, 사용자가 할 일도 "다시
+          // 시도"가 아니라 설정에서 위치를 켜는 것이다. 같은 문구로 뭉뚱그리면
+          // 권한을 거부해 놓고 재시도만 반복하게 된다 — 실제로 홈·지도·전국지도가
+          // 그랬고 「위치가 꺼져 있어요」는 발견 탭에서만 나왔다.
+          //
+          // 재시도 버튼을 빼는 이유: 이 상태는 눌러서 풀리지 않는다. 설정에서
+          // 위치를 켜고 돌아오면 provider가 다시 조회한다.
           error: (Object error, _) => Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  l10n.homeSectionError,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+            child: error is LocationUnavailable
+                ? Text(
+                    l10n.permissionLocationBlockedMessage,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        l10n.homeSectionError,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton(
+                          onPressed: onRetry,
+                          child: Text(l10n.homeSectionRetry),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 4),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton(
-                    onPressed: onRetry,
-                    child: Text(l10n.homeSectionRetry),
-                  ),
-                ),
-              ],
-            ),
           ),
         ),
       ],

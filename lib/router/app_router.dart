@@ -6,6 +6,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../common/analytics/analytics_route_observer.dart';
 import '../common/navigation/pending_destination.dart';
 import '../common/navigation/root_navigator_key.dart';
+import '../common/permission/model/permission_kind.dart';
+import '../common/permission/model/permission_state.dart';
+import '../common/permission/provider/permission_providers.dart';
 import '../common/storage/app_preferences.dart';
 import '../domain/auth/model/auth_state.dart';
 import '../domain/auth/provider/auth_controller.dart';
@@ -41,6 +44,7 @@ String? resolveRedirect({
   required bool languageChosen,
   required AuthGateState auth,
   required TermsGateState terms,
+  required LocationGateState locationPermission,
   required PendingDestination pending,
   bool emailVerificationHoldsHandle = false,
 }) {
@@ -49,6 +53,7 @@ String? resolveRedirect({
     languageChosen: languageChosen,
     auth: auth,
     terms: terms,
+    locationPermission: locationPermission,
     emailVerificationHoldsHandle: emailVerificationHoldsHandle,
   );
 
@@ -89,9 +94,14 @@ String? resolveRedirect({
   // 그래서 인증이 `ready`인지와 **약관이 충족됐는지**를 함께 본다. 게이트가 아직
   // 잡고 있는 동안에는 꺼내지 않고 두었다가, 동의를 마치면 위의 복귀 분기가
   // 소비한다. 끝내 로그인하지 않으면 앱이 끝날 때 라우터와 함께 사라진다(AC17.3).
+  // 위치 게이트도 같은 이유로 함께 본다(2026-08-26). 위치를 거부한 사용자는
+  // `/location-required`와 `/settings/**`에서 target이 null인데, 여기서 목적지를
+  // 꺼내면 그 목적지가 다시 위치 게이트에 막혀 튕긴다 — 약관에서 겪은 그 무한
+  // 루프와 같은 모양이다.
   if (target == null &&
       auth == AuthGateState.ready &&
       terms == TermsGateState.satisfied &&
+      locationPermission == LocationGateState.granted &&
       location != splashPath &&
       pending.hasDestination) {
     final String destination = _takeDestination(pending);
@@ -147,6 +157,9 @@ GoRouter goRouter(Ref ref) {
         languageChosen: ref.read(appPreferencesProvider).savedLanguage != null,
         auth: authGate,
         terms: termsGate,
+        locationPermission: _locationGate(
+          ref.read(permissionControllerProvider)[PermissionKind.location],
+        ),
         emailVerificationHoldsHandle: holdsHandle,
         pending: pending,
       );
@@ -187,12 +200,32 @@ TermsGateState _termsGate(AsyncValue<List<AgreementStatus>> agreements) {
       : TermsGateState.unmet;
 }
 
-/// Riverpod의 인증·약관 변화를 GoRouter로 잇는다 — 로그인/로그아웃, 온보딩 완료,
+/// 위치 권한 상태를 게이트 입력으로 접는다(2026-08-26).
+///
+/// **아직 조회 전(null)은 [LocationGateState.loading]이다.** 부트 시퀀스가 상태를
+/// 기록하기 전에 `denied`로 단정하면, 권한을 허용해 둔 사용자도 앱을 켤 때마다
+/// 위치 안내 화면을 한 번씩 보게 된다.
+///
+/// **약관 게이트와 달리 실패를 통과로 보지 않는다.** 약관은 서버 조회라 장애 때
+/// 사용자를 가두지 않는 편이 안전하지만, 위치는 OS가 즉시 답하는 로컬 상태다 —
+/// 여기서 통과시키면 게이트가 통째로 새고, 그것이 정확히 고치려는 증상이다.
+LocationGateState _locationGate(PermissionState? state) => switch (state) {
+  null => LocationGateState.loading,
+  PermissionState.granted => LocationGateState.granted,
+  _ => LocationGateState.denied,
+};
+
+/// Riverpod의 인증·약관·위치 권한 변화를 GoRouter로 잇는다 — 로그인/로그아웃, 온보딩 완료,
 /// 필수 약관 동의가 리다이렉트를 다시 평가하게 한다(위젯 분기가 아니라
 /// `refreshListenable`).
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Ref ref) {
     ref.listen(authControllerProvider, (_, _) => notifyListeners());
     ref.listen(agreementsControllerProvider, (_, _) => notifyListeners());
+    // 위치 권한도 듣는다(2026-08-26). 설정에서 위치를 켜고 돌아오면
+    // `PermissionBootGate`의 resume 훅이 `refreshAll()`로 상태를 갱신하는데,
+    // 여기서 듣지 않으면 게이트가 다시 평가되지 않아 앱 재시작 전까지
+    // 안내 화면에 갇힌다.
+    ref.listen(permissionControllerProvider, (_, _) => notifyListeners());
   }
 }

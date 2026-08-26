@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../common/location/coordinates.dart';
 import '../common/onboarding/view/language_selection_screen.dart';
 import '../common/onboarding/view/splash_screen.dart';
+import '../common/permission/view/location_required_screen.dart';
 import '../common/widget/floating_bottom_nav_scaffold.dart';
 import '../domain/auth/view/email_verification_screen.dart';
 import '../domain/auth/view/login_screen.dart';
@@ -400,6 +401,14 @@ List<RouteBase> buildRoutes() => <RouteBase>[
     path: '/required-terms',
     name: RequiredTermsScreen.routeName,
     builder: (_, _) => const RequiredTermsScreen(),
+  ),
+  // 위치 권한 안내(2026-08-26). 약관 화면과 같은 이유로 **최상위**다 — 게이트가
+  // 막았을 때 착지하는 곳이라, 아래에 다른 화면을 깔면 뒤로 가기가 다시 막힌
+  // 화면으로 돌아간다.
+  GoRoute(
+    path: '/location-required',
+    name: LocationRequiredScreen.routeName,
+    builder: (_, _) => const LocationRequiredScreen(),
   ),
   // 공유 지도(SPEC-0030 R37). **인증 없이 열린다** — 게이트를 통과해야 한다.
   //
