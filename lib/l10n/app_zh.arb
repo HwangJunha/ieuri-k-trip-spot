@@ -90,9 +90,9 @@
   "photoSyncDone": "地图已更新。",
   "photoSyncLimitedNotice": "選擇 設定 > App > K-Trip Spot > 照片 > 所有照片，即可掃描整個相簿。",
   "@photoSyncLimitedNotice": {},
-  "photoSyncLimitedNoticeAndroid": "僅掃描了你選擇的照片。若要掃描整個相簿，請將權限改為「全部允許」。",
+  "photoSyncLimitedNoticeAndroid": "僅掃描了你選擇的照片。選擇 設定 > 應用程式 > K-Trip Spot > 權限 > 相片和影片 > 一律全部允許，即可掃描整個相簿。",
   "@photoSyncLimitedNoticeAndroid": {
-    "description": "Android partial photo access notice"
+    "description": "Android partial photo access notice. Path is Samsung One UI (Android 14+)."
   },
   "photoSyncSelectMore": "選擇更多照片",
   "@photoSyncSelectMore": {},

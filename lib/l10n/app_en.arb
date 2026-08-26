@@ -92,9 +92,9 @@
   "@photoSyncLimitedNotice": {
     "description": "iOS limited photo access notice/action"
   },
-  "photoSyncLimitedNoticeAndroid": "Only the photos you picked were scanned. To scan your whole library, change the permission to \"Allow all\".",
+  "photoSyncLimitedNoticeAndroid": "Only the photos you picked were scanned. For your whole library: Settings > Apps > K-Trip Spot > Permissions > Photos and videos > Always allow all.",
   "@photoSyncLimitedNoticeAndroid": {
-    "description": "Android partial photo access notice"
+    "description": "Android partial photo access notice. Path is Samsung One UI (Android 14+)."
   },
   "photoSyncSelectMore": "Select more photos",
   "@photoSyncSelectMore": {
