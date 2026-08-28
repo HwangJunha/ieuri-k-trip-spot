@@ -273,6 +273,34 @@ void main() {
       // R10 — 전송 실패이므로 토큰은 유지된다.
       expect(await storage.readRefreshToken(), 'stored-r');
     });
+
+    /// **로그인은 억제를 푸는 계기다**(2026-08-29).
+    ///
+    /// 부팅 때 갱신이 실패해 억제가 서 있으면, 그 뒤 로그인해서 멀쩡한
+    /// refreshToken을 새로 받아도 갱신 링크가 발화하지 않았다 — 액세스 토큰이
+    /// 만료되는 순간부터 모든 요청이 `UNAUTHENTICATED_TOKEN_REJECTED`로 떨어지고
+    /// 갱신은 영영 시도되지 않는다. 실기기에서 그 상태를 겪었다.
+    test('로그인에 성공하면 억제가 해제된다', () async {
+      final SecureStorage storage = SecureStorage(MemoryStore());
+      final ProviderContainer c = _container(
+        storage,
+        repo: FakeAuthRepository(session: _fresh),
+      );
+      await c.read(authControllerProvider.future);
+      final TokenRefreshBridge bridge = c.read(tokenRefreshBridgeProvider);
+      // 부팅 갱신 실패로 억제가 선 상태를 만든다.
+      bridge.suppressRefresh();
+
+      await c
+          .read(authControllerProvider.notifier)
+          .signIn(email: 'a@b.com', password: 'pw');
+
+      expect(
+        bridge.suppressed,
+        isFalse,
+        reason: '새 토큰 쌍을 받았으므로 억제를 유지할 근거가 없다',
+      );
+    });
   });
 }
 

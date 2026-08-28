@@ -133,26 +133,48 @@ class SpotRepositoryImpl implements SpotRepository {
   @override
   Future<CursorPage<LikedSpot>> fetchLikedSpots({
     List<String>? categoryCodes,
+    String? query,
     int? first,
     String? after,
   }) async {
     // 언어는 인자로 보내지 않는다 — Accept-Language 헤더로 전달된다(spec §2).
     // categoryCodes가 null/빈 목록이면 인자를 비워 전체를 받는다(서버 규약).
-    final Map<String, dynamic> data = await _query(
-      documentNodeQueryLikedSpots,
-      Variables$Query$LikedSpots(
-        categories: _categories(categoryCodes),
-        first: first,
-        after: after,
-      ).toJson(),
-      'likedSpots',
-    );
-    final Query$LikedSpots$likedSpots result = Query$LikedSpots.fromJson(
-      data,
-    ).likedSpots;
+    //
+    // **검색어가 있으면 아예 다른 쿼리를 부른다**(SPEC-0033). 서버는 `likedSpots`에
+    // 인자를 더한 것이 아니라 `searchLikedSpots`를 따로 냈고, 그쪽 `query`는
+    // non-null 필수다 — "빈 검색어로 전체 받기"라는 호출이 성립하지 않으므로
+    // 여기서 가른다. 두 쿼리의 반환 타입이 같아 아래 매핑은 공유한다.
+    final bool searching = query != null && query.isNotEmpty;
+    // 두 쿼리가 같은 프래그먼트를 쓰므로 결과 타입이 하나다 — 부를 쿼리만 가르고
+    // 매핑은 아래에서 한 번만 한다.
+    final Fragment$LikedSpotPage result;
+    if (searching) {
+      final Map<String, dynamic> data = await _query(
+        documentNodeQuerySearchLikedSpots,
+        Variables$Query$SearchLikedSpots(
+          query: query,
+          categories: _categories(categoryCodes),
+          first: first,
+          after: after,
+        ).toJson(),
+        'searchLikedSpots',
+      );
+      result = Query$SearchLikedSpots.fromJson(data).searchLikedSpots;
+    } else {
+      final Map<String, dynamic> data = await _query(
+        documentNodeQueryLikedSpots,
+        Variables$Query$LikedSpots(
+          categories: _categories(categoryCodes),
+          first: first,
+          after: after,
+        ).toJson(),
+        'likedSpots',
+      );
+      result = Query$LikedSpots.fromJson(data).likedSpots;
+    }
     return CursorPage<LikedSpot>(
       items: result.edges
-          .map((Query$LikedSpots$likedSpots$edges e) => _likedFromNode(e.node))
+          .map((Fragment$LikedSpotPage$edges e) => _likedFromNode(e.node))
           .toList(growable: false),
       hasNextPage: result.pageInfo.hasNextPage,
       endCursor: result.pageInfo.endCursor,
@@ -396,7 +418,9 @@ class SpotRepositoryImpl implements SpotRepository {
   /// **폴백이 없다**(SPEC-0020). 예전에는 매핑되지 않은 서버 enum을 touristSpot으로
   /// 떨어뜨렸는데, 이제 카테고리가 코드/라벨을 실은 객체라 서버가 보낸 값을 그대로
   /// 담으면 된다 — 지어낼 것이 없다.
-  LikedSpot _likedFromNode(Query$LikedSpots$likedSpots$edges$node n) =>
+  /// 프래그먼트 타입을 받으므로 `likedSpots`·`searchLikedSpots` 양쪽이 함께 쓴다 —
+  /// 두 쿼리가 같은 선택 집합을 공유하는 이유다(SPEC-0033).
+  LikedSpot _likedFromNode(Fragment$LikedSpotPage$edges$node n) =>
       LikedSpot(
         id: n.id,
         // TourAPI 원문이라 엔티티가 섞여 온다(다른 표면과 동일하게 정리).

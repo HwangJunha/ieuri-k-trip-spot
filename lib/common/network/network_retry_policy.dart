@@ -20,6 +20,7 @@
 library;
 
 import '../location/location_service.dart';
+import 'auth_error_codes.dart';
 
 /// 허용하는 자동 재시도 횟수. 최초 시도 + 이 횟수만큼 재시도한다(총 6회).
 ///
@@ -72,10 +73,25 @@ Duration defaultRetryDelayOf(int retryCount) {
 /// **위치 실패는 재시도하지 않는다.** 권한 거부나 GPS 꺼짐은 다시 물어도 같은
 /// 답이 오고, 그 안내는 SPEC-0001 경로가 맡는다.
 ///
-/// **인증 실패는 여기서 거르지 않는다.** 도메인마다 실패 타입이 달라 공통 코드가
-/// 알 수 없기 때문이다 — 인증 갈래를 가진 도메인은 자기 정책을 쓰는 편이 정확하다.
+/// **인증 실패도 재시도하지 않는다**(2026-08-29). 예전에는 "도메인마다 실패 타입이
+/// 달라 공통 코드가 알 수 없다"며 걸러 내지 않았는데, 그 결과 이 정책을 쓰는 7개
+/// 도메인 37곳이 전부 인증 실패에 재시도를 반복했다 — 액세스 토큰이 거부된 상태에서
+/// 홈 화면의 세 쿼리가 **0.5초 간격으로 끝없이** 서버를 두드렸다(실기기).
+///
+/// 상한(5회)이 있는데도 무한이 된 이유는 두 가지가 겹쳐서다.
+///
+/// 1. **재시도해도 회복되지 않는다.** 같은 토큰으로 같은 요청을 보내니 결과가 같다.
+///    회복은 갱신 링크(`graphql_client.dart`)가 하는 일이지 재시도가 할 일이 아니다.
+/// 2. **상한이 리셋된다.** 홈 섹션은 `currentCoordinatesProvider`를 watch하는데,
+///    Riverpod은 의존성이 바뀌면 재시도 카운터를 0으로 되돌린다
+///    (`element.dart`의 `if (_didChangeDependency) _retryCount = 0`). 위치가 갱신될
+///    때마다 5회가 새로 시작되니 사실상 상한이 없다.
+///
+/// 판별은 [AuthAwareFailure] 하나에만 의존한다 — 도메인 타입을 알 필요가 없고,
+/// 새 도메인이 그 인터페이스만 구현하면 저절로 포함된다.
 Duration? defaultNetworkRetry(int retryCount, Object error) {
   if (error is LocationUnavailable) return null;
+  if (error is AuthAwareFailure && error.isUnauthenticated) return null;
   if (retryCount >= defaultMaxAutoRetries) return null;
   return defaultRetryDelayOf(retryCount);
 }

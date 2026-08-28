@@ -5,6 +5,8 @@ import 'package:ieuri_k_trip_spot/common/localization/locale_controller.dart';
 import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/liked_spot.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/liked_spots_empty_reason.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/liked_spots_query.dart';
 import 'package:ieuri_k_trip_spot/common/category/spot_category.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/liked_spots_providers.dart';
@@ -55,7 +57,7 @@ void main() {
 
     final LikedSpotsState state = await _container(
       repo,
-    ).read(likedSpotsControllerProvider(noCategories).future);
+    ).read(likedSpotsControllerProvider(likedQuery()).future);
 
     expect(state.items.map((LikedSpot s) => s.id), <String>['a', 'b']);
     expect(state.hasMore, isTrue);
@@ -67,14 +69,14 @@ void main() {
       liked: <LikedSpot>[_liked('a'), _liked('b'), _liked('c')],
     );
     final ProviderContainer container = _container(repo);
-    await container.read(likedSpotsControllerProvider(noCategories).future);
+    await container.read(likedSpotsControllerProvider(likedQuery()).future);
 
     await container
-        .read(likedSpotsControllerProvider(noCategories).notifier)
+        .read(likedSpotsControllerProvider(likedQuery()).notifier)
         .loadMore();
 
     final LikedSpotsState state = container
-        .read(likedSpotsControllerProvider(noCategories))
+        .read(likedSpotsControllerProvider(likedQuery()))
         .requireValue;
     // 서버가 준 순서 그대로 이어 붙는다 — 클라이언트가 정렬하지 않는다(§5.2).
     expect(state.items.map((LikedSpot s) => s.id), <String>['a', 'b', 'c']);
@@ -86,11 +88,11 @@ void main() {
       liked: <LikedSpot>[_liked('a')],
     );
     final ProviderContainer container = _container(repo);
-    await container.read(likedSpotsControllerProvider(noCategories).future);
+    await container.read(likedSpotsControllerProvider(likedQuery()).future);
     expect(repo.likedSpotsCallCount, 1);
 
     await container
-        .read(likedSpotsControllerProvider(noCategories).notifier)
+        .read(likedSpotsControllerProvider(likedQuery()).notifier)
         .loadMore();
 
     // hasMore=false이므로 호출이 늘지 않는다.
@@ -100,7 +102,7 @@ void main() {
   test('좋아요가 없으면 빈 상태다', () async {
     final LikedSpotsState state = await _container(
       FakeSpotRepository(),
-    ).read(likedSpotsControllerProvider(noCategories).future);
+    ).read(likedSpotsControllerProvider(likedQuery()).future);
 
     expect(state.items, isEmpty);
     expect(state.isEmpty, isTrue);
@@ -113,12 +115,12 @@ void main() {
       FakeSpotRepository(likedSpotsFailure: SpotFailure.unauthenticated),
     );
     // autoDispose라 구독을 유지해야 오류 상태를 읽는 동안 살아있다.
-    container.listen(likedSpotsControllerProvider(noCategories), (_, _) {});
+    container.listen(likedSpotsControllerProvider(likedQuery()), (_, _) {});
 
     // Future를 먼저 변수로 붙잡아 구독을 확정한 뒤 매처에 넘긴다 — expectLater에
     // `.future`를 바로 넘기면 구독이 한 틀 늦게 붙어 컨테이너 폐기와 경쟁한다.
     final Future<LikedSpotsState> pending = container.read(
-      likedSpotsControllerProvider(noCategories).future,
+      likedSpotsControllerProvider(likedQuery()).future,
     );
 
     await expectLater(
@@ -146,7 +148,7 @@ void main() {
 
     await _container(repo).read(
       likedSpotsControllerProvider(
-        selectionOf(const <SpotCategory>[catRestaurant]),
+        likedQuery(categories: const <SpotCategory>[catRestaurant]),
       ).future,
     );
 
@@ -163,11 +165,11 @@ void main() {
     final ProviderContainer container = _container(repo);
 
     final LikedSpotsState all = await container.read(
-      likedSpotsControllerProvider(noCategories).future,
+      likedSpotsControllerProvider(likedQuery()).future,
     );
     final LikedSpotsState dining = await container.read(
       likedSpotsControllerProvider(
-        selectionOf(const <SpotCategory>[catRestaurant]),
+        likedQuery(categories: const <SpotCategory>[catRestaurant]),
       ).future,
     );
 
@@ -183,7 +185,7 @@ void main() {
 
     await _container(
       repo,
-    ).read(likedSpotsControllerProvider(noCategories).future);
+    ).read(likedSpotsControllerProvider(likedQuery()).future);
 
     expect(repo.lastLikedCategoryCodes, isNull);
   });
@@ -196,14 +198,14 @@ void main() {
       failLikedAfter: 1,
     );
     final ProviderContainer container = _container(repo);
-    await container.read(likedSpotsControllerProvider(noCategories).future);
+    await container.read(likedSpotsControllerProvider(likedQuery()).future);
 
     await container
-        .read(likedSpotsControllerProvider(noCategories).notifier)
+        .read(likedSpotsControllerProvider(likedQuery()).notifier)
         .loadMore();
 
     final LikedSpotsState state = container
-        .read(likedSpotsControllerProvider(noCategories))
+        .read(likedSpotsControllerProvider(likedQuery()))
         .requireValue;
     // 보고 있던 목록은 그대로 남고 오류 화면으로 바뀌지 않는다.
     expect(state.items.map((LikedSpot s) => s.id), <String>['a', 'b']);
@@ -219,14 +221,254 @@ void main() {
       liked: <LikedSpot>[_liked('a')],
     );
     final ProviderContainer container = _container(repo);
-    await container.read(likedSpotsControllerProvider(noCategories).future);
+    await container.read(likedSpotsControllerProvider(likedQuery()).future);
     expect(repo.likedSpotsCallCount, 1);
 
     await container
         .read(localeControllerProvider.notifier)
         .select(AppLanguage.korean);
-    await container.read(likedSpotsControllerProvider(noCategories).future);
+    await container.read(likedSpotsControllerProvider(likedQuery()).future);
 
     expect(repo.likedSpotsCallCount, 2);
+  });
+
+  // --- 목록 내 검색(SPEC-0033) -------------------------------------------------
+
+  group('목록 내 검색', () {
+    test('검색어를 바꾸면 다시 조회한다 (AC8.1)', () async {
+      // 검색어가 family 키에 들어가지 않으면 같은 인스턴스를 가리켜 재조회가
+      // 일어나지 않는다 — 이 배선에서 가장 틀리기 쉬운 지점이다.
+      final FakeSpotRepository repo = FakeSpotRepository(
+        liked: <LikedSpot>[_liked('a'), _liked('b')],
+      );
+      final ProviderContainer container = _container(repo);
+
+      await container.read(likedSpotsControllerProvider(likedQuery()).future);
+      expect(repo.likedSpotsCallCount, 1);
+
+      await container.read(
+        likedSpotsControllerProvider(likedQuery(query: 'Spot a')).future,
+      );
+
+      expect(repo.likedSpotsCallCount, 2);
+      expect(repo.lastLikedQuery, 'Spot a');
+    });
+
+    test('빈 검색어는 query 인자를 보내지 않는다 (AC8.2)', () async {
+      // 빈 문자열을 보내면 서버가 EMPTY_QUERY로 거절한다 — "생략 = 필터 없음"과
+      // "빈 값 = 오류"가 계약에서 다르다.
+      final FakeSpotRepository repo = FakeSpotRepository(
+        liked: <LikedSpot>[_liked('a')],
+      );
+
+      await _container(
+        repo,
+      ).read(likedSpotsControllerProvider(likedQuery()).future);
+
+      expect(repo.lastLikedQuery, isNull);
+    });
+
+    test('공백뿐인 검색어도 인자를 보내지 않는다', () async {
+      final FakeSpotRepository repo = FakeSpotRepository(
+        liked: <LikedSpot>[_liked('a')],
+      );
+
+      await _container(
+        repo,
+      ).read(likedSpotsControllerProvider(likedQuery(query: '   ')).future);
+
+      expect(repo.lastLikedQuery, isNull);
+    });
+
+    test('loadMore가 검색어를 유지한다', () async {
+      // 첫 페이지만 필터되고 다음 페이지가 필터되지 않는 것이 이 배선에서 가장
+      // 나오기 쉬운 버그다(설계 §핵심 배선).
+      final FakeSpotRepository repo = FakeSpotRepository(
+        liked: <LikedSpot>[
+          _liked('seoul 1'),
+          _liked('seoul 2'),
+          _liked('seoul 3'),
+        ],
+      );
+      final ProviderContainer container = _container(repo);
+      final LikedSpotsQuery key = likedQuery(query: 'seoul');
+      await container.read(likedSpotsControllerProvider(key).future);
+
+      await container.read(likedSpotsControllerProvider(key).notifier).loadMore();
+
+      expect(repo.lastLikedQuery, 'seoul');
+      final LikedSpotsState state = container
+          .read(likedSpotsControllerProvider(key))
+          .requireValue;
+      expect(state.items.length, 3);
+    });
+
+    test('카테고리와 검색어가 함께 실린다 (AND)', () async {
+      // 한쪽을 바꿀 때 다른 쪽이 초기화되면 안 된다.
+      final FakeSpotRepository repo = FakeSpotRepository(
+        liked: <LikedSpot>[
+          _liked('seoul a'),
+          _liked('seoul b', category: catRestaurant),
+        ],
+      );
+
+      final LikedSpotsState state = await _container(repo).read(
+        likedSpotsControllerProvider(
+          likedQuery(
+            categories: const <SpotCategory>[catRestaurant],
+            query: 'seoul',
+          ),
+        ).future,
+      );
+
+      expect(repo.lastLikedCategoryCodes, <String>[catRestaurant.code]);
+      expect(repo.lastLikedQuery, 'seoul');
+      expect(state.items.map((LikedSpot s) => s.id), <String>['seoul b']);
+    });
+
+    test('필터 없는 조회만 좋아요 존재 여부의 근거가 된다', () async {
+      // 검색 결과 0건은 그 자체로 좋아요가 없다는 뜻이 아니다 — 빈 상태 문구를
+      // 가르려면 필터를 걷어낸 관측이 필요하다.
+      final FakeSpotRepository repo = FakeSpotRepository(
+        liked: <LikedSpot>[_liked('a')],
+      );
+      final ProviderContainer container = _container(repo);
+
+      await container.read(likedSpotsControllerProvider(likedQuery()).future);
+      expect(container.read(likedSpotsPresenceProvider), isTrue);
+
+      // 아무것도 맞지 않는 검색을 해도 관측이 뒤집히지 않는다.
+      final LikedSpotsState searched = await container.read(
+        likedSpotsControllerProvider(likedQuery(query: 'zzz')).future,
+      );
+      expect(searched.items, isEmpty);
+      expect(container.read(likedSpotsPresenceProvider), isTrue);
+    });
+  });
+
+  // --- 검색어 상태(SPEC-0033 §입력 처리) ---------------------------------------
+
+  group('검색어 provider', () {
+    test('앞뒤 공백을 턴다', () {
+      final ProviderContainer container = _container(FakeSpotRepository());
+
+      container.read(likedSpotsSearchQueryProvider.notifier).set('  seoul  ');
+
+      expect(container.read(likedSpotsSearchQueryProvider), 'seoul');
+    });
+
+    test('100자를 넘으면 자른다', () {
+      // QUERY_TOO_LONG은 방어선이지 정상 경로가 아니다 — 입력에서 막는다.
+      final ProviderContainer container = _container(FakeSpotRepository());
+
+      container
+          .read(likedSpotsSearchQueryProvider.notifier)
+          .set('x' * (likedSpotsQueryMaxLength + 20));
+
+      expect(
+        container.read(likedSpotsSearchQueryProvider).length,
+        likedSpotsQueryMaxLength,
+      );
+    });
+
+    test('clear가 검색어를 비운다', () {
+      final ProviderContainer container = _container(FakeSpotRepository());
+      container.read(likedSpotsSearchQueryProvider.notifier).set('seoul');
+
+      container.read(likedSpotsSearchQueryProvider.notifier).clear();
+
+      expect(container.read(likedSpotsSearchQueryProvider), '');
+    });
+  });
+
+  // --- 패밀리 키 값 동등성(SPEC-0033 §핵심 배선) ------------------------------
+
+  group('LikedSpotsQuery 동등성', () {
+    test('같은 값이면 같은 키다', () {
+      // 동등성이 깨지면 리빌드마다 새 인스턴스가 생겨 매 프레임 재조회한다.
+      expect(
+        likedQuery(
+          categories: const <SpotCategory>[catRestaurant],
+          query: 'seoul',
+        ),
+        likedQuery(
+          categories: const <SpotCategory>[catRestaurant],
+          query: 'seoul',
+        ),
+      );
+      expect(
+        likedQuery(query: 'seoul').hashCode,
+        likedQuery(query: 'seoul').hashCode,
+      );
+    });
+
+    test('검색어가 다르면 다른 키다', () {
+      expect(likedQuery(query: 'seoul'), isNot(likedQuery(query: 'busan')));
+    });
+
+    test('카테고리가 다르면 다른 키다', () {
+      expect(
+        likedQuery(categories: const <SpotCategory>[catRestaurant]),
+        isNot(likedQuery()),
+      );
+    });
+
+    test('앞뒤 공백만 다른 검색어는 같은 키다', () {
+      // "seoul"과 "seoul "은 같은 조회이므로 같은 provider를 가리켜야 한다.
+      expect(likedQuery(query: 'seoul '), likedQuery(query: 'seoul'));
+    });
+
+    test('빈 검색어는 queryOrNull이 null이다', () {
+      expect(likedQuery().queryOrNull, isNull);
+      expect(likedQuery().hasQuery, isFalse);
+      expect(likedQuery(query: 'seoul').queryOrNull, 'seoul');
+      expect(likedQuery(query: 'seoul').hasQuery, isTrue);
+    });
+  });
+
+  // --- 빈 상태 판정(SPEC-0033 §두 개의 빈 상태) -------------------------------
+
+  group('빈 상태 판정', () {
+    test('항목이 있으면 빈 상태가 아니다', () {
+      expect(
+        likedSpotsEmptyReason(
+          isEmpty: false,
+          hasQuery: true,
+          hasAnyLikes: true,
+        ),
+        isNull,
+      );
+    });
+
+    test('좋아요가 있고 검색 결과가 0건이면 결과 없음이다 (AC8.3)', () {
+      expect(
+        likedSpotsEmptyReason(isEmpty: true, hasQuery: true, hasAnyLikes: true),
+        LikedSpotsEmptyReason.noSearchResults,
+      );
+    });
+
+    test('좋아요가 0건이면 검색어가 있어도 좋아요 0건이 우선한다 (AC8.4)', () {
+      // 저장한 게 하나도 없는 사람에게 "검색 결과가 없습니다"는 할 일을 알려주지
+      // 못한다.
+      expect(
+        likedSpotsEmptyReason(
+          isEmpty: true,
+          hasQuery: true,
+          hasAnyLikes: false,
+        ),
+        LikedSpotsEmptyReason.noLikes,
+      );
+    });
+
+    test('검색어 없이 비었으면 좋아요 0건이다', () {
+      expect(
+        likedSpotsEmptyReason(
+          isEmpty: true,
+          hasQuery: false,
+          hasAnyLikes: false,
+        ),
+        LikedSpotsEmptyReason.noLikes,
+      );
+    });
   });
 }
