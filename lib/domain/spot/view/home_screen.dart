@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../common/location/location_providers.dart';
 import '../../../common/navigation/spot_detail_route.dart';
 import '../../../common/widget/home_section.dart';
 import '../../spot_qa/component/my_questions_button.dart';
@@ -72,8 +73,15 @@ class HomeScreen extends ConsumerWidget {
           // **`.future`를 await 해야 한다** — invalidate만 하고 끝나면 데이터가
           // 도착하기 전에 스피너가 걷혀 새로고침이 안 된 것처럼 보인다. 셋 중
           // 하나가 실패해도 나머지를 기다리도록 각각 catchError로 받는다.
+          //
+          // **좌표부터 버린다**(2026-08-27). 섹션만 다시 받으면 예전 좌표로 같은
+          // 결과가 돌아와, 자리를 옮긴 사용자가 당겨도 아무것도 바뀌지 않는다 —
+          // 조회 좌표는 세션 동안 고정되기 때문이다(`currentCoordinatesProvider`).
+          // 앞으로 돌아올 때의 자동 갱신은 500m를 넘어야 도는 반면, 손으로 당긴
+          // 것은 거리를 따지지 않고 그대로 받아들인다.
           onRefresh: () async {
             ref
+              ..invalidate(currentCoordinatesProvider)
               ..invalidate(nearbySpotsSectionProvider)
               ..invalidate(popularSpotsSectionProvider);
             await Future.wait(<Future<void>>[

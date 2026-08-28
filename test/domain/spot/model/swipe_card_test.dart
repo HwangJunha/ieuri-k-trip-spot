@@ -220,36 +220,63 @@ void main() {
       }
     });
 
-    /// AC R3-1: 오른쪽으로 확정하면 좋아요.
-    test('오른쪽으로 끌면 좋아요다', () {
+    /// R3 개정(2026-08-27): **어느 쪽으로 밀어도 패스다.** 넘기는 동작과 좋아요가
+    /// 같은 제스처를 쓰면 구분되지 않아, 넘기려던 카드가 보관함에 쌓였다. 좋아요는
+    /// 카드의 버튼과 상세 화면에서만 받는다.
+    test('오른쪽으로 끌어도 패스다', () {
       expect(
-        SwipeDrag.resolve(dragX: 200, width: 400, velocity: 0),
-        SpotReaction.like,
+        SwipeDrag.resolveHorizontal(
+          drag: const Offset(200, 0),
+          size: const Size2D(400, 800),
+          velocity: Offset.zero,
+        )?.reaction,
+        SpotReaction.dislike,
       );
     });
 
-    /// AC R3-2: 왼쪽으로 확정하면 관심 없음.
-    test('왼쪽으로 끌면 관심 없음이다', () {
+    test('왼쪽으로 끌어도 패스다', () {
       expect(
-        SwipeDrag.resolve(dragX: -200, width: 400, velocity: 0),
+        SwipeDrag.resolveHorizontal(
+          drag: const Offset(-200, 0),
+          size: const Size2D(400, 800),
+          velocity: Offset.zero,
+        )?.reaction,
         SpotReaction.dislike,
       );
     });
 
     /// 임계에 못 미치면 확정하지 않는다(스프링백).
     test('임계에 못 미치면 판정하지 않는다', () {
-      expect(SwipeDrag.resolve(dragX: 10, width: 400, velocity: 0), isNull);
+      expect(
+        SwipeDrag.resolveHorizontal(
+          drag: const Offset(10, 0),
+          size: const Size2D(400, 800),
+          velocity: Offset.zero,
+        ),
+        isNull,
+      );
     });
 
     /// 짧게 튕기는 조작을 거리만으로 판정하면 "분명히 넘겼는데 돌아온다"가 된다.
+    ///
+    /// 판정 결과는 둘 다 패스지만, **카드가 날아가는 방향**은 민 쪽을 따라야 한다 —
+    /// 그래서 방향 자체는 여전히 구분된다.
     test('빠르게 튕기면 거리가 짧아도 확정된다', () {
       expect(
-        SwipeDrag.resolve(dragX: 10, width: 400, velocity: 900),
-        SpotReaction.like,
+        SwipeDrag.resolveHorizontal(
+          drag: const Offset(10, 0),
+          size: const Size2D(400, 800),
+          velocity: const Offset(900, 0),
+        ),
+        SwipeDirection.right,
       );
       expect(
-        SwipeDrag.resolve(dragX: -10, width: 400, velocity: -900),
-        SpotReaction.dislike,
+        SwipeDrag.resolveHorizontal(
+          drag: const Offset(-10, 0),
+          size: const Size2D(400, 800),
+          velocity: const Offset(-900, 0),
+        ),
+        SwipeDirection.left,
       );
     });
 
@@ -292,7 +319,14 @@ void main() {
     test('폭이 0이면 계산이 무너지지 않는다', () {
       expect(SwipeDrag.progress(50, 0), 0);
       expect(SwipeDrag.tilt(50, 0), 0);
-      expect(SwipeDrag.resolve(dragX: 50, width: 0, velocity: 0), isNull);
+      expect(
+        SwipeDrag.resolveHorizontal(
+          drag: const Offset(50, 0),
+          size: const Size2D(0, 0),
+          velocity: Offset.zero,
+        ),
+        isNull,
+      );
     });
   });
 }

@@ -20,6 +20,7 @@ import '../component/swipe_card.dart';
 import '../model/retry_exhausted.dart';
 import '../../../common/category/spot_category.dart';
 import '../../../common/category/spot_category_selection.dart';
+import '../model/spot_reaction.dart';
 import '../model/swipe_card_metrics.dart';
 import '../model/swipe_drag.dart';
 import '../model/swipe_queue.dart';
@@ -508,7 +509,24 @@ class _CardStackState extends ConsumerState<_CardStack>
   ///
   /// **던진 속도를 이어받는다.** 세게 튕겼는데 카드가 정해진 속도로만 나가면
   /// 그 순간 손과 화면이 끊긴다 — 튕긴 세기만큼 빨리 빠져야 이어져 보인다.
-  void _confirm(SwipeDirection direction, Size2D size, Offset velocity) {
+  void _confirm(SwipeDirection direction, Size2D size, Offset velocity) =>
+      _flyOut(direction, size, velocity, direction.reaction);
+
+  /// 좋아요 버튼(R3 개정, 2026-08-27). 카드를 오른쪽으로 날려 보내고 `like`를 쓴다.
+  ///
+  /// **스와이프와 같은 애니메이션을 탄다.** 버튼을 누른 카드만 그 자리에서 사라지면
+  /// 손으로 민 것과 다른 동작이 되어, 같은 화면 안에 카드가 없어지는 방식이 둘이
+  /// 된다. 방향은 오른쪽으로 고정한다 — 좋아요가 오른쪽이라는 관례는 판정에서
+  /// 걷어냈어도 눈에는 남아 있다.
+  void _like(Size2D size) =>
+      _flyOut(SwipeDirection.right, size, Offset.zero, SpotReaction.like);
+
+  void _flyOut(
+    SwipeDirection direction,
+    Size2D size,
+    Offset velocity,
+    SpotReaction reaction,
+  ) {
     if (_flyingOut) return; // 연타로 두 장이 한꺼번에 소비되는 것을 막는다.
     _flyingOut = true;
 
@@ -534,7 +552,7 @@ class _CardStackState extends ConsumerState<_CardStack>
           if (!mounted) return;
           ref
               .read(swipeControllerProvider(widget.selection).notifier)
-              .swipe(direction.reaction);
+              .swipe(reaction);
           _drag.value = Offset.zero;
           _animation = null;
           _flyingOut = false;
@@ -655,6 +673,7 @@ class _CardStackState extends ConsumerState<_CardStack>
                     _confirm(direction, size, velocity),
                 onSpringBack: _springBack,
                 onTap: () => _openDetail(top),
+                onLike: () => _like(size),
               ),
             ),
           ],
@@ -681,6 +700,7 @@ class _DraggableTop extends StatelessWidget {
     required this.onConfirm,
     required this.onSpringBack,
     required this.onTap,
+    required this.onLike,
   });
 
   final TouristSpot spot;
@@ -700,6 +720,9 @@ class _DraggableTop extends StatelessWidget {
 
   /// 카드 탭(드래그 아님) 콜백 — 상세 진입.
   final VoidCallback onTap;
+
+  /// 카드의 좋아요 버튼. 스와이프가 전부 패스가 된 뒤로 좋아요는 이 경로뿐이다.
+  final VoidCallback onLike;
 
   @override
   Widget build(BuildContext context) {
@@ -728,7 +751,9 @@ class _DraggableTop extends StatelessWidget {
         // `child`는 다시 빌드되지 않지만, 경계가 없으면 바깥 `Transform`이 움직일
         // 때마다 사진·블러 배경이 다시 래스터화된다. 경계를 두면 굳은 레이어를
         // 옮기기만 한다 — 드래그가 부드러워지는 핵심이다.
-        child: RepaintBoundary(child: SwipeCard(spot: spot, metrics: metrics)),
+        child: RepaintBoundary(
+          child: SwipeCard(spot: spot, metrics: metrics, onLike: onLike),
+        ),
         builder: (BuildContext context, Offset value, Widget? child) =>
             Transform.translate(
               offset: value,

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'app_colors.dart';
-
-/// Light and dark [ThemeData] for the app.
+/// Light [ThemeData] for the app.
 ///
 /// The light scheme is the exact Material 3 role set exported from the Google
 /// Stitch design system. The dark scheme is seeded from the brand key color
@@ -29,7 +27,6 @@ class AppTheme {
   ];
 
   static final ThemeData light = _build(_lightScheme);
-  static final ThemeData dark = _build(_darkScheme);
 
   static ThemeData _build(ColorScheme scheme) => ThemeData(
     useMaterial3: true,
@@ -89,24 +86,5 @@ class AppTheme {
     tertiaryFixedDim: Color(0xFFFFB955),
     onTertiaryFixed: Color(0xFF291800),
     onTertiaryFixedVariant: Color(0xFF633F00),
-  );
-
-  /// Dark scheme seeded from the brand key color, with secondary/tertiary
-  /// nudged to the brand values. Replace with Stitch dark tones when available.
-  ///
-  /// **secondary 계열은 primary와 같은 톤으로 맞춘다** — 라이트 스킴과 같은 이유로
-  /// 주황 서브 컬러를 쓰지 않는다. 시드가 primary이므로 시드에서 파생된 primary
-  /// 톤을 그대로 secondary 자리에 넣어, 어두운 배경 대비도 함께 따라온다.
-  static final ColorScheme _darkScheme = _seededDark.copyWith(
-    secondary: _seededDark.primary,
-    onSecondary: _seededDark.onPrimary,
-    secondaryContainer: _seededDark.primaryContainer,
-    onSecondaryContainer: _seededDark.onPrimaryContainer,
-    tertiary: AppColors.tertiary,
-  );
-
-  static final ColorScheme _seededDark = ColorScheme.fromSeed(
-    seedColor: AppColors.primary,
-    brightness: Brightness.dark,
   );
 }

@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'common/analytics/app_analytics.dart';
 import 'common/localization/app_language.dart';
 import 'common/localization/locale_controller.dart';
+import 'common/location/component/location_refresh_gate.dart';
 import 'common/permission/component/permission_boot_gate.dart';
 import 'common/storage/app_preferences.dart';
 import 'common/storage/secure_storage.dart';
@@ -71,8 +72,7 @@ class KTripSpotApp extends ConsumerWidget {
           AppLocalizations.of(context).appTitle,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.light,
       locale: locale,
       supportedLocales: AppLanguage.supportedLocales,
       localizationsDelegates: const <LocalizationsDelegate<Object>>[
@@ -87,9 +87,15 @@ class KTripSpotApp extends ConsumerWidget {
       // 알림 게이트 둘도 같은 자리에 얹는다(SPEC-0028 §3.2·§3.3) — 화면을 그리지 않고
       // 인증 전이와 알림 탭만 듣는다. **권한 게이트 안쪽에 둔다**: 등록은 권한 판정이
       // 끝난 뒤라야 의미가 있고, 권한 시퀀스가 먼저 돌아야 `check`가 실제 값을 준다.
+      //
+      // 위치 갱신 게이트도 같은 자리다 — 앱이 앞으로 돌아온 시점에만 좌표를 다시
+      // 보고, 의미 있게 움직였을 때만 조회 좌표를 무효화한다. **권한 게이트 안쪽에
+      // 둔다**: 권한이 정해지기 전에는 읽을 좌표가 없다.
       builder: (BuildContext context, Widget? child) => PermissionBootGate(
-        child: PushRegistrationGate(
-          child: PushDeepLinkGate(child: child ?? const SizedBox.shrink()),
+        child: LocationRefreshGate(
+          child: PushRegistrationGate(
+            child: PushDeepLinkGate(child: child ?? const SizedBox.shrink()),
+          ),
         ),
       ),
       // **딥링크 URL을 파서 앞에서 정규화한다**([DeepLinkRouteInformationParser]).
