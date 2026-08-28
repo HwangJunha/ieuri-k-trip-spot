@@ -964,5 +964,6 @@
   "@onboardingTitle5": {},
   "@onboardingBody5": {},
   "photoSyncAllowAll": "設定で全体を許可",
-  "photoSyncRescan": "もう一度埋める"
+  "photoSyncRescan": "もう一度埋める",
+  "homeRefreshLocation": "現在地で更新"
 }

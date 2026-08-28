@@ -5,19 +5,22 @@ import 'spot_reaction.dart';
 /// 드래그가 확정된 방향.
 ///
 /// **좌우뿐이다**(사용자 결정 2026-08-24). 한때 상하까지 확정 방향으로 뒀지만,
-/// 아래로 밀면 패스가 되는 것이 직관과 어긋났다 — 좋아요는 오른쪽, 패스는
-/// 왼쪽이라는 관례가 이미 굳어 있다. 카드는 여전히 손가락을 따라 위아래로도
-/// 움직이지만(그래야 뻣뻣하지 않다), 판정은 가로 변위만 본다.
+/// 아래로 밀면 패스가 되는 것이 직관과 어긋났다. 카드는 여전히 손가락을 따라
+/// 위아래로도 움직이지만(그래야 뻣뻣하지 않다), 판정은 가로 변위만 본다.
 enum SwipeDirection {
   left,
   right;
 
-  /// 이 방향이 뜻하는 반응. 서버 enum은 LIKE/DISLIKE 둘뿐이다
-  /// (`spot_schema.graphql:23-26`).
-  SpotReaction get reaction => switch (this) {
-    SwipeDirection.right => SpotReaction.like,
-    SwipeDirection.left => SpotReaction.dislike,
-  };
+  /// 이 방향이 뜻하는 반응. **어느 쪽으로 밀어도 패스다**(사용자 결정 2026-08-27).
+  ///
+  /// 예전에는 오른쪽이 좋아요였는데, 테스터들이 "분명 넘겼는데 좋아요에 들어가
+  /// 있다"고 했다. 카드를 넘기는 동작과 마음에 든다는 표시가 같은 제스처에 얹혀
+  /// 있으면 구분이 되지 않는다 — 넘기려던 것이 좋아요가 되어 보관함이 의도하지
+  /// 않은 장소로 채워진다.
+  ///
+  /// 좋아요는 카드의 버튼과 상세 화면에서만 받는다. 누르는 동작은 스와이프와
+  /// 헷갈릴 수 없다.
+  SpotReaction get reaction => SpotReaction.dislike;
 
   /// 카드가 날아갈 단위 방향.
   Offset get unit => switch (this) {
@@ -80,26 +83,6 @@ abstract final class SwipeDrag {
   }) =>
       (width > 0 && dragX.abs() >= width * confirmFraction) ||
       velocity.abs() >= flingVelocity;
-
-  /// 확정 방향 → 반응(R3). 오른쪽이 좋아요, 왼쪽이 관심 없음.
-  ///
-  /// 거의 안 움직였는데 튕긴 경우가 있어 **속도도 함께 본다** — 변위가 0이면 방향을
-  /// 변위로 정할 수 없다.
-  static SpotReaction reactionFor({
-    required double dragX,
-    required double velocity,
-  }) => (dragX > 0 || (dragX == 0 && velocity > 0))
-      ? SpotReaction.like
-      : SpotReaction.dislike;
-
-  /// 손을 뗐을 때의 판정 결과. 확정이 아니면 null(스프링백).
-  static SpotReaction? resolve({
-    required double dragX,
-    required double width,
-    required double velocity,
-  }) => confirms(dragX: dragX, width: width, velocity: velocity)
-      ? reactionFor(dragX: dragX, velocity: velocity)
-      : null;
 
   /// 손을 뗐을 때의 판정. 확정이 아니면 null(스프링백).
   ///

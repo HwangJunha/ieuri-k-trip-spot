@@ -2288,5 +2288,9 @@
   "@onboardingTitle5": {},
   "@onboardingBody5": {},
   "photoSyncAllowAll": "설정에서 전체 허용",
-  "photoSyncRescan": "다시 채우기"
+  "photoSyncRescan": "다시 채우기",
+  "homeRefreshLocation": "현재 위치로 새로고침",
+  "@homeRefreshLocation": {
+    "description": "내 주변 섹션의 위치 새로고침 버튼"
+  }
 }

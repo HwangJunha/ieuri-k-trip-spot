@@ -7,6 +7,7 @@ import '../../../common/permission/component/permission_blocked_notice.dart';
 import '../../../common/permission/model/permission_kind.dart';
 import '../../../common/permission/model/permission_state.dart';
 import '../../../common/permission/provider/permission_providers.dart';
+import '../../../common/location/location_providers.dart';
 import '../../../common/storage/search_radius_controller.dart';
 import '../../../common/widget/failure_notice.dart';
 import '../../../common/widget/floating_bottom_nav_scaffold.dart';
@@ -20,6 +21,7 @@ import '../component/swipe_card.dart';
 import '../model/retry_exhausted.dart';
 import '../../../common/category/spot_category.dart';
 import '../../../common/category/spot_category_selection.dart';
+import '../model/spot_reaction.dart';
 import '../model/swipe_card_metrics.dart';
 import '../model/swipe_drag.dart';
 import '../model/swipe_queue.dart';
@@ -508,7 +510,38 @@ class _CardStackState extends ConsumerState<_CardStack>
   ///
   /// **던진 속도를 이어받는다.** 세게 튕겼는데 카드가 정해진 속도로만 나가면
   /// 그 순간 손과 화면이 끊긴다 — 튕긴 세기만큼 빨리 빠져야 이어져 보인다.
-  void _confirm(SwipeDirection direction, Size2D size, Offset velocity) {
+  void _confirm(SwipeDirection direction, Size2D size, Offset velocity) =>
+      _flyOut(direction, size, velocity, direction.reaction);
+
+  /// 좋아요 버튼(R3 개정, 2026-08-27). 카드를 오른쪽으로 날려 보내고 `like`를 쓴다.
+  ///
+  /// **스와이프와 같은 애니메이션을 탄다.** 버튼을 누른 카드만 그 자리에서 사라지면
+  /// 손으로 민 것과 다른 동작이 되어, 같은 화면 안에 카드가 없어지는 방식이 둘이
+  /// 된다. 방향은 오른쪽으로 고정한다 — 좋아요가 오른쪽이라는 관례는 판정에서
+  /// 걷어냈어도 눈에는 남아 있다.
+  void _like(Size2D size) =>
+      _flyOut(SwipeDirection.right, size, Offset.zero, SpotReaction.like);
+
+  /// 위치를 다시 잡는다(2026-08-27).
+  ///
+  /// 조회 좌표는 세션 동안 고정되므로 지하철로 이동해도 예전 동네의 카드가 계속
+  /// 나온다. 앞으로 돌아올 때 500m를 넘으면 자동으로 갱신되지만
+  /// (`LocationRefreshGate`), 그 판정에 걸리지 않는 경우가 남는다.
+  ///
+  /// **큐도 함께 버린다.** 좌표만 새로 받으면 이미 쌓인 카드는 예전 위치의 것
+  /// 그대로다 — 사용자가 보는 것이 바뀌지 않으면 새로고침이 아니다.
+  void _refreshLocation() {
+    ref
+      ..invalidate(currentCoordinatesProvider)
+      ..invalidate(swipeControllerProvider(widget.selection));
+  }
+
+  void _flyOut(
+    SwipeDirection direction,
+    Size2D size,
+    Offset velocity,
+    SpotReaction reaction,
+  ) {
     if (_flyingOut) return; // 연타로 두 장이 한꺼번에 소비되는 것을 막는다.
     _flyingOut = true;
 
@@ -534,7 +567,7 @@ class _CardStackState extends ConsumerState<_CardStack>
           if (!mounted) return;
           ref
               .read(swipeControllerProvider(widget.selection).notifier)
-              .swipe(direction.reaction);
+              .swipe(reaction);
           _drag.value = Offset.zero;
           _animation = null;
           _flyingOut = false;
@@ -585,6 +618,12 @@ class _CardStackState extends ConsumerState<_CardStack>
     // 다시 빌드된다 — 여기서 실제로 읽는 것은 `viewPadding` 하나뿐이다.
     final EdgeInsets viewPadding = MediaQuery.viewPaddingOf(context);
 
+    // **글자 크기는 따로 구독한다**(2026-08-28). 정보 영역 높이를 고정하면서
+    // 그 높이가 글자 크기에 달리게 됐다 — 사용자가 글자를 키웠는데 높이가
+    // 그대로면 거리 줄이 잘린다. `textScalerOf`는 그 값 하나만 구독하므로 위
+    // 주석이 피하려던 통짜 구독은 여전히 일어나지 않는다.
+    final double textScale = MediaQuery.textScalerOf(context).scale(1);
+
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         final double width = constraints.maxWidth;
@@ -605,6 +644,7 @@ class _CardStackState extends ConsumerState<_CardStack>
               viewPadding.bottom + FloatingBottomNavScaffold.barExtent,
           topViewPadding: viewPadding.top,
           overlayControlsHeight: _overlayControlsHeight,
+          textScale: textScale,
         );
 
         final Size2D size = Size2D(width, constraints.maxHeight);
@@ -632,6 +672,15 @@ class _CardStackState extends ConsumerState<_CardStack>
                       key: ValueKey<String>(next.id),
                       spot: next,
                       metrics: metrics,
+                      // **하트를 여기서부터 그린다**(사용자 지적 2026-08-27).
+                      // 이 카드는 0.92배로 축소돼 있다가 앞으로 나오며 1.0이
+                      // 되는데, 그때 버튼까지 새로 나타나면 사진이 버튼 때문에
+                      // 줄었다 커지는 것처럼 보인다. 콜백은 주지 않는다 — 아직
+                      // 만질 수 없는 카드다.
+                      showsLike: true,
+                      // 새로고침도 같다. 게다가 이 아이콘은 거리 줄의 높이까지
+                      // 좌우하므로, 없으면 정보 영역이 낮아진다.
+                      showsRefresh: true,
                     ),
                   ),
                   builder: (BuildContext context, Offset drag, Widget? child) =>
@@ -655,6 +704,8 @@ class _CardStackState extends ConsumerState<_CardStack>
                     _confirm(direction, size, velocity),
                 onSpringBack: _springBack,
                 onTap: () => _openDetail(top),
+                onLike: () => _like(size),
+                onRefreshLocation: _refreshLocation,
               ),
             ),
           ],
@@ -681,6 +732,8 @@ class _DraggableTop extends StatelessWidget {
     required this.onConfirm,
     required this.onSpringBack,
     required this.onTap,
+    required this.onLike,
+    required this.onRefreshLocation,
   });
 
   final TouristSpot spot;
@@ -700,6 +753,14 @@ class _DraggableTop extends StatelessWidget {
 
   /// 카드 탭(드래그 아님) 콜백 — 상세 진입.
   final VoidCallback onTap;
+
+  /// 사진 위 좋아요. **패스 버튼은 두지 않는다**(사용자 결정 2026-08-27) — 어느
+  /// 방향으로 밀어도 패스라 손짓 경로가 이미 있고, 좋아요만 스와이프에서 떼어낸
+  /// 뒤로 이 경로뿐이기 때문이다.
+  final VoidCallback onLike;
+
+  /// 거리 옆의 위치 새로고침.
+  final VoidCallback onRefreshLocation;
 
   @override
   Widget build(BuildContext context) {
@@ -728,7 +789,16 @@ class _DraggableTop extends StatelessWidget {
         // `child`는 다시 빌드되지 않지만, 경계가 없으면 바깥 `Transform`이 움직일
         // 때마다 사진·블러 배경이 다시 래스터화된다. 경계를 두면 굳은 레이어를
         // 옮기기만 한다 — 드래그가 부드러워지는 핵심이다.
-        child: RepaintBoundary(child: SwipeCard(spot: spot, metrics: metrics)),
+        child: RepaintBoundary(
+          child: SwipeCard(
+            spot: spot,
+            metrics: metrics,
+            showsLike: true,
+            onLike: onLike,
+            showsRefresh: true,
+            onRefreshLocation: onRefreshLocation,
+          ),
+        ),
         builder: (BuildContext context, Offset value, Widget? child) =>
             Transform.translate(
               offset: value,
