@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
+import '../../../common/location/location_service.dart';
 // 페이지 모델은 공용 OffsetPage다 — 기능이 자기 페이지네이션을 만들지 않는다(§4).
 import '../../../common/pagination/offset_page.dart';
 import '../../../common/storage/search_radius_controller.dart';
@@ -148,6 +149,10 @@ class SpotSearch extends _$SpotSearch {
       AppAnalytics.logEvent(AnalyticsEvents.search, <String, Object>{
         AnalyticsParams.hasResult: !result.isEmpty,
       });
+    } on LocationUnavailable {
+      // **좌표를 못 얻은 것은 서버 실패와 다르다**(2026-08-29). 재시도로 풀리지
+      // 않으므로 화면이 위치 안내를 띄우도록 표시해 둔다.
+      state = SpotSearchFailed(query, needsLocation: true);
     } catch (error) {
       // 질의 원문은 사용자 입력이라 로깅하지 않는다(POL-013).
       state = SpotSearchFailed(query);

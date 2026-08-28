@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../common/location/component/location_needed_notice.dart';
 import '../../../common/location/coordinates.dart';
 import '../../../common/navigation/picked_place.dart';
 import '../../../common/navigation/spot_detail_route.dart';
@@ -173,6 +174,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   onSelect: _openDetail,
                 ),
               SpotSearchEmpty() => _Message(text: l10n.searchEmptyResult),
+              // 위치 실패는 재시도가 아니라 위치를 켜는 것으로 풀린다(2026-08-29).
+              // 이 분기가 아래 일반 실패보다 앞이어야 한다 — sealed switch는
+              // 먼저 맞는 패턴을 고른다.
+              SpotSearchFailed(needsLocation: true) => LocationNeededNotice(
+                message: l10n.searchLocationUnavailable,
+                onRetry: () => ref.read(spotSearchProvider.notifier).retry(),
+              ),
               SpotSearchFailed() => _Failure(
                 onRetry: () => ref.read(spotSearchProvider.notifier).retry(),
               ),

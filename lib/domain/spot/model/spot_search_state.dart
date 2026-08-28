@@ -58,8 +58,18 @@ class SpotSearchEmpty extends SpotSearchState {
 
 /// 조회가 실패했다 — 화면이 재시도 수단을 준다(AC-11.3).
 class SpotSearchFailed extends SpotSearchState {
-  const SpotSearchFailed(this.query);
+  const SpotSearchFailed(this.query, {this.needsLocation = false});
 
   /// 재시도가 같은 질의를 다시 보낼 수 있도록 들고 있는다.
   final String query;
+
+  /// 실패 원인이 **좌표를 얻지 못한 것**인지(2026-08-29).
+  ///
+  /// 화면이 안내를 갈라야 해서 둔다. 위치 실패에 "다시 시도"를 주면 눌러도 같은
+  /// 실패가 돌아온다 — 원인이 서버가 아니라 기기 설정이라 앱이 스스로 고칠 수
+  /// 없다. 그 상태가 App Store 심사에서 Guideline 5.1.5로 거절됐다.
+  ///
+  /// 새 상태로 가르지 않고 플래그로 두는 이유는 재시도 경로가 같기 때문이다 —
+  /// 위치를 켠 뒤에는 똑같이 `retry()`가 같은 질의를 다시 보내면 된다.
+  final bool needsLocation;
 }

@@ -1,3 +1,4 @@
+import '../../../common/location/location_service.dart';
 import '../../../common/network/auth_error_codes.dart';
 import '../../../common/network/network_retry_policy.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -22,10 +23,15 @@ CommunityRepository communityRepository(Ref ref) =>
 ///
 /// 인증 실패는 **아예 재시도하지 않는다** — SPEC-0005의 갱신·로그아웃 경로가
 /// 소관이며 여기서 다시 조회해 봐야 같은 실패가 난다.
+///
+/// 위치 실패도 같은 이유로 재시도하지 않는다(2026-08-29) — 주변 글 피드가
+/// 좌표를 입력으로 쓰는데, 좌표를 못 얻은 것은 서버가 아니라 기기 사정이라
+/// 다시 조회해도 같은 답이다. 화면은 `communityLocationUnavailable`로 안내한다.
 Duration? communityRetryPolicy(int retryCount, Object error) {
   // 인증 실패는 갱신 링크 소관이라 재시도하지 않는다. 판별은 공통
   // [AuthAwareFailure] 하나에만 의존한다 — 도메인마다 따로 적어 두면 서버가
   // 코드를 늘렸을 때 한쪽만 고쳐진다(2026-08-29).
+  if (error is LocationUnavailable) return null;
   if (error is AuthAwareFailure && error.isUnauthenticated) return null;
   if (retryCount >= defaultMaxAutoRetries) return null;
   return defaultRetryDelayOf(retryCount);
