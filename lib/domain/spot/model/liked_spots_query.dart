@@ -35,8 +35,9 @@ class LikedSpotsQuery {
   /// 검색이 걸려 있는지 — 빈 상태 문구를 가르는 근거다(§두 개의 빈 상태).
   bool get hasQuery => query.isNotEmpty;
 
-  /// 서버로 보낼 값. **빈 검색어는 null로 접는다** — 빈 문자열을 보내면 서버가
-  /// `EMPTY_QUERY`로 거절하므로 인자를 생략해 필터 없이 받는다(AC8.2).
+  /// 서버로 보낼 값. **빈 검색어는 null로 접는다** — null이면 repository가 검색
+  /// 오퍼레이션(`searchLikedSpots`) 대신 전체 목록(`likedSpots`)을 부른다. 그쪽
+  /// `query`가 non-null 필수라 빈 문자열로는 "전체"를 표현할 수 없다(AC8.2).
   String? get queryOrNull => query.isEmpty ? null : query;
 
   /// 검색어만 바꾼 키. 카테고리 선택은 그대로 실려 간다.

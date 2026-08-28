@@ -139,10 +139,12 @@ type LikedSpotEdge {
   likedAt: String!
 }
 
+# totalCount는 **없다.** 예전 이 SDL에 적혀 있었으나 라이브 서버에 존재하지 않아
+# 걷었다(2026-08-29 확인 — `FieldUndefined`). 조회하는 오퍼레이션이 없어 영향은
+# 없었지만, 없는 필드를 적어 두면 다음 사람이 그것을 근거로 배선한다.
 type LikedSpotConnection {
   edges: [LikedSpotEdge!]!
   pageInfo: PageInfo!
-  totalCount: Int
 }
 
 # ── SPEC-0013 검색 · Popular ──────────────────────────────────────────────
@@ -225,12 +227,21 @@ extend type Query {
   # 세션 갱신 경로를 탄다 — 이 스펙이 별도 처리를 더하지 않는다(§5.2).
   # categories 생략 = "전체"다(Discover의 spots와 같은 규약). 필터링은 서버가
   # 하고 클라이언트는 받은 페이지를 그대로 잇는다.
-  # SPEC-0033: 목록 내 검색. **생략 = 필터 없음, 빈 문자열 = EMPTY_QUERY 오류**이며
-  # 100자를 넘으면 QUERY_TOO_LONG이다. 둘 다 payload 래퍼 없이 최상위 errors[]로
-  # 온다(searchSpots의 userErrors[]와 통로가 다르다). 정렬은 likedAt DESC 그대로다.
   likedSpots(
     categories: [String!]
-    query: String
+    first: Int
+    after: String
+  ): LikedSpotConnection!
+  # SPEC-0033 목록 내 검색. **`likedSpots`의 인자가 아니라 별개의 쿼리다** — 서버가
+  # 그렇게 냈다(라이브 스키마 확인 2026-08-29). `query`가 **non-null 필수**라
+  # "생략 = 필터 없음"이 없고, 호출부가 검색어 유무로 두 쿼리를 가른다.
+  #
+  # 반환은 `likedSpots`와 같은 LikedSpotConnection!이며 정렬도 likedAt DESC 그대로다
+  # (searchSpots의 관련도 정렬과 다르다). EMPTY_QUERY·QUERY_TOO_LONG은 payload 래퍼
+  # 없이 최상위 errors[]로 온다 — searchSpots의 userErrors[]와 통로가 다르다.
+  searchLikedSpots(
+    query: String!
+    categories: [String!]
     first: Int
     after: String
   ): LikedSpotConnection!

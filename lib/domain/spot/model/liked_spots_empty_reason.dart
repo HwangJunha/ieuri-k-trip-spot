@@ -15,8 +15,9 @@ enum LikedSpotsEmptyReason {
 /// [hasAnyLikes]는 "검색·필터를 걷어낸 좋아요가 하나라도 있는가"다. **결과 목록만
 /// 보고는 두 상태를 가를 수 없다** — 검색 결과 0건은 그 자체로 좋아요가 없다는
 /// 뜻이 아니다. 서버가 필터 없는 총량을 따로 주지 않으므로(`LikedSpotConnection`에
-/// 라이브 `totalCount`가 없다) 필터도 검색어도 없을 때 받은 목록에서 관측해 둔다 —
-/// `likedSpotsPresenceProvider`가 그 관측값이다. 왕복을 늘리지 않는다.
+/// `totalCount`가 없다 — 라이브 확인 후 SDL에서도 걷었다) 필터도 검색어도 없을 때
+/// 받은 목록에서 관측해 둔다 — `likedSpotsPresenceProvider`가 그 관측값이다.
+/// 왕복을 늘리지 않는다.
 ///
 /// 반환이 null이면 빈 상태가 아니다 — 보여줄 항목이 있다.
 LikedSpotsEmptyReason? likedSpotsEmptyReason({

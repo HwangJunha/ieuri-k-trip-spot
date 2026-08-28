@@ -122,40 +122,56 @@ query SpotDetail($id: ID!, $categoryCode: String!) {
 #
 # likedAt은 엣지에 있지만 조회하지 않는다 — 화면이 좋아요 시각을 표시하지 않고(요구사항에
 # 표시 요건 없음), 정렬은 서버가 보장하므로 클라이언트가 재정렬하지 않는다(§5.2).
-# SPEC-0033: `query`는 **생략과 빈 문자열이 다르다** — 생략은 "필터 없음"이고 빈
-# 문자열은 `EMPTY_QUERY` 오류다. 호출부가 빈 검색어를 null로 접어 넘긴다.
-query LikedSpots(
+query LikedSpots($categories: [String!], $first: Int, $after: String) {
+  likedSpots(categories: $categories, first: $first, after: $after) {
+    ...LikedSpotPage
+  }
+}
+
+# SPEC-0033 목록 내 검색. **`likedSpots`에 인자가 붙은 것이 아니라 별개의 쿼리다** —
+# 서버가 그렇게 냈다(라이브 스키마 확인, 2026-08-29). `query`는 **non-null 필수**라
+# "생략 = 필터 없음"이라는 표현 자체가 없다. 그래서 repository가 검색어 유무로 두
+# 오퍼레이션을 가르고, 빈 검색어는 아예 이 쿼리를 부르지 않는다.
+#
+# 반환 타입이 `likedSpots`와 같은 LikedSpotConnection!이라 매핑 경로를 공유한다
+# (아래 프래그먼트). 정렬도 likedAt DESC 그대로다.
+query SearchLikedSpots(
+  $query: String!
   $categories: [String!]
-  $query: String
   $first: Int
   $after: String
 ) {
-  likedSpots(
-    categories: $categories
+  searchLikedSpots(
     query: $query
+    categories: $categories
     first: $first
     after: $after
   ) {
-    edges {
-      cursor
-      node {
-        id
-        title
-        thumbnailImageUrl
-        address
-        category {
-          code
-          label
-          iconUrl
-        }
-        copyright
-        attributionText
+    ...LikedSpotPage
+  }
+}
+
+# 두 좋아요 목록 쿼리가 공유하는 선택 집합 — 한쪽만 고쳐 서로 어긋나는 것을 막는다.
+fragment LikedSpotPage on LikedSpotConnection {
+  edges {
+    cursor
+    node {
+      id
+      title
+      thumbnailImageUrl
+      address
+      category {
+        code
+        label
+        iconUrl
       }
+      copyright
+      attributionText
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
+  }
+  pageInfo {
+    hasNextPage
+    endCursor
   }
 }
 

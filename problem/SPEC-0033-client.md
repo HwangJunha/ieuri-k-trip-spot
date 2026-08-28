@@ -71,11 +71,22 @@
 
 ## 계약과 생성 타입
 
+설계 시점의 제안은 아래였습니다.
+
 ```graphql
 likedSpots(categories: [String!], query: String, first: Int = 20, after: String): LikedSpotConnection!
 ```
 
-응답 타입은 바뀌지 않습니다 — `LikedSpot`·`LikedSpotEdge`·`LikedSpotConnection` 그대로입니다. 인자 하나만 늘었으므로 기존 GraphQL 문서에 변수를 더하고 재생성하면 됩니다.
+**서버가 낸 실물은 다릅니다**(라이브 확인 2026-08-29). `likedSpots`는 그대로 두고 검색용 쿼리를 따로 냈으며, `query`가 **non-null 필수**입니다.
+
+```graphql
+likedSpots(categories: [String!], first: Int, after: String): LikedSpotConnection!
+searchLikedSpots(query: String!, categories: [String!], first: Int, after: String): LikedSpotConnection!
+```
+
+이 차이가 구현에 주는 영향은 아래 "구현하며 정한 것 §두 쿼리로 갈라진다"에 적었습니다.
+
+응답 타입은 바뀌지 않습니다 — `LikedSpot`·`LikedSpotEdge`·`LikedSpotConnection` 그대로이고 두 쿼리가 같은 것을 돌려줍니다.
 
 `graphql_codegen` 생성 타입은 **repository 계층을 넘지 않습니다**(POL-020). repository가 도메인 모델로 변환합니다 — 기존 좋아요 목록 repository의 변환 경로를 그대로 씁니다.
 
@@ -150,27 +161,57 @@ go_router가 비활성 브랜치를 `TickerMode(enabled: false)`로 감싸는 �
 그래서 `session_scope.dart`에 `listenSignedOut()`을 더해 **로그아웃이라는 사건에만** 반응하게 했다 —
 관측해 쌓아 두는 provider가 앞으로도 쓸 수 있는 자리다.
 
-### `query` 인자를 생략하는 방법
+### 두 쿼리로 갈라진다 (2026-08-29, 서버 배포 후 수정)
 
-`graphql_codegen`의 `Variables$...`는 생성자에 **명시적으로 넘긴 null을 "생략"으로 접지 않는다** —
-선택 인자의 기본값이 sentinel이고 그것과 다르면 키를 넣으므로, `query: null`은 `"query": null`로
-직렬화된다(graphql_codegen 3.0.2 `lib/src/printer/base/input.dart:295-330`에서 확인). 계약상
-"생략 = 필터 없음"과 "빈 값 = `EMPTY_QUERY`"가 다르므로, 명시적 null을 서버 해석에 맡기지 않고
-repository가 **키 자체를 지운다**(`variables.remove('query')`).
+서버가 배포되며 **설계의 전제가 하나 틀린 것으로 드러났다.** `likedSpots`에 `query` 인자가 붙은
+것이 아니라 `searchLikedSpots`가 **별개의 쿼리**로 나왔고, 그쪽 `query`는 **non-null 필수**다.
 
-## 확인하지 못한 것
+그래서 "인자를 하나 더 보낸다"가 성립하지 않는다 — 빈 검색어로 전체를 받는 호출 자체가 없다.
+**repository가 검색어 유무로 두 오퍼레이션을 가른다.**
 
-**라이브 서버에 `query` 인자가 아직 없다**(2026-08-28 확인). `localhost:8888`에 쏘면
-`Validation error (UnknownArgument@[likedSpots]) : Unknown field argument 'query'`가 온다 —
-설계 §선행이 말한 서버 #121이 아직 배포되지 않았다.
+- 검색어 있음 → `searchLikedSpots(query: String!, categories, first, after)`
+- 검색어 없음 → `likedSpots(categories, first, after)` (원래대로)
 
-따라서 **계약은 미검증이다.** 커밋된 SDL과 생성 코드는 서로 맞고 codegen도 통과하지만, CLAUDE.md
-§13이 경고하는 그대로 그것은 서버가 받아준다는 증거가 아니다. 서버 배포 후 이 오퍼레이션 하나를
-라이브에 쏘아 확인해야 한다.
+**갈림은 repository 안에서 끝난다.** `fetchLikedSpots({query})` 시그니처는 그대로라 provider·화면·
+테스트는 한 줄도 바뀌지 않았다 — 호출부에는 여전히 인자 하나로 보인다. 이것이 계약 변화를 흡수하는
+repository 계층의 값어치다.
 
-곁가지로 **기존 드리프트를 하나 발견했다**: 커밋된 SDL의 `LikedSpotConnection.totalCount`가 라이브
-서버에는 없다(`FieldUndefined`). 지금 조회하는 오퍼레이션이 그 필드를 쓰지 않아 영향은 없고, 이
-작업의 범위가 아니라 손대지 않았다.
+두 쿼리의 선택 집합은 **`LikedSpotPage` 프래그먼트로 묶었다.** 반환 타입이 같은데 선택을 두 벌
+적으면 한쪽만 고쳐 어긋난다. 부수 효과로 생성 타입도 `Fragment$LikedSpotPage` 하나로 합쳐져
+매핑 함수(`_likedFromNode`)와 `CursorPage` 조립을 양쪽이 공유한다.
+
+`queryOrNull`이 빈 검색어를 null로 접는 규약은 그대로 살아 있다. 뜻만 바뀌었다 — 예전에는
+"인자를 생략한다"였고 지금은 "검색 쿼리를 부르지 않는다"다.
+
+### 폐기된 판단 — `variables.remove('query')`
+
+`likedSpots(query:)`를 전제로, 명시적 null이 `"query": null`로 직렬화되는 것을 피하려 repository가
+변수 키를 직접 지웠었다(graphql_codegen 3.0.2 `lib/src/printer/base/input.dart:295-330`). 쿼리가
+갈라지면서 **필요가 없어져 걷어냈다** — 빈 검색어는 이제 그 쿼리를 아예 부르지 않는다.
+
+관찰 자체는 유효하니 남겨 둔다: 이 코드베이스에서 선택 인자에 명시적 null을 넘기면 생략이 아니라
+null 전송이다. 다른 오퍼레이션에서 "생략"이 필요하면 같은 함정이 있다.
+
+## 확인한 것 (2026-08-29)
+
+**계약 검증 완료.** 이전 커밋에서 미검증으로 남긴 부분이 해소됐다.
+
+- 두 오퍼레이션 문서를 라이브 서버(`localhost:8888`)에 직접 발사 → 둘 다 `UNAUTHENTICATED`.
+  §13 기준으로 **형태가 통과했다는 뜻이다**(`ValidationError`가 아니다).
+- 전체 오퍼레이션 스윕 → **불일치 0건**. 직전 커밋에 남아 있던
+  `UnknownArgument@[likedSpots]`가 사라졌다.
+
+**미검증으로 남는 것 하나:** `EMPTY_QUERY`·`QUERY_TOO_LONG`의 실제 응답 형태는 확인하지 못했다.
+빈 문자열과 150자를 쏘아도 **`UNAUTHENTICATED`가 먼저 걸려** 입력 검증까지 도달하지 않는다.
+정상 경로에서는 입력 단계가 막으므로(§입력 처리) 영향은 없고, 오면 기존 `_ErrorBody`로 흘러간다 —
+설계가 정한 그대로다.
+
+### 곁가지로 고친 SDL 드리프트
+
+커밋된 SDL의 `LikedSpotConnection.totalCount`가 **라이브 서버에 없다**(`FieldUndefined`).
+지난 커밋에서는 범위 밖이라 두었으나, 이번에 같은 타입을 손대며 걷어냈다. 조회하는 오퍼레이션이
+없어 동작에는 영향이 없다 — 다만 없는 필드를 SDL에 적어 두면 다음 사람이 그것을 근거로 배선한다
+(실제로 이 작업에서 빈 상태 판정의 후보로 검토했다가 라이브에 없는 것을 확인하고 접었다).
 
 ## 관련
 
