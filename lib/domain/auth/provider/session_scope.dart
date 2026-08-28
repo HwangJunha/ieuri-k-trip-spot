@@ -42,4 +42,22 @@ extension SessionScope on Ref {
     final AsyncValue<AuthState> auth = watch(authControllerProvider);
     return auth.value?.isAuthenticated ?? false;
   }
+
+  /// 로그아웃이 **확정될 때만** [onSignedOut]을 부른다.
+  ///
+  /// [watchSignedIn]과 달리 build를 다시 돌리지 않는다. 관측해서 쌓아 둔 값을 들고
+  /// 있는 provider는 watch를 쓸 수 없다 — 인증 판정이 `loading`에서 `data`로
+  /// 자리잡는 것만으로도 build가 다시 돌아 **쌓아 둔 값이 지워진다**. 로그인 직후
+  /// 첫 조회가 그 타이밍에 걸리면 관측이 통째로 날아간다.
+  ///
+  /// 그런 provider는 이것을 쓴다. 로그아웃이라는 **사건**에만 반응하므로 세션
+  /// 경계는 그대로 지키면서 값이 살아남는다.
+  void listenSignedOut(void Function() onSignedOut) {
+    listen(authControllerProvider, (
+      AsyncValue<AuthState>? _,
+      AsyncValue<AuthState> next,
+    ) {
+      if (next.value?.isAuthenticated == false) onSignedOut();
+    });
+  }
 }

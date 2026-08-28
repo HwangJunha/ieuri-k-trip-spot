@@ -122,8 +122,20 @@ query SpotDetail($id: ID!, $categoryCode: String!) {
 #
 # likedAt은 엣지에 있지만 조회하지 않는다 — 화면이 좋아요 시각을 표시하지 않고(요구사항에
 # 표시 요건 없음), 정렬은 서버가 보장하므로 클라이언트가 재정렬하지 않는다(§5.2).
-query LikedSpots($categories: [String!], $first: Int, $after: String) {
-  likedSpots(categories: $categories, first: $first, after: $after) {
+# SPEC-0033: `query`는 **생략과 빈 문자열이 다르다** — 생략은 "필터 없음"이고 빈
+# 문자열은 `EMPTY_QUERY` 오류다. 호출부가 빈 검색어를 null로 접어 넘긴다.
+query LikedSpots(
+  $categories: [String!]
+  $query: String
+  $first: Int
+  $after: String
+) {
+  likedSpots(
+    categories: $categories
+    query: $query
+    first: $first
+    after: $after
+  ) {
     edges {
       cursor
       node {

@@ -133,18 +133,26 @@ class SpotRepositoryImpl implements SpotRepository {
   @override
   Future<CursorPage<LikedSpot>> fetchLikedSpots({
     List<String>? categoryCodes,
+    String? query,
     int? first,
     String? after,
   }) async {
     // 언어는 인자로 보내지 않는다 — Accept-Language 헤더로 전달된다(spec §2).
     // categoryCodes가 null/빈 목록이면 인자를 비워 전체를 받는다(서버 규약).
+    final Map<String, dynamic> variables = Variables$Query$LikedSpots(
+      categories: _categories(categoryCodes),
+      query: query,
+      first: first,
+      after: after,
+    ).toJson();
+    // **검색어가 없으면 키 자체를 뺀다**(SPEC-0033 AC8.2). 생성 코드는 생성자에
+    // 명시적으로 넘긴 null을 "생략"이 아니라 `"query": null`로 직렬화하는데,
+    // 계약상 "생략 = 필터 없음"과 "빈 값 = EMPTY_QUERY"가 다르므로 명시적 null을
+    // 서버 해석에 맡기지 않는다.
+    if (query == null || query.isEmpty) variables.remove('query');
     final Map<String, dynamic> data = await _query(
       documentNodeQueryLikedSpots,
-      Variables$Query$LikedSpots(
-        categories: _categories(categoryCodes),
-        first: first,
-        after: after,
-      ).toJson(),
+      variables,
       'likedSpots',
     );
     final Query$LikedSpots$likedSpots result = Query$LikedSpots.fromJson(
