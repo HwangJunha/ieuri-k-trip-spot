@@ -11,6 +11,7 @@ class SwipeCardMetrics {
     required this.height,
     required this.overlayBottomInset,
     required this.topScrimHeight,
+    required this.overlayContentHeight,
   });
 
   /// [screenWidth]×[screenHeight] 화면에서의 카드 배치를 정한다.
@@ -28,6 +29,7 @@ class SwipeCardMetrics {
     required double bottomViewPadding,
     required double topViewPadding,
     required double overlayControlsHeight,
+    double textScale = 1,
   }) {
     final double width = screenWidth < 0 ? 0 : screenWidth;
     final double height = (screenHeight - bottomNavHeight).clamp(
@@ -38,6 +40,7 @@ class SwipeCardMetrics {
     return SwipeCardMetrics(
       width: width,
       height: height,
+      overlayContentHeight: fixedOverlayContentHeight(textScale: textScale),
       // **고정 픽셀값을 쓰지 않는다**(설계 §2.2). 정보가 화면 최하단에 붙으므로 기기의
       // 안전 영역을 침범하지 않아야 하는데, 그 높이는 기기마다 다르다.
       //
@@ -51,6 +54,52 @@ class SwipeCardMetrics {
           _nonNegative(topViewPadding) + _nonNegative(overlayControlsHeight),
     );
   }
+
+  /// 정보 영역이 **늘 차지할** 높이(패딩 제외한 내용 높이).
+  ///
+  /// **왜 고정하는가.** 예전에는 정보가 자기 내용만큼만 차지했다. 그런데 그 높이가
+  /// 카드마다 달랐다 — 제목이 한 줄이냐 두 줄이냐, 주소가 있냐 없냐에 따라
+  /// 33px쯤 오르내렸다. 정보가 남긴 자리를 사진이 가져가므로(`Expanded`),
+  /// **카드가 넘어갈 때마다 사진이 커졌다 작아졌다** 했다. 사진 우하단에 붙은
+  /// 좋아요 버튼도 함께 오르내려 더 눈에 띄었다(사용자 지적 2026-08-28, 실기기
+  /// 녹화 분석: 정보 영역 시작점이 490 ↔ 504로 진동).
+  ///
+  /// 최댓값으로 고정한다 — 제목 2줄·주소 2줄·거리 1줄이 다 들어가는 높이다.
+  /// 짧은 카드는 아래에 빈 자리가 남지만, **사진과 버튼이 흔들리지 않는 편이**
+  /// 낫다(사용자 결정 2026-08-28).
+  ///
+  /// [textScale]은 기기 글자 크기 설정. 사용자가 글자를 키우면 정보도 그만큼
+  /// 커져야 잘리지 않는다.
+  static double fixedOverlayContentHeight({double textScale = 1}) {
+    final double scale = textScale <= 0 ? 1 : textScale;
+    return (_badgeHeight +
+            _badgeGap +
+            _titleLineHeight * _titleMaxLines +
+            _addressGap +
+            _addressLineHeight * _addressMaxLines +
+            _distanceGap +
+            _distanceRowHeight) *
+        scale;
+  }
+
+  /// 출처 배지 한 줄. `CopyrightBadge`의 글자(labelSmall 11 × 1.2)와 상하 패딩.
+  static const double _badgeHeight = 26;
+  static const double _badgeGap = 10;
+
+  /// 제목 한 줄 — `titleLarge`(22)에 `height: 1.25`.
+  static const double _titleLineHeight = 22 * 1.25;
+  static const int _titleMaxLines = 2;
+
+  static const double _addressGap = 6;
+
+  /// 주소 한 줄 — `bodyMedium`(14)의 기본 행간(약 1.43).
+  static const double _addressLineHeight = 20;
+  static const int _addressMaxLines = 2;
+
+  static const double _distanceGap = 8;
+
+  /// 거리 줄 — 새로고침 `IconButton`의 최소 높이(36)가 이 줄을 지배한다.
+  static const double _distanceRowHeight = 36;
 
   /// 기기와 무관한 기본 하단 여백. 안전 영역 위에 얹는다.
   ///
@@ -74,6 +123,10 @@ class SwipeCardMetrics {
 
   /// 상단 스크림 높이. 겹쳐 놓인 카테고리 바의 가독성을 받쳐 준다(R14).
   final double topScrimHeight;
+
+  /// 정보 영역이 늘 차지하는 높이. **카드마다 같아야** 사진과 좋아요 버튼이
+  /// 흔들리지 않는다 — 계산 근거는 [fixedOverlayContentHeight].
+  final double overlayContentHeight;
 
   /// 좌우 여백이 없는가(AC R1-1). 전체화면화의 핵심 판정이다.
   bool get fillsWidth => width > 0;

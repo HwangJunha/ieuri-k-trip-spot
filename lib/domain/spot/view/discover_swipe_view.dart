@@ -618,6 +618,12 @@ class _CardStackState extends ConsumerState<_CardStack>
     // 다시 빌드된다 — 여기서 실제로 읽는 것은 `viewPadding` 하나뿐이다.
     final EdgeInsets viewPadding = MediaQuery.viewPaddingOf(context);
 
+    // **글자 크기는 따로 구독한다**(2026-08-28). 정보 영역 높이를 고정하면서
+    // 그 높이가 글자 크기에 달리게 됐다 — 사용자가 글자를 키웠는데 높이가
+    // 그대로면 거리 줄이 잘린다. `textScalerOf`는 그 값 하나만 구독하므로 위
+    // 주석이 피하려던 통짜 구독은 여전히 일어나지 않는다.
+    final double textScale = MediaQuery.textScalerOf(context).scale(1);
+
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         final double width = constraints.maxWidth;
@@ -638,6 +644,7 @@ class _CardStackState extends ConsumerState<_CardStack>
               viewPadding.bottom + FloatingBottomNavScaffold.barExtent,
           topViewPadding: viewPadding.top,
           overlayControlsHeight: _overlayControlsHeight,
+          textScale: textScale,
         );
 
         final Size2D size = Size2D(width, constraints.maxHeight);
@@ -665,6 +672,15 @@ class _CardStackState extends ConsumerState<_CardStack>
                       key: ValueKey<String>(next.id),
                       spot: next,
                       metrics: metrics,
+                      // **하트를 여기서부터 그린다**(사용자 지적 2026-08-27).
+                      // 이 카드는 0.92배로 축소돼 있다가 앞으로 나오며 1.0이
+                      // 되는데, 그때 버튼까지 새로 나타나면 사진이 버튼 때문에
+                      // 줄었다 커지는 것처럼 보인다. 콜백은 주지 않는다 — 아직
+                      // 만질 수 없는 카드다.
+                      showsLike: true,
+                      // 새로고침도 같다. 게다가 이 아이콘은 거리 줄의 높이까지
+                      // 좌우하므로, 없으면 정보 영역이 낮아진다.
+                      showsRefresh: true,
                     ),
                   ),
                   builder: (BuildContext context, Offset drag, Widget? child) =>
@@ -688,7 +704,6 @@ class _CardStackState extends ConsumerState<_CardStack>
                     _confirm(direction, size, velocity),
                 onSpringBack: _springBack,
                 onTap: () => _openDetail(top),
-                onPass: () => _confirm(SwipeDirection.left, size, Offset.zero),
                 onLike: () => _like(size),
                 onRefreshLocation: _refreshLocation,
               ),
@@ -717,7 +732,6 @@ class _DraggableTop extends StatelessWidget {
     required this.onConfirm,
     required this.onSpringBack,
     required this.onTap,
-    required this.onPass,
     required this.onLike,
     required this.onRefreshLocation,
   });
@@ -740,9 +754,9 @@ class _DraggableTop extends StatelessWidget {
   /// 카드 탭(드래그 아님) 콜백 — 상세 진입.
   final VoidCallback onTap;
 
-  /// 카드 안 액션 바. 스와이프를 모르는 사용자에게 유일한 길이고, 좋아요는
-  /// 스와이프가 전부 패스가 된 뒤로 이 경로뿐이다.
-  final VoidCallback onPass;
+  /// 사진 위 좋아요. **패스 버튼은 두지 않는다**(사용자 결정 2026-08-27) — 어느
+  /// 방향으로 밀어도 패스라 손짓 경로가 이미 있고, 좋아요만 스와이프에서 떼어낸
+  /// 뒤로 이 경로뿐이기 때문이다.
   final VoidCallback onLike;
 
   /// 거리 옆의 위치 새로고침.
@@ -779,8 +793,9 @@ class _DraggableTop extends StatelessWidget {
           child: SwipeCard(
             spot: spot,
             metrics: metrics,
-            onPass: onPass,
+            showsLike: true,
             onLike: onLike,
+            showsRefresh: true,
             onRefreshLocation: onRefreshLocation,
           ),
         ),

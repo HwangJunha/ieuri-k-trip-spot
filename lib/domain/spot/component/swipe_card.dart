@@ -23,8 +23,9 @@ class SwipeCard extends StatelessWidget {
     super.key,
     required this.spot,
     this.metrics,
-    this.onPass,
+    this.showsLike = false,
     this.onLike,
+    this.showsRefresh = false,
     this.onRefreshLocation,
   });
 
@@ -34,13 +35,38 @@ class SwipeCard extends StatelessWidget {
   /// 등)이므로 기본 여백을 쓴다.
   final SwipeCardMetrics? metrics;
 
-  /// 액션 바 콜백. **둘 다 없으면 바를 그리지 않는다** — 뒤에 깔린 다음 카드는
-  /// 만질 수 없으므로 버튼이 있을 이유가 없다.
-  final VoidCallback? onPass;
+  /// 좋아요 버튼을 그릴지. **뒤에 깔린 다음 카드에도 켠다**(사용자 지적
+  /// 2026-08-27).
+  ///
+  /// 처음에는 [onLike]가 있을 때만 그렸다 — 뒤 카드는 만질 수 없으니 버튼도 없어야
+  /// 한다고 봤다. 그런데 뒤 카드는 0.92배로 축소돼 있다가 앞으로 나오면서 1.0으로
+  /// 커지는데(`SwipeDrag.nextCardScale2D`), 하필 그 순간에 버튼이 새로 나타났다.
+  /// 커지는 사진과 튀어나오는 버튼이 겹쳐 **사진이 버튼 때문에 줄었다 커지는 것처럼**
+  /// 보였다.
+  ///
+  /// 처음부터 그려 두면 카드가 넘어가도 버튼은 제자리에 있고, 스케일 연출만 남는다.
+  final bool showsLike;
+
+  /// 좋아요를 눌렀을 때. **없으면 버튼이 눌리지 않는다**([showsLike]와 별개다) —
+  /// 뒤 카드는 보이기만 하고 아직 만질 수 없다.
+  ///
+  /// 패스 콜백은 없다. 어느 방향으로 밀어도 패스라 손짓 경로가 이미 있다.
   final VoidCallback? onLike;
 
-  /// 거리 옆의 위치 새로고침. 거리가 "내 위치 기준"이라는 뜻이므로 그 옆이면
-  /// 무엇을 다시 잡는지 설명 없이 읽힌다.
+  /// 거리 옆의 위치 새로고침을 그릴지. **[showsLike]와 같은 이유로 뒤 카드에도
+  /// 켠다**(사용자 지적 2026-08-28) — 앞으로 나올 때 아이콘이 새로 나타나면
+  /// 원래 없던 것이 생긴 것처럼 보인다.
+  ///
+  /// 여기서는 튀는 것 말고 하나가 더 걸린다. 이 아이콘은 거리 **줄 안에** 있고
+  /// `IconButton`의 최소 높이(36)가 그 줄의 높이를 지배하므로, 없는 카드는 거리
+  /// 줄까지 낮아진다 — 정보 영역 높이를 고정한 이유와 같은 문제다.
+  final bool showsRefresh;
+
+  /// 새로고침을 눌렀을 때. **없으면 아이콘이 눌리지 않는다**([showsRefresh]와
+  /// 별개다) — 뒤 카드는 보이기만 하고 아직 만질 수 없다.
+  ///
+  /// 거리가 "내 위치 기준"이라는 뜻이므로 그 옆이면 무엇을 다시 잡는지 설명 없이
+  /// 읽힌다.
   final VoidCallback? onRefreshLocation;
 
   @override
@@ -75,8 +101,38 @@ class SwipeCard extends StatelessWidget {
         children: <Widget>[
           // 사진이 남는 세로를 다 쓴다. 그 안을 채우는 방식만 저작권이 가른다 —
           // TYPE1은 잘라서 채우고, TYPE3·미지정은 잘리지 않게 넣는다(R13).
-          Expanded(child: _CardImage(display: display, metrics: metrics!)),
-          // 정보는 **내용만큼만** 차지한다.
+          Expanded(
+            child: Stack(
+              fit: StackFit.expand,
+              children: <Widget>[
+                _CardImage(display: display, metrics: metrics!),
+                // **좋아요는 사진 우하단에 얹는다**(사용자 결정 2026-08-27).
+                //
+                // 정보 영역에 두었더니 그만큼 사진이 밀려 사진:정보가 6:4에
+                // 가까워졌다 — 장소를 구경하는 화면에서 장소가 줄어드는, R1이
+                // 고치려던 문제로 되돌아간 셈이었다. 사진 위라면 세로를 뺏지
+                // 않는다.
+                //
+                // 카드 **밖에** 겹쳤던 그 앞의 시도와 다른 점: 여기는 사진 영역
+                // 안이라 하단 탭 바에 잘리지 않는다.
+                if (showsLike)
+                  Positioned(
+                    right: 16,
+                    bottom: 16,
+                    child: _LikeButton(onPressed: onLike, l10n: l10n),
+                  ),
+              ],
+            ),
+          ),
+          // **정보 영역 높이를 카드마다 같게 고정한다**(사용자 결정 2026-08-28).
+          //
+          // 예전에는 내용만큼만 차지했는데, 그러면 제목이 한 줄이냐 두 줄이냐에
+          // 따라 높이가 달라지고 — 사진이 그 나머지를 가져가므로(`Expanded`) —
+          // **카드가 넘어갈 때마다 사진이 커졌다 작아졌다** 했다. 사진 우하단의
+          // 좋아요 버튼도 함께 오르내려 "버튼 때문에 사진이 줄어든다"처럼 보였다.
+          //
+          // 짧은 카드는 아래에 빈 자리가 남는다. 그래도 사진과 버튼이 제자리에
+          // 있는 편이 낫다는 판단이다.
           Padding(
             padding: EdgeInsets.fromLTRB(
               20,
@@ -84,13 +140,20 @@ class SwipeCard extends StatelessWidget {
               20,
               metrics!.overlayBottomInset,
             ),
-            child: _Overlay(
-              display: display,
-              l10n: l10n,
-              theme: theme,
-              onPass: onPass,
-              onLike: onLike,
-              onRefreshLocation: onRefreshLocation,
+            child: SizedBox(
+              height: metrics!.overlayContentHeight,
+              // 내용이 고정 높이보다 짧으면 **위에 붙인다** — 가운데 정렬하면
+              // 제목이 카드마다 다른 높이에 뜬다.
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: _Overlay(
+                  display: display,
+                  l10n: l10n,
+                  theme: theme,
+                  showsRefresh: showsRefresh,
+                  onRefreshLocation: onRefreshLocation,
+                ),
+              ),
             ),
           ),
         ],
@@ -195,16 +258,14 @@ class _Overlay extends StatelessWidget {
     required this.display,
     required this.l10n,
     required this.theme,
-    this.onPass,
-    this.onLike,
+    this.showsRefresh = false,
     this.onRefreshLocation,
   });
 
   final SwipeCardDisplay display;
   final AppLocalizations l10n;
   final ThemeData theme;
-  final VoidCallback? onPass;
-  final VoidCallback? onLike;
+  final bool showsRefresh;
   final VoidCallback? onRefreshLocation;
 
   @override
@@ -263,130 +324,87 @@ class _Overlay extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const Spacer(),
-              // **거리 옆에 둔다.** 거리는 "내 위치 기준 849m"라는 뜻이므로, 그
-              // 옆의 새로고침은 "이 기준을 다시 잡는다"로 설명 없이 읽힌다.
-              // 카테고리 바나 앱바에 두면 무엇에 대한 조작인지 알 수 없다.
-              if (onRefreshLocation != null)
+              // **거리에 바짝 붙인다.** 거리는 "내 위치 기준 396m"라는 뜻이므로,
+              // 그 옆의 새로고침은 "이 기준을 다시 잡는다"로 설명 없이 읽힌다.
+              //
+              // 처음에는 `Spacer()`로 화면 오른쪽 끝까지 밀었는데, 그러면 거리와
+              // 아이콘 사이가 멀어 서로 무관한 두 요소로 보였다(사용자 지적
+              // 2026-08-27). 붙여 놔야 하나의 문장으로 읽힌다.
+              if (showsRefresh)
                 IconButton(
                   onPressed: onRefreshLocation,
-                  icon: const Icon(Icons.my_location, size: 20),
+                  icon: const Icon(Icons.my_location, size: 18),
                   tooltip: l10n.homeRefreshLocation,
                   visualDensity: VisualDensity.compact,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(
-                    minWidth: 40,
-                    minHeight: 40,
+                    minWidth: 36,
+                    minHeight: 36,
                   ),
-                  color: scheme.onSurfaceVariant,
+                  color: scheme.primary,
+                  // **못 누를 때도 같은 색이다**(사용자 결정 2026-08-28).
+                  //
+                  // `IconButton`은 `onPressed`가 null이면 `color`를 버리고 회색
+                  // 비활성 색을 쓴다. 뒤에 깔린 카드가 그런데, 그러면 카드가
+                  // 앞으로 나오는 순간 **회색에서 빨간색으로 색이 바뀌어** 아이콘이
+                  // 새로 켜지는 것처럼 보였다.
+                  //
+                  // "지금 못 누른다"는 사용자가 알 필요 없는 내부 사정이다 — 뒤
+                  // 카드는 만질 수 없을 뿐이고, 앞으로 나오면 바로 눌린다. 회색은
+                  // 그 사정을 잘못된 신호로 내보내는 셈이다.
+                  disabledColor: scheme.primary,
                 ),
             ],
           ),
-        ],
-        // **액션 바는 카드 정보 영역 안에 둔다**(2026-08-27).
-        //
-        // 처음에는 좋아요를 제목 옆에 붙였는데, 뒤에 깔린 카드에는 버튼이 없어
-        // 제목이 쓸 수 있는 폭이 달랐다 — 카드가 넘어가는 순간 글자가 작아지는
-        // 것처럼 보였다. 그다음에는 카드 밖에 겹쳐 놨더니 하단 탭 바에 잘렸다.
-        //
-        // 여기라면 둘 다 없다. 제목과 다른 줄이라 폭을 다투지 않고, 카드 안이라
-        // 탭 바와 겹칠 일이 없다. 전체화면(R1)도 그대로다 — 정보 영역은 원래
-        // 자기 내용만큼 차지하므로 한 줄이 늘 뿐이다.
-        if (onPass != null && onLike != null) ...<Widget>[
-          const SizedBox(height: 18),
-          _ActionBar(onPass: onPass!, onLike: onLike!, l10n: l10n),
         ],
       ],
     );
   }
 }
 
-/// 카드 안의 패스·좋아요 버튼 줄.
+/// 사진 우하단의 좋아요 버튼(2026-08-27).
 ///
-/// **패스도 버튼으로 둔다.** 스와이프가 전부 패스가 된 뒤로 좋아요는 버튼뿐인데
-/// 패스는 여전히 미는 것뿐이었다 — 스와이프를 모르는 사용자에게 카드를 넘길 길이
-/// 없다.
+/// **왜 사진 위인가.** 카드 정보 영역에 두면 그만큼 사진이 밀리고, 카드 밖에
+/// 겹치면 하단 탭 바에 잘린다 — 둘 다 실제로 겪었다. 사진 오른쪽 아래는 두 문제가
+/// 모두 없으면서 엄지가 닿는 자리다.
 ///
-/// 두 버튼의 무게를 다르게 둔다(패스는 테두리, 좋아요는 채움). 같으면 어느 쪽이
-/// 기본 동작인지 알 수 없다.
-class _ActionBar extends StatelessWidget {
-  const _ActionBar({
-    required this.onPass,
-    required this.onLike,
-    required this.l10n,
-  });
+/// **좋아요만 있고 패스 버튼은 없다**(사용자 결정 2026-08-27). 스와이프는 어느
+/// 방향으로 밀어도 패스이므로(`SwipeDrag.reaction`) 패스에는 이미 손짓 경로가
+/// 있다. 반면 좋아요는 스와이프에서 떼어냈으므로 이 버튼이 유일한 경로다.
+/// **버튼은 손짓으로 할 수 없는 것만 맡는다** — 둘을 나란히 두면 "두 버튼으로
+/// 조작하는 화면"으로 읽혀 미는 동작 자체를 안 하게 된다.
+class _LikeButton extends StatelessWidget {
+  const _LikeButton({required this.onPressed, required this.l10n});
 
-  static const double _buttonSize = 56;
-
-  final VoidCallback onPass;
-  final VoidCallback onLike;
+  /// null이면 **보이지만 눌리지 않는다** — 뒤에 깔린 다음 카드가 그렇다. 모양은
+  /// 같아야 앞으로 나올 때 버튼이 튀어나오지 않는다.
+  final VoidCallback? onPressed;
   final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
     final ColorScheme scheme = Theme.of(context).colorScheme;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        _ActionButton(
-          onPressed: onPass,
-          icon: Icons.close,
-          label: l10n.spotDetailDislikeAction,
-          background: scheme.surface,
-          foreground: scheme.onSurfaceVariant,
-          border: scheme.outlineVariant,
-          size: _buttonSize,
-        ),
-        const SizedBox(width: 24),
-        _ActionButton(
-          onPressed: onLike,
-          icon: Icons.favorite,
-          label: l10n.spotDetailLikeAction,
-          background: scheme.primary,
-          foreground: scheme.onPrimary,
-          size: _buttonSize,
-        ),
-      ],
-    );
-  }
-}
 
-class _ActionButton extends StatelessWidget {
-  const _ActionButton({
-    required this.onPressed,
-    required this.icon,
-    required this.label,
-    required this.background,
-    required this.foreground,
-    required this.size,
-    this.border,
-  });
-
-  final VoidCallback onPressed;
-  final IconData icon;
-  final String label;
-  final Color background;
-  final Color foreground;
-  final double size;
-  final Color? border;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: label,
+    return Tooltip(
+      message: l10n.discoverLikeLabel,
       child: Material(
-        color: background,
-        shape: border == null
-            ? const CircleBorder()
-            : CircleBorder(side: BorderSide(color: border!)),
+        color: scheme.primary,
+        shape: const CircleBorder(),
+        // 밝은 사진 위에서 묻히지 않도록 그림자를 준다.
+        elevation: 3,
         child: InkWell(
           onTap: onPressed,
           customBorder: const CircleBorder(),
+          // 지름 56 — Material 최소 터치 영역(48)보다 넉넉하다. 하나뿐인 버튼이라
+          // 둘일 때(52)보다 조금 키워도 답답하지 않다.
           child: SizedBox(
-            width: size,
-            height: size,
-            child: Icon(icon, color: foreground, size: 26),
+            width: 56,
+            height: 56,
+            child: Icon(
+              Icons.favorite_rounded,
+              size: 28,
+              color: scheme.onPrimary,
+            ),
           ),
         ),
       ),
