@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/component/swipe_action_bar.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_reaction.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/swipe_card_display.dart';
@@ -118,6 +119,7 @@ void main() {
       double bottomNav = 0,
       double bottomPadding = 34,
       double topPadding = 47,
+      double actionBar = 0,
     }) => SwipeCardMetrics.fromScreen(
       screenWidth: width,
       screenHeight: height,
@@ -125,6 +127,7 @@ void main() {
       bottomViewPadding: bottomPadding,
       topViewPadding: topPadding,
       overlayControlsHeight: 68,
+      actionBarHeight: actionBar,
     );
 
     /// AC R1-1: 좌우 여백이 없다 — 카드 폭이 화면 폭 그대로다.
@@ -163,6 +166,24 @@ void main() {
         metricsOf(bottomPadding: 34 + barExtent).overlayBottomInset -
             metricsOf(bottomPadding: 34).overlayBottomInset,
         barExtent,
+      );
+    });
+
+    /// 액션 바도 카드 위에 겹치므로 같은 보정이 필요하다(2026-08-27) — 제목·주소가
+    /// 좋아요·패스 버튼 뒤로 들어가면 읽을 수 없다.
+    test('액션 바 높이만큼 하단 여백이 커진다', () {
+      expect(
+        metricsOf(actionBar: SwipeActionBar.barHeight).overlayBottomInset -
+            metricsOf(actionBar: 0).overlayBottomInset,
+        SwipeActionBar.barHeight,
+      );
+    });
+
+    /// 액션 바는 **높이를 차지하지 않는다** — 겹쳐 놓이므로 카드가 줄면 안 된다.
+    test('액션 바가 있어도 카드 높이는 그대로다', () {
+      expect(
+        metricsOf(actionBar: SwipeActionBar.barHeight).height,
+        metricsOf(actionBar: 0).height,
       );
     });
 

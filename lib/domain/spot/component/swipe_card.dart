@@ -19,22 +19,13 @@ import 'spot_display.dart';
 /// **이미지 맞춤은 저작권 유형이 정한다**(R13, SPEC-0002 §4.7) — TYPE1만 크롭하고
 /// 나머지는 원본을 유지한다. 그 판단은 [SwipeCardDisplay]에 있다.
 class SwipeCard extends StatelessWidget {
-  const SwipeCard({
-    super.key,
-    required this.spot,
-    this.metrics,
-    this.onLike,
-  });
+  const SwipeCard({super.key, required this.spot, this.metrics});
 
   final TouristSpot spot;
 
   /// 하단 오버레이를 어디에 놓을지. 없으면 기기 인셋을 모르는 자리(다음 카드 대기
   /// 등)이므로 기본 여백을 쓴다.
   final SwipeCardMetrics? metrics;
-
-  /// 좋아요 버튼을 눌렀을 때. null이면 버튼이 없다 — 뒤에 깔린 다음 카드는
-  /// 만질 수 없으므로 버튼을 그릴 이유가 없다.
-  final VoidCallback? onLike;
 
   @override
   Widget build(BuildContext context) {
@@ -77,12 +68,7 @@ class SwipeCard extends StatelessWidget {
               20,
               metrics!.overlayBottomInset,
             ),
-            child: _Overlay(
-              display: display,
-              l10n: l10n,
-              theme: theme,
-              onLike: onLike,
-            ),
+            child: _Overlay(display: display, l10n: l10n, theme: theme),
           ),
         ],
       ),
@@ -186,15 +172,11 @@ class _Overlay extends StatelessWidget {
     required this.display,
     required this.l10n,
     required this.theme,
-    this.onLike,
   });
 
   final SwipeCardDisplay display;
   final AppLocalizations l10n;
   final ThemeData theme;
-
-  /// 좋아요 버튼을 눌렀을 때. null이면 버튼을 그리지 않는다(다음 카드 대기 등).
-  final VoidCallback? onLike;
 
   @override
   Widget build(BuildContext context) {
@@ -218,31 +200,15 @@ class _Overlay extends StatelessWidget {
         // 두 줄을 꽉 채워 답답했다(사용자 지적 2026-08-18).
         //
         // 줄 간격도 함께 좁힌다 — 두 줄이 될 때 행간이 벌어지면 더 커 보인다.
-        // **좋아요는 이름 옆에 버튼으로 둔다**(2026-08-27). 예전에는 오른쪽으로
-        // 미는 것이 좋아요였는데, 넘기려던 카드가 좋아요로 들어간다는 지적이
-        // 반복됐다 — 넘기는 동작과 마음에 든다는 표시가 같은 제스처를 쓰면
-        // 구분되지 않는다. 스와이프는 이제 어느 쪽이든 패스이고, 좋아요는
-        // 명시적으로 눌러야 한다.
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Expanded(
-              child: Text(
-                display.name,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  color: scheme.onSurface,
-                  fontWeight: FontWeight.bold,
-                  height: 1.25,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            if (onLike != null) ...<Widget>[
-              const SizedBox(width: 12),
-              _LikeButton(onPressed: onLike!, label: l10n.spotDetailLikeAction),
-            ],
-          ],
+        Text(
+          display.name,
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: scheme.onSurface,
+            fontWeight: FontWeight.bold,
+            height: 1.25,
+          ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
         if (display.showsAddress) ...<Widget>[
           const SizedBox(height: 6),
@@ -277,37 +243,3 @@ class _Overlay extends StatelessWidget {
   }
 }
 
-/// 카드의 좋아요 버튼.
-///
-/// **채운 원형으로 둔다.** 카드에서 유일하게 누를 수 있는 것이므로 눈에 띄어야
-/// 하고, 스와이프가 전부 패스가 된 지금은 이것이 좋아요로 가는 유일한 길이다.
-///
-/// 탭 영역을 48로 잡는다 — Material 최소 터치 타깃이고, 사진을 넘기려다 잘못
-/// 누르지 않을 만큼은 떨어져 있어야 한다.
-class _LikeButton extends StatelessWidget {
-  const _LikeButton({required this.onPressed, required this.label});
-
-  final VoidCallback onPressed;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final ColorScheme scheme = Theme.of(context).colorScheme;
-    return Tooltip(
-      message: label,
-      child: Material(
-        color: scheme.primary,
-        shape: const CircleBorder(),
-        child: InkWell(
-          onTap: onPressed,
-          customBorder: const CircleBorder(),
-          child: SizedBox(
-            width: 48,
-            height: 48,
-            child: Icon(Icons.favorite, color: scheme.onPrimary, size: 24),
-          ),
-        ),
-      ),
-    );
-  }
-}

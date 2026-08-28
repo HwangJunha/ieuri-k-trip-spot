@@ -16,6 +16,7 @@ import '../../../common/analytics/app_analytics.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../common/category/spot_category_bar.dart';
 import '../component/drag_feedback_overlay.dart';
+import '../component/swipe_action_bar.dart';
 import '../component/swipe_card.dart';
 import '../model/retry_exhausted.dart';
 import '../../../common/category/spot_category.dart';
@@ -623,6 +624,9 @@ class _CardStackState extends ConsumerState<_CardStack>
               viewPadding.bottom + FloatingBottomNavScaffold.barExtent,
           topViewPadding: viewPadding.top,
           overlayControlsHeight: _overlayControlsHeight,
+          // 액션 바도 카드 위에 겹치므로 같은 보정이 필요하다 — 글자가 버튼 뒤로
+          // 들어가면 읽을 수 없다.
+          actionBarHeight: SwipeActionBar.barHeight,
         );
 
         final Size2D size = Size2D(width, constraints.maxHeight);
@@ -673,6 +677,22 @@ class _CardStackState extends ConsumerState<_CardStack>
                     _confirm(direction, size, velocity),
                 onSpringBack: _springBack,
                 onTap: () => _openDetail(top),
+              ),
+            ),
+            // **액션 바는 카드 위에 겹친다**(R14와 같은 판단). 자리를 차지하면
+            // 사진이 그만큼 줄어 전체화면화의 뜻이 사라진다 — 대신 카드의 하단
+            // 여백을 `actionBarHeight`만큼 늘려 글자가 버튼 뒤로 가지 않게 했다.
+            //
+            // 내비 바 위에 놓는다. 셸이 `extendBody: true`라 카드는 바 아래까지
+            // 그려지지만, 버튼은 눌러야 하므로 가리면 안 된다.
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom:
+                  MediaQuery.viewPaddingOf(context).bottom +
+                  FloatingBottomNavScaffold.barExtent,
+              child: SwipeActionBar(
+                onPass: () => _confirm(SwipeDirection.left, size, Offset.zero),
                 onLike: () => _like(size),
               ),
             ),
@@ -700,7 +720,6 @@ class _DraggableTop extends StatelessWidget {
     required this.onConfirm,
     required this.onSpringBack,
     required this.onTap,
-    required this.onLike,
   });
 
   final TouristSpot spot;
@@ -720,9 +739,6 @@ class _DraggableTop extends StatelessWidget {
 
   /// 카드 탭(드래그 아님) 콜백 — 상세 진입.
   final VoidCallback onTap;
-
-  /// 카드의 좋아요 버튼. 스와이프가 전부 패스가 된 뒤로 좋아요는 이 경로뿐이다.
-  final VoidCallback onLike;
 
   @override
   Widget build(BuildContext context) {
@@ -751,9 +767,7 @@ class _DraggableTop extends StatelessWidget {
         // `child`는 다시 빌드되지 않지만, 경계가 없으면 바깥 `Transform`이 움직일
         // 때마다 사진·블러 배경이 다시 래스터화된다. 경계를 두면 굳은 레이어를
         // 옮기기만 한다 — 드래그가 부드러워지는 핵심이다.
-        child: RepaintBoundary(
-          child: SwipeCard(spot: spot, metrics: metrics, onLike: onLike),
-        ),
+        child: RepaintBoundary(child: SwipeCard(spot: spot, metrics: metrics)),
         builder: (BuildContext context, Offset value, Widget? child) =>
             Transform.translate(
               offset: value,
