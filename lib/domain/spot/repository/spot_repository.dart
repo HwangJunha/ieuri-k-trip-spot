@@ -138,8 +138,17 @@ abstract interface class SpotRepository {
   /// 정렬은 서버가 보장하므로 클라이언트가 재정렬하지 않는다. 미인증이면 최상위
   /// `errors[]`의 `UNAUTHENTICATED`가 [SpotFailure]로 번역되어 SPEC-0005의 세션 갱신
   /// 경로를 탄다 — 이 스펙이 별도 처리를 더하지 않는다(§5.2).
+  ///
+  /// [query]는 목록 내 검색어다(SPEC-0033). **null·빈 문자열이면 검색하지 않는다** —
+  /// 서버가 `likedSpots`에 인자를 더한 것이 아니라 `searchLikedSpots`를 따로 냈고
+  /// 그쪽 `query`는 non-null 필수라, 구현이 검색어 유무로 두 오퍼레이션을 가른다.
+  /// 호출부는 그 갈림을 알 필요가 없다 — 여기서는 인자 하나로 보인다.
+  ///
+  /// 카테고리와 **함께**(AND) 적용되고, 정렬은 검색이어도 `likedAt DESC`다 —
+  /// [searchSpots]의 관련도 정렬과 다르다.
   Future<CursorPage<LikedSpot>> fetchLikedSpots({
     List<String>? categoryCodes,
+    String? query,
     int? first,
     String? after,
   });

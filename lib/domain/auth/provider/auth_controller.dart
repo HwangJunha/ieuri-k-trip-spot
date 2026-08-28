@@ -148,6 +148,15 @@ class AuthController extends _$AuthController {
   /// token is already stored.
   Future<AuthState> _establishSession(AuthSession tokens) async {
     await _persist(tokens);
+    // **로그인은 억제를 푸는 계기다.** 부팅 때 갱신이 실패해 억제가 서 있으면
+    // (`_restoreSession`의 RefreshRejected·RefreshUnavailable 분기) 방금 로그인해
+    // 멀쩡한 refreshToken을 새로 받았는데도 갱신 링크가 발화하지 않는다 — 액세스
+    // 토큰이 만료되는 순간부터 모든 요청이 `UNAUTHENTICATED_TOKEN_REJECTED`로
+    // 떨어지고 갱신은 영영 시도되지 않는다. 실기기에서 그 상태를 겪었다(2026-08-29).
+    //
+    // 새 토큰 쌍을 손에 쥔 이 자리가 억제를 유지할 근거가 사라지는 지점이다.
+    // 저장 **뒤에** 푼다 — 순서가 바뀌면 그 사이 요청이 옛 토큰으로 갱신을 때린다.
+    ref.read(tokenRefreshBridgeProvider).allowRefresh();
     final Me me = await _repo.fetchMe();
     final AuthSession session = tokens.copyWith(user: me);
     await _persistUser(me);

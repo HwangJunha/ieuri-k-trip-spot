@@ -8,8 +8,8 @@ import 'package:logger/logger.dart';
 import '../../../common/log/app_log.dart';
 import '../../../common/pagination/page.dart';
 import '../model/liked_spot.dart';
+import '../model/liked_spots_query.dart';
 import '../../../common/category/spot_category.dart';
-import '../../../common/category/spot_category_selection.dart';
 import '../repository/spot_repository.dart';
 import '../../../common/category/spot_category_toggle.dart';
 import 'spot_providers.dart';
@@ -86,12 +86,82 @@ class SelectedLikedCategory extends _$SelectedLikedCategory
   }
 }
 
-/// 좋아요 목록 컨트롤러(SPEC-0008 R-18). [selection]별 패밀리 — 선택을 바꾸면
-/// 다른 인스턴스가 로딩되고, 필터링은 서버가 한다(클라이언트가 받은 목록을 거르지
-/// 않는다).
+/// 좋아요 목록의 검색어(SPEC-0033).
 ///
-/// family 인자가 `Set`이 아니라 [SpotCategorySelection]인 이유는 스와이프 컨트롤러와
-/// 같다 — `Set`은 값 동등성이 없어 family 키로 쓸 수 없다.
+/// **화면 `State`가 아니라 provider가 들고 있다.** `loadMore`·재시도·`invalidate`가
+/// 모두 family 키를 통해 도는데, 검색어가 위젯 안에만 있으면 그 경로들이 검색어를
+/// 모른다 — 카테고리 선택([SelectedLikedCategory])을 provider로 둔 것과 같은 이유다.
+///
+/// **제출된 값이다.** 입력창이 들고 있는 타이핑 중 문자열과 다르다 — 이쪽은 조회를
+/// 트리거하는 확정 값이라, 엔터를 칠 때만 갱신된다(사용자 결정, 2026-08-29).
+/// 타자 중에 갱신하면 매 글자 재조회가 되고, 엔터를 쳐도 이미 같은 값이라 아무 일도
+/// 일어나지 않는 것처럼 보인다.
+///
+/// keepAlive가 아닌 이유는 카테고리 선택과 반대다 — 탭을 떠나면 검색어를 버리고
+/// 다음 진입은 빈 입력으로 시작한다(§입력 처리). 다만 좋아요 탭은 셸 브랜치라
+/// 계속 mount되어 autoDispose가 저절로 돌지 않으므로, 화면이 탭 이탈을 감지해
+/// [LikedSpotsSearchQuery.clear]를 부른다.
+@riverpod
+class LikedSpotsSearchQuery extends _$LikedSpotsSearchQuery {
+  @override
+  String build() {
+    // 로그아웃하면 검색어도 버린다.
+    ref.watchSignedIn();
+    return '';
+  }
+
+  /// 입력에서 온 검색어를 확정한다. **앞뒤 공백을 털고 100자로 자른다** —
+  /// `EMPTY_QUERY`·`QUERY_TOO_LONG`은 방어선이지 정상 경로가 아니므로 입력
+  /// 단계에서 막는다(§입력 처리).
+  void set(String value) {
+    final String trimmed = value.trim();
+    state = trimmed.length > likedSpotsQueryMaxLength
+        ? trimmed.substring(0, likedSpotsQueryMaxLength)
+        : trimmed;
+  }
+
+  void clear() => state = '';
+}
+
+/// 이 세션에서 **필터도 검색어도 없는** 좋아요 목록이 비어 있지 않은 것을 본 적이
+/// 있는지(SPEC-0033 §두 개의 빈 상태).
+///
+/// 검색 결과 0건과 좋아요 0건을 가르려면 "필터를 걷어낸 좋아요가 있는가"를 알아야
+/// 하는데, 서버는 그 총량을 따로 주지 않는다(라이브 `LikedSpotConnection`에
+/// `totalCount`가 없다). 그래서 **왕복을 늘리지 않고** 관측한다 — 필터도 검색어도
+/// 없는 조회는 그 자체가 전체 목록이므로, 그때 받은 결과가 답이다.
+///
+/// keepAlive다. 검색어를 치는 순간 컨트롤러의 키가 바뀌어 필터 없는 인스턴스가
+/// 버려지므로, autoDispose면 판정 근거가 그와 함께 사라진다.
+@Riverpod(keepAlive: true)
+class LikedSpotsPresence extends _$LikedSpotsPresence {
+  @override
+  bool build() {
+    // **로그아웃에만 반응한다** — `ref.watchSignedIn()`을 쓰면 인증 판정이
+    // loading→data로 자리잡는 것만으로도 build가 다시 돌아 이미 관측한 값이
+    // false로 지워진다. 로그인 직후 첫 목록이 그 타이밍에 걸리면 좋아요가 있는데도
+    // "아직 좋아요한 여행지가 없어요"가 뜬다. 다음 계정의 목록은 다시 봐야 하므로
+    // 로그아웃이 확정되면 관측을 버린다.
+    ref.listenSignedOut(() => state = false);
+    return false;
+  }
+
+  /// 필터 없는 조회가 [hasItems]를 돌려줬음을 기록한다. 필터가 걸린 조회는
+  /// 근거가 되지 않으므로 호출부가 거른다.
+  void observe({required bool hasItems}) => state = hasItems;
+}
+
+/// 검색어 상한(SPEC-0033 §입력 처리). 서버 `QUERY_TOO_LONG`과 같은 값이며,
+/// 입력에서 막으므로 그 오류가 실제로 올 일은 없어야 한다.
+const int likedSpotsQueryMaxLength = 100;
+
+/// 좋아요 목록 컨트롤러(SPEC-0008 R-18 · SPEC-0033). [query]별 패밀리 — 카테고리
+/// 선택이나 검색어를 바꾸면 다른 인스턴스가 로딩되고, 필터링은 서버가 한다
+/// (클라이언트가 받은 목록을 거르지 않는다).
+///
+/// family 인자가 `Set`이나 `String` 조합이 아니라 [LikedSpotsQuery]인 이유는 스와이프
+/// 컨트롤러와 같다 — 값 동등성이 없는 타입은 family 키로 쓸 수 없다. **검색어가
+/// 이 키에 들어가야** 검색어를 바꿨을 때 재조회가 일어난다(SPEC-0033 §핵심 배선).
 ///
 /// 미인증이면 repository가 `UNAUTHENTICATED`를 [SpotFailure]로 던지고, 그것이
 /// `AsyncValue.error`로 UI에 노출되어 SPEC-0005의 세션 갱신 경로를 탄다 — 이 스펙이
@@ -112,7 +182,7 @@ class LikedSpotsController extends _$LikedSpotsController {
   SpotRepository get _repository => ref.read(spotRepositoryProvider);
 
   @override
-  Future<LikedSpotsState> build(SpotCategorySelection selection) async {
+  Future<LikedSpotsState> build(LikedSpotsQuery query) async {
     // 언어를 바꾸면 목록을 다시 받는다. 좋아요 **자체는** SPEC-0019 이후 언어를 넘어
     // 유지되지만, 쌓아둔 항목의 제목·주소는 이전 언어로 받아온 문장이다. 좋아요 탭도
     // 셸 브랜치라 계속 mount되어 autoDispose가 돌지 않으므로, 이 구독이 없으면
@@ -120,9 +190,18 @@ class LikedSpotsController extends _$LikedSpotsController {
     ref.watch(localeControllerProvider);
 
     final CursorPage<LikedSpot> page = await _repository.fetchLikedSpots(
-      categoryCodes: selection.codesOrNull,
+      categoryCodes: query.selection.codesOrNull,
+      query: query.queryOrNull,
       first: _pageSize,
     );
+    // 필터도 검색어도 없는 조회만이 "좋아요가 하나라도 있는가"의 근거다 — 빈 상태
+    // 문구를 가르는 데 쓴다(SPEC-0033 §두 개의 빈 상태). 필터가 걸린 조회의 0건은
+    // 좋아요가 없다는 뜻이 아니다.
+    if (query.selection.isEmpty && !query.hasQuery) {
+      ref
+          .read(likedSpotsPresenceProvider.notifier)
+          .observe(hasItems: page.items.isNotEmpty);
+    }
     return LikedSpotsState(
       items: page.items,
       hasMore: page.hasNextPage,
@@ -141,8 +220,10 @@ class LikedSpotsController extends _$LikedSpotsController {
       final CursorPage<LikedSpot> next = await _repository.fetchLikedSpots(
         // **첫 페이지와 같은 필터로 이어 받는다.** 예전에는 이 인자가 빠져 있어
         // 다음 장부터 필터가 풀렸다 — 커서만 잇고 조건을 바꾸면 서로 이어지지
-        // 않는 두 목록을 붙이는 셈이다.
-        categoryCodes: selection.codesOrNull,
+        // 않는 두 목록을 붙이는 셈이다. 검색어도 같은 이유로 함께 싣는다
+        // (SPEC-0033 §핵심 배선 — 첫 페이지만 필터되는 것이 가장 나오기 쉬운 버그다).
+        categoryCodes: query.selection.codesOrNull,
+        query: query.queryOrNull,
         first: _pageSize,
         after: current.endCursor,
       );

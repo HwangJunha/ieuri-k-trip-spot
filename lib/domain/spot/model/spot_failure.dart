@@ -1,7 +1,9 @@
+import '../../../common/network/auth_error_codes.dart';
+
 /// 스팟 데이터 접근 실패(SPEC-0002·0003). repository가 전송/도메인 오류를 이 값으로
 /// 번역해 provider·UI에 넘긴다 — 서버 코드 문자열을 UI로 직접 흘리지 않는다
 /// (POL-016 대비). 순수 도메인.
-class SpotFailure implements Exception {
+class SpotFailure implements Exception, AuthAwareFailure {
   const SpotFailure(this.kind, {this.code});
 
   /// 전송 오류(네트워크·서버 도달 불가·정체불명 top-level errors).
@@ -93,6 +95,15 @@ class SpotFailure implements Exception {
         'AUTH_STORE_UNAVAILABLE' => SpotFailure.network,
         _ => SpotFailure.network,
       };
+
+  /// 액세스 토큰이 만료·무효라 갱신이 필요하다.
+  ///
+  /// **공통 재시도 정책이 보는 이름이다**(`common/network/network_retry_policy.dart`).
+  /// 도메인마다 실패 타입이 달라 공통 코드가 `kind`를 알 수 없으므로, 모든 failure가
+  /// 같은 이름의 게터를 노출해 그쪽에서 하나로 판별한다 — 인증 실패에 자동 재시도를
+  /// 하면 같은 토큰으로 같은 실패가 나 상한까지 헛돈다(2026-08-29 실기기).
+  @override
+  bool get isUnauthenticated => kind == SpotFailureKind.unauthenticated;
 
   @override
   String toString() => 'SpotFailure($kind${code == null ? '' : ', $code'})';

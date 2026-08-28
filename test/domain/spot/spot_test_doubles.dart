@@ -5,6 +5,7 @@ import 'package:ieuri_k_trip_spot/common/pagination/offset_page.dart';
 import 'package:ieuri_k_trip_spot/common/pagination/page.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/liked_spot.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/liked_spots_query.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/popular_spot.dart';
 import 'package:ieuri_k_trip_spot/common/category/spot_category.dart';
 import 'package:ieuri_k_trip_spot/common/category/spot_category_selection.dart';
@@ -101,29 +102,42 @@ class FakeSpotRepository implements SpotRepository {
   /// 마지막 조회에 실린 카테고리 코드(검증용) — 필터가 서버까지 전달되는지 본다.
   List<String>? lastLikedCategoryCodes;
 
+  /// 마지막 조회에 실린 검색어(검증용, SPEC-0033). **null과 빈 문자열이 다르다** —
+  /// null은 인자를 보내지 않았다는 뜻이고, 빈 문자열은 서버가 `EMPTY_QUERY`로
+  /// 거절할 값이다(AC8.2).
+  String? lastLikedQuery;
+
   /// 좋아요 목록 커서 페이징(SPEC-0008 R-18). [likedPageSize]씩 잘라 돌려주며,
   /// 커서는 다음 항목의 인덱스 문자열이다 — 실제 서버의 불투명 커서를 흉내내되
   /// 테스트가 페이지 경계를 예측할 수 있게 한다.
   ///
   /// [categoryCodes]가 있으면 실제 서버처럼 **자르기 전에** 거른다 — 페이지 크기가
   /// 필터링 이후 기준이어야 커서 경계가 서버와 같아진다. 여러 코드는 OR다.
+  /// [query]도 같은 자리에서 제목 부분일치로 거른다(대소문자 무시) — 카테고리와
+  /// **함께**(AND) 적용되는 것이 서버 규약이다.
   @override
   Future<CursorPage<LikedSpot>> fetchLikedSpots({
     List<String>? categoryCodes,
+    String? query,
     int? first,
     String? after,
   }) async {
     likedSpotsCallCount++;
     lastLikedCategoryCodes = categoryCodes;
+    lastLikedQuery = query;
     if (likedSpotsFailure != null && likedSpotsCallCount > failLikedAfter) {
       throw likedSpotsFailure!;
     }
 
-    final List<LikedSpot> pool = categoryCodes == null
-        ? liked
-        : liked
-              .where((LikedSpot s) => categoryCodes.contains(s.category.code))
-              .toList();
+    final String? needle = query?.toLowerCase();
+    final List<LikedSpot> pool = liked
+        .where(
+          (LikedSpot s) =>
+              (categoryCodes == null ||
+                  categoryCodes.contains(s.category.code)) &&
+              (needle == null || s.title.toLowerCase().contains(needle)),
+        )
+        .toList();
     final int start = after == null ? 0 : (int.tryParse(after) ?? 0);
     final int end = (start + likedPageSize).clamp(0, pool.length);
     final List<LikedSpot> items = start >= pool.length
@@ -340,6 +354,16 @@ final SpotCategorySelection noCategories = SpotCategorySelection(
 /// [categories]를 담은 선택. family 인자로 그대로 쓴다.
 SpotCategorySelection selectionOf(List<SpotCategory> categories) =>
     SpotCategorySelection(categories);
+
+/// 좋아요 목록 컨트롤러의 family 키(SPEC-0033). 카테고리와 검색어를 함께 담는다 —
+/// 검색어를 생략하면 필터 없는 전체 조회다.
+LikedSpotsQuery likedQuery({
+  List<SpotCategory> categories = const <SpotCategory>[],
+  String query = '',
+}) => LikedSpotsQuery(
+  selection: SpotCategorySelection(categories),
+  query: query,
+);
 
 /// 상세 하나를 최소 필드로 만든다(테스트 데이터 생성 편의). null 인자를 넘겨 값 없는
 /// 섹션(overview/address/homepage/tel)이나 빈 갤러리를 검증할 수 있다.

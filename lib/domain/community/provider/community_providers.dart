@@ -1,9 +1,9 @@
+import '../../../common/network/auth_error_codes.dart';
 import '../../../common/network/network_retry_policy.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/model/target_category.dart';
 import '../../../common/network/graphql_client.dart';
-import '../model/community_failure.dart';
 import '../repository/community_repository.dart';
 import '../repository/community_repository_impl.dart';
 
@@ -23,10 +23,10 @@ CommunityRepository communityRepository(Ref ref) =>
 /// 인증 실패는 **아예 재시도하지 않는다** — SPEC-0005의 갱신·로그아웃 경로가
 /// 소관이며 여기서 다시 조회해 봐야 같은 실패가 난다.
 Duration? communityRetryPolicy(int retryCount, Object error) {
-  if (error is CommunityFailure &&
-      error.kind == CommunityFailureKind.unauthenticated) {
-    return null;
-  }
+  // 인증 실패는 갱신 링크 소관이라 재시도하지 않는다. 판별은 공통
+  // [AuthAwareFailure] 하나에만 의존한다 — 도메인마다 따로 적어 두면 서버가
+  // 코드를 늘렸을 때 한쪽만 고쳐진다(2026-08-29).
+  if (error is AuthAwareFailure && error.isUnauthenticated) return null;
   if (retryCount >= defaultMaxAutoRetries) return null;
   return defaultRetryDelayOf(retryCount);
 }
