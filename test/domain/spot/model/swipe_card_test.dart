@@ -166,6 +166,62 @@ void main() {
       );
     });
 
+    /// **정보 영역 높이는 카드 내용과 무관하게 같다**(사용자 결정 2026-08-28).
+    ///
+    /// 내용만큼만 차지하게 두면 제목이 한 줄이냐 두 줄이냐에 따라 높이가 달라지고,
+    /// 사진이 그 나머지를 가져가므로 카드가 넘어갈 때마다 사진이 커졌다 작아졌다
+    /// 한다 — 사진 우하단의 좋아요 버튼도 함께 오르내린다(실기기 녹화 분석:
+    /// 정보 영역 시작점이 490 ↔ 504로 진동).
+    ///
+    /// 이 값은 화면 크기·안전 영역과 무관해야 한다. 기기가 달라도 **한 기기 안에서는
+    /// 모든 카드가 같은 높이**라는 것이 요점이다.
+    test('정보 영역 높이는 화면 크기와 무관하게 일정하다', () {
+      expect(
+        metricsOf(width: 400, height: 800).overlayContentHeight,
+        metricsOf(width: 320, height: 1200).overlayContentHeight,
+      );
+      expect(
+        metricsOf(bottomPadding: 0).overlayContentHeight,
+        metricsOf(bottomPadding: 34).overlayContentHeight,
+      );
+    });
+
+    /// 제목 2줄·주소 2줄·거리 1줄이 다 들어가야 한다 — 최댓값으로 잡으므로 짧은
+    /// 카드는 아래가 남고, 긴 카드도 잘리지 않는다.
+    test('정보 영역은 제목 2줄·주소 2줄·거리 줄을 담을 만큼 크다', () {
+      const double titleTwoLines = 22 * 1.25 * 2;
+      const double addressTwoLines = 20 * 2;
+      const double distanceRow = 36;
+
+      expect(
+        metricsOf().overlayContentHeight,
+        greaterThanOrEqualTo(titleTwoLines + addressTwoLines + distanceRow),
+      );
+    });
+
+    /// 글자를 키운 사용자에게도 잘리지 않아야 한다 — 고정 높이의 위험이 여기다.
+    test('글자 크기를 키우면 정보 영역도 그만큼 커진다', () {
+      final double normal = SwipeCardMetrics.fixedOverlayContentHeight();
+      final double large = SwipeCardMetrics.fixedOverlayContentHeight(
+        textScale: 1.5,
+      );
+
+      expect(large, greaterThan(normal));
+      expect(large, closeTo(normal * 1.5, 0.01));
+    });
+
+    /// 0이나 음수가 들어와도 무너지지 않는다(기기 설정을 그대로 믿지 않는다).
+    test('글자 배율이 0 이하면 기본 배율로 본다', () {
+      expect(
+        SwipeCardMetrics.fixedOverlayContentHeight(textScale: 0),
+        SwipeCardMetrics.fixedOverlayContentHeight(),
+      );
+      expect(
+        SwipeCardMetrics.fixedOverlayContentHeight(textScale: -1),
+        SwipeCardMetrics.fixedOverlayContentHeight(),
+      );
+    });
+
     /// R14: 겹침 영역의 가독성 보조. 상단 스크림이 상태바와 카테고리 바를 덮는다.
     test('상단 스크림이 상태바와 조작 영역을 덮는다', () {
       expect(metricsOf(topPadding: 47).topScrimHeight, 47 + 68);
@@ -220,36 +276,63 @@ void main() {
       }
     });
 
-    /// AC R3-1: 오른쪽으로 확정하면 좋아요.
-    test('오른쪽으로 끌면 좋아요다', () {
+    /// R3 개정(2026-08-27): **어느 쪽으로 밀어도 패스다.** 넘기는 동작과 좋아요가
+    /// 같은 제스처를 쓰면 구분되지 않아, 넘기려던 카드가 보관함에 쌓였다. 좋아요는
+    /// 카드의 버튼과 상세 화면에서만 받는다.
+    test('오른쪽으로 끌어도 패스다', () {
       expect(
-        SwipeDrag.resolve(dragX: 200, width: 400, velocity: 0),
-        SpotReaction.like,
+        SwipeDrag.resolveHorizontal(
+          drag: const Offset(200, 0),
+          size: const Size2D(400, 800),
+          velocity: Offset.zero,
+        )?.reaction,
+        SpotReaction.dislike,
       );
     });
 
-    /// AC R3-2: 왼쪽으로 확정하면 관심 없음.
-    test('왼쪽으로 끌면 관심 없음이다', () {
+    test('왼쪽으로 끌어도 패스다', () {
       expect(
-        SwipeDrag.resolve(dragX: -200, width: 400, velocity: 0),
+        SwipeDrag.resolveHorizontal(
+          drag: const Offset(-200, 0),
+          size: const Size2D(400, 800),
+          velocity: Offset.zero,
+        )?.reaction,
         SpotReaction.dislike,
       );
     });
 
     /// 임계에 못 미치면 확정하지 않는다(스프링백).
     test('임계에 못 미치면 판정하지 않는다', () {
-      expect(SwipeDrag.resolve(dragX: 10, width: 400, velocity: 0), isNull);
+      expect(
+        SwipeDrag.resolveHorizontal(
+          drag: const Offset(10, 0),
+          size: const Size2D(400, 800),
+          velocity: Offset.zero,
+        ),
+        isNull,
+      );
     });
 
     /// 짧게 튕기는 조작을 거리만으로 판정하면 "분명히 넘겼는데 돌아온다"가 된다.
+    ///
+    /// 판정 결과는 둘 다 패스지만, **카드가 날아가는 방향**은 민 쪽을 따라야 한다 —
+    /// 그래서 방향 자체는 여전히 구분된다.
     test('빠르게 튕기면 거리가 짧아도 확정된다', () {
       expect(
-        SwipeDrag.resolve(dragX: 10, width: 400, velocity: 900),
-        SpotReaction.like,
+        SwipeDrag.resolveHorizontal(
+          drag: const Offset(10, 0),
+          size: const Size2D(400, 800),
+          velocity: const Offset(900, 0),
+        ),
+        SwipeDirection.right,
       );
       expect(
-        SwipeDrag.resolve(dragX: -10, width: 400, velocity: -900),
-        SpotReaction.dislike,
+        SwipeDrag.resolveHorizontal(
+          drag: const Offset(-10, 0),
+          size: const Size2D(400, 800),
+          velocity: const Offset(-900, 0),
+        ),
+        SwipeDirection.left,
       );
     });
 
@@ -292,7 +375,14 @@ void main() {
     test('폭이 0이면 계산이 무너지지 않는다', () {
       expect(SwipeDrag.progress(50, 0), 0);
       expect(SwipeDrag.tilt(50, 0), 0);
-      expect(SwipeDrag.resolve(dragX: 50, width: 0, velocity: 0), isNull);
+      expect(
+        SwipeDrag.resolveHorizontal(
+          drag: const Offset(50, 0),
+          size: const Size2D(0, 0),
+          velocity: Offset.zero,
+        ),
+        isNull,
+      );
     });
   });
 }

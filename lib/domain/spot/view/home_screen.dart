@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../common/location/location_providers.dart';
 import '../../../common/navigation/spot_detail_route.dart';
 import '../../../common/widget/home_section.dart';
 import '../../spot_qa/component/my_questions_button.dart';
@@ -72,8 +73,15 @@ class HomeScreen extends ConsumerWidget {
           // **`.future`를 await 해야 한다** — invalidate만 하고 끝나면 데이터가
           // 도착하기 전에 스피너가 걷혀 새로고침이 안 된 것처럼 보인다. 셋 중
           // 하나가 실패해도 나머지를 기다리도록 각각 catchError로 받는다.
+          //
+          // **좌표부터 버린다**(2026-08-27). 섹션만 다시 받으면 예전 좌표로 같은
+          // 결과가 돌아와, 자리를 옮긴 사용자가 당겨도 아무것도 바뀌지 않는다 —
+          // 조회 좌표는 세션 동안 고정되기 때문이다(`currentCoordinatesProvider`).
+          // 앞으로 돌아올 때의 자동 갱신은 500m를 넘어야 도는 반면, 손으로 당긴
+          // 것은 거리를 따지지 않고 그대로 받아들인다.
           onRefresh: () async {
             ref
+              ..invalidate(currentCoordinatesProvider)
               ..invalidate(nearbySpotsSectionProvider)
               ..invalidate(popularSpotsSectionProvider);
             await Future.wait(<Future<void>>[
@@ -129,6 +137,23 @@ class _NearYouSection extends ConsumerWidget {
       title: l10n.homeSectionNearYou,
       value: spots,
       emptyMessage: l10n.homeNearYouEmpty,
+      // **위치 새로고침을 이 섹션에 둔다**(2026-08-27).
+      //
+      // 조회 좌표는 세션 동안 고정된다 — 지하철로 이동해도 앱을 완전히 종료하기
+      // 전에는 예전 동네가 보였다. 앱이 앞으로 돌아올 때 500m를 넘으면 자동으로
+      // 갱신하지만(`LocationRefreshGate`), 그 판정에 걸리지 않는 경우와 좌표를
+      // 못 받은 경우가 남는다.
+      //
+      // 앱바가 아니라 여기 두는 이유는 **무엇을 새로 잡는지 분명해야** 하기
+      // 때문이다. 「내 주변」 옆의 새로고침은 설명 없이도 읽힌다.
+      titleAction: IconButton(
+        onPressed: () => ref
+          ..invalidate(currentCoordinatesProvider)
+          ..invalidate(nearbySpotsSectionProvider),
+        icon: const Icon(Icons.my_location),
+        tooltip: l10n.homeRefreshLocation,
+        visualDensity: VisualDensity.compact,
+      ),
       // 이 섹션의 provider만 무효화한다 — 다른 두 섹션은 그대로다(AC-20.2).
       onRetry: () => ref.invalidate(nearbySpotsSectionProvider),
       skeletonItems: spotSkeletonSamples,

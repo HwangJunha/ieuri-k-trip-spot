@@ -29,7 +29,10 @@ class DragFeedbackOverlay extends StatelessWidget {
     final double intensity = size.width == 0
         ? 0
         : (drag.dx.abs() / (size.width / 2)).clamp(0.0, 1.0);
-    final bool isLike = drag.dx > 0;
+
+    // **어느 쪽으로 밀어도 패스다**(2026-08-27). 라벨은 하나뿐이고, 미는 방향에
+    // 따라 반대편에 붙어 손가락을 가리지 않는다.
+    final bool draggingRight = drag.dx > 0;
 
     // **가로로 안 움직였으면 라벨을 아예 만들지 않는다.** 투명도 0으로 숨기면
     // 위젯은 트리에 남아, 세로로만 민 상태에서 "NOPE"가 존재하게 된다 —
@@ -40,14 +43,16 @@ class DragFeedbackOverlay extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Align(
-          alignment: isLike ? Alignment.topLeft : Alignment.topRight,
+          alignment: draggingRight
+              ? Alignment.topLeft
+              : Alignment.topRight,
           child: Opacity(
             opacity: intensity,
             child: _Label(
-              text: isLike ? l10n.discoverLikeLabel : l10n.discoverNopeLabel,
-              color: isLike ? Colors.green : Colors.red,
-              // 방향에 맞춰 살짝 기울인 스탬프 느낌.
-              angle: isLike ? -0.35 : 0.35,
+              text: l10n.discoverNopeLabel,
+              color: Theme.of(context).colorScheme.outline,
+              // 미는 방향에 맞춰 살짝 기울인 스탬프 느낌.
+              angle: draggingRight ? -0.35 : 0.35,
             ),
           ),
         ),
