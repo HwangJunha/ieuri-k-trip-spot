@@ -137,6 +137,23 @@ class _NearYouSection extends ConsumerWidget {
       title: l10n.homeSectionNearYou,
       value: spots,
       emptyMessage: l10n.homeNearYouEmpty,
+      // **위치 새로고침을 이 섹션에 둔다**(2026-08-27).
+      //
+      // 조회 좌표는 세션 동안 고정된다 — 지하철로 이동해도 앱을 완전히 종료하기
+      // 전에는 예전 동네가 보였다. 앱이 앞으로 돌아올 때 500m를 넘으면 자동으로
+      // 갱신하지만(`LocationRefreshGate`), 그 판정에 걸리지 않는 경우와 좌표를
+      // 못 받은 경우가 남는다.
+      //
+      // 앱바가 아니라 여기 두는 이유는 **무엇을 새로 잡는지 분명해야** 하기
+      // 때문이다. 「내 주변」 옆의 새로고침은 설명 없이도 읽힌다.
+      titleAction: IconButton(
+        onPressed: () => ref
+          ..invalidate(currentCoordinatesProvider)
+          ..invalidate(nearbySpotsSectionProvider),
+        icon: const Icon(Icons.my_location),
+        tooltip: l10n.homeRefreshLocation,
+        visualDensity: VisualDensity.compact,
+      ),
       // 이 섹션의 provider만 무효화한다 — 다른 두 섹션은 그대로다(AC-20.2).
       onRetry: () => ref.invalidate(nearbySpotsSectionProvider),
       skeletonItems: spotSkeletonSamples,

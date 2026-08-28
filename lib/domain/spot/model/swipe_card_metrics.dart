@@ -28,7 +28,6 @@ class SwipeCardMetrics {
     required double bottomViewPadding,
     required double topViewPadding,
     required double overlayControlsHeight,
-    double actionBarHeight = 0,
   }) {
     final double width = screenWidth < 0 ? 0 : screenWidth;
     final double height = (screenHeight - bottomNavHeight).clamp(
@@ -45,14 +44,7 @@ class SwipeCardMetrics {
       // 카드가 하단 내비 바 **아래까지** 그려지는 셸에서는(`extendBody: true`)
       // 호출부가 그 바 높이를 [bottomViewPadding]에 함께 실어 보낸다 — 사진은 바
       // 뒤로 흘러도 되지만 글자가 가리면 읽을 수 없기 때문이다.
-      //
-      // [actionBarHeight]도 같은 이유로 더한다(2026-08-27). 좋아요·패스 버튼이
-      // 카드 위에 겹쳐 있어 자리를 차지하지 않지만, 글자가 그 뒤로 들어가면
-      // 읽히지 않는다.
-      overlayBottomInset:
-          _base +
-          _nonNegative(bottomViewPadding) +
-          _nonNegative(actionBarHeight),
+      overlayBottomInset: _base + _nonNegative(bottomViewPadding),
       // 앱바·카테고리 바가 사진 위에 겹치므로 그 영역에 상단 스크림을 깐다(R14).
       // 밝은 사진 위에서 44x44 원형 아이콘이 특히 취약하다(설계 §2.5).
       topScrimHeight:

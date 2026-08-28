@@ -19,13 +19,29 @@ import 'spot_display.dart';
 /// **이미지 맞춤은 저작권 유형이 정한다**(R13, SPEC-0002 §4.7) — TYPE1만 크롭하고
 /// 나머지는 원본을 유지한다. 그 판단은 [SwipeCardDisplay]에 있다.
 class SwipeCard extends StatelessWidget {
-  const SwipeCard({super.key, required this.spot, this.metrics});
+  const SwipeCard({
+    super.key,
+    required this.spot,
+    this.metrics,
+    this.onPass,
+    this.onLike,
+    this.onRefreshLocation,
+  });
 
   final TouristSpot spot;
 
   /// 하단 오버레이를 어디에 놓을지. 없으면 기기 인셋을 모르는 자리(다음 카드 대기
   /// 등)이므로 기본 여백을 쓴다.
   final SwipeCardMetrics? metrics;
+
+  /// 액션 바 콜백. **둘 다 없으면 바를 그리지 않는다** — 뒤에 깔린 다음 카드는
+  /// 만질 수 없으므로 버튼이 있을 이유가 없다.
+  final VoidCallback? onPass;
+  final VoidCallback? onLike;
+
+  /// 거리 옆의 위치 새로고침. 거리가 "내 위치 기준"이라는 뜻이므로 그 옆이면
+  /// 무엇을 다시 잡는지 설명 없이 읽힌다.
+  final VoidCallback? onRefreshLocation;
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +84,14 @@ class SwipeCard extends StatelessWidget {
               20,
               metrics!.overlayBottomInset,
             ),
-            child: _Overlay(display: display, l10n: l10n, theme: theme),
+            child: _Overlay(
+              display: display,
+              l10n: l10n,
+              theme: theme,
+              onPass: onPass,
+              onLike: onLike,
+              onRefreshLocation: onRefreshLocation,
+            ),
           ),
         ],
       ),
@@ -172,11 +195,17 @@ class _Overlay extends StatelessWidget {
     required this.display,
     required this.l10n,
     required this.theme,
+    this.onPass,
+    this.onLike,
+    this.onRefreshLocation,
   });
 
   final SwipeCardDisplay display;
   final AppLocalizations l10n;
   final ThemeData theme;
+  final VoidCallback? onPass;
+  final VoidCallback? onLike;
+  final VoidCallback? onRefreshLocation;
 
   @override
   Widget build(BuildContext context) {
@@ -224,7 +253,6 @@ class _Overlay extends StatelessWidget {
         if (display.showsDistance) ...<Widget>[
           const SizedBox(height: 8),
           Row(
-            mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Icon(Icons.place_outlined, size: 16, color: scheme.primary),
               const SizedBox(width: 4),
@@ -235,10 +263,133 @@ class _Overlay extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
+              const Spacer(),
+              // **거리 옆에 둔다.** 거리는 "내 위치 기준 849m"라는 뜻이므로, 그
+              // 옆의 새로고침은 "이 기준을 다시 잡는다"로 설명 없이 읽힌다.
+              // 카테고리 바나 앱바에 두면 무엇에 대한 조작인지 알 수 없다.
+              if (onRefreshLocation != null)
+                IconButton(
+                  onPressed: onRefreshLocation,
+                  icon: const Icon(Icons.my_location, size: 20),
+                  tooltip: l10n.homeRefreshLocation,
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 40,
+                    minHeight: 40,
+                  ),
+                  color: scheme.onSurfaceVariant,
+                ),
             ],
           ),
         ],
+        // **액션 바는 카드 정보 영역 안에 둔다**(2026-08-27).
+        //
+        // 처음에는 좋아요를 제목 옆에 붙였는데, 뒤에 깔린 카드에는 버튼이 없어
+        // 제목이 쓸 수 있는 폭이 달랐다 — 카드가 넘어가는 순간 글자가 작아지는
+        // 것처럼 보였다. 그다음에는 카드 밖에 겹쳐 놨더니 하단 탭 바에 잘렸다.
+        //
+        // 여기라면 둘 다 없다. 제목과 다른 줄이라 폭을 다투지 않고, 카드 안이라
+        // 탭 바와 겹칠 일이 없다. 전체화면(R1)도 그대로다 — 정보 영역은 원래
+        // 자기 내용만큼 차지하므로 한 줄이 늘 뿐이다.
+        if (onPass != null && onLike != null) ...<Widget>[
+          const SizedBox(height: 18),
+          _ActionBar(onPass: onPass!, onLike: onLike!, l10n: l10n),
+        ],
       ],
+    );
+  }
+}
+
+/// 카드 안의 패스·좋아요 버튼 줄.
+///
+/// **패스도 버튼으로 둔다.** 스와이프가 전부 패스가 된 뒤로 좋아요는 버튼뿐인데
+/// 패스는 여전히 미는 것뿐이었다 — 스와이프를 모르는 사용자에게 카드를 넘길 길이
+/// 없다.
+///
+/// 두 버튼의 무게를 다르게 둔다(패스는 테두리, 좋아요는 채움). 같으면 어느 쪽이
+/// 기본 동작인지 알 수 없다.
+class _ActionBar extends StatelessWidget {
+  const _ActionBar({
+    required this.onPass,
+    required this.onLike,
+    required this.l10n,
+  });
+
+  static const double _buttonSize = 56;
+
+  final VoidCallback onPass;
+  final VoidCallback onLike;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        _ActionButton(
+          onPressed: onPass,
+          icon: Icons.close,
+          label: l10n.spotDetailDislikeAction,
+          background: scheme.surface,
+          foreground: scheme.onSurfaceVariant,
+          border: scheme.outlineVariant,
+          size: _buttonSize,
+        ),
+        const SizedBox(width: 24),
+        _ActionButton(
+          onPressed: onLike,
+          icon: Icons.favorite,
+          label: l10n.spotDetailLikeAction,
+          background: scheme.primary,
+          foreground: scheme.onPrimary,
+          size: _buttonSize,
+        ),
+      ],
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  const _ActionButton({
+    required this.onPressed,
+    required this.icon,
+    required this.label,
+    required this.background,
+    required this.foreground,
+    required this.size,
+    this.border,
+  });
+
+  final VoidCallback onPressed;
+  final IconData icon;
+  final String label;
+  final Color background;
+  final Color foreground;
+  final double size;
+  final Color? border;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: label,
+      child: Material(
+        color: background,
+        shape: border == null
+            ? const CircleBorder()
+            : CircleBorder(side: BorderSide(color: border!)),
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          child: SizedBox(
+            width: size,
+            height: size,
+            child: Icon(icon, color: foreground, size: 26),
+          ),
+        ),
+      ),
     );
   }
 }

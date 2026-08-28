@@ -7,6 +7,7 @@ import '../../../common/permission/component/permission_blocked_notice.dart';
 import '../../../common/permission/model/permission_kind.dart';
 import '../../../common/permission/model/permission_state.dart';
 import '../../../common/permission/provider/permission_providers.dart';
+import '../../../common/location/location_providers.dart';
 import '../../../common/storage/search_radius_controller.dart';
 import '../../../common/widget/failure_notice.dart';
 import '../../../common/widget/floating_bottom_nav_scaffold.dart';
@@ -16,7 +17,6 @@ import '../../../common/analytics/app_analytics.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../common/category/spot_category_bar.dart';
 import '../component/drag_feedback_overlay.dart';
-import '../component/swipe_action_bar.dart';
 import '../component/swipe_card.dart';
 import '../model/retry_exhausted.dart';
 import '../../../common/category/spot_category.dart';
@@ -522,6 +522,20 @@ class _CardStackState extends ConsumerState<_CardStack>
   void _like(Size2D size) =>
       _flyOut(SwipeDirection.right, size, Offset.zero, SpotReaction.like);
 
+  /// 위치를 다시 잡는다(2026-08-27).
+  ///
+  /// 조회 좌표는 세션 동안 고정되므로 지하철로 이동해도 예전 동네의 카드가 계속
+  /// 나온다. 앞으로 돌아올 때 500m를 넘으면 자동으로 갱신되지만
+  /// (`LocationRefreshGate`), 그 판정에 걸리지 않는 경우가 남는다.
+  ///
+  /// **큐도 함께 버린다.** 좌표만 새로 받으면 이미 쌓인 카드는 예전 위치의 것
+  /// 그대로다 — 사용자가 보는 것이 바뀌지 않으면 새로고침이 아니다.
+  void _refreshLocation() {
+    ref
+      ..invalidate(currentCoordinatesProvider)
+      ..invalidate(swipeControllerProvider(widget.selection));
+  }
+
   void _flyOut(
     SwipeDirection direction,
     Size2D size,
@@ -624,9 +638,6 @@ class _CardStackState extends ConsumerState<_CardStack>
               viewPadding.bottom + FloatingBottomNavScaffold.barExtent,
           topViewPadding: viewPadding.top,
           overlayControlsHeight: _overlayControlsHeight,
-          // 액션 바도 카드 위에 겹치므로 같은 보정이 필요하다 — 글자가 버튼 뒤로
-          // 들어가면 읽을 수 없다.
-          actionBarHeight: SwipeActionBar.barHeight,
         );
 
         final Size2D size = Size2D(width, constraints.maxHeight);
@@ -677,23 +688,9 @@ class _CardStackState extends ConsumerState<_CardStack>
                     _confirm(direction, size, velocity),
                 onSpringBack: _springBack,
                 onTap: () => _openDetail(top),
-              ),
-            ),
-            // **액션 바는 카드 위에 겹친다**(R14와 같은 판단). 자리를 차지하면
-            // 사진이 그만큼 줄어 전체화면화의 뜻이 사라진다 — 대신 카드의 하단
-            // 여백을 `actionBarHeight`만큼 늘려 글자가 버튼 뒤로 가지 않게 했다.
-            //
-            // 내비 바 위에 놓는다. 셸이 `extendBody: true`라 카드는 바 아래까지
-            // 그려지지만, 버튼은 눌러야 하므로 가리면 안 된다.
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom:
-                  MediaQuery.viewPaddingOf(context).bottom +
-                  FloatingBottomNavScaffold.barExtent,
-              child: SwipeActionBar(
                 onPass: () => _confirm(SwipeDirection.left, size, Offset.zero),
                 onLike: () => _like(size),
+                onRefreshLocation: _refreshLocation,
               ),
             ),
           ],
@@ -720,6 +717,9 @@ class _DraggableTop extends StatelessWidget {
     required this.onConfirm,
     required this.onSpringBack,
     required this.onTap,
+    required this.onPass,
+    required this.onLike,
+    required this.onRefreshLocation,
   });
 
   final TouristSpot spot;
@@ -739,6 +739,14 @@ class _DraggableTop extends StatelessWidget {
 
   /// 카드 탭(드래그 아님) 콜백 — 상세 진입.
   final VoidCallback onTap;
+
+  /// 카드 안 액션 바. 스와이프를 모르는 사용자에게 유일한 길이고, 좋아요는
+  /// 스와이프가 전부 패스가 된 뒤로 이 경로뿐이다.
+  final VoidCallback onPass;
+  final VoidCallback onLike;
+
+  /// 거리 옆의 위치 새로고침.
+  final VoidCallback onRefreshLocation;
 
   @override
   Widget build(BuildContext context) {
@@ -767,7 +775,15 @@ class _DraggableTop extends StatelessWidget {
         // `child`는 다시 빌드되지 않지만, 경계가 없으면 바깥 `Transform`이 움직일
         // 때마다 사진·블러 배경이 다시 래스터화된다. 경계를 두면 굳은 레이어를
         // 옮기기만 한다 — 드래그가 부드러워지는 핵심이다.
-        child: RepaintBoundary(child: SwipeCard(spot: spot, metrics: metrics)),
+        child: RepaintBoundary(
+          child: SwipeCard(
+            spot: spot,
+            metrics: metrics,
+            onPass: onPass,
+            onLike: onLike,
+            onRefreshLocation: onRefreshLocation,
+          ),
+        ),
         builder: (BuildContext context, Offset value, Widget? child) =>
             Transform.translate(
               offset: value,

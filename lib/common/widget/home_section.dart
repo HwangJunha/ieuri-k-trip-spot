@@ -27,9 +27,14 @@ class HomeSection<T> extends ConsumerWidget {
     required this.onRetry,
     required this.builder,
     this.skeletonItems = const <Never>[],
+    this.titleAction,
   });
 
   final String title;
+
+  /// 제목 오른쪽에 놓을 것. 「내 주변」의 위치 새로고침처럼 **그 섹션에만 해당하는**
+  /// 조작을 둔다 — 앱바에 두면 무엇에 대한 조작인지 알 수 없다.
+  final Widget? titleAction;
   final AsyncValue<List<T>> value;
 
   /// 결과가 0건일 때 보여줄 이유 문구. 실패 문구와 구분된다.
@@ -56,8 +61,20 @@ class HomeSection<T> extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(title, style: theme.textTheme.titleLarge),
+          padding: EdgeInsets.only(
+            left: 16,
+            // 액션이 있으면 오른쪽 여백을 줄인다 — 아이콘 버튼이 자체 패딩을
+            // 갖고 있어 16을 그대로 두면 화면 끝에서 너무 멀어진다.
+            right: titleAction == null ? 16 : 8,
+          ),
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(title, style: theme.textTheme.titleLarge),
+              ),
+              ?titleAction,
+            ],
+          ),
         ),
         const SizedBox(height: 8),
         value.when(

@@ -1400,5 +1400,6 @@
   "photoSyncRescan": "Fill again",
   "@photoSyncRescan": {
     "description": "Runs the photo scan again after it finished."
-  }
+  },
+  "homeRefreshLocation": "Refresh with current location"
 }
