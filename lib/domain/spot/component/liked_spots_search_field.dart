@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,8 +7,13 @@ import '../provider/liked_spots_providers.dart';
 
 /// 좋아요 목록 내 검색 입력(SPEC-0033 §입력 처리).
 ///
-/// **입력이 멎은 뒤 조회한다** — 타자 한 글자마다 목록을 갈아 끼우면 호출량도 늘고
-/// 화면이 깜빡인다. 대기 시간은 [likedSpotsSearchDebounce]다.
+/// **엔터(제출)로만 조회한다**(사용자 결정, 2026-08-29). 타자 중에는 아무 요청도
+/// 나가지 않는다 — 전체 코퍼스 검색(`SearchScreen`)이 이미 제출로 실행되므로 두
+/// 검색의 조작이 같아지고, 목록이 타자 중에 갈아 끼워지지 않는다.
+///
+/// 예전에는 입력이 멎으면 자동 조회했는데(디바운스 300ms), 그러면 **엔터가 듣지
+/// 않는 것처럼 보였다** — 타이머가 이미 같은 검색어를 확정해 둬서 엔터를 쳐도
+/// provider 상태가 그대로였고, family 키가 안 바뀌니 재조회도 없었다.
 ///
 /// 타이핑 중 문자열은 이 위젯의 [TextEditingController]가, 조회를 트리거하는 확정
 /// 값은 `likedSpotsSearchQueryProvider`가 들고 있다 — 둘을 하나로 두면 입력할 때마다
@@ -29,7 +32,6 @@ class LikedSpotsSearchField extends ConsumerStatefulWidget {
 
 class _LikedSpotsSearchFieldState extends ConsumerState<LikedSpotsSearchField> {
   late final TextEditingController _controller;
-  Timer? _debounce;
 
   @override
   void initState() {
@@ -43,31 +45,30 @@ class _LikedSpotsSearchFieldState extends ConsumerState<LikedSpotsSearchField> {
 
   @override
   void dispose() {
-    _debounce?.cancel();
     _controller.dispose();
     super.dispose();
   }
 
-  /// 입력이 멎으면 검색어를 확정한다. 다음 글자가 들어오면 앞선 타이머를 버린다.
+  /// 타이핑은 **조회하지 않는다.** 지우기 버튼을 띄울지만 다시 그린다.
+  ///
+  /// 입력을 다 지우면 그때만 검색어를 버려 전체 목록으로 돌아간다 — 지우는 것은
+  /// 검색의 취소이지 새 조회가 아니라, 엔터를 한 번 더 치게 할 이유가 없다.
   void _onChanged(String value) {
-    // 지우기는 기다릴 이유가 없다 — 빈 입력은 "필터 없음"이라 서버를 부르는 비용이
-    // 검색어를 치는 경우와 다르고, 결과 없음 화면에서 곧바로 목록이 돌아와야 한다.
     if (value.trim().isEmpty) {
-      _debounce?.cancel();
       ref.read(likedSpotsSearchQueryProvider.notifier).clear();
-      setState(() {});
-      return;
     }
     setState(() {});
-    _debounce?.cancel();
-    _debounce = Timer(likedSpotsSearchDebounce, () {
-      _debounce = null;
-      ref.read(likedSpotsSearchQueryProvider.notifier).set(value);
-    });
   }
 
+  /// 엔터(제출)로 조회한다.
+  ///
+  /// **같은 검색어로 다시 제출하면 아무 일도 일어나지 않는다** — provider 상태가
+  /// 그대로라 family 키가 바뀌지 않기 때문이다. 이미 그 결과를 보고 있으므로
+  /// 맞는 동작이고, 조회가 실패했다면 목록의 재시도 버튼이 그 자리를 맡는다.
+  void _submit(String value) =>
+      ref.read(likedSpotsSearchQueryProvider.notifier).set(value);
+
   void _clear() {
-    _debounce?.cancel();
     _controller.clear();
     ref.read(likedSpotsSearchQueryProvider.notifier).clear();
     setState(() {});
@@ -84,7 +85,6 @@ class _LikedSpotsSearchFieldState extends ConsumerState<LikedSpotsSearchField> {
     // 빌드 중 `setState`는 프레임워크가 막는다.
     ref.listen<String>(likedSpotsSearchQueryProvider, (String? _, String next) {
       if (next.isNotEmpty || _controller.text.isEmpty) return;
-      _debounce?.cancel();
       _controller.clear();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) setState(() {});
@@ -126,11 +126,8 @@ class _LikedSpotsSearchFieldState extends ConsumerState<LikedSpotsSearchField> {
           isDense: true,
         ),
         onChanged: _onChanged,
-        // 제출은 디바운스를 앞당길 뿐 다른 동작이 아니다.
-        onSubmitted: (String value) {
-          _debounce?.cancel();
-          ref.read(likedSpotsSearchQueryProvider.notifier).set(value);
-        },
+        // **조회를 일으키는 유일한 자리다.**
+        onSubmitted: _submit,
       ),
     );
   }
