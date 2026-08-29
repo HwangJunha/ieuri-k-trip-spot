@@ -72,12 +72,22 @@ class _PermissionBootGateState extends ConsumerState<PermissionBootGate>
   /// **완료 신호는 어떤 경로로든 선다.** 중간에 실패해도 `finally`로 세운다 —
   /// 세우지 못하면 스플래시가 완료를 기다리다 갇힌다. (스플래시에도 5초
   /// 타임아웃이 있지만, 그것은 마지막 방어선이지 정상 경로가 아니다.)
+  ///
+  /// **시퀀스 전체를 대기 표시로 감싼다**(2026-08-29). 예전에는 사전설명 시트만
+  /// 감쌌는데, 시트가 닫히고 OS 다이얼로그가 뜨기까지의 **틈**에 표시가 꺼졌다.
+  /// 그 사이 스플래시의 시한이 지나면 화면이 언어 선택으로 넘어가 버리고, OS
+  /// 다이얼로그는 그 위에 남는다 — 언어 화면 위에 위치 권한 창이 겹쳐 보이던
+  /// 것이 이것이다(사용자 지적). 위치와 알림 사이의 틈도 같은 문제였다.
   Future<void> _runSequence() async {
     if (_started) return;
     _started = true;
     try {
-      await _requestLocation();
-      await _requestNotification();
+      await ref
+          .read(permissionPromptPendingProvider.notifier)
+          .during(() async {
+            await _requestLocation();
+            await _requestNotification();
+          });
     } finally {
       ref.read(permissionBootCompleteProvider.notifier).complete();
     }
@@ -120,19 +130,12 @@ class _PermissionBootGateState extends ConsumerState<PermissionBootGate>
     await controller.request(PermissionKind.location);
   }
 
-  /// 사전설명 시트를 띄우되 **그동안 스플래시의 시한을 멈춘다**(2026-08-29).
+  /// 사전설명 시트를 띄운다.
   ///
-  /// 스플래시에는 부트가 멈췄을 때를 위한 5초 시한이 있는데, 그것이 사용자가
-  /// 시트를 읽는 시간까지 세고 있었다. 위치 시트를 잠깐 들여다보는 사이 시한이
-  /// 지나면 스플래시가 떠나 버리고, 그 뒤에 떠야 할 알림 시트는 아예 뜨지
-  /// 못한다 — 선택 권한인데 선택할 기회가 사라진다(사용자 지적).
-  ///
-  /// 응답을 기다리는 것은 정상이고 아무 일도 일어나지 않는 것이 비정상이다.
-  /// 시한은 후자만 세야 한다.
+  /// 대기 표시는 [_runSequence]가 시퀀스 전체에 한 번 건다 — 여기서 따로 걸면
+  /// 시트와 OS 다이얼로그 **사이**에 잠깐 꺼져, 그 틈에 스플래시가 떠난다.
   Future<bool> _showRationale(BuildContext context, PermissionKind kind) =>
-      ref
-          .read(permissionPromptPendingProvider.notifier)
-          .during(() => PermissionRationaleSheet.show(context, kind));
+      PermissionRationaleSheet.show(context, kind);
 
   /// R6 + R3: 알림은 선택. 상태를 조회해 이미 결정됐으면 아무 것도 안 한다. 그 외에는 닫을
   /// 수 있는 사전설명을 띄우고, 사용자가 진행할 때만 OS 요청을 발동한다.
