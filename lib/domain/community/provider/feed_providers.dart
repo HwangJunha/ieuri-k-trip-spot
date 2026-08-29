@@ -5,6 +5,7 @@ import '../../../common/analytics/analytics_events.dart';
 import '../../../common/analytics/app_analytics.dart';
 import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
+import '../../../common/location/location_service.dart';
 import 'package:logger/logger.dart';
 
 import '../../../common/log/app_log.dart';
@@ -131,9 +132,21 @@ class FeedState {
 /// `INVALID_INPUT`을 주는데, 정렬마다 인스턴스가 갈리면 새 인스턴스는 `after` 없이
 /// 첫 페이지부터 받으므로 커서가 섞일 길이 없다.
 ///
-/// 좌표는 앱이 이미 쓰고 있는 [currentCoordinatesProvider]를 그대로 쓴다. 위치를
-/// 얻지 못하면 그 실패가 `AsyncValue.error`로 올라와 화면이 **빈 피드와 구분되는
-/// 사유**를 보여준다.
+/// **좌표는 [sort]에 따라 필수이기도 하고 아니기도 하다**(2026-08-29).
+///
+/// 서버는 좌표를 주지 않으면 반경으로 좁히지 않고 전체를 돌려준다
+/// (`PostsSearch.area`가 nullable이다). 그래서
+///
+/// - [PostSortOrder.latest] — 좌표 **없이도 성립한다.** 있으면 반경 안으로
+///   좁히고, 없으면 전국의 최신 글을 보여준다.
+/// - [PostSortOrder.distance] — 좌표가 **곧 정렬 기준이라** 없으면 성립하지
+///   않는다. 서버 쿼리도 `community_post_spot`을 INNER JOIN한다.
+///
+/// 예전에는 정렬과 무관하게 좌표를 먼저 기다렸다. 그래서 위치를 끄면
+/// **최신순에서도** "위치를 사용할 수 없어 주변 글을 보여줄 수 없어요"가 떴는데,
+/// 그 화면은 좌표 없이도 채울 수 있었다 — 서버가 아니라 앱이 만든 제약이었다.
+/// App Store 심사가 지적한 5.1.5("위치를 끄면 앱이 동작하지 않는다")가 바로
+/// 이런 자리들이다.
 ///
 /// **좌표와 카테고리는 서로 독립이다**(가이드 §2) — 카테고리는 범위와 무관하게
 /// 걸리므로 좌표가 있든 없든 같은 인자로 넘어간다.
@@ -148,12 +161,10 @@ class FeedController extends _$FeedController {
     TargetCategorySelection selection,
     PostSortOrder sort,
   ) async {
-    final Coordinates coords = await ref.watch(
-      currentCoordinatesProvider.future,
-    );
+    final Coordinates? coords = await _coordinatesFor(sort);
     final CursorPage<Post> page = await _repository.fetchPosts(
-      latitude: coords.latitude,
-      longitude: coords.longitude,
+      latitude: coords?.latitude,
+      longitude: coords?.longitude,
       categories: selection.valuesOrNull,
       sort: sort,
       first: _pageSize,
@@ -165,22 +176,42 @@ class FeedController extends _$FeedController {
     );
   }
 
+  /// 이 정렬에 쓸 좌표. 거리순은 못 얻으면 던지고, 최신순은 `null`로 넘어간다.
+  ///
+  /// 최신순에서 실패를 삼키는 것은 **정보를 버리는 것이 아니다** — 좌표가 없다는
+  /// 사실이 결과를 바꾸지 않는다(전국 최신 글이 나온다). 반면 거리순에서 삼키면
+  /// 정렬 기준이 사라진 채 조용히 다른 목록이 나와, 사용자는 거리순이 고장 난
+  /// 것으로 읽는다.
+  Future<Coordinates?> _coordinatesFor(PostSortOrder sort) async {
+    if (sort == PostSortOrder.distance) {
+      return ref.watch(currentCoordinatesProvider.future);
+    }
+    try {
+      return await ref.watch(currentCoordinatesProvider.future);
+    } on LocationUnavailable {
+      return null;
+    }
+  }
+
   /// 다음 페이지를 이어 붙인다. 더 받을 것이 없거나 이미 받는 중이면 아무것도 하지
   /// 않는다 — 스크롤 끝에서 중복 호출이 들어와도 안전하다.
   Future<void> loadMore() async {
     final FeedState? current = state.value;
     if (current == null || !current.hasMore || current.isLoadingMore) return;
 
+    // **좌표를 새로 얻지 않는다** — 여기서 다시 잡으면 걸어 다니는 사용자의 피드
+    // 순서가 페이지마다 어긋난다. 첫 페이지가 쓴 값을 그대로 이어 쓴다.
     final Coordinates? coords = ref.read(currentCoordinatesProvider).value;
-    // 첫 페이지를 받은 뒤이므로 좌표는 이미 있다. 없다면 조용히 멈춘다 — 여기서
-    // 좌표를 새로 얻으려 들면 걸어 다니는 사용자의 피드 순서가 페이지마다 어긋난다.
-    if (coords == null) return;
+    // 거리순은 좌표가 정렬 기준이라 없으면 이어 받을 수 없다. 최신순은 첫 페이지도
+    // 좌표 없이 받았으므로 `null` 그대로 넘겨 같은 범위를 이어 간다 — 예전에는
+    // 여기서 멈춰, 위치를 끈 사용자는 최신순 첫 페이지 뒤로 스크롤할 수 없었다.
+    if (coords == null && sort == PostSortOrder.distance) return;
 
     state = AsyncData<FeedState>(current.copyWith(isLoadingMore: true));
     try {
       final CursorPage<Post> next = await _repository.fetchPosts(
-        latitude: coords.latitude,
-        longitude: coords.longitude,
+        latitude: coords?.latitude,
+        longitude: coords?.longitude,
         categories: selection.valuesOrNull,
         // **첫 페이지와 같은 정렬을 넘겨야 한다** — 커서는 정렬마다 형식이 달라서
         // 다른 정렬로 이어 받으면 서버가 `INVALID_INPUT`을 준다(2차 가이드 §3).

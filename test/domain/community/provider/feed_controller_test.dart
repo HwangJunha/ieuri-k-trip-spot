@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
+import 'package:ieuri_k_trip_spot/common/location/location_service.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/community_failure.dart';
 import 'package:ieuri_k_trip_spot/common/model/post.dart';
 import 'package:ieuri_k_trip_spot/domain/community/model/post_sort_order.dart';
@@ -384,6 +385,104 @@ void main() {
 
       expect(repo.lastFetchPosts?.catalogId, '11094');
       expect(repo.lastFetchPosts?.latitude, isNull);
+    });
+  });
+
+  // 위치를 끄면 **최신순에서도** "위치를 사용할 수 없어 주변 글을 보여줄 수
+  // 없어요"가 떴다(실기기, 사용자 지적 2026-08-29).
+  //
+  // 서버는 좌표를 주지 않으면 반경으로 좁히지 않고 전체를 돌려주는데
+  // (`PostsSearch.area`가 nullable이고, `posts`는 좌표가 nullable인 유일한
+  // 조회다) 앱이 정렬과 무관하게 좌표부터 기다려서 생긴 일이다 — 서버가 아니라
+  // **앱이 만든 제약**이었고, App Store가 지적한 5.1.5가 정확히 이런 자리다.
+  group('위치 없이도 최신순은 돈다 (App Store 5.1.5 회귀)', () {
+    ProviderContainer withoutLocation(FakeCommunityRepository repo) {
+      final ProviderContainer container = ProviderContainer(
+        overrides: [
+          communityRepositoryProvider.overrideWithValue(repo),
+          locationServiceProvider.overrideWithValue(
+            FakeLocationService.unavailable(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      return container;
+    }
+
+    test('최신순은 좌표 없이 조회하고 글을 보여준다', () async {
+      final FakeCommunityRepository repo = FakeCommunityRepository(
+        posts: <Post>[fakePost(id: 'p1')],
+      );
+      final ProviderContainer container = withoutLocation(repo);
+
+      final FeedState state = await container.read(
+        feedControllerProvider(_allCategories, PostSortOrder.latest).future,
+      );
+
+      // 오류가 아니라 목록이 온다.
+      expect(state.items, hasLength(1));
+      // 좌표는 생략된다 — 서버가 그것을 "전국"으로 읽는다.
+      expect(repo.lastFetchPosts?.latitude, isNull);
+      expect(repo.lastFetchPosts?.longitude, isNull);
+    });
+
+    test('거리순은 좌표가 없으면 실패한다 — 정렬 기준이 사라지므로', () async {
+      final ProviderContainer container = withoutLocation(
+        FakeCommunityRepository(posts: <Post>[fakePost(id: 'p1')]),
+      );
+
+      // 여기서 실패를 삼키고 조용히 다른 목록을 주면 사용자는 거리순이 고장 난
+      // 것으로 읽는다. 화면은 이 오류를 받아 위치 안내를 띄운다.
+      await expectLater(
+        container.read(
+          feedControllerProvider(_allCategories, PostSortOrder.distance).future,
+        ),
+        throwsA(isA<LocationUnavailable>()),
+      );
+    });
+
+    test('최신순은 좌표 없이도 다음 페이지를 이어 받는다', () async {
+      // 예전에는 `loadMore`가 좌표 없으면 조용히 멈춰, 위치를 끈 사용자는
+      // 첫 페이지 뒤로 스크롤할 수 없었다.
+      final FakeCommunityRepository repo = FakeCommunityRepository(
+        posts: <Post>[fakePost(id: 'p1')],
+        hasNextPage: true,
+        nextPagePosts: <Post>[fakePost(id: 'p2')],
+      );
+      final ProviderContainer container = withoutLocation(repo);
+      await container.read(
+        feedControllerProvider(_allCategories, PostSortOrder.latest).future,
+      );
+
+      await container
+          .read(
+            feedControllerProvider(
+              _allCategories,
+              PostSortOrder.latest,
+            ).notifier,
+          )
+          .loadMore();
+
+      final FeedState state = container
+          .read(feedControllerProvider(_allCategories, PostSortOrder.latest))
+          .value!;
+      expect(state.items.map((Post p) => p.id), <String>['p1', 'p2']);
+      expect(repo.lastFetchPosts?.latitude, isNull);
+    });
+
+    test('좌표가 있으면 최신순도 그것을 넘긴다 — 반경 안으로 좁힌다', () async {
+      // 위치를 끈 경우에만 생략하는 것이지, 있는 좌표를 버리는 것이 아니다.
+      final FakeCommunityRepository repo = FakeCommunityRepository(
+        posts: <Post>[fakePost(id: 'p1')],
+      );
+      final ProviderContainer container = _container(repo);
+
+      await container.read(
+        feedControllerProvider(_allCategories, PostSortOrder.latest).future,
+      );
+
+      expect(repo.lastFetchPosts?.latitude, 37.5);
+      expect(repo.lastFetchPosts?.longitude, 127.0);
     });
   });
 }
