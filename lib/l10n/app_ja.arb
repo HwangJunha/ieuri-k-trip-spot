@@ -774,6 +774,8 @@
   "mapLegendEvent": "イベント",
   "mapSearchThisArea": "このエリアで再検索",
   "mapRegionRecommendationsTitle": "おすすめの地域",
+  "mapRegionRecommendationsTitleMyLocation": "現在地から",
+  "mapRegionRecommendationsTitleMapCenter": "地図の中心から",
   "mapRegionRecommendationsAction": "おすすめの地域を見る",
   "mapRegionRecommendationPartialData": "一部のデータに基づく",
   "mapRegionRecommendationsGatheringTitle": "データを収集しています",

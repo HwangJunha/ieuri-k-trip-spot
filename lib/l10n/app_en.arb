@@ -1142,6 +1142,8 @@
   "mapLegendEvent": "Events",
   "mapSearchThisArea": "Search this area",
   "mapRegionRecommendationsTitle": "Recommended Regions",
+  "mapRegionRecommendationsTitleMyLocation": "Near My Location",
+  "mapRegionRecommendationsTitleMapCenter": "Near Map Center",
   "mapRegionRecommendationsAction": "Recommended regions",
   "mapRegionRecommendationPartialData": "Based on partial data",
   "mapRegionRecommendationsGatheringTitle": "We're still gathering data",

@@ -774,6 +774,8 @@
   "mapLegendEvent": "活動",
   "mapSearchThisArea": "在此區域重新搜尋",
   "mapRegionRecommendationsTitle": "推薦地區",
+  "mapRegionRecommendationsTitleMapCenter": "以地圖中心",
+  "mapRegionRecommendationsTitleMyLocation": "以我的位置",
   "mapRegionRecommendationsAction": "檢視推薦地區",
   "mapRegionRecommendationPartialData": "基於部分資料",
   "mapRegionRecommendationsGatheringTitle": "正在收集資料",
