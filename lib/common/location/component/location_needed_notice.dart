@@ -16,10 +16,8 @@ import '../location_providers.dart';
 /// 동작하지 않는다"로 거절됐다(Guideline 5.1.5). 사용자가 할 수 있는 일을
 /// 제시해야 안내다.
 ///
-/// **버튼은 상태에 따라 달라진다.** 아직 OS에 물어볼 수 있으면(거부·미결정)
-/// 권한 요청을, 설정에서만 바꿀 수 있으면(영구거부·restricted·위치 서비스 꺼짐)
-/// 설정 이동을 건다. 후자에 권한 요청을 걸면 iOS는 다이얼로그를 띄우지 않아
-/// 누르면 아무 일도 안 일어나는 버튼이 된다.
+/// **버튼은 두 가지뿐이다** — 권한이 이미 있으면 "다시 시도", 없으면 "설정 열기".
+/// 앱 안에서 권한 요청을 걸지 않는 이유는 [build]의 주석에 적었다.
 class LocationNeededNotice extends ConsumerWidget {
   const LocationNeededNotice({super.key, required this.message, this.onRetry});
 
@@ -36,22 +34,27 @@ class LocationNeededNotice extends ConsumerWidget {
       permissionControllerProvider.select((s) => s[PermissionKind.location]),
     );
 
-    // 세 갈래다.
+    // 두 갈래다.
     //
-    //   granted        — 권한은 있는데 좌표를 못 얻었다(위치 서비스 꺼짐,
-    //                    실내에서 fix 실패, 혹은 설정에서 막 켜고 돌아온 직후).
-    //                    OS에 다시 물어도 다이얼로그가 안 뜨므로 **다시 시도**다.
-    //   needsSettings  — 영구거부·restricted. 설정에서만 바꿀 수 있다.
-    //   그 외          — 아직 물어볼 수 있다. 권한 요청을 건다.
+    //   granted — 권한은 있는데 좌표를 못 얻었다(위치 서비스 꺼짐, 실내에서
+    //             fix 실패, 설정에서 막 켜고 돌아온 직후). **다시 시도**다.
+    //   그 외   — 설정으로 보낸다.
     //
-    // 상태를 모르면(null) 설정 이동으로 둔다 — 요청을 걸었다가 조용히 실패하는
-    // 것보다 사용자가 확실히 바꿀 수 있는 곳으로 보내는 편이 낫다.
-    final _NoticeAction action = switch (state) {
-      PermissionState.granted => _NoticeAction.retry,
-      null => _NoticeAction.openSettings,
-      _ when state.needsSettings => _NoticeAction.openSettings,
-      _ => _NoticeAction.requestPermission,
-    };
+    // **앱 안에서는 권한 요청을 걸지 않는다**(사용자 지적 2026-08-29).
+    //
+    // 예전에는 아직 `denied`(영구거부 아님)면 `request()`를 걸었다. 그런데
+    // iOS는 OS 다이얼로그를 **설치당 한 번만** 띄운다 — 부트 시퀀스가 이미 그
+    // 한 번을 썼으면 여기서 요청해도 다이얼로그가 뜨지 않고 조용히 거부가
+    // 돌아온다. 사용자에게는 **눌러도 아무 일이 없는 버튼**이다.
+    //
+    // 부트에서 "나중에"를 눌러 요청이 나가지 않은 경우에는 다이얼로그가 뜨는데,
+    // 그러면 같은 버튼이 상황에 따라 다이얼로그를 띄우기도 하고 설정을 열기도
+    // 한다 — "설정 열기"라고 적혀 있는데 다이얼로그가 뜨는 것이 그 경우다.
+    //
+    // 설정은 **언제나 열리고 언제나 바꿀 수 있다.** 예측 가능한 쪽을 택한다.
+    final _NoticeAction action = state == PermissionState.granted
+        ? _NoticeAction.retry
+        : _NoticeAction.openSettings;
 
     return FailureNotice.terminal(
       title: l10n.locationNeededTitle,
@@ -59,8 +62,6 @@ class LocationNeededNotice extends ConsumerWidget {
       actionLabel: switch (action) {
         _NoticeAction.retry => l10n.discoverRetryButton,
         _NoticeAction.openSettings => l10n.permissionOpenSettings,
-        _NoticeAction.requestPermission =>
-          l10n.mapRegionRecommendationsAllowLocation,
       },
       onAction: () => _act(ref, action),
       icon: Icons.location_off_outlined,
@@ -79,13 +80,6 @@ class LocationNeededNotice extends ConsumerWidget {
         // 좌표를 다시 받는다 — 여기서 결과를 기다릴 수 없다(앱이 백그라운드로
         // 간다).
         return;
-
-      case _NoticeAction.requestPermission:
-        final PermissionState next = await controller.request(
-          PermissionKind.location,
-        );
-        if (next != PermissionState.granted) return;
-        _retry(ref);
 
       case _NoticeAction.retry:
         // 권한은 이미 있다 — 실패한 것은 좌표 조회다.
@@ -106,4 +100,7 @@ class LocationNeededNotice extends ConsumerWidget {
 }
 
 /// 버튼이 무엇을 하는지. 권한 상태에 따라 갈린다.
-enum _NoticeAction { openSettings, requestPermission, retry }
+///
+/// **권한 요청은 없다** — 위 `build`의 주석 참고. 앱 안에서는 설정으로 보내거나
+/// 이미 있는 권한으로 다시 시도할 뿐이다.
+enum _NoticeAction { openSettings, retry }
