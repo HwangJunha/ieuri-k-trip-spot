@@ -259,8 +259,14 @@ class _TopBar extends ConsumerWidget {
             // 공유는 상단 우측이 표준이다(iOS 내비게이션 바, Android 앱바).
             // 하단 FAB에 두면 "이 화면의 주 동작"으로 읽혀 과하다.
             _ShareButton(onShare: onShare, l10n: l10n),
+            // **사진 동기화만 primary로 칠한다**(사용자 지적 2026-08-29).
+            //
+            // 옅은 색 지도 위에서 기본 아이콘 색이 묻혀 잘 보이지 않았다. 이
+            // 버튼은 지도를 실제로 채우는 동작이라 옆의 관계·공유보다 눈에
+            // 띄어야 한다.
             IconButton(
               icon: const Icon(Icons.photo_library_outlined),
+              color: scheme.primary,
               tooltip: l10n.photoSyncTitle,
               onPressed: onPhotoSync,
             ),
