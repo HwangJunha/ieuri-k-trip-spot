@@ -37,6 +37,34 @@ class PermissionBootComplete extends _$PermissionBootComplete {
   void complete() => state = true;
 }
 
+/// 지금 **사용자 응답을 기다리는 중**인지(2026-08-29).
+///
+/// 스플래시에는 부트가 멈췄을 때를 위한 시한이 있는데(`_bootTimeout`), 그 시한이
+/// 사용자가 권한 시트를 읽고 있는 시간까지 함께 세고 있었다. 위치 시트를 잠깐
+/// 들여다보는 사이 시한이 지나 스플래시가 떠나 버리면, 그 뒤에 떠야 할 알림
+/// 시트는 아예 뜨지 못한다 — **선택 권한인데 선택할 기회가 없어진다**(사용자
+/// 지적).
+///
+/// 시트가 떠 있는 동안 이 값이 참이 되고, 스플래시는 그때 시한을 세지 않는다.
+/// 기다림의 두 종류를 가르는 것이 요점이다 — 응답을 기다리는 것은 정상이고,
+/// 아무 일도 일어나지 않는 것이 비정상이다.
+@Riverpod(keepAlive: true)
+class PermissionPromptPending extends _$PermissionPromptPending {
+  @override
+  bool build() => false;
+
+  /// 시트를 띄우는 동안 감싼다. 예외가 나도 반드시 내려간다 — 켜진 채로 남으면
+  /// 스플래시의 시한이 영영 서지 않아 원래 고치려던 갇힘이 되돌아온다.
+  Future<T> during<T>(Future<T> Function() action) async {
+    state = true;
+    try {
+      return await action();
+    } finally {
+      state = false;
+    }
+  }
+}
+
 /// 앱 전역 런타임 권한 상태 (SPEC-0001 §영구거부처리): [PermissionKind]별 마지막으로
 /// 알려진 [PermissionState]. 빈 상태(아직 아무것도 조회 안 함)로 시작한다.
 ///

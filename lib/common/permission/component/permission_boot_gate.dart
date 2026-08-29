@@ -111,7 +111,7 @@ class _PermissionBootGateState extends ConsumerState<PermissionBootGate>
     final BuildContext? navContext = widget.navigatorKey.currentContext;
     if (navContext == null || !navContext.mounted) return;
     unawaited(shown.markShown(PermissionKind.location));
-    final bool proceed = await PermissionRationaleSheet.show(
+    final bool proceed = await _showRationale(
       navContext,
       PermissionKind.location,
     );
@@ -119,6 +119,20 @@ class _PermissionBootGateState extends ConsumerState<PermissionBootGate>
 
     await controller.request(PermissionKind.location);
   }
+
+  /// 사전설명 시트를 띄우되 **그동안 스플래시의 시한을 멈춘다**(2026-08-29).
+  ///
+  /// 스플래시에는 부트가 멈췄을 때를 위한 5초 시한이 있는데, 그것이 사용자가
+  /// 시트를 읽는 시간까지 세고 있었다. 위치 시트를 잠깐 들여다보는 사이 시한이
+  /// 지나면 스플래시가 떠나 버리고, 그 뒤에 떠야 할 알림 시트는 아예 뜨지
+  /// 못한다 — 선택 권한인데 선택할 기회가 사라진다(사용자 지적).
+  ///
+  /// 응답을 기다리는 것은 정상이고 아무 일도 일어나지 않는 것이 비정상이다.
+  /// 시한은 후자만 세야 한다.
+  Future<bool> _showRationale(BuildContext context, PermissionKind kind) =>
+      ref
+          .read(permissionPromptPendingProvider.notifier)
+          .during(() => PermissionRationaleSheet.show(context, kind));
 
   /// R6 + R3: 알림은 선택. 상태를 조회해 이미 결정됐으면 아무 것도 안 한다. 그 외에는 닫을
   /// 수 있는 사전설명을 띄우고, 사용자가 진행할 때만 OS 요청을 발동한다.
@@ -150,7 +164,7 @@ class _PermissionBootGateState extends ConsumerState<PermissionBootGate>
     // 기다리지 않는다 — 여기서 `await`하면 그 뒤 `navContext` 사용이 async gap을
     // 건너뛰게 된다. 디스크 기록이 늦어져도 이 세션의 판단에는 영향이 없다.
     unawaited(shown.markShown(PermissionKind.notification));
-    final bool proceed = await PermissionRationaleSheet.show(
+    final bool proceed = await _showRationale(
       navContext,
       PermissionKind.notification,
     );
