@@ -6,8 +6,11 @@ import 'coordinates.dart';
 /// provider·UI는 [Coordinates](순수 값)만 본다. 테스트는 이 인터페이스를 페이크로
 /// 오버라이드해 GPS 없이 좌표를 주입한다.
 abstract interface class LocationService {
-  /// 현재 좌표를 한 번 얻는다. 권한이 없거나(설정에서만 허용) 위치 서비스가 꺼져
-  /// 있으면 [LocationUnavailable]을 던진다.
+  /// 현재 좌표를 한 번 얻는다. 권한이 없거나 위치 서비스가 꺼져 있으면
+  /// [LocationUnavailable]을 던진다.
+  ///
+  /// **권한을 요청하지 않는다** — 있는 권한을 쓸 뿐이다. 요청은 사용자에게
+  /// 맥락을 설명한 자리(`PermissionBootGate`·`LocationNeededNotice`)가 한다.
   Future<Coordinates> currentCoordinates();
 
   /// 위치가 바뀔 때마다 좌표를 흘려보낸다(지도의 실시간 내 위치 표시용).
@@ -61,10 +64,19 @@ class GeolocatorLocationService implements LocationService {
       );
     }
 
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
+    // **여기서 권한을 요청하지 않는다**(2026-08-29).
+    //
+    // 예전에는 `denied`면 곧바로 `requestPermission()`을 불렀다. 그래서 부트
+    // 시퀀스에서 "나중에"를 누른 사용자도, 홈·발견 화면이 좌표를 조회하는
+    // 순간 **사전설명 없이 OS 다이얼로그를 마주했다.** 구글 로그인 웹뷰 위로
+    // 권한 창이 뜨는 것까지 이 경로였다 — 그 화면 뒤에서 피드가 좌표를
+    // 읽었다(사용자 지적).
+    //
+    // 권한을 언제 물을지는 **그 맥락을 사용자에게 설명한 자리**가 정한다 —
+    // 부트 시퀀스(`PermissionBootGate`)와 화면의 위치 안내
+    // (`LocationNeededNotice`)뿐이다. 조회는 있는 권한을 쓸 뿐이고 없으면
+    // 실패로 알린다. 그래야 "거부했는데 또 묻는" 일이 없다(Guideline 5.1.1).
+    final LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied ||
         permission == LocationPermission.deniedForever) {
       throw const LocationUnavailable(
