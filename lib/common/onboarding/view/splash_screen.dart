@@ -87,6 +87,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   /// 한 번보다 앱이 열리는 것이 우선이다.
   void _routeIfReady() {
     if (_routed || !_minDelayElapsed) return;
+
+    // **사용자가 시트에 답하는 중이면 시한을 무시한다**(2026-08-29).
+    //
+    // 시한은 부트가 **멈췄을 때**의 탈출구인데, 그것이 사용자가 권한 시트를
+    // 읽는 시간까지 함께 세고 있었다. 위치 시트를 잠깐 들여다보는 사이 시한이
+    // 지나면 스플래시가 떠나 버리고, 그 뒤에 떠야 할 알림 시트는 아예 뜨지
+    // 못한다 — **선택 권한인데 선택할 기회가 사라진다**(사용자 지적).
+    //
+    // 응답을 기다리는 것은 정상이고, 아무 일도 일어나지 않는 것이 비정상이다.
+    if (ref.read(permissionPromptPendingProvider)) return;
+
     if (!_bootTimedOut && !ref.read(permissionBootCompleteProvider)) return;
     _routed = true;
     // 이미 떠나므로 남은 타임아웃은 할 일이 없다.
@@ -114,9 +125,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     final TextTheme text = Theme.of(context).textTheme;
     const Color onCoral = Colors.white;
 
-    // 부트 시퀀스 완료 래치에만 반응한다(PermissionBootGate가 구동). 위치 허용
+    // 부트 시퀀스 완료 래치에 반응한다(PermissionBootGate가 구동). 위치 허용
     // 여부는 더 이상 라우팅 조건이 아니다 — 위 클래스 주석 참고.
     ref.listen(permissionBootCompleteProvider, (_, _) => _routeIfReady());
+
+    // **시트가 닫히는 순간도 듣는다.** 시한이 시트 뒤에 지났다면 그 시점에는
+    // `_routeIfReady`가 응답 대기를 이유로 물러났으므로, 닫힌 뒤 다시 물어야
+    // 한다 — 그러지 않으면 시한이 이미 지난 채로 아무도 깨우지 않아 스플래시에
+    // 남는다.
+    ref.listen(permissionPromptPendingProvider, (_, bool pending) {
+      if (!pending) _routeIfReady();
+    });
 
     return Scaffold(
       backgroundColor: AppColors.primary,
