@@ -5,7 +5,7 @@
 		<key>CADisableMinimumFrameDurationOnPhone</key>
 		<true/>
 		<key>NSLocationWhenInUseUsageDescription</key>
-		<string>K-Trip Spot uses your location to show tourist attractions near you, sort them by distance, and display real-time crowd levels for each place. Without this, the app cannot tell which attractions are nearby. Your location is used only while the app is open and is never tracked in the background.</string>
+		<string>K-Trip Spot uses your location to show tourist attractions near you, sort them by distance, and display real-time crowd levels for each place. You can skip this and still browse the community, your liked spots, the map, and search. Your location is used only while the app is open and is never tracked in the background.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>K-Trip Spot reads the location tags stored in your photos to automatically fill in the regions you have visited on your travel map, and lets you attach photos to community posts and your profile. Photos are read on your device and are uploaded only when you choose to attach one to a post.</string>
 		<!-- 수출 규정(암호화) 자진 신고. 이 앱은 HTTPS만 쓰고 자체 암호화를
@@ -84,6 +84,17 @@
 		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<!-- 라이트 모드로 고정한다(SPEC-0033에서 다크 모드를 걷어냈다).
+
+		     **`ThemeMode.light`만으로는 절반이다.** 그것은 Flutter가 그리는
+		     화면만 고정하고, 기기가 다크 모드면 iOS가 그리는 것들 — 키보드,
+		     공유 시트, 권한 다이얼로그, 상태바 — 은 여전히 다크로 뜬다. 라이트
+		     화면 위에 다크 키보드가 올라오는 식이라 완성도가 떨어져 보인다.
+
+		     심사자는 위치·사진 권한 다이얼로그를 반드시 보게 되므로 이 키가
+		     없으면 그 화면이 어긋난 채로 심사된다. -->
+		<key>UIUserInterfaceStyle</key>
+		<string>Light</string>
 		<!-- Google Sign-In (google_sign_in v7): the iOS OAuth client id. Without
 		     this (or a bundled GoogleService-Info.plist / a clientId passed to
 		     initialize) the SDK has no client id and the sign-in throws. This is

@@ -7,7 +7,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../../app_assets.dart';
+import '../../navigation/auth_route.dart';
 import '../../permission/provider/permission_providers.dart';
+import '../../storage/app_preferences.dart';
 import '../../theme/app_colors.dart';
 import 'language_selection_screen.dart';
 
@@ -89,9 +91,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     _routed = true;
     // 이미 떠나므로 남은 타임아웃은 할 일이 없다.
     _bootTimeoutTimer?.cancel();
-    // 라우터에 넘긴다: redirect(스펙 §10)가 auth/온보딩 상태로부터 언어 → 로그인 →
-    // 온보딩 → 홈을 해소한다.
-    context.goNamed(LanguageSelectionScreen.routeName);
+
+    // **언어를 이미 골랐으면 언어 화면을 거치지 않는다**(2026-08-29).
+    //
+    // 예전에는 무조건 `/language`로 갔다. 게이트가 그 뒤에 걷어내 주긴 하지만,
+    // 걷어내기 전에 **언어 화면이 한 프레임 이상 그려진다** — 앱이 빠르면
+    // 스쳐 지나가 안 보이고 느리면 보인다. 재실행 때마다 언어 선택 화면이
+    // 번쩍이던 것이 이것이다(사용자 지적).
+    //
+    // 게이트(`route_gate.dart` 1번)와 같은 값을 본다 — 판정이 갈리면 여기서
+    // 보낸 곳을 게이트가 되돌리며 튕긴다.
+    final bool languageChosen =
+        ref.read(appPreferencesProvider).savedLanguage != null;
+    context.goNamed(
+      languageChosen ? loginRouteName : LanguageSelectionScreen.routeName,
+    );
   }
 
   @override
