@@ -85,8 +85,12 @@ void main() {
       // Location rationale comes first (R2: sequential, location before notif).
       expect(find.text('Find spots around you'), findsOneWidget);
       expect(find.text('Stay in the loop'), findsNothing);
-      // Location is mandatory ([AMEND]): its sheet offers no "Not now".
-      expect(find.text('Not now'), findsNothing);
+      // **Location is optional again** (2026-08-29, SPEC-0001 R3/R4). The
+      // 2026-08-26 build removed "Not now" from this sheet and made it
+      // undismissable; App Store review rejected that whole design
+      // (Guideline 5.1.5, and an undismissable pre-permission modal is itself
+      // a 5.1.1 risk). Every rationale sheet can be declined.
+      expect(find.text('Not now'), findsOneWidget);
 
       await tester.tap(find.text('Continue'));
       await tester.pumpAndSettle();
@@ -214,10 +218,16 @@ void main() {
   });
 
   testWidgets(
-    'location not granted on the boot dialog is promoted to needs-Settings (R5)',
+    'declining location on the boot dialog is recorded as-is, not promoted',
     (tester) async {
-      // The OS dialog returns denied and won't prompt again — the app must route
-      // the user to Settings rather than sit on the splash forever.
+      // **The boot sequence no longer forces `permanentlyDenied`** (2026-08-29).
+      //
+      // It used to, so that the splash — which held the app until location was
+      // granted — could offer "open Settings" instead of sitting there forever.
+      // With the splash and the router gate no longer blocking on location,
+      // that promotion only served to lie about the OS state: a plain `denied`
+      // can still be re-prompted on Android, and claiming otherwise sends the
+      // user to Settings for no reason.
       final service = FakePermissionService(
         initial: {
           PermissionKind.location: PermissionState.denied,
@@ -230,15 +240,15 @@ void main() {
       await tester.tap(find.text('Continue'));
       await tester.pumpAndSettle();
 
-      // Promoted so the splash can offer "open Settings" instead of re-prompting.
+      // Whatever the OS said is what we store — no promotion.
       final PermissionState? location = container.read(
         permissionControllerProvider,
       )[PermissionKind.location];
-      expect(location, PermissionState.permanentlyDenied);
-      expect(
-        container.read(permissionControllerProvider.notifier).isLocationBlocked,
-        isTrue,
-      );
+      expect(location, PermissionState.denied);
+
+      // The app is usable regardless; screens that need coordinates offer the
+      // Settings route themselves (`LocationNeededNotice`).
+      expect(find.text('HOME'), findsOneWidget);
     },
   );
 

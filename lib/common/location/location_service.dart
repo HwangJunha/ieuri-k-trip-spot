@@ -33,7 +33,19 @@ class LocationUnavailable implements Exception {
   String toString() => 'LocationUnavailable($reason)';
 }
 
-enum LocationUnavailableReason { serviceDisabled, permissionDenied }
+enum LocationUnavailableReason {
+  serviceDisabled,
+  permissionDenied,
+
+  /// 권한도 서비스도 살아 있는데 **좌표를 못 잡았다**(2026-08-29).
+  ///
+  /// 실내·시뮬레이터·기기 첫 부팅에서 일어난다. 예전에는 이 경우만
+  /// `TimeoutException`으로 새어 나가 호출부의 `error is LocationUnavailable`
+  /// 검사를 전부 빗겨갔고, 그래서 재시도 정책이 이것을 네트워크 오류로 보고
+  /// 5회를 더 돌렸다 — fix 시한 10초까지 더하면 최악 60초 스피너다. 위치를 끈
+  /// 심사자가 본 것이 이 화면일 수 있다.
+  fixTimeout,
+}
 
 /// geolocator 기반 [LocationService]. 권한은 SPEC-0001 흐름이 이미 요청하므로 여기선
 /// 상태만 확인하고, 필요한 경우 한 번 더 요청한다(거부면 예외).
@@ -79,18 +91,29 @@ class GeolocatorLocationService implements LocationService {
     }
 
     // 캐시가 없으면(기기 첫 부팅 등) 새로 잡되 **무한정 기다리지 않는다.**
-    // 시한을 넘기면 `TimeoutException`이 오고, 호출부는 위치 실패와 같은 경로로
-    // 처리한다 — 영원히 도는 스켈레톤보다 사유가 보이는 편이 낫다.
-    final Position position = await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.medium,
-        timeLimit: _fixTimeout,
-      ),
-    );
-    return Coordinates(
-      latitude: position.latitude,
-      longitude: position.longitude,
-    );
+    //
+    // **실패를 [LocationUnavailable]로 정규화한다**(2026-08-29). 시한을 넘기면
+    // geolocator가 `TimeoutException`을, 플랫폼 사정에 따라 다른 예외를 던지는데
+    // 그대로 새어 나가면 호출부의 `error is LocationUnavailable` 검사를 전부
+    // 빗겨간다 — 재시도 정책이 네트워크 오류로 착각해 5회를 더 돌리고, 화면은
+    // 위치 안내 대신 "다시 시도" 배너를 띄운다. 위치를 못 얻은 것은 하나의
+    // 사실이고, 그 사실이 타입 하나로 표현되어야 한다.
+    try {
+      final Position position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+          timeLimit: _fixTimeout,
+        ),
+      );
+      return Coordinates(
+        latitude: position.latitude,
+        longitude: position.longitude,
+      );
+    } on LocationUnavailable {
+      rethrow;
+    } on Object {
+      throw const LocationUnavailable(LocationUnavailableReason.fixTimeout);
+    }
   }
 
   /// 새 fix를 기다리는 최대 시간. 넘기면 예외가 되어 화면이 실패를 그린다.

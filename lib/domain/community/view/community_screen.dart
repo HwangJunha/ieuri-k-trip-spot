@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../common/location/component/location_needed_notice.dart';
 import '../../../common/location/location_service.dart';
 import '../../../common/pagination/pagination_list_view.dart';
 import '../../../common/widget/floating_bottom_nav_scaffold.dart';
@@ -201,16 +202,24 @@ class _Feed extends ConsumerWidget {
           now: _skeletonNow,
         ),
       ),
-      error: (Object error, _) => _FeedError(
-        // 위치 실패는 조회 실패와 다른 사유를 보여준다.
-        title: error is LocationUnavailable
-            ? l10n.communityLocationUnavailable
-            : l10n.communityFeedUnavailable,
-        body: error is LocationUnavailable
-            ? null
-            : l10n.communityFeedUnavailableBody,
-        onRetry: () => ref.invalidate(feedControllerProvider(selection, sort)),
-      ),
+      // **위치 실패는 거리순에서만 온다**(2026-08-29). 최신순은 좌표 없이도
+      // 전국 최신 글로 채우므로 여기까지 오지 않는다(`FeedController`).
+      //
+      // 그래서 "다시 시도"가 아니라 위치를 켜는 길을 준다 — 원인이 기기 설정이라
+      // 재시도로는 풀리지 않는다. 최신순 칩이 화면에 남아 있어, 위치를 켜고 싶지
+      // 않은 사용자는 그쪽으로 돌아가면 된다.
+      error: (Object error, _) => error is LocationUnavailable
+          ? LocationNeededNotice(
+              message: l10n.communityLocationUnavailable,
+              onRetry: () =>
+                  ref.invalidate(feedControllerProvider(selection, sort)),
+            )
+          : _FeedError(
+              title: l10n.communityFeedUnavailable,
+              body: l10n.communityFeedUnavailableBody,
+              onRetry: () =>
+                  ref.invalidate(feedControllerProvider(selection, sort)),
+            ),
       data: (FeedState data) => data.isEmpty
           ? Center(child: Text(l10n.communityFeedEmpty))
           : _FeedList(selection: selection, sort: sort, data: data),

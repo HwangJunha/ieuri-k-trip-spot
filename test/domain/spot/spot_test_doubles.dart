@@ -443,19 +443,37 @@ TouristSpot swipeSpot(
 
 /// 고정 좌표를 돌려주는 페이크 [LocationService]. GPS 없이 SwipeController·뷰
 /// 테스트가 위치 조회를 통제할 수 있게 한다.
+///
+/// [failure]를 주면 좌표 대신 그것을 던진다 — 위치를 끈 기기를 흉내 낸다.
 class FakeLocationService implements LocationService {
   FakeLocationService({
     this.coordinates = const Coordinates(latitude: 37.5, longitude: 127.0),
+    this.failure,
   });
+
+  /// 위치를 얻지 못하는 기기(권한 거부·위치 서비스 꺼짐).
+  factory FakeLocationService.unavailable([
+    LocationUnavailableReason reason = LocationUnavailableReason.serviceDisabled,
+  ]) => FakeLocationService(failure: LocationUnavailable(reason));
 
   final Coordinates coordinates;
 
+  /// 설정하면 [currentCoordinates]와 [watchCoordinates]가 이것을 던진다.
+  final LocationUnavailable? failure;
+
   @override
-  Future<Coordinates> currentCoordinates() async => coordinates;
+  Future<Coordinates> currentCoordinates() async {
+    final LocationUnavailable? error = failure;
+    if (error != null) throw error;
+    return coordinates;
+  }
 
   /// 한 번 흘리고 닫는다 — 이 페이크를 쓰는 테스트는 지도 화면이 아니라 위치를
   /// 입력으로 받는 조회들이라, 좌표가 계속 바뀔 필요가 없다.
   @override
-  Stream<Coordinates> watchCoordinates() =>
-      Stream<Coordinates>.value(coordinates);
+  Stream<Coordinates> watchCoordinates() {
+    final LocationUnavailable? error = failure;
+    if (error != null) return Stream<Coordinates>.error(error);
+    return Stream<Coordinates>.value(coordinates);
+  }
 }
