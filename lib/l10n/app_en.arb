@@ -191,7 +191,7 @@
   "permissionLocationRationaleTitle": "Find spots around you",
   "permissionLocationRationaleBody": "K-Trip Spot uses your location while you use the app to show nearby places. We never track you in the background.",
   "permissionNotificationRationaleTitle": "Stay in the loop",
-  "permissionNotificationRationaleBody": "Turn on notifications to get crowd alerts and updates for the spots you care about. You can change this anytime.",
+  "permissionNotificationRationaleBody": "Turn on notifications to get answers to your questions and new messages. You can change this anytime.",
   "permissionContinue": "Continue",
   "permissionNotNow": "Not now",
   "permissionLocationBlockedMessage": "Location is turned off. Enable it in Settings to see nearby spots.",
