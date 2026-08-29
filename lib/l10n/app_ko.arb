@@ -732,7 +732,7 @@
   "@permissionNotificationRationaleTitle": {
     "description": "알림 권한 사전 설명 시트 제목"
   },
-  "permissionNotificationRationaleBody": "알림을 켜면 관심 스팟의 혼잡 알림과 소식을 받을 수 있어요. 언제든지 변경할 수 있습니다.",
+  "permissionNotificationRationaleBody": "알림을 켜면 내 질문에 달린 답변과 새 메시지를 받을 수 있어요. 언제든지 변경할 수 있습니다.",
   "@permissionNotificationRationaleBody": {
     "description": "알림 권한 사전 설명 시트 본문"
   },
@@ -1869,6 +1869,14 @@
   "@mapSearchThisArea": {},
   "mapRegionRecommendationsTitle": "추천 지역",
   "@mapRegionRecommendationsTitle": {},
+  "mapRegionRecommendationsTitleMyLocation": "내 위치 기준 추천",
+  "@mapRegionRecommendationsTitleMyLocation": {
+    "description": "추천 지역 화면 제목 — 내 위치 기준일 때"
+  },
+  "mapRegionRecommendationsTitleMapCenter": "지도 중심 기준 추천",
+  "@mapRegionRecommendationsTitleMapCenter": {
+    "description": "추천 지역 화면 제목 — 지도 중심 기준일 때"
+  },
   "mapRegionRecommendationsAction": "추천 지역 보기",
   "@mapRegionRecommendationsAction": {},
   "mapRegionRecommendationPartialData": "일부 데이터 기준",

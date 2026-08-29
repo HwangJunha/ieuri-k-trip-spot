@@ -16,10 +16,9 @@ import '../location_providers.dart';
 /// 동작하지 않는다"로 거절됐다(Guideline 5.1.5). 사용자가 할 수 있는 일을
 /// 제시해야 안내다.
 ///
-/// **버튼은 상태에 따라 달라진다.** 아직 OS에 물어볼 수 있으면(거부·미결정)
-/// 권한 요청을, 설정에서만 바꿀 수 있으면(영구거부·restricted·위치 서비스 꺼짐)
-/// 설정 이동을 건다. 후자에 권한 요청을 걸면 iOS는 다이얼로그를 띄우지 않아
-/// 누르면 아무 일도 안 일어나는 버튼이 된다.
+/// **버튼은 권한 상태를 따라간다** — 이미 있으면 "다시 시도", 아직 물어볼 수
+/// 있으면 "위치 허용", 설정에서만 바꿀 수 있으면 "설정 열기". 그 판정과 근거는
+/// [build]의 주석에 있다.
 class LocationNeededNotice extends ConsumerWidget {
   const LocationNeededNotice({super.key, required this.message, this.onRetry});
 
@@ -38,14 +37,20 @@ class LocationNeededNotice extends ConsumerWidget {
 
     // 세 갈래다.
     //
-    //   granted        — 권한은 있는데 좌표를 못 얻었다(위치 서비스 꺼짐,
-    //                    실내에서 fix 실패, 혹은 설정에서 막 켜고 돌아온 직후).
-    //                    OS에 다시 물어도 다이얼로그가 안 뜨므로 **다시 시도**다.
-    //   needsSettings  — 영구거부·restricted. 설정에서만 바꿀 수 있다.
-    //   그 외          — 아직 물어볼 수 있다. 권한 요청을 건다.
+    //   granted       — 권한은 있는데 좌표를 못 얻었다(위치 서비스 꺼짐, 실내
+    //                   fix 실패, 설정에서 막 켜고 돌아온 직후). **다시 시도**.
+    //   needsSettings — 영구거부·restricted. 앱이 더 물을 수 없다. **설정 열기**.
+    //   그 외(denied) — 아직 물어볼 수 있다. **권한 요청**.
     //
-    // 상태를 모르면(null) 설정 이동으로 둔다 — 요청을 걸었다가 조용히 실패하는
-    // 것보다 사용자가 확실히 바꿀 수 있는 곳으로 보내는 편이 낫다.
+    // **`denied`에 설정을 열면 막다른 길이 된다**(사용자 지적 2026-08-29).
+    //
+    // iOS는 앱이 위치를 **한 번이라도 요청한 뒤에야** 설정에 "위치" 항목을
+    // 만든다. 부트 시퀀스에서 "나중에"를 눌러 요청이 나가지 않았으면 설정에는
+    // 그 항목이 아예 없다 — 설정은 열리는데 바꿀 것이 없다(실기기 확인).
+    //
+    // 그래서 `denied`에서는 요청을 건다. 그 요청이 다이얼로그를 띄우지 못하고
+    // 조용히 거부로 돌아오는 경우(설치당 1회를 이미 썼을 때)는 `_act`가 그
+    // 결과를 보고 설정으로 넘긴다 — 눌러도 아무 일이 없는 버튼이 되지 않는다.
     final _NoticeAction action = switch (state) {
       PermissionState.granted => _NoticeAction.retry,
       null => _NoticeAction.openSettings,
@@ -84,8 +89,22 @@ class LocationNeededNotice extends ConsumerWidget {
         final PermissionState next = await controller.request(
           PermissionKind.location,
         );
-        if (next != PermissionState.granted) return;
-        _retry(ref);
+        if (next == PermissionState.granted) {
+          _retry(ref);
+          return;
+        }
+        // **다이얼로그가 뜨지 못했으면 설정으로 넘긴다**(2026-08-29).
+        //
+        // iOS는 OS 다이얼로그를 설치당 한 번만 띄운다. 그 한 번이 이미 쓰였으면
+        // 요청은 다이얼로그 없이 즉시 거부로 돌아오고, 사용자에게는 눌러도
+        // 아무 일이 없는 버튼이 된다. 그때는 설정이 유일한 길이며, 요청이
+        // 나간 뒤라 설정에 위치 항목도 생겨 있다.
+        //
+        // 사용자가 다이얼로그에서 방금 "허용 안 함"을 누른 경우도 여기로 오는데,
+        // 그 경우 상태가 `permanentlyDenied`가 되어 다음 빌드부터는 애초에
+        // 설정 갈래로 잡힌다. 이 화면에서 곧바로 설정이 열리는 것이 어색하긴
+        // 하지만, 방금 거부한 사용자는 설정 화면을 닫으면 그만이다.
+        if (next.needsSettings) await controller.openSettings();
 
       case _NoticeAction.retry:
         // 권한은 이미 있다 — 실패한 것은 좌표 조회다.
@@ -105,5 +124,5 @@ class LocationNeededNotice extends ConsumerWidget {
   }
 }
 
-/// 버튼이 무엇을 하는지. 권한 상태에 따라 갈린다.
+/// 버튼이 무엇을 하는지. 권한 상태에 따라 갈린다 — 판정은 `build`에 있다.
 enum _NoticeAction { openSettings, requestPermission, retry }

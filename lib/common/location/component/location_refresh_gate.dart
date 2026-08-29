@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../coordinates.dart';
 import '../location_providers.dart';
 import '../location_refresh_policy.dart';
+import '../location_service.dart';
 
 /// 앱이 앞으로 돌아올 때 조회 좌표를 다시 받을지 판단한다.
 ///
@@ -85,8 +86,21 @@ class _LocationRefreshGateState extends ConsumerState<LocationRefreshGate>
       if (LocationRefreshPolicy.shouldRefresh(previous, current)) {
         ref.invalidate(currentCoordinatesProvider);
       }
+    } on LocationUnavailable {
+      // **권한이 회수됐으면 캐시된 좌표를 버린다**(2026-08-29).
+      //
+      // 설정에서 위치를 껐다 돌아온 경우다. provider에는 **성공 상태의** 좌표가
+      // 남아 있어 화면들이 그것으로 계속 그려졌다 — 위치를 껐는데도 주변 목록이
+      // 그대로 보이고, "위치가 필요합니다" 안내가 나오지 않았다(사용자 지적).
+      //
+      // 예전에는 이 실패를 아래 `on Object`가 함께 삼키며 "기존 좌표를 그대로
+      // 쓴다"고 했는데, 그 판단은 일시적 실패(실내에서 fix 실패 등)에나 맞는
+      // 것이었다. 권한이 사라진 것은 일시적이지 않다.
+      if (!mounted) return;
+      ref.invalidate(currentCoordinatesProvider);
     } on Object {
-      // 권한 거부·GPS 꺼짐·타임아웃. 기존 좌표를 그대로 쓴다.
+      // 그 밖의 일시적 실패(타임아웃 등). 기존 좌표를 그대로 쓴다 — 다음 resume에
+      // 다시 시도한다.
     } finally {
       _checking = false;
     }
