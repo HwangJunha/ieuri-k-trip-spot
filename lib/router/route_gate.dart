@@ -18,11 +18,15 @@ const String onboardingPath = '/onboarding';
 /// 필수 약관 미동의 상태에서 사용자를 보내는 곳(R11).
 const String requiredTermsPath = '/required-terms';
 
-/// 위치 권한이 없을 때 사용자를 보내는 곳(2026-08-26).
+/// 위치 권한 안내 화면(2026-08-26 도입, 2026-08-29 게이트에서 분리).
 ///
-/// 탭마다 안내 문구를 띄우는 대신 **화면 하나로 막는다.** 문구만 띄우면 탭은
-/// 계속 열려 있어 사용자가 홈·지도·스팟톡을 돌아다니며 빈 화면을 보게 되고,
-/// 그때마다 좌표 없이도 되는 조회(전국 지도·좋아요·스팟톡)는 실제로 나간다.
+/// **더 이상 게이트가 여기로 강제 이동시키지 않는다.** 예전에는 위치 권한이
+/// 없으면 앱 전체를 이 화면으로 대체했는데, App Store 심사에서 거절됐다
+/// (Guideline 5.1.5 — "위치 서비스를 끄면 앱이 동작하지 않는다"). 위치는
+/// 주변 추천을 **더 좋게** 만드는 입력이지 앱을 쓰기 위한 자격이 아니다.
+///
+/// 화면은 남겨 둔다 — 각 탭의 안내에서 "위치 켜기"를 누르면 여기로 온다.
+/// 강제로 갇히는 곳이 아니라 사용자가 스스로 찾아오는 곳이다.
 const String locationRequiredPath = '/location-required';
 
 /// 이메일 인증 미완 상태에서 사용자를 보내는 곳(SPEC-0024 R10-1).
@@ -81,22 +85,6 @@ enum AuthGateState {
   ready,
 }
 
-/// 위치 권한 상태를 세 갈래로 나눈 게이트 입력(2026-08-26).
-///
-/// **위치는 필수 권한이다**([AMEND] SPEC-0001). 이 앱이 보여 주는 것이 전부 "내
-/// 주변"이라, 좌표가 없으면 홈·발견·스팟톡이 전부 빈 화면이 된다 — 그 상태로
-/// 탭을 돌아다니게 두면 사용자는 앱이 고장 난 것으로 읽는다.
-enum LocationGateState {
-  /// 아직 조회되지 않음/부트 시퀀스 진행 중.
-  loading,
-
-  /// 거부·영구거부·restricted. 앱을 쓸 수 없다.
-  denied,
-
-  /// 허용됨 → 게이트가 열린다.
-  granted,
-}
-
 /// 필수 약관 상태를 세 갈래로 나눈 게이트 입력.
 enum TermsGateState {
   /// 아직 조회되지 않음/조회 중.
@@ -111,8 +99,8 @@ enum TermsGateState {
 
 /// 게이트 판정(SPEC-0005 §10 + SPEC-0011 R11·R12).
 ///
-/// 판정 순서는 **언어 → 위치 → 인증 → 온보딩 → 필수 약관 → 목적지**다(설계 §3).
-/// 위치가 인증보다 앞인 이유는 아래 2)에 적었다. 게이트가
+/// 판정 순서는 **언어 → 인증 → 온보딩 → 필수 약관 → 목적지**다(설계 §3).
+/// 위치는 2026-08-29에 게이트에서 빠졌다 — 이유는 아래 2)에 적었다. 게이트가
 /// 하나뿐이어야 하는 이유는 순환이다 — 둘이 각자 리다이렉트하면 서로를 되돌리며
 /// 무한히 튕긴다.
 ///
@@ -130,7 +118,6 @@ String? resolveGate({
   required bool languageChosen,
   required AuthGateState auth,
   required TermsGateState terms,
-  required LocationGateState locationPermission,
   bool emailVerificationHoldsHandle = false,
 }) {
   // 스플래시는 자기 초기 내비게이션을 스스로 몬다.
@@ -146,22 +133,22 @@ String? resolveGate({
     return location == languagePath ? null : languagePath;
   }
 
-  // 2) 위치 권한(2026-08-26). **인증보다 앞이다.**
+  // 2) 위치는 **게이트가 아니다**(2026-08-29).
   //
-  //    순서가 중요하다 — 뒤에 두면 미인증 사용자가 3)에서 `/login`으로 빠져나가
-  //    위치 판정에 아예 도달하지 않는다. 그러면 위치를 거부한 채 로그인·가입을
-  //    끝내고 앱에 들어올 수 있고, 그때부터는 게이트가 이미 지나가 있어 막을
-  //    자리가 없다(실제로 테스트가 `/login`으로 새는 것을 잡았다).
+  //    2026-08-26에 위치 권한을 인증보다 앞선 게이트로 두었다가 App Store 심사에서
+  //    거절됐다(Guideline 5.1.5 — "the app is not functional when Location Services
+  //    are disabled"). 그 구조에는 두 가지 결함이 있었다.
   //
-  //    위치는 계정과 무관한 **기기 상태**라 로그인 전에 판정해도 이상하지 않다.
-  //    이 앱이 보여 주는 것이 전부 "내 주변"이라, 좌표가 없으면 로그인해도
-  //    성립하는 화면이 없다.
-  if (locationPermission != LocationGateState.granted) {
-    if (_locationAllows(location)) return null;
-    return locationPermission == LocationGateState.loading
-        ? splashPath
-        : locationRequiredPath;
-  }
+  //    첫째, 위치 없이도 성립하는 기능이 실제로는 많다 — 커뮤니티 읽기·쓰기,
+  //    좋아요 목록, DM, 스팟 상세, 전국 지도(사진 EXIF 기반)는 좌표를 쓰지 않는다.
+  //    "전부 내 주변"이라는 전제가 과했다.
+  //
+  //    둘째, 위치 판정이 인증보다 앞이라 위치를 끈 사람은 **로그인 화면에조차
+  //    도달하지 못했다.** 심사자가 데모 계정을 받고도 쓸 수 없었던 이유이고
+  //    (Guideline 2.1(a)), 두 지적이 같은 뿌리였다.
+  //
+  //    이제 위치는 화면별로 다룬다 — 좌표가 필요한 곳은 그 자리에서 안내와
+  //    대안(지역 선택·기본 좌표)을 주고, 나머지는 그대로 동작한다.
 
   // 3) 인증이 아직 판정되지 않았으면 보호 화면을 그리지 않는다(SPEC-0005 AC-1·AC-2).
   //    대기 화면은 빈 화면이나 에러 화면이 아니어야 하므로 스플래시로 보낸다. 인증이
@@ -211,26 +198,19 @@ String? resolveGate({
     return terms == TermsGateState.loading ? splashPath : requiredTermsPath;
   }
 
-  // 8) 통과한 사용자를 진입 전 화면(로그인·온보딩·언어·동의·위치)에 두지 않는다(§10.4).
+  // 8) 통과한 사용자를 진입 전 화면(로그인·온보딩·언어·동의)에 두지 않는다(§10.4).
+  //
+  //    **위치 안내 화면은 여기서 뺀다**(2026-08-29). 더 이상 "진입 전 화면"이
+  //    아니라 사용자가 탭의 안내에서 눌러 들어오는 곳이다. 여기 두면 위치를
+  //    켜러 들어간 사람이 곧바로 Discover로 튕겨 나온다.
   if (authPaths.contains(location) ||
       location == onboardingPath ||
       location == languagePath ||
-      location == requiredTermsPath ||
-      location == locationRequiredPath) {
+      location == requiredTermsPath) {
     return discoverPath;
   }
   return null;
 }
-
-/// 위치 권한이 없을 때 허용되는 목적지.
-///
-/// **설정 계열을 연다** — 약관 게이트와 같은 이유다(`_termsAllows`). 위치를
-/// 끝내 켜지 않기로 한 사용자에게도 로그아웃·탈퇴·언어 변경으로 빠져나갈 길은
-/// 남아 있어야 한다. 막아 두면 앱을 지우는 것 말고는 방법이 없다.
-bool _locationAllows(String location) =>
-    location == locationRequiredPath ||
-    location == settingsPath ||
-    location.startsWith('$settingsPath/');
 
 /// 이메일 인증 미완 상태에서 허용되는 목적지(SPEC-0024 R10-2).
 ///

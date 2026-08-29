@@ -64,9 +64,15 @@ class SwipeCardMetrics {
   /// 좋아요 버튼도 함께 오르내려 더 눈에 띄었다(사용자 지적 2026-08-28, 실기기
   /// 녹화 분석: 정보 영역 시작점이 490 ↔ 504로 진동).
   ///
-  /// 최댓값으로 고정한다 — 제목 2줄·주소 2줄·거리 1줄이 다 들어가는 높이다.
+  /// 최댓값을 잡는다 — 제목 2줄·주소 2줄·거리 1줄이 다 들어가는 높이다.
   /// 짧은 카드는 아래에 빈 자리가 남지만, **사진과 버튼이 흔들리지 않는 편이**
   /// 낫다(사용자 결정 2026-08-28).
+  ///
+  /// **이 값은 최소 높이로 쓰인다**(2026-08-29, `swipe_card.dart`). 고정
+  /// 높이였을 때는 이 계산이 실제 렌더보다 조금만 작아도 카드가 잘렸는데,
+  /// 글꼴 메트릭이 환경마다 달라 그 "조금"을 없앨 방법이 없었다. 바닥값으로
+  /// 두면 대부분의 카드는 여전히 같은 높이로 서고, 넘치는 카드만 그만큼
+  /// 늘어난다.
   ///
   /// [textScale]은 기기 글자 크기 설정. 사용자가 글자를 키우면 정보도 그만큼
   /// 커져야 잘리지 않는다.
@@ -82,24 +88,46 @@ class SwipeCardMetrics {
         scale;
   }
 
-  /// 출처 배지 한 줄. `CopyrightBadge`의 글자(labelSmall 11 × 1.2)와 상하 패딩.
-  static const double _badgeHeight = 26;
+  // ---------------------------------------------------------------------------
+  //  아래 값들은 **근사치이며, 그래도 된다**(2026-08-29).
+  //
+  //  이 합은 정보 영역의 **최소 높이**로만 쓰인다(`swipe_card.dart`의
+  //  `ConstrainedBox`). 실제 내용이 더 크면 그만큼 늘어나므로 값이 조금 작아도
+  //  잘리지 않는다.
+  //
+  //  예전에는 이 값이 `SizedBox`의 고정 높이였고, 그래서 실제 렌더 높이와
+  //  어긋날 때마다 `BOTTOM OVERFLOWED BY N PIXELS`가 났다. 상수를 실측에 맞춰
+  //  봐도 끝나지 않았다 — 글꼴 메트릭이 기기·언어·글자크기마다 다르고 위젯
+  //  테스트의 폰트는 실기기 폰트가 아니라서 맞출 기준 자체가 없었다.
+  //  구조를 최소 높이로 바꾼 뒤로는 이 값이 틀려도 레이아웃이 깨지지 않는다.
+  // ---------------------------------------------------------------------------
+
+  /// 출처 배지 한 줄. 글자(`labelSmall` 11 × 1.45 ≈ 16)와 상하 패딩 4+4.
+  static const double _badgeHeight = 24;
   static const double _badgeGap = 10;
 
-  /// 제목 한 줄 — `titleLarge`(22)에 `height: 1.25`.
-  static const double _titleLineHeight = 22 * 1.25;
+  /// 제목 한 줄 — `titleLarge`(22).
+  ///
+  /// **22 × 1.25가 아니다.** 위젯이 `height: 1.25`를 주지만 Material 3의
+  /// `titleLarge`가 이미 `height: 1.27`을 갖고 있어 실제 줄 높이는 27.5가 아니라
+  /// 28로 잡힌다.
+  static const double _titleLineHeight = 28;
   static const int _titleMaxLines = 2;
 
   static const double _addressGap = 6;
 
-  /// 주소 한 줄 — `bodyMedium`(14)의 기본 행간(약 1.43).
+  /// 주소 한 줄 — `bodyMedium`(14 × 1.43 = 20.02 → 20).
   static const double _addressLineHeight = 20;
   static const int _addressMaxLines = 2;
 
   static const double _distanceGap = 8;
 
-  /// 거리 줄 — 새로고침 `IconButton`의 최소 높이(36)가 이 줄을 지배한다.
-  static const double _distanceRowHeight = 36;
+  /// 거리 줄 — 새로고침 `IconButton`이 지배한다.
+  ///
+  /// **`minHeight: 36`이 아니라 40이다.** `visualDensity: compact`가 세로로 -2를
+  /// 주는데, `IconButton`은 그만큼 자기 박스를 **키운다**(제약을 줄이는 것이
+  /// 아니다). 36을 그대로 믿었다가 4px이 새어 오버플로우의 대부분을 만들었다.
+  static const double _distanceRowHeight = 40;
 
   /// 기기와 무관한 기본 하단 여백. 안전 영역 위에 얹는다.
   ///

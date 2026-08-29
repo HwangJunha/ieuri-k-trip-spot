@@ -77,7 +77,6 @@ void main() {
         languageChosen: true,
         auth: AuthGateState.loading,
         terms: TermsGateState.satisfied,
-        locationPermission: LocationGateState.granted,
       );
 
       expect(target, splashPath);
@@ -89,7 +88,6 @@ void main() {
         languageChosen: true,
         auth: AuthGateState.unauthenticated,
         terms: TermsGateState.satisfied,
-        locationPermission: LocationGateState.granted,
       );
 
       expect(target, loginPath);
@@ -101,7 +99,6 @@ void main() {
         languageChosen: true,
         auth: AuthGateState.unauthenticated,
         terms: TermsGateState.satisfied,
-        locationPermission: LocationGateState.granted,
       );
 
       expect(
@@ -119,7 +116,6 @@ void main() {
         languageChosen: true,
         auth: AuthGateState.loading,
         terms: TermsGateState.satisfied,
-        locationPermission: LocationGateState.granted,
       );
 
       expect(
@@ -135,7 +131,6 @@ void main() {
         languageChosen: true,
         auth: AuthGateState.ready,
         terms: TermsGateState.satisfied,
-        locationPermission: LocationGateState.granted,
       );
 
       expect(target, isNull);
@@ -147,7 +142,6 @@ void main() {
         languageChosen: true,
         auth: AuthGateState.ready,
         terms: TermsGateState.unmet,
-        locationPermission: LocationGateState.granted,
       );
 
       expect(
@@ -175,7 +169,6 @@ void main() {
       languageChosen: true,
       auth: AuthGateState.ready,
       terms: terms,
-      locationPermission: LocationGateState.granted,
       pending: pending,
     );
 

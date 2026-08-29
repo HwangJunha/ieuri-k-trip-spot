@@ -140,19 +140,34 @@ class SwipeCard extends StatelessWidget {
               20,
               metrics!.overlayBottomInset,
             ),
-            child: SizedBox(
-              height: metrics!.overlayContentHeight,
-              // 내용이 고정 높이보다 짧으면 **위에 붙인다** — 가운데 정렬하면
-              // 제목이 카드마다 다른 높이에 뜬다.
-              child: Align(
-                alignment: Alignment.topLeft,
-                child: _Overlay(
-                  display: display,
-                  l10n: l10n,
-                  theme: theme,
-                  showsRefresh: showsRefresh,
-                  onRefreshLocation: onRefreshLocation,
-                ),
+            child: ConstrainedBox(
+              // **고정 높이가 아니라 최소 높이다**(2026-08-29).
+              //
+              // 예전에는 `SizedBox(height:)`로 못박았는데, 그 값이 손으로 더한
+              // 상수 합이라 실제 렌더 높이와 조금이라도 어긋나면 그대로
+              // `BOTTOM OVERFLOWED BY N PIXELS`가 됐다. 상수를 실측에 맞춰
+              // 봐도 소용없었다 — 글꼴 메트릭이 기기·언어·글자크기마다 다르고,
+              // 위젯 테스트가 쓰는 폰트는 실기기 폰트가 아니라서 **맞출 기준
+              // 자체가 없다.** 5px을 고치면 2px이 남는 식이었다.
+              //
+              // 최소 높이로 두면 목적은 지키면서 그 위험이 사라진다. 목적은
+              // "카드마다 정보 영역이 같은 높이"이지 "정확히 N픽셀"이 아니었다
+              // — 대부분의 카드는 이 바닥값에 걸려 같은 높이가 되고, 드물게
+              // 넘치는 카드는 잘리는 대신 조금 더 차지한다(그만큼 사진이
+              // 양보한다, 위 `Expanded`).
+              constraints: BoxConstraints(
+                minHeight: metrics!.overlayContentHeight,
+              ),
+              // **`Align`을 두지 않는다.** 내용을 위에 붙이는 것은 `_Overlay`의
+              // `Column`이 `mainAxisSize: min`이라 이미 그렇게 되고, 여기에
+              // `Align`을 끼우면 그것이 세로를 최대로 잡아 최소 높이가 사실상
+              // 고정 높이로 되돌아간다.
+              child: _Overlay(
+                display: display,
+                l10n: l10n,
+                theme: theme,
+                showsRefresh: showsRefresh,
+                onRefreshLocation: onRefreshLocation,
               ),
             ),
           ),

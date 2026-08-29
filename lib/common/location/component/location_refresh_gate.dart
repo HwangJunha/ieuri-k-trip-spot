@@ -54,9 +54,27 @@ class _LocationRefreshGateState extends ConsumerState<LocationRefreshGate>
     if (_checking) return;
     _checking = true;
     try {
+      final AsyncValue<Coordinates> snapshot = ref.read(
+        currentCoordinatesProvider,
+      );
+
+      // **실패한 채로 돌아왔으면 무조건 다시 받는다**(2026-08-29).
+      //
+      // 위치를 끈 사용자가 설정에서 켜고 돌아오는 경우다. 이때 provider는 오류
+      // 상태로 캐시돼 있어 화면을 다시 그려도 같은 오류가 나온다 — 무효화하지
+      // 않으면 앱을 재시작할 때까지 풀리지 않는다(실기기 확인).
+      //
+      // 아래 이동 거리 판정은 **이미 좌표가 있는** 경우의 절약이지 없는 경우까지
+      // 덮는 규칙이 아니었다. 예전에는 값이 없으면 그대로 돌아가 버려서, 설정에서
+      // 켜고 와도 화면이 오류인 채 남았다.
+      if (snapshot.hasError) {
+        ref.invalidate(currentCoordinatesProvider);
+        return;
+      }
+
       // **아직 좌표를 받은 적이 없으면 아무것도 하지 않는다.** 첫 조회는 화면이
       // 알아서 하며, 여기서 끼어들면 부팅 중에 조회가 두 번 나간다.
-      final Coordinates? previous = ref.read(currentCoordinatesProvider).value;
+      final Coordinates? previous = snapshot.value;
       if (previous == null) return;
 
       final Coordinates current = await ref

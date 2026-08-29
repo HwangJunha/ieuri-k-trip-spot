@@ -12,15 +12,11 @@ String? _gate(
   bool languageChosen = true,
   AuthGateState auth = AuthGateState.ready,
   TermsGateState terms = TermsGateState.satisfied,
-  // 기존 사례는 전부 위치 게이트 이전의 판정을 다룬다 — 허용을 기본값으로 둬야
-  // 그 사례들이 원래 보려던 갈래에 그대로 도달한다.
-  LocationGateState locationPermission = LocationGateState.granted,
 }) => resolveGate(
   location: location,
   languageChosen: languageChosen,
   auth: auth,
   terms: terms,
-  locationPermission: locationPermission,
 );
 
 void main() {
@@ -214,7 +210,6 @@ void main() {
           languageChosen: true,
           auth: AuthGateState.unauthenticated,
           terms: TermsGateState.satisfied,
-          locationPermission: LocationGateState.granted,
           emailVerificationHoldsHandle: false,
         ),
         loginPath,
@@ -230,7 +225,6 @@ void main() {
           languageChosen: true,
           auth: AuthGateState.unauthenticated,
           terms: TermsGateState.satisfied,
-          locationPermission: LocationGateState.granted,
           emailVerificationHoldsHandle: true,
         ),
         isNull,
@@ -243,13 +237,18 @@ void main() {
     });
   });
 
-  // 위치를 거부해도 발견 탭만 안내를 띄우고 나머지 탭은 열려 있었다 — 사용자가
-  // 홈에서 캐시된 좌표로 받은 스팟을 보고, 전국 지도·스팟톡을 그대로 썼다.
-  // 탭 하나가 아니라 앱 전체가 막혀야 한다(사용자 결정 2026-08-26).
-  group('위치 권한 게이트', () {
-    const LocationGateState denied = LocationGateState.denied;
-
-    test('거부하면 다섯 탭이 전부 막힌다', () {
+  // **위치는 더 이상 게이트가 아니다**(2026-08-29).
+  //
+  // 2026-08-26에 위치 권한이 없으면 앱 전체를 `/location-required`로 대체했다가
+  // App Store 심사에서 거절됐다 — Guideline 5.1.5("위치 서비스를 끄면 앱이
+  // 동작하지 않는다")와 2.1(a)("데모 계정으로 앱에 접근할 수 없다"). 후자는
+  // 위치 판정이 인증보다 앞이라 위치를 끈 심사자가 로그인 화면에조차 도달하지
+  // 못한 결과였다.
+  //
+  // 이 그룹은 그 회귀를 막는다. 게이트는 위치를 아예 입력으로 받지 않으므로
+  // 여기서 검증할 것은 "위치와 무관하게 열린다"는 사실 하나다.
+  group('위치는 게이트가 아니다 (App Store 5.1.5·2.1(a) 회귀)', () {
+    test('다섯 탭이 전부 열린다', () {
       for (final String tab in <String>[
         '/home',
         '/national-map',
@@ -257,76 +256,40 @@ void main() {
         '/library',
         '/map',
       ]) {
-        expect(
-          _gate(tab, locationPermission: denied),
-          locationRequiredPath,
-          reason: '$tab이 위치 없이 열렸다',
-        );
+        expect(_gate(tab), isNull, reason: '$tab이 막혔다');
       }
     });
 
-    test('거부하면 상세 화면 같은 하위 경로도 막힌다', () {
-      expect(_gate('/spot/123', locationPermission: denied),
-          locationRequiredPath);
+    test('상세 같은 하위 경로도 열린다', () {
+      expect(_gate('/spot/123'), isNull);
     });
 
-    test('안내 화면 자체는 되돌리지 않는다', () {
-      // 되돌리면 자기 자신으로 무한히 리다이렉트한다.
-      expect(_gate(locationRequiredPath, locationPermission: denied), isNull);
+    test('로그인 화면에 도달할 수 있다', () {
+      // **심사자가 막힌 지점이 여기다.** 위치 판정이 인증보다 앞이라
+      // `/login`이 `/location-required`로 갈아치워졌고, 데모 계정을 받고도
+      // 입력할 화면이 나오지 않았다(Guideline 2.1(a)).
+      expect(_gate(loginPath, auth: AuthGateState.unauthenticated), isNull);
+      expect(_gate('/sign-up', auth: AuthGateState.unauthenticated), isNull);
     });
 
-    test('거부해도 설정 계열은 열려 있다', () {
-      // 위치를 끝내 켜지 않는 사용자에게도 로그아웃·탈퇴로 빠져나갈 길은 남아야
-      // 한다 — 막으면 앱을 지우는 것 말고는 방법이 없다.
-      expect(_gate(settingsPath, locationPermission: denied), isNull);
-      expect(_gate('/settings/preferences', locationPermission: denied),
-          isNull);
+    test('좌표를 쓰지 않는 기능도 열린다', () {
+      // 커뮤니티 읽기·쓰기, 좋아요 목록, DM은 좌표를 입력으로 쓰지 않는다 —
+      // "전부 내 주변"이라는 전제가 과했다.
+      for (final String path in <String>[
+        '/library',
+        '/post/1',
+        '/conversations',
+        '/settings',
+      ]) {
+        expect(_gate(path), isNull, reason: '$path이 막혔다');
+      }
     });
 
-    test('조회 중에는 통과시키지 않고 스플래시에 세운다', () {
-      // 통과시키면 거부한 사용자가 한 프레임이라도 목적지를 보고 튕겨 나간다.
-      expect(
-        _gate('/home', locationPermission: LocationGateState.loading),
-        splashPath,
-      );
-    });
-
-    test('허용하면 게이트가 풀린다', () {
-      expect(_gate('/home'), isNull);
-    });
-
-    test('허용한 사용자를 안내 화면에 두지 않는다', () {
-      // 설정에서 위치를 켜고 돌아왔을 때 여기 갇히면 안 된다.
-      expect(_gate(locationRequiredPath), discoverPath);
-    });
-
-    // **위치는 인증·약관보다 앞이다.** 뒤에 두면 미인증 사용자가 `/login`으로
-    // 빠져나가 위치 판정에 도달하지 않고, 그대로 로그인을 마치면 게이트가 이미
-    // 지나가 있어 막을 자리가 없다 — 실제로 이 테스트가 그 누수를 잡았다.
-    test('위치가 인증보다 먼저다', () {
-      expect(
-        _gate(
-          '/home',
-          auth: AuthGateState.unauthenticated,
-          locationPermission: denied,
-        ),
-        locationRequiredPath,
-      );
-    });
-
-    test('위치가 약관보다 먼저다', () {
-      expect(
-        _gate('/home', terms: TermsGateState.unmet, locationPermission: denied),
-        locationRequiredPath,
-      );
-    });
-
-    test('언어 선택만은 위치보다 먼저다', () {
-      // 언어를 고르기 전에 위치 안내를 띄우면 읽을 수 없는 말로 나온다.
-      expect(
-        _gate('/home', languageChosen: false, locationPermission: denied),
-        languagePath,
-      );
+    test('안내 화면은 남아 있고, 들어가면 머물 수 있다', () {
+      // 게이트가 강제로 보내지는 않지만 화면 자체는 유효하다 — 각 탭의 안내에서
+      // "위치 켜기"를 누르면 여기로 온다. 8)의 진입 전 화면 목록에 넣어 두면
+      // 들어가자마자 Discover로 튕겨 나온다.
+      expect(_gate(locationRequiredPath), isNull);
     });
   });
 }

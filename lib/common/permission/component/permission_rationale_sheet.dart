@@ -10,31 +10,22 @@ import '../model/permission_kind.dart';
 /// [show]로 표시하며, 사용자가 진행을 택하면 `true`, 닫으면 `false`/`null`로 완료된다
 /// (R3 실패 경로 — OS 요청 안 함).
 ///
-/// 위치는 필수라([AMEND] SPEC-0001), 위치 시트에는 "나중에" 버튼이 없고 스와이프/배리어로
-/// 닫을 수도 없다 — 나아가는 길은 "계속"뿐이다. 알림 시트는 닫을 수 있게 유지한다.
+/// **모든 시트는 닫을 수 있다**(2026-08-29). 2026-08-26에 위치 시트만 "나중에"를
+/// 없애고 스와이프·배리어·뒤로가기를 전부 막았는데, 닫을 수 없는 사전설명 모달은
+/// 그 자체로 App Store 심사 위험이고(Guideline 5.1.1 — 권한은 거부할 수 있어야
+/// 한다) 위치를 필수로 본 전제도 5.1.5로 거절됐다. SPEC-0001 R3·R4대로 돌아간다.
 class PermissionRationaleSheet extends StatelessWidget {
   const PermissionRationaleSheet({super.key, required this.kind});
 
   final PermissionKind kind;
 
-  /// 진행하지 않고 닫는 걸 허용하는지 여부. 위치는 필수라 사전설명에 "계속"만 둔다.
-  bool get _dismissible => kind != PermissionKind.location;
-
-  /// 사전설명을 모달 바텀시트로 띄운다. 사용자가 "계속"을 누르면 `true`, 아니면 `false`
-  /// (닫음 — 닫을 수 있는 kind에서만 가능).
+  /// 사전설명을 모달 바텀시트로 띄운다. 사용자가 "계속"을 누르면 `true`, 아니면 `false`.
   static Future<bool> show(BuildContext context, PermissionKind kind) async {
-    final bool dismissible = kind != PermissionKind.location;
     final bool? proceed = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      showDragHandle: dismissible,
-      isDismissible: dismissible,
-      enableDrag: dismissible,
-      builder: (_) => PopScope<bool>(
-        // 필수 시트는 뒤로가기로도 닫을 수 없다.
-        canPop: dismissible,
-        child: PermissionRationaleSheet(kind: kind),
-      ),
+      showDragHandle: true,
+      builder: (_) => PermissionRationaleSheet(kind: kind),
     );
     return proceed ?? false;
   }
@@ -92,15 +83,13 @@ class PermissionRationaleSheet extends StatelessWidget {
               onPressed: () => Navigator.of(context).pop(true),
               child: Text(l10n.permissionContinue),
             ),
-            // 위치는 필수 — 거부 선택지 없음. 알림은 "나중에"를 유지.
-            if (_dismissible) ...<Widget>[
-              const SizedBox(height: 8),
-              TextButton(
-                key: const Key('permission_rationale_not_now'),
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text(l10n.permissionNotNow),
-              ),
-            ],
+            // 어떤 권한이든 거부할 수 있다 — 위치도 예외가 아니다(위 클래스 주석).
+            const SizedBox(height: 8),
+            TextButton(
+              key: const Key('permission_rationale_not_now'),
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l10n.permissionNotNow),
+            ),
           ],
         ),
       ),

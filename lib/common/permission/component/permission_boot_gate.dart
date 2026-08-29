@@ -18,8 +18,9 @@ import 'permission_rationale_sheet.dart';
 /// 흐름은 첫 프레임 이후 한 번 실행된다:
 ///   위치 → (사전설명 → OS 요청) 그다음 알림 → (사전설명 → OS 요청). 엄격히 순차라 두
 ///   OS 다이얼로그가 겹치지 않는다 (R2). 각 kind는 상태가 이미 결정됐으면 건너뛴다 (R6).
-///   결과는 앱을 막지 않는다 — 허용이든 거부든 [child]로 흘러간다 (R4). 앱 `resumed` 시
-///   이미 조회했던 권한을 다시 읽어, 설정에서 바꾼 값이 재시작 없이 반영된다 (R5).
+///   **둘 다 선택 권한이다** — 허용이든 거부든 앱을 막지 않고 [child]로 흘러간다 (R4).
+///   앱 `resumed` 시 이미 조회했던 권한을 다시 읽어, 설정에서 바꾼 값이 재시작 없이
+///   반영된다 (R5).
 class PermissionBootGate extends ConsumerStatefulWidget {
   PermissionBootGate({
     super.key,
@@ -66,24 +67,33 @@ class _PermissionBootGateState extends ConsumerState<PermissionBootGate>
 
   /// 위치 다음 알림을 순차 실행한다. 첫 프레임 콜백이 두 번 이상 예약돼도 한 번만 돌도록
   /// 가드한다. 끝에서 부트 완료를 신호해, 스플래시가 두 프롬프트가 모두 실행된 뒤에만
-  /// 라우팅하게 한다 — 위치가 허용되는 순간(선택 권한인 알림 프롬프트를 건너뛰게 됨)이
-  /// 아니라 (R2).
+  /// 라우팅하게 한다 (R2).
+  ///
+  /// **완료 신호는 어떤 경로로든 선다.** 중간에 실패해도 `finally`로 세운다 —
+  /// 세우지 못하면 스플래시가 완료를 기다리다 갇힌다. (스플래시에도 5초
+  /// 타임아웃이 있지만, 그것은 마지막 방어선이지 정상 경로가 아니다.)
   Future<void> _runSequence() async {
     if (_started) return;
     _started = true;
-    await _requestLocation();
-    await _requestNotification();
-    ref.read(permissionBootCompleteProvider.notifier).complete();
+    try {
+      await _requestLocation();
+      await _requestNotification();
+    } finally {
+      ref.read(permissionBootCompleteProvider.notifier).complete();
+    }
   }
 
-  /// 위치는 필수 ([AMEND] SPEC-0001). 이미 허용됐으면 끝. 설정에서만 바꿀 수 있는
-  /// 상태(`permanentlyDenied`/restricted)면 스플래시의 "설정 열기" 경로에 넘긴다 (R5).
-  /// 그 외에는 (닫을 수 없는) 사전설명을 한 번 띄우고 OS 다이얼로그를 발동한다. 그래도
-  /// 허용 안 하면 설정 필요 상태로 승격시켜, 앱이 스플래시에 영영 머무는 대신 스플래시가
-  /// 그 경로를 노출하게 한다.
+  /// 위치는 **선택 권한이다**(2026-08-29, SPEC-0001 R3·R4 복귀). 알림과 같은 규칙을
+  /// 따른다 — 이미 결정됐으면 건드리지 않고, 닫을 수 있는 사전설명을 한 번 띄우고,
+  /// 사용자가 진행을 택할 때만 OS 다이얼로그를 발동한다.
   ///
-  /// 반복이 아니라 1회 프롬프트: iOS는 OS 다이얼로그를 설치당 최대 1회만 띄우므로 재요청은
-  /// 소용없다 — 남은 길은 설정뿐이다.
+  /// 2026-08-26에는 위치를 필수로 보고 시트를 닫을 수 없게 하고 거부를
+  /// `permanentlyDenied`로 승격시켜 설정으로만 나가게 했는데, 그 구조 전체가
+  /// App Store 심사에서 거절됐다(Guideline 5.1.5). 거부는 정당한 답이고, 좌표가
+  /// 필요한 화면이 각자 안내한다.
+  ///
+  /// 반복이 아니라 1회 프롬프트: iOS는 OS 다이얼로그를 설치당 최대 1회만 띄우므로
+  /// 재요청은 소용없다 — 마음이 바뀌면 설정에서 켠다.
   Future<void> _requestLocation() async {
     final PermissionController controller = ref.read(
       permissionControllerProvider.notifier,
@@ -91,21 +101,23 @@ class _PermissionBootGateState extends ConsumerState<PermissionBootGate>
     final PermissionState current = await controller.check(
       PermissionKind.location,
     );
-    if (current == PermissionState.granted || current.needsSettings) return;
+    if (current.isDecided) return;
+
+    // 알림과 같은 이유로 한 번 물어봤으면 다시 묻지 않는다 — "나중에"는 OS에
+    // 남지 않아 기록해 두지 않으면 앱을 켤 때마다 같은 시트가 뜬다.
+    final RationaleShownStore shown = ref.read(rationaleShownStoreProvider);
+    if (shown.wasShown(PermissionKind.location)) return;
 
     final BuildContext? navContext = widget.navigatorKey.currentContext;
     if (navContext == null || !navContext.mounted) return;
-    // 위치 시트에는 "나중에"가 없으므로 항상 true로 돌아온다.
-    await PermissionRationaleSheet.show(navContext, PermissionKind.location);
-
-    final PermissionState next = await controller.request(
+    unawaited(shown.markShown(PermissionKind.location));
+    final bool proceed = await PermissionRationaleSheet.show(
+      navContext,
       PermissionKind.location,
     );
-    // 여전히 허용 안 됨 → 앱이 다시 프롬프트할 수 없다; 스플래시를 통해 사용자를 설정으로
-    // 안내한다.
-    if (next != PermissionState.granted) {
-      controller.markNeedsSettings(PermissionKind.location);
-    }
+    if (!proceed) return;
+
+    await controller.request(PermissionKind.location);
   }
 
   /// R6 + R3: 알림은 선택. 상태를 조회해 이미 결정됐으면 아무 것도 안 한다. 그 외에는 닫을

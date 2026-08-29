@@ -3,11 +3,9 @@ import 'package:flutter/physics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../common/permission/component/permission_blocked_notice.dart';
-import '../../../common/permission/model/permission_kind.dart';
-import '../../../common/permission/model/permission_state.dart';
-import '../../../common/permission/provider/permission_providers.dart';
+import '../../../common/location/component/location_needed_notice.dart';
 import '../../../common/location/location_providers.dart';
+import '../../../common/location/location_service.dart';
 import '../../../common/storage/search_radius_controller.dart';
 import '../../../common/widget/failure_notice.dart';
 import '../../../common/widget/floating_bottom_nav_scaffold.dart';
@@ -32,18 +30,17 @@ import 'spot_detail_view.dart';
 
 /// Discover 스와이프 화면 본체(spec §3·§7). 상단 카테고리 바 + 카드 스택.
 ///
-/// 상태 처리(§7): 위치 권한 거부 → 안내+설정 CTA(SPEC-0001 컴포넌트 재사용),
-/// 초기 로딩 → 스피너, 소진/0건 → 빈 상태(반경/카테고리 CTA), 오류 → 재시도 배너.
+/// 상태 처리(§7): 초기 로딩 → 스피너, 소진/0건 → 빈 상태(반경/카테고리 CTA),
+/// 위치를 얻지 못함 → 위치 안내+CTA([LocationNeededNotice]), 그 외 오류 → 재시도 배너.
 class DiscoverSwipeView extends ConsumerWidget {
   const DiscoverSwipeView({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 위치가 설정에서만 켤 수 있는 상태면 카드 대신 권한 안내를 먼저 보여준다(§7).
-    final PermissionState? locationState = ref.watch(
-      permissionControllerProvider.select((s) => s[PermissionKind.location]),
-    );
-    final bool locationBlocked = locationState?.needsSettings ?? false;
+    // **권한 상태로 미리 막지 않는다**(2026-08-29). 예전에는 위치가 영구거부면
+    // 조회를 시도하기도 전에 안내로 갈아 끼웠는데, 그러면 캐시된 좌표로 카드를
+    // 채울 수 있는 경우까지 함께 막혔다. 실제로 좌표를 못 얻었을 때만
+    // `_ErrorState`가 안내한다 — 판정이 한 곳에 모인다.
 
     // 최초 상태는 "전체"다(사용자 결정, 2026-08-15) — 아무것도 심지 않는다. 예전에는
     // 진입 시 TOURIST_SPOT을 심었는데(R4), "전체" 칩이 생기면서 그 자리가 자연스러운
@@ -54,9 +51,7 @@ class DiscoverSwipeView extends ConsumerWidget {
       swipeControllerProvider(selection),
     );
 
-    final Widget body = locationBlocked
-        ? const _LocationBlocked()
-        : _QueueBody(selection: selection, queue: queue);
+    final Widget body = _QueueBody(selection: selection, queue: queue);
 
     // **카테고리 바가 사진 위에 겹친다**(R14, 사용자 결정 2026-08-17). 예전에는
     // `Column`으로 카드 위에 쌓여 그만큼 사진을 밀어냈는데, 전체화면화는 사진 면적을
@@ -177,21 +172,6 @@ class _OverlayControls extends StatelessWidget {
 /// `CategoryBar`의 높이를 바꾸면 이 값도 함께 고쳐야 한다.
 const double _overlayControlsHeight = 88 + 8 + 28;
 
-/// 위치 영구거부 상태: SPEC-0001의 [PermissionBlockedNotice]를 재사용해 설정 이동
-/// 경로를 노출한다(중복 구현 없음).
-class _LocationBlocked extends StatelessWidget {
-  const _LocationBlocked();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Padding(
-        padding: EdgeInsets.all(24),
-        child: PermissionBlockedNotice(kind: PermissionKind.location),
-      ),
-    );
-  }
-}
 
 class _QueueBody extends ConsumerWidget {
   const _QueueBody({required this.selection, required this.queue});
@@ -246,6 +226,20 @@ class _ErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
+
+    // **위치 실패는 재시도로 풀리지 않는다**(2026-08-29). 원인이 기기 설정이라
+    // "다시 시도"를 눌러도 같은 실패가 돌아온다 — 실제로 이 화면이 그 상태였고
+    // App Store 심사에서 Guideline 5.1.5로 거절됐다. 사용자가 실제로 할 수 있는
+    // 일(위치 켜기·설정 이동)을 준다.
+    //
+    // 재시도 정책이 `LocationUnavailable`을 세지 않으므로(`retry_counting.dart`)
+    // 이 오류는 `RetryExhausted`가 되지 않아 아래 분기보다 먼저 봐도 안전하다.
+    if (error is LocationUnavailable) {
+      return LocationNeededNotice(
+        message: l10n.discoverLocationUnavailable,
+        onRetry: onRetry,
+      );
+    }
 
     if (error is RetryExhausted) {
       return FailureNotice.terminal(
