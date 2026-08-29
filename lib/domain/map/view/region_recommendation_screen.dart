@@ -59,7 +59,22 @@ class _RegionRecommendationScreenState
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(l10n.mapRegionRecommendationsTitle),
+            // **제목이 기준을 말한다**(사용자 지적 2026-08-29).
+            //
+            // 두 기준(내 위치 / 지도 중심)이 제목은 "추천 지역"으로 같아서,
+            // 화면만 봐서는 무엇을 기준으로 한 추천인지 알 수 없었다. 기준은
+            // 우측 아이콘의 툴팁에만 있었는데 툴팁은 길게 눌러야 나온다.
+            //
+            // 토글이 없을 때(지도를 거치지 않고 들어왔을 때)는 기준이 하나뿐이라
+            // 굳이 밝히지 않는다 — 고를 것이 없는데 "내 위치 기준"이라고 적으면
+            // 다른 기준이 있는 것처럼 읽힌다.
+            Text(
+              widget.mapCenter == null
+                  ? l10n.mapRegionRecommendationsTitle
+                  : _useMapCenter
+                  ? l10n.mapRegionRecommendationsTitleMapCenter
+                  : l10n.mapRegionRecommendationsTitleMyLocation,
+            ),
             const SizedBox(width: 2),
             // 제목 글자 높이 안에서 위로 올려 붙인다.
             Transform.translate(

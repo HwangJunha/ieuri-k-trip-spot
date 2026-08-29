@@ -31,6 +31,21 @@ class RegionRecommendationNeedsLocation implements Exception {
   String toString() => 'RegionRecommendationNeedsLocation($reason)';
 }
 
+/// 이 화면의 재시도 정책(2026-08-29).
+///
+/// **공통 정책을 그대로 쓰면 위치 부재에 백오프가 돈다.** `defaultNetworkRetry`는
+/// `LocationUnavailable`을 걸러 내는데, 이 provider는 그것을
+/// [RegionRecommendationNeedsLocation]으로 **갈아 끼워** 던진다. 정책이 그 타입을
+/// 알 리 없으니 네트워크 오류로 보고 5회를 지수 백오프로 돌렸고, 위치를 끈
+/// 사용자는 안내가 뜨기까지 10초 가까이 스피너만 봤다(사용자 지적 — "계속
+/// 빙글빙글 돌다가").
+///
+/// 위치가 없다는 사실은 다시 물어도 달라지지 않는다. 곧바로 안내로 보낸다.
+Duration? regionRecommendationRetry(int retryCount, Object error) {
+  if (error is RegionRecommendationNeedsLocation) return null;
+  return defaultNetworkRetry(retryCount, error);
+}
+
 /// 지역 추천 목록(SPEC-0015).
 ///
 /// **위치가 필수다.** 설계 초안(R27)은 "위치 없이도 추천이 나온다"였으나 서버가
@@ -50,7 +65,7 @@ class RegionRecommendationNeedsLocation implements Exception {
 /// 사용자가 화면에서 기준을 바꿀 수 있으므로 인자로 받아 family가 된다 — 기준이
 /// 바뀌면 새 인자가 되어 이전 조회는 자동으로 버려지고, 두 기준의 결과가 각각
 /// 캐시된다(왔다 갔다 해도 다시 받지 않는다).
-@Riverpod(retry: defaultNetworkRetry)
+@Riverpod(retry: regionRecommendationRetry)
 Future<RegionRecommendationResult> regionRecommendations(
   Ref ref,
   Coordinates? mapCenter,
