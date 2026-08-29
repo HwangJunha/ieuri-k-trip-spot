@@ -84,6 +84,17 @@
 		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<!-- 라이트 모드로 고정한다(SPEC-0033에서 다크 모드를 걷어냈다).
+
+		     **`ThemeMode.light`만으로는 절반이다.** 그것은 Flutter가 그리는
+		     화면만 고정하고, 기기가 다크 모드면 iOS가 그리는 것들 — 키보드,
+		     공유 시트, 권한 다이얼로그, 상태바 — 은 여전히 다크로 뜬다. 라이트
+		     화면 위에 다크 키보드가 올라오는 식이라 완성도가 떨어져 보인다.
+
+		     심사자는 위치·사진 권한 다이얼로그를 반드시 보게 되므로 이 키가
+		     없으면 그 화면이 어긋난 채로 심사된다. -->
+		<key>UIUserInterfaceStyle</key>
+		<string>Light</string>
 		<!-- Google Sign-In (google_sign_in v7): the iOS OAuth client id. Without
 		     this (or a bundled GoogleService-Info.plist / a clientId passed to
 		     initialize) the SDK has no client id and the sign-in throws. This is
