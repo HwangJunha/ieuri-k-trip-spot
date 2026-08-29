@@ -6,6 +6,7 @@ import '../../permission/model/permission_kind.dart';
 import '../../permission/model/permission_state.dart';
 import '../../permission/provider/permission_providers.dart';
 import '../../widget/failure_notice.dart';
+import '../location_providers.dart';
 
 /// 좌표가 필요한 화면이 좌표를 얻지 못했을 때 그리는 안내(2026-08-29).
 ///
@@ -35,34 +36,74 @@ class LocationNeededNotice extends ConsumerWidget {
       permissionControllerProvider.select((s) => s[PermissionKind.location]),
     );
 
-    // 상태를 아직 모르면 설정 이동으로 둔다 — 요청을 걸었다가 조용히 실패하는
-    // 것보다, 사용자가 확실히 바꿀 수 있는 곳으로 보내는 편이 낫다.
-    final bool needsSettings = state?.needsSettings ?? true;
+    // 세 갈래다.
+    //
+    //   granted        — 권한은 있는데 좌표를 못 얻었다(위치 서비스 꺼짐,
+    //                    실내에서 fix 실패, 혹은 설정에서 막 켜고 돌아온 직후).
+    //                    OS에 다시 물어도 다이얼로그가 안 뜨므로 **다시 시도**다.
+    //   needsSettings  — 영구거부·restricted. 설정에서만 바꿀 수 있다.
+    //   그 외          — 아직 물어볼 수 있다. 권한 요청을 건다.
+    //
+    // 상태를 모르면(null) 설정 이동으로 둔다 — 요청을 걸었다가 조용히 실패하는
+    // 것보다 사용자가 확실히 바꿀 수 있는 곳으로 보내는 편이 낫다.
+    final _NoticeAction action = switch (state) {
+      PermissionState.granted => _NoticeAction.retry,
+      null => _NoticeAction.openSettings,
+      _ when state.needsSettings => _NoticeAction.openSettings,
+      _ => _NoticeAction.requestPermission,
+    };
 
     return FailureNotice.terminal(
       title: l10n.locationNeededTitle,
       body: message,
-      actionLabel: needsSettings
-          ? l10n.permissionOpenSettings
-          : l10n.mapRegionRecommendationsAllowLocation,
-      onAction: () => _act(ref, needsSettings),
+      actionLabel: switch (action) {
+        _NoticeAction.retry => l10n.discoverRetryButton,
+        _NoticeAction.openSettings => l10n.permissionOpenSettings,
+        _NoticeAction.requestPermission =>
+          l10n.mapRegionRecommendationsAllowLocation,
+      },
+      onAction: () => _act(ref, action),
       icon: Icons.location_off_outlined,
     );
   }
 
-  Future<void> _act(WidgetRef ref, bool needsSettings) async {
+  Future<void> _act(WidgetRef ref, _NoticeAction action) async {
     final PermissionController controller = ref.read(
       permissionControllerProvider.notifier,
     );
-    if (needsSettings) {
-      await controller.openSettings();
-      // 설정에서 돌아오는 것은 `PermissionBootGate`의 resume 훅이 잡아 상태를
-      // 갱신한다 — 여기서 결과를 기다릴 수 없다(앱이 백그라운드로 간다).
-      return;
+
+    switch (action) {
+      case _NoticeAction.openSettings:
+        await controller.openSettings();
+        // 설정에서 돌아오는 것은 `LocationRefreshGate`의 resume 훅이 잡아
+        // 좌표를 다시 받는다 — 여기서 결과를 기다릴 수 없다(앱이 백그라운드로
+        // 간다).
+        return;
+
+      case _NoticeAction.requestPermission:
+        final PermissionState next = await controller.request(
+          PermissionKind.location,
+        );
+        if (next != PermissionState.granted) return;
+        _retry(ref);
+
+      case _NoticeAction.retry:
+        // 권한은 이미 있다 — 실패한 것은 좌표 조회다.
+        _retry(ref);
     }
-    final PermissionState next = await controller.request(
-      PermissionKind.location,
-    );
-    if (next == PermissionState.granted) onRetry?.call();
+  }
+
+  /// 캐시된 실패를 버리고 좌표를 다시 받는다.
+  ///
+  /// **[onRetry]만으로는 부족하다.** 화면의 재조회는 좌표 provider를 다시
+  /// `watch`할 뿐인데, 그것이 오류 상태로 남아 있으면 같은 오류가 그대로 돌아온다
+  /// — 버튼을 눌러도 아무 일이 없는 것처럼 보인다(실기기 확인 2026-08-29).
+  /// 좌표부터 무효화해야 다음 조회가 실제로 GPS를 다시 읽는다.
+  void _retry(WidgetRef ref) {
+    ref.invalidate(currentCoordinatesProvider);
+    onRetry?.call();
   }
 }
+
+/// 버튼이 무엇을 하는지. 권한 상태에 따라 갈린다.
+enum _NoticeAction { openSettings, requestPermission, retry }

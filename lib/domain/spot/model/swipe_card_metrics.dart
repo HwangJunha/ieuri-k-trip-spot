@@ -82,24 +82,41 @@ class SwipeCardMetrics {
         scale;
   }
 
-  /// 출처 배지 한 줄. `CopyrightBadge`의 글자(labelSmall 11 × 1.2)와 상하 패딩.
-  static const double _badgeHeight = 26;
+  // ---------------------------------------------------------------------------
+  //  아래 값들은 **실측이다**(2026-08-29).
+  //
+  //  눈대중으로 적었다가 합이 5px 모자라 카드가
+  //  `BOTTOM OVERFLOWED BY 5.0 PIXELS`로 깨졌다(실기기, 사용자 지적). 값을 바꿀
+  //  때는 `swipe_card_metrics_test.dart`가 위젯을 실제로 세워 재므로 거기서
+  //  확인하고 고친다 — 다시 눈대중하면 같은 일이 반복된다.
+  // ---------------------------------------------------------------------------
+
+  /// 출처 배지 한 줄. 글자(`labelSmall` 11 × 1.45 ≈ 16)와 상하 패딩 4+4.
+  static const double _badgeHeight = 24;
   static const double _badgeGap = 10;
 
-  /// 제목 한 줄 — `titleLarge`(22)에 `height: 1.25`.
-  static const double _titleLineHeight = 22 * 1.25;
+  /// 제목 한 줄 — `titleLarge`(22).
+  ///
+  /// **22 × 1.25가 아니다.** 위젯이 `height: 1.25`를 주지만 Material 3의
+  /// `titleLarge`가 이미 `height: 1.27`을 갖고 있어 실제 줄 높이는 27.5가 아니라
+  /// 28로 잡힌다.
+  static const double _titleLineHeight = 28;
   static const int _titleMaxLines = 2;
 
   static const double _addressGap = 6;
 
-  /// 주소 한 줄 — `bodyMedium`(14)의 기본 행간(약 1.43).
+  /// 주소 한 줄 — `bodyMedium`(14 × 1.43 = 20.02 → 20).
   static const double _addressLineHeight = 20;
   static const int _addressMaxLines = 2;
 
   static const double _distanceGap = 8;
 
-  /// 거리 줄 — 새로고침 `IconButton`의 최소 높이(36)가 이 줄을 지배한다.
-  static const double _distanceRowHeight = 36;
+  /// 거리 줄 — 새로고침 `IconButton`이 지배한다.
+  ///
+  /// **`minHeight: 36`이 아니라 40이다.** `visualDensity: compact`가 세로로 -2를
+  /// 주는데, `IconButton`은 그만큼 자기 박스를 **키운다**(제약을 줄이는 것이
+  /// 아니다). 36을 그대로 믿었다가 4px이 새어 오버플로우의 대부분을 만들었다.
+  static const double _distanceRowHeight = 40;
 
   /// 기기와 무관한 기본 하단 여백. 안전 영역 위에 얹는다.
   ///
