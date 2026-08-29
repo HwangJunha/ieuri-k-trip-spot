@@ -184,7 +184,7 @@
   "permissionLocationRationaleTitle": "周辺のスポットを探す",
   "permissionLocationRationaleBody": "K-Trip Spotはアプリの使用中のみ位置情報を利用し、近くのスポットを表示します。バックグラウンドで追跡することはありません。",
   "permissionNotificationRationaleTitle": "最新情報を受け取る",
-  "permissionNotificationRationaleBody": "通知をオンにすると、気になるスポットの混雑通知やお知らせを受け取れます。いつでも変更できます。",
+  "permissionNotificationRationaleBody": "通知をオンにすると、自分の質問への回答や新しいメッセージを受け取れます。いつでも変更できます。",
   "permissionContinue": "続ける",
   "permissionNotNow": "後で",
   "permissionLocationBlockedMessage": "位置情報がオフになっています。周辺のスポットを見るには設定でオンにしてください。",
