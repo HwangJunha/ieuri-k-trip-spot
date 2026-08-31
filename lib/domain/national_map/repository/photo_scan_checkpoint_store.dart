@@ -14,8 +14,8 @@ import '../model/photo_scan_progress.dart';
 ///
 /// 배치마다 여기에 적어 두면 앱이 어떻게 죽든 그 지점부터 이어 간다.
 ///
-/// **판정 결과(`resolvedCellCodes`)도 같이 적는다** — 지점만 적으면 이어 갈 때
-/// 앞서 찾은 지역을 잃는다.
+/// **판정 결과(`resolvedDistrictCodes`)도 같이 적는다** — 지점만 적으면 이어 갈
+/// 때 앞서 찾은 지역을 잃는다.
 ///
 /// 좌표가 아니라 시군구 코드와 진행 숫자만 담는다. 좌표는 기기를 떠나지도,
 /// 디스크에 남지도 않는다.
@@ -38,7 +38,7 @@ class PhotoScanCheckpoint {
     required this.processed,
     required this.total,
     required this.foundCoordinates,
-    required this.resolvedCellCodes,
+    required this.resolvedDistrictCodes,
   });
 
   /// 여기까지 읽었다. 다음 시작점이다.
@@ -48,13 +48,17 @@ class PhotoScanCheckpoint {
   final int total;
 
   final int foundCoordinates;
-  final List<String> resolvedCellCodes;
 
+  /// 판정된 **시군구 코드**(5자리). 칸 id가 아니다 — SPEC-0034 R5의 이름 정리.
+  final List<String> resolvedDistrictCodes;
+
+  /// **JSON 키는 그대로 둔다.** 이름을 바꾸면 이미 디스크에 적힌 지점을 읽지
+  /// 못해, 업데이트한 사용자가 스캔을 처음부터 다시 하게 된다.
   Map<String, Object?> toJson() => <String, Object?>{
     'processed': processed,
     'total': total,
     'foundCoordinates': foundCoordinates,
-    'resolvedCellCodes': resolvedCellCodes,
+    'resolvedCellCodes': resolvedDistrictCodes,
   };
 
   static PhotoScanCheckpoint? fromJson(Map<String, dynamic> json) {
@@ -67,7 +71,7 @@ class PhotoScanCheckpoint {
       foundCoordinates: json['foundCoordinates'] is int
           ? json['foundCoordinates'] as int
           : 0,
-      resolvedCellCodes: <String>[
+      resolvedDistrictCodes: <String>[
         for (final Object? c in (json['resolvedCellCodes'] as List<Object?>?) ??
             const <Object?>[])
           if (c is String) c,
@@ -76,11 +80,14 @@ class PhotoScanCheckpoint {
   }
 
   /// 화면이 이어서 보여 줄 상태로 되돌린다.
+  ///
+  /// **칸 수는 복원하지 않는다.** 칸 접기에는 서버가 준 칸 목록이 필요한데
+  /// 디스크에는 시군구 코드만 있다 — 이어하기가 시작되면 스캔이 다시 센다.
   PhotoScanProgress toProgress() => PhotoScanProgress(
     processed: processed,
     total: total,
     foundCoordinates: foundCoordinates,
-    resolvedCellCodes: resolvedCellCodes,
+    resolvedDistrictCodes: resolvedDistrictCodes,
   );
 }
 

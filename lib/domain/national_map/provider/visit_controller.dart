@@ -22,13 +22,15 @@ class VisitController extends _$VisitController {
   ///
   /// 낙관적 표시는 하지 않는다 — 어떤 칸이 칠해질지는 서버의 칸 묶음 규칙에
   /// 달렸고, 그건 응답(`updatedCells`)이 알려 준다.
-  Future<RecordVisitsResult> record(List<String> districtCodes) async {
-    if (districtCodes.isEmpty) {
-      return const RecordVisitsResult(
-        updatedCells: <MapCell>[],
-        unknownDistrictCodes: <String>[],
-      );
-    }
+  ///
+  /// **갱신된 칸 id를 돌려준다**(SPEC-0034 R7). 예전에는 응답을 캐시 패치에만
+  /// 쓰고 버려서, 시트가 "몇 곳을 확인했는가"를 로컬 추정으로 말할 수밖에 없었다.
+  ///
+  /// 반환 타입이 `RecordVisitsResult`가 아니라 id 목록인 이유는 **부르는 쪽이
+  /// component이기 때문이다.** 그 타입은 repository의 것이라 component가 import할
+  /// 수 없다(CLAUDE.md §3) — 경계에서 접어 넘긴다.
+  Future<List<String>> record(List<String> districtCodes) async {
+    if (districtCodes.isEmpty) return const <String>[];
 
     state = true;
     try {
@@ -40,7 +42,7 @@ class VisitController extends _$VisitController {
       if (ref.mounted) {
         ref.read(mapCellsProvider.notifier).applyUpdated(result.updatedCells);
       }
-      return result;
+      return <String>[for (final MapCell c in result.updatedCells) c.id];
     } finally {
       // **`ref.mounted`를 본다**(실기기 확인 2026-08-26 — `UnmountedRefException`).
       //

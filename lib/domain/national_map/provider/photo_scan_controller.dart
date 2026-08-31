@@ -171,6 +171,10 @@ class PhotoScanController extends _$PhotoScanController {
 
     // 시군구 코드 -> 칸 id. 스캔 도중 지도를 칠하려면 이 변환이 필요하다 —
     // 판정 결과는 시군구 코드인데 지도는 칸 id로 칠한다.
+    //
+    // **표시용 수도 이 표로 센다**(SPEC-0034 R5). 예전에는 이 변환 결과가
+    // 낙관적 색칠에만 쓰이고 버려져, 시트는 시군구 코드 수를 세고 지도는 칸을
+    // 칠했다 — 그래서 지도는 맞고 숫자만 틀렸다.
     final Map<String, String> cellIdOf = <String, String>{
       for (final MapCell c in cells)
         for (final String code in c.districtCodes) code: c.id,
@@ -180,10 +184,10 @@ class PhotoScanController extends _$PhotoScanController {
     // 때만 누적한다 — 안 그러면 이미 등록을 마친 코드를 다시 모아 보내게 된다.
     final bool resuming = from > 0;
     final Set<String> found = <String>{
-      if (resuming) ...state.resolvedCellCodes,
+      if (resuming) ...state.resolvedDistrictCodes,
     };
     // 사진에서 찾았으나 **이미 지도에 있던** 지역. 등록 대상은 아니지만 "몇 곳을
-    // 확인했는가"를 말하려면 이것도 세야 한다.
+    // 확인했는가"를 말하려면 이것도 세야 한다. 시군구 코드로 모으고 셀 때 접는다.
     final Set<String> alreadyOnMap = <String>{};
     int processed = from;
     int withCoordinates = resuming ? state.foundCoordinates : 0;
@@ -195,14 +199,15 @@ class PhotoScanController extends _$PhotoScanController {
           stage: PhotoScanStage.idle,
           processed: processed,
           foundCoordinates: withCoordinates,
-          resolvedCellCodes: found.toList()..sort(),
+          resolvedDistrictCodes: found.toList()..sort(),
+          newCellCount: foldToCellIds(found, cellIdOf).length,
         );
         await checkpoints.write(
           PhotoScanCheckpoint(
             processed: processed,
             total: total,
             foundCoordinates: withCoordinates,
-            resolvedCellCodes: found.toList()..sort(),
+            resolvedDistrictCodes: found.toList()..sort(),
           ),
         );
         return;
@@ -291,7 +296,9 @@ class PhotoScanController extends _$PhotoScanController {
       state = state.copyWith(
         processed: processed,
         foundCoordinates: withCoordinates,
-        resolvedCellCodes: found.toList()..sort(),
+        resolvedDistrictCodes: found.toList()..sort(),
+        // 진행 중 문구가 쓰는 잠정값이다 — 칸 단위로 접어 센다(R5).
+        newCellCount: foldToCellIds(found, cellIdOf).length,
       );
 
       // **배치마다 디스크에 적는다.** 홈 버튼을 눌러 앱이 정지·종료돼도 여기서
@@ -301,7 +308,7 @@ class PhotoScanController extends _$PhotoScanController {
           processed: processed,
           total: total,
           foundCoordinates: withCoordinates,
-          resolvedCellCodes: found.toList()..sort(),
+          resolvedDistrictCodes: found.toList()..sort(),
         ),
       );
     }
@@ -311,21 +318,36 @@ class PhotoScanController extends _$PhotoScanController {
     // (사용자 결정, 2026-08-22. 스펙 R30의 별도 확인 단계를 없앤다).
     //
     // 단계 자체는 남긴다 — 등록이 도는 동안 보여줄 상태가 필요하다.
+    //
+    // **칸으로 접은 뒤 신규에서 기존을 뺀다**(SPEC-0034 R6). 순서가 중요하다 —
+    // 시군구 단위로 세면 같은 칸이 신규와 기존으로 갈려 이중 계상된다. 예컨대
+    // 서울 강남구를 이미 방문했고 사진에서 서초구가 나오면, 둘은 같은 칸이므로
+    // 새로 칠해지는 칸은 없는데 예전 셈으로는 신규 1 + 기존 1 = 2가 됐다.
+    final Set<String> alreadyOnMapCells = foldToCellIds(alreadyOnMap, cellIdOf);
+    final Set<String> newCells = foldToCellIds(
+      found,
+      cellIdOf,
+    )..removeAll(alreadyOnMapCells);
+
     state = state.copyWith(
       stage: found.isEmpty
           ? PhotoScanStage.completed
           : PhotoScanStage.awaitingConfirmation,
       processed: total,
       foundCoordinates: withCoordinates,
-      resolvedCellCodes: found.toList()..sort(),
-      alreadyOnMapCount: alreadyOnMap.length,
+      resolvedDistrictCodes: found.toList()..sort(),
+      newCellCount: newCells.length,
+      alreadyOnMapCellCount: alreadyOnMapCells.length,
+      // 아직 등록 전이다 — 완료 문구가 쓸 수는 등록 응답이 정한다(R7).
+      clearRegisteredCellCount: true,
     );
     // **무엇을 훑고 무엇이 걸러졌는지 남긴다**(2026-08-26). "왜 두 곳만
     // 찾았나"를 판단하려면 세 수가 다 필요하다 — 훑은 장수, 좌표가 있던 장수,
-    // 그리고 새로 찾은 지역 수(이미 방문한 시군구는 R27에 따라 빠진다).
+    // 그리고 새로 찾은 칸 수(이미 방문한 시군구는 R27에 따라 빠진다).
     _log.i(
       '사진 스캔 완료: 훑음 $total장 · 좌표 있음 $withCoordinates장 · '
-      '새 지역 ${found.length}곳 · 이미 있던 지역 ${alreadyOnMap.length}곳',
+      '새 칸 ${newCells.length}곳(시군구 ${found.length}개) · '
+      '이미 있던 칸 ${alreadyOnMapCells.length}곳',
     );
 
     // **좌표가 있던 사진 수를 센다.** 훑은 총량(`total`)은 사진첩 크기에 좌우돼
@@ -402,7 +424,10 @@ class PhotoScanController extends _$PhotoScanController {
       processed: 0,
       total: 0,
       foundCoordinates: 0,
-      resolvedCellCodes: const <String>[],
+      resolvedDistrictCodes: const <String>[],
+      newCellCount: 0,
+      alreadyOnMapCellCount: 0,
+      clearRegisteredCellCount: true,
     );
     await ref.read(photoScanCheckpointStoreProvider).clear();
     await start();
@@ -429,9 +454,20 @@ class PhotoScanController extends _$PhotoScanController {
   }
 
   /// 등록이 끝났다. 등록 자체는 화면이 `VisitController`로 한다.
-  void confirmed() {
+  ///
+  /// [updatedCellIds]는 서버가 **실제로 갱신했다고 알려준 칸**이다(SPEC-0034 R7).
+  /// 완료 문구의 수가 여기서 나온다 — 지도에 칠해진 것과 정의상 일치하는 유일한
+  /// 값이다. 로컬 추정([PhotoScanProgress.newCellCount])은 스캔 중에만 쓴다.
+  void confirmed(Iterable<String> updatedCellIds) {
     _registering = false;
-    state = state.copyWith(stage: PhotoScanStage.completed);
+    // 갱신된 칸과 이미 있던 칸을 합친 것이 "이번 스캔이 확인한 곳"이다.
+    // 서버가 갱신했다고 한 칸은 신규이므로 기존 집합과 겹치지 않는다.
+    final int confirmedCells =
+        updatedCellIds.toSet().length + state.alreadyOnMapCellCount;
+    state = state.copyWith(
+      stage: PhotoScanStage.completed,
+      registeredCellCount: confirmedCells,
+    );
   }
 
   /// 등록이 실패했다(2026-08-26).
@@ -447,6 +483,9 @@ class PhotoScanController extends _$PhotoScanController {
     state = state.copyWith(
       stage: PhotoScanStage.failed,
       retryCount: state.retryCount + 1,
+      // **실패했으면 수를 표시하지 않는다**(SPEC-0034 R7). 등록이 실패했는데
+      // "N곳을 확인했어요"가 뜨면 거짓이다.
+      clearRegisteredCellCount: true,
     );
   }
 

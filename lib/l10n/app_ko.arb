@@ -353,10 +353,13 @@
   "@photoSyncTitle": {
     "description": "사진 동기화 시트 제목"
   },
-  "photoSyncBody": "사진에 담긴 위치로 다녀온 지역을 찾아요. 사진은 기기 밖으로 나가지 않습니다.",
+  "photoSyncTitleDone": "지도를 채웠어요",
+  "photoSyncBody": "사진에 담긴 위치로 다녀온 지역을 찾아요. 사진은 서버에 전송하지 않아요. 찾아낸 지역만 내 지도에 저장돼요.",
   "@photoSyncBody": {
     "description": "사진 동기화 시트 설명 - 사진 미전송을 밝힌다"
   },
+  "photoSyncBodyResume": "지난번에 멈춘 지점부터 이어서 찾아요. 사진은 서버에 전송하지 않아요.",
+  "photoSyncBodyDone": "사진은 서버에 전송하지 않아요. 다시 채우면 새로 추가된 사진만 확인해요.",
   "photoSyncStart": "시작하기",
   "@photoSyncStart": {
     "description": "사진 동기화 - 시작 버튼"
@@ -399,10 +402,6 @@
       }
     }
   },
-  "photoSyncConfirmBody": "등록하면 지도가 채워집니다.",
-  "@photoSyncConfirmBody": {
-    "description": "등록 확인 안내"
-  },
   "photoSyncRegister": "등록하기",
   "@photoSyncRegister": {
     "description": "사진 동기화 - 판정 결과 등록"
@@ -416,13 +415,13 @@
   },
   "photoSyncSelectMore": "사진 더 고르기",
   "@photoSyncSelectMore": {},
-  "photoSyncSummary": "사진 {photos}장을 훑어 {regions}곳을 채웠어요.",
+  "photoSyncSummary": "사진 {photos}장을 읽어 {cells}곳을 확인했어요.",
   "@photoSyncSummary": {
     "placeholders": {
       "photos": {
         "type": "int"
       },
-      "regions": {
+      "cells": {
         "type": "int"
       }
     }

@@ -35,23 +35,50 @@ class PhotoSyncSheet extends ConsumerWidget {
     final ThemeData theme = Theme.of(context);
     final PhotoScanProgress progress = ref.watch(photoScanControllerProvider);
 
+    // **제목과 본문을 stage에서 파생시킨다**(SPEC-0034 R9). 예전에는 stage와
+    // 무관하게 늘 같은 키를 그려, 스캔을 마치고 다시 열어도 "찾아요"라는 예고가
+    // 남았다.
+    final bool done = progress.stage == PhotoScanStage.completed;
+    final String? body = _bodyOf(progress, l10n);
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(l10n.photoSyncTitle, style: theme.textTheme.titleLarge),
-        const SizedBox(height: 8),
         Text(
-          l10n.photoSyncBody,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+          done ? l10n.photoSyncTitleDone : l10n.photoSyncTitle,
+          style: theme.textTheme.titleLarge,
         ),
+        if (body != null) ...<Widget>[
+          const SizedBox(height: 8),
+          Text(
+            body,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
         const SizedBox(height: 20),
         _Content(progress: progress, l10n: l10n),
       ],
     );
   }
+
+  /// stage별 본문. null이면 본문을 그리지 않는다.
+  ///
+  /// **스캔 중에는 본문이 없다** — 진행 표시가 그 자리를 차지하므로 예고 문구를
+  /// 겹쳐 두면 시트만 길어진다.
+  static String? _bodyOf(PhotoScanProgress progress, AppLocalizations l10n) =>
+      switch (progress.stage) {
+        PhotoScanStage.completed => l10n.photoSyncBodyDone,
+        PhotoScanStage.scanning ||
+        PhotoScanStage.requestingPermission ||
+        PhotoScanStage.awaitingConfirmation => null,
+        // 이어하기가 가능하면 중단 지점부터 간다는 것을 먼저 말한다.
+        PhotoScanStage.idle || PhotoScanStage.failed =>
+          progress.isResumable ? l10n.photoSyncBodyResume : l10n.photoSyncBody,
+        PhotoScanStage.permissionDenied => l10n.photoSyncBody,
+      };
 }
 
 class _Content extends ConsumerWidget {
@@ -127,10 +154,13 @@ class _Content extends ConsumerWidget {
               l10n.photoSyncProgress(progress.processed, progress.total),
               style: theme.textTheme.bodySmall,
             ),
-            if (progress.resolvedCellCodes.isNotEmpty) ...<Widget>[
+            // **칸 단위로 센다**(SPEC-0034 R5). 시군구 코드 수를 세면 서울
+            // 3개 구가 "3곳"이 되는데 칠해지는 칸은 하나다. 잠정값임은 "지금까지"가
+            // 드러낸다(R7).
+            if (progress.newCellCount > 0) ...<Widget>[
               const SizedBox(height: 4),
               Text(
-                l10n.photoSyncFoundSoFar(progress.resolvedCellCodes.length),
+                l10n.photoSyncFoundSoFar(progress.newCellCount),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.primary,
                 ),
@@ -155,7 +185,7 @@ class _Content extends ConsumerWidget {
         // 가드는 **컨트롤러가 들고 있다.** 시트의 전역 플래그였을 때는 푸는 자리가
         // idle/failed 버튼뿐이라, 그대로 이 단계에 들어오면 등록이 영영 안 걸렸다.
         if (controller.beginRegistration()) {
-          _log.i('방문 등록 시작: ${progress.resolvedCellCodes.length}곳');
+          _log.i('방문 등록 시작: 시군구 ${progress.resolvedDistrictCodes.length}개');
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             // **`finally`여야 한다.** 순차로 두면 등록이 던졌을 때 플래그가 true로
             // 박혀 재시도조차 막힌다 — `_register`가 예외를 삼키게 됐지만, 그
@@ -167,7 +197,8 @@ class _Content extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             Text(
-              l10n.photoSyncFound(progress.resolvedCellCodes.length),
+              // 등록 중이라 아직 응답이 없다 — 로컬 추정을 쓴다(R5).
+              l10n.photoSyncFound(progress.newCellCount),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -200,19 +231,21 @@ class _Content extends ConsumerWidget {
             // 몇 장을 훑어 몇 곳을 찾았는지 알 수 없어, 스캔이 제대로 돌았는지
             // 사용자가 판단할 수 없다 — 실제로 두 곳만 칠해진 것을 보고 "갤러리가
             // 전부 스캔되지 않은 것 같다"는 의심이 나왔다.
-            if (!progress.finishedWithoutCoordinates) ...<Widget>[
+            // **수의 근거는 등록 응답이다**(SPEC-0034 R7). 서버가 실제로 갱신한
+            // 칸이라 지도에 칠해진 것과 정의상 일치한다.
+            //
+            // **등록이 실패했으면 수를 아예 말하지 않는다** — 실패했는데
+            // "N곳을 확인했어요"가 뜨면 거짓이다. 그래서 0이 아니라 null이다.
+            if (!progress.finishedWithoutCoordinates &&
+                progress.registeredCellCount != null) ...<Widget>[
               const SizedBox(height: 4),
               Text(
-                // **훑은 총 장수와 채운 지역 수만 말한다**(2026-08-26).
+                // **훑은 총 장수와 확인한 칸 수만 말한다**(2026-08-26).
                 // 좌표가 있던 장수나 이미 있던 지역 수까지 세는 것은 사용자가
                 // 궁금해하지 않는 내부 사정이다 — 사용자 지적.
-                //
-                // 지역 수는 새로 찾은 곳과 이미 있던 곳을 합친다. 사진에서 찾아낸
-                // 지역이 곧 "채운" 것이고, 그중 무엇이 이미 있었는지는 구분할
-                // 이유가 없다.
                 l10n.photoSyncSummary(
                   progress.total,
-                  progress.resolvedCellCodes.length + progress.alreadyOnMapCount,
+                  progress.registeredCellCount!,
                 ),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
@@ -282,10 +315,14 @@ class _Content extends ConsumerWidget {
   }
 
   Future<void> _register(WidgetRef ref, PhotoScanController controller) async {
-    final List<String> codes = progress.resolvedCellCodes;
+    // 등록 요청은 **시군구 코드**를 보낸다 — 서버가 시군구 단위로 저장한다.
+    final List<String> codes = progress.resolvedDistrictCodes;
+    final List<String> updatedCellIds;
     try {
       // 사진이 몇 장이든 요청은 1회다 — 판정 결과가 시군구 코드로 축약돼 있다.
-      await ref.read(visitControllerProvider.notifier).record(codes);
+      updatedCellIds = await ref
+          .read(visitControllerProvider.notifier)
+          .record(codes);
     } on Object catch (error, stackTrace) {
       // **던지게 두면 스피너가 영원히 돈다**(실기기 확인 2026-08-26).
       // `record`가 던지면 아래 `confirmed()`에 닿지 못해 단계가
@@ -316,7 +353,10 @@ class _Content extends ConsumerWidget {
       <String, Object>{AnalyticsParams.from: 'photo'},
     );
     // 시트를 닫지 않는다 — 완료 문구를 보고 사용자가 닫는다.
-    _log.i('방문 등록 성공: ${codes.length}곳');
-    controller.confirmed();
+    //
+    // **응답이 알려준 갱신 칸을 넘긴다**(SPEC-0034 R7). 완료 문구의 수가
+    // 여기서 나온다 — 로컬 추정이 아니라 서버가 실제로 칠한 칸이다.
+    _log.i('방문 등록 성공: 시군구 ${codes.length}개 → 칸 ${updatedCellIds.length}곳');
+    controller.confirmed(updatedCellIds);
   }
 }

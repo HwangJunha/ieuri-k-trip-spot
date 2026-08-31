@@ -78,14 +78,16 @@
   "sharedMapGone": "この地図はもう見られません。",
   "sharedMapBlocked": "この地図は見られません。",
   "photoSyncTitle": "写真から埋める",
-  "photoSyncBody": "写真に記録された位置から訪れた地域を探します。写真が端末の外に出ることはありません。",
+  "photoSyncTitleDone": "地図を埋めました",
+  "photoSyncBody": "写真に記録された位置から、訪れた地域を探します。写真はサーバーに送信しません。見つかった地域だけがマップに保存されます。",
+  "photoSyncBodyResume": "前回止まったところから続けて探します。写真はサーバーに送信しません。",
+  "photoSyncBodyDone": "写真はサーバーに送信しません。もう一度埋めると、新しく追加された写真だけを確認します。",
   "photoSyncStart": "開始",
   "photoSyncResume": "続きから",
   "photoSyncStop": "停止",
   "photoSyncProgress": "{total}枚中{done}枚を確認しました",
   "photoSyncFoundSoFar": "これまでに{count}か所見つかりました",
   "photoSyncFound": "{count}か所見つかりました",
-  "photoSyncConfirmBody": "登録すると地図が埋まります。",
   "photoSyncRegister": "登録する",
   "photoSyncDone": "地図を更新しました。",
   "photoSyncLimitedNotice": "設定 > アプリ > K-Trip Spot > 写真 > すべての写真 を選ぶと、ライブラリ全体を確認します。",
@@ -96,13 +98,13 @@
   },
   "photoSyncSelectMore": "写真をさらに選ぶ",
   "@photoSyncSelectMore": {},
-  "photoSyncSummary": "写真{photos}枚から{regions}か所を埋めました。",
+  "photoSyncSummary": "写真{photos}枚を読んで{cells}か所を確認しました。",
   "@photoSyncSummary": {
     "placeholders": {
       "photos": {
         "type": "int"
       },
-      "regions": {
+      "cells": {
         "type": "int"
       }
     }

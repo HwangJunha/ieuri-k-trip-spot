@@ -78,14 +78,28 @@
   "sharedMapGone": "This map is no longer available.",
   "sharedMapBlocked": "You can't view this map.",
   "photoSyncTitle": "Fill from photos",
-  "photoSyncBody": "We read the location saved in your photos to find where you've been. Your photos never leave your device.",
+  "photoSyncTitleDone": "Your map is filled in",
+  "@photoSyncTitleDone": {
+    "description": "Sheet title after the scan finished (SPEC-0034 R9)."
+  },
+  "photoSyncBody": "We look at the location saved in your photos to find the regions you've visited. Your photos are never sent to our server. Only the regions we find are saved to your map.",
+  "@photoSyncBody": {
+    "description": "Sheet body before scanning. Says plainly that photos are not sent to the server (SPEC-0034 R8) — never use euphemisms like \"never leave your device\"."
+  },
+  "photoSyncBodyResume": "We'll pick up where the last scan stopped. Your photos are never sent to our server.",
+  "@photoSyncBodyResume": {
+    "description": "Sheet body when a stopped scan can be resumed (SPEC-0034 R9)."
+  },
+  "photoSyncBodyDone": "Your photos are never sent to our server. If you fill again, we only look at photos added since.",
+  "@photoSyncBodyDone": {
+    "description": "Sheet body after the scan finished. Present tense — this is how the app always behaves, not a report about this run (SPEC-0034 R8)."
+  },
   "photoSyncStart": "Start",
   "photoSyncResume": "Resume",
   "photoSyncStop": "Stop",
   "photoSyncProgress": "Checked {done} of {total}",
   "photoSyncFoundSoFar": "{count} regions found so far",
   "photoSyncFound": "Found {count} regions",
-  "photoSyncConfirmBody": "Adding them will fill in your map.",
   "photoSyncRegister": "Add them",
   "photoSyncDone": "Your map is updated.",
   "photoSyncLimitedNotice": "Only the photos you picked are scanned. For your whole library: Settings > Apps > K-Trip Spot > Photos > All Photos.",
@@ -100,14 +114,14 @@
   "@photoSyncSelectMore": {
     "description": "iOS limited photo access notice/action"
   },
-  "photoSyncSummary": "Scanned {photos} photos and filled in {regions} regions.",
+  "photoSyncSummary": "Read {photos} photos and confirmed {cells} regions.",
   "@photoSyncSummary": {
-    "description": "Scan result: total photos scanned and regions filled.",
+    "description": "Scan result: photos read and map cells confirmed. {cells} counts map cells, not districts (SPEC-0034 R7).",
     "placeholders": {
       "photos": {
         "type": "int"
       },
-      "regions": {
+      "cells": {
         "type": "int"
       }
     }
