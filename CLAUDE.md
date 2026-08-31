@@ -426,6 +426,54 @@ never regenerate a whole screen to add an icon.
 
 ---
 
+## 11.5 Release builds & Play distribution
+
+**A release build that "succeeded" is not a release build that contains your code.** On
+2026-08-31 build 5 shipped to closed testing with `libapp.so` and `classes.dex` **byte-identical
+to build 2** — the entire 8/29 UI change (like button, "나중에", liked-list search) was absent.
+The source was correct and the iOS build of the same commit was fine; only Android reused a stale
+artifact. Testers ran a three-day-old app, and the half day spent hunting it went into ProGuard,
+SHA-1 and bundle splits instead.
+
+**Always full-clean before a store build.** `flutter clean` → `pub get` → `gen-l10n` →
+`build_runner build` → build. `lib/l10n/gen/` is untracked (`.gitignore` has `gen/`), so it is
+absent after a fresh checkout and silently stale otherwise — nothing fails, the old strings just
+compile in.
+
+**Verify the artifact, not the build log.** Compare `libapp.so` against the previous release:
+
+```
+unzip -p build/app/outputs/bundle/prodRelease/app-prod-release.aab \
+  base/lib/arm64-v8a/libapp.so | shasum -a 256
+```
+
+Same hash as the last build while the code changed = the change is not in there. Do not upload.
+Previous bundles are downloadable from Play Console (**모든 App Bundle → 다운로드 → 원본 파일**),
+which is what finally settled this one.
+
+**`strings`/`grep` cannot verify Dart content.** Korean UI strings in an AOT `libapp.so` are not
+stored as contiguous UTF-8, so both report 0 hits for text that is demonstrably in the app — a
+false negative that reads like proof. Use the hash above, or check the running app on a device.
+
+**Play distribution rules that cost time here (all confirmed against Play Console):**
+
+- A tester **opted into internal testing receives only that track**, whatever version code closed
+  testing holds. They must *leave the test program* first ([Play Console
+  Help](https://support.google.com/googleplay/android-developer/answer/9845334)) — pausing the
+  track or deleting the email list does not do it. **Pausing a track also 404s the store URL.**
+- **Check the account is on the track's tester list before debugging anything else.** Half a day
+  went to "the new build won't install" when `tarot1415@gmail.com` was simply not on the closed
+  list, so the device could never be served that track.
+- Play re-signs and re-packages the upload, so a locally built APK is **not** the artifact users
+  get. `com.pairip` (Automatic Integrity Protection) is injected there and its setting is
+  **per-release — it re-arms on every new upload**
+  ([Play Console Help](https://support.google.com/googleplay/android-developer/answer/10183279)).
+- The app signing key changed on 2026-08-26 when the PQC (quantum-resistant) beta was enabled, so
+  the bundle now carries several SHA-1s. Any new one must be registered in Firebase and Kakao or
+  SNS sign-in breaks. Read the current values from **앱 무결성 → 앱 서명**.
+
+---
+
 ## 12. Branches & commits (convention — hook not installed, see §13 note)
 
 **Every task runs in its own worktree.** Tasks run concurrently against one checkout, so
