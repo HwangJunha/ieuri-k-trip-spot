@@ -205,7 +205,7 @@
   "@permissionPhotosRationaleTitle": {
     "description": "사진 권한 사전설명 - 제목"
   },
-  "permissionPhotosRationaleBody": "사진에 담긴 위치로 다녀온 지역을 찾아 지도를 채웁니다. 사진은 기기 밖으로 나가지 않고, 좌표는 지역을 판정하는 데만 쓰고 저장하지 않습니다.",
+  "permissionPhotosRationaleBody": "사진에 담긴 위치로 다녀온 지역을 찾아 지도를 채워요. 사진은 서버에 전송하지 않고, 좌표도 저장하지 않아요. 찾아낸 지역만 내 지도에 저장돼요.",
   "@permissionPhotosRationaleBody": {
     "description": "사진 권한 사전설명 - 본문(사진 미전송·좌표 미저장을 밝힌다)"
   },

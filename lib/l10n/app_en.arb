@@ -48,7 +48,10 @@
   "navNationalMap": "Korea Map",
   "navLibrary": "My Activity",
   "permissionPhotosRationaleTitle": "Fill your map from photos?",
-  "permissionPhotosRationaleBody": "We read the location saved in your photos to find where you've been. Your photos never leave your device, and coordinates are used only to identify regions — they're never stored.",
+  "permissionPhotosRationaleBody": "We look at the location saved in your photos to find the regions you've visited. Your photos are never sent to our server, and coordinates are never stored. Only the regions we find are saved to your map.",
+  "@permissionPhotosRationaleBody": {
+    "description": "Pre-permission rationale body. Same wording principle as the photo sync sheet (SPEC-0034 R8): say plainly that photos are not sent to the server — no euphemisms like \"never leave your device\"."
+  },
   "permissionPhotosBlockedMessage": "Photo access is off, so we can't fill your map from photos. You can allow it in Settings.",
   "nationalMapNationwide": "Nationwide",
   "nationalMapCellCount": "{visited} of {total}",

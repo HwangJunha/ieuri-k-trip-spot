@@ -48,7 +48,7 @@
   "navNationalMap": "全國地圖",
   "navLibrary": "我的活動",
   "permissionPhotosRationaleTitle": "用照片填充地圖？",
-  "permissionPhotosRationaleBody": "我們讀取照片中記錄的位置來找出你去過的地區。照片不會離開你的裝置，座標僅用於判定地區，不會被儲存。",
+  "permissionPhotosRationaleBody": "我們讀取照片中記錄的位置，找出你去過的地區並填入地圖。你的照片不會傳送到我們的伺服器，座標也不會被儲存。只有找到的地區會存進你的地圖。",
   "permissionPhotosBlockedMessage": "照片訪問已關閉，無法用照片填充地圖。可在設定中允許。",
   "nationalMapNationwide": "全國",
   "nationalMapCellCount": "{total}格中{visited}格",

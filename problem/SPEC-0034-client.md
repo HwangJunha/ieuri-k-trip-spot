@@ -264,6 +264,17 @@ null로 지울 수 있게 `clearRegisteredCellCount` 플래그를 뒀습니다.
 `resolvedCellCodes`입니다 — 바꾸면 이미 적힌 지점을 읽지 못해 업데이트한 사용자가
 스캔을 처음부터 다시 하게 됩니다.
 
+### 8.1.1 권한 rationale 문구 (2026-09-10 보완)
+
+설계 §4.2의 "권한 rationale 문구도 같은 원칙으로 맞춘다"가 8/31 커밋에서 빠져 있었다.
+`permissionPhotosRationaleBody`가 네 언어 모두 "기기 밖으로 나가지 않고 / never leave your
+device"라는 완곡어법 그대로였다 — 시트는 "서버에 전송하지 않아요"라 말하고 rationale은
+우회하는 상태다. 시트와 같은 순서(하는 일 → 서버 미전송 → 저장되는 것)로 네 언어를 고쳤다.
+
+**iOS `NSPhotoLibraryUsageDescription`은 건드리지 않았다.** OS 권한 대화상자 문구라
+커뮤니티·프로필 첨부 업로드까지 함께 설명해야 하고, 설계가 지목한 것은 앱 안의 사전설명
+시트(rationale)다. 출시 설정 문구는 `release-check`가 따로 보는 항목이기도 하다.
+
 ### 8.2 중국어 문구 (R11 관련)
 
 **`zh`는 번체(TC)입니다.** 초안을 간체로 썼다가 `nav_arb_keys_test`의 폰트 커버리지
