@@ -49,8 +49,13 @@ class PhotoSyncSheet extends ConsumerWidget {
           done ? l10n.photoSyncTitleDone : l10n.photoSyncTitle,
           style: theme.textTheme.titleLarge,
         ),
+        // **제목 바로 아래, 모든 단계에서**(사용자 결정 2026-09-10). 본문 속 한
+        // 문장으로 두면 읽히지 않는다 — "사진으로 채우기"를 보는 순간 사진이
+        // 나가지 않는다는 것이 같이 보여야 한다.
+        const SizedBox(height: 12),
+        _NoUploadNotice(l10n: l10n),
         if (body != null) ...<Widget>[
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
             body,
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -79,6 +84,51 @@ class PhotoSyncSheet extends ConsumerWidget {
           progress.isResumable ? l10n.photoSyncBodyResume : l10n.photoSyncBody,
         PhotoScanStage.permissionDenied => l10n.photoSyncBody,
       };
+}
+
+/// "사진은 서버에 전송하지 않아요"(SPEC-0034 R8).
+///
+/// 시트의 다른 어떤 문구보다 먼저 눈에 들어와야 한다 — 사용자가 걱정하는 것이
+/// 바로 이것이고, 본문 안에 섞여 있던 동안은 와닿지 않았다(사용자 지적
+/// 2026-09-10). 그래서 본문과 같은 회색 글자가 아니라 색 있는 상자에 아이콘을
+/// 붙여 따로 둔다.
+class _NoUploadNotice extends StatelessWidget {
+  const _NoUploadNotice({required this.l10n});
+
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    final TextTheme text = Theme.of(context).textTheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: colors.primaryContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: <Widget>[
+          Icon(
+            Icons.cloud_off_outlined,
+            size: 20,
+            color: colors.onPrimaryContainer,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              l10n.photoSyncNoUploadNotice,
+              style: text.titleSmall?.copyWith(
+                color: colors.onPrimaryContainer,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _Content extends ConsumerWidget {

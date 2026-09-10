@@ -85,17 +85,21 @@
   "@photoSyncTitleDone": {
     "description": "Sheet title after the scan finished (SPEC-0034 R9)."
   },
-  "photoSyncBody": "We look at the location saved in your photos to find the regions you've visited. Your photos are never sent to our server. Only the regions we find are saved to your map.",
-  "@photoSyncBody": {
-    "description": "Sheet body before scanning. Says plainly that photos are not sent to the server (SPEC-0034 R8) — never use euphemisms like \"never leave your device\"."
+  "photoSyncNoUploadNotice": "Your photos are never sent to our server.",
+  "@photoSyncNoUploadNotice": {
+    "description": "Highlighted notice right under the sheet title, shown at every stage (SPEC-0034 R8, user decision 2026-09-10). Say \"server\" plainly — never euphemisms like \"never leave your device\"."
   },
-  "photoSyncBodyResume": "We'll pick up where the last scan stopped. Your photos are never sent to our server.",
+  "photoSyncBody": "We look at the location saved in your photos to find the regions you've visited. Only the regions we find are saved to your map.",
+  "@photoSyncBody": {
+    "description": "Sheet body before scanning: what we do and what gets saved. The no-upload statement lives in photoSyncNoUploadNotice."
+  },
+  "photoSyncBodyResume": "We'll pick up where the last scan stopped.",
   "@photoSyncBodyResume": {
     "description": "Sheet body when a stopped scan can be resumed (SPEC-0034 R9)."
   },
-  "photoSyncBodyDone": "Your photos are never sent to our server. If you fill again, we only look at photos added since.",
+  "photoSyncBodyDone": "If you fill again, we only look at photos added since.",
   "@photoSyncBodyDone": {
-    "description": "Sheet body after the scan finished. Present tense — this is how the app always behaves, not a report about this run (SPEC-0034 R8)."
+    "description": "Sheet body after the scan finished (SPEC-0034 R9)."
   },
   "photoSyncStart": "Start",
   "photoSyncResume": "Resume",
