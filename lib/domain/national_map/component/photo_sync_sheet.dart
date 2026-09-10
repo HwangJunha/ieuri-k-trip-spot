@@ -92,6 +92,11 @@ class PhotoSyncSheet extends ConsumerWidget {
 /// 바로 이것이고, 본문 안에 섞여 있던 동안은 와닿지 않았다(사용자 지적
 /// 2026-09-10). 그래서 본문과 같은 회색 글자가 아니라 색 있는 상자에 아이콘을
 /// 붙여 따로 둔다.
+///
+/// **채운 빨강은 쓰지 않는다.** `primaryContainer`로 칠했더니 아래 "시작하기"
+/// 버튼과 같은 색이라 버튼이 둘로 보였다(사용자 지적, 같은 날). 연한 틴트
+/// (`secondaryContainer`)에 짙은 글자로 두면 시트 바탕과 어우러지면서도 글자는
+/// 여전히 도드라진다.
 class _NoUploadNotice extends StatelessWidget {
   const _NoUploadNotice({required this.l10n});
 
@@ -105,7 +110,7 @@ class _NoUploadNotice extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: colors.primaryContainer,
+        color: colors.secondaryContainer,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -113,15 +118,15 @@ class _NoUploadNotice extends StatelessWidget {
           Icon(
             Icons.cloud_off_outlined,
             size: 20,
-            color: colors.onPrimaryContainer,
+            color: colors.onSecondaryContainer,
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               l10n.photoSyncNoUploadNotice,
               style: text.titleSmall?.copyWith(
-                color: colors.onPrimaryContainer,
-                fontWeight: FontWeight.w700,
+                color: colors.onSecondaryContainer,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),

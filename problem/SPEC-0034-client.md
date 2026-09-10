@@ -287,6 +287,9 @@ device"라는 완곡어법 그대로였다 — 시트는 "서버에 전송하지
 - `photoSyncBody`·`photoSyncBodyResume`·`photoSyncBodyDone`에서는 같은 문장을 뺀다.
   두 번 적으면 강조가 아니라 소음이다.
 - 권한 rationale(§8.1.1)은 그대로 둔다 — 거기는 본문 하나뿐이라 문장 순서가 곧 강조다.
+- 상자 색은 `secondaryContainer`(연한 틴트) + `onSecondaryContainer`(짙은 글자)다.
+  처음 `primaryContainer`로 칠했더니 "시작하기" 버튼과 같은 빨강이라 버튼이 둘로
+  보였다(사용자 지적, 같은 날). 강조는 글자 색과 아이콘이 맡고 배경은 시트에 녹인다.
 
 ### 8.2 중국어 문구 (R11 관련)
 
