@@ -19,13 +19,25 @@ enum MapScreenViewState {
   ///
   /// 값이 다 있으면 오류여도 지도를 그린다 — 그건 갱신이 실패한 것이지, 이미
   /// 그려 둔 지도를 치울 이유가 아니다.
+  ///
+  /// **빈 칸 목록은 지도가 아니다**(SPEC-0034 R2). 161칸은 서버가 부팅 시 개수를
+  /// 강제하는 고정 집합이라(SPEC-0030) 빈 목록은 정상 결과일 수 없다 — 조회가
+  /// 덜 됐거나 실패한 것이다. 예전에는 "값이 non-null인가"만 봤는데 빈 리스트도
+  /// non-null이라 그대로 지도 상태를 통과했고, **칸이 하나도 없는 빈 화면이
+  /// 정상처럼 그려졌다.**
+  ///
+  /// 그래서 [settled]가 필요하다. 조회가 끝나지 않았는데 비어 있는 것은 아직
+  /// 안 온 것(로딩)이고, 끝났는데 비어 있으면 오류다.
   static MapScreenViewState of({
     required bool hasCells,
     required bool hasGeometries,
     required bool failed,
+    required bool settled,
   }) {
     if (hasCells && hasGeometries) return MapScreenViewState.map;
     if (failed) return MapScreenViewState.error;
+    // 조회가 끝났는데도 그릴 값이 없다 — 기다려 봐야 오지 않는다.
+    if (settled) return MapScreenViewState.error;
     return MapScreenViewState.loading;
   }
 }

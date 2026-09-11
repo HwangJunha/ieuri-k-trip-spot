@@ -50,6 +50,35 @@ class CellGeometry {
   int get hashCode => cellId.hashCode;
 }
 
+/// 칸 도형이 어디서 왔는지(SPEC-0034 R4).
+///
+/// 두 경로가 같은 결과를 내지 않는다 — 전용 자산은 크기가 고른 다각형이고,
+/// 폴백은 실제 시군구 경계를 합친 것이라 서울 주변이 쌀알만 해진다. 그런데
+/// **어느 쪽으로 그렸는지 알아낼 방법이 없었다.** 로더가 모든 예외를 삼켜
+/// 자산 부재가 빈 맵으로 둔갑했고, 그래서 자산이 아예 없다는 사실이 몇 달 동안
+/// 아무 신호도 내지 않았다.
+enum CellShapeOrigin {
+  /// 전용 도형 자산(`asset/geo/cell-shapes.json`)으로 그렸다.
+  shapeAsset,
+
+  /// 자산이 없거나 쓸 수 없어 원본 시군구 경계를 합쳐 그렸다.
+  boundaryFallback,
+}
+
+/// 칸 도형 조립 결과.
+///
+/// **출처를 값으로 들고 다닌다.** 로그로만 남기면 테스트가 붙을 자리가 없어
+/// R4를 확인할 방법이 없다.
+///
+/// [origin]은 화면에 노출하지 않는다 — 사용자가 쓸 수 있는 정보가 아니고,
+/// 지도는 어느 경로로든 그려지면 된다.
+class CellGeometrySet {
+  const CellGeometrySet({required this.geometries, required this.origin});
+
+  final List<CellGeometry> geometries;
+  final CellShapeOrigin origin;
+}
+
 /// 경위도 한 점. `dart:ui`의 `Offset`과 섞이지 않게 별도 타입으로 둔다.
 class GeoPoint {
   const GeoPoint(this.lng, this.lat);

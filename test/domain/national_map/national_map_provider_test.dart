@@ -85,8 +85,16 @@ class _FakeRepository implements NationalMapRepository {
   String? lastRevokedUrl;
   bool shareLinkThrows = false;
 
+  /// 몇 번 조회했는지. 재시도가 실제로 서버를 다시 치는지 본다(SPEC-0034 R1).
+  int fetchCellsCallCount = 0;
+  bool fetchCellsThrows = false;
+
   @override
-  Future<List<MapCell>> fetchCells() async => _cells;
+  Future<List<MapCell>> fetchCells() async {
+    fetchCellsCallCount++;
+    if (fetchCellsThrows) throw Exception('조회 실패');
+    return _cells;
+  }
 
   @override
   Future<CellDetail> fetchCellDetail({
@@ -269,6 +277,26 @@ class _AuthedController extends AuthController {
   );
 }
 
+/// 미인증으로 시작해 [signIn]으로 세션이 복원되는 컨트롤러.
+///
+/// 앱 시작 직후 세션 복원보다 지도 provider가 먼저 평가되는 상황을 흉내 낸다
+/// (SPEC-0034 R3).
+class _RestorableAuthController extends AuthController {
+  @override
+  Future<AuthState> build() async => const AuthState();
+
+  /// 세션이 복원됐다. 이름이 `signIn`이면 실제 로그인 API를 덮어쓴다.
+  void restoreSession() => state = AsyncData<AuthState>(
+    AuthState(
+      session: AuthSession(
+        accessToken: 'a',
+        refreshToken: 'r',
+        user: const Me(id: 'me', nickname: '나', email: 'me@example.com'),
+      ),
+    ),
+  );
+}
+
 class _FakeShareSheet implements ShareSheetService {
   String? lastText;
 
@@ -353,12 +381,12 @@ void main() {
       final _FakeRepository repo = _FakeRepository();
       final ProviderContainer c = _container(repo: repo);
 
-      final RecordVisitsResult r = await c
+      final List<String> updated = await c
           .read(visitControllerProvider.notifier)
           .record(const <String>[]);
 
       expect(repo.recordCallCount, 0);
-      expect(r.updatedCells, isEmpty);
+      expect(updated, isEmpty);
     });
 
     test('해제는 칸 id를 보낸다', () async {
@@ -400,7 +428,7 @@ void main() {
       final PhotoScanProgress p = c.read(photoScanControllerProvider);
 
       expect(p.stage, PhotoScanStage.awaitingConfirmation);
-      expect(p.resolvedCellCodes, <String>['11110', '26110']);
+      expect(p.resolvedDistrictCodes, <String>['11110', '26110']);
       expect(p.processed, 2);
     });
 
@@ -418,7 +446,7 @@ void main() {
 
       await c.read(photoScanControllerProvider.notifier).start();
 
-      expect(c.read(photoScanControllerProvider).resolvedCellCodes, <String>[
+      expect(c.read(photoScanControllerProvider).resolvedDistrictCodes, <String>[
         '11110',
       ]);
     });
@@ -443,7 +471,7 @@ void main() {
       controller.registrationFailed();
       expect(controller.beginRegistration(), isTrue);
 
-      controller.confirmed();
+      controller.confirmed(const <String>[]);
       expect(controller.beginRegistration(), isTrue);
     });
 
@@ -469,10 +497,163 @@ void main() {
       await c.read(photoScanControllerProvider.notifier).start();
 
       final PhotoScanProgress p = c.read(photoScanControllerProvider);
-      expect(p.resolvedCellCodes, <String>['26110']);
+      expect(p.resolvedDistrictCodes, <String>['26110']);
       // 등록 대상에서는 빠지되 **세기는 한다** — 안 그러면 이미 방문한 곳만
       // 나온 스캔이 "0곳을 찾았어요"가 되어 실패로 읽힌다.
-      expect(p.alreadyOnMapCount, 1);
+      expect(p.alreadyOnMapCellCount, 1);
+    });
+
+    // 시트가 시군구 코드 수를 세어, 지도는 칸 하나를 칠하면서 "3곳"이라고
+    // 말했다(SPEC-0034 R5). 테스트가 없어서 잡히지 않았다.
+    test('표시용 수는 칸 단위다 — 서울 3개 구는 1곳 (R5)', () async {
+      final List<DistrictBoundary> seoul = <DistrictBoundary>[
+        _district('11110', lng: 127, lat: 37),
+        _district('11140', lng: 128, lat: 37),
+        _district('11170', lng: 129, lat: 37),
+      ];
+      final _FakeLibrary library = _FakeLibrary(
+        coordinates: <GeoPoint>[
+          const GeoPoint(127.5, 37.5), // 11110
+          const GeoPoint(128.5, 37.5), // 11140
+          const GeoPoint(129.5, 37.5), // 11170
+        ],
+      );
+      final ProviderContainer c = _container(
+        // 세 구가 **한 칸**이다.
+        repo: _FakeRepository(
+          cells: <MapCell>[
+            _cell('seoul', <String>['11110', '11140', '11170']),
+          ],
+        ),
+        library: library,
+        boundaries: seoul,
+      );
+      await _readCells(c);
+
+      await c.read(photoScanControllerProvider.notifier).start();
+
+      final PhotoScanProgress p = c.read(photoScanControllerProvider);
+      // 보내는 값은 시군구 코드 그대로다 — 서버가 시군구 단위로 저장한다.
+      expect(p.resolvedDistrictCodes.length, 3);
+      // 표시하는 수는 칸 단위다.
+      expect(p.newCellCount, 1, reason: '세 구가 한 칸이므로 1곳이다');
+    });
+
+    test('서로 다른 칸이면 칸 수 그대로다 (R5)', () async {
+      final List<DistrictBoundary> three = <DistrictBoundary>[
+        _district('11110', lng: 127, lat: 37),
+        _district('26110', lng: 129, lat: 35),
+        _district('30110', lng: 131, lat: 33),
+      ];
+      final ProviderContainer c = _container(
+        repo: _FakeRepository(
+          cells: <MapCell>[
+            _cell('1', <String>['11110']),
+            _cell('2', <String>['26110']),
+            _cell('3', <String>['30110']),
+          ],
+        ),
+        library: _FakeLibrary(
+          coordinates: <GeoPoint>[
+            const GeoPoint(127.5, 37.5),
+            const GeoPoint(129.5, 35.5),
+            const GeoPoint(131.5, 33.5),
+          ],
+        ),
+        boundaries: three,
+      );
+      await _readCells(c);
+
+      await c.read(photoScanControllerProvider.notifier).start();
+
+      expect(c.read(photoScanControllerProvider).newCellCount, 3);
+    });
+
+    // R6: 같은 칸이 신규와 기존으로 갈려 이중 계상되던 것을 막는다.
+    test('이미 있던 칸과 겹치면 신규에서 빠진다 (R6)', () async {
+      final List<DistrictBoundary> seoul = <DistrictBoundary>[
+        _district('11110', lng: 127, lat: 37),
+        _district('11140', lng: 128, lat: 37),
+      ];
+      final ProviderContainer c = _container(
+        // 강남(11110)을 이미 방문했고 서초(11140)는 아직인데 **같은 칸이다.**
+        repo: _FakeRepository(
+          cells: <MapCell>[
+            _cell('seoul', <String>['11110', '11140'], visited: true),
+          ],
+        ),
+        library: _FakeLibrary(
+          coordinates: <GeoPoint>[
+            const GeoPoint(127.5, 37.5), // 이미 방문한 구
+            const GeoPoint(128.5, 37.5), // 아직 아닌 구, 그러나 같은 칸
+          ],
+        ),
+        boundaries: seoul,
+      );
+      await _readCells(c);
+
+      await c.read(photoScanControllerProvider.notifier).start();
+
+      final PhotoScanProgress p = c.read(photoScanControllerProvider);
+      // 이미 칠해진 칸이므로 새로 칠할 것이 없다. 예전 셈으로는
+      // 신규 1 + 기존 1 = 2가 됐다.
+      expect(p.newCellCount, 0);
+      expect(p.alreadyOnMapCellCount, 1);
+    });
+
+    // R7: 완료 문구의 수는 등록 응답이 정한다.
+    test('완료 시 수의 근거는 등록 응답이다 (R7)', () async {
+      final ProviderContainer c = _container(
+        repo: _FakeRepository(cells: <MapCell>[_cell('1', <String>['11110'])]),
+        library: _FakeLibrary(coordinates: const <GeoPoint>[]),
+        boundaries: boundaries,
+      );
+      await _readCells(c);
+      final PhotoScanController controller = c.read(
+        photoScanControllerProvider.notifier,
+      );
+
+      // 서버가 두 칸을 갱신했다고 답했다.
+      controller.confirmed(const <String>['1', '2']);
+
+      final PhotoScanProgress p = c.read(photoScanControllerProvider);
+      expect(p.stage, PhotoScanStage.completed);
+      expect(p.registeredCellCount, 2);
+    });
+
+    test('같은 칸이 두 번 와도 한 번만 센다 (R7)', () async {
+      final ProviderContainer c = _container(
+        repo: _FakeRepository(),
+        library: _FakeLibrary(coordinates: const <GeoPoint>[]),
+        boundaries: boundaries,
+      );
+      c.read(photoScanControllerProvider.notifier).confirmed(
+        const <String>['1', '1', '2'],
+      );
+
+      expect(c.read(photoScanControllerProvider).registeredCellCount, 2);
+    });
+
+    test('등록이 실패하면 수를 표시하지 않는다 (R7)', () async {
+      final ProviderContainer c = _container(
+        repo: _FakeRepository(),
+        library: _FakeLibrary(coordinates: const <GeoPoint>[]),
+        boundaries: boundaries,
+      );
+      final PhotoScanController controller = c.read(
+        photoScanControllerProvider.notifier,
+      );
+
+      // 한 번 성공해 수가 남은 뒤 다시 실패하는 경우까지 본다 — 지난 회차의
+      // 수가 남으면 실패 화면에 "N곳을 확인했어요"가 뜬다.
+      controller.confirmed(const <String>['1']);
+      expect(c.read(photoScanControllerProvider).registeredCellCount, 1);
+
+      controller.registrationFailed();
+
+      final PhotoScanProgress p = c.read(photoScanControllerProvider);
+      expect(p.stage, PhotoScanStage.failed);
+      expect(p.registeredCellCount, isNull, reason: '실패했으면 수가 없어야 한다');
     });
 
     test('한국 밖 좌표는 판정하지 않는다 (R25)', () async {
@@ -493,7 +674,7 @@ void main() {
 
       // 좌표가 하나도 안 잡혀도 오류가 아니다(R32).
       expect(p.stage, PhotoScanStage.completed);
-      expect(p.resolvedCellCodes, isEmpty);
+      expect(p.resolvedDistrictCodes, isEmpty);
     });
 
     // "위치 정보가 있는 사진을 찾지 못했어요" 화면에서 설정만 바꾸고 돌아오면
@@ -530,7 +711,7 @@ void main() {
 
       final PhotoScanProgress p = c.read(photoScanControllerProvider);
       expect(p.stage, PhotoScanStage.awaitingConfirmation);
-      expect(p.resolvedCellCodes, <String>['11110']);
+      expect(p.resolvedDistrictCodes, <String>['11110']);
     });
 
     test('거부에서 허용으로 바뀌어 돌아와도 다시 훑는다', () async {
@@ -561,7 +742,7 @@ void main() {
       await controller.handleAppRestart();
 
       expect(
-        c.read(photoScanControllerProvider).resolvedCellCodes,
+        c.read(photoScanControllerProvider).resolvedDistrictCodes,
         <String>['11110'],
       );
     });
@@ -853,6 +1034,118 @@ void main() {
 
       expect(unvisited, visited);
       expect(unvisited.hashCode, visited.hashCode);
+    });
+  });
+
+  // 지도가 안 그려지는데 재시도 버튼이 아무 일도 하지 않았다(SPEC-0034 R1·R3).
+  group('지도 데이터 재조회 (SPEC-0034 R1·R3)', () {
+    test('재시도는 조회를 다시 일으킨다 (R1)', () async {
+      final _FakeRepository repo = _FakeRepository(
+        cells: <MapCell>[
+          _cell('1', <String>['11110']),
+        ],
+      );
+      final ProviderContainer c = _container(repo: repo);
+      await _readCells(c);
+      expect(repo.fetchCellsCallCount, 1);
+
+      // 화면의 재시도 버튼이 하는 일 — 지도에 필요한 것을 전부 버린다.
+      c.invalidateNationalMap();
+      await _readCells(c);
+
+      expect(
+        repo.fetchCellsCallCount,
+        2,
+        reason: '무효화했으면 서버를 다시 쳐야 한다',
+      );
+    });
+
+    test('실패한 결과는 붙들지 않는다 (R1)', () async {
+      // 예전에는 실패가 keepAlive로 남아, 버튼을 눌러도 같은 실패가 재사용됐다.
+      final _FakeRepository repo = _FakeRepository(
+        cells: <MapCell>[
+          _cell('1', <String>['11110']),
+        ],
+      )..fetchCellsThrows = true;
+      final ProviderContainer c = _container(repo: repo);
+      await c.read(authControllerProvider.future);
+
+      await expectLater(c.read(mapCellsProvider.future), throwsA(anything));
+
+      // 서버가 회복됐다. 재시도가 실제로 새 조회를 내야 한다.
+      repo.fetchCellsThrows = false;
+      c.invalidateNationalMap();
+
+      expect((await c.read(mapCellsProvider.future)).single.id, '1');
+    });
+
+    test('미인증이 돌려준 빈 목록은 캐시로 남지 않는다 (R3)', () async {
+      // 앱 시작 직후 세션 복원보다 이 provider가 먼저 평가되는 경우다.
+      // 예전에는 그 빈 목록이 keepAlive로 남아 **세션이 복원돼도 빈 지도였다.**
+      final _FakeRepository repo = _FakeRepository(
+        cells: <MapCell>[
+          _cell('1', <String>['11110']),
+        ],
+      );
+      final _RestorableAuthController auth = _RestorableAuthController();
+      final ProviderContainer c = ProviderContainer(
+        overrides: [
+          authControllerProvider.overrideWith(() => auth),
+          nationalMapRepositoryProvider.overrideWithValue(repo),
+          photoScanCheckpointStoreProvider.overrideWithValue(
+            _FakeCheckpointStore(),
+          ),
+          locationServiceProvider.overrideWithValue(_FakeLocationService(null)),
+        ],
+      );
+      addTearDown(c.dispose);
+
+      await c.read(authControllerProvider.future);
+      expect(await c.read(mapCellsProvider.future), isEmpty);
+      expect(repo.fetchCellsCallCount, 0, reason: '미인증이면 부르지 않는다');
+
+      // 세션이 복원됐다.
+      auth.restoreSession();
+
+      expect((await c.read(mapCellsProvider.future)).single.id, '1');
+      expect(repo.fetchCellsCallCount, 1);
+    });
+  });
+
+  // `asset/geo/cell-shapes.json`은 파일도 없고 pubspec에도 없는데, 로더가 모든
+  // 예외를 삼켜 **그 부재가 아무 신호도 내지 않았다**(SPEC-0034 R4).
+  group('칸 도형 출처 (SPEC-0034 R4)', () {
+    test('자산이 없으면 조립 결과가 경계 폴백이라고 밝힌다', () async {
+      final ProviderContainer c = _container(
+        repo: _FakeRepository(
+          cells: <MapCell>[
+            _cell('1', <String>['11110']),
+          ],
+        ),
+      );
+      await _readCells(c);
+
+      final CellGeometrySet set = await c.read(cellGeometriesProvider.future);
+
+      // 자산이 실제로 없는 것이 현재 상태다. 폴백은 끊기지 않아야 한다 —
+      // 자산 생성은 이 스펙의 범위 밖이고(SPEC-0034 §7) 지도는 그려져야 한다.
+      expect(set.origin, CellShapeOrigin.boundaryFallback);
+    });
+
+    test('자산 부재가 빈 값으로 둔갑하지 않는다', () async {
+      final ProviderContainer c = _container(
+        repo: _FakeRepository(
+          cells: <MapCell>[
+            _cell('1', <String>['11110']),
+          ],
+        ),
+      );
+      await _readCells(c);
+
+      // 자산 로더는 빈 맵을 주지만, 그것이 곧 "그릴 도형이 없다"는 아니다.
+      expect(await c.read(cellShapesProvider.future), isEmpty);
+      final CellGeometrySet set = await c.read(cellGeometriesProvider.future);
+      expect(set.geometries, isNotEmpty, reason: '폴백이 실제로 그려야 한다');
     });
   });
 }

@@ -205,7 +205,7 @@
   "@permissionPhotosRationaleTitle": {
     "description": "사진 권한 사전설명 - 제목"
   },
-  "permissionPhotosRationaleBody": "사진에 담긴 위치로 다녀온 지역을 찾아 지도를 채웁니다. 사진은 기기 밖으로 나가지 않고, 좌표는 지역을 판정하는 데만 쓰고 저장하지 않습니다.",
+  "permissionPhotosRationaleBody": "사진에 담긴 위치로 다녀온 지역을 찾아 지도를 채워요. 사진은 서버에 전송하지 않고, 좌표도 저장하지 않아요. 찾아낸 지역만 내 지도에 저장돼요.",
   "@permissionPhotosRationaleBody": {
     "description": "사진 권한 사전설명 - 본문(사진 미전송·좌표 미저장을 밝힌다)"
   },
@@ -353,10 +353,17 @@
   "@photoSyncTitle": {
     "description": "사진 동기화 시트 제목"
   },
-  "photoSyncBody": "사진에 담긴 위치로 다녀온 지역을 찾아요. 사진은 기기 밖으로 나가지 않습니다.",
-  "@photoSyncBody": {
-    "description": "사진 동기화 시트 설명 - 사진 미전송을 밝힌다"
+  "photoSyncTitleDone": "지도를 채웠어요",
+  "photoSyncNoUploadNotice": "사진은 서버에 전송하지 않아요",
+  "@photoSyncNoUploadNotice": {
+    "description": "시트 제목 바로 아래 강조 안내 - 모든 단계에서 보인다 (사용자 결정 2026-09-10)"
   },
+  "photoSyncBody": "사진에 담긴 위치데이터로만 다녀온 지역을 찾아요.",
+  "@photoSyncBody": {
+    "description": "사진 동기화 시트 설명 - 하는 일. 미전송 문구는 photoSyncNoUploadNotice가 맡는다"
+  },
+  "photoSyncBodyResume": "지난번에 멈춘 지점부터 이어서 찾아요.",
+  "photoSyncBodyDone": "다시 채우면 새로 추가된 사진만 확인해요.",
   "photoSyncStart": "시작하기",
   "@photoSyncStart": {
     "description": "사진 동기화 - 시작 버튼"
@@ -399,10 +406,6 @@
       }
     }
   },
-  "photoSyncConfirmBody": "등록하면 지도가 채워집니다.",
-  "@photoSyncConfirmBody": {
-    "description": "등록 확인 안내"
-  },
   "photoSyncRegister": "등록하기",
   "@photoSyncRegister": {
     "description": "사진 동기화 - 판정 결과 등록"
@@ -416,13 +419,13 @@
   },
   "photoSyncSelectMore": "사진 더 고르기",
   "@photoSyncSelectMore": {},
-  "photoSyncSummary": "사진 {photos}장을 훑어 {regions}곳을 채웠어요.",
+  "photoSyncSummary": "사진 {photos}장을 읽어 {cells}곳을 확인했어요.",
   "@photoSyncSummary": {
     "placeholders": {
       "photos": {
         "type": "int"
       },
-      "regions": {
+      "cells": {
         "type": "int"
       }
     }

@@ -37,7 +37,7 @@ class NationalMapScreen extends ConsumerWidget {
     final AppLocalizations l10n = AppLocalizations.of(context);
 
     final AsyncValue<List<MapCell>> cells = ref.watch(mapCellsProvider);
-    final AsyncValue<List<CellGeometry>> geometries = ref.watch(
+    final AsyncValue<CellGeometrySet> geometries = ref.watch(
       cellGeometriesProvider,
     );
 
@@ -47,12 +47,16 @@ class NationalMapScreen extends ConsumerWidget {
     // 깜빡인 원인이다(사용자 지적 2026-08-26). 로딩 스피너는 **보여 줄 것이 아직
     // 아무것도 없을 때만** 띄운다.
     final List<MapCell>? loadedCells = cells.value;
-    final List<CellGeometry>? loadedGeometries = geometries.value;
+    final List<CellGeometry>? loadedGeometries = geometries.value?.geometries;
 
+    // **빈 목록은 값이 아니다**(SPEC-0034 R2). 161칸은 고정 집합이라 빈 결과는
+    // 조회가 덜 됐거나 실패한 것이지 정상이 아니다.
     final MapScreenViewState view = MapScreenViewState.of(
-      hasCells: loadedCells != null,
-      hasGeometries: loadedGeometries != null,
+      hasCells: loadedCells != null && loadedCells.isNotEmpty,
+      hasGeometries: loadedGeometries != null && loadedGeometries.isNotEmpty,
       failed: cells is AsyncError || geometries is AsyncError,
+      // 조회가 끝났는지. 둘 다 더 기다릴 것이 없는데 값이 비어 있으면 오류다.
+      settled: !cells.isLoading && !geometries.isLoading,
     );
 
     return Scaffold(
@@ -68,7 +72,11 @@ class NationalMapScreen extends ConsumerWidget {
           child: _ErrorBody(
             message: l10n.nationalMapUnavailable,
             retryLabel: l10n.nationalMapRetry,
-            onRetry: () => ref.invalidate(mapCellsProvider),
+            // **지도에 필요한 것을 전부 무효화한다**(SPEC-0034 R1). 칸 목록만
+            // 버리면 형상 쪽 실패는 `keepAlive`로 남아 버튼이 아무 일도 하지
+            // 않았다. 무엇을 버릴지는 provider 파일이 안다 — 여기서 세면 의존이
+            // 늘 때 빠뜨린다.
+            onRetry: ref.invalidateNationalMap,
           ),
         ),
         // **여기는 뼈대를 두지 않는다**(사용자 지적 2026-08-25). 한때 한반도

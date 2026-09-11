@@ -48,7 +48,7 @@
   "navNationalMap": "全國地圖",
   "navLibrary": "我的活動",
   "permissionPhotosRationaleTitle": "用照片填充地圖？",
-  "permissionPhotosRationaleBody": "我們讀取照片中記錄的位置來找出你去過的地區。照片不會離開你的裝置，座標僅用於判定地區，不會被儲存。",
+  "permissionPhotosRationaleBody": "我們讀取照片中記錄的位置，找出你去過的地區並填入地圖。你的照片不會傳送到我們的伺服器，座標也不會被儲存。只有找到的地區會存進你的地圖。",
   "permissionPhotosBlockedMessage": "照片訪問已關閉，無法用照片填充地圖。可在設定中允許。",
   "nationalMapNationwide": "全國",
   "nationalMapCellCount": "{total}格中{visited}格",
@@ -78,14 +78,17 @@
   "sharedMapGone": "這個地圖已無法檢視。",
   "sharedMapBlocked": "無法檢視這個地圖。",
   "photoSyncTitle": "用照片填充",
-  "photoSyncBody": "我們讀取照片中記錄的位置來找出你去過的地區。照片不會離開你的裝置。",
+  "photoSyncTitleDone": "地圖填好了",
+  "photoSyncNoUploadNotice": "你的照片不會傳送到我們的伺服器",
+  "photoSyncBody": "我們只使用照片中記錄的位置資料，找出你去過的地區。",
+  "photoSyncBodyResume": "會從上次停下的地方繼續找。",
+  "photoSyncBodyDone": "再次填入時，只會看新增的照片。",
   "photoSyncStart": "開始",
   "photoSyncResume": "繼續",
   "photoSyncStop": "停止",
   "photoSyncProgress": "已檢查{total}張中的{done}張",
   "photoSyncFoundSoFar": "目前找到{count}個地區",
   "photoSyncFound": "找到{count}個地區",
-  "photoSyncConfirmBody": "登記後地圖就會被填充。",
   "photoSyncRegister": "登記",
   "photoSyncDone": "地圖已更新。",
   "photoSyncLimitedNotice": "選擇 設定 > App > K-Trip Spot > 照片 > 所有照片，即可掃描整個相簿。",
@@ -96,13 +99,13 @@
   },
   "photoSyncSelectMore": "選擇更多照片",
   "@photoSyncSelectMore": {},
-  "photoSyncSummary": "掃描{photos}張照片，填入{regions}個地區。",
+  "photoSyncSummary": "讀取{photos}張照片，確認了{cells}個地區。",
   "@photoSyncSummary": {
     "placeholders": {
       "photos": {
         "type": "int"
       },
-      "regions": {
+      "cells": {
         "type": "int"
       }
     }

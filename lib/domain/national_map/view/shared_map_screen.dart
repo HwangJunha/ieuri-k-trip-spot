@@ -88,9 +88,10 @@ class _BodyState extends ConsumerState<_Body> {
     final SharedMap map = widget.map;
     final String token = widget.token;
     final AppLocalizations l10n = widget.l10n;
-    final AsyncValue<List<CellGeometry>> geometries = ref.watch(
-      cellGeometriesProvider,
-    );
+    // 조립 결과에서 도형만 꺼낸다 — 출처는 화면이 쓰지 않는다(SPEC-0034 R4).
+    final AsyncValue<List<CellGeometry>> geometries = ref
+        .watch(cellGeometriesProvider)
+        .whenData((CellGeometrySet s) => s.geometries);
 
     return Stack(
       children: <Widget>[
