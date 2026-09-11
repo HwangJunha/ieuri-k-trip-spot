@@ -88,4 +88,75 @@ void main() {
 
     expect(hasRootFailure(result, 'spotDetail'), isTrue);
   });
+
+  // SPEC-0035 — `location { recommendedSpots }`처럼 결과가 한 단계 아래에 실리는
+  // 조회는 그 깊이까지를 전체 실패로 본다. 최상위 이름만 보면 커서 오류가 부분
+  // 실패로 통과해 매핑에서 터진다.
+  group('hasFieldFailure — 중첩 필드', () {
+    const List<String> path = <String>['location', 'recommendedSpots'];
+
+    test('결과 필드 자리의 오류는 전체 실패다', () {
+      final QueryResult<Object?> result = _result(
+        errors: const <GraphQLError>[
+          GraphQLError(
+            message: 'expired',
+            path: <dynamic>['location', 'recommendedSpots'],
+            extensions: <String, dynamic>{'code': 'CURSOR_EXPIRED'},
+          ),
+        ],
+      );
+
+      expect(hasFieldFailure(result, path), isTrue);
+      expect(
+        firstFieldError(result, path)?.extensions?['code'],
+        'CURSOR_EXPIRED',
+      );
+    });
+
+    test('부모 필드의 오류도 전체 실패다', () {
+      final QueryResult<Object?> result = _result(
+        errors: const <GraphQLError>[
+          GraphQLError(message: 'bad coords', path: <dynamic>['location']),
+        ],
+      );
+
+      expect(hasFieldFailure(result, path), isTrue);
+    });
+
+    test('결과 필드보다 깊은 오류는 부분 실패다', () {
+      final QueryResult<Object?> result = _result(
+        errors: const <GraphQLError>[
+          GraphQLError(
+            message: 'one node',
+            path: <dynamic>['location', 'recommendedSpots', 'edges', 0, 'node'],
+          ),
+        ],
+      );
+
+      expect(hasFieldFailure(result, path), isFalse);
+    });
+
+    test('다른 보기의 오류는 무시한다', () {
+      final QueryResult<Object?> result = _result(
+        errors: const <GraphQLError>[
+          GraphQLError(message: 'boom', path: <dynamic>['location', 'spots']),
+        ],
+      );
+
+      expect(hasFieldFailure(result, path), isFalse);
+    });
+
+    test('최상위 한 칸 경로는 hasRootFailure와 같다', () {
+      final QueryResult<Object?> result = _result(
+        errors: const <GraphQLError>[
+          GraphQLError(message: 'boom', path: <dynamic>['spotDetail']),
+        ],
+      );
+
+      expect(
+        hasFieldFailure(result, <String>['spotDetail']),
+        hasRootFailure(result, 'spotDetail'),
+      );
+    });
+  });
 }

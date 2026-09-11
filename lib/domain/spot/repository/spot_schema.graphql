@@ -194,6 +194,59 @@ type PopularSpotEdge {
   likeCount: Int!
 }
 
+# ── SPEC-0035 내 주변 추천 피드 ────────────────────────────────────────────
+#
+# `Specs/SPEC-0035/contract.graphql`(제안)에서 옮겼다. **라이브 스키마로 확인하지
+# 못했다**(2026-09-11) — 서버 S1이 아직 배포되지 않았고 로컬 서버도 내려가 있었다.
+# 서버가 배포되면 §13 스윕으로 대조하고, 어긋나면 이 사본을 서버 기준으로 고친다.
+#
+# `Location`·`SpotConnection`·`SpotEdge`는 **여기에만 한 번** 둔다. codegen이 모든
+# 조각을 하나로 병합하므로 커뮤니티 조각이 다시 정의하면 충돌한다 — 커뮤니티의
+# `NearbySpots`는 병합된 타입을 그대로 쓴다.
+
+# 좌표 한 점이 소유하는 보기들. 같은 후보 집합(반경 안 spot)을 다른 순서로 본다.
+# 로그인 호출자는 두 보기 모두에서 이미 반응(좋아요·싫어요)한 spot이 제외된다.
+#
+# **id가 없는 가상 노드다.** 다시 볼 때는 좌표를 다시 준다. 공용 클라이언트는
+# 정규화 캐시를 쓰지 않으므로(`build.yaml` `addTypename: false`) 문제없다.
+type Location {
+  # 거리 오름차순(동거리는 id 오름차순). `Query.spots`와 같은 결과·같은 검증이며
+  # 페이지만 커서다. 커서는 (거리, id) 키셋이라 같은 조건에서 중복·누락 없이 이어진다.
+  # 손상·불일치는 INVALID_CURSOR.
+  spots(
+    # 기본 20000, 최대 100000 — 초과 시 RADIUS_TOO_LARGE.
+    radiusMeters: Int = 20000
+    # 다중 필터(OR). 생략·null이면 전 카테고리. 빈 배열은 EMPTY_CATEGORY_SET.
+    categories: [String!]
+    # 기본 20, 상한 100 — 초과 시 절삭된다.
+    first: Int = 20
+    after: String
+  ): SpotConnection!
+  # 추천 순 + 다양성. 점수의 요인 구성은 서버 내부다.
+  #
+  # 커서는 첫 요청의 조건(반경·카테고리·언어·좌표)에 묶인다. 조건이 바뀐 채 이어
+  # 받으면 INVALID_CURSOR, 수명을 넘기면 CURSOR_EXPIRED — 두 경우 모두 after 없이
+  # 새로 시작한다. 총 개수는 제공하지 않는다(popularSpots·likedSpots와 같은 규약).
+  recommendedSpots(
+    radiusMeters: Int = 20000
+    categories: [String!]
+    first: Int = 20
+    after: String
+  ): SpotConnection!
+}
+
+# Spot 커서 연결. 총 개수는 제공하지 않는다.
+type SpotConnection {
+  edges: [SpotEdge!]!
+  pageInfo: PageInfo!
+}
+
+# Spot 커서 항목 1건. Spot을 그대로 재사용하며 랭킹 근거 필드는 두지 않는다.
+type SpotEdge {
+  node: Spot!
+  cursor: String!
+}
+
 input ReactToSpotInput {
   catalogId: ID!
   reaction: SpotReaction!
@@ -207,6 +260,10 @@ type ReactToSpotPayload {
 # auth_schema.graphql가 base Query/Mutation를 소유하므로 여기선 extend로 이어 붙인다
 # (graphql_codegen은 모든 스키마 파일을 하나로 병합한다 — 중복 정의 시 충돌).
 extend type Query {
+  # SPEC-0035로 **deprecated**. 이 저장소에는 더 이상 부르는 오퍼레이션이 없다 —
+  # `query Spots`·`fetchSpotPage`는 같은 스펙에서 제거했고, 홈·Discover는
+  # `location.recommendedSpots`, 장소 선택 시트는 `location.spots`를 쓴다.
+  # 필드 자체는 배포된 앱이 쓰므로 서버가 남겨 둔다(제거는 별도 결정).
   spots(
     latitude: Float!
     longitude: Float!
@@ -214,10 +271,13 @@ extend type Query {
     # SPEC-0020 R5: 다중 선택. code 문자열 배열이며 OR로 걸린다. 생략은 "전체",
     # 빈 배열은 서버 오류(EmptyCategorySetException)다.
     categories: [String!]
-    # true면 요청 언어로 쓰인 원문만, false면 번역본만, 생략하면 둘 다(SPEC-0019).
     page: Int
     size: Int
-  ): SpotPage!
+  ): SpotPage! @deprecated(reason: "location.spots — 같은 결과를 커서로 준다")
+  # SPEC-0035. 지도 위 한 점. 좌표로 정해지는 맥락이며 그 주변을 보는 필드들을
+  # 소유한다. 좌표 검증은 spots와 같다(범위 밖이면 같은 오류 코드). 언어는
+  # Accept-Language로 정해진다(다른 조회와 동일, locale 인자 없음).
+  location(latitude: Float!, longitude: Float!): Location!
   availableSpotCategories: [SpotCategory!]!
   # contentId(=Spot.id) 단건 상세 조회. 로케일은 Accept-Language 헤더로 전달(SPEC-0002
   # 규약) — 로케일 인자 없음. 유효 id는 항상 SpotDetail을 반환하고, 해소 실패는 최상위

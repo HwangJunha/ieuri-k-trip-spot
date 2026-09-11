@@ -484,14 +484,15 @@ mutation ReportContent(
 
 # 컴포저의 장소 선택 시트가 쓰는 주변 장소 목록.
 #
-# **`spots`는 좌표 기반이고 이름 검색 인자가 없다** — 반경 안의 장소를 거리 오름차순으로
-# 준다. 그래서 이름으로 좁히는 것은 이미 받아 둔 목록에 대해 클라이언트가 한다.
+# **`location.spots`는 좌표 기반이고 이름 검색 인자가 없다** — 반경 안의 장소를 거리
+# 오름차순으로 준다(SPEC-0035 R30). 이름으로 좁히는 것은 `searchSpots`가 한다.
 #
-# 커서가 아니라 **오프셋 페이징**(`page`/`size` + `hasNext`)이라 `common/pagination`의
-# `OffsetPage`로 매핑한다(피드의 커서 페이징과 다르다).
+# SPEC-0035에서 오프셋 `Query.spots`(deprecated)에서 **커서**로 옮겼다 —
+# `common/pagination`의 `CursorPage`로 매핑한다. `Location`·`SpotConnection`은 spot
+# 조각(`spot_schema.graphql`)이 선언한 것을 병합해 쓴다(여기서 다시 정의하면 충돌).
 #
-# 오퍼레이션 이름이 `Spots`가 아닌 이유: codegen이 모든 오퍼레이션을 한 이름공간에
-# 모으므로 `domain/spot`의 `query Spots`와 부딪힌다.
+# 오퍼레이션 이름은 그대로 `NearbySpots`다 — codegen이 모든 오퍼레이션을 한
+# 이름공간에 모으므로 spot 도메인의 `RecommendedSpots`와 겹치지 않는다(AC-31.3).
 #
 # `category` 인자는 **서버가 거르는 진짜 필터다**(이름 필터와 다르다) — null이면
 # 전체다. 응답의 `category` 필드는 요청하지 않는다: 시트가 줄마다 카테고리를 그리지
@@ -503,27 +504,30 @@ query NearbySpots(
   $longitude: Float!
   $radiusMeters: Int
   $categories: [String!]
-  $page: Int
-  $size: Int
+  $first: Int
+  $after: String
 ) {
-  spots(
-    latitude: $latitude
-    longitude: $longitude
-    radiusMeters: $radiusMeters
-    categories: $categories
-    page: $page
-    size: $size
-  ) {
-    items {
-      id
-      title
-      address
-      thumbnailImageUrl
-      distanceMeters
+  location(latitude: $latitude, longitude: $longitude) {
+    spots(
+      radiusMeters: $radiusMeters
+      categories: $categories
+      first: $first
+      after: $after
+    ) {
+      edges {
+        node {
+          id
+          title
+          address
+          thumbnailImageUrl
+          distanceMeters
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
     }
-    page
-    hasNext
-    totalCount
   }
 }
 

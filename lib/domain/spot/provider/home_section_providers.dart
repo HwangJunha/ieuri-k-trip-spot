@@ -4,7 +4,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../common/localization/locale_controller.dart';
 import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
-import '../../../common/pagination/offset_page.dart';
 import '../../../common/pagination/page.dart';
 import '../../../common/storage/search_radius_controller.dart';
 import '../model/popular_spot.dart';
@@ -18,10 +17,12 @@ part 'home_section_providers.g.dart';
 /// 족하고, 홈에서는 페이지를 더 넘기지 않는다(더 보려면 Discover로 간다).
 const int homeSectionSize = 10;
 
-/// 홈 "Near you" 섹션(R16). 설정된 반경 안의 spot을 서버가 계산한 거리순으로 준다.
+/// 홈 "Near you" 섹션(R16 → SPEC-0035 R26). 설정된 반경 안의 spot을 서버의 추천
+/// 순(거리·인기·활동·취향 점수 + 다양화)으로 준다.
 ///
-/// **Discover와 같은 `spots` 쿼리를 재사용한다**(설계 §3). 홈 전용 조회 경로를
-///따로 두면 같은 데이터에 두 규약이 생긴다.
+/// **Discover와 같은 `location.recommendedSpots` 쿼리를 재사용한다**(설계 §3). 홈
+/// 전용 조회 경로를 따로 두면 같은 데이터에 두 규약이 생긴다. 커서는 쓰지 않는다 —
+/// 홈은 한 묶음만 보여주고 더 보려면 Discover로 간다(AC-26.1).
 ///
 /// 좌표와 반경을 `watch`하는 것이 AC-16.2를 만족시키는 지점이다 — 설정에서 반경을
 /// 바꾸면 이 provider가 무효화되어 다음 조회에 새 값이 실린다. `read`로 하면 값은
@@ -44,17 +45,17 @@ Future<List<TouristSpot>> nearbySpotsSection(Ref ref) async {
 
   final SpotRepository repository = ref.watch(spotRepositoryProvider);
 
-  // 정렬은 서버가 보장한다(거리 오름차순) — 클라이언트가 다시 정렬하지 않는다.
+  // 정렬은 서버가 보장한다(추천 순) — 클라이언트가 다시 정렬하지 않는다(POL-019).
   //
-  // **조회는 한 번이다**(SPEC-0029). 서버가 활성 언어의 장소만 주므로 원문을 먼저
-  // 채우고 번역본으로 보충하던 2단 조회가 사라졌다. 반경 안에 활성 언어 장소가
-  // 적으면 섹션이 짧거나 비는데, 그것이 정상 결과다.
-  final OffsetPage<TouristSpot> page = await repository.fetchSpotPage(
+  // **조회는 한 번이고 커서가 없다**(SPEC-0029·SPEC-0035 AC-26.1). 서버가 활성
+  // 언어의 장소만 주므로 원문을 먼저 채우고 번역본으로 보충하던 2단 조회가 사라졌다.
+  // 반경 안에 활성 언어 장소가 적으면 섹션이 짧거나 비는데, 그것이 정상 결과다.
+  // `endCursor`는 버린다 — 홈은 다음 묶음을 받지 않는다.
+  final CursorPage<TouristSpot> page = await repository.fetchRecommendedSpots(
     latitude: coords.latitude,
     longitude: coords.longitude,
     radiusMeters: radiusMetersOf(radiusKm),
-    page: 0,
-    size: homeSectionSize,
+    first: homeSectionSize,
   );
   return page.items;
 }

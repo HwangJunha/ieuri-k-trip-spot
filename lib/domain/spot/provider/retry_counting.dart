@@ -12,8 +12,12 @@ import '../model/spot_failure.dart';
 ///   결과를 그대로 쓴다(새 판별 로직을 만들지 않는다).
 /// - 위치 권한 거부·서비스 꺼짐([LocationUnavailable]) — 재시도로 풀리지 않는 상태이며
 ///   SPEC-0001 안내 경로 소관이다.
+/// - 커서 만료·손상([SpotFailureKind.cursorInvalid], SPEC-0035 AC-28) — 네트워크
+///   실패가 아니라 세션 조건이 바뀌었다는 신호다. `SwipeController`가 커서 없이 첫
+///   요청을 다시 보내 스스로 회복하므로 예산을 쓰지 않는다.
 bool countsTowardRetryBudget(Object error) => switch (error) {
   SpotFailure(kind: SpotFailureKind.unauthenticated) => false,
+  SpotFailure(kind: SpotFailureKind.cursorInvalid) => false,
   LocationUnavailable() => false,
   _ => true,
 };

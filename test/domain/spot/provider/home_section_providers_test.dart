@@ -66,6 +66,37 @@ void main() {
       expect(spots.map((TouristSpot s) => s.id), <String>['a', 'b']);
     });
 
+    // SPEC-0035 R26 — 홈은 추천 조회를 커서 없이 한 번만 부른다.
+    test('AC-26.1 · 추천 조회를 first: 10, after: null로 정확히 1회 부른다', () async {
+      final repository = FakeSpotRepository(
+        feed: <TouristSpot>[homeSpot('a')],
+        pageSize: 10,
+      );
+      final container = makeContainer(spotRepository: repository);
+
+      await container.read(nearbySpotsSectionProvider.future);
+
+      expect(repository.recommendedRequests, hasLength(1));
+      expect(repository.recommendedRequests.single.first, homeSectionSize);
+      expect(repository.recommendedRequests.single.after, isNull);
+    });
+
+    test('AC-26.3 · 위치가 새로 잡히면 새 좌표로 다시 1회 부른다(커서 없음)', () async {
+      final repository = FakeSpotRepository(
+        feed: <TouristSpot>[homeSpot('a')],
+        pageSize: 10,
+      );
+      final container = makeContainer(spotRepository: repository);
+      await container.read(nearbySpotsSectionProvider.future);
+
+      // 위치 새로고침 버튼이 하는 일 — 좌표 provider를 무효화한다.
+      container.invalidate(currentCoordinatesProvider);
+      await container.read(nearbySpotsSectionProvider.future);
+
+      expect(repository.recommendedRequests, hasLength(2));
+      expect(repository.recommendedRequests.last.after, isNull);
+    });
+
     test('AC-16.1 · 설정된 반경을 인자로 조회한다', () async {
       await prefs.setDouble('search_radius_km', 30);
       final repository = FakeSpotRepository(
@@ -76,8 +107,6 @@ void main() {
 
       await container.read(nearbySpotsSectionProvider.future);
 
-      // 원문이 1건뿐이라 번역본 보충 조회가 한 번 더 나간다(SPEC-0019). 반경은
-      // **두 조회 모두**에 실려야 한다.
       expect(repository.requestedRadiiMeters, everyElement(30000));
     });
 
@@ -247,7 +276,7 @@ void main() {
       expect(events.callCount, 0);
       // Near you는 실패 1회 + 재시도 성공 1회다. 섹션당 조회가 1회이므로
       // 보충 조회가 붙지 않는다(SPEC-0029 AC-19.1).
-      expect(repository.spotPageCallCount, 2);
+      expect(repository.recommendedCallCount, 2);
     });
   });
 
@@ -265,7 +294,7 @@ void main() {
       );
       await container.read(nearbySpotsSectionProvider.future);
       // 원문이 목표를 못 채워 번역본 보충까지 2회 나간다(SPEC-0019).
-      final int afterFirstLoad = repository.spotPageCallCount;
+      final int afterFirstLoad = repository.recommendedCallCount;
       expect(afterFirstLoad, greaterThan(0));
 
       await container
@@ -274,7 +303,7 @@ void main() {
       await container.read(nearbySpotsSectionProvider.future);
 
       // 언어가 바뀌면 처음부터 다시 받는다 — 조회가 더 나갔다는 것이 요지다.
-      expect(repository.spotPageCallCount, greaterThan(afterFirstLoad));
+      expect(repository.recommendedCallCount, greaterThan(afterFirstLoad));
     });
   });
 
@@ -295,7 +324,7 @@ void main() {
       );
 
       expect(spots.map((TouristSpot s) => s.id), <String>['o1', 'o2']);
-      expect(repository.spotPageCallCount, 1);
+      expect(repository.recommendedCallCount, 1);
     });
 
     test('Popular도 한 번만 조회한다', () async {

@@ -63,9 +63,13 @@ void main() {
         .read(nearbySpotsControllerProvider)
         .requireValue;
     expect(state.items.map((NearbySpot s) => s.id), <String>['1', '2']);
+    // `hasMore`는 서버의 `hasNextPage`를 그대로 따른다(SPEC-0035 AC-30.2).
     expect(state.hasMore, isFalse);
-    // 커서가 아니라 오프셋이다 — 다음 페이지 번호로 조회한다.
-    expect(repo.lastFetchNearbySpots?.page, 1);
+    // 커서 페이징이다 — 이전 페이지의 endCursor를 after로 넘긴다.
+    expect(
+      repo.lastFetchNearbySpots?.after,
+      FakeCommunityRepository.nearbySpotsCursor,
+    );
   });
 
   test('더 받을 것이 없으면 추가 조회를 하지 않는다', () async {
@@ -76,7 +80,20 @@ void main() {
     await container.read(nearbySpotsControllerProvider.future);
     await container.read(nearbySpotsControllerProvider.notifier).loadMore();
 
-    expect(repo.lastFetchNearbySpots?.page, 0);
+    expect(repo.nearbySpotsCalls, 1);
+    expect(repo.lastFetchNearbySpots?.after, isNull);
+  });
+
+  // SPEC-0035 R30 — 시트 「주변」 탭은 `location.spots`를 커서로 쓴다.
+  test('AC-30.1 · 첫 요청은 반경 5000·first 50·커서 없음이다', () async {
+    final FakeCommunityRepository repo = FakeCommunityRepository();
+
+    await _container(repo).read(nearbySpotsControllerProvider.future);
+
+    expect(repo.nearbySpotsCalls, 1);
+    expect(repo.lastFetchNearbySpots?.radiusMeters, nearbySpotsRadiusMeters);
+    expect(repo.lastFetchNearbySpots?.first, nearbySpotsPageSize);
+    expect(repo.lastFetchNearbySpots?.after, isNull);
   });
 
   // SPEC-0013 R14 — 주변 탭은 이제 받아 둔 목록을 거르지 않고 서버 검색을 부른다.
@@ -211,8 +228,8 @@ void main() {
         repo.lastFetchNearbySpots?.category,
         NearbySpotCategory.restaurant,
       );
-      // 오프셋은 카테고리마다 다르므로 이어 붙이지 않고 처음부터 받는다.
-      expect(repo.lastFetchNearbySpots?.page, 0);
+      // 커서는 조건에 묶여 있으므로 이어 붙이지 않고 커서 없이 처음부터 받는다(AC-30.3).
+      expect(repo.lastFetchNearbySpots?.after, isNull);
       expect(state.items.map((NearbySpot s) => s.id), <String>['2']);
     });
 
@@ -262,6 +279,6 @@ void main() {
 
     await _container(repo).read(nearbySpotsControllerProvider.future);
 
-    expect(repo.lastFetchNearbySpots?.size, 50);
+    expect(repo.lastFetchNearbySpots?.first, 50);
   });
 }

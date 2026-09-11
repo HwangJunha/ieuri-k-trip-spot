@@ -207,6 +207,26 @@ void main() {
       expect(countsTowardRetryBudget(SpotFailure.upstreamUnavailable), isTrue);
       expect(countsTowardRetryBudget(SpotFailure.notFound), isTrue);
     });
+
+    // SPEC-0035 AC-28 — 커서 만료·손상은 네트워크 실패가 아니라 세션을 다시 시작할
+    // 신호다. 컨트롤러가 커서 없이 다시 받아 스스로 회복하므로 예산을 쓰지 않는다.
+    test('커서 만료·손상은 계상하지 않는다', () {
+      expect(countsTowardRetryBudget(SpotFailure.cursorInvalid), isFalse);
+    });
+  });
+
+  // SPEC-0035 — 두 코드는 클라이언트가 할 일이 같아(커서 없이 다시 시작) 하나로 접는다.
+  group('SpotFailure.fromQueryErrorCode 커서 오류', () {
+    test('CURSOR_EXPIRED와 INVALID_CURSOR는 둘 다 cursorInvalid다', () {
+      expect(
+        SpotFailure.fromQueryErrorCode('CURSOR_EXPIRED'),
+        SpotFailure.cursorInvalid,
+      );
+      expect(
+        SpotFailure.fromQueryErrorCode('INVALID_CURSOR'),
+        SpotFailure.cursorInvalid,
+      );
+    });
   });
 
   group('spotRetryPolicy', () {
@@ -739,14 +759,12 @@ void main() {
   test('top returns the first card, null when empty', () {
     const SwipeQueue full = SwipeQueue(
       cards: <TouristSpot>[_a],
-      loadedPage: 0,
       hasNextPage: false,
     );
     expect(full.top, _a);
 
     const SwipeQueue empty = SwipeQueue(
       cards: <TouristSpot>[],
-      loadedPage: 0,
       hasNextPage: false,
     );
     expect(empty.top, isNull);
@@ -754,77 +772,77 @@ void main() {
 
   test('isExhausted only when empty and no next page', () {
     expect(
-      // SPEC-0029에서 원문/번역 두 구간이 사라져 소진 판정이 한 줄로 돌아왔다.
-      const SwipeQueue(
-        cards: <TouristSpot>[],
-        loadedPage: 0,
-        hasNextPage: false,
-      ).isExhausted,
+      const SwipeQueue(cards: <TouristSpot>[], hasNextPage: false).isExhausted,
       isTrue,
     );
     expect(
       const SwipeQueue(
         cards: <TouristSpot>[],
-        loadedPage: 0,
         hasNextPage: true,
+        endCursor: 'c',
       ).isExhausted,
       isFalse,
     );
     expect(
       const SwipeQueue(
         cards: <TouristSpot>[_a],
-        loadedPage: 0,
         hasNextPage: false,
       ).isExhausted,
       isFalse,
     );
   });
 
-  test('nextPage is the page after loadedPage, null when exhausted', () {
-    const SwipeQueue more = SwipeQueue(
-      cards: <TouristSpot>[_a],
-      loadedPage: 2,
-      hasNextPage: true,
+  // SPEC-0035 — 이어 받기는 다음 묶음이 있고 넘길 커서도 있을 때만이다.
+  test('canLoadMore needs both hasNextPage and a cursor', () {
+    expect(
+      const SwipeQueue(
+        cards: <TouristSpot>[_a],
+        hasNextPage: true,
+        endCursor: 'c',
+      ).canLoadMore,
+      isTrue,
     );
-    expect(more.nextPage, 3);
-
-    const SwipeQueue done = SwipeQueue(
-      cards: <TouristSpot>[_a],
-      loadedPage: 2,
-      hasNextPage: false,
+    expect(
+      const SwipeQueue(
+        cards: <TouristSpot>[_a],
+        hasNextPage: false,
+        endCursor: 'c',
+      ).canLoadMore,
+      isFalse,
+      reason: '다음이 없다',
     );
-    expect(done.nextPage, isNull);
+    expect(
+      const SwipeQueue(cards: <TouristSpot>[_a], hasNextPage: true).canLoadMore,
+      isFalse,
+      reason: '커서 없이 after: null로 보내면 첫 묶음을 또 받는다',
+    );
   });
 
-  // SPEC-0029 — 원문/번역 구간이 사라져 페이지 번호가 한 줄로 이어진다. 마지막
-  // 페이지를 받은 뒤 0으로 되감기던 전환점이 없다.
-  test('마지막 페이지 뒤에 되감기지 않는다', () {
-    const SwipeQueue lastPage = SwipeQueue(
+  test('마지막 묶음 뒤에는 이어 받지 않는다', () {
+    const SwipeQueue last = SwipeQueue(
       cards: <TouristSpot>[_a],
-      loadedPage: 3,
       hasNextPage: false,
     );
 
-    expect(lastPage.nextPage, isNull, reason: '이어 받을 구간이 없다');
-    expect(lastPage.isExhausted, isFalse, reason: '카드가 남아 있다');
+    expect(last.canLoadMore, isFalse, reason: '이어 받을 구간이 없다');
+    expect(last.isExhausted, isFalse, reason: '카드가 남아 있다');
   });
 
-  test('copyWith replaces only given fields', () {
+  test('copyWith replaces only cards and keeps the cursor state', () {
     const SwipeQueue q = SwipeQueue(
       cards: <TouristSpot>[_a],
-      loadedPage: 1,
       hasNextPage: true,
+      endCursor: 'c1',
     );
     final SwipeQueue next = q.copyWith(cards: const <TouristSpot>[]);
     expect(next.cards, isEmpty);
-    expect(next.loadedPage, 1);
+    expect(next.endCursor, 'c1');
     expect(next.hasNextPage, isTrue);
   });
 
   test('removeCard drops every occurrence of the id', () {
     const SwipeQueue q = SwipeQueue(
       cards: <TouristSpot>[_a, _b, _a],
-      loadedPage: 0,
       hasNextPage: false,
     );
 
@@ -836,7 +854,6 @@ void main() {
   test('removeCard returns the same queue when the id is absent', () {
     const SwipeQueue q = SwipeQueue(
       cards: <TouristSpot>[_a],
-      loadedPage: 0,
       hasNextPage: false,
     );
 

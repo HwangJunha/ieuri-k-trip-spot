@@ -44,6 +44,18 @@ class SpotFailure implements Exception, AuthAwareFailure {
     SpotFailureKind.unauthenticated,
   );
 
+  /// 이어 받기 커서가 더 이상 유효하지 않음(SPEC-0035 `CURSOR_EXPIRED`·`INVALID_CURSOR`).
+  ///
+  /// **두 코드를 하나로 접는다** — 만료든 손상·조건 불일치든 클라이언트가 할 일은
+  /// 같다: 커서 없이 첫 요청을 다시 보낸다(AC-28.1·28.3). 이름은 그래서 만료와 손상을
+  /// 아우르는 중립형이다.
+  ///
+  /// **재시도 예산에 계상하지 않는다**(`retry_counting.dart`). 네트워크 실패가 아니라
+  /// 세션 조건이 바뀌었다는 신호이며, 같은 커서로 다시 보내 봐야 같은 답이 온다.
+  static const SpotFailure cursorInvalid = SpotFailure(
+    SpotFailureKind.cursorInvalid,
+  );
+
   final SpotFailureKind kind;
 
   /// 뮤테이션 userErrors의 서버 코드(있으면). 로깅·분기용이며 UI엔 노출하지 않는다.
@@ -87,6 +99,9 @@ class SpotFailure implements Exception, AuthAwareFailure {
         'UPSTREAM_RATE_LIMITED' => SpotFailure.rateLimited,
         'UPSTREAM_UNAVAILABLE' => SpotFailure.upstreamUnavailable,
         'UNAUTHENTICATED' => SpotFailure.unauthenticated,
+        // 커서 만료·손상(SPEC-0035). 둘 다 "커서 없이 다시 시작"이라 구분하지 않는다.
+        'CURSOR_EXPIRED' => SpotFailure.cursorInvalid,
+        'INVALID_CURSOR' => SpotFailure.cursorInvalid,
         // 토큰 거부(2026-08-25). 갱신으로 회복되는 자리라 위와 같게 다룬다.
         'UNAUTHENTICATED_TOKEN_REJECTED' => SpotFailure.unauthenticated,
         // 인증 저장소 일시 장애. **인증 실패로 접지 않는다** — 재로그인이
@@ -121,4 +136,7 @@ enum SpotFailureKind {
   rateLimited,
   upstreamUnavailable,
   unauthenticated,
+
+  /// 이어 받기 커서 만료·손상(SPEC-0035). 커서 없이 첫 요청부터 다시 한다.
+  cursorInvalid,
 }

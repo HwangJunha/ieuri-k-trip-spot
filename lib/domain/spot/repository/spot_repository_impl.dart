@@ -29,11 +29,14 @@ import 'spot_schema.graphql.dart';
 /// typed operations through the shared client and maps each response to a domain
 /// model. The generated `*.graphql.dart` types never leave this file (CLAUDE.md §3).
 ///
-/// The Discover swipe feed is server-backed: `spots` (offset page/size — the
-/// server has no cursor support), `availableSpotCategories`, and the `reactToSpot`
-/// mutation. Home's recommended/popular sections have no server API yet, so those
-/// two methods still return illustrative mock data; only they change when a Home
-/// API lands.
+/// 홈 「Near you」와 Discover 스와이프는 `location.recommendedSpots`(커서, SPEC-0035),
+/// 홈 「Popular」는 `popularSpots`, 스와이프 반응은 `reactToSpot` 뮤테이션이다.
+///
+/// **중첩 필드 조회의 실패 판정.** `location { recommendedSpots }`는 결과가 최상위가
+/// 아니라 한 단계 아래에 실리므로, 전체/부분 실패를 가르는 경로도 그만큼 깊다 —
+/// `_query`에 `fieldPath`를 넘겨 `['location', 'recommendedSpots']`까지를 전체 실패로
+/// 본다. 최상위 필드 이름만 보면 `recommendedSpots`의 커서 오류가 부분 실패로 통과해
+/// 매핑에서 터진다.
 class SpotRepositoryImpl implements SpotRepository {
   SpotRepositoryImpl(this._client);
 
@@ -49,35 +52,44 @@ class SpotRepositoryImpl implements SpotRepository {
   /// 가장 흔한 분류를 골랐다. 맞으면 운영정보까지 뜨고, 아니어도 손해가 없다.
   static const String _fallbackCategoryCode = 'TOURIST_SPOT';
 
-  // --- Discover 스와이프 피드 (서버) -----------------------------------------
+  // --- 내 주변 추천 피드 (SPEC-0035) ------------------------------------------
 
   @override
-  Future<OffsetPage<TouristSpot>> fetchSpotPage({
+  Future<CursorPage<TouristSpot>> fetchRecommendedSpots({
     required double latitude,
     required double longitude,
     int? radiusMeters,
     List<String>? categoryCodes,
-    required int page,
-    required int size,
+    int? first,
+    String? after,
   }) async {
+    // 언어는 인자로 보내지 않는다 — Accept-Language 헤더로 전달된다(spec §2).
+    // 커서 만료·손상(CURSOR_EXPIRED·INVALID_CURSOR)은 최상위 errors[]로 오고
+    // `SpotFailure.fromQueryErrorCode`가 `cursorInvalid`로 접는다.
     final Map<String, dynamic> data = await _query(
-      documentNodeQuerySpots,
-      Variables$Query$Spots(
+      documentNodeQueryRecommendedSpots,
+      Variables$Query$RecommendedSpots(
         latitude: latitude,
         longitude: longitude,
         radiusMeters: radiusMeters,
         categories: _categories(categoryCodes),
-        page: page,
-        size: size,
+        first: first,
+        after: after,
       ).toJson(),
-      'spots',
+      'location',
+      fieldPath: const <String>['location', 'recommendedSpots'],
     );
-    final Query$Spots$spots result = Query$Spots.fromJson(data).spots;
-    return OffsetPage<TouristSpot>(
-      items: result.items.map(_spotFromItem).toList(growable: false),
-      page: result.page,
-      hasNext: result.hasNext,
-      totalCount: result.totalCount,
+    final Query$RecommendedSpots$location$recommendedSpots result =
+        Query$RecommendedSpots.fromJson(data).location.recommendedSpots;
+    return CursorPage<TouristSpot>(
+      items: result.edges
+          .map(
+            (Query$RecommendedSpots$location$recommendedSpots$edges e) =>
+                _spotFromRecommendedNode(e.node),
+          )
+          .toList(growable: false),
+      hasNextPage: result.pageInfo.hasNextPage,
+      endCursor: result.pageInfo.endCursor,
     );
   }
 
@@ -344,32 +356,34 @@ class SpotRepositoryImpl implements SpotRepository {
 
   // --- 매핑 (생성 타입 → 도메인) ---------------------------------------------
 
-  /// 서버 `Spot` 아이템을 도메인 [TouristSpot]으로 매핑한다. 스와이프 카드가 쓰는
-  /// 필드만 채우고(Home 전용 필드는 null), 거리는 미터 정수로 반올림한다.
+  /// 추천 피드 노드를 도메인 [TouristSpot]으로 매핑한다(SPEC-0035). 스와이프 카드와
+  /// 홈 카드가 쓰는 필드만 채우고, 거리는 미터 정수로 반올림한다.
   /// 제목·주소는 TourAPI 원문이라 `&amp;` 같은 엔티티가 섞여 온다. 여기서 정리해
   /// 두면 같은 값을 스와이프 카드와 상세가 똑같이 보여준다(한쪽만 정리하면 탭 한 번에
   /// 표기가 달라진다).
-  TouristSpot _spotFromItem(Query$Spots$spots$items item) => TouristSpot(
-    id: item.id,
-    name: sanitizeTourApiText(item.title) ?? item.title,
-    imageRef: item.thumbnailImageUrl,
-    location: sanitizeTourApiText(item.address) ?? '',
-    thumbnailImageUrl: item.thumbnailImageUrl,
-    address: sanitizeTourApiText(item.address),
-    distanceMeters: item.distanceMeters.round(),
-    copyright: _copyright(item.copyright),
-    attributionText: item.attributionText,
+  TouristSpot _spotFromRecommendedNode(
+    Query$RecommendedSpots$location$recommendedSpots$edges$node n,
+  ) => TouristSpot(
+    id: n.id,
+    name: sanitizeTourApiText(n.title) ?? n.title,
+    imageRef: n.thumbnailImageUrl,
+    location: sanitizeTourApiText(n.address) ?? '',
+    thumbnailImageUrl: n.thumbnailImageUrl,
+    address: sanitizeTourApiText(n.address),
+    distanceMeters: n.distanceMeters.round(),
+    copyright: _copyright(n.copyright),
+    attributionText: n.attributionText,
     category: _categoryOf(
-      item.category.code,
-      item.category.label,
-      item.category.iconUrl,
+      n.category.code,
+      n.category.label,
+      n.category.iconUrl,
     ),
   );
 
   /// 검색 결과 노드 → 도메인 [TouristSpot](SPEC-0013).
   ///
-  /// `spots`와 같은 `Spot` 타입이지만 생성 타입이 오퍼레이션별로 갈리므로 매핑도
-  /// 따로 둔다 — 규칙은 [_spotFromItem]과 같다(엔티티 정리, 거리 미터 반올림).
+  /// 같은 `Spot` 타입이지만 생성 타입이 오퍼레이션별로 갈리므로 매핑도 따로 둔다 —
+  /// 규칙은 [_spotFromRecommendedNode]와 같다(엔티티 정리, 거리 미터 반올림).
   TouristSpot _spotFromSearchNode(
     Query$SearchSpots$searchSpots$connection$items n,
   ) => TouristSpot(
@@ -507,8 +521,8 @@ class SpotRepositoryImpl implements SpotRepository {
   /// 카테고리를 추가해도 클라이언트는 아무것도 잃지 않는다 — 모르는 코드는 아이콘만
   /// 중립 기본값으로 떨어진다(AC11.5).
   ///
-  /// 오퍼레이션마다 생성 타입이 갈리므로([Query$Spots$spots$items$category] 등) 인자를
-  /// 구조적으로 받는다. 필드 이름이 같아 호출부가 그대로 넘긴다.
+  /// 오퍼레이션마다 생성 타입이 갈리므로 인자를 구조적으로 받는다. 필드 이름이
+  /// 같아 호출부가 그대로 넘긴다.
   SpotCategory _categoryOf(String code, String label, String? iconUrl) =>
       SpotCategory(code: code, label: label, iconUrl: iconUrl);
 
@@ -536,14 +550,19 @@ class SpotRepositoryImpl implements SpotRepository {
 
   // --- 전송/실행 (auth repo와 동일한 2단계 실패 검사) -------------------------
 
+  /// [operation]은 최상위 필드 이름이자 로그 라벨이다. 결과가 한 단계 아래 필드에
+  /// 실리는 조회(`location { recommendedSpots }`)는 [fieldPath]로 그 경로를 넘긴다 —
+  /// 실패 판정이 그 깊이까지를 전체 실패로 본다. 생략하면 `[operation]`이다.
   Future<Map<String, dynamic>> _query(
     DocumentNode document,
     Map<String, dynamic> variables,
-    String operation,
-  ) => _run(
+    String operation, {
+    List<String>? fieldPath,
+  }) => _run(
     () => _client.query(QueryOptions(document: document, variables: variables)),
     operation,
     variables,
+    fieldPath: fieldPath,
   );
 
   /// **전체 실패로 판정된** 오류의 코드 문자열. 서버가 `extensions.code`에 싣는 것이
@@ -554,8 +573,8 @@ class SpotRepositoryImpl implements SpotRepository {
   /// 부분 실패와 전체 실패가 같은 배열에 함께 실려 오므로, 앞자리에 갤러리 부분 실패가
   /// 오면 뒤의 UNAUTHENTICATED를 놓쳐 인증 실패가 네트워크 실패로 둔갑한다. 그러면
   /// 재시도 상한에 계상되고 세션 갱신 경로로도 못 간다(SPEC-0006 R5·AC-14).
-  String? _rootErrorCode(QueryResult<Object?> result, String rootField) {
-    final GraphQLError? error = firstRootError(result, rootField);
+  String? _rootErrorCode(QueryResult<Object?> result, List<String> fieldPath) {
+    final GraphQLError? error = firstFieldError(result, fieldPath);
     if (error == null) return null;
     final Object? code = error.extensions?['code'];
     if (code is String && code.isNotEmpty) return code;
@@ -579,8 +598,10 @@ class SpotRepositoryImpl implements SpotRepository {
   Future<Map<String, dynamic>> _run(
     Future<QueryResult<Object?>> Function() call,
     String operation,
-    Map<String, dynamic> variables,
-  ) async {
+    Map<String, dynamic> variables, {
+    List<String>? fieldPath,
+  }) async {
+    final List<String> path = fieldPath ?? <String>[operation];
     GraphqlDebugLog.request(operation, variables);
     late final QueryResult<Object?> result;
     try {
@@ -597,13 +618,14 @@ class SpotRepositoryImpl implements SpotRepository {
     // 오류 화면이 되어 R-7이 무너진다 — 하위 필드 실패는 여기서 통과시키고, 값이
     // null로 내려온 것을 매핑이 빈 값으로 접는다.
     //
-    // `operation`이 곧 최상위 필드 이름이라 별도 인자가 필요 없다.
-    if (hasRootFailure(result, operation)) {
+    // 최상위 필드 조회는 `operation`이 곧 경로이고, 중첩 조회는 `fieldPath`가 그 깊이를
+    // 정한다(SPEC-0035 — `location.recommendedSpots`의 커서 오류는 두 칸 깊이다).
+    if (hasFieldFailure(result, path)) {
       GraphqlDebugLog.transportFailure(operation, result);
       // 코드를 뽑아 번역한다. 인증 실패(UNAUTHENTICATED)를 네트워크 실패로 뭉개면
       // 재시도 상한이 그것까지 계상해 버려 AC-14를 만족할 수 없다(SPEC-0006 §2.3).
       // 코드가 없으면 기존대로 네트워크 실패로 떨어진다.
-      throw SpotFailure.fromQueryErrorCode(_rootErrorCode(result, operation));
+      throw SpotFailure.fromQueryErrorCode(_rootErrorCode(result, path));
     }
 
     final Object? data = result.data;

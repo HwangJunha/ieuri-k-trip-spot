@@ -1,7 +1,6 @@
 import 'package:ieuri_k_trip_spot/common/localization/app_language.dart';
 import 'package:ieuri_k_trip_spot/common/location/coordinates.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_service.dart';
-import 'package:ieuri_k_trip_spot/common/pagination/offset_page.dart';
 import 'package:ieuri_k_trip_spot/common/pagination/page.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/liked_spot.dart';
@@ -41,23 +40,38 @@ class FakeSpotRepository implements SpotRepository {
   }) : feed = feed ?? const <TouristSpot>[],
        liked = liked ?? const <LikedSpot>[];
 
-  /// `fetchSpotPage`가 던질 실패(설정 시). [failPageTimes]와 함께 쓰면 앞의 N회만
-  /// 실패하고 이후 성공한다 — 재시도 상한 검증용(SPEC-0006).
+  /// `fetchRecommendedSpots`가 던질 실패(설정 시). [failPageTimes]와 함께 쓰면 앞의
+  /// N회만 실패하고 이후 성공한다 — 재시도 상한 검증용(SPEC-0006).
   final Object? pageFailure;
 
   /// [pageFailure]를 던질 횟수. 0이면 설정된 동안 계속 던진다.
   final int failPageTimes;
 
-  /// `fetchSpotPage` 호출 횟수(검증용). 상한 소진 후 호출이 늘지 않는지 확인한다.
-  int spotPageCallCount = 0;
+  /// `fetchRecommendedSpots` 호출 횟수(검증용). 상한 소진 후 호출이 늘지 않는지
+  /// 확인한다.
+  int recommendedCallCount = 0;
+
+  /// 호출마다 실린 인자(검증용, SPEC-0035). `after`가 null이면 커서 없는 첫 요청이다.
+  final List<RecommendedRequest> recommendedRequests = <RecommendedRequest>[];
 
   /// 호출마다 실린 `radiusMeters`(설정 반경이 실제로 조회에 실리는지 확인용,
   /// SPEC-0011 R13). null은 인자를 보내지 않은 것 — 0km가 그 경우다.
   final List<int?> requestedRadiiMeters = <int?>[];
 
+  /// **이어 받기**(`after != null`)만 던질 실패(설정 시, SPEC-0035 AC-27.4·AC-28).
+  /// [failContinuationTimes]와 함께 쓰면 앞의 N회만 실패한다.
+  Object? continuationFailure;
+
+  /// [continuationFailure]를 던질 횟수. 0이면 설정된 동안 계속 던진다.
+  int failContinuationTimes = 0;
+  int _continuationFailures = 0;
+
   /// 조회가 돌려줄 장소. **활성 언어의 장소만 담는다**(SPEC-0029) — 서버가 언어 축으로
   /// 이미 갈라 주므로 페이크도 원문/번역을 구분하지 않는다.
-  final List<TouristSpot> feed;
+  ///
+  /// 바꿀 수 있다 — 커서 없이 다시 시작한 세션이 다른 묶음을 주는 상황(AC-28.2)을
+  /// 만들 때 테스트가 도중에 갈아끼운다.
+  List<TouristSpot> feed;
 
   final List<SpotCategory>? categories;
   final int pageSize;
@@ -234,42 +248,56 @@ class FakeSpotRepository implements SpotRepository {
     return searchResult;
   }
 
+  /// 추천 피드 커서 페이징(SPEC-0035). [pageSize]씩 잘라 돌려주며, 커서는 다음
+  /// 항목의 인덱스 문자열이다 — 실제 서버의 불투명 커서를 흉내내되 테스트가 페이지
+  /// 경계를 예측할 수 있게 한다(좋아요 목록 페이크와 같은 규약).
   @override
-  Future<OffsetPage<TouristSpot>> fetchSpotPage({
+  Future<CursorPage<TouristSpot>> fetchRecommendedSpots({
     required double latitude,
     required double longitude,
     int? radiusMeters,
     List<String>? categoryCodes,
-    required int page,
-    required int size,
+    int? first,
+    String? after,
   }) async {
-    spotPageCallCount++;
+    recommendedCallCount++;
     requestedRadiiMeters.add(radiusMeters);
+    recommendedRequests.add((
+      first: first,
+      after: after,
+      radiusMeters: radiusMeters,
+      categoryCodes: categoryCodes,
+    ));
     if (pageFailure != null &&
-        (failPageTimes == 0 || spotPageCallCount <= failPageTimes)) {
+        (failPageTimes == 0 || recommendedCallCount <= failPageTimes)) {
       throw pageFailure!;
     }
-    final List<TouristSpot> source = feed;
+    if (after != null &&
+        continuationFailure != null &&
+        (failContinuationTimes == 0 ||
+            _continuationFailures < failContinuationTimes)) {
+      _continuationFailures++;
+      throw continuationFailure!;
+    }
     final List<TouristSpot> pool = categoryCodes == null
-        ? source
-        : source
+        ? feed
+        : feed
               .where(
                 (TouristSpot s) => categoryCodes.contains(s.category?.code),
               )
               .toList();
-    // 프로바이더는 프로덕션에서 size=100을 보내지만, 페이징/선제조회를 작은 피드로
-    // 검증할 수 있게 페이크는 자신의 [pageSize]로 자른다(들어온 size는 무시).
-    final int start = page * pageSize;
+    // 프로바이더는 프로덕션에서 first=100을 보내지만, 페이징/선제조회를 작은 피드로
+    // 검증할 수 있게 페이크는 자신의 [pageSize]로 자른다(들어온 first는 무시).
+    final int start = after == null ? 0 : (int.tryParse(after) ?? 0);
     final int end = (start + pageSize).clamp(0, pool.length);
     final List<TouristSpot> items = start >= pool.length
         ? const <TouristSpot>[]
         : pool.sublist(start, end);
     final bool hasNext = end < pool.length;
-    return OffsetPage<TouristSpot>(
+    return CursorPage<TouristSpot>(
       items: items,
-      page: page,
-      hasNext: hasNext,
-      totalCount: pool.length,
+      hasNextPage: hasNext,
+      endCursor: hasNext ? '$end' : null,
     );
   }
 
@@ -315,6 +343,14 @@ class FakeSpotRepository implements SpotRepository {
     recordedReactions.add((spotId, reaction));
   }
 }
+
+/// `fetchRecommendedSpots`에 실린 인자 한 벌(검증용).
+typedef RecommendedRequest = ({
+  int? first,
+  String? after,
+  int? radiusMeters,
+  List<String>? categoryCodes,
+});
 
 /// 테스트가 쓰는 카테고리 값들(SPEC-0020). 서버가 주는 것과 같은 모양의 값 객체이며
 /// 동등성은 `code`만 본다 — 라벨이 달라도 같은 카테고리다.

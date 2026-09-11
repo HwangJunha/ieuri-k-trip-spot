@@ -1,5 +1,4 @@
 import '../../../common/localization/app_language.dart';
-import '../../../common/pagination/offset_page.dart';
 import '../../../common/pagination/page.dart';
 import '../model/liked_spot.dart';
 import '../model/popular_spot.dart';
@@ -13,9 +12,9 @@ import '../model/tourist_spot.dart';
 /// Data access for tourist spots. Returns domain models only — the generated
 /// GraphQL types never cross this boundary (CLAUDE.md §3).
 ///
-/// 홈의 목 데이터 메서드(`fetchRecommendedSpots`/`fetchPopularSpots`)는
-/// SPEC-0013에서 제거했다. 홈 "Near you"는 Discover와 같은 [fetchSpotPage]를
-/// 재사용한다 — 같은 `spots` 쿼리이므로 조회 경로를 둘로 두지 않는다.
+/// 홈 "Near you"와 Discover 스와이프는 같은 [fetchRecommendedSpots]를 쓴다
+/// (SPEC-0035) — 같은 `location.recommendedSpots` 쿼리이므로 조회 경로를 둘로 두지
+/// 않는다. 오프셋 `spots`를 부르던 `fetchSpotPage`는 같은 스펙에서 제거했다.
 ///
 /// Methods return domain values built on `common/pagination` so no feature
 /// rolls its own pagination.
@@ -29,23 +28,27 @@ import '../model/tourist_spot.dart';
 /// 비면 호출부가 null을 주고 서버는 전체를 돌려준다(AC5.1). 그 접기는
 /// `SpotCategorySelection.codesOrNull`이 한다.
 abstract interface class SpotRepository {
-  /// One page of the Discover swipe feed. The server has no cursor support, so
-  /// this is offset pagination: [page] is the 0-based page number and [size] the
-  /// page length. [latitude]/[longitude] are the user's location (server-required),
-  /// [radiusMeters] bounds the search, and [categoryCodes] filters when set. Returns
-  /// an [OffsetPage] carrying items + `page` + `hasNext` (spec §4).
+  /// 내 주변 추천 피드 한 묶음(SPEC-0035 R26·R27). `location(좌표).recommendedSpots`를
+  /// 부르며 홈 「Near you」와 Discover 스와이프가 함께 쓴다.
   ///
-  /// **결과는 활성 언어에 원문이 있는 장소뿐이다**(SPEC-0029). 기계번역이 사라져
-  /// 서버가 언어 축으로 장소를 가르므로, 원문/번역을 고르던 `hasOrigin`도 함께
-  /// 없어졌다 — 고를 대상이 없다. 다른 언어에만 있는 장소는 오류가 아니라 그냥
-  /// 결과에 들어오지 않는다.
-  Future<OffsetPage<TouristSpot>> fetchSpotPage({
+  /// **커서 페이징**이라 [fetchLikedSpots]와 같은 모양으로 [CursorPage]를 돌려준다.
+  /// [after]는 이전 묶음의 `endCursor`이며 첫 조회에선 null이다. 커서는 첫 요청의
+  /// 조건(좌표·반경·카테고리·언어)에 묶여 있어, 조건이 바뀌면 호출부가 커서를
+  /// 버리고 다시 시작한다. 만료·손상은 [SpotFailure.cursorInvalid]로 온다 — 그때도
+  /// 할 일은 같다(커서 없이 첫 요청).
+  ///
+  /// 순서는 서버가 정한 추천 순(다양화 포함)이며 클라이언트가 재정렬하지 않는다
+  /// (POL-019). 총 개수는 없다(popularSpots·likedSpots와 같은 규약).
+  ///
+  /// **결과는 활성 언어에 원문이 있는 장소뿐이다**(SPEC-0029). 다른 언어에만 있는
+  /// 장소는 오류가 아니라 그냥 결과에 들어오지 않는다.
+  Future<CursorPage<TouristSpot>> fetchRecommendedSpots({
     required double latitude,
     required double longitude,
     int? radiusMeters,
     List<String>? categoryCodes,
-    required int page,
-    required int size,
+    int? first,
+    String? after,
   });
 
   /// One tourist spot's full detail by [id] (=contentId, SPEC-0003). The active
@@ -117,7 +120,7 @@ abstract interface class SpotRepository {
   /// SPEC-0029에서 10에서 5로 낮아졌고, 이 역시 서버가 정한다. 조건을 만족하는
   /// spot이 0건인 것은 정상 상태다(AC-18.4).
   ///
-  /// 활성 언어 한정은 [fetchSpotPage]와 같다(SPEC-0029).
+  /// 활성 언어 한정은 [fetchRecommendedSpots]와 같다(SPEC-0029).
   Future<CursorPage<PopularSpot>> fetchPopularSpots({
     required double latitude,
     required double longitude,
@@ -128,12 +131,12 @@ abstract interface class SpotRepository {
   });
 
   /// 좋아요한 관광지 한 페이지(SPEC-0008 R-18). `likedSpots`는 **커서** 페이징이라
-  /// 오프셋인 [fetchSpotPage]와 달리 [CursorPage]를 돌려준다 — 둘 다 `common/pagination`의
-  /// 공용 타입이고, 기능이 자기 페이지네이션을 새로 만들지 않는다(CLAUDE.md §4).
+  /// [CursorPage]를 돌려준다 — `common/pagination`의 공용 타입이고, 기능이 자기
+  /// 페이지네이션을 새로 만들지 않는다(CLAUDE.md §4).
   ///
   /// [after]는 이전 페이지의 `endCursor`이며 첫 조회에선 null이다. [first]는 페이지 크기.
   /// [categoryCodes]가 null이면 전체다 — 필터링은 서버가 하고 클라이언트는 받은
-  /// 페이지를 그대로 잇는다(Discover의 [fetchSpotPage]와 같은 규약).
+  /// 페이지를 그대로 잇는다(Discover의 [fetchRecommendedSpots]와 같은 규약).
   ///
   /// 정렬은 서버가 보장하므로 클라이언트가 재정렬하지 않는다. 미인증이면 최상위
   /// `errors[]`의 `UNAUTHENTICATED`가 [SpotFailure]로 번역되어 SPEC-0005의 세션 갱신

@@ -89,25 +89,25 @@ abstract interface class CommunityRepository {
     String? after,
   });
 
-  /// 컴포저의 장소 선택 시트가 그리는 주변 장소 한 페이지.
+  /// 컴포저의 장소 선택 시트가 그리는 주변 장소 한 페이지(SPEC-0035 R30).
   ///
-  /// **좌표 기반이고 이름 검색 인자가 없다** — 서버 `spots`는 반경 안의 장소를
-  /// 거리 오름차순으로 준다. 이름으로 좁히는 것은 이미 받아 둔 목록에 대해
-  /// 클라이언트가 한다.
+  /// **좌표 기반이고 이름 검색 인자가 없다** — 서버 `location.spots`는 반경 안의
+  /// 장소를 거리 오름차순으로 준다. 이름으로 좁히는 것은 [searchSpots]가 한다.
   ///
-  /// [category]는 그와 달리 **서버가 거르는 진짜 필터다.** null이면 전체이며,
-  /// 값을 바꾸면 페이지 0부터 다시 받아야 한다(오프셋이 카테고리마다 다르다).
+  /// [category]는 **서버가 거르는 진짜 필터다.** null이면 전체이며, 값을 바꾸면
+  /// 커서를 버리고 첫 페이지부터 다시 받아야 한다(커서가 조건에 묶여 있다).
   ///
-  /// 피드와 달리 **오프셋 페이징**이라 [OffsetPage]로 돌려준다(`page`/`size` +
-  /// `hasNext`). [page]는 0-based이고 [size] 50까지는 서버가 그대로 지킨다
-  /// (라이브 확인).
-  Future<OffsetPage<NearbySpot>> fetchNearbySpots({
+  /// **커서 페이징**이라 [CursorPage]로 돌려준다 — [fetchLikedSpots]와 같은 모양이다.
+  /// [after]는 이전 페이지의 `endCursor`이며 첫 조회에선 null이다. 오프셋
+  /// `Query.spots`(deprecated)에서 옮겼고, [first] 50까지는 서버가 그대로 지킨다
+  /// (SPEC-0035 AC-2.3 — 상한 100).
+  Future<CursorPage<NearbySpot>> fetchNearbySpots({
     required double latitude,
     required double longitude,
     int? radiusMeters,
     NearbySpotCategory? category,
-    int? page,
-    int? size,
+    int? first,
+    String? after,
   });
 
   /// 장소 선택 시트의 **서버 검색**(SPEC-0013 R14).
@@ -117,8 +117,9 @@ abstract interface class CommunityRepository {
   /// 페이지로 오므로 질의가 있는 상태에서도 다음 장을 이어 받을 수 있다(AC-14.2).
   ///
   /// **오프셋 페이징이다**([page]는 0-based). 초안은 커서였으나 서버가 커서 방식에서
-  /// 정확히 동작하지 않아 전환됐다 — 주변 목록(`fetchNearbySpots`)과 같은 모양이다.
-  /// 정렬은 서버가 보장하므로 재정렬하지 않는다(POL-019).
+  /// 정확히 동작하지 않아 전환됐다 — 주변 목록(`fetchNearbySpots`)은 SPEC-0035에서
+  /// 커서로 옮겨 이제 둘의 모양이 다르다. 정렬은 서버가 보장하므로 재정렬하지
+  /// 않는다(POL-019).
   ///
   /// [category]는 [fetchNearbySpots]와 **같은 필터다** — 시트의 카테고리 칩 하나가
   /// 주변 목록과 검색 양쪽에 걸린다. null이면 전체다.
@@ -137,9 +138,8 @@ abstract interface class CommunityRepository {
 
   /// 장소 선택 시트의 두 번째 출처 — 내가 좋아요한 장소 한 페이지.
   ///
-  /// **주변 장소와 페이징 방식이 다르다**: [fetchNearbySpots]는 오프셋이고 이쪽은
-  /// **커서**라 [CursorPage]로 돌려준다. 서버가 그렇게 갈라 놓았고, 각 컨트롤러가
-  /// 자기 페이지 모델을 쓰면 그 차이가 화면까지 새지 않는다.
+  /// [fetchNearbySpots]와 같은 **커서** 페이징이라 [CursorPage]로 돌려준다(주변
+  /// 목록은 SPEC-0035에서 오프셋에서 커서로 옮겨 이제 둘이 같은 모양이다).
   ///
   /// [category]는 [fetchNearbySpots]와 **같은 필터다** — 시트의 카테고리 줄 하나가
   /// 두 출처에 함께 걸린다. null이면 전체다.

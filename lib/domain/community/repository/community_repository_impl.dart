@@ -148,14 +148,17 @@ class CommunityRepositoryImpl implements CommunityRepository {
   }
 
   @override
-  Future<OffsetPage<NearbySpot>> fetchNearbySpots({
+  Future<CursorPage<NearbySpot>> fetchNearbySpots({
     required double latitude,
     required double longitude,
     int? radiusMeters,
     NearbySpotCategory? category,
-    int? page,
-    int? size,
+    int? first,
+    String? after,
   }) async {
+    // 결과가 `location { spots }` 두 칸 아래에 실리므로 실패 판정 경로도 그만큼
+    // 깊다(SPEC-0035) — 최상위 이름만 보면 `spots`의 커서 오류가 부분 실패로 통과해
+    // 매핑에서 터진다.
     final Map<String, dynamic> data = await _query(
       documentNodeQueryNearbySpots,
       Variables$Query$NearbySpots(
@@ -164,33 +167,33 @@ class CommunityRepositoryImpl implements CommunityRepository {
         radiusMeters: radiusMeters,
         // null이면 전체다 — 서버가 nullable로 받는다.
         categories: category == null ? null : _spotCategoryInput(category),
-        page: page,
-        size: size,
+        first: first,
+        after: after,
       ).toJson(),
-      'spots',
+      'location',
+      fieldPath: const <String>['location', 'spots'],
     );
-    final Query$NearbySpots$spots result = Query$NearbySpots.fromJson(
+    final Query$NearbySpots$location$spots result = Query$NearbySpots.fromJson(
       data,
-    ).spots;
-    return OffsetPage<NearbySpot>(
-      items: result.items
+    ).location.spots;
+    return CursorPage<NearbySpot>(
+      items: result.edges
           .map(
-            (Query$NearbySpots$spots$items s) => NearbySpot(
-              id: s.id,
-              title: s.title,
-              distanceMeters: s.distanceMeters,
+            (Query$NearbySpots$location$spots$edges e) => NearbySpot(
+              id: e.node.id,
+              title: e.node.title,
+              distanceMeters: e.node.distanceMeters,
               // 서버가 빈 문자열을 줄 수 있다 — 화면이 자리채움으로 떨어지도록
               // 여기서 null로 접는다.
-              thumbnailImageUrl: s.thumbnailImageUrl.isEmpty
+              thumbnailImageUrl: e.node.thumbnailImageUrl.isEmpty
                   ? null
-                  : s.thumbnailImageUrl,
-              address: s.address,
+                  : e.node.thumbnailImageUrl,
+              address: e.node.address,
             ),
           )
           .toList(growable: false),
-      page: result.page,
-      hasNext: result.hasNext,
-      totalCount: result.totalCount,
+      hasNextPage: result.pageInfo.hasNextPage,
+      endCursor: result.pageInfo.endCursor,
     );
   }
 
@@ -1035,14 +1038,19 @@ class CommunityRepositoryImpl implements CommunityRepository {
 
   // --- 전송/실행 (spot repository와 동일한 2단계 실패 검사) -------------------
 
+  /// [operation]은 최상위 필드 이름이자 로그 라벨이다. 결과가 한 단계 아래 필드에
+  /// 실리는 조회(`location { spots }`)는 [fieldPath]로 그 경로를 넘긴다 — 실패
+  /// 판정이 그 깊이까지를 전체 실패로 본다. 생략하면 `[operation]`이다.
   Future<Map<String, dynamic>> _query(
     DocumentNode document,
     Map<String, dynamic> variables,
-    String operation,
-  ) => _run(
+    String operation, {
+    List<String>? fieldPath,
+  }) => _run(
     () => _client.query(QueryOptions(document: document, variables: variables)),
     operation,
     variables,
+    fieldPath: fieldPath,
   );
 
   Future<Map<String, dynamic>> _mutate(
@@ -1060,8 +1068,10 @@ class CommunityRepositoryImpl implements CommunityRepository {
   Future<Map<String, dynamic>> _run(
     Future<QueryResult<Object?>> Function() call,
     String operation,
-    Map<String, dynamic> variables,
-  ) async {
+    Map<String, dynamic> variables, {
+    List<String>? fieldPath,
+  }) async {
+    final List<String> path = fieldPath ?? <String>[operation];
     GraphqlDebugLog.request(operation, variables);
     late final QueryResult<Object?> result;
     try {
@@ -1073,13 +1083,12 @@ class CommunityRepositoryImpl implements CommunityRepository {
 
     GraphqlDebugLog.response(operation, result);
 
-    // 범위 판별은 `path`로 한다 — `operation`이 곧 최상위 필드 이름이다. 하위 필드만
-    // 실패한 응답은 통과시키고 매핑이 빈 값으로 접는다(공용 `hasRootFailure`).
-    if (hasRootFailure(result, operation)) {
+    // 범위 판별은 `path`로 한다 — 최상위 조회는 `operation`이 곧 경로이고, 중첩 조회는
+    // `fieldPath`가 그 깊이를 정한다. 그보다 깊은 하위 필드만 실패한 응답은
+    // 통과시키고 매핑이 빈 값으로 접는다(공용 `hasFieldFailure`).
+    if (hasFieldFailure(result, path)) {
       GraphqlDebugLog.transportFailure(operation, result);
-      throw CommunityFailure.fromQueryErrorCode(
-        _rootErrorCode(result, operation),
-      );
+      throw CommunityFailure.fromQueryErrorCode(_rootErrorCode(result, path));
     }
 
     final Object? data = result.data;
@@ -1090,8 +1099,8 @@ class CommunityRepositoryImpl implements CommunityRepository {
   /// 전체 실패로 판정된 오류의 코드 문자열. `extensions.code`가 관례이고, 없으면
   /// 코드처럼 보이는 메시지(SCREAMING_SNAKE)를 폴백으로 본다. 못 찾으면 null이라
   /// [CommunityFailure.network]로 떨어진다.
-  String? _rootErrorCode(QueryResult<Object?> result, String rootField) {
-    final GraphQLError? error = firstRootError(result, rootField);
+  String? _rootErrorCode(QueryResult<Object?> result, List<String> fieldPath) {
+    final GraphQLError? error = firstFieldError(result, fieldPath);
     if (error == null) return null;
     final Object? code = error.extensions?['code'];
     if (code is String && code.isNotEmpty) return code;

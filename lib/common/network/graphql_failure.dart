@@ -36,8 +36,20 @@ bool hasTransportFailure(QueryResult<Object?> result) =>
 /// 주의: DGS가 중첩 필드 실패에 실제로 이 형태를 내려주는지는 단위 테스트로 검증되지
 /// 않는다(SPEC-0008 §8 `[TBD-3]`) — 실제 응답 육안 확인이 필요한 가정이다.
 bool hasRootFailure(QueryResult<Object?> result, String rootField) =>
+    hasFieldFailure(result, <String>[rootField]);
+
+/// [hasRootFailure]의 **중첩 필드판**(SPEC-0035). `location { recommendedSpots }`처럼
+/// 조회 결과가 최상위가 아니라 한 단계 아래 필드에 실릴 때 쓴다.
+///
+/// [fieldPath]는 결과가 실리는 필드까지의 경로(`['location', 'recommendedSpots']`)다.
+/// 그 경로 **위나 그 자리**에서 난 오류는 전체 실패다 — `location` 자체가 실패해도,
+/// `recommendedSpots`가 실패해도 결과 필드가 null이 되어 매핑할 것이 없다. 그보다
+/// 깊은 경로(`[..., 'edges', 0, 'node']`)는 부분 실패로 통과시킨다.
+///
+/// 최상위 필드 하나짜리 조회는 [hasRootFailure]와 같다 — 그쪽이 이쪽으로 위임한다.
+bool hasFieldFailure(QueryResult<Object?> result, List<String> fieldPath) =>
     result.exception?.linkException != null ||
-    firstRootError(result, rootField) != null;
+    firstFieldError(result, fieldPath) != null;
 
 /// 전체 실패로 판정되는 **첫 오류**. 없으면 null(=부분 실패이거나 실패가 아님).
 ///
@@ -47,7 +59,18 @@ bool hasRootFailure(QueryResult<Object?> result, String rootField) =>
 /// `[{path:["spotDetail","gallery"]}, {path:["spotDetail"], code:"UNAUTHENTICATED"}]`
 /// 에서 첫 항목만 보면 코드를 못 찾아 인증 실패가 네트워크 실패로 둔갑하고, 재시도
 /// 상한에 계상되어 SPEC-0006 R5·AC-14가 깨진다.
-GraphQLError? firstRootError(QueryResult<Object?> result, String rootField) {
+GraphQLError? firstRootError(QueryResult<Object?> result, String rootField) =>
+    firstFieldError(result, <String>[rootField]);
+
+/// [firstRootError]의 중첩 필드판 — [hasFieldFailure]와 **같은 술어**다.
+///
+/// 오류의 `path`가 [fieldPath]의 접두(같거나 더 짧음)이면 전체 실패다. `path`가
+/// 없으면 범위를 좁힐 근거가 없어 안전한 쪽(전체 실패)으로 본다. 다른 최상위 필드나
+/// 더 깊은 경로의 오류는 이 조회의 관심사가 아니다.
+GraphQLError? firstFieldError(
+  QueryResult<Object?> result,
+  List<String> fieldPath,
+) {
   if (!result.hasException) return null;
 
   final List<GraphQLError> errors =
@@ -56,8 +79,16 @@ GraphQLError? firstRootError(QueryResult<Object?> result, String rootField) {
     final List<dynamic>? path = error.path;
     // path가 없으면 범위를 좁힐 근거가 없다 — 안전한 쪽(전체 실패)으로 본다.
     if (path == null || path.isEmpty) return error;
-    if (path.first != rootField) continue;
-    if (path.length == 1) return error;
+    if (_isPrefixOf(path, fieldPath)) return error;
   }
   return null;
+}
+
+/// [path]가 [fieldPath]의 접두인지 — 길이가 같거나 짧고, 그 길이만큼 원소가 같다.
+bool _isPrefixOf(List<dynamic> path, List<String> fieldPath) {
+  if (path.length > fieldPath.length) return false;
+  for (int i = 0; i < path.length; i++) {
+    if (path[i] != fieldPath[i]) return false;
+  }
+  return true;
 }

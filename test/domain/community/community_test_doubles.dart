@@ -177,7 +177,7 @@ class FakeCommunityRepository implements CommunityRepository {
   /// 컴포저 장소 선택 시트가 받을 주변 장소. 거리 오름차순으로 오는 것을 흉내 낸다.
   List<NearbySpot> nearbySpots = const <NearbySpot>[];
 
-  /// `page`가 0보다 클 때 돌려줄 항목들(추가 로딩 검증용).
+  /// `after`가 주어진 두 번째 조회에서 돌려줄 항목들(추가 로딩 검증용).
   List<NearbySpot> nextNearbySpots = const <NearbySpot>[];
 
   /// 설정하면 주변 장소 조회가 이 오류를 던진다 — 위치 실패·조회 실패 상태 검증용.
@@ -194,15 +194,19 @@ class FakeCommunityRepository implements CommunityRepository {
   Map<NearbySpotCategory, List<NearbySpot>> nearbySpotsByCategory =
       const <NearbySpotCategory, List<NearbySpot>>{};
 
-  /// 마지막 주변 장소 조회 인자.
+  /// 마지막 주변 장소 조회 인자(SPEC-0035 — 커서 페이징).
   ({
     double latitude,
     double longitude,
+    int? radiusMeters,
     NearbySpotCategory? category,
-    int? page,
-    int? size,
+    int? first,
+    String? after,
   })?
   lastFetchNearbySpots;
+
+  /// 첫 페이지 응답에 실어 줄 `endCursor`. [nearbySpotsHasNext]가 참일 때만 의미 있다.
+  static const String nearbySpotsCursor = 'nearby-cursor-1';
 
   /// 주변 장소 조회 횟수. 카테고리를 바꿨을 때 실제로 다시 조회하는지 본다.
   int nearbySpotsCalls = 0;
@@ -212,36 +216,33 @@ class FakeCommunityRepository implements CommunityRepository {
       spotCategories;
 
   @override
-  Future<OffsetPage<NearbySpot>> fetchNearbySpots({
+  Future<CursorPage<NearbySpot>> fetchNearbySpots({
     required double latitude,
     required double longitude,
     int? radiusMeters,
     NearbySpotCategory? category,
-    int? page,
-    int? size,
+    int? first,
+    String? after,
   }) async {
     nearbySpotsCalls++;
     if (nearbySpotsError != null) throw nearbySpotsError!;
     lastFetchNearbySpots = (
       latitude: latitude,
       longitude: longitude,
+      radiusMeters: radiusMeters,
       category: category,
-      page: page,
-      size: size,
+      first: first,
+      after: after,
     );
-    if ((page ?? 0) > 0) {
-      return OffsetPage<NearbySpot>(
-        items: nextNearbySpots,
-        page: page!,
-        hasNext: false,
-      );
+    if (after != null) {
+      return CursorPage<NearbySpot>(items: nextNearbySpots, hasNextPage: false);
     }
-    return OffsetPage<NearbySpot>(
+    return CursorPage<NearbySpot>(
       items: category == null
           ? nearbySpots
           : nearbySpotsByCategory[category] ?? nearbySpots,
-      page: 0,
-      hasNext: nearbySpotsHasNext,
+      hasNextPage: nearbySpotsHasNext,
+      endCursor: nearbySpotsHasNext ? nearbySpotsCursor : null,
     );
   }
 
