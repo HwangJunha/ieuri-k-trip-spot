@@ -80,7 +80,7 @@
   "photoSyncTitle": "用照片填充",
   "photoSyncTitleDone": "地圖填好了",
   "photoSyncNoUploadNotice": "你的照片不會傳送到我們的伺服器",
-  "photoSyncBody": "我們只使用照片中記錄的位置資料，找出你去過的地區。只有找到的地區會存進你的地圖。",
+  "photoSyncBody": "我們只使用照片中記錄的位置資料，找出你去過的地區。",
   "photoSyncBodyResume": "會從上次停下的地方繼續找。",
   "photoSyncBodyDone": "再次填入時，只會看新增的照片。",
   "photoSyncStart": "開始",

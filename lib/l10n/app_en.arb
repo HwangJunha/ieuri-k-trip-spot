@@ -89,9 +89,9 @@
   "@photoSyncNoUploadNotice": {
     "description": "Highlighted notice right under the sheet title, shown at every stage (SPEC-0034 R8, user decision 2026-09-10). Say \"server\" plainly — never euphemisms like \"never leave your device\"."
   },
-  "photoSyncBody": "We use only the location data saved in your photos to find the regions you've visited. Only the regions we find are saved to your map.",
+  "photoSyncBody": "We use only the location data saved in your photos to find the regions you've visited.",
   "@photoSyncBody": {
-    "description": "Sheet body before scanning: what we do and what gets saved. The no-upload statement lives in photoSyncNoUploadNotice."
+    "description": "Sheet body before scanning: what we do. The no-upload statement lives in photoSyncNoUploadNotice."
   },
   "photoSyncBodyResume": "We'll pick up where the last scan stopped.",
   "@photoSyncBodyResume": {

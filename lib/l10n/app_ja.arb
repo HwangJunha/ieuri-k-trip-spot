@@ -80,7 +80,7 @@
   "photoSyncTitle": "写真から埋める",
   "photoSyncTitleDone": "地図を埋めました",
   "photoSyncNoUploadNotice": "写真はサーバーに送信しません",
-  "photoSyncBody": "写真に記録された位置データだけを使って、訪れた地域を探します。見つかった地域だけがマップに保存されます。",
+  "photoSyncBody": "写真に記録された位置データだけを使って、訪れた地域を探します。",
   "photoSyncBodyResume": "前回止まったところから続けて探します。",
   "photoSyncBodyDone": "もう一度埋めると、新しく追加された写真だけを確認します。",
   "photoSyncStart": "開始",
