@@ -358,7 +358,7 @@
   "@photoSyncNoUploadNotice": {
     "description": "시트 제목 바로 아래 강조 안내 - 모든 단계에서 보인다 (사용자 결정 2026-09-10)"
   },
-  "photoSyncBody": "사진에 담긴 위치로 다녀온 지역을 찾아요. 찾아낸 지역만 내 지도에 저장돼요.",
+  "photoSyncBody": "사진에 담긴 위치데이터로만 다녀온 지역을 찾아요. 찾아낸 지역만 내 지도에 저장돼요.",
   "@photoSyncBody": {
     "description": "사진 동기화 시트 설명 - 하는 일과 저장되는 것. 미전송 문구는 photoSyncNoUploadNotice가 맡는다"
   },

@@ -90,13 +90,12 @@ class PhotoSyncSheet extends ConsumerWidget {
 ///
 /// 시트의 다른 어떤 문구보다 먼저 눈에 들어와야 한다 — 사용자가 걱정하는 것이
 /// 바로 이것이고, 본문 안에 섞여 있던 동안은 와닿지 않았다(사용자 지적
-/// 2026-09-10). 그래서 본문과 같은 회색 글자가 아니라 색 있는 상자에 아이콘을
-/// 붙여 따로 둔다.
+/// 2026-09-10). 그래서 본문과 같은 회색 글자가 아니라 색 있는 상자에 따로 둔다.
 ///
 /// **채운 빨강은 쓰지 않는다.** `primaryContainer`로 칠했더니 아래 "시작하기"
 /// 버튼과 같은 색이라 버튼이 둘로 보였다(사용자 지적, 같은 날). 연한 틴트
 /// (`secondaryContainer`)에 짙은 글자로 두면 시트 바탕과 어우러지면서도 글자는
-/// 여전히 도드라진다.
+/// 여전히 도드라진다. 강조는 글자 색과 상자가 맡는다.
 class _NoUploadNotice extends StatelessWidget {
   const _NoUploadNotice({required this.l10n});
 
@@ -113,24 +112,13 @@ class _NoUploadNotice extends StatelessWidget {
         color: colors.secondaryContainer,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Row(
-        children: <Widget>[
-          Icon(
-            Icons.cloud_off_outlined,
-            size: 20,
-            color: colors.onSecondaryContainer,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              l10n.photoSyncNoUploadNotice,
-              style: text.titleSmall?.copyWith(
-                color: colors.onSecondaryContainer,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
+      // 아이콘 없이 글자만 둔다(사용자 결정 2026-09-11).
+      child: Text(
+        l10n.photoSyncNoUploadNotice,
+        style: text.titleSmall?.copyWith(
+          color: colors.onSecondaryContainer,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
