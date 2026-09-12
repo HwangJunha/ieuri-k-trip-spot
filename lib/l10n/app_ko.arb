@@ -177,10 +177,6 @@
   "@categoryAll": {
     "description": "카테고리 바 - 필터 없음(전체) 칩"
   },
-  "categoryRecommended": "추천",
-  "@categoryRecommended": {
-    "description": "Discover 카테고리 바 - 추천 묶음 소스 토글(SPEC-0035)"
-  },
   "navHome": "홈",
   "@navHome": {
     "description": "하단 내비 - 홈 탭"

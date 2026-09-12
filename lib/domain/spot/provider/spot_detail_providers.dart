@@ -2,7 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../model/retry_budget.dart';
 import '../model/retry_exhausted.dart';
-import '../model/swipe_feed_key.dart';
+import '../../../common/category/spot_category_selection.dart';
 import 'package:logger/logger.dart';
 
 import '../../../common/log/app_log.dart';
@@ -138,8 +138,12 @@ class SpotDetailController extends _$SpotDetailController {
   /// 세션을 오류로 만들거나 배너를 띄우지 않는다(§4.2) — 사용자가 한 행동의 결과가
   /// 아니기 때문이다.
   void _dropFromSwipeSessions(String spotId) {
-    for (final SwipeFeedKey feed in liveSwipeSessions.toList(growable: false)) {
-      final SwipeControllerProvider provider = swipeControllerProvider(feed);
+    for (final SpotCategorySelection selection in liveSwipeSessions.toList(
+      growable: false,
+    )) {
+      final SwipeControllerProvider provider = swipeControllerProvider(
+        selection,
+      );
       if (!ref.exists(provider)) continue;
       ref.read(provider.notifier).dropMissingCard(spotId);
     }
@@ -185,11 +189,7 @@ class SpotDetailController extends _$SpotDetailController {
       if (error is SpotFailure && error.isSpotMissing) {
         _dropFromSwipeSessions(current.id);
       }
-      _log.w(
-        'reactToSpot failed (rolled back)',
-        error: error,
-        stackTrace: stack,
-      );
+      _log.w('reactToSpot failed (rolled back)', error: error, stackTrace: stack);
       rethrow;
     }
   }

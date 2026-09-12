@@ -1,12 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/category/spot_category.dart';
+import 'package:ieuri_k_trip_spot/common/category/spot_category_selection.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_providers.dart';
 import 'package:ieuri_k_trip_spot/common/storage/app_preferences.dart';
 import 'package:ieuri_k_trip_spot/domain/auth/provider/auth_controller.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_reaction.dart';
-import 'package:ieuri_k_trip_spot/domain/spot/model/swipe_feed_key.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/swipe_queue.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/tourist_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/spot_providers.dart';
@@ -15,7 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../spot_test_doubles.dart';
 
-/// SwipeController의 두 소스(SPEC-0035 R10) — 추천 묶음과 전체 오프셋.
+/// SwipeController의 추천 묶음(SPEC-0035 R10). 소스는 이것 하나다.
 ///
 /// 컨트롤러는 좌표·반경·로그인 상태를 전이적으로 watch하므로 위치 서비스와
 /// SharedPreferences까지 오버라이드해야 컨테이너가 선다.
@@ -29,11 +29,11 @@ void main() {
     prefs = await SharedPreferences.getInstance();
   });
 
-  /// [feed] 세션을 구독한 컨테이너.
+  /// [selection] 세션을 구독한 컨테이너.
   Future<ProviderContainer> makeContainer(
-    FakeSpotRepository repository,
-    SwipeFeedKey feed,
-  ) async {
+    FakeSpotRepository repository, [
+    SpotCategorySelection? selection,
+  ]) async {
     final container = ProviderContainer(
       overrides: [
         spotRepositoryProvider.overrideWithValue(repository),
@@ -52,7 +52,7 @@ void main() {
     // 구독을 유지해야 컨트롤러가 watch하는 autoDispose 좌표 provider가 보충 조회
     // 도중 폐기되지 않는다(상세 컨트롤러 테스트와 같은 규약).
     container.listen(
-      swipeControllerProvider(feed),
+      swipeControllerProvider(selection ?? noCategories),
       (_, _) {},
       fireImmediately: true,
     );
@@ -65,19 +65,20 @@ void main() {
   List<String> idsOf(Iterable<TouristSpot> cards) =>
       cards.map((TouristSpot s) => s.id).toList(growable: false);
 
-  SwipeQueue queueOf(ProviderContainer c, SwipeFeedKey feed) =>
-      c.read(swipeControllerProvider(feed)).requireValue;
+  SwipeQueue queueOf(ProviderContainer c) =>
+      c.read(swipeControllerProvider(noCategories)).requireValue;
 
-  group('추천 소스 — 묶음 (AC-10.2)', () {
-    final SwipeFeedKey feed = recommendedFeed();
+  SwipeController notifierOf(ProviderContainer c) =>
+      c.read(swipeControllerProvider(noCategories).notifier);
 
-    test('첫 빌드는 first: 100으로 1회 부르고 받은 순서를 그대로 담는다', () async {
+  group('첫 묶음 (AC-10.2)', () {
+    test('first: 100으로 1회 부르고 받은 순서를 그대로 담는다', () async {
       // 100장이 꽉 차게 오면 더 부를 수 있다고 본다.
       final repository = FakeSpotRepository(feed: spots(100));
-      final container = await makeContainer(repository, feed);
+      final container = await makeContainer(repository);
 
       final SwipeQueue queue = await container.read(
-        swipeControllerProvider(feed).future,
+        swipeControllerProvider(noCategories).future,
       );
 
       expect(repository.recommendedRequests, hasLength(1));
@@ -85,38 +86,55 @@ void main() {
       expect(repository.recommendedRequests.single.categoryCodes, isNull);
       // 서버 배열이 계약이라 섞지 않는다.
       expect(idsOf(queue.cards), idsOf(repository.feed));
-      expect(queue.loadedPage, isNull, reason: '묶음에는 페이지가 없다');
       expect(queue.hasNextPage, isTrue);
-      expect(repository.spotPageCallCount, 0, reason: 'spots는 부르지 않는다');
     });
 
     test('first보다 적게 오면 소진 — 큐를 다 쓰면 빈 상태고 다시 부르지 않는다', () async {
       final repository = FakeSpotRepository(feed: spots(3));
-      final container = await makeContainer(repository, feed);
-      await container.read(swipeControllerProvider(feed).future);
-      final SwipeController notifier = container.read(
-        swipeControllerProvider(feed).notifier,
-      );
+      final container = await makeContainer(repository);
+      await container.read(swipeControllerProvider(noCategories).future);
 
       for (int i = 0; i < 3; i++) {
-        notifier.swipe(SpotReaction.like);
+        notifierOf(container).swipe(SpotReaction.like);
       }
       await pumpEventQueue();
 
-      expect(queueOf(container, feed).isExhausted, isTrue);
+      expect(queueOf(container).isExhausted, isTrue);
       expect(repository.recommendedCallCount, 1);
     });
 
+    test('카테고리 칩은 묶음에 필터로 실린다', () async {
+      final repository = FakeSpotRepository(
+        feed: <TouristSpot>[
+          swipeSpot('t1'),
+          swipeSpot('r1', category: catRestaurant),
+        ],
+      );
+      final SpotCategorySelection restaurants = selectionOf(<SpotCategory>[
+        catRestaurant,
+      ]);
+      final container = await makeContainer(repository, restaurants);
+
+      final SwipeQueue queue = await container.read(
+        swipeControllerProvider(restaurants).future,
+      );
+
+      expect(repository.recommendedRequests.single.categoryCodes, <String>[
+        'RESTAURANT',
+      ]);
+      expect(idsOf(queue.cards), <String>['r1']);
+    });
+  });
+
+  group('보충 (AC-10.2)', () {
     test('큐가 10장 미만이면 같은 인자로 다시 부르고 겹치는 id를 걷어낸 뒤 붙인다', () async {
       final List<TouristSpot> first = spots(100);
       final repository = FakeSpotRepository(feed: first);
-      final container = await makeContainer(repository, feed);
-      await container.read(swipeControllerProvider(feed).future);
-      final SwipeController notifier = container.read(
-        swipeControllerProvider(feed).notifier,
-      );
+      final container = await makeContainer(repository);
+      await container.read(swipeControllerProvider(noCategories).future);
+      final SwipeController notifier = notifierOf(container);
 
-      // 91장을 넘겨 9장을 남긴다(<10). 이 동안 보충이 나가면 안 된다.
+      // 90장을 넘겨 10장을 남긴다(임계 미만이 아님). 보충이 나가면 안 된다.
       for (int i = 0; i < 90; i++) {
         notifier.swipe(SpotReaction.dislike);
       }
@@ -135,24 +153,20 @@ void main() {
 
       expect(repository.recommendedCallCount, 2);
       expect(repository.recommendedRequests.last.first, 100);
-      final SwipeQueue queue = queueOf(container, feed);
-      final List<String> ids = idsOf(queue.cards);
+      final List<String> ids = idsOf(queueOf(container).cards);
       // 남아 있던 9장이 앞에 그대로, 새 카드 98장이 받은 순서로 뒤에.
       expect(ids.take(9).toList(), idsOf(first.sublist(91)));
       expect(ids.skip(9).toList(), idsOf(spots(98, prefix: 'n')));
       expect(ids.toSet().length, ids.length, reason: '겹치는 id가 없다');
       expect(ids, isNot(contains('s0')), reason: '넘긴 카드는 다시 오지 않는다');
-      expect(queue.hasNextPage, isTrue);
+      expect(queueOf(container).hasNextPage, isTrue);
     });
 
     test('걷어낸 뒤 새 카드가 0장이면 그 조건에서는 더 부르지 않는다', () async {
-      final List<TouristSpot> first = spots(100);
-      final repository = FakeSpotRepository(feed: first);
-      final container = await makeContainer(repository, feed);
-      await container.read(swipeControllerProvider(feed).future);
-      final SwipeController notifier = container.read(
-        swipeControllerProvider(feed).notifier,
-      );
+      final repository = FakeSpotRepository(feed: spots(100));
+      final container = await makeContainer(repository);
+      await container.read(swipeControllerProvider(noCategories).future);
+      final SwipeController notifier = notifierOf(container);
       for (int i = 0; i < 90; i++) {
         notifier.swipe(SpotReaction.dislike);
       }
@@ -162,22 +176,20 @@ void main() {
       notifier.swipe(SpotReaction.dislike);
       await pumpEventQueue();
       expect(repository.recommendedCallCount, 2);
-      expect(queueOf(container, feed).hasNextPage, isFalse);
+      expect(queueOf(container).hasNextPage, isFalse);
 
       // 이후 스와이프에서는 재요청하지 않는다 — 무한 재요청 방지.
       notifier.swipe(SpotReaction.dislike);
       await pumpEventQueue();
       expect(repository.recommendedCallCount, 2);
-      expect(queueOf(container, feed).cards, hasLength(8));
+      expect(queueOf(container).cards, hasLength(8));
     });
 
     test('보충 실패는 큐를 유지하고 다음 스와이프에서 다시 시도한다', () async {
       final repository = FakeSpotRepository(feed: spots(100));
-      final container = await makeContainer(repository, feed);
-      await container.read(swipeControllerProvider(feed).future);
-      final SwipeController notifier = container.read(
-        swipeControllerProvider(feed).notifier,
-      );
+      final container = await makeContainer(repository);
+      await container.read(swipeControllerProvider(noCategories).future);
+      final SwipeController notifier = notifierOf(container);
       for (int i = 0; i < 90; i++) {
         notifier.swipe(SpotReaction.dislike);
       }
@@ -190,7 +202,7 @@ void main() {
       await pumpEventQueue();
 
       final AsyncValue<SwipeQueue> state = container.read(
-        swipeControllerProvider(feed),
+        swipeControllerProvider(noCategories),
       );
       expect(state.hasError, isFalse);
       expect(state.requireValue.cards, hasLength(9));
@@ -199,91 +211,26 @@ void main() {
       notifier.swipe(SpotReaction.dislike);
       await pumpEventQueue();
       expect(repository.recommendedCallCount, 3);
-      expect(queueOf(container, feed).cards.length, greaterThan(8));
-    });
-
-    test('카테고리 칩은 추천 묶음에도 필터로 실린다', () async {
-      final repository = FakeSpotRepository(
-        feed: <TouristSpot>[
-          swipeSpot('t1'),
-          swipeSpot('r1', category: catRestaurant),
-        ],
-      );
-      final SwipeFeedKey filtered = recommendedFeed(<SpotCategory>[
-        catRestaurant,
-      ]);
-      final container = await makeContainer(repository, filtered);
-
-      final SwipeQueue queue = await container.read(
-        swipeControllerProvider(filtered).future,
-      );
-
-      expect(repository.recommendedRequests.single.categoryCodes, <String>[
-        'RESTAURANT',
-      ]);
-      expect(idsOf(queue.cards), <String>['r1']);
+      expect(queueOf(container).cards.length, greaterThan(8));
     });
   });
 
   group('조건 변경은 새 세션 (AC-10.3)', () {
     test('좌표가 무효화되면 큐를 비우고 다시 부른다', () async {
-      final SwipeFeedKey feed = recommendedFeed();
       final repository = FakeSpotRepository(feed: spots(5));
-      final container = await makeContainer(repository, feed);
-      await container.read(swipeControllerProvider(feed).future);
-      container
-          .read(swipeControllerProvider(feed).notifier)
-          .swipe(SpotReaction.like);
+      final container = await makeContainer(repository);
+      await container.read(swipeControllerProvider(noCategories).future);
+      notifierOf(container).swipe(SpotReaction.like);
       await pumpEventQueue();
 
       repository.feed = spots(4, prefix: 'n');
       container.invalidate(currentCoordinatesProvider);
       final SwipeQueue queue = await container.read(
-        swipeControllerProvider(feed).future,
+        swipeControllerProvider(noCategories).future,
       );
 
       expect(repository.recommendedCallCount, 2);
       expect(idsOf(queue.cards), idsOf(repository.feed));
-    });
-
-    test('추천을 끄면 전체(spots) 세션이 따로 시작된다', () async {
-      final repository = FakeSpotRepository(feed: spots(5), pageSize: 5);
-      final container = await makeContainer(repository, recommendedFeed());
-      await container.read(swipeControllerProvider(recommendedFeed()).future);
-
-      container.listen(
-        swipeControllerProvider(allFeed),
-        (_, _) {},
-        fireImmediately: true,
-      );
-      final SwipeQueue queue = await container.read(
-        swipeControllerProvider(allFeed).future,
-      );
-
-      expect(repository.recommendedCallCount, 1);
-      expect(repository.spotPageCallCount, 1);
-      expect(queue.loadedPage, 0, reason: '전체 소스는 오프셋 페이지다');
-      expect(idsOf(queue.cards).toSet(), idsOf(repository.feed).toSet());
-    });
-  });
-
-  group('전체 소스 — 오프셋 (기존 규칙 유지)', () {
-    test('첫 페이지 뒤 큐가 10장 미만이면 다음 페이지를 이어 붙인다', () async {
-      final repository = FakeSpotRepository(feed: spots(12), pageSize: 8);
-      final container = await makeContainer(repository, allFeed);
-      await container.read(swipeControllerProvider(allFeed).future);
-
-      container
-          .read(swipeControllerProvider(allFeed).notifier)
-          .swipe(SpotReaction.like);
-      await pumpEventQueue();
-
-      expect(repository.spotPageCallCount, 2);
-      expect(repository.recommendedCallCount, 0);
-      final SwipeQueue queue = queueOf(container, allFeed);
-      expect(queue.loadedPage, 1);
-      expect(queue.cards, hasLength(7 + 4));
-      expect(queue.hasNextPage, isFalse);
     });
   });
 }

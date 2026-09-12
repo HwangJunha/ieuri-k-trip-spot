@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ieuri_k_trip_spot/common/category/spot_category.dart';
 import 'package:ieuri_k_trip_spot/common/category/spot_category_selection.dart';
-import 'package:ieuri_k_trip_spot/domain/spot/model/swipe_feed_key.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/provider/spot_providers.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/view/spot_detail_view.dart';
 import 'package:ieuri_k_trip_spot/l10n/gen/app_localizations.dart';
@@ -93,29 +92,8 @@ void main() {
       find.byType(SpotDetailView),
     );
     expect(
-      view.swipeFeed,
-      SwipeFeedKey(
-        recommended: false,
-        selection: SpotCategorySelection(const <SpotCategory>[
-          catLodging,
-          catRestaurant,
-        ]),
-      ),
-    );
-  });
-
-  // SPEC-0035 — 소스도 세션 키의 일부다. 같은 필터의 추천 세션과 전체 세션은 다른
-  // 인스턴스라, 빠뜨리면 상세의 좋아요가 없는 세션에서 카드를 찾는다.
-  testWidgets('source=recommended면 추천 세션 키로 되돌린다', (tester) async {
-    final repo = FakeSpotRepository(detail: detailSpot('c1'));
-    await _pumpRoute(tester, repo, '/spot/c1?category=&source=recommended');
-
-    final SpotDetailView view = tester.widget<SpotDetailView>(
-      find.byType(SpotDetailView),
-    );
-    expect(
-      view.swipeFeed,
-      SwipeFeedKey(recommended: true, selection: SpotCategorySelection.empty),
+      view.swipeCategory,
+      SpotCategorySelection(const <SpotCategory>[catLodging, catRestaurant]),
     );
   });
 
@@ -129,7 +107,7 @@ void main() {
       find.byType(SpotDetailView),
     );
     expect(
-      view.swipeFeed?.selection,
+      view.swipeCategory,
       SpotCategorySelection(const <SpotCategory>[catLodging, catRestaurant]),
     );
   });
@@ -143,7 +121,7 @@ void main() {
     final SpotDetailView view = tester.widget<SpotDetailView>(
       find.byType(SpotDetailView),
     );
-    expect(view.swipeFeed, isNull);
+    expect(view.swipeCategory, isNull);
   });
 
   testWidgets('상세 라우트는 아래→위 전환을 지정한다 (AC-17·AC-20·AC-22)', (tester) async {

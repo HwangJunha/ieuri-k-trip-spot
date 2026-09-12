@@ -69,8 +69,6 @@ ProviderContainer _container(FakeSpotRepository repo) {
   return container;
 }
 
-
-
 Future<void> _settle(ProviderContainer container) async {
   for (int i = 0; i < 5; i++) {
     try {
@@ -190,7 +188,6 @@ void main() {
     final repo = FakeSpotRepository(
       detail: detailSpot('c1', likeCount: 10),
       feed: <TouristSpot>[swipeSpot('c1'), swipeSpot('c2')],
-      pageSize: 5,
       reactFailure: const SpotFailure(
         SpotFailureKind.userError,
         code: 'SPOT_NOT_FOUND',
@@ -209,11 +206,11 @@ void main() {
     );
     addTearDown(container.dispose);
     container.listen(
-      swipeControllerProvider(allFeed),
+      swipeControllerProvider(noCategories),
       (_, _) {},
       fireImmediately: true,
     );
-    await container.read(swipeControllerProvider(allFeed).future);
+    await container.read(swipeControllerProvider(noCategories).future);
 
     final notifier = container.read(
       spotDetailControllerProvider('c1').notifier,
@@ -233,7 +230,7 @@ void main() {
     // 사라진 축제는 스와이프 스택에서도 빠진다(AC-44).
     expect(
       container
-          .read(swipeControllerProvider(allFeed))
+          .read(swipeControllerProvider(noCategories))
           .value!
           .cards
           .map((TouristSpot s) => s.id),
@@ -250,7 +247,6 @@ void main() {
       'session without failing the session', () async {
     final repo = FakeSpotRepository(
       feed: <TouristSpot>[swipeSpot('c1'), swipeSpot('c2')],
-      pageSize: 5,
       detail: detailSpot('c1'),
     );
     // 스와이프 세션이 언어 전환에 반응하려고 locale을 watch하므로(SPEC-0007 §4.5)
@@ -266,11 +262,11 @@ void main() {
     );
     addTearDown(container.dispose);
     container.listen(
-      swipeControllerProvider(allFeed),
+      swipeControllerProvider(noCategories),
       (_, _) {},
       fireImmediately: true,
     );
-    await container.read(swipeControllerProvider(allFeed).future);
+    await container.read(swipeControllerProvider(noCategories).future);
 
     // 상세를 한 번 정상적으로 연 뒤, 그 사이 축제가 삭제된 상황을 만든다.
     container.listen(
@@ -287,7 +283,7 @@ void main() {
     expect(container.read(spotDetailControllerProvider('c1')).hasError, isTrue);
 
     final AsyncValue<SwipeQueue> session = container.read(
-      swipeControllerProvider(allFeed),
+      swipeControllerProvider(noCategories),
     );
     // 세션은 살아 있고, 사라진 카드만 빠졌다.
     expect(session.hasError, isFalse);
@@ -368,5 +364,4 @@ void main() {
     // 라우트가 넘긴 값과 무관하게, 조회 결과의 thumbnailImageUrl이 최종 값이다.
     expect(detail.thumbnailImageUrl, 'https://img/c1.jpg');
   });
-
 }

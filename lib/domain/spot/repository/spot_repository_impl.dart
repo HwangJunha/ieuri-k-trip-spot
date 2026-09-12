@@ -29,11 +29,8 @@ import 'spot_schema.graphql.dart';
 /// typed operations through the shared client and maps each response to a domain
 /// model. The generated `*.graphql.dart` types never leave this file (CLAUDE.md §3).
 ///
-/// The Discover swipe feed is server-backed: `spots` (offset page/size — the
-/// server has no cursor support), `availableSpotCategories`, and the `reactToSpot`
-/// mutation. Home's recommended/popular sections have no server API yet, so those
-/// two methods still return illustrative mock data; only they change when a Home
-/// API lands.
+/// 홈 「Near you」와 Discover 스와이프는 `recommendedSpots` 묶음(SPEC-0035), 홈
+/// 「Popular」는 `popularSpots`, 스와이프 반응은 `reactToSpot` 뮤테이션이다.
 class SpotRepositoryImpl implements SpotRepository {
   SpotRepositoryImpl(this._client);
 
@@ -49,37 +46,7 @@ class SpotRepositoryImpl implements SpotRepository {
   /// 가장 흔한 분류를 골랐다. 맞으면 운영정보까지 뜨고, 아니어도 손해가 없다.
   static const String _fallbackCategoryCode = 'TOURIST_SPOT';
 
-  // --- Discover 스와이프 피드 (서버) -----------------------------------------
-
-  @override
-  Future<OffsetPage<TouristSpot>> fetchSpotPage({
-    required double latitude,
-    required double longitude,
-    int? radiusMeters,
-    List<String>? categoryCodes,
-    required int page,
-    required int size,
-  }) async {
-    final Map<String, dynamic> data = await _query(
-      documentNodeQuerySpots,
-      Variables$Query$Spots(
-        latitude: latitude,
-        longitude: longitude,
-        radiusMeters: radiusMeters,
-        categories: _categories(categoryCodes),
-        page: page,
-        size: size,
-      ).toJson(),
-      'spots',
-    );
-    final Query$Spots$spots result = Query$Spots.fromJson(data).spots;
-    return OffsetPage<TouristSpot>(
-      items: result.items.map(_spotFromItem).toList(growable: false),
-      page: result.page,
-      hasNext: result.hasNext,
-      totalCount: result.totalCount,
-    );
-  }
+  // --- 내 주변 추천 (SPEC-0035) ---------------------------------------------
 
   /// 내 주변 추천 묶음(SPEC-0035). `Spots`와 같은 선택 집합이라 같은 카드 모델로
   /// 매핑하되, 생성 타입이 오퍼레이션별로 갈리므로 매핑 함수는 따로 둔다.
@@ -370,30 +337,11 @@ class SpotRepositoryImpl implements SpotRepository {
 
   // --- 매핑 (생성 타입 → 도메인) ---------------------------------------------
 
-  /// 서버 `Spot` 아이템을 도메인 [TouristSpot]으로 매핑한다. 스와이프 카드가 쓰는
-  /// 필드만 채우고(Home 전용 필드는 null), 거리는 미터 정수로 반올림한다.
+  /// 추천 묶음 항목 → 도메인 [TouristSpot](SPEC-0035). 스와이프 카드·홈 카드가 쓰는
+  /// 필드만 채우고, 거리는 미터 정수로 반올림한다.
   /// 제목·주소는 TourAPI 원문이라 `&amp;` 같은 엔티티가 섞여 온다. 여기서 정리해
   /// 두면 같은 값을 스와이프 카드와 상세가 똑같이 보여준다(한쪽만 정리하면 탭 한 번에
   /// 표기가 달라진다).
-  TouristSpot _spotFromItem(Query$Spots$spots$items item) => TouristSpot(
-    id: item.id,
-    name: sanitizeTourApiText(item.title) ?? item.title,
-    imageRef: item.thumbnailImageUrl,
-    location: sanitizeTourApiText(item.address) ?? '',
-    thumbnailImageUrl: item.thumbnailImageUrl,
-    address: sanitizeTourApiText(item.address),
-    distanceMeters: item.distanceMeters.round(),
-    copyright: _copyright(item.copyright),
-    attributionText: item.attributionText,
-    category: _categoryOf(
-      item.category.code,
-      item.category.label,
-      item.category.iconUrl,
-    ),
-  );
-
-  /// 추천 묶음 항목 → 도메인 [TouristSpot](SPEC-0035). 규칙은 [_spotFromItem]과
-  /// 같다(엔티티 정리, 거리 미터 반올림) — `Spot` 타입이 같아 카드도 같다.
   TouristSpot _spotFromRecommendedNode(
     Query$RecommendedSpots$recommendedSpots n,
   ) => TouristSpot(
@@ -415,8 +363,8 @@ class SpotRepositoryImpl implements SpotRepository {
 
   /// 검색 결과 노드 → 도메인 [TouristSpot](SPEC-0013).
   ///
-  /// `spots`와 같은 `Spot` 타입이지만 생성 타입이 오퍼레이션별로 갈리므로 매핑도
-  /// 따로 둔다 — 규칙은 [_spotFromItem]과 같다(엔티티 정리, 거리 미터 반올림).
+  /// 같은 `Spot` 타입이지만 생성 타입이 오퍼레이션별로 갈리므로 매핑도 따로 둔다 —
+  /// 규칙은 [_spotFromRecommendedNode]와 같다(엔티티 정리, 거리 미터 반올림).
   TouristSpot _spotFromSearchNode(
     Query$SearchSpots$searchSpots$connection$items n,
   ) => TouristSpot(
@@ -554,8 +502,8 @@ class SpotRepositoryImpl implements SpotRepository {
   /// 카테고리를 추가해도 클라이언트는 아무것도 잃지 않는다 — 모르는 코드는 아이콘만
   /// 중립 기본값으로 떨어진다(AC11.5).
   ///
-  /// 오퍼레이션마다 생성 타입이 갈리므로([Query$Spots$spots$items$category] 등) 인자를
-  /// 구조적으로 받는다. 필드 이름이 같아 호출부가 그대로 넘긴다.
+  /// 오퍼레이션마다 생성 타입이 갈리므로 인자를 구조적으로 받는다. 필드 이름이
+  /// 같아 호출부가 그대로 넘긴다.
   SpotCategory _categoryOf(String code, String label, String? iconUrl) =>
       SpotCategory(code: code, label: label, iconUrl: iconUrl);
 

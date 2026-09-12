@@ -42,11 +42,11 @@ class SpotRetryBudget extends _$SpotRetryBudget {
 
 /// 스와이프 피드의 카운터 scope. 선택별로 갈라 상한이 독립적으로 시작한다(AC-4).
 ///
-/// [feedKey]는 `SwipeFeedKey.scopeKey`다(예: `recommended/LODGING,TOURIST_SPOT`) —
-/// 소스(추천/전체)와 정렬된 코드 문자열을 함께 담아, 같은 필터라도 소스가 다르면
-/// 예산이 갈린다(SPEC-0035). 정렬하는 이유는 선택 순서가 예산을 가르면 안 되기
-/// 때문이다. 코드가 비어 있어도(전체) 소스 접두 덕에 고유 scope다.
-String swipeRetryScope(String feedKey) => 'swipe:$feedKey';
+/// [categoryKey]는 **정렬된 코드 문자열**이다(예: `LODGING,TOURIST_SPOT`) — 예전에는
+/// Dart enum 이름이었으나 SPEC-0020에서 그 표현이 사라졌다. 정렬하는 이유는 선택
+/// 순서가 예산을 가르면 안 되기 때문이다. 빈 문자열(선택 없음)도 고유 scope다.
+String swipeRetryScope(String categoryKey) =>
+    'swipe:${categoryKey.isEmpty ? 'all' : categoryKey}';
 
 /// 상세 조회의 카운터 scope. contentId별로 갈린다 — 다른 관광지 상세는 자기 상한을
 /// 새로 시작한다.

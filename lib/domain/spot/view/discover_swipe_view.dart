@@ -22,7 +22,6 @@ import '../../../common/category/spot_category_selection.dart';
 import '../model/spot_reaction.dart';
 import '../model/swipe_card_metrics.dart';
 import '../model/swipe_drag.dart';
-import '../model/swipe_feed_key.dart';
 import '../model/swipe_queue.dart';
 import '../model/tourist_spot.dart';
 import '../provider/spot_detail_providers.dart';
@@ -43,19 +42,16 @@ class DiscoverSwipeView extends ConsumerWidget {
     // 채울 수 있는 경우까지 함께 막혔다. 실제로 좌표를 못 얻었을 때만
     // `_ErrorState`가 안내한다 — 판정이 한 곳에 모인다.
 
-    // 최초 상태는 「추천」 + 칩 없음이다(사용자 결정 2026-09-12, SPEC-0035). 칩은
-    // 아무것도 심지 않는다(2026-08-15) — "전체" 칩이 생기면서 빈 선택이 자연스러운
-    // 상태가 됐고, 추천은 그 위에 얹히는 소스 토글이다.
+    // 최초 상태는 "전체"다(사용자 결정, 2026-08-15) — 아무것도 심지 않는다. 예전에는
+    // 진입 시 TOURIST_SPOT을 심었는데(R4), "전체" 칩이 생기면서 그 자리가 자연스러운
+    // 시작 상태가 됐다.
     final Set<SpotCategory> selected = ref.watch(selectedSpotCategoryProvider);
-    final SwipeFeedKey feed = SwipeFeedKey(
-      recommended: ref.watch(recommendedFeedToggleProvider),
-      selection: SpotCategorySelection(selected),
-    );
+    final SpotCategorySelection selection = SpotCategorySelection(selected);
     final AsyncValue<SwipeQueue> queue = ref.watch(
-      swipeControllerProvider(feed),
+      swipeControllerProvider(selection),
     );
 
-    final Widget body = _QueueBody(feed: feed, queue: queue);
+    final Widget body = _QueueBody(selection: selection, queue: queue);
 
     // **카테고리 바가 사진 위에 겹친다**(R14, 사용자 결정 2026-08-17). 예전에는
     // `Column`으로 카드 위에 쌓여 그만큼 사진을 밀어냈는데, 전체화면화는 사진 면적을
@@ -115,22 +111,10 @@ class _DiscoverCategoryBar extends ConsumerWidget {
       selected: ref.watch(selectedSpotCategoryProvider),
       onToggle: (SpotCategory next) =>
           ref.read(selectedSpotCategoryProvider.notifier).toggle(next),
-      onSelectAll: () => selectAllSpots(ref),
-      // 「추천」(SPEC-0035) — 칩처럼 독립으로 켜고 끈다. 켜져 있으면 소스가
-      // `recommendedSpots`이고 켜진 칩은 그 위에 필터로 얹힌다.
-      recommendedSelected: ref.watch(recommendedFeedToggleProvider),
-      onRecommended: () =>
-          ref.read(recommendedFeedToggleProvider.notifier).toggle(),
+      onSelectAll: () =>
+          ref.read(selectedSpotCategoryProvider.notifier).selectAll(),
     );
   }
-}
-
-/// 「전체」 — 칩과 「추천」을 모두 끈다(SPEC-0035). 「전체」는 필터도 추천도 없는 `spots`
-/// 목록이라, 칩만 풀고 추천을 남기면 바에 「전체」가 켜지지 않는 채로 추천 묶음이
-/// 계속 온다. 빈 상태의 "카테고리 바꾸기"도 같은 뜻이라 같은 함수를 쓴다.
-void selectAllSpots(WidgetRef ref) {
-  ref.read(selectedSpotCategoryProvider.notifier).selectAll();
-  ref.read(recommendedFeedToggleProvider.notifier).set(false);
 }
 
 /// 겹쳐 놓인 카테고리 바의 배경. **가독성 보조는 R14의 일부다.**
@@ -188,10 +172,11 @@ class _OverlayControls extends StatelessWidget {
 /// `CategoryBar`의 높이를 바꾸면 이 값도 함께 고쳐야 한다.
 const double _overlayControlsHeight = 88 + 8 + 28;
 
-class _QueueBody extends ConsumerWidget {
-  const _QueueBody({required this.feed, required this.queue});
 
-  final SwipeFeedKey feed;
+class _QueueBody extends ConsumerWidget {
+  const _QueueBody({required this.selection, required this.queue});
+
+  final SpotCategorySelection selection;
   final AsyncValue<SwipeQueue> queue;
 
   @override
@@ -201,11 +186,11 @@ class _QueueBody extends ConsumerWidget {
       error: (Object error, _) => _ErrorState(
         error: error,
         onRetry: () =>
-            ref.read(swipeControllerProvider(feed).notifier).reload(),
+            ref.read(swipeControllerProvider(selection).notifier).reload(),
       ),
       data: (SwipeQueue data) {
         if (data.isExhausted) return const _EmptyState();
-        return _CardStack(feed: feed, queue: data);
+        return _CardStack(selection: selection, queue: data);
       },
     );
   }
@@ -308,9 +293,9 @@ class _EmptyState extends ConsumerWidget {
   ///
   /// 예전에는 기본 카테고리 하나로 되돌렸으나(R4), "전체" 칩이 생기면서 필터를 가장
   /// 넓히는 자리가 그쪽이 됐다 — "결과가 없으니 필터를 풀어 보라"는 이 버튼의 뜻에
-  /// 맞는다. 빈 집합은 서버에 인자를 보내지 않는 상태다(AC5.1). 「추천」도 함께
-  /// 끈다 — 추천 후보가 소진된 뒤 가장 넓은 소스는 전체 목록이다(SPEC-0035).
-  void _resetCategory(WidgetRef ref) => selectAllSpots(ref);
+  /// 맞는다. 빈 집합은 서버에 인자를 보내지 않는 상태다(AC5.1).
+  void _resetCategory(WidgetRef ref) =>
+      ref.read(selectedSpotCategoryProvider.notifier).selectAll();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -366,9 +351,9 @@ class _EmptyState extends ConsumerWidget {
 /// 드래그 가능한 카드 스택. 맨 위 카드만 제스처를 받고, 그 아래 다음 카드는 살짝
 /// 작게(scale-up 대기) 깔린다. 확정 임계값·기울기·다음 카드 스케일업은 [_DraggableTop].
 class _CardStack extends ConsumerStatefulWidget {
-  const _CardStack({required this.feed, required this.queue});
+  const _CardStack({required this.selection, required this.queue});
 
-  final SwipeFeedKey feed;
+  final SpotCategorySelection selection;
   final SwipeQueue queue;
 
   @override
@@ -542,7 +527,7 @@ class _CardStackState extends ConsumerState<_CardStack>
   void _refreshLocation() {
     ref
       ..invalidate(currentCoordinatesProvider)
-      ..invalidate(swipeControllerProvider(widget.feed));
+      ..invalidate(swipeControllerProvider(widget.selection));
   }
 
   void _flyOut(
@@ -571,12 +556,11 @@ class _CardStackState extends ConsumerState<_CardStack>
       ..removeListener(_onTick)
       ..addListener(_onTick)
       ..value = 0;
-    _controller
-        .animateTo(1, duration: duration, curve: Curves.easeOutCubic)
+    _controller.animateTo(1, duration: duration, curve: Curves.easeOutCubic)
         .whenCompleteOrCancel(() {
           if (!mounted) return;
           ref
-              .read(swipeControllerProvider(widget.feed).notifier)
+              .read(swipeControllerProvider(widget.selection).notifier)
               .swipe(reaction);
           _drag.value = Offset.zero;
           _animation = null;
@@ -610,10 +594,7 @@ class _CardStackState extends ConsumerState<_CardStack>
         //
         // **선택이 비어도(=전체) 파라미터를 싣는다.** 값은 빈 문자열이 되는데,
         // 라우트가 부재(null)와 빈 값을 구분해 빈 값을 "전체 세션"으로 되돌린다.
-        'category': widget.feed.selection.codes.join(','),
-        // 소스도 키의 일부다(SPEC-0035) — 같은 필터의 추천 세션과 전체 세션은 다른
-        // 인스턴스라, 빠뜨리면 상세의 좋아요가 엉뚱한(없는) 세션에서 카드를 찾는다.
-        if (widget.feed.recommended) 'source': swipeSourceRecommended,
+        'category': widget.selection.codes.join(','),
       },
     );
   }

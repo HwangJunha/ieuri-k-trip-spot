@@ -5,7 +5,6 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/category/spot_category.dart';
-import 'package:ieuri_k_trip_spot/common/category/spot_category_selection.dart';
 import 'package:ieuri_k_trip_spot/common/location/coordinates.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_service.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
@@ -18,7 +17,6 @@ import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_image.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_info_item.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_intro.dart';
-import 'package:ieuri_k_trip_spot/domain/spot/model/swipe_feed_key.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/swipe_queue.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/tour_api_text.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/tourist_spot.dart';
@@ -359,7 +357,10 @@ void main() {
           id: 'c1',
           title: 'T',
           thumbnailImageUrl: 'https://img/t.jpg',
-          coordinates: const Coordinates(latitude: 37.5665, longitude: 126.9780),
+          coordinates: const Coordinates(
+            latitude: 37.5665,
+            longitude: 126.9780,
+          ),
           copyright: CopyrightType.type1,
           attributionText: 'KTO',
           gallery: const <SpotImage>[],
@@ -741,106 +742,49 @@ void main() {
   test('top returns the first card, null when empty', () {
     const SwipeQueue full = SwipeQueue(
       cards: <TouristSpot>[_a],
-      loadedPage: 0,
       hasNextPage: false,
     );
     expect(full.top, _a);
 
     const SwipeQueue empty = SwipeQueue(
       cards: <TouristSpot>[],
-      loadedPage: 0,
       hasNextPage: false,
     );
     expect(empty.top, isNull);
   });
 
-  test('isExhausted only when empty and no next page', () {
+  test('isExhausted only when empty and no next bundle', () {
+    // SPEC-0035 — 페이지가 없다. hasNextPage는 "더 부를 만한가"다.
     expect(
-      // SPEC-0029에서 원문/번역 두 구간이 사라져 소진 판정이 한 줄로 돌아왔다.
-      const SwipeQueue(
-        cards: <TouristSpot>[],
-        loadedPage: 0,
-        hasNextPage: false,
-      ).isExhausted,
+      const SwipeQueue(cards: <TouristSpot>[], hasNextPage: false).isExhausted,
       isTrue,
     );
     expect(
-      const SwipeQueue(
-        cards: <TouristSpot>[],
-        loadedPage: 0,
-        hasNextPage: true,
-      ).isExhausted,
+      const SwipeQueue(cards: <TouristSpot>[], hasNextPage: true).isExhausted,
       isFalse,
     );
     expect(
       const SwipeQueue(
         cards: <TouristSpot>[_a],
-        loadedPage: 0,
         hasNextPage: false,
       ).isExhausted,
       isFalse,
     );
   });
 
-  test('nextPage is the page after loadedPage, null when exhausted', () {
-    const SwipeQueue more = SwipeQueue(
-      cards: <TouristSpot>[_a],
-      loadedPage: 2,
-      hasNextPage: true,
-    );
-    expect(more.nextPage, 3);
-
-    const SwipeQueue done = SwipeQueue(
-      cards: <TouristSpot>[_a],
-      loadedPage: 2,
-      hasNextPage: false,
-    );
-    expect(done.nextPage, isNull);
-  });
-
-  // SPEC-0029 — 원문/번역 구간이 사라져 페이지 번호가 한 줄로 이어진다. 마지막
-  // 페이지를 받은 뒤 0으로 되감기던 전환점이 없다.
-  test('마지막 페이지 뒤에 되감기지 않는다', () {
-    const SwipeQueue lastPage = SwipeQueue(
-      cards: <TouristSpot>[_a],
-      loadedPage: 3,
-      hasNextPage: false,
-    );
-
-    expect(lastPage.nextPage, isNull, reason: '이어 받을 구간이 없다');
-    expect(lastPage.isExhausted, isFalse, reason: '카드가 남아 있다');
-  });
-
-  // SPEC-0035 — 추천 묶음 소스에는 페이지가 없다. loadedPage가 null이면 hasNextPage가
-  // 참이어도 넘길 페이지 번호가 없고, 보충은 컨트롤러가 같은 인자로 다시 부른다.
-  test('묶음 소스(loadedPage null)는 nextPage가 없다', () {
-    const SwipeQueue bundle = SwipeQueue(
-      cards: <TouristSpot>[_a],
-      loadedPage: null,
-      hasNextPage: true,
-    );
-
-    expect(bundle.nextPage, isNull);
-    expect(bundle.isExhausted, isFalse);
-    expect(bundle.copyWith(hasNextPage: false).loadedPage, isNull);
-  });
-
   test('copyWith replaces only given fields', () {
     const SwipeQueue q = SwipeQueue(
       cards: <TouristSpot>[_a],
-      loadedPage: 1,
       hasNextPage: true,
     );
     final SwipeQueue next = q.copyWith(cards: const <TouristSpot>[]);
     expect(next.cards, isEmpty);
-    expect(next.loadedPage, 1);
     expect(next.hasNextPage, isTrue);
   });
 
   test('removeCard drops every occurrence of the id', () {
     const SwipeQueue q = SwipeQueue(
       cards: <TouristSpot>[_a, _b, _a],
-      loadedPage: 0,
       hasNextPage: false,
     );
 
@@ -852,52 +796,10 @@ void main() {
   test('removeCard returns the same queue when the id is absent', () {
     const SwipeQueue q = SwipeQueue(
       cards: <TouristSpot>[_a],
-      loadedPage: 0,
       hasNextPage: false,
     );
 
     expect(identical(q.removeCard('missing'), q), isTrue);
-  });
-
-  // ─── swipe_feed_key (SPEC-0035) ──────────────────────────────
-
-  test('SwipeFeedKey는 소스와 선택 둘 다로 같음을 판정한다', () {
-    final SpotCategorySelection sel = SpotCategorySelection(
-      const <SpotCategory>[SpotCategory(code: 'TOURIST_SPOT', label: 'T')],
-    );
-    final SwipeFeedKey rec = SwipeFeedKey(recommended: true, selection: sel);
-
-    expect(rec, SwipeFeedKey(recommended: true, selection: sel));
-    expect(rec, isNot(SwipeFeedKey(recommended: false, selection: sel)));
-    expect(
-      rec,
-      isNot(
-        SwipeFeedKey(recommended: true, selection: SpotCategorySelection.empty),
-      ),
-    );
-    expect(
-      rec.hashCode,
-      SwipeFeedKey(recommended: true, selection: sel).hashCode,
-    );
-  });
-
-  test('SwipeFeedKey.scopeKey는 소스 접두로 같은 필터의 두 소스를 가른다', () {
-    expect(
-      SwipeFeedKey(
-        recommended: true,
-        selection: SpotCategorySelection.empty,
-      ).scopeKey,
-      'recommended/',
-    );
-    expect(
-      SwipeFeedKey(
-        recommended: false,
-        selection: SpotCategorySelection(const <SpotCategory>[
-          SpotCategory(code: 'TOURIST_SPOT', label: 'T'),
-        ]),
-      ).scopeKey,
-      'all/TOURIST_SPOT',
-    );
   });
 
   // ─── tour_api_text ───────────────────────────────────────────

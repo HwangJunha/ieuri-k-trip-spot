@@ -55,7 +55,6 @@ void main() {
       final container = makeContainer(
         spotRepository: FakeSpotRepository(
           feed: <TouristSpot>[homeSpot('a'), homeSpot('b')],
-          pageSize: 10,
         ),
       );
 
@@ -92,10 +91,7 @@ void main() {
 
     test('AC-16.1 · 설정된 반경을 인자로 조회한다', () async {
       await prefs.setDouble('search_radius_km', 30);
-      final repository = FakeSpotRepository(
-        feed: <TouristSpot>[homeSpot('a')],
-        pageSize: 10,
-      );
+      final repository = FakeSpotRepository(feed: <TouristSpot>[homeSpot('a')]);
       final container = makeContainer(spotRepository: repository);
 
       await container.read(nearbySpotsSectionProvider.future);
@@ -106,10 +102,7 @@ void main() {
     });
 
     test('AC-16.2 · 반경이 바뀌면 다음 조회에 반영된다', () async {
-      final repository = FakeSpotRepository(
-        feed: <TouristSpot>[homeSpot('a')],
-        pageSize: 10,
-      );
+      final repository = FakeSpotRepository(feed: <TouristSpot>[homeSpot('a')]);
       final container = makeContainer(spotRepository: repository);
       await container.read(nearbySpotsSectionProvider.future);
 
@@ -230,11 +223,10 @@ void main() {
     });
 
     test('AC-20.1·20.2 · 재시도는 그 섹션만 다시 조회한다', () async {
-      final repository =
-          FakeSpotRepository(feed: <TouristSpot>[homeSpot('a')], pageSize: 10)
-            ..recommendedFailure = SpotFailure.network
-            // 첫 호출만 실패하고 두 번째부터 성공한다.
-            ..failRecommendedTimes = 1;
+      final repository = FakeSpotRepository(feed: <TouristSpot>[homeSpot('a')])
+        ..recommendedFailure = SpotFailure.network
+        // 첫 호출만 실패하고 두 번째부터 성공한다.
+        ..failRecommendedTimes = 1;
       final events = FakeEventRepository(festivals: const <Festival>[]);
       final container = makeContainer(
         spotRepository: repository,
@@ -279,10 +271,7 @@ void main() {
   // 서버가 Accept-Language로 번역해 주는 문장이라 다시 받는 수밖에 없다.
   group('언어 전환', () {
     test('언어를 바꾸면 Near you를 다시 받는다', () async {
-      final repository = FakeSpotRepository(
-        feed: <TouristSpot>[homeSpot('a')],
-        pageSize: 10,
-      );
+      final repository = FakeSpotRepository(feed: <TouristSpot>[homeSpot('a')]);
       final ProviderContainer container = makeContainer(
         spotRepository: repository,
       );
@@ -309,7 +298,6 @@ void main() {
       // 그 지역에 활성 언어 장소가 둘뿐인 것이 정상 결과다.
       final repository = FakeSpotRepository(
         feed: <TouristSpot>[homeSpot('o1'), homeSpot('o2')],
-        pageSize: 10,
       );
       final container = makeContainer(spotRepository: repository);
 
