@@ -66,6 +66,30 @@ void main() {
       expect(spots.map((TouristSpot s) => s.id), <String>['a', 'b']);
     });
 
+    // SPEC-0035 AC-10.1 — 홈은 추천 묶음을 first: 10으로 정확히 1회 부른다.
+    test('AC-10.1 · 추천 묶음을 first: 10으로 1회 부른다', () async {
+      final repository = FakeSpotRepository(feed: <TouristSpot>[homeSpot('a')]);
+      final container = makeContainer(spotRepository: repository);
+
+      await container.read(nearbySpotsSectionProvider.future);
+
+      expect(repository.recommendedRequests, hasLength(1));
+      expect(repository.recommendedRequests.single.first, homeSectionSize);
+      // 홈은 필터가 없다.
+      expect(repository.recommendedRequests.single.categoryCodes, isNull);
+    });
+
+    test('AC-10.1 · 위치 새로고침이면 다시 1회 부른다', () async {
+      final repository = FakeSpotRepository(feed: <TouristSpot>[homeSpot('a')]);
+      final container = makeContainer(spotRepository: repository);
+      await container.read(nearbySpotsSectionProvider.future);
+
+      container.invalidate(currentCoordinatesProvider);
+      await container.read(nearbySpotsSectionProvider.future);
+
+      expect(repository.recommendedCallCount, 2);
+    });
+
     test('AC-16.1 · 설정된 반경을 인자로 조회한다', () async {
       await prefs.setDouble('search_radius_km', 30);
       final repository = FakeSpotRepository(
@@ -171,7 +195,8 @@ void main() {
   group('섹션 독립성 (R19·R20)', () {
     test('AC-19.1 · 한 섹션이 실패해도 나머지는 정상이다', () async {
       final container = makeContainer(
-        spotRepository: FakeSpotRepository(pageFailure: SpotFailure.network),
+        spotRepository: FakeSpotRepository()
+          ..recommendedFailure = SpotFailure.network,
         // Happening Now도 페이크를 준다 — 없으면 실제 GraphQL 클라이언트로 나가
         // `secureStorageProvider` 미오버라이드에서 죽는다(SPEC-0013로 event가
         // 실데이터가 되면서 생긴 새 요구다).
@@ -205,13 +230,11 @@ void main() {
     });
 
     test('AC-20.1·20.2 · 재시도는 그 섹션만 다시 조회한다', () async {
-      final repository = FakeSpotRepository(
-        feed: <TouristSpot>[homeSpot('a')],
-        pageSize: 10,
-        pageFailure: SpotFailure.network,
-        // 첫 호출만 실패하고 두 번째부터 성공한다.
-        failPageTimes: 1,
-      );
+      final repository =
+          FakeSpotRepository(feed: <TouristSpot>[homeSpot('a')], pageSize: 10)
+            ..recommendedFailure = SpotFailure.network
+            // 첫 호출만 실패하고 두 번째부터 성공한다.
+            ..failRecommendedTimes = 1;
       final events = FakeEventRepository(festivals: const <Festival>[]);
       final container = makeContainer(
         spotRepository: repository,
@@ -247,7 +270,7 @@ void main() {
       expect(events.callCount, 0);
       // Near you는 실패 1회 + 재시도 성공 1회다. 섹션당 조회가 1회이므로
       // 보충 조회가 붙지 않는다(SPEC-0029 AC-19.1).
-      expect(repository.spotPageCallCount, 2);
+      expect(repository.recommendedCallCount, 2);
     });
   });
 
@@ -265,7 +288,7 @@ void main() {
       );
       await container.read(nearbySpotsSectionProvider.future);
       // 원문이 목표를 못 채워 번역본 보충까지 2회 나간다(SPEC-0019).
-      final int afterFirstLoad = repository.spotPageCallCount;
+      final int afterFirstLoad = repository.recommendedCallCount;
       expect(afterFirstLoad, greaterThan(0));
 
       await container
@@ -274,7 +297,7 @@ void main() {
       await container.read(nearbySpotsSectionProvider.future);
 
       // 언어가 바뀌면 처음부터 다시 받는다 — 조회가 더 나갔다는 것이 요지다.
-      expect(repository.spotPageCallCount, greaterThan(afterFirstLoad));
+      expect(repository.recommendedCallCount, greaterThan(afterFirstLoad));
     });
   });
 
@@ -295,7 +318,7 @@ void main() {
       );
 
       expect(spots.map((TouristSpot s) => s.id), <String>['o1', 'o2']);
-      expect(repository.spotPageCallCount, 1);
+      expect(repository.recommendedCallCount, 1);
     });
 
     test('Popular도 한 번만 조회한다', () async {

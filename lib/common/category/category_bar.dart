@@ -36,10 +36,23 @@ class CategoryBar extends StatelessWidget {
     required this.onToggle,
     required this.onSelectAll,
     this.onImage = false,
+    this.recommendedLabel,
+    this.recommendedSelected = false,
+    this.onRecommended,
   });
 
   /// 사진 위에 얹히는가 — 라벨 색을 가른다(→[CategoryBarEntry.onImage]).
   final bool onImage;
+
+  /// 「전체」 바로 뒤에 놓는 「추천」 항목(SPEC-0035, Discover 전용). [onRecommended]가
+  /// null이면 그리지 않는다 — 좋아요·검색·지도·커뮤니티에는 추천 소스가 없다.
+  ///
+  /// **칩처럼 동작한다**(사용자 결정 2026-09-12) — 개별 칩과 독립으로 켜고 끄며 함께
+  /// 켜질 수 있다. 다만 「전체」와는 배타다: 「전체」는 칩도 추천도 켜지지 않은 상태에만
+  /// 켜지고, 「전체」를 누르면 호출부가 둘 다 끈다.
+  final String? recommendedLabel;
+  final bool recommendedSelected;
+  final VoidCallback? onRecommended;
 
   /// 그릴 카테고리. 비어 있으면 바 자체를 그리지 않는다 — 목록이 아직 오지 않았거나
   /// 조회에 실패한 상태이며, 그때 "전체" 하나만 남은 바는 자리만 차지한다.
@@ -65,6 +78,9 @@ class CategoryBar extends StatelessWidget {
     if (available.isEmpty) return const SizedBox.shrink();
 
     final List<CategoryChipData> ordered = orderedCategoryChips(available);
+    final VoidCallback? onRecommended = this.onRecommended;
+    // 「추천」이 있으면 「전체」 뒤에 한 칸 더 끼운다.
+    final int leading = onRecommended == null ? 1 : 2;
     return SizedBox(
       height: 88,
       child: ListView.builder(
@@ -75,19 +91,30 @@ class CategoryBar extends StatelessWidget {
         // +`Icon`+`Text`라 열 개면 그대로 열 배다. 이 바는 부모가 다시 빌드될
         // 때마다 함께 도는 자리라 그 비용이 반복된다.
         //
-        // 0번은 "전체"이고 그 뒤가 개별 카테고리라 인덱스를 하나 민다.
-        itemCount: ordered.length + 1,
+        // 0번은 "전체", (있으면) 1번은 "추천", 그 뒤가 개별 카테고리라 인덱스를 민다.
+        itemCount: ordered.length + leading,
         itemBuilder: (BuildContext context, int index) {
           if (index == 0) {
             return CategoryBarEntry(
               icon: Icons.grid_view_rounded,
               label: allLabel,
-              selected: selectedIds.isEmpty,
+              // 「전체」는 아무것도 켜지지 않은 상태에만 켜진다 — 추천이 켜져 있으면
+              // 소스가 이미 전체 목록이 아니다.
+              selected: selectedIds.isEmpty && !recommendedSelected,
               onTap: onSelectAll,
               onImage: onImage,
             );
           }
-          final CategoryChipData chip = ordered[index - 1];
+          if (index == 1 && onRecommended != null) {
+            return CategoryBarEntry(
+              icon: Icons.auto_awesome_rounded,
+              label: recommendedLabel ?? '',
+              selected: recommendedSelected,
+              onTap: onRecommended,
+              onImage: onImage,
+            );
+          }
+          final CategoryChipData chip = ordered[index - leading];
           return CategoryBarEntry(
             icon: chip.icon,
             label: chip.label,

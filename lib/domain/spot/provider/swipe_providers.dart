@@ -14,11 +14,11 @@ import '../../../common/storage/search_radius_controller.dart';
 import '../model/retry_budget.dart';
 import '../model/retry_exhausted.dart';
 import '../../../common/category/spot_category.dart';
-import '../../../common/category/spot_category_selection.dart';
 import '../model/spot_failure.dart';
 import '../model/spot_reaction.dart';
 import '../../../common/analytics/analytics_events.dart';
 import '../../../common/analytics/app_analytics.dart';
+import '../model/swipe_feed_key.dart';
 import '../model/swipe_queue.dart';
 import '../model/tourist_spot.dart';
 import '../repository/spot_repository.dart';
@@ -30,19 +30,23 @@ import '../../auth/provider/session_scope.dart';
 
 part 'swipe_providers.g.dart';
 
-/// 한 번에 저장하는 페이지 크기(spec §4 방향 변경). 서버가 커서를 지원하지 않아
-/// page/size 오프셋으로 조회하며, provider가 100장씩 보관한다.
+/// 한 번에 받는 카드 수(spec §4 방향 변경). 전체 소스는 page/size 오프셋, 추천
+/// 소스는 `first`(서버 상한도 100, SPEC-0035 AC-1.3)로 같은 값을 쓴다.
 const int _pageSize = 100;
 
-/// 잔여 카드가 이 값 미만으로 떨어지면 다음 페이지를 선제 조회한다. 100장을 받아
+/// 잔여 카드가 이 값 미만으로 떨어지면 다음 묶음을 선제 조회한다. 100장을 받아
 /// 두고 10장 미만이 남으면 다음 100장을 이어 붙여 스택이 끊기지 않게 한다.
 const int _prefetchThreshold = 10;
 
-/// 받아온 페이지를 클라이언트에서 한 번 더 섞는다.
+/// 받아온 페이지를 클라이언트에서 한 번 더 섞는다. **전체(`spots`) 소스 전용이다.**
 ///
 /// 서버는 같은 좌표·카테고리에 같은 순서를 돌려주므로, 한 카페에 있는 사용자들이
 /// 전부 같은 카드를 같은 순서로 보게 된다. 페이지 안에서만 섞어도 100장 규모에서는
 /// 충분히 갈라진다 — 보통 한 세션에 100장을 넘기지 않기 때문이다.
+///
+/// 추천 묶음은 섞지 않는다(SPEC-0035). 순서 자체가 서버의 계약이고(점수 + 카테고리
+/// 반복 감점으로 닮은 카드가 연달아 오지 않게 배열한 것), 취향이 반영돼 사용자마다
+/// 이미 다르다 — 섞으면 그 배열을 무너뜨린다(POL-019).
 ///
 /// 페이지 **경계는 넘지 않는다**: 이어 붙인 다음 페이지는 그 페이지 안에서만 섞어
 /// 서버의 거리순 대분류(가까운 100장 → 다음 100장)를 보존한다. 전체를 다시 섞으면
@@ -100,21 +104,51 @@ class SelectedSpotCategory extends _$SelectedSpotCategory
 /// 등록·해제는 컨트롤러의 `build`/`onDispose`가 짝으로 한다. 컨테이너를 넘어 남지만
 /// [SwipeController]가 `keepAlive`라 실질 수명이 같고, 없는 세션은 `ref.exists`가
 /// 걸러낸다.
-final Set<SpotCategorySelection> liveSwipeSessions = <SpotCategorySelection>{};
+final Set<SwipeFeedKey> liveSwipeSessions = <SwipeFeedKey>{};
 
-/// Discover 스와이프 카드 스택 컨트롤러(spec §4). [selection]별 패밀리 —
-/// 선택 변경은 다른 인스턴스 로딩으로 이어진다.
+/// Discover 「추천」 토글(SPEC-0035, 사용자 결정 2026-09-12). 참이면 스와이프 소스가
+/// `recommendedSpots` 묶음이고, 거짓이면 기존 `spots` 오프셋 목록이다.
 ///
-/// **family 인자가 `Set`이 아니라 [SpotCategorySelection]인 이유**(SPEC-0020):
-/// Dart의 `Set`은 값 동등성이 없어, 원소가 같아도 매 빌드마다 새 키가 되어
-/// keepAlive 세션이 무한히 쌓이고 피드를 계속 다시 받는다. 정렬된 코드 문자열로
-/// 동등성을 정의한 값 객체가 그것을 막는다.
+/// **칩처럼 동작한다** — 카테고리 칩과 독립으로 켜고 끄며 함께 켜질 수 있다(켜진 칩은
+/// 두 소스 모두에 `categories` 필터로 얹힌다). 「전체」는 칩과 이 토글을 모두 끈
+/// 상태다.
 ///
-/// - 첫 빌드: 현재 좌표를 얻어 첫 페이지(page 0, size 100)를 조회해 [SwipeQueue]를 만든다.
+/// **기본은 켜짐**(사용자 결정) — 이 스펙의 목적(한 카테고리만 이어지는 문제 해결)이
+/// 곧 기본 경험이다. [SelectedSpotCategory]와 같은 이유로 `keepAlive`이며 로그아웃에
+/// 초기화된다.
+@Riverpod(keepAlive: true)
+class RecommendedFeedToggle extends _$RecommendedFeedToggle {
+  @override
+  bool build() {
+    ref.watchSignedIn();
+    return true;
+  }
+
+  void toggle() => state = !state;
+
+  void set(bool value) => state = value;
+}
+
+/// Discover 스와이프 카드 스택 컨트롤러(spec §4). [key]별 패밀리 — 소스(추천/전체)나
+/// 카테고리 선택이 바뀌면 다른 인스턴스 로딩으로 이어진다.
+///
+/// **family 인자가 [SwipeFeedKey]인 이유**(SPEC-0020·SPEC-0035): Dart의 `Set`은 값
+/// 동등성이 없어, 원소가 같아도 매 빌드마다 새 키가 되어 keepAlive 세션이 무한히
+/// 쌓이고 피드를 계속 다시 받는다. 정렬된 코드 문자열로 동등성을 정의한 값 객체에
+/// 소스 축을 더한 것이 이 키다.
+///
+/// 소스가 둘이다(SPEC-0035):
+/// - **추천**(`key.recommended`): `recommendedSpots(first: 100)` 묶음. 페이지가 없다.
+///   잔여 [_prefetchThreshold] 미만이면 **같은 인자로 다시 부르고** 받은 묶음에서
+///   큐에 이미 있는 id와 이 세션에서 이미 넘긴 id를 걷어낸 뒤 뒤에 붙인다(AC-10.2).
+///   `first`보다 적게 오거나 걷어낸 뒤 새 카드가 0장이면 그 조건에서는 더 부르지
+///   않는다 — 무한 재요청 방지. 받은 순서는 섞지 않는다(서버 배열이 계약).
+/// - **전체**: 첫 페이지(page 0, size 100)를 조회하고 다음 페이지가 있으면 이어
+///   붙인다. 페이지 안에서만 섞는다([_shuffled]).
+///
 /// - [swipe]: 낙관적으로 맨 위 카드를 즉시 제거하고 `reactToSpot`을 비동기 발사한다.
 ///   실패해도 카드를 복원하지 않고 조용히 로깅한다(좋아요 실패는 비치명적).
-/// - 잔여 [_prefetchThreshold] 미만이고 다음 페이지가 있으면 백그라운드로 이어 붙인다.
-/// - 소진: 큐가 비고 `hasNext=false`면 [SwipeQueue.isExhausted]로 빈 상태.
+/// - 소진: 큐가 비고 `hasNextPage=false`면 [SwipeQueue.isExhausted]로 빈 상태.
 /// [retry]로 자동 재시도를 1회로 묶는다(R1). Riverpod 기본값은 최대 10회 지수 백오프라
 /// 실패 상태에서 조회가 폭주하는데, 그 폭주의 실제 경로가 여기다(설계문서 §2.1).
 ///
@@ -135,13 +169,19 @@ class SwipeController extends _$SwipeController {
 
   bool _isPrefetching = false;
 
-  /// 이 선택의 재시도 예산(SPEC-0006 R4). 컨트롤러 바깥의 keepAlive provider라
+  /// 이 세션에서 큐를 떠난 카드 id(스와이프·상세 소비·사라진 카드). 추천 묶음을
+  /// 보충할 때 겹침 제거에 함께 쓴다(SPEC-0035 §5) — 반응 뮤테이션이 서버에 커밋되기
+  /// 전에 재요청하면 방금 넘긴 카드가 한 번 더 올 수 있고, 반응 전송이 실패한 카드도
+  /// 이 세션 안에서는 다시 보이지 않는 편이 맞다. 세션(빌드)마다 비운다.
+  final Set<String> _seenIds = <String>{};
+
+  /// 이 세션의 재시도 예산(SPEC-0006 R4). 컨트롤러 바깥의 keepAlive provider라
   /// 재빌드를 넘어 살아남는다 — 인스턴스 필드에 두면 폭주 경로인 재빌드가 카운터를
   /// 초기화해 상한이 무의미해진다(설계문서 §2.2).
   ///
-  /// 캐시 키는 정렬된 코드 문자열이다 — 예전에는 Dart enum 이름(`.name`)이었으나
-  /// 그 표현이 사라졌고, 선택 순서가 예산을 가르면 안 되므로 정렬된 값을 쓴다.
-  String get _retryScope => swipeRetryScope(selection.codes.join(','));
+  /// 캐시 키는 소스 + 정렬된 코드 문자열이다 — 선택 순서가 예산을 가르면 안 되고,
+  /// 같은 필터라도 소스가 다르면 다른 세션이다.
+  String get _retryScope => swipeRetryScope(key.scopeKey);
 
   SpotRetryBudget get _budget =>
       ref.read(spotRetryBudgetProvider(_retryScope).notifier);
@@ -150,11 +190,12 @@ class SwipeController extends _$SwipeController {
       ref.read(spotRetryBudgetProvider(_retryScope));
 
   @override
-  Future<SwipeQueue> build(SpotCategorySelection selection) async {
+  Future<SwipeQueue> build(SwipeFeedKey key) async {
     // 살아 있는 세션으로 등록한다 — 상세 화면이 사라진 카드를 걷어낼 때 훑을 목록이다.
     // 다중 선택 이후로는 가능한 조합을 열거할 수 없어 세션이 스스로 알린다.
-    liveSwipeSessions.add(selection);
-    ref.onDispose(() => liveSwipeSessions.remove(selection));
+    liveSwipeSessions.add(key);
+    ref.onDispose(() => liveSwipeSessions.remove(key));
+    _seenIds.clear();
 
     // 언어가 바뀌면 세션을 통째로 다시 만든다(SPEC-0007 §4.5·R-14). **이제 id 때문이
     // 아니다** — SPEC-0019에서 id가 언어 무관해져 옛 카드로도 상세·반응이 통한다.
@@ -191,8 +232,8 @@ class SwipeController extends _$SwipeController {
     return _fetchFirstPage(coords, radiusKm);
   }
 
-  /// 첫 페이지를 조회하고 실패를 상한에 계상한다. 계상 대상은 설계문서 §2.3의 표를
-  /// 따른다 — 인증 실패는 SPEC-0005 갱신 경로 소관이라 계상하지 않는다(AC-14·AC-15).
+  /// 첫 묶음/페이지를 조회하고 실패를 상한에 계상한다. 계상 대상은 설계문서 §2.3의
+  /// 표를 따른다 — 인증 실패는 SPEC-0005 갱신 경로 소관이라 계상하지 않는다(AC-14·AC-15).
   Future<SwipeQueue> _fetchFirstPage(
     Coordinates coords,
     double radiusKm,
@@ -201,11 +242,23 @@ class SwipeController extends _$SwipeController {
       // **한 번만 받는다**(SPEC-0029). 서버가 활성 언어의 장소만 주므로 원문·번역을
       // 갈라 두 번 조회하던 구간이 사라졌다. 다른 언어에만 있는 장소가 결과에서
       // 빠지는 것은 오류가 아니라 정상이며, 그 지역이 비면 그대로 소진 상태다.
+      if (key.recommended) {
+        final List<TouristSpot> bundle = await _fetchRecommended(
+          coords,
+          radiusKm,
+        );
+        return SwipeQueue(
+          cards: bundle,
+          loadedPage: null,
+          // first보다 적게 왔으면 반경 안 후보가 소진된 것이다(AC-10.2).
+          hasNextPage: bundle.length >= _pageSize,
+        );
+      }
       final OffsetPage<TouristSpot> page = await _repository.fetchSpotPage(
         latitude: coords.latitude,
         longitude: coords.longitude,
         radiusMeters: radiusMetersOf(radiusKm),
-        categoryCodes: selection.codesOrNull,
+        categoryCodes: key.selection.codesOrNull,
         page: 0,
         size: _pageSize,
       );
@@ -225,6 +278,19 @@ class SwipeController extends _$SwipeController {
     }
   }
 
+  /// 추천 묶음 한 번. 첫 조회와 보충이 **같은 인자**를 쓴다 — 서버가 이미 반응한
+  /// 장소를 빼 주므로 "다음"을 표현할 인자가 없다(SPEC-0035 §4).
+  Future<List<TouristSpot>> _fetchRecommended(
+    Coordinates coords,
+    double radiusKm,
+  ) => _repository.fetchRecommendedSpots(
+    latitude: coords.latitude,
+    longitude: coords.longitude,
+    radiusMeters: radiusMetersOf(radiusKm),
+    categoryCodes: key.selection.codesOrNull,
+    first: _pageSize,
+  );
+
   /// 맨 위 카드를 [reaction]으로 처리한다. 즉시 큐에서 제거(낙관적)하고 반응 기록을
   /// 비동기 발사한다. 데이터가 아직 없으면 무시한다.
   void swipe(SpotReaction reaction) {
@@ -233,6 +299,7 @@ class SwipeController extends _$SwipeController {
     if (queue == null || top == null) return;
 
     // 낙관적 제거: 카드를 먼저 없앤다.
+    _seenIds.add(top.id);
     state = AsyncData<SwipeQueue>(
       queue.copyWith(cards: queue.cards.sublist(1)),
     );
@@ -263,6 +330,7 @@ class SwipeController extends _$SwipeController {
     if (queue == null) return;
     if (!queue.cards.any((TouristSpot s) => s.id == spotId)) return;
 
+    _seenIds.add(spotId);
     state = AsyncData<SwipeQueue>(
       queue.copyWith(
         cards: queue.cards
@@ -297,36 +365,46 @@ class SwipeController extends _$SwipeController {
   void dropMissingCard(String spotId) {
     final SwipeQueue? queue = state.value;
     if (queue == null) return;
+    _seenIds.add(spotId);
     final SwipeQueue next = queue.removeCard(spotId);
     if (identical(next, queue)) return;
     state = AsyncData<SwipeQueue>(next);
     _maybePrefetch();
   }
 
-  /// 잔여 카드가 임계값 미만이고 다음 페이지가 있으면 한 번만 이어 조회한다.
+  /// 잔여 카드가 임계값 미만이고 더 받을 것이 있으면 한 번만 이어 조회한다.
   Future<void> _maybePrefetch() async {
     final SwipeQueue? queue = state.value;
     if (queue == null || _isPrefetching) return;
-    final int? nextPage = queue.nextPage;
-    if (nextPage == null || queue.cards.length >= _prefetchThreshold) return;
+    if (!queue.hasNextPage || queue.cards.length >= _prefetchThreshold) return;
 
     _isPrefetching = true;
     try {
-      // 좌표는 첫 조회 시점 값을 재사용한다(스와이프 중 위치가 바뀌어도 같은 피드를 이어감).
+      // 좌표는 첫 조회 시점 값을 재사용한다(스와이프 중 위치가 바뀌어도 같은 피드를
+      // 이어감). 좌표가 바뀌면 이 컨트롤러 자체가 재빌드된다(AC-10.3).
       final Coordinates coords = await ref.read(
         currentCoordinatesProvider.future,
       );
+      // 반경도 첫 요청과 같은 값을 싣는다 — 바뀌었다면 이미 build가 다시 돌았다.
+      final double radiusKm = ref.read(searchRadiusControllerProvider);
+      if (key.recommended) {
+        await _refillRecommended(coords, radiusKm);
+        return;
+      }
+      final int? nextPage = queue.nextPage;
+      if (nextPage == null) return;
       final OffsetPage<TouristSpot> next = await _repository.fetchSpotPage(
         latitude: coords.latitude,
         longitude: coords.longitude,
-        categoryCodes: selection.codesOrNull,
+        radiusMeters: radiusMetersOf(radiusKm),
+        categoryCodes: key.selection.codesOrNull,
         page: nextPage,
         size: _pageSize,
       );
       final SwipeQueue? current = state.value;
       if (current == null) return;
       state = AsyncData<SwipeQueue>(
-        current.copyWith(
+        SwipeQueue(
           cards: <TouristSpot>[...current.cards, ..._shuffled(next.items)],
           loadedPage: next.page,
           hasNextPage: next.hasNext,
@@ -338,6 +416,32 @@ class SwipeController extends _$SwipeController {
     } finally {
       _isPrefetching = false;
     }
+  }
+
+  /// 추천 묶음 보충(SPEC-0035 AC-10.2). 같은 인자로 다시 부르고, 큐에 이미 있는 id와
+  /// 이 세션에서 넘긴 id를 걷어낸 뒤 **받은 순서 그대로** 뒤에 붙인다.
+  ///
+  /// 더 부를지는 두 조건으로 정한다 — `first`보다 적게 왔으면 후보 소진이고, 걷어낸
+  /// 뒤 새 카드가 0장이면 서버가 줄 수 있는 것을 큐가 이미 다 들고 있는 것이다.
+  /// 어느 쪽이든 `hasNextPage`를 내려 같은 요청을 되풀이하지 않는다.
+  Future<void> _refillRecommended(Coordinates coords, double radiusKm) async {
+    final List<TouristSpot> bundle = await _fetchRecommended(coords, radiusKm);
+    final SwipeQueue? current = state.value;
+    if (current == null) return;
+    final Set<String> present = <String>{
+      ...current.cards.map((TouristSpot s) => s.id),
+      ..._seenIds,
+    };
+    final List<TouristSpot> fresh = bundle
+        .where((TouristSpot s) => !present.contains(s.id))
+        .toList(growable: false);
+    state = AsyncData<SwipeQueue>(
+      SwipeQueue(
+        cards: <TouristSpot>[...current.cards, ...fresh],
+        loadedPage: null,
+        hasNextPage: bundle.length >= _pageSize && fresh.isNotEmpty,
+      ),
+    );
   }
 
   /// 사용자의 명시적 재시도(R3). **상한을 무시하고 1회 조회한다**(AC-8·AC-13) —

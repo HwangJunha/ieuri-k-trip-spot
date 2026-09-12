@@ -5,6 +5,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/common/category/spot_category.dart';
+import 'package:ieuri_k_trip_spot/common/category/spot_category_selection.dart';
 import 'package:ieuri_k_trip_spot/common/location/coordinates.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_service.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
@@ -17,6 +18,7 @@ import 'package:ieuri_k_trip_spot/domain/spot/model/spot_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_image.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_info_item.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_intro.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/swipe_feed_key.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/swipe_queue.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/tour_api_text.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/tourist_spot.dart';
@@ -809,6 +811,20 @@ void main() {
     expect(lastPage.isExhausted, isFalse, reason: '카드가 남아 있다');
   });
 
+  // SPEC-0035 — 추천 묶음 소스에는 페이지가 없다. loadedPage가 null이면 hasNextPage가
+  // 참이어도 넘길 페이지 번호가 없고, 보충은 컨트롤러가 같은 인자로 다시 부른다.
+  test('묶음 소스(loadedPage null)는 nextPage가 없다', () {
+    const SwipeQueue bundle = SwipeQueue(
+      cards: <TouristSpot>[_a],
+      loadedPage: null,
+      hasNextPage: true,
+    );
+
+    expect(bundle.nextPage, isNull);
+    expect(bundle.isExhausted, isFalse);
+    expect(bundle.copyWith(hasNextPage: false).loadedPage, isNull);
+  });
+
   test('copyWith replaces only given fields', () {
     const SwipeQueue q = SwipeQueue(
       cards: <TouristSpot>[_a],
@@ -841,6 +857,47 @@ void main() {
     );
 
     expect(identical(q.removeCard('missing'), q), isTrue);
+  });
+
+  // ─── swipe_feed_key (SPEC-0035) ──────────────────────────────
+
+  test('SwipeFeedKey는 소스와 선택 둘 다로 같음을 판정한다', () {
+    final SpotCategorySelection sel = SpotCategorySelection(
+      const <SpotCategory>[SpotCategory(code: 'TOURIST_SPOT', label: 'T')],
+    );
+    final SwipeFeedKey rec = SwipeFeedKey(recommended: true, selection: sel);
+
+    expect(rec, SwipeFeedKey(recommended: true, selection: sel));
+    expect(rec, isNot(SwipeFeedKey(recommended: false, selection: sel)));
+    expect(
+      rec,
+      isNot(
+        SwipeFeedKey(recommended: true, selection: SpotCategorySelection.empty),
+      ),
+    );
+    expect(
+      rec.hashCode,
+      SwipeFeedKey(recommended: true, selection: sel).hashCode,
+    );
+  });
+
+  test('SwipeFeedKey.scopeKey는 소스 접두로 같은 필터의 두 소스를 가른다', () {
+    expect(
+      SwipeFeedKey(
+        recommended: true,
+        selection: SpotCategorySelection.empty,
+      ).scopeKey,
+      'recommended/',
+    );
+    expect(
+      SwipeFeedKey(
+        recommended: false,
+        selection: SpotCategorySelection(const <SpotCategory>[
+          SpotCategory(code: 'TOURIST_SPOT', label: 'T'),
+        ]),
+      ).scopeKey,
+      'all/TOURIST_SPOT',
+    );
   });
 
   // ─── tour_api_text ───────────────────────────────────────────

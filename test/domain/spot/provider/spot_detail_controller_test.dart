@@ -209,11 +209,11 @@ void main() {
     );
     addTearDown(container.dispose);
     container.listen(
-      swipeControllerProvider(noCategories),
+      swipeControllerProvider(allFeed),
       (_, _) {},
       fireImmediately: true,
     );
-    await container.read(swipeControllerProvider(noCategories).future);
+    await container.read(swipeControllerProvider(allFeed).future);
 
     final notifier = container.read(
       spotDetailControllerProvider('c1').notifier,
@@ -233,7 +233,7 @@ void main() {
     // 사라진 축제는 스와이프 스택에서도 빠진다(AC-44).
     expect(
       container
-          .read(swipeControllerProvider(noCategories))
+          .read(swipeControllerProvider(allFeed))
           .value!
           .cards
           .map((TouristSpot s) => s.id),
@@ -266,11 +266,11 @@ void main() {
     );
     addTearDown(container.dispose);
     container.listen(
-      swipeControllerProvider(noCategories),
+      swipeControllerProvider(allFeed),
       (_, _) {},
       fireImmediately: true,
     );
-    await container.read(swipeControllerProvider(noCategories).future);
+    await container.read(swipeControllerProvider(allFeed).future);
 
     // 상세를 한 번 정상적으로 연 뒤, 그 사이 축제가 삭제된 상황을 만든다.
     container.listen(
@@ -287,7 +287,7 @@ void main() {
     expect(container.read(spotDetailControllerProvider('c1')).hasError, isTrue);
 
     final AsyncValue<SwipeQueue> session = container.read(
-      swipeControllerProvider(noCategories),
+      swipeControllerProvider(allFeed),
     );
     // 세션은 살아 있고, 사라진 카드만 빠졌다.
     expect(session.hasError, isFalse);

@@ -81,6 +81,32 @@ class SpotRepositoryImpl implements SpotRepository {
     );
   }
 
+  /// 내 주변 추천 묶음(SPEC-0035). `Spots`와 같은 선택 집합이라 같은 카드 모델로
+  /// 매핑하되, 생성 타입이 오퍼레이션별로 갈리므로 매핑 함수는 따로 둔다.
+  @override
+  Future<List<TouristSpot>> fetchRecommendedSpots({
+    required double latitude,
+    required double longitude,
+    int? radiusMeters,
+    List<String>? categoryCodes,
+    int? first,
+  }) async {
+    final Map<String, dynamic> data = await _query(
+      documentNodeQueryRecommendedSpots,
+      Variables$Query$RecommendedSpots(
+        latitude: latitude,
+        longitude: longitude,
+        radiusMeters: radiusMeters,
+        categories: _categories(categoryCodes),
+        first: first,
+      ).toJson(),
+      'recommendedSpots',
+    );
+    return Query$RecommendedSpots.fromJson(
+      data,
+    ).recommendedSpots.map(_spotFromRecommendedNode).toList(growable: false);
+  }
+
   @override
   Future<List<SpotCategory>> fetchAvailableCategories(
     AppLanguage language,
@@ -363,6 +389,27 @@ class SpotRepositoryImpl implements SpotRepository {
       item.category.code,
       item.category.label,
       item.category.iconUrl,
+    ),
+  );
+
+  /// 추천 묶음 항목 → 도메인 [TouristSpot](SPEC-0035). 규칙은 [_spotFromItem]과
+  /// 같다(엔티티 정리, 거리 미터 반올림) — `Spot` 타입이 같아 카드도 같다.
+  TouristSpot _spotFromRecommendedNode(
+    Query$RecommendedSpots$recommendedSpots n,
+  ) => TouristSpot(
+    id: n.id,
+    name: sanitizeTourApiText(n.title) ?? n.title,
+    imageRef: n.thumbnailImageUrl,
+    location: sanitizeTourApiText(n.address) ?? '',
+    thumbnailImageUrl: n.thumbnailImageUrl,
+    address: sanitizeTourApiText(n.address),
+    distanceMeters: n.distanceMeters.round(),
+    copyright: _copyright(n.copyright),
+    attributionText: n.attributionText,
+    category: _categoryOf(
+      n.category.code,
+      n.category.label,
+      n.category.iconUrl,
     ),
   );
 

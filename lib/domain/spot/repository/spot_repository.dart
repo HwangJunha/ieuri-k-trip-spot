@@ -48,6 +48,24 @@ abstract interface class SpotRepository {
     required int size,
   });
 
+  /// 내 주변 추천 **묶음**(SPEC-0035 R10). 홈 「Near you」와 Discover 「추천」 소스가
+  /// 함께 쓴다. 인증 필수 — 미인증이면 `UNAUTHENTICATED`가 [SpotFailure]로 온다.
+  ///
+  /// **페이지가 아니다.** 서버가 이미 반응(좋아요·싫어요)한 장소를 뺀 뒤 점수순
+  /// 앞 [first]건을 주며, 다시 부르면 그 시점의 새 추천이 온다. 그래서 반환이
+  /// `OffsetPage`도 `CursorPage`도 아닌 목록이다. [first]보다 적게 오면 반경 안
+  /// 후보가 소진된 것이다(상한 100, 초과는 절삭).
+  ///
+  /// 순서는 서버가 정한 추천 순이며 클라이언트가 재정렬하지 않는다(POL-019).
+  /// [categoryCodes]는 [fetchSpotPage]와 같은 규약(빈 목록 금지, null = 전체).
+  Future<List<TouristSpot>> fetchRecommendedSpots({
+    required double latitude,
+    required double longitude,
+    int? radiusMeters,
+    List<String>? categoryCodes,
+    int? first,
+  });
+
   /// One tourist spot's full detail by [id] (=contentId, SPEC-0003). The active
   /// language is carried by the client's `Accept-Language` header, not an
   /// argument (spec §2). Maps the GraphQL response to a domain [SpotDetail];

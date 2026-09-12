@@ -17,6 +17,7 @@ import 'package:ieuri_k_trip_spot/domain/spot/model/spot_intro.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_reaction.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_search_result.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/spot_suggestion.dart';
+import 'package:ieuri_k_trip_spot/domain/spot/model/swipe_feed_key.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/tourist_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/repository/spot_repository.dart';
 
@@ -57,7 +58,25 @@ class FakeSpotRepository implements SpotRepository {
 
   /// 조회가 돌려줄 장소. **활성 언어의 장소만 담는다**(SPEC-0029) — 서버가 언어 축으로
   /// 이미 갈라 주므로 페이크도 원문/번역을 구분하지 않는다.
-  final List<TouristSpot> feed;
+  ///
+  /// `fetchSpotPage`와 `fetchRecommendedSpots`가 함께 쓴다. 바꿀 수 있다 — 추천 묶음을
+  /// 다시 불렀을 때 서버가 다른 묶음을 주는 상황(SPEC-0035 AC-10.2)을 테스트가
+  /// 도중에 갈아끼워 만든다.
+  List<TouristSpot> feed;
+
+  /// `fetchRecommendedSpots` 호출 횟수(검증용, SPEC-0035). 홈이 1회만 부르는지, 큐
+  /// 보충이 같은 인자로 다시 부르는지 본다.
+  int recommendedCallCount = 0;
+
+  /// 호출마다 실린 인자(검증용, SPEC-0035). 커서·페이지가 없어 세 값뿐이다.
+  final List<RecommendedRequest> recommendedRequests = <RecommendedRequest>[];
+
+  /// `fetchRecommendedSpots`가 던질 실패(설정 시). [pageFailure]와 별개다 — 홈은 추천을,
+  /// 전체 스와이프는 페이지를 부르므로 둘을 따로 실패시킬 수 있어야 한다.
+  Object? recommendedFailure;
+
+  /// [recommendedFailure]를 던질 횟수. 0이면 설정된 동안 계속 던진다.
+  int failRecommendedTimes = 0;
 
   final List<SpotCategory>? categories;
   final int pageSize;
@@ -273,6 +292,39 @@ class FakeSpotRepository implements SpotRepository {
     );
   }
 
+  /// 추천 묶음(SPEC-0035). **페이지가 없다** — 카테고리로 거른 [feed]의 앞 [first]건을
+  /// 그대로 준다. 서버가 반응한 장소를 빼는 동작은 흉내내지 않는다(그 판정은
+  /// 서버 테스트 몫이고, 클라이언트는 받은 묶음에서 겹침만 걷어낸다).
+  @override
+  Future<List<TouristSpot>> fetchRecommendedSpots({
+    required double latitude,
+    required double longitude,
+    int? radiusMeters,
+    List<String>? categoryCodes,
+    int? first,
+  }) async {
+    recommendedCallCount++;
+    requestedRadiiMeters.add(radiusMeters);
+    recommendedRequests.add((
+      first: first,
+      radiusMeters: radiusMeters,
+      categoryCodes: categoryCodes,
+    ));
+    if (recommendedFailure != null &&
+        (failRecommendedTimes == 0 ||
+            recommendedCallCount <= failRecommendedTimes)) {
+      throw recommendedFailure!;
+    }
+    final List<TouristSpot> pool = categoryCodes == null
+        ? feed
+        : feed
+              .where(
+                (TouristSpot s) => categoryCodes.contains(s.category?.code),
+              )
+              .toList();
+    return first == null ? pool : pool.take(first).toList(growable: false);
+  }
+
   @override
   Future<List<SpotCategory>> fetchAvailableCategories(
     AppLanguage language,
@@ -354,6 +406,26 @@ final SpotCategorySelection noCategories = SpotCategorySelection(
 /// [categories]를 담은 선택. family 인자로 그대로 쓴다.
 SpotCategorySelection selectionOf(List<SpotCategory> categories) =>
     SpotCategorySelection(categories);
+
+/// `fetchRecommendedSpots`에 실린 인자 한 벌(검증용, SPEC-0035).
+typedef RecommendedRequest = ({
+  int? first,
+  int? radiusMeters,
+  List<String>? categoryCodes,
+});
+
+/// 전체(`spots`) 소스 + 선택 없음 — 예전 `swipeControllerProvider(noCategories)`가
+/// 가리키던 세션이다. 추천이 기본이 된 뒤(SPEC-0035)에도 오프셋 경로를 검증하는
+/// 테스트는 이 키를 쓴다.
+final SwipeFeedKey allFeed = SwipeFeedKey(
+  recommended: false,
+  selection: noCategories,
+);
+
+/// 추천 소스 + [categories] 필터. 비우면 필터 없는 추천 묶음이다.
+SwipeFeedKey recommendedFeed([
+  List<SpotCategory> categories = const <SpotCategory>[],
+]) => SwipeFeedKey(recommended: true, selection: selectionOf(categories));
 
 /// 좋아요 목록 컨트롤러의 family 키(SPEC-0033). 카테고리와 검색어를 함께 담는다 —
 /// 검색어를 생략하면 필터 없는 전체 조회다.

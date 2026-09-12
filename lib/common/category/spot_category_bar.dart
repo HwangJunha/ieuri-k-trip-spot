@@ -27,7 +27,14 @@ class SpotCategoryBar extends StatelessWidget {
     required this.onToggle,
     required this.onSelectAll,
     this.onImage = false,
+    this.recommendedSelected = false,
+    this.onRecommended,
   });
+
+  /// 「추천」 항목(SPEC-0035). [onRecommended]가 null이면 그리지 않는다 — Discover만
+  /// 넘긴다. 문구는 공용 키([AppLocalizations.categoryRecommended])다.
+  final bool recommendedSelected;
+  final VoidCallback? onRecommended;
 
   /// 사진 위에 얹히는가 — 라벨 색을 가른다(→[CategoryBarEntry.onImage]).
   /// 둘러보기 전체화면만 참이다.
@@ -55,5 +62,8 @@ class SpotCategoryBar extends StatelessWidget {
       ),
     ),
     onSelectAll: onSelectAll,
+    recommendedLabel: AppLocalizations.of(context).categoryRecommended,
+    recommendedSelected: recommendedSelected,
+    onRecommended: onRecommended,
   );
 }

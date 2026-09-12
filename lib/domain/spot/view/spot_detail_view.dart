@@ -17,7 +17,7 @@ import '../component/spot_info_item_list.dart';
 import '../component/spot_intro_rows.dart';
 import '../model/retry_exhausted.dart';
 import '../../../common/navigation/spot_detail_route.dart';
-import '../../../common/category/spot_category_selection.dart';
+import '../model/swipe_feed_key.dart';
 import '../model/spot_detail.dart';
 import '../model/spot_failure.dart';
 import '../model/spot_image.dart';
@@ -35,7 +35,7 @@ class SpotDetailView extends ConsumerWidget {
     super.key,
     required this.contentId,
     this.initialThumbnailUrl,
-    this.swipeCategory,
+    this.swipeFeed,
   });
 
   /// 스와이프 카드가 이미 가진 썸네일 URL(SPEC-0006 R8). 본문 조회가 끝나기 전에도
@@ -44,8 +44,9 @@ class SpotDetailView extends ConsumerWidget {
   /// (AC-25). 조회가 끝나면 응답의 `thumbnailImageUrl`이 최종 값이다(AC-26).
   final String? initialThumbnailUrl;
 
-  /// 이 상세를 연 스와이프 세션의 **카테고리 선택**(null=스와이프 밖에서 진입,
-  /// SPEC-0006 R11). 반응 후 그 세션에서 카드를 소비할 때 쓰는 키다.
+  /// 이 상세를 연 스와이프 세션의 키 — **소스(추천/전체)와 카테고리 선택**(null=
+  /// 스와이프 밖에서 진입, SPEC-0006 R11·SPEC-0035). 반응 후 그 세션에서 카드를
+  /// 소비할 때 쓴다.
   ///
   /// 이 관광지 자신의 카테고리가 아니라 **스와이프의 필터 집합**이다. 선택이 비어
   /// 있는 것(=전체)도 유효한 키다 — 빈 값을 null로 접으면 전체로 보던 사용자가
@@ -53,7 +54,7 @@ class SpotDetailView extends ConsumerWidget {
   ///
   /// 현재 선택 상태를 다시 읽지 않는 이유는, 상세를 열어둔 채 필터를 바꾸면 그
   /// 선택이 이미 다른 세션을 가리켜 정작 카드가 있는 인스턴스를 놓치기 때문이다.
-  final SpotCategorySelection? swipeCategory;
+  final SwipeFeedKey? swipeFeed;
 
   /// Discover 카드의 contentId(=Spot.id). 라우트 파라미터로 전달된다(R9).
   final String contentId;
@@ -79,7 +80,7 @@ class SpotDetailView extends ConsumerWidget {
           ),
           data: (SpotDetail data) => _DetailBody(
             contentId: contentId,
-            swipeCategory: swipeCategory,
+            swipeFeed: swipeFeed,
             detail: data,
             initialThumbnailUrl: initialThumbnailUrl,
           ),
@@ -273,16 +274,15 @@ class _ErrorState extends StatelessWidget {
 class _DetailBody extends ConsumerWidget {
   const _DetailBody({
     required this.contentId,
-    required this.swipeCategory,
+    required this.swipeFeed,
     required this.detail,
     this.initialThumbnailUrl,
   });
 
   final String contentId;
 
-  /// 이 상세를 연 스와이프 세션의 카테고리 선택(null=스와이프 밖). 반응 후 카드
-  /// 소비 대상이다.
-  final SpotCategorySelection? swipeCategory;
+  /// 이 상세를 연 스와이프 세션 키(null=스와이프 밖). 반응 후 카드 소비 대상이다.
+  final SwipeFeedKey? swipeFeed;
 
   final SpotDetail detail;
 
@@ -302,139 +302,139 @@ class _DetailBody extends ConsumerWidget {
     // 최상위를 한 번 감싸 제목·주소·소개·운영정보가 모두 한 번에 잡히게 한다.
     return SelectionArea(
       child: SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          SpotGallery(
-            images: detail.gallery,
-            // 리스트에서 보던 썸네일이 있으면 그것을 첫 장으로 유지한다(R8·AC-24) —
-            // 응답의 썸네일로 갈아끼우면 로딩 화면에서 본문으로 넘어가는 순간
-            // 이미지가 바뀐다. 직접 진입이면 응답 값이 첫 장이다(AC-25).
-            fallbackImageUrl: initialThumbnailUrl ?? detail.thumbnailImageUrl,
-            // 그 썸네일이 갤러리에 없을 수 있으므로 맞춤 판단 근거를 함께 넘긴다
-            // (R13) — 없으면 크롭하지 않는 쪽으로 떨어진다.
-            fallbackCopyright: detail.copyright,
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(detail.title, style: theme.textTheme.headlineSmall),
-                if (detail.hasAddress) ...<Widget>[
-                  const SizedBox(height: 8),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Icon(
-                        Icons.place_outlined,
-                        size: 18,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          detail.displayAddress!,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            SpotGallery(
+              images: detail.gallery,
+              // 리스트에서 보던 썸네일이 있으면 그것을 첫 장으로 유지한다(R8·AC-24) —
+              // 응답의 썸네일로 갈아끼우면 로딩 화면에서 본문으로 넘어가는 순간
+              // 이미지가 바뀐다. 직접 진입이면 응답 값이 첫 장이다(AC-25).
+              fallbackImageUrl: initialThumbnailUrl ?? detail.thumbnailImageUrl,
+              // 그 썸네일이 갤러리에 없을 수 있으므로 맞춤 판단 근거를 함께 넘긴다
+              // (R13) — 없으면 크롭하지 않는 쪽으로 떨어진다.
+              fallbackCopyright: detail.copyright,
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(detail.title, style: theme.textTheme.headlineSmall),
+                  if (detail.hasAddress) ...<Widget>[
+                    const SizedBox(height: 8),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Icon(
+                          Icons.place_outlined,
+                          size: 18,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            detail.displayAddress!,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: 16),
-                // 좋아요 개수만 좁게 watch 한다 — 낙관적 갱신/롤백 시 이 배지만
-                // 다시 그리고, 갤러리·소개 등 정적 서브트리는 건드리지 않는다(§5 select).
-                _LikeCount(contentId: contentId),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  // 좋아요 개수만 좁게 watch 한다 — 낙관적 갱신/롤백 시 이 배지만
+                  // 다시 그리고, 갤러리·소개 등 정적 서브트리는 건드리지 않는다(§5 select).
+                  _LikeCount(contentId: contentId),
 
-                // 소개글: overview 값이 있을 때만(AC-25).
-                if (detail.hasOverview) ...<Widget>[
+                  // 소개글: overview 값이 있을 때만(AC-25).
+                  if (detail.hasOverview) ...<Widget>[
+                    const SizedBox(height: 24),
+                    DetailSection(
+                      title: l10n.spotDetailOverviewTitle,
+                      child: Text(
+                        detail.displayOverview!,
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ),
+                  ],
+
+                  // 운영 정보: 값이 있는 항목이 하나라도 있을 때만. 카테고리에 없는
+                  // 개념은 서버가 null로 주므로 여행코스처럼 항목이 전무한 상세에선
+                  // 섹션 자체가 사라진다(AC-25).
+                  if (detail.hasIntro) ...<Widget>[
+                    const SizedBox(height: 24),
+                    DetailSection(
+                      title: l10n.spotDetailIntroTitle,
+                      child: SpotIntroRows(entries: detail.introEntries),
+                    ),
+                  ],
+
+                  // 이용안내: 내용이 있는 항목만 넘긴다(빈 항목은 모델이 걸러냈다).
+                  if (detail.hasInfoItems) ...<Widget>[
+                    const SizedBox(height: 24),
+                    DetailSection(
+                      title: l10n.spotDetailInfoTitle,
+                      child: SpotInfoItemList(items: detail.presentInfoItems),
+                    ),
+                  ],
+
+                  // 연락처: homepage·tel 중 하나라도 값이 있을 때만(빈 문자열 제외).
+                  if (detail.hasContact) ...<Widget>[
+                    const SizedBox(height: 24),
+                    DetailSection(
+                      title: l10n.spotDetailContactTitle,
+                      child: _ContactRows(detail: detail),
+                    ),
+                  ],
+
+                  // 「지금 여기 어때?」 진입점(SPEC-0026). **좋아요 여부와 무관하게
+                  // 항상 보인다** — 가기 전에 묻는 질문이라 좋아요를 조건으로 걸면
+                  // 질문이 가장 필요한 사람을 막는다. 서버도 2026-08-18에 게이팅을
+                  // 걷어냈다.
+                  //
+                  // 질문이 있으면 목록으로, 없으면 **빈 목록을 거치지 않고 바로 작성**
+                  // 으로 보낸다(설계 §진입점) — 빈 화면을 보여주고 다시 누르게 하면
+                  // 진입 장벽만 높아진다.
+                  //
+                  // **출처(AttributionBlock) 위에 둔다.** 출처는 법적 고지라 본문 맨
+                  // 끝이 자리이고, 그 아래에 있는 행동 버튼은 부록처럼 읽힌다.
                   const SizedBox(height: 24),
-                  DetailSection(
-                    title: l10n.spotDetailOverviewTitle,
-                    child: Text(
-                      detail.displayOverview!,
-                      style: theme.textTheme.bodyMedium,
+                  SpotQaEntryButton(
+                    catalogId: contentId,
+                    onOpenList: () => context.pushNamed(
+                      spotQuestionsRouteName,
+                      pathParameters: <String, String>{'spotId': contentId},
+                    ),
+                    // 장소명은 **표시용 힌트**로만 넘긴다(썸네일과 같은 성격) —
+                    // 「내 질문」 목록에 적어 둘 이름이며, 없어도 작성은 그대로 된다.
+                    onCompose: () => context.pushNamed(
+                      spotQaComposerRouteName,
+                      pathParameters: <String, String>{'spotId': contentId},
+                      queryParameters: <String, String>{'spot': detail.title},
                     ),
                   ),
-                ],
 
-                // 운영 정보: 값이 있는 항목이 하나라도 있을 때만. 카테고리에 없는
-                // 개념은 서버가 null로 주므로 여행코스처럼 항목이 전무한 상세에선
-                // 섹션 자체가 사라진다(AC-25).
-                if (detail.hasIntro) ...<Widget>[
                   const SizedBox(height: 24),
-                  DetailSection(
-                    title: l10n.spotDetailIntroTitle,
-                    child: SpotIntroRows(entries: detail.introEntries),
+                  AttributionBlock(
+                    attributionText: detail.attributionText,
+                    imageAttributions: detail.distinctImageAttributions,
                   ),
-                ],
 
-                // 이용안내: 내용이 있는 항목만 넘긴다(빈 항목은 모델이 걸러냈다).
-                if (detail.hasInfoItems) ...<Widget>[
+                  // 「내 질문」은 여기 두지 않는다 — 상세는 *이 장소*를 보는 화면이고
+                  // 내 질문은 장소를 가로지르는 목록이라 성격이 다르다. 질문 목록 화면
+                  // 상단과 마이페이지에 둔다(둘 다 "내" 맥락이다).
                   const SizedBox(height: 24),
-                  DetailSection(
-                    title: l10n.spotDetailInfoTitle,
-                    child: SpotInfoItemList(items: detail.presentInfoItems),
+                  DetailReactionBar(
+                    onReaction: (SpotReaction reaction) =>
+                        _react(context, ref, reaction),
                   ),
                 ],
-
-                // 연락처: homepage·tel 중 하나라도 값이 있을 때만(빈 문자열 제외).
-                if (detail.hasContact) ...<Widget>[
-                  const SizedBox(height: 24),
-                  DetailSection(
-                    title: l10n.spotDetailContactTitle,
-                    child: _ContactRows(detail: detail),
-                  ),
-                ],
-
-                // 「지금 여기 어때?」 진입점(SPEC-0026). **좋아요 여부와 무관하게
-                // 항상 보인다** — 가기 전에 묻는 질문이라 좋아요를 조건으로 걸면
-                // 질문이 가장 필요한 사람을 막는다. 서버도 2026-08-18에 게이팅을
-                // 걷어냈다.
-                //
-                // 질문이 있으면 목록으로, 없으면 **빈 목록을 거치지 않고 바로 작성**
-                // 으로 보낸다(설계 §진입점) — 빈 화면을 보여주고 다시 누르게 하면
-                // 진입 장벽만 높아진다.
-                //
-                // **출처(AttributionBlock) 위에 둔다.** 출처는 법적 고지라 본문 맨
-                // 끝이 자리이고, 그 아래에 있는 행동 버튼은 부록처럼 읽힌다.
-                const SizedBox(height: 24),
-                SpotQaEntryButton(
-                  catalogId: contentId,
-                  onOpenList: () => context.pushNamed(
-                    spotQuestionsRouteName,
-                    pathParameters: <String, String>{'spotId': contentId},
-                  ),
-                  // 장소명은 **표시용 힌트**로만 넘긴다(썸네일과 같은 성격) —
-                  // 「내 질문」 목록에 적어 둘 이름이며, 없어도 작성은 그대로 된다.
-                  onCompose: () => context.pushNamed(
-                    spotQaComposerRouteName,
-                    pathParameters: <String, String>{'spotId': contentId},
-                    queryParameters: <String, String>{'spot': detail.title},
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-                AttributionBlock(
-                  attributionText: detail.attributionText,
-                  imageAttributions: detail.distinctImageAttributions,
-                ),
-
-                // 「내 질문」은 여기 두지 않는다 — 상세는 *이 장소*를 보는 화면이고
-                // 내 질문은 장소를 가로지르는 목록이라 성격이 다르다. 질문 목록 화면
-                // 상단과 마이페이지에 둔다(둘 다 "내" 맥락이다).
-                const SizedBox(height: 24),
-                DetailReactionBar(
-                  onReaction: (SpotReaction reaction) =>
-                      _react(context, ref, reaction),
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -478,9 +478,9 @@ class _DetailBody extends ConsumerWidget {
     // 없다. **빈 선택(=전체)은 null이 아니다** — 그것도 유효한 세션 키이고, 둘을
     // 같이 취급했다가 전체로 보던 사용자가 좋아요를 눌러도 다음 카드로 넘어가지
     // 않는 회귀가 있었다.
-    final SpotCategorySelection? category = swipeCategory;
-    if (category != null) {
-      ref.read(swipeControllerProvider(category).notifier).consume(contentId);
+    final SwipeFeedKey? feed = swipeFeed;
+    if (feed != null) {
+      ref.read(swipeControllerProvider(feed).notifier).consume(contentId);
     }
 
     if (navigator.canPop()) navigator.pop();
