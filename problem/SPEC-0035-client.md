@@ -35,7 +35,7 @@ recommendedSpots(
 | 진입점 | 파일 · 단위 | 동작 |
 |---|---|---|
 | 홈 「Near you」 | `home_section_providers.dart` `nearbySpotsSection` | `fetchRecommendedSpots(first: 10)` 1회. 새로고침(좌표 무효화)이면 다시 1회(AC-10.1). `_NearYouSection`은 손대지 않았다 |
-| Discover 카테고리 바 | — | **손대지 않는다.** 바는 그대로 `[전체][칩…]`이고 「전체」의 뜻이 "필터 없는 추천"이 됐을 뿐이다 |
+| Discover 카테고리 바 | `discover_swipe_view.dart` `_DiscoverCategoryBar` | 첫 칩을 「전체」 대신 **「추천」**(`categoryRecommended`, `auto_awesome_rounded`)으로 넘긴다. 동작은 같다 — 칩을 모두 끈 상태가 필터 없는 추천이다. `SpotCategoryBar`/`CategoryBar`에 `allLabel`·`allIcon` 선택 인자를 더했고 좋아요·검색·지도는 기본값 「전체」 그대로 |
 | Discover 스와이프 | `swipe_providers.dart` `SwipeController` | family 키는 그대로 `SpotCategorySelection`. 소스는 `recommendedSpots(first: 100)` 묶음 **하나**. 칩은 `categories` 필터로 얹힌다 |
 | 상세 → 스와이프 세션 소비 | — | 손대지 않는다(세션 키가 안 바뀌었다) |
 | 장소 선택 시트(community) | — | **손대지 않는다.** 서버가 `spots`를 안 바꿨다 |
@@ -57,6 +57,9 @@ recommendedSpots(
 
 그래서 두 소스를 한 모델에 담던 것(`SwipeFeedKey`, `SwipeQueue.loadedPage: int?`, 라우트
 `source`, `_shuffled`)이 전부 사라지고 이번 변경 전보다 구조가 단순해졌다.
+
+바의 첫 칩은 「추천」이다. 소스가 추천 하나인데 「전체」라고 쓰면 거리순 전체 목록처럼 읽힌다
+(사용자 지적 2026-09-12). 문구 EN "For you" / KO "추천" / JA "おすすめ" / ZH "推薦".
 
 ## 핵심 배선
 
@@ -129,3 +132,4 @@ recommendedSpots(
 | 2026-09-11 | 초안(v1.0 계약 — `location`·커서) | ieuri-k-trip-spot #105 |
 | 2026-09-12 | **전면 재작성 — 서버 계약 변경(루트 쿼리·커서 없음·spots 불변)**. 「추천」 칩·기본 켜짐은 사용자 결정 | ieuri-server PR #133, 사용자 결정(2026-09-12) |
 | 2026-09-12 | 「전체」(`spots` 오프셋) 소스 제거 — 추천 단일 소스. `SwipeFeedKey`·「추천」 칩·라우트 `source`·셔플·`fetchSpotPage`·`query Spots` 삭제 | 실기기 확인 후 사용자 결정(2026-09-12) |
+| 2026-09-12 | Discover 바 첫 칩 문구 「전체」→「추천」(아이콘 포함). 다른 화면은 「전체」 유지 | 사용자 지적(2026-09-12) |

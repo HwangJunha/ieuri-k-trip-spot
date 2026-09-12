@@ -42,9 +42,9 @@ class DiscoverSwipeView extends ConsumerWidget {
     // 채울 수 있는 경우까지 함께 막혔다. 실제로 좌표를 못 얻었을 때만
     // `_ErrorState`가 안내한다 — 판정이 한 곳에 모인다.
 
-    // 최초 상태는 "전체"다(사용자 결정, 2026-08-15) — 아무것도 심지 않는다. 예전에는
-    // 진입 시 TOURIST_SPOT을 심었는데(R4), "전체" 칩이 생기면서 그 자리가 자연스러운
-    // 시작 상태가 됐다.
+    // 최초 상태는 빈 선택(사용자 결정, 2026-08-15) — 아무것도 심지 않는다. 예전에는
+    // 진입 시 TOURIST_SPOT을 심었는데(R4), 빈 선택이 정상 상태가 되면서 그 자리가
+    // 자연스러운 시작이 됐다. 이 화면에서 그 칩의 문구는 「추천」이다(SPEC-0035).
     final Set<SpotCategory> selected = ref.watch(selectedSpotCategoryProvider);
     final SpotCategorySelection selection = SpotCategorySelection(selected);
     final AsyncValue<SwipeQueue> queue = ref.watch(
@@ -98,6 +98,11 @@ class _DiscoverCategoryBar extends ConsumerWidget {
     return SpotCategoryBar(
       // 사진 위에 얹히므로 라벨을 흰색으로 받는다(R14의 가독성 보조).
       onImage: true,
+      // 첫 칩은 「전체」가 아니라 「추천」이다(SPEC-0035, 사용자 결정 2026-09-12). 이
+      // 화면의 소스는 추천 묶음 하나라 "필터 없음"이 곧 "추천"이고, 「전체」라고
+      // 쓰면 거리순 전체 목록처럼 읽힌다. 동작은 그대로 — 칩을 모두 끈 상태다.
+      allLabel: AppLocalizations.of(context).categoryRecommended,
+      allIcon: Icons.auto_awesome_rounded,
       // **`.value`만 고른다.** `AsyncValue`를 통째로 watch하면 로딩→데이터
       // 전환처럼 값이 같은 갱신에도 바가 다시 빌드된다.
       available: ref.watch(
@@ -171,7 +176,6 @@ class _OverlayControls extends StatelessWidget {
 ///
 /// `CategoryBar`의 높이를 바꾸면 이 값도 함께 고쳐야 한다.
 const double _overlayControlsHeight = 88 + 8 + 28;
-
 
 class _QueueBody extends ConsumerWidget {
   const _QueueBody({required this.selection, required this.queue});
@@ -289,9 +293,9 @@ class _EmptyState extends ConsumerWidget {
     }
   }
 
-  /// 선택을 "전체"로 되돌린다.
+  /// 선택을 필터 없는 「추천」으로 되돌린다.
   ///
-  /// 예전에는 기본 카테고리 하나로 되돌렸으나(R4), "전체" 칩이 생기면서 필터를 가장
+  /// 예전에는 기본 카테고리 하나로 되돌렸으나(R4), 빈 선택 칩이 생기면서 필터를 가장
   /// 넓히는 자리가 그쪽이 됐다 — "결과가 없으니 필터를 풀어 보라"는 이 버튼의 뜻에
   /// 맞는다. 빈 집합은 서버에 인자를 보내지 않는 상태다(AC5.1).
   void _resetCategory(WidgetRef ref) =>
@@ -556,7 +560,8 @@ class _CardStackState extends ConsumerState<_CardStack>
       ..removeListener(_onTick)
       ..addListener(_onTick)
       ..value = 0;
-    _controller.animateTo(1, duration: duration, curve: Curves.easeOutCubic)
+    _controller
+        .animateTo(1, duration: duration, curve: Curves.easeOutCubic)
         .whenCompleteOrCancel(() {
           if (!mounted) return;
           ref
