@@ -357,7 +357,10 @@ void main() {
           id: 'c1',
           title: 'T',
           thumbnailImageUrl: 'https://img/t.jpg',
-          coordinates: const Coordinates(latitude: 37.5665, longitude: 126.9780),
+          coordinates: const Coordinates(
+            latitude: 37.5665,
+            longitude: 126.9780,
+          ),
           copyright: CopyrightType.type1,
           attributionText: 'KTO',
           gallery: const <SpotImage>[],
@@ -739,92 +742,49 @@ void main() {
   test('top returns the first card, null when empty', () {
     const SwipeQueue full = SwipeQueue(
       cards: <TouristSpot>[_a],
-      loadedPage: 0,
       hasNextPage: false,
     );
     expect(full.top, _a);
 
     const SwipeQueue empty = SwipeQueue(
       cards: <TouristSpot>[],
-      loadedPage: 0,
       hasNextPage: false,
     );
     expect(empty.top, isNull);
   });
 
-  test('isExhausted only when empty and no next page', () {
+  test('isExhausted only when empty and no next bundle', () {
+    // SPEC-0035 — 페이지가 없다. hasNextPage는 "더 부를 만한가"다.
     expect(
-      // SPEC-0029에서 원문/번역 두 구간이 사라져 소진 판정이 한 줄로 돌아왔다.
-      const SwipeQueue(
-        cards: <TouristSpot>[],
-        loadedPage: 0,
-        hasNextPage: false,
-      ).isExhausted,
+      const SwipeQueue(cards: <TouristSpot>[], hasNextPage: false).isExhausted,
       isTrue,
     );
     expect(
-      const SwipeQueue(
-        cards: <TouristSpot>[],
-        loadedPage: 0,
-        hasNextPage: true,
-      ).isExhausted,
+      const SwipeQueue(cards: <TouristSpot>[], hasNextPage: true).isExhausted,
       isFalse,
     );
     expect(
       const SwipeQueue(
         cards: <TouristSpot>[_a],
-        loadedPage: 0,
         hasNextPage: false,
       ).isExhausted,
       isFalse,
     );
   });
 
-  test('nextPage is the page after loadedPage, null when exhausted', () {
-    const SwipeQueue more = SwipeQueue(
-      cards: <TouristSpot>[_a],
-      loadedPage: 2,
-      hasNextPage: true,
-    );
-    expect(more.nextPage, 3);
-
-    const SwipeQueue done = SwipeQueue(
-      cards: <TouristSpot>[_a],
-      loadedPage: 2,
-      hasNextPage: false,
-    );
-    expect(done.nextPage, isNull);
-  });
-
-  // SPEC-0029 — 원문/번역 구간이 사라져 페이지 번호가 한 줄로 이어진다. 마지막
-  // 페이지를 받은 뒤 0으로 되감기던 전환점이 없다.
-  test('마지막 페이지 뒤에 되감기지 않는다', () {
-    const SwipeQueue lastPage = SwipeQueue(
-      cards: <TouristSpot>[_a],
-      loadedPage: 3,
-      hasNextPage: false,
-    );
-
-    expect(lastPage.nextPage, isNull, reason: '이어 받을 구간이 없다');
-    expect(lastPage.isExhausted, isFalse, reason: '카드가 남아 있다');
-  });
-
   test('copyWith replaces only given fields', () {
     const SwipeQueue q = SwipeQueue(
       cards: <TouristSpot>[_a],
-      loadedPage: 1,
       hasNextPage: true,
     );
     final SwipeQueue next = q.copyWith(cards: const <TouristSpot>[]);
     expect(next.cards, isEmpty);
-    expect(next.loadedPage, 1);
     expect(next.hasNextPage, isTrue);
   });
 
   test('removeCard drops every occurrence of the id', () {
     const SwipeQueue q = SwipeQueue(
       cards: <TouristSpot>[_a, _b, _a],
-      loadedPage: 0,
       hasNextPage: false,
     );
 
@@ -836,7 +796,6 @@ void main() {
   test('removeCard returns the same queue when the id is absent', () {
     const SwipeQueue q = SwipeQueue(
       cards: <TouristSpot>[_a],
-      loadedPage: 0,
       hasNextPage: false,
     );
 

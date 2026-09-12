@@ -69,8 +69,6 @@ ProviderContainer _container(FakeSpotRepository repo) {
   return container;
 }
 
-
-
 Future<void> _settle(ProviderContainer container) async {
   for (int i = 0; i < 5; i++) {
     try {
@@ -190,7 +188,6 @@ void main() {
     final repo = FakeSpotRepository(
       detail: detailSpot('c1', likeCount: 10),
       feed: <TouristSpot>[swipeSpot('c1'), swipeSpot('c2')],
-      pageSize: 5,
       reactFailure: const SpotFailure(
         SpotFailureKind.userError,
         code: 'SPOT_NOT_FOUND',
@@ -250,7 +247,6 @@ void main() {
       'session without failing the session', () async {
     final repo = FakeSpotRepository(
       feed: <TouristSpot>[swipeSpot('c1'), swipeSpot('c2')],
-      pageSize: 5,
       detail: detailSpot('c1'),
     );
     // 스와이프 세션이 언어 전환에 반응하려고 locale을 watch하므로(SPEC-0007 §4.5)
@@ -368,5 +364,4 @@ void main() {
     // 라우트가 넘긴 값과 무관하게, 조회 결과의 thumbnailImageUrl이 최종 값이다.
     expect(detail.thumbnailImageUrl, 'https://img/c1.jpg');
   });
-
 }
