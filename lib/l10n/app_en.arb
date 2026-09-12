@@ -41,6 +41,7 @@
   "searchRetry": "Retry",
   "viewAll": "View all",
   "categoryAll": "All",
+  "categoryRecommended": "For you",
   "navHome": "Home",
   "navMap": "Map",
   "navDiscover": "Discover",
@@ -48,7 +49,10 @@
   "navNationalMap": "Korea Map",
   "navLibrary": "My Activity",
   "permissionPhotosRationaleTitle": "Fill your map from photos?",
-  "permissionPhotosRationaleBody": "We read the location saved in your photos to find where you've been. Your photos never leave your device, and coordinates are used only to identify regions — they're never stored.",
+  "permissionPhotosRationaleBody": "We look at the location saved in your photos to find the regions you've visited. Your photos are never sent to our server, and coordinates are never stored. Only the regions we find are saved to your map.",
+  "@permissionPhotosRationaleBody": {
+    "description": "Pre-permission rationale body. Same wording principle as the photo sync sheet (SPEC-0034 R8): say plainly that photos are not sent to the server — no euphemisms like \"never leave your device\"."
+  },
   "permissionPhotosBlockedMessage": "Photo access is off, so we can't fill your map from photos. You can allow it in Settings.",
   "nationalMapNationwide": "Nationwide",
   "nationalMapCellCount": "{visited} of {total}",
@@ -78,14 +82,32 @@
   "sharedMapGone": "This map is no longer available.",
   "sharedMapBlocked": "You can't view this map.",
   "photoSyncTitle": "Fill from photos",
-  "photoSyncBody": "We read the location saved in your photos to find where you've been. Your photos never leave your device.",
+  "photoSyncTitleDone": "Your map is filled in",
+  "@photoSyncTitleDone": {
+    "description": "Sheet title after the scan finished (SPEC-0034 R9)."
+  },
+  "photoSyncNoUploadNotice": "Your photos are never sent to our server.",
+  "@photoSyncNoUploadNotice": {
+    "description": "Highlighted notice right under the sheet title, shown at every stage (SPEC-0034 R8, user decision 2026-09-10). Say \"server\" plainly — never euphemisms like \"never leave your device\"."
+  },
+  "photoSyncBody": "We use only the location data saved in your photos to find the regions you've visited.",
+  "@photoSyncBody": {
+    "description": "Sheet body before scanning: what we do. The no-upload statement lives in photoSyncNoUploadNotice."
+  },
+  "photoSyncBodyResume": "We'll pick up where the last scan stopped.",
+  "@photoSyncBodyResume": {
+    "description": "Sheet body when a stopped scan can be resumed (SPEC-0034 R9)."
+  },
+  "photoSyncBodyDone": "If you fill again, we only look at photos added since.",
+  "@photoSyncBodyDone": {
+    "description": "Sheet body after the scan finished (SPEC-0034 R9)."
+  },
   "photoSyncStart": "Start",
   "photoSyncResume": "Resume",
   "photoSyncStop": "Stop",
   "photoSyncProgress": "Checked {done} of {total}",
   "photoSyncFoundSoFar": "{count} regions found so far",
   "photoSyncFound": "Found {count} regions",
-  "photoSyncConfirmBody": "Adding them will fill in your map.",
   "photoSyncRegister": "Add them",
   "photoSyncDone": "Your map is updated.",
   "photoSyncLimitedNotice": "Only the photos you picked are scanned. For your whole library: Settings > Apps > K-Trip Spot > Photos > All Photos.",
@@ -100,14 +122,14 @@
   "@photoSyncSelectMore": {
     "description": "iOS limited photo access notice/action"
   },
-  "photoSyncSummary": "Scanned {photos} photos and filled in {regions} regions.",
+  "photoSyncSummary": "Read {photos} photos and confirmed {cells} regions.",
   "@photoSyncSummary": {
-    "description": "Scan result: total photos scanned and regions filled.",
+    "description": "Scan result: photos read and map cells confirmed. {cells} counts map cells, not districts (SPEC-0034 R7).",
     "placeholders": {
       "photos": {
         "type": "int"
       },
-      "regions": {
+      "cells": {
         "type": "int"
       }
     }

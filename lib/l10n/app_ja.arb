@@ -41,6 +41,7 @@
   "searchRetry": "再試行",
   "viewAll": "すべて見る",
   "categoryAll": "すべて",
+  "categoryRecommended": "おすすめ",
   "navHome": "ホーム",
   "navMap": "マップ",
   "navDiscover": "発見",
@@ -48,7 +49,7 @@
   "navNationalMap": "全国地図",
   "navLibrary": "マイ活動",
   "permissionPhotosRationaleTitle": "写真から地図を埋めますか？",
-  "permissionPhotosRationaleBody": "写真に記録された位置から訪れた地域を探します。写真が端末の外に出ることはなく、座標は地域の判定にのみ使い保存しません。",
+  "permissionPhotosRationaleBody": "写真に記録された位置から訪れた地域を探し、地図を埋めます。写真はサーバーに送信せず、座標も保存しません。見つかった地域だけがマップに保存されます。",
   "permissionPhotosBlockedMessage": "写真へのアクセスがオフのため、写真から埋められません。設定で許可できます。",
   "nationalMapNationwide": "全国",
   "nationalMapCellCount": "{total}区画中{visited}区画",
@@ -78,14 +79,17 @@
   "sharedMapGone": "この地図はもう見られません。",
   "sharedMapBlocked": "この地図は見られません。",
   "photoSyncTitle": "写真から埋める",
-  "photoSyncBody": "写真に記録された位置から訪れた地域を探します。写真が端末の外に出ることはありません。",
+  "photoSyncTitleDone": "地図を埋めました",
+  "photoSyncNoUploadNotice": "写真はサーバーに送信しません",
+  "photoSyncBody": "写真に記録された位置データだけを使って、訪れた地域を探します。",
+  "photoSyncBodyResume": "前回止まったところから続けて探します。",
+  "photoSyncBodyDone": "もう一度埋めると、新しく追加された写真だけを確認します。",
   "photoSyncStart": "開始",
   "photoSyncResume": "続きから",
   "photoSyncStop": "停止",
   "photoSyncProgress": "{total}枚中{done}枚を確認しました",
   "photoSyncFoundSoFar": "これまでに{count}か所見つかりました",
   "photoSyncFound": "{count}か所見つかりました",
-  "photoSyncConfirmBody": "登録すると地図が埋まります。",
   "photoSyncRegister": "登録する",
   "photoSyncDone": "地図を更新しました。",
   "photoSyncLimitedNotice": "設定 > アプリ > K-Trip Spot > 写真 > すべての写真 を選ぶと、ライブラリ全体を確認します。",
@@ -96,13 +100,13 @@
   },
   "photoSyncSelectMore": "写真をさらに選ぶ",
   "@photoSyncSelectMore": {},
-  "photoSyncSummary": "写真{photos}枚から{regions}か所を埋めました。",
+  "photoSyncSummary": "写真{photos}枚を読んで{cells}か所を確認しました。",
   "@photoSyncSummary": {
     "placeholders": {
       "photos": {
         "type": "int"
       },
-      "regions": {
+      "cells": {
         "type": "int"
       }
     }

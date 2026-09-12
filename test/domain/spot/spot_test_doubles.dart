@@ -1,7 +1,6 @@
 import 'package:ieuri_k_trip_spot/common/localization/app_language.dart';
 import 'package:ieuri_k_trip_spot/common/location/coordinates.dart';
 import 'package:ieuri_k_trip_spot/common/location/location_service.dart';
-import 'package:ieuri_k_trip_spot/common/pagination/offset_page.dart';
 import 'package:ieuri_k_trip_spot/common/pagination/page.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/copyright_type.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/model/liked_spot.dart';
@@ -21,19 +20,16 @@ import 'package:ieuri_k_trip_spot/domain/spot/model/tourist_spot.dart';
 import 'package:ieuri_k_trip_spot/domain/spot/repository/spot_repository.dart';
 
 /// A single configurable fake [SpotRepository]. Each method returns whatever the
-/// test supplies, keeping test setup minimal. The swipe methods (SPEC-0002) page
-/// through [feed] in [pageSize] chunks so prefetch/exhaustion are testable.
+/// test supplies, keeping test setup minimal. The recommended bundle (SPEC-0035)
+/// returns the first `first` items of [feed] so refill/exhaustion are testable.
 class FakeSpotRepository implements SpotRepository {
   FakeSpotRepository({
     List<TouristSpot>? feed,
     this.categories,
-    this.pageSize = 5,
     this.reactShouldFail = false,
     this.reactFailure,
     this.detail,
     this.detailFailure,
-    this.pageFailure,
-    this.failPageTimes = 0,
     List<LikedSpot>? liked,
     this.likedPageSize = 2,
     this.likedSpotsFailure,
@@ -41,26 +37,32 @@ class FakeSpotRepository implements SpotRepository {
   }) : feed = feed ?? const <TouristSpot>[],
        liked = liked ?? const <LikedSpot>[];
 
-  /// `fetchSpotPage`가 던질 실패(설정 시). [failPageTimes]와 함께 쓰면 앞의 N회만
-  /// 실패하고 이후 성공한다 — 재시도 상한 검증용(SPEC-0006).
-  final Object? pageFailure;
-
-  /// [pageFailure]를 던질 횟수. 0이면 설정된 동안 계속 던진다.
-  final int failPageTimes;
-
-  /// `fetchSpotPage` 호출 횟수(검증용). 상한 소진 후 호출이 늘지 않는지 확인한다.
-  int spotPageCallCount = 0;
-
   /// 호출마다 실린 `radiusMeters`(설정 반경이 실제로 조회에 실리는지 확인용,
   /// SPEC-0011 R13). null은 인자를 보내지 않은 것 — 0km가 그 경우다.
   final List<int?> requestedRadiiMeters = <int?>[];
 
-  /// 조회가 돌려줄 장소. **활성 언어의 장소만 담는다**(SPEC-0029) — 서버가 언어 축으로
-  /// 이미 갈라 주므로 페이크도 원문/번역을 구분하지 않는다.
-  final List<TouristSpot> feed;
+  /// `fetchRecommendedSpots`가 돌려줄 장소. **활성 언어의 장소만 담는다**(SPEC-0029)
+  /// — 서버가 언어 축으로 이미 갈라 주므로 페이크도 원문/번역을 구분하지 않는다.
+  ///
+  /// 바꿀 수 있다 — 묶음을 다시 불렀을 때 서버가 다른 묶음을 주는 상황(SPEC-0035
+  /// AC-10.2)을 테스트가 도중에 갈아끼워 만든다.
+  List<TouristSpot> feed;
+
+  /// `fetchRecommendedSpots` 호출 횟수(검증용, SPEC-0035). 홈이 1회만 부르는지, 큐
+  /// 보충이 같은 인자로 다시 부르는지 본다.
+  int recommendedCallCount = 0;
+
+  /// 호출마다 실린 인자(검증용, SPEC-0035). 커서·페이지가 없어 세 값뿐이다.
+  final List<RecommendedRequest> recommendedRequests = <RecommendedRequest>[];
+
+  /// `fetchRecommendedSpots`가 던질 실패(설정 시). [failRecommendedTimes]와 함께 쓰면
+  /// 앞의 N회만 실패하고 이후 성공한다 — 재시도 상한 검증용(SPEC-0006).
+  Object? recommendedFailure;
+
+  /// [recommendedFailure]를 던질 횟수. 0이면 설정된 동안 계속 던진다.
+  int failRecommendedTimes = 0;
 
   final List<SpotCategory>? categories;
-  final int pageSize;
   final bool reactShouldFail;
 
   /// `reactToSpot`이 던질 도메인 실패(설정 시). [reactShouldFail]보다 우선한다 —
@@ -234,43 +236,37 @@ class FakeSpotRepository implements SpotRepository {
     return searchResult;
   }
 
+  /// 추천 묶음(SPEC-0035). **페이지가 없다** — 카테고리로 거른 [feed]의 앞 [first]건을
+  /// 그대로 준다. 서버가 반응한 장소를 빼는 동작은 흉내내지 않는다(그 판정은
+  /// 서버 테스트 몫이고, 클라이언트는 받은 묶음에서 겹침만 걷어낸다).
   @override
-  Future<OffsetPage<TouristSpot>> fetchSpotPage({
+  Future<List<TouristSpot>> fetchRecommendedSpots({
     required double latitude,
     required double longitude,
     int? radiusMeters,
     List<String>? categoryCodes,
-    required int page,
-    required int size,
+    int? first,
   }) async {
-    spotPageCallCount++;
+    recommendedCallCount++;
     requestedRadiiMeters.add(radiusMeters);
-    if (pageFailure != null &&
-        (failPageTimes == 0 || spotPageCallCount <= failPageTimes)) {
-      throw pageFailure!;
+    recommendedRequests.add((
+      first: first,
+      radiusMeters: radiusMeters,
+      categoryCodes: categoryCodes,
+    ));
+    if (recommendedFailure != null &&
+        (failRecommendedTimes == 0 ||
+            recommendedCallCount <= failRecommendedTimes)) {
+      throw recommendedFailure!;
     }
-    final List<TouristSpot> source = feed;
     final List<TouristSpot> pool = categoryCodes == null
-        ? source
-        : source
+        ? feed
+        : feed
               .where(
                 (TouristSpot s) => categoryCodes.contains(s.category?.code),
               )
               .toList();
-    // 프로바이더는 프로덕션에서 size=100을 보내지만, 페이징/선제조회를 작은 피드로
-    // 검증할 수 있게 페이크는 자신의 [pageSize]로 자른다(들어온 size는 무시).
-    final int start = page * pageSize;
-    final int end = (start + pageSize).clamp(0, pool.length);
-    final List<TouristSpot> items = start >= pool.length
-        ? const <TouristSpot>[]
-        : pool.sublist(start, end);
-    final bool hasNext = end < pool.length;
-    return OffsetPage<TouristSpot>(
-      items: items,
-      page: page,
-      hasNext: hasNext,
-      totalCount: pool.length,
-    );
+    return first == null ? pool : pool.take(first).toList(growable: false);
   }
 
   @override
@@ -354,6 +350,13 @@ final SpotCategorySelection noCategories = SpotCategorySelection(
 /// [categories]를 담은 선택. family 인자로 그대로 쓴다.
 SpotCategorySelection selectionOf(List<SpotCategory> categories) =>
     SpotCategorySelection(categories);
+
+/// `fetchRecommendedSpots`에 실린 인자 한 벌(검증용, SPEC-0035).
+typedef RecommendedRequest = ({
+  int? first,
+  int? radiusMeters,
+  List<String>? categoryCodes,
+});
 
 /// 좋아요 목록 컨트롤러의 family 키(SPEC-0033). 카테고리와 검색어를 함께 담는다 —
 /// 검색어를 생략하면 필터 없는 전체 조회다.

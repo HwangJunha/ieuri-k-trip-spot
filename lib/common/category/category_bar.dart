@@ -36,10 +36,15 @@ class CategoryBar extends StatelessWidget {
     required this.onToggle,
     required this.onSelectAll,
     this.onImage = false,
+    this.allIcon = Icons.grid_view_rounded,
   });
 
   /// 사진 위에 얹히는가 — 라벨 색을 가른다(→[CategoryBarEntry.onImage]).
   final bool onImage;
+
+  /// 첫 칩의 아이콘. 기본은 "전체"의 격자. Discover는 첫 칩이 「추천」이라(SPEC-0035)
+  /// 문구와 함께 아이콘도 바꾼다 — 문구만 바꾸면 격자 아이콘이 "추천"을 말하지 않는다.
+  final IconData allIcon;
 
   /// 그릴 카테고리. 비어 있으면 바 자체를 그리지 않는다 — 목록이 아직 오지 않았거나
   /// 조회에 실패한 상태이며, 그때 "전체" 하나만 남은 바는 자리만 차지한다.
@@ -80,7 +85,7 @@ class CategoryBar extends StatelessWidget {
         itemBuilder: (BuildContext context, int index) {
           if (index == 0) {
             return CategoryBarEntry(
-              icon: Icons.grid_view_rounded,
+              icon: allIcon,
               label: allLabel,
               selected: selectedIds.isEmpty,
               onTap: onSelectAll,

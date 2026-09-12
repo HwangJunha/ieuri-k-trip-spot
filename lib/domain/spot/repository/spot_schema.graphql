@@ -218,6 +218,21 @@ extend type Query {
     page: Int
     size: Int
   ): SpotPage!
+  # SPEC-0035 내 주변 추천 — Discover·홈의 유일한 소스(위 `spots`는 이 도메인에서
+  # 더 이상 부르지 않으며 커뮤니티 장소 시트가 쓴다). **인증 필수**(UNAUTHENTICATED). **페이지가 아니라
+  # 묶음이다** — 이미 반응(좋아요·싫어요)한 장소를 뺀 뒤 점수(거리·면세·카테고리
+  # 다양성·취향)순으로 앞 first건을 준다. 다시 부르면 그 시점의 새 추천이 오고,
+  # first보다 적게 오면 반경 안 후보가 소진된 것이다. 커서·세션·캐시가 없다.
+  # 좌표·반경·카테고리 검증은 spots와 같다(INVALID_COORDINATES·RADIUS_TOO_LARGE·
+  # EMPTY_CATEGORY_SET). first는 상한 100 초과 시 절삭(오류 아님).
+  # 서버 `src/main/resources/schema/tourism.graphqls`(2026-09-12)와 대조했다.
+  recommendedSpots(
+    latitude: Float!
+    longitude: Float!
+    radiusMeters: Int = 20000
+    categories: [String!]
+    first: Int = 20
+  ): [Spot!]!
   availableSpotCategories: [SpotCategory!]!
   # contentId(=Spot.id) 단건 상세 조회. 로케일은 Accept-Language 헤더로 전달(SPEC-0002
   # 규약) — 로케일 인자 없음. 유효 id는 항상 SpotDetail을 반환하고, 해소 실패는 최상위

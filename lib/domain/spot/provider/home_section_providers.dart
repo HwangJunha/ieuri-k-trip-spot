@@ -4,7 +4,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../common/localization/locale_controller.dart';
 import '../../../common/location/coordinates.dart';
 import '../../../common/location/location_providers.dart';
-import '../../../common/pagination/offset_page.dart';
 import '../../../common/pagination/page.dart';
 import '../../../common/storage/search_radius_controller.dart';
 import '../model/popular_spot.dart';
@@ -18,10 +17,12 @@ part 'home_section_providers.g.dart';
 /// 족하고, 홈에서는 페이지를 더 넘기지 않는다(더 보려면 Discover로 간다).
 const int homeSectionSize = 10;
 
-/// 홈 "Near you" 섹션(R16). 설정된 반경 안의 spot을 서버가 계산한 거리순으로 준다.
+/// 홈 "Near you" 섹션(R16 → SPEC-0035 AC-10.1). 설정된 반경 안의 spot을 서버가
+/// 계산한 **추천 순**(거리·면세·카테고리 다양성·취향)으로 준다.
 ///
-/// **Discover와 같은 `spots` 쿼리를 재사용한다**(설계 §3). 홈 전용 조회 경로를
-///따로 두면 같은 데이터에 두 규약이 생긴다.
+/// **Discover 「추천」과 같은 `recommendedSpots` 묶음을 재사용한다.** 홈 전용 조회
+/// 경로를 따로 두면 같은 데이터에 두 규약이 생긴다. 한 묶음(`first: 10`)만 받고
+/// 더 보려면 Discover로 간다 — 새로고침(좌표 무효화)이면 다시 1회다.
 ///
 /// 좌표와 반경을 `watch`하는 것이 AC-16.2를 만족시키는 지점이다 — 설정에서 반경을
 /// 바꾸면 이 provider가 무효화되어 다음 조회에 새 값이 실린다. `read`로 하면 값은
@@ -44,19 +45,17 @@ Future<List<TouristSpot>> nearbySpotsSection(Ref ref) async {
 
   final SpotRepository repository = ref.watch(spotRepositoryProvider);
 
-  // 정렬은 서버가 보장한다(거리 오름차순) — 클라이언트가 다시 정렬하지 않는다.
+  // 정렬은 서버가 보장한다(추천 순) — 클라이언트가 다시 정렬하지 않는다(POL-019).
   //
-  // **조회는 한 번이다**(SPEC-0029). 서버가 활성 언어의 장소만 주므로 원문을 먼저
-  // 채우고 번역본으로 보충하던 2단 조회가 사라졌다. 반경 안에 활성 언어 장소가
+  // **조회는 한 번이다**(SPEC-0029·SPEC-0035 AC-10.1). 서버가 활성 언어의 장소만
+  // 주므로 보충 조회가 없고, 추천은 묶음이라 페이지 인자도 없다. 반경 안에 후보가
   // 적으면 섹션이 짧거나 비는데, 그것이 정상 결과다.
-  final OffsetPage<TouristSpot> page = await repository.fetchSpotPage(
+  return repository.fetchRecommendedSpots(
     latitude: coords.latitude,
     longitude: coords.longitude,
     radiusMeters: radiusMetersOf(radiusKm),
-    page: 0,
-    size: homeSectionSize,
+    first: homeSectionSize,
   );
-  return page.items;
 }
 
 /// 홈 "Popular" 섹션(R18). 반경 안의 spot을 누적 좋아요 총합 내림차순으로 준다.

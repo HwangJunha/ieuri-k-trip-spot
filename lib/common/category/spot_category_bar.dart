@@ -18,7 +18,9 @@ import 'spot_category_icon.dart';
 /// 그대로 화면에 뜬다. 목록에 있는 진짜 인스턴스를 넘기는 편이 안전하다.
 ///
 /// "전체" 문구는 공용 키([AppLocalizations.categoryAll])다 — 커뮤니티가 자기
-/// `communityCategoryAll`을 계속 쓰므로 그 키를 빌리지 않는다.
+/// `communityCategoryAll`을 계속 쓰므로 그 키를 빌리지 않는다. Discover만 첫 칩을
+/// 「추천」으로 바꿔 넘긴다([allLabel]·[allIcon], SPEC-0035) — 그 화면의 소스가
+/// 추천 묶음 하나라 "필터 없음"이 곧 "추천"이다. 좋아요·검색·지도는 목록이라 「전체」다.
 class SpotCategoryBar extends StatelessWidget {
   const SpotCategoryBar({
     super.key,
@@ -27,7 +29,15 @@ class SpotCategoryBar extends StatelessWidget {
     required this.onToggle,
     required this.onSelectAll,
     this.onImage = false,
+    this.allLabel,
+    this.allIcon = Icons.grid_view_rounded,
   });
+
+  /// 첫 칩(필터 없음)의 문구. null이면 공용 「전체」다.
+  final String? allLabel;
+
+  /// 첫 칩의 아이콘. 기본은 "전체"의 격자.
+  final IconData allIcon;
 
   /// 사진 위에 얹히는가 — 라벨 색을 가른다(→[CategoryBarEntry.onImage]).
   /// 둘러보기 전체화면만 참이다.
@@ -46,7 +56,8 @@ class SpotCategoryBar extends StatelessWidget {
   Widget build(BuildContext context) => CategoryBar(
     available: spotCategoryChips(available),
     selectedIds: selected.map((SpotCategory c) => c.code).toSet(),
-    allLabel: AppLocalizations.of(context).categoryAll,
+    allLabel: allLabel ?? AppLocalizations.of(context).categoryAll,
+    allIcon: allIcon,
     onImage: onImage,
     onToggle: (String code) => onToggle(
       available.firstWhere(

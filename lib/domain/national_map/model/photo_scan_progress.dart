@@ -1,3 +1,19 @@
+/// 시군구 코드를 칸 id로 접는다(SPEC-0034 R5).
+///
+/// 판정 결과는 시군구 코드인데 지도는 칸 단위로 칠해진다. **서울 3개 구는 한
+/// 칸이므로 1이다** — 코드 수를 그대로 세면 지도에 칸 하나가 칠해졌는데 "3곳"이
+/// 된다. 그 오독이 이 버그였다.
+///
+/// [cellIdOf]에 없는 코드는 버린다. 어느 칸에도 속하지 않는 코드는 칠할 칸이
+/// 없으니 셀 것도 없다.
+Set<String> foldToCellIds(
+  Iterable<String> districtCodes,
+  Map<String, String> cellIdOf,
+) => <String>{
+  for (final String code in districtCodes)
+    if (cellIdOf[code] case final String id) id,
+};
+
 /// 사진 스캔의 단계(R29·R32).
 enum PhotoScanStage {
   /// 아직 시작하지 않았다.
@@ -32,10 +48,12 @@ class PhotoScanProgress {
     this.processed = 0,
     this.total = 0,
     this.foundCoordinates = 0,
-    this.resolvedCellCodes = const <String>[],
+    this.resolvedDistrictCodes = const <String>[],
     this.retryCount = 0,
     this.limitedAccess = false,
-    this.alreadyOnMapCount = 0,
+    this.alreadyOnMapCellCount = 0,
+    this.newCellCount = 0,
+    this.registeredCellCount,
   });
 
   final PhotoScanStage stage;
@@ -51,8 +69,16 @@ class PhotoScanProgress {
   /// 0으로 끝나도 오류가 아니다(R32) — "위치 정보가 있는 사진을 찾지 못했습니다".
   final int foundCoordinates;
 
-  /// 판정된 칸 코드. 사용자가 확인해야 등록된다(R30).
-  final List<String> resolvedCellCodes;
+  /// 판정된 **시군구 코드**(5자리). 사용자가 확인해야 등록된다(R30).
+  ///
+  /// **칸 id가 아니다**(SPEC-0034 R5). 예전 이름이 `resolvedCellCodes`라
+  /// "판정된 칸 코드"로 읽혔고, 시트가 이 리스트의 길이를 그대로 칸 수로 표시해
+  /// **서울 3개 구를 다녀오면 칸 하나가 칠해지는데 "3곳"이라고 말했다.** 지도는
+  /// 맞게 칠해지고 숫자만 틀렸다.
+  ///
+  /// 등록 요청이 보내는 값은 이것이 맞다 — 서버가 시군구 단위로 저장한다.
+  /// 표시용 수는 [newCellCount]·[registeredCellCount]가 따로 갖는다.
+  final List<String> resolvedDistrictCodes;
 
   /// 지금까지 쓴 재시도 횟수(POL-040).
   final int retryCount;
@@ -64,11 +90,28 @@ class PhotoScanProgress {
   /// 사실을 알리고 재선택 수단을 줘야, 사용자가 "왜 3장만 훑었지"에서 멈추지 않는다.
   final bool limitedAccess;
 
-  /// 사진에서 찾았으나 **이미 지도에 있던** 지역 수(2026-08-26).
+  /// 사진에서 찾았으나 **이미 지도에 있던** 칸 수(2026-08-26).
   ///
   /// 등록 대상은 아니지만 결과를 말할 때는 세야 한다 — 빼고 말하면 "1장에서
   /// 0곳을 찾았어요"가 되어 실패로 읽힌다(사용자 지적).
-  final int alreadyOnMapCount;
+  ///
+  /// **칸 단위다**(SPEC-0034 R6). 예전에는 시군구 단위라 같은 칸이 신규와
+  /// 기존으로 갈려 이중 계상됐다. 접은 뒤 신규 집합에서 기존 집합을 빼므로
+  /// 겹치는 칸은 [newCellCount]에서 빠지고 여기에만 남는다.
+  final int alreadyOnMapCellCount;
+
+  /// 이번 스캔이 **새로 찾은 칸** 수(SPEC-0034 R5).
+  ///
+  /// 스캔 중에는 등록 응답이 없으므로 이 로컬 추정을 쓴다 — 시군구 코드를 칸
+  /// id로 접은 집합의 크기다. 서울 3개 구는 1이 된다.
+  final int newCellCount;
+
+  /// 등록이 실제로 갱신한 칸 수(SPEC-0034 R7). 등록 전이거나 실패했으면 null.
+  ///
+  /// **완료 문구는 이 값을 쓴다.** 서버 응답이 알려주는 실제 갱신 칸이라 지도에
+  /// 칠해진 것과 정의상 일치한다. 실패한 경우에 수를 표시하지 않으려면 "0"이
+  /// 아니라 null이어야 한다 — 0은 "확인한 곳이 없다"는 참인 진술이 되어 버린다.
+  final int? registeredCellCount;
 
   /// 0.0~1.0. 전체를 모르면 0이다.
   double get ratio => total == 0 ? 0 : (processed / total).clamp(0.0, 1.0);
@@ -98,24 +141,34 @@ class PhotoScanProgress {
   /// 수도 있다.
   bool get canRescan => !limitedAccess;
 
+  /// [registeredCellCount]는 **지우려면 `clearRegisteredCellCount`를 쓴다.**
+  /// null을 넘기면 `??`가 기존 값을 살려 두므로 새 스캔이 지난 회차의 수를
+  /// 물려받는다.
   PhotoScanProgress copyWith({
     PhotoScanStage? stage,
     int? processed,
     int? total,
     int? foundCoordinates,
-    List<String>? resolvedCellCodes,
+    List<String>? resolvedDistrictCodes,
     int? retryCount,
     bool? limitedAccess,
-    int? alreadyOnMapCount,
+    int? alreadyOnMapCellCount,
+    int? newCellCount,
+    int? registeredCellCount,
+    bool clearRegisteredCellCount = false,
   }) => PhotoScanProgress(
     stage: stage ?? this.stage,
     processed: processed ?? this.processed,
     total: total ?? this.total,
     foundCoordinates: foundCoordinates ?? this.foundCoordinates,
-    resolvedCellCodes: resolvedCellCodes ?? this.resolvedCellCodes,
+    resolvedDistrictCodes: resolvedDistrictCodes ?? this.resolvedDistrictCodes,
     retryCount: retryCount ?? this.retryCount,
     limitedAccess: limitedAccess ?? this.limitedAccess,
-    alreadyOnMapCount: alreadyOnMapCount ?? this.alreadyOnMapCount,
+    alreadyOnMapCellCount: alreadyOnMapCellCount ?? this.alreadyOnMapCellCount,
+    newCellCount: newCellCount ?? this.newCellCount,
+    registeredCellCount: clearRegisteredCellCount
+        ? null
+        : (registeredCellCount ?? this.registeredCellCount),
   );
 
   @override
@@ -127,8 +180,10 @@ class PhotoScanProgress {
       other.foundCoordinates == foundCoordinates &&
       other.retryCount == retryCount &&
       other.limitedAccess == limitedAccess &&
-      other.alreadyOnMapCount == alreadyOnMapCount &&
-      _sameCodes(other.resolvedCellCodes, resolvedCellCodes);
+      other.alreadyOnMapCellCount == alreadyOnMapCellCount &&
+      other.newCellCount == newCellCount &&
+      other.registeredCellCount == registeredCellCount &&
+      _sameCodes(other.resolvedDistrictCodes, resolvedDistrictCodes);
 
   @override
   int get hashCode => Object.hash(
@@ -138,8 +193,10 @@ class PhotoScanProgress {
     foundCoordinates,
     retryCount,
     limitedAccess,
-    alreadyOnMapCount,
-    Object.hashAll(resolvedCellCodes),
+    alreadyOnMapCellCount,
+    newCellCount,
+    registeredCellCount,
+    Object.hashAll(resolvedDistrictCodes),
   );
 
   static bool _sameCodes(List<String> a, List<String> b) {

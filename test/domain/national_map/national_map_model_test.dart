@@ -461,6 +461,7 @@ void main() {
           hasCells: true,
           hasGeometries: true,
           failed: false,
+          settled: true,
         ),
         MapScreenViewState.map,
       );
@@ -473,6 +474,7 @@ void main() {
           hasCells: true,
           hasGeometries: true,
           failed: true,
+          settled: true,
         ),
         MapScreenViewState.map,
       );
@@ -484,6 +486,7 @@ void main() {
           hasCells: false,
           hasGeometries: false,
           failed: false,
+          settled: false,
         ),
         MapScreenViewState.loading,
       );
@@ -495,6 +498,7 @@ void main() {
           hasCells: true,
           hasGeometries: false,
           failed: false,
+          settled: false,
         ),
         MapScreenViewState.loading,
       );
@@ -506,9 +510,110 @@ void main() {
           hasCells: false,
           hasGeometries: false,
           failed: true,
+          settled: true,
         ),
         MapScreenViewState.error,
       );
+    });
+
+    // 빈 목록이 지도로 그려졌다(SPEC-0034 R2). 161칸은 서버가 개수를 강제하는
+    // 고정 집합이라 빈 결과는 정상일 수 없는데, 판정이 "non-null인가"만 봐서
+    // 빈 리스트가 그대로 지도 상태를 통과했다.
+    test('조회가 끝났는데 값이 비어 있으면 오류다', () {
+      // 화면이 `isNotEmpty`를 넘기므로 여기서는 hasCells가 거짓으로 들어온다.
+      expect(
+        MapScreenViewState.of(
+          hasCells: false,
+          hasGeometries: true,
+          failed: false,
+          settled: true,
+        ),
+        MapScreenViewState.error,
+      );
+    });
+
+    test('아직 조회 중이면 비어 있어도 로딩이다', () {
+      expect(
+        MapScreenViewState.of(
+          hasCells: false,
+          hasGeometries: true,
+          failed: false,
+          settled: false,
+        ),
+        MapScreenViewState.loading,
+      );
+    });
+
+    test('조회가 끝났어도 값이 다 있으면 지도다', () {
+      // settled는 빈 값일 때만 판정을 바꾼다 — 값이 있으면 아무 영향이 없다.
+      expect(
+        MapScreenViewState.of(
+          hasCells: true,
+          hasGeometries: true,
+          failed: false,
+          settled: false,
+        ),
+        MapScreenViewState.map,
+      );
+    });
+  });
+
+  // 시트가 시군구 코드 수를 칸 수로 표시해, 지도는 칸 하나를 칠하면서 "3곳"이라고
+  // 말했다(SPEC-0034 R5). 이 접기 함수가 그 차이를 없앤다.
+  group('시군구 코드를 칸으로 접기 (foldToCellIds)', () {
+    // 서울 3개 구가 한 칸. 수원 2개 구가 다른 한 칸.
+    const Map<String, String> cellIdOf = <String, String>{
+      '11110': 'seoul',
+      '11140': 'seoul',
+      '11170': 'seoul',
+      '41111': 'suwon',
+      '41113': 'suwon',
+      '26110': 'busan',
+      '30110': 'daejeon',
+    };
+
+    test('서울 3개 구는 한 칸이다', () {
+      expect(
+        foldToCellIds(<String>['11110', '11140', '11170'], cellIdOf),
+        <String>{'seoul'},
+      );
+    });
+
+    test('서로 다른 칸이면 그 수 그대로다', () {
+      expect(
+        foldToCellIds(<String>['11110', '26110', '30110'], cellIdOf).length,
+        3,
+      );
+    });
+
+    test('수원 2개 구는 한 칸이다', () {
+      expect(foldToCellIds(<String>['41111', '41113'], cellIdOf), <String>{
+        'suwon',
+      });
+    });
+
+    test('빈 입력은 0이다', () {
+      expect(foldToCellIds(const <String>[], cellIdOf), isEmpty);
+    });
+
+    test('어느 칸에도 속하지 않는 코드는 버린다', () {
+      // 칠할 칸이 없으니 셀 것도 없다.
+      expect(foldToCellIds(<String>['99999', '11110'], cellIdOf), <String>{
+        'seoul',
+      });
+    });
+
+    // R6: 접은 뒤 신규에서 기존을 빼면 겹치는 칸이 한쪽에만 남는다.
+    test('겹치는 칸은 신규에서 빠져 한쪽에만 계상된다', () {
+      // 강남(11110)은 이미 지도에 있고, 사진에서 서초(11140)가 나왔다.
+      // 둘은 같은 칸이므로 새로 칠해지는 칸은 없다.
+      final Set<String> already = foldToCellIds(<String>['11110'], cellIdOf);
+      final Set<String> fresh = foldToCellIds(<String>[
+        '11140',
+      ], cellIdOf)..removeAll(already);
+
+      expect(already.length, 1);
+      expect(fresh, isEmpty, reason: '같은 칸이므로 신규는 0이어야 한다');
     });
   });
 }
