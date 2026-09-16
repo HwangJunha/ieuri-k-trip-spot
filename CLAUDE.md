@@ -393,7 +393,9 @@ you are holding, ask whether the user would notice — if yes it is a requiremen
 ### When the server isn't ready yet
 
 The live snapshot is the only source for the schema (§13), so a slice can start before the server
-has one. **Wait for the server's mock, and build the screen side while you wait.**
+has one. **Wait for the server's mock, and build the screen side while you wait.** The wait is for
+the schema to be settled, not for the server to be built — the mock is announced as soon as the
+schema is fixed (see "How the mock reaches you" below).
 
 A mock the **server** generates from its own schema *is* the contract — its field names and types
 are what will deploy, so writing operations against it is not guessing. (A fake you write yourself
@@ -415,13 +417,36 @@ layer rules buy. **Never "skip the network layer and wire it up later":** an emp
 leaves the provider with nothing to hold and puts every layer above it on a guess, which is the
 whole slice, rebuilt twice.
 
-**Half a day is the threshold** (user decision, 2026-09-17). A mock that takes longer than that
-signals a problem on the server side worth asking about rather than waiting through; past that,
-build the repository from `spec.md` and mark the contract unverified. Both repos derive from the
-same requirements, so the starting point is shared either way.
+**Half a day is the threshold** (user decision, 2026-09-17). The announcement follows the schema
+being settled, so taking longer than that points at something stuck on the server side — ask
+rather than keep waiting. Past that, build the repository from `spec.md` and mark the contract
+unverified. Both repos derive from the same requirements, so the starting point is shared either
+way.
 
 **A mock passing is still not the live server passing.** Run the §13 sweep once after the server
 deploys — mock and live do drift apart occasionally.
+
+#### How the mock reaches you
+
+**A comment on this spec's GitHub issue** (`HwangJunha/ieuri-k-trip-spot`, one issue per spec)
+announces it. It arrives **as soon as the schema is settled, before the server implements
+anything** — so there is nothing to wait for beyond this comment. It carries the mock's URL, the
+server branch, and the schema delta: what was added, what changed, what was deleted.
+
+- **Read the URL from the comment; never hardcode the port.** Server worktrees run in parallel, so
+  several mocks are up at once and the port differs every time. §13's sweep already reads
+  `GRAPHQL_INTROSPECT_URL`; point it at the announced URL rather than editing a literal.
+- **The schema is real; every response is fake.** Values are generated from the types, so `title`
+  comes back "Hello World" and lists are always 2 items. **Arguments are ignored** —
+  `spotDetail(id: 42)` does not return 42. Use it to settle the screen's structure and the
+  operation's shape, never to verify data flow, filtering, paging, or anything a value drives. An
+  empty state or a 40-item list has to come from a fake repository in a test, not from here.
+- **Ids arrive as numeric strings** (`"8089"`), the same shape as the live server.
+- **The mock re-reads the schema by itself.** If the schema changes after the announcement, a
+  follow-up comment lands on the issue, with breaking changes in bold. Read the delta and touch
+  only the named fields — **no comment ever says "go re-check everything,"** so a full re-sweep of
+  operations nobody mentioned is wasted work.
+- **If the mock is down, ask the server.** This repo doesn't start it.
 
 ### When information is missing mid-implementation
 
@@ -684,6 +709,11 @@ done
 Run it **once, before the PR**, alongside the test suite (§8) — not per edit. If the server is
 down, say so and mark the contract as unverified in the spec doc; do not let a green build imply
 a checked contract.
+
+**Pointing it at a mock is a different claim.** `GRAPHQL_INTROSPECT_URL=<the announced mock URL>`
+runs the same sweep against the mock, which validates the operation against the settled schema —
+useful, and the earliest check available (§10, "When the server isn't ready yet"). It is not the
+live check: say "verified against the mock" and run it again once the server deploys.
 
 **The sweep does not catch a newly-required input field.** It sends `variables: {}`, so a missing
 required argument comes back as `coerced Null` — exactly what you are told to ignore as noise. A
