@@ -390,6 +390,39 @@ The distinction that matters: a **design** decision goes in `problem/SPEC-XXXX-c
 never touches the spec. A **requirement** being wrong goes in the spec. If you are unsure which
 you are holding, ask whether the user would notice — if yes it is a requirement.
 
+### When the server isn't ready yet
+
+The live snapshot is the only source for the schema (§13), so a slice can start before the server
+has one. **Wait for the server's mock, and build the screen side while you wait.**
+
+A mock the **server** generates from its own schema *is* the contract — its field names and types
+are what will deploy, so writing operations against it is not guessing. (A fake you write yourself
+is not: if you and the server misread the same requirement, your fake agrees with you and proves
+nothing. That is the `signUp`/`login` failure in §13, which no self-authored fake would have
+caught.)
+
+Waiting costs little because the split falls along the repository boundary:
+
+| | Depends on the schema? | Do it while waiting |
+|---|---|---|
+| Design document, entry points, state transitions, routing | No — it comes from `spec.md` | **Yes.** This is most of the slice's thinking |
+| component / view | No — they read domain models | **Yes** |
+| provider | Barely — it holds domain models | Mostly |
+| repository: operations, SDL fragment, mapping | **Yes** | Wait for the mock |
+
+So a mismatch rewrites one or two files inside `repository/`, not the slice — that is what the §3
+layer rules buy. **Never "skip the network layer and wire it up later":** an empty repository
+leaves the provider with nothing to hold and puts every layer above it on a guess, which is the
+whole slice, rebuilt twice.
+
+**Half a day is the threshold** (user decision, 2026-09-17). A mock that takes longer than that
+signals a problem on the server side worth asking about rather than waiting through; past that,
+build the repository from `spec.md` and mark the contract unverified. Both repos derive from the
+same requirements, so the starting point is shared either way.
+
+**A mock passing is still not the live server passing.** Run the §13 sweep once after the server
+deploys — mock and live do drift apart occasionally.
+
 ### When information is missing mid-implementation
 
 **Ask the user, right there. Don't route it through the planner.**
