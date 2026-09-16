@@ -1,63 +1,67 @@
 <!--
-이 파일은 템플릿이다. 새 스펙을 시작할 때 `problem/SPEC-XXXX-client.md`로 복사해 채운다.
-템플릿 자체는 고치지 말고, 절이 부족하면 개편 지침(CLAUDE.md §10)과 함께 고친다.
+A template. Copy it to `problem/SPEC-XXXX-client.md` when a spec starts, then fill it in.
+Don't edit the template in passing — change it together with CLAUDE.md §10.
 
-저자는 client다. planner는 요구사항만 주고 화면 구성은 내려주지 않는다 — 진입점과
-화면 수를 정하는 것이 이 문서의 존재 이유다.
+This repo is the author. The planner supplies requirements and does not hand down screen
+composition; deciding the entry point and how many screens exist is why this document exists.
 -->
 
-# SPEC-XXXX 클라이언트 설계
+# SPEC-XXXX — Client design
 
-## 근거 요구사항
+## Requirements this design answers
 
-(spec.md에서 이 설계를 구속하는 FR/QR/BR만 **번호로** 참조. 문장을 복사하지 않는다 —
-복사본은 spec이 고쳐져도 따라오지 않아 낡은 사실이 된다)
+(Reference only the FR/QR/BR **ids** from `spec.md` that constrain this design. Don't copy the
+sentences — a copy doesn't follow the spec when the spec is corrected, and becomes a stale fact.)
 
-## 진입점
+## Entry points
 
-| 요구사항 | 어느 화면 | 어느 위젯 | 무엇을 추가 |
+| Requirement | Which screen | Which widget | What is added |
 |---|---|---|---|
-| FR-012 | `lib/domain/tourism/view/spot_detail_view.dart` | 사진 캐러셀 아래 | 예매 버튼 행 |
+| FR-012 | `lib/domain/tourism/view/spot_detail_view.dart` | below the photo carousel | booking button row |
 
-실제 파일 경로와 위젯 이름으로 적는다. "장소 상세 화면에"는 진입점이 아니다.
+Write real file paths and widget names. "On the spot detail screen" is not an entry point.
 
-**도달 가능성을 요구하는 FR이 spec.md에 없으면 여기서 멈추고 사용자에게 묻는다** — 화면을
-지어 붙일 자리가 아니다(CLAUDE.md §10 "Reachability is a requirement").
+**If no FR in `spec.md` requires reachability, stop here and ask the user** — there is no place to
+attach a screen (CLAUDE.md §10, "Reachability is a requirement").
 
-## 결정
+## Decisions
 
-| # | 결정 | 근거 | 탈락 대안과 이유 |
+| # | Decision | Rationale | Alternative rejected, and why |
 |---|---|---|---|
 | D-01 | | | |
 
-## 부족한 정보
+## Missing information
 
-(없으면 "없음". 비어 있지 않으면 구현 진입 금지 — 사용자에게 직접 묻는다, CLAUDE.md §10)
+(Write "none" if there is none. **If this section is not empty, do not start implementing** — ask
+the user directly, CLAUDE.md §10.)
 
-## 규모 가정
+## Scale assumptions
 
-(spec.md가 미정으로 남긴 항목 중 **화면에 영향을 주는 것**을 여기서 채우고 승인받는다.
-승인된 값은 spec.md에 되쓴다 — 단, 서버가 먼저 채웠는지 확인하고 덮어쓰지 않는다)
+(For each item `spec.md` left as `미정` that **affects a screen**, fill in the value here and get
+it approved. Write the approved value back into `spec.md` — but check first whether the server
+already filled that field, and don't overwrite it if so.)
 
-## 슬라이스
+## Slices
 
-| # | 인수 조건 | 상태 |
+| # | Acceptance criterion | Status |
 |---|---|---|
 | S1 | AC-001 | |
 
-**슬라이스 하나 = 인수 조건 하나 = 브랜치 하나.** 한 슬라이스가 끝나면 사람이 확인할
-자리를 남기고 멈춘다 — 다음 슬라이스로 자동으로 이어가지 않는다.
+**One slice = one acceptance criterion = one branch.** When a slice is done, stop and leave a
+place for a person to check it — don't roll on into the next one.
 
-## 이번 범위 아님
+## Not in this scope
 
-(다음 슬라이스로 미루는 것 — 확장 포인트 선제작과 미요청 화면을 막는 장치.
-`architecture-reviewer`의 역매핑표가 `(none)`을 낼 때 이 목록과 대조한다)
+(What is deferred to a later slice. This is the guard against pre-built extension points and
+screens nobody asked for: when `architecture-reviewer`'s reverse mapping reports `(none)`, it is
+checked against this list.)
 
-## 화면과 상태
+## Screens and states
 
-(각 화면이 가질 수 있는 상태와 전이. loading·empty·error·denied를 포함한다)
+(The states each screen can be in, and the transitions between them. Include loading, empty,
+error, and denied.)
 
-## 변경 이력
+## Change history
 
-| 날짜 | 변경 | 이유 |
+| Date | Change | Why |
 |---|---|---|

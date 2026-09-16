@@ -53,16 +53,16 @@ inherits its parent's id.
 
 `(none)` is not automatically wrong. It is either unrequested work or a
 requirement nobody wrote down, and both need the user. Cross-check each `(none)`
-against 이번 범위 아님 in the design document: a match there is a confirmed
+against "Not in this scope" in the design document: a match there is a confirmed
 overreach, not a judgment call. **Surface every `(none)` to the user** — never
 resolve one yourself by inferring which requirement it probably serves.
 
 ### Scale check
 
-Compare the implementation against 규모 가정 in `spec.md`:
-- "1회 조회 최대 20,000석" + infinite scroll → mismatch
-- "동시 1만 명(전체 유입)" + a queue UI → mismatch
-- "표시 오차 3초 허용" + a realtime subscription → mismatch
+Compare the implementation against the scale assumptions in `spec.md`:
+- "at most 20,000 seats per fetch" + infinite scroll → mismatch
+- "10,000 concurrent users (total inflow)" + a queue UI → mismatch
+- "3s of display lag is acceptable" + a realtime subscription → mismatch
 
 This is comparison, not judgment. State the pair and the mismatch.
 

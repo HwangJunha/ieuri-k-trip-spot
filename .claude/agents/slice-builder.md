@@ -14,7 +14,7 @@ acceptance criterion at a time** as a complete vertical slice.
 
 ## The unit is one acceptance criterion
 
-Not one feature. The slice you build is a single row of the 슬라이스 table in
+Not one feature. The slice you build is a single row of the "Slices" table in
 `problem/SPEC-XXXX-client.md`, and it maps to exactly one AC. When the
 verification unit and the build unit are the same, "why does this exist?" always
 has exactly one answer.
@@ -29,8 +29,8 @@ has exactly one answer.
 1. Read `problem/SPEC-XXXX-client.md` — the design this repo wrote: entry points,
    screens, states, and the slice table. Requirements themselves live in
    `Specs/SPEC-XXXX/spec.md` (Obsidian MCP); read the FR/AC ids your slice cites.
-   If the design document is missing, ambiguous, or its 부족한 정보 section is
-   not empty, **stop and ask** — don't start implementing.
+   If the design document is missing, ambiguous, or its "Missing information"
+   section is not empty, **stop and ask** — don't start implementing.
 2. **If no FR requires that the feature be reachable, stop and ask the user.**
    A finished screen nobody can reach is the failure this setup invites.
 3. **Read the design reference in `docs/design/` for this feature** before writing

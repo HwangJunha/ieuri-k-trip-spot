@@ -18,6 +18,16 @@ missing hook was watching your back is how two contract breaks reached `dev`.
 prefixes (`fix(auth):`) stay English; sentences addressed to the user are Korean, including every
 question and option in AskUserQuestion.
 
+**Harness files themselves are written in English** — this file, `.claude/agents/*.md`,
+`.claude/skills/**`, `.gitignore` comments, and the design-document template. That is the prose;
+it is separate from the rule above, which governs what you say to the user. The only Korean that
+belongs in a harness file is a **string that is quoted rather than written**: words the user
+actually types (`"작업 완료"`), values that literally appear in `spec.md` (`미정`,
+`상태: 요청 중`), and Korean UI labels you have to match on screen (`앱 무결성 → 앱 서명`).
+Translating one of those turns it into a string that matches nothing. Everything else is English,
+including headings — a document whose sections are named in Korean drags Korean into every file
+that references them.
+
 **Close with what needs checking, nothing else.** Three things belong in a final summary: choices
 you made unilaterally, things only the user can verify (on-device appearance), and what you left
 out of scope with a one-line why. **If there is nothing to check, say so and stop** — "완료했습니다"
@@ -32,27 +42,27 @@ runs; everything else waits for this list, and nothing here runs twice.
 
 1. `flutter analyze` — must be clean
 2. `dart run build_runner build` if any `.graphql`/`@riverpod` source changed (§11.5).
-   **생성물은 커밋되지 않으므로**(`.gitignore` — `*.g.dart`, `*.graphql.dart`)
-   빼먹어도 diff에는 아무것도 안 뜬다. 로컬 컴파일이 깨지는 것으로만 드러나니
-   provider나 오퍼레이션을 고쳤으면 **반드시 돌린다**
+   **Generated files are not committed** (`.gitignore` — `*.g.dart`, `*.graphql.dart`), so
+   skipping this shows up as nothing at all in the diff. It surfaces only as a broken local
+   compile, so if you touched a provider or an operation, **run it.**
 3. **Live-server operation sweep** if any `.graphql` operation changed (§13) — codegen passing
    proves nothing about the server
 4. `flutter test` — once (§8)
 5. Update `problem/SPEC-*.md` with what you decided and what you could not verify (§10)
 
-**CI가 이 목록을 대신하지 않는다.** `.github/workflows/`가 PR에서 codegen·analyze·
-테스트를 다시 돌리지만, 그건 **빠뜨렸을 때 잡는 그물**이지 로컬에서 안 돌려도 되는
-근거가 아니다 — private 저장소라 Actions 분이 과금되고, CI가 잡아 주기를 기다리는
-왕복이 로컬 실행보다 훨씬 비싸다.
+**CI does not stand in for this list.** `.github/workflows/` re-runs codegen, analyze and the
+tests on a PR, but that is **a net for what you forgot**, not a reason to skip running them
+locally — the repo is private so Actions minutes are billed, and waiting for CI to catch it is a
+far more expensive round trip than running it here.
 
-| 워크플로 | 언제 | 무엇을 |
+| Workflow | When | What |
 |---|---|---|
-| `dev-check` | **모든 PR → dev** | codegen · analyze · test |
-| `release-check` | **PR dev → master** | 위 + 다국어 키 정합성 · 출시 설정(앱 이름·권한 문구) · 생성 파일 미추적 |
+| `dev-check` | **every PR → dev** | codegen · analyze · test |
+| `release-check` | **PR dev → master** | the above + translation-key consistency · release settings (app name, permission strings) · generated files untracked |
 
-네이티브 빌드(apk/ipa)는 **CI에서 돌리지 않는다**(사용자 결정 2026-08-25) — iOS는
-macOS 러너가 분당 10배 과금이고, 서명 없는 CI 산출물은 어차피 스토어에 못 올린다.
-출시 빌드는 키를 가진 로컬에서 만든다(§12의 `key.properties`).
+Native builds (apk/ipa) are **not run in CI** (user decision, 2026-08-25) — macOS runners bill at
+10× per minute for iOS, and an unsigned CI artifact can't reach the store anyway. Release builds
+are made locally, where the keys are (§12, `key.properties`).
 
 If a step is skipped or fails, say which and why. "Couldn't check the contract, server was down"
 is a fine report; silence that lets a green build imply a checked contract is not.
@@ -350,8 +360,8 @@ that is finished and that nobody can reach is this setup's signature failure.
   this repo's decision, and this document is where that decision is recorded. The acceptance
   criteria in the linked spec are what provider tests must satisfy. Meeting the design while
   missing an acceptance criterion is not done. **Start from
-  `problem/SPEC-XXXX-client-TEMPLATE.md`** — its 진입점 and 이번 범위 아님 sections are what the
-  reviewer's reverse mapping is checked against.
+  `problem/SPEC-XXXX-client-TEMPLATE.md`** — its "Entry points" and "Not in this scope" sections
+  are what the reviewer's reverse mapping is checked against.
 - **Commit it with the code.** The design is the entry point for implementation, so its history
   belongs beside the code's — including planner updates. A reviewer who can't see the file can't
   see the reasoning.
@@ -390,7 +400,8 @@ are there to know what the app needs.
 - ✗ "Should this list be infinite scroll or paginated?"
 - ✓ "How many entries should one screen show?"
 
-If the missing piece is a **scale assumption left `미정` in `spec.md` that affects a screen** —
+If the missing piece is a **scale assumption left undecided (`미정`) in `spec.md` that affects a
+screen** —
 how many per screen, a list ceiling, a rendering budget — ask the user and write the answer back
 into `spec.md`. **Don't wait for the server:** it fills in only what its own design needs, so the
 screen-side numbers can stay empty forever.
@@ -460,7 +471,7 @@ committed SDL (`*_schema.graphql`) — codegen already validated the output agai
 
 **`architecture-reviewer` runs on every slice, and its reverse mapping comes first.** Before any
 Blocking/Advisory finding it maps every added route, screen, provider and repository method to a
-requirement id, and compares the build against the spec's 규모 가정. **Each `(none)` goes to the
+requirement id, and compares the build against the spec's scale assumptions. **Each `(none)` goes to the
 user** — it is either unrequested work or a requirement nobody wrote down, and neither is the
 reviewer's to settle. Run it on the `dev...HEAD` diff, which is why slices stay small.
 
@@ -582,7 +593,7 @@ git push -u origin feature/SPEC-0007-home-screen
 - Naming: `feature/SPEC-XXXX-<short-kebab>`; `fix/`, `hotfix/`, `chore/`, `refactor/` take the
   same shape. The spec id belongs in the branch name; a step number does not. Work with no spec
   uses `chore/<short-kebab>` — don't invent an id.
-- **One branch = one slice = one acceptance criterion** (§10's 슬라이스 table). The reviewer reads
+- **One branch = one slice = one acceptance criterion** (the design document's "Slices" table). The reviewer reads
   the `dev...HEAD` diff, so a smaller diff buys a better review. **Stop at the end of a slice and
   hand back** — the point of cutting slices is to leave a place for a person to step in, and
   running straight into the next one removes it. "Just keep going until it's all done" is not how
@@ -627,7 +638,7 @@ Auth errors mean the shape passed. One sweep over every operation document takes
 
 ```sh
 URL="${GRAPHQL_INTROSPECT_URL:-http://localhost:8888/graphql}"
-# 서버 확인이 먼저다 — 죽어 있어도 아래 루프는 조용히 끝나 "불일치 0건"처럼 보인다.
+# Check the server first — if it is down the loop below still exits quietly, looking like "0 mismatches".
 curl -s -m 5 -o /dev/null "$URL" || { echo "server down — contract NOT verified"; exit 1; }
 for f in lib/domain/*/repository/*_operations.graphql; do
   op=$(grep -m1 -oE '^(query|mutation|subscription) [A-Za-z_]+' "$f" | awk '{print $2}')

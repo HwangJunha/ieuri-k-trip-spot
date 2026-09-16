@@ -314,17 +314,17 @@ captures/
 *.jks
 *.keystore
 
-# Firebase 설정 파일은 **커밋한다**(2026-08-25 결정, 이전 무시 규칙을 걷어냄).
+# Firebase config files **are committed** (decided 2026-08-25, reversing an earlier ignore rule).
 #
-# Google 공식 입장이 "비밀이 아니다"이다 — API 키는 프로젝트와 앱을 *식별*할 뿐이고
-# *인가*는 Security Rules·App Check·IAM이 한다. 게다가 이 값들은 어차피 APK/IPA에
-# 컴파일되어 들어가므로, 숨겨도 앱을 뜯으면 나온다. 보안 효과 없이 클론한 사람의
-# 알림만 망가뜨리고 있었다.
+# Google's official position is that they are not secrets — an API key only *identifies* the
+# project and app, while *authorization* comes from Security Rules, App Check and IAM. These
+# values are compiled into the APK/IPA anyway, so hiding them only means someone unpacks the app
+# to read them. Ignoring them bought no security and broke notifications for anyone who cloned.
 #
-# **진짜 비밀은 아래 셋이고 그것들은 계속 막는다** — `.env*`의 Cloudflare Access
-# 서비스 토큰(개발 API 전체 접근), `key.properties`의 키스토어 비밀번호, `*.jks`.
+# **The real secrets are these three, and they stay blocked** — the Cloudflare Access service
+# token in `.env*` (full access to the dev API), the keystore password in `key.properties`, `*.jks`.
 #
-# macOS는 이 앱의 배포 대상이 아니라 규칙만 남겨 둔다.
+# macOS is not a release target for this app; the rule is kept only for completeness.
 macos/Runner/GoogleService-Info.plist
 
 # Android Patch
@@ -402,37 +402,37 @@ hs_err_pid*
 # never committed (see hooks/require-fresh-schema.sh + CLAUDE.md §13).
 /schema/schema.introspection.json
 
-# SNS 클라이언트 식별자 등 빌드 시 주입값. 값 자체는 공개 식별자지만 환경마다
-# 다르므로 커밋하지 않는다 — 형식은 .env.example을 본다.
+# Build-time injected values such as SNS client identifiers. The values are public identifiers,
+# but they differ per environment, so they are not committed — see .env.example for the format.
 #
-# **flavor별 파일도 함께 무시한다**(.env.dev / .env.prod). 특히 `.env.dev`에는
-# Cloudflare Access 서비스 토큰이 들어가는데, 그건 공개 식별자가 아니라 진짜
-# 비밀이다 — 개발 API 전체에 접근할 수 있다.
+# **Per-flavor files are ignored too** (.env.dev / .env.prod). `.env.dev` in particular carries
+# the Cloudflare Access service token, which is not a public identifier but a real secret — it
+# grants access to the entire dev API.
 /.env
 /.env.dev
 /.env.prod
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 코드 생성 산출물 — 커밋하지 않는다(2026-08-24 결정).
+# Code generation output — not committed (decided 2026-08-24).
 #
-# **빌드 절차를 밟으면 나오는 파일이지 소스가 아니다.** 커밋해 두면 소스를 고치고
-# codegen을 빼먹은 채 올리는 일이 생기고(실제로 provider 15개를 고치고 생성물을
-# 안 맞춘 커밋이 있었다), 리뷰에서는 손으로 쓴 변경이 생성물 diff에 묻힌다.
+# **These fall out of the build; they are not source.** Committing them lets someone edit the
+# source, skip codegen and push anyway (there was a commit touching 15 providers whose generated
+# files didn't match), and in review it buries hand-written changes under generated diff.
 #
-# **클론한 뒤에는 반드시 먼저 돌려야 한다** — 안 돌리면 컴파일되지 않는다:
+# **Run these first after cloning** — nothing compiles until you do:
 #   flutter pub get
 #   dart run build_runner build --delete-conflicting-outputs
 #
-# 손으로 쓰는 `.graphql`(오퍼레이션)과 `*_schema.graphql`(SDL)은 **커밋한다** —
-# 생성물이 아니라 서버 계약의 출처다(CLAUDE.md §13).
+# The hand-written `.graphql` operations and `*_schema.graphql` (SDL) **are committed** — they
+# are not generated output but the source of the server contract (CLAUDE.md §13).
 *.g.dart
 *.graphql.dart
 
 # ─────────────────────────────────────────────────────────────────────────────
-# MCP 설정 — 커밋하지 않는다.
+# MCP configuration — not committed.
 #
-# obsidian(Specs vault) MCP 서버가 Bearer 토큰을 헤더에 담으므로 이 파일은 비밀이다.
-# 각자 로컬에서 아래로 붙인다(토큰은 planner 하네스의 .mcp.json에 있다):
+# The obsidian (Specs vault) MCP server carries a Bearer token in its header, so this file is a
+# secret. Set it up locally instead — the token is in the planner harness's .mcp.json:
 #   claude mcp add --scope project --transport http obsidian http://127.0.0.1:27123/mcp \
-#     --header "Authorization: Bearer <토큰>"
+#     --header "Authorization: Bearer <token>"
 /.mcp.json
