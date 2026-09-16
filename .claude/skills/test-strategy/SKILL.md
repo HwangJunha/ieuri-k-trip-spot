@@ -1,6 +1,6 @@
 ---
 name: test-strategy
-description: Defines and reviews the per-layer test shape for the Flutter app (CLAUDE.md §8) — model unit tests, repository tests against a mocked GraphQL client, provider tests with a ProviderContainer, widget tests with provider overrides. Keeps tests simple. Use when writing or reviewing tests.
+description: Defines and reviews the per-layer test shape for the Flutter app (CLAUDE.md §8) — model unit tests, repository tests against a mocked GraphQL client, and provider tests with a ProviderContainer as the layers acceptance criteria are verified at; widget tests are advisory. Keeps tests simple. Use when writing or reviewing tests.
 allowed-tools: Read, Glob, Grep
 ---
 
@@ -39,11 +39,23 @@ CLAUDE.md §8.
   로딩 상태에서 폐기돼 테스트가 매달린다(구독을 미리 걸어도 같다). 그 경로는 위젯 테스트에
   맡기고, provider 테스트는 이미 성공한 뒤의 재조회(`reload()`)로 같은 실패를 유발한다.
 
-- **view / component** — widget tests that pump the widget inside a provider
-  scope with overrides; assert what the user sees, not internal wiring.
+- **view / component** — widget tests are **Advisory, not required.** The
+  planner writes acceptance criteria so they are satisfiable at the
+  application/domain layer, and it no longer specifies screen composition — so no
+  AC arrives that only a widget test can verify. Without an AC behind it there is
+  no ground for making one Blocking.
+
+  Write one where it earns its cost: the **failure path that provider tests
+  cannot reproduce** (an AsyncNotifier discarded while loading, per the provider
+  section above) belongs in a widget test. When you do write one, pump the widget
+  inside a provider scope with overrides and assert what the user sees, not
+  internal wiring.
 
 ## What to flag when reviewing
-- A feature missing its repository test or provider test (both are Blocking).
+- A slice missing its repository test or provider test (both are Blocking — the
+  acceptance criteria are verified at these layers).
+- A missing widget test is **Advisory**, with one exception worth naming: a
+  `build()`-throws path that provider tests demonstrably cannot cover.
 - A repository test that hits a real endpoint instead of a mocked GraphQL layer.
 - A repository test with no error-path case for the GraphQL `errors` array.
 - Over-mocking: mocking things the test never asserts on.
@@ -57,6 +69,6 @@ CLAUDE.md §8.
   지키던 인수 기준이 그대로 사라진다.
 
 ## How to report
-Missing repository or provider tests are **Blocking**. Over-mocked or
-multi-behavior tests are **Advisory** with the simpler rewrite. For each: the
-file and line, the issue, and the fix.
+Missing repository or provider tests are **Blocking**. Missing widget tests,
+over-mocked tests, and multi-behavior tests are **Advisory** with the simpler
+rewrite. For each: the file and line, the issue, and the fix.

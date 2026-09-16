@@ -162,7 +162,7 @@ lib/
 ├── router/                     # GoRouter configuration + route guards
 └── main.dart
 
-problem/                        # Feature specs as *.md (source of truth for implementation)
+problem/                        # Client design documents, written here. Requirements live in the Obsidian vault.
 ```
 - **One feature = one folder under `lib/domain/`.** Never split a feature across the top level.
 - A feature uses only the subfolders it needs; where present, they mean exactly what §3 says.
@@ -273,7 +273,7 @@ One behavior per test. Minimal mocks. Arrange–Act–Assert.
 | `model` | Pure unit: serialization round-trip, equality, value logic. No mocks. |
 | `repository` | Mocked GraphQL client/link. Assert the operation ran and mapped to the model. Include an `errors`-array case that surfaces as a failure. |
 | `provider` | `ProviderContainer` with an overridden repository; assert emitted `AsyncValue` states. |
-| `view` / `component` | Widget test with provider overrides; assert what the user sees, not internals. |
+| `view` / `component` | **Advisory.** Acceptance criteria are satisfiable at provider and below, so a widget test is required only for a failure path providers can't reproduce (`build()` throwing). When you write one: provider overrides, assert what the user sees. |
 
 - Don't test framework or generated code. Elaborate setup means the code under test is too
   complex — simplify the code first.
@@ -299,12 +299,59 @@ One behavior per test. Minimal mocks. Arrange–Act–Assert.
 
 ## 10. Specs & design
 
-Requirements originate in the planner harness (`ieuri-planner`).
+Requirements originate in the planner harness (`ieuri-planner`). **The planner supplies
+requirements only — screens, entry points and routing are this repo's to decide.** A requirement
+now arrives as one line ("the user can reach the booking screen"); how many screens that becomes
+and where they attach is a design decision you make and record.
 
-- **`problem/SPEC-XXXX-client.md`** (this repo) — the client design: screens, state transitions,
-  navigation, which repository consumes which operation. Start here; the acceptance criteria in
-  the linked spec are what provider and widget tests must satisfy. Meeting the design while
-  missing an acceptance criterion is not done.
+That is more freedom, so it needs more checking, not less. The server derives a schema, which is
+a contract and shows when it is wrong; a screen is not. **Screens nobody asked for is the failure
+mode this setup invites** — the reverse-mapping table in `architecture-reviewer` exists for it.
+
+### What you read before you start
+
+```
+GitHub issue (ieuri-k-trip-spot#NN)  ← the work request. Start here
+      ↓ the issue carries the spec path and the decision-report URL
+Specs/SPEC-XXXX/spec.md              ← requirements. The only source
+Decision report (HTML)               ← open items, and conflicts already resolved
+      ↓ written by this repo
+problem/SPEC-XXXX-client.md          ← screens and design decisions. This repo's output
+```
+
+The issue lists the FR/AC **numbers** it owns and nothing else — no sentences. **You cannot work
+from the issue alone; open `spec.md`.** Read it through the `obsidian` MCP server (project scope,
+`http://127.0.0.1:27123/mcp`). Its token lives in `.mcp.json`, which is **gitignored** — set it up
+locally, never commit it.
+
+**The decision report holds what the spec does not** — items still `미정`, which requirements they
+block, and where a user's answer conflicted with a statute or industry source. The spec keeps only
+settled values, so *why* a value is what it is exists only in the report.
+
+When a spec has two `targets`, each repo gets its own issue and reads only that one. **Don't read
+the server's design documents** — both repos design independently from the same `spec.md`.
+
+### Reachability is a requirement, and its absence is a defect
+
+| The planner gives | This repo decides |
+|---|---|
+| FR-012 the user can reach the booking screen | which screen, which widget, where the button goes |
+| AC-003 starting a booking reaches the session list | route path, transition, widget composition |
+| QR-001 within 500ms at 20,000 seats | rendering strategy, whether to virtualize |
+
+**If no FR requires reachability, that is a defect in the spec.** The planner used to spell out
+entry points in prose, so one could not go missing; now it arrives as a single FR, and if the
+planner drops it nothing else catches it. **Stop before implementing and ask the user.** A screen
+that is finished and that nobody can reach is this setup's signature failure.
+
+- **`problem/SPEC-XXXX-client.md`** (this repo) — the client design, **written here, not handed
+  down.** Entry points, screens, state transitions, routing, which repository consumes which
+  operation. The planner supplies requirements only; where the feature attaches in the app is
+  this repo's decision, and this document is where that decision is recorded. The acceptance
+  criteria in the linked spec are what provider tests must satisfy. Meeting the design while
+  missing an acceptance criterion is not done. **Start from
+  `problem/SPEC-XXXX-client-TEMPLATE.md`** — its 진입점 and 이번 범위 아님 sections are what the
+  reviewer's reverse mapping is checked against.
 - **Commit it with the code.** The design is the entry point for implementation, so its history
   belongs beside the code's — including planner updates. A reviewer who can't see the file can't
   see the reasoning.
@@ -312,9 +359,10 @@ Requirements originate in the planner harness (`ieuri-planner`).
   `slice-builder` before it writes any `view/` or `component/`. Records layout, components (named
   to map onto `component/`), loading/empty/error states, and the Stitch screen id. It is a
   reference: where it conflicts with the spec's acceptance criteria, the spec wins.
-- **`Specs/SPEC-XXXX/contract.graphql` is the planner's proposal; the server owns the schema.**
-  Write operations against the live introspection snapshot (§13) — the proposal is what was
-  asked for, the snapshot is what exists.
+- **There is no contract proposal.** The server derives the schema from the same requirements
+  you are reading. Write operations against the live introspection snapshot (§13) — that is
+  what exists, and it is the only source. When a field you need is absent, ask the server
+  (§10 "Asking the server").
 - One issue per repo per spec, opened by the planner. Branch naming: §12.
 
 ### When requirements change
@@ -323,7 +371,33 @@ Edit `problem/SPEC-XXXX-client.md` directly and commit it with the code, recordi
 and why ("user decision", "server contract differed"). Patching code and leaving the doc stale is
 the worst outcome — the next person trusts the doc and reverts you.
 
-`Specs/SPEC-XXXX/spec.md` (Obsidian vault) stays read-only; a hook blocks it.
+`Specs/SPEC-XXXX/spec.md` is the requirements, and it is **not read-only.** When a requirement
+turns out to be wrong — not merely inconvenient — edit it there, record the date, what changed
+and why in its change history, and leave a line on the issue. The planner reads that when it
+plans the next feature.
+
+The distinction that matters: a **design** decision goes in `problem/SPEC-XXXX-client.md` and
+never touches the spec. A **requirement** being wrong goes in the spec. If you are unsure which
+you are holding, ask whether the user would notice — if yes it is a requirement.
+
+### When information is missing mid-implementation
+
+**Ask the user, right there. Don't route it through the planner.**
+
+Ask in service terms, not technical ones. The user is not there to decide your widget tree; they
+are there to know what the app needs.
+
+- ✗ "Should this list be infinite scroll or paginated?"
+- ✓ "How many entries should one screen show?"
+
+If the missing piece is a **scale assumption left `미정` in `spec.md` that affects a screen** —
+how many per screen, a list ceiling, a rendering budget — ask the user and write the answer back
+into `spec.md`. **Don't wait for the server:** it fills in only what its own design needs, so the
+screen-side numbers can stay empty forever.
+
+**Check the field before writing it back.** The issues are split per repo, so the server may have
+filled the same field first. If a value is already there, follow it; if it doesn't work for the
+screen, **don't overwrite it — leave a line on the issue.**
 
 ### Asking the server or a policy for something
 
@@ -343,6 +417,9 @@ So while you are building, put every server-facing request in **this repo's `pro
 `SPEC-XXXX-SERVER-<topic>.md` (spec id first, so one spec's documents sort together). Commit it
 with the code like any other design doc (§10) — a reviewer who can't see the request can't see
 why the client works around something.
+
+**And leave a line on the issue.** A document alone gives the server no reason to read it — the
+issues are split per repo, so nobody looks in the other repo's `problem/`.
 
 Head the file with the target operations, the environment you verified against, and a status line
 (`상태: 요청 중` / `해소됨(날짜, 서버 PR)`). When the server resolves it, update that line in place
@@ -380,6 +457,17 @@ findings — and say to take them as given, or the agent re-runs the same intros
 **Never read generated files.** `*.graphql.dart` and `*.g.dart` are permission-blocked; one
 community operation is 500KB (~170k tokens). Read the operation source (`*.graphql`) and the
 committed SDL (`*_schema.graphql`) — codegen already validated the output against the schema (§13).
+
+**`architecture-reviewer` runs on every slice, and its reverse mapping comes first.** Before any
+Blocking/Advisory finding it maps every added route, screen, provider and repository method to a
+requirement id, and compares the build against the spec's 규모 가정. **Each `(none)` goes to the
+user** — it is either unrequested work or a requirement nobody wrote down, and neither is the
+reviewer's to settle. Run it on the `dev...HEAD` diff, which is why slices stay small.
+
+**No static analyzer enforces this — deliberately.** Flutter has no Konsist equivalent, and
+`architecture-reviewer` already covers layer boundaries, dependency direction and GraphQL
+isolation. Adding another checker would add checks without adding catches. Revisit once the
+reverse mapping has settled in.
 
 ---
 
@@ -494,6 +582,11 @@ git push -u origin feature/SPEC-0007-home-screen
 - Naming: `feature/SPEC-XXXX-<short-kebab>`; `fix/`, `hotfix/`, `chore/`, `refactor/` take the
   same shape. The spec id belongs in the branch name; a step number does not. Work with no spec
   uses `chore/<short-kebab>` — don't invent an id.
+- **One branch = one slice = one acceptance criterion** (§10's 슬라이스 table). The reviewer reads
+  the `dev...HEAD` diff, so a smaller diff buys a better review. **Stop at the end of a slice and
+  hand back** — the point of cutting slices is to leave a place for a person to step in, and
+  running straight into the next one removes it. "Just keep going until it's all done" is not how
+  this repo works.
 - To build on an unmerged branch, branch from *it*, and note the base in the PR body.
 - `master`, `main`, `dev` are protected. `require-feature-branch.sh` *would* block `Edit`/`Write` and
   git-mutating Bash there; read-only git and branch creation stay open. Create the topic branch

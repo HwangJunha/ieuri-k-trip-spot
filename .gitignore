@@ -427,3 +427,12 @@ hs_err_pid*
 # 생성물이 아니라 서버 계약의 출처다(CLAUDE.md §13).
 *.g.dart
 *.graphql.dart
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MCP 설정 — 커밋하지 않는다.
+#
+# obsidian(Specs vault) MCP 서버가 Bearer 토큰을 헤더에 담으므로 이 파일은 비밀이다.
+# 각자 로컬에서 아래로 붙인다(토큰은 planner 하네스의 .mcp.json에 있다):
+#   claude mcp add --scope project --transport http obsidian http://127.0.0.1:27123/mcp \
+#     --header "Authorization: Bearer <토큰>"
+/.mcp.json
