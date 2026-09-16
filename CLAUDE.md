@@ -448,6 +448,24 @@ server branch, and the schema delta: what was added, what changed, what was dele
   operations nobody mentioned is wasted work.
 - **If the mock is down, ask the server.** This repo doesn't start it.
 
+**Poll for the announcement; don't idle and don't hand the wait back.** Waiting is not a reason to
+stop and ask the user to tell you when it lands. Work the screen side, and check the issue every
+~5 minutes (user decision, 2026-09-17) — the announcement carries everything needed to start the
+repository, so picking it up is immediate:
+
+```sh
+gh issue view <NN> --json comments \
+  --jq '[.comments[] | select(.body | test("localhost:[0-9]+/graphql"))] | last | .body'
+```
+
+Empty means it hasn't landed; a body means it has, and the URL is
+`grep -oE 'https?://localhost:[0-9]+/graphql'` of it. Take `last`, not the first — a follow-up
+comment supersedes the original announcement (breaking changes in bold).
+
+Polling is cheap, so the cost of waiting is the polling, not your attention: **keep building the
+screen side between checks** rather than blocking on the loop. If the half-day threshold passes
+with nothing on the issue, that is the signal to ask rather than keep polling.
+
 ### When information is missing mid-implementation
 
 **Ask the user, right there. Don't route it through the planner.**
