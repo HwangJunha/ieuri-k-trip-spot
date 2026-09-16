@@ -1,6 +1,6 @@
 ---
 name: test-strategy
-description: Defines and reviews the per-layer test shape for the Flutter app (CLAUDE.md §8) — model unit tests, repository tests against a mocked GraphQL client, provider tests with a ProviderContainer, widget tests with provider overrides. Keeps tests simple. Use when writing or reviewing tests.
+description: Defines and reviews the per-layer test shape for the Flutter app (CLAUDE.md §8) — model unit tests, repository tests against a mocked GraphQL client, and provider tests with a ProviderContainer as the layers acceptance criteria are verified at; widget tests are advisory. Keeps tests simple. Use when writing or reviewing tests.
 allowed-tools: Read, Glob, Grep
 ---
 
@@ -26,37 +26,56 @@ CLAUDE.md §8.
   overridden with a fake; assert the emitted `AsyncValue` states (loading then
   data, or error).
 
-  provider가 **전이적으로** 끌어오는 의존까지 override해야 컨테이너가 선다. 예를 들어
-  `SwipeController`가 locale을 watch하면 `sharedPreferencesProvider` override와
-  `TestWidgetsFlutterBinding.ensureInitialized()`가 함께 필요하다(저장된 언어가 없을 때
-  기기 로케일을 읽기 때문). 빠뜨리면 provider가 오류 상태로 떠서 `.future`가 완결되지
-  않고 **30초 타임아웃까지 매달린다** — 실패 메시지가 아니라 느려짐으로 먼저 드러난다.
+  The container only stands up if you override what the provider pulls in
+  **transitively**, not just its direct dependency. When `SwipeController` watches
+  locale, for instance, it needs a `sharedPreferencesProvider` override *and*
+  `TestWidgetsFlutterBinding.ensureInitialized()` (it reads the device locale when
+  no language is stored). Miss one and the provider comes up in an error state,
+  `.future` never completes, and the test **hangs to the 30s timeout** — it shows
+  up as slowness before it shows up as a failure message.
 
-  autoDispose provider는 `container.listen(..., fireImmediately: true)`로 구독을 유지한
-  뒤 읽는다. 구독 없이 `.future`를 읽으면 로딩 중 폐기돼 같은 증상이 난다.
+  For an autoDispose provider, hold a subscription with
+  `container.listen(..., fireImmediately: true)` before reading it. Reading
+  `.future` with no subscription discards it mid-load, with the same symptom.
 
-  **`build()`가 던지는 첫 실패 경로는 provider 단위로 재현되지 않는다.** AsyncNotifier가
-  로딩 상태에서 폐기돼 테스트가 매달린다(구독을 미리 걸어도 같다). 그 경로는 위젯 테스트에
-  맡기고, provider 테스트는 이미 성공한 뒤의 재조회(`reload()`)로 같은 실패를 유발한다.
+  **The first failure path — `build()` throwing — cannot be reproduced at the
+  provider level.** The AsyncNotifier is discarded while loading and the test
+  hangs (holding a subscription first doesn't change it). Leave that path to a
+  widget test; in provider tests, trigger the same failure with a `reload()` after
+  a successful first load.
 
-- **view / component** — widget tests that pump the widget inside a provider
-  scope with overrides; assert what the user sees, not internal wiring.
+- **view / component** — widget tests are **Advisory, not required.** The
+  planner writes acceptance criteria so they are satisfiable at the
+  application/domain layer, and it no longer specifies screen composition — so no
+  AC arrives that only a widget test can verify. Without an AC behind it there is
+  no ground for making one Blocking.
+
+  Write one where it earns its cost: the **failure path that provider tests
+  cannot reproduce** (an AsyncNotifier discarded while loading, per the provider
+  section above) belongs in a widget test. When you do write one, pump the widget
+  inside a provider scope with overrides and assert what the user sees, not
+  internal wiring.
 
 ## What to flag when reviewing
-- A feature missing its repository test or provider test (both are Blocking).
+- A slice missing its repository test or provider test (both are Blocking — the
+  acceptance criteria are verified at these layers).
+- A missing widget test is **Advisory**, with one exception worth naming: a
+  `build()`-throws path that provider tests demonstrably cannot cover.
 - A repository test that hits a real endpoint instead of a mocked GraphQL layer.
 - A repository test with no error-path case for the GraphQL `errors` array.
 - Over-mocking: mocking things the test never asserts on.
 - Tests with elaborate setup — usually a sign the code under test is too complex;
   simplify the code first.
-- 스위트가 느려졌다면(전체 300개 기준 약 11초가 정상) 실행 성능이 아니라 **매달린 테스트**를
-  의심한다. `Tried to use a provider that is in error state`나 `TimeoutException after 0:00:30`이
-  찍혔는지 본다 — 원인은 대개 위의 override 누락이다.
-- 공통 provider에 새 `watch`를 추가한 변경은 그 provider를 쓰는 **모든 기존 테스트**의 셋업을
-  함께 고쳐야 한다. 남의 테스트가 깨진 것을 발견하고 삭제하는 것은 해결이 아니다 — 그 테스트가
-  지키던 인수 기준이 그대로 사라진다.
+- A suite that got slower (about 11s for 300 tests is normal) is usually **a hanging
+  test**, not a performance problem. Look for `Tried to use a provider that is in
+  error state` or `TimeoutException after 0:00:30` — the cause is nearly always a
+  missing override above.
+- A change that adds a new `watch` to a shared provider must fix the setup of
+  **every existing test** that uses it. Finding someone else's test broken and
+  deleting it is not a fix — the acceptance criterion it guarded disappears with
+  it.
 
 ## How to report
-Missing repository or provider tests are **Blocking**. Over-mocked or
-multi-behavior tests are **Advisory** with the simpler rewrite. For each: the
-file and line, the issue, and the fix.
+Missing repository or provider tests are **Blocking**. Missing widget tests,
+over-mocked tests, and multi-behavior tests are **Advisory** with the simpler
+rewrite. For each: the file and line, the issue, and the fix.

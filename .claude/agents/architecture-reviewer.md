@@ -1,6 +1,6 @@
 ---
 name: architecture-reviewer
-description: Read-only reviewer that verifies domain-centric structure, layer boundaries, dependency direction, and GraphQL isolation (CLAUDE.md §2–§4) for K-TripSpot Flutter changes. Use after a feature is built or edited, before it's considered done. Does NOT edit — it reports violations for slice-builder/the parent to fix.
+description: Read-only reviewer that maps every added route/screen/provider/repository method back to a requirement id, compares the build against the spec's scale assumptions, and verifies domain-centric structure, layer boundaries, dependency direction, and GraphQL isolation (CLAUDE.md §2–§4) for K-TripSpot Flutter changes. Use after a slice is built or edited, before it's considered done. Does NOT edit — it reports violations for slice-builder/the parent to fix.
 tools: Read, Glob, Grep, Bash
 model: sonnet
 skills:
@@ -30,6 +30,47 @@ Apply the `layer-boundary-review` skill against CLAUDE.md §2–§4. In particul
    architectural boundary (CLAUDE.md §1.3).
 
 ## Output
-Report only. Group findings as **Blocking** (breaks a hard boundary rule) vs
+
+Two tables come **first**, before any Blocking/Advisory finding. Write them from
+the `dev...HEAD` diff and `problem/SPEC-XXXX-client.md`. You review the diff
+rather than having built it, and that is the point — whoever built it finds
+justification easy, and a reviewer writes `(none)` more honestly.
+
+### Reverse mapping — write this before Blocking/Advisory
+
+| Added | Requirement id |
+|---|---|
+| SeatMapView | FR-002 |
+| SeatMapZoomController | (none) |
+| BookingRoute | FR-012 |
+
+Ids only, never prose. A sentence of justification is something you can invent;
+an id is something that exists or does not.
+
+Rows to include: every new route, screen, provider, and repository method. Not
+every widget — a component that exists only to lay out something already mapped
+inherits its parent's id.
+
+`(none)` is not automatically wrong. It is either unrequested work or a
+requirement nobody wrote down, and both need the user. Cross-check each `(none)`
+against "Not in this scope" in the design document: a match there is a confirmed
+overreach, not a judgment call. **Surface every `(none)` to the user** — never
+resolve one yourself by inferring which requirement it probably serves.
+
+### Scale check
+
+Compare the implementation against the scale assumptions in `spec.md`:
+- "at most 20,000 seats per fetch" + infinite scroll → mismatch
+- "10,000 concurrent users (total inflow)" + a queue UI → mismatch
+- "3s of display lag is acceptable" + a realtime subscription → mismatch
+
+This is comparison, not judgment. State the pair and the mismatch.
+
+All three examples are **more than the requirement allows**. On the client,
+overreach usually wears the costume of performance work or realtime updates.
+
+### Findings
+
+Then report only. Group findings as **Blocking** (breaks a hard boundary rule) vs
 **Advisory**. For each: file:line, the rule violated, the concrete fix. If clean,
 say so plainly. Don't restate the codebase.
