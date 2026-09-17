@@ -195,10 +195,12 @@ void main() {
     }
   });
 
-  /// SPEC-0036 FR-012. 문화행사는 이 변경의 대상이 아니라 기존대로 매번 표시된다 —
-  /// 제외 목록에 넣으면 재검색 한 번에 행사가 지도에서 영구히 사라진다.
-  test('문화행사는 제외 목록에 들어가지 않는다', () {
-    final MapViewportResult events = MapViewportResult(
+  /// SPEC-0036 FR-012. 문화행사는 이 변경의 대상이 아니라 기존대로 표시된다.
+  ///
+  /// 제외 목록에 넣으면 재검색 한 번에 행사가 지도에서 영구히 사라지고, 아무것도
+  /// 견주지 않으면 같은 행사가 쌓여 같은 자리에 핀이 겹쳐 박힌다 — 양쪽 다 틀렸다.
+  group('문화행사 (FR-012)', () {
+    MapViewportResult eventResult() => MapViewportResult(
       markers: <MapMarker>[
         MapMarker(
           id: 'e1',
@@ -211,17 +213,49 @@ void main() {
       truncated: false,
     );
 
-    final ProviderContainer c = container();
-    final MapMarkerController controller = c.read(
-      mapMarkerControllerProvider.notifier,
-    );
+    test('여러 번 흡수해도 같은 행사가 겹쳐 쌓이지 않는다', () {
+      final ProviderContainer c = container();
+      final MapMarkerController controller = c.read(
+        mapMarkerControllerProvider.notifier,
+      );
 
-    expect(controller.absorb(events, visible), isTrue);
-    expect(
-      controller.absorb(events, visible),
-      isTrue,
-      reason: '행사가 한 번 표시되고 나서 후보에서 빠졌다',
-    );
+      controller.absorb(eventResult(), visible);
+      controller.absorb(eventResult(), visible);
+      controller.absorb(eventResult(), visible);
+
+      expect(
+        c.read(mapMarkerControllerProvider).where(
+          (MapMarker m) => m.id == 'e1',
+        ),
+        hasLength(1),
+        reason: '같은 자리에 핀이 겹쳐 박힌다',
+      );
+    });
+
+    /// 제외 목록은 세션 내내 남으므로, 행사가 거기 들어가면 화면에서 지워진 뒤
+    /// 다시는 돌아오지 못한다.
+    test('표시에서 밀려난 행사는 다시 후보가 된다', () {
+      final ProviderContainer c = container();
+      final MapMarkerController controller = c.read(
+        mapMarkerControllerProvider.notifier,
+      );
+
+      controller.absorb(eventResult(), visible);
+      // 화면을 비운 상태를 만든다 — 보관 상한에 밀렸거나 로그아웃한 뒤와 같다.
+      controller.clear();
+
+      expect(
+        controller.absorb(eventResult(), visible),
+        isTrue,
+        reason: '행사가 제외 목록에 갇혔다',
+      );
+      expect(
+        c.read(mapMarkerControllerProvider).where(
+          (MapMarker m) => m.id == 'e1',
+        ),
+        hasLength(1),
+      );
+    });
   });
 
   test('지도 이동으로 인한 흡수는 화면 안 마커를 지우지 않는다', () {

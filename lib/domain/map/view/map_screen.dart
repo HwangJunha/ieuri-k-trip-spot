@@ -411,7 +411,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       //
       // 조회가 실패하면 이 줄에 닿지 않으므로 소진으로 넘어가지 않는다 — 네트워크
       // 오류를 「더 볼 것이 없음」으로 읽으면 버튼이 영영 사라진다.
-      _areaExhausted = !added && !result.truncated;
+      final bool exhausted = !added && !result.truncated;
+      if (exhausted != _areaExhausted) {
+        setState(() => _areaExhausted = exhausted);
+      }
 
       // 여기까지 왔을 때만 "받아 뒀다"로 기록한다 — 실패했는데 기록하면 재조회가
       // 영영 막힌다.
@@ -526,16 +529,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     // 취지가 성립하지 않는다.**
     //
     // 첫 진입도 같은 경로를 탄다 — 그때도 화면이 비어 있다.
-    final bool nothingVisible = !ref
-        .read(mapMarkerControllerProvider)
-        .any(
-          (MapMarker m) =>
-              m.latitude >= visible.minLat &&
-              m.latitude <= visible.maxLat &&
-              m.longitude >= visible.minLng &&
-              m.longitude <= visible.maxLng,
-        );
-    if (nothingVisible) {
+    if (_hasNoMarkerOnScreen(visible)) {
       await _searchMarkersHere(visible, zoomLevel);
       return;
     }
@@ -550,12 +544,14 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       // 이동으로 이미 띄웠으면 대기 중인 재노출 타이머는 필요 없다 — 남겨 두면
       // 5초 뒤에 같은 상태를 한 번 더 덮어쓴다.
       _searchAgainTimer?.cancel();
-      // **새 영역이면 소진을 푼다**(FR-008은 영역 단위다). 앞 영역을 다 봤다고
-      // 다음 영역까지 막으면 지도를 옮겨도 버튼이 돌아오지 않는다.
-      _areaExhausted = false;
     }
-    if (moved != _canSearchHere) {
-      setState(() => _canSearchHere = moved);
+    // **새 영역이면 소진을 푼다**(FR-008은 영역 단위다). 앞 영역을 다 봤다고
+    // 다음 영역까지 막으면 지도를 옮겨도 버튼이 돌아오지 않는다.
+    if (moved != _canSearchHere || (moved && _areaExhausted)) {
+      setState(() {
+        _canSearchHere = moved;
+        if (moved) _areaExhausted = false;
+      });
     }
   }
 
@@ -736,7 +732,13 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         //
         // **후보가 소진되면 다시 띄우지 않는다**(FR-008). 안내를 띄우는 대신 요청할
         // 수단만 사라진다 — 누적된 마커가 화면에 남아 있어 빈 화면이 되지 않는다.
-        if (!_areaExhausted) {
+        //
+        // **화면에 아무것도 없으면 그 전제가 깨진다.** 스펙이 안내를 생략한 근거가
+        // 「이미 표시된 장소가 남아 있어 화면이 비지 않는다」이므로, 정말 비어 있다면
+        // 버튼까지 사라져 아무 수단도 없는 화면이 된다 — 멀리 이동했을 때 마커가
+        // 하나도 없어 기능이 죽은 것처럼 보이던 실기기 지적과 같은 모양이다.
+        // 그때는 소진이어도 버튼을 남긴다.
+        if (!_areaExhausted || _hasNoMarkerOnScreen(visible)) {
           _searchAgainTimer = Timer(MapTuning.searchAgainDelay, () {
             if (mounted && !_isSearchingArea) {
               setState(() => _canSearchHere = true);
@@ -746,6 +748,17 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       }
     }
   }
+
+  /// 화면 안에 마커가 하나도 없는가. 소진이어도 버튼을 남길지 판정한다.
+  bool _hasNoMarkerOnScreen(MapBounds visible) => !ref
+      .read(mapMarkerControllerProvider)
+      .any(
+        (MapMarker m) =>
+            m.latitude >= visible.minLat &&
+            m.latitude <= visible.maxLat &&
+            m.longitude >= visible.minLng &&
+            m.longitude <= visible.maxLng,
+      );
 
   /// 영역이 바뀌지 않았으면 첫 조회에 쓴 bbox를, 바뀌었으면 `null`을 준다(FR-010).
   ///

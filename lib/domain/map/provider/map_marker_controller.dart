@@ -112,9 +112,18 @@ class MapMarkerController extends _$MapMarkerController {
 
   /// 이미 표시한 적 있는 장소인가. 고정한 마커도 후보에서 뺀다 — 재검색 때 강조가
   /// 꺼진 같은 장소가 새로 들어오면 빨간 테두리가 사라진다.
+  ///
+  /// **문화행사는 [_servedKeys]가 아니라 지금 들고 있는 것과만 견준다.** 기록에 넣으면
+  /// 한 번 표시된 행사가 이 세션 내내 후보에서 빠져 지도에서 영구히 사라지고(FR-012
+  /// 위반), 아무것도 안 견주면 재검색할 때마다 같은 행사가 [state]에 쌓여 같은 자리에
+  /// SDK 핀이 겹쳐 박힌다.
   bool _isServed(MapMarker m) {
     final String key = _keyOf(m);
-    return key == _pinnedKey || _servedKeys.contains(key);
+    if (key == _pinnedKey) return true;
+    if (m.kind != MapMarkerKind.spot) {
+      return state.any((MapMarker held) => _keyOf(held) == key);
+    }
+    return _servedKeys.contains(key);
   }
 
   /// 이 세션에서 이미 표시한 장소의 키(FR-004).
