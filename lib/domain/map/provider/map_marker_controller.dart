@@ -28,13 +28,16 @@ part 'map_marker_controller.g.dart';
 class MapMarkerController extends _$MapMarkerController {
   @override
   List<MapMarker> build() {
-    // 로그아웃하면 쌓인 마커를 버린다. 이 컨트롤러는 `add` 의미라 스스로
-    // 비워지지 않는다.
-    ref.watchSignedIn();
-    // 표시 기록도 함께 버린다 — 계정이 바뀌면 「이 세션에서 본 장소」의 주체가
-    // 달라진다.
-    _servedKeys.clear();
-    _pinnedKey = null;
+    // **`watchSignedIn`이 아니라 `listenSignedOut`이다**(SPEC-0036).
+    //
+    // watch면 인증 판정이 `loading`에서 `data`로 자리잡는 것만으로도 build가 다시
+    // 돌아 **쌓아 둔 것이 지워진다.** 이 컨트롤러는 마커와 표시 기록을 관측해
+    // 쌓아 두는 쪽이라 그 대상이다 — 실제로 첫 조회 직후 기록이 통째로 날아가
+    // 제외 목록이 늘 비어 있었고, 「다음 장소」가 매번 같은 장소를 다시 줬다
+    // (FR-004·FR-005 위반).
+    //
+    // 로그아웃이라는 **사건**에만 반응하면 세션 경계는 지키면서 값이 살아남는다.
+    ref.listenSignedOut(clear);
     return const <MapMarker>[];
   }
 
@@ -133,7 +136,9 @@ class MapMarkerController extends _$MapMarkerController {
         .take(MapTuning.markersPerBatch)
         .toList();
     for (final MapMarker m in added) {
-      if (m.kind == MapMarkerKind.spot) _servedKeys.add(_keyOf(m));
+      if (m.kind != MapMarkerKind.spot) continue;
+      _servedKeys.add(_keyOf(m));
+      _servedSpotIds.add(m.id);
     }
 
     // 화면 밖으로 나간 마커는 **버리지 않는다** — 축소하면 다시 화면에 들어오기
@@ -168,12 +173,13 @@ class MapMarkerController extends _$MapMarkerController {
 
   /// 이 세션에서 이미 표시한 **spot의 id**(FR-004). 서버에 제외 목록으로 보낸다.
   ///
-  /// 키가 아니라 id를 준다 — 서버 계약의 `excludedIds`가 `[ID!]`이고, spot만 담기므로
-  /// `kind` 접두사가 필요 없다. 문화행사는 애초에 [_servedKeys]에 들어가지 않는다
-  /// (FR-012).
-  List<String> get servedSpotIds => _servedKeys
-      .map((String key) => key.substring(key.indexOf(':') + 1))
-      .toList();
+  /// 계약의 `excludedIds`가 `[ID!]`라 키가 아니라 id다. 문화행사는 애초에 여기
+  /// 들어가지 않는다(FR-012).
+  ///
+  /// **키에서 잘라내지 않고 따로 든다.** `'kind:id'`를 파싱해 복원하면 id에 콜론이
+  /// 들어가는 순간 조용히 틀린 값을 보내게 된다 — 지금은 숫자 문자열이지만 그것은
+  /// 계약이 보장하는 바가 아니다.
+  List<String> get servedSpotIds => _servedSpotIds.toList();
 
   /// 이 세션에서 이미 표시한 장소의 키(FR-004).
   ///
@@ -183,6 +189,9 @@ class MapMarkerController extends _$MapMarkerController {
   /// **영역을 옮겨도 비우지 않는다**(FR-006). 앞 영역에서 본 장소가 새 영역에도
   /// 있으면 다시 고르지 않는다.
   final Set<String> _servedKeys = <String>{};
+
+  /// [_servedKeys] 중 spot의 id만. 서버로 보낼 형태 그대로 든다.
+  final Set<String> _servedSpotIds = <String>{};
 
   /// 검색으로 찾은 장소를 **맨 앞에 고정한다**.
   ///
@@ -228,6 +237,7 @@ class MapMarkerController extends _$MapMarkerController {
   void clear() {
     _pinnedKey = null;
     _servedKeys.clear();
+    _servedSpotIds.clear();
     state = const <MapMarker>[];
   }
 

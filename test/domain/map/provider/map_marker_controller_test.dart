@@ -3,11 +3,42 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/map_bounds.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/map_marker.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/map_tuning.dart';
+import 'package:ieuri_k_trip_spot/domain/map/model/map_recommendation_result.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/map_viewport_result.dart';
 import 'package:ieuri_k_trip_spot/domain/map/provider/map_marker_controller.dart';
+import 'package:ieuri_k_trip_spot/domain/map/provider/map_providers.dart';
+import 'package:ieuri_k_trip_spot/domain/map/repository/map_repository.dart';
 
 /// 지도 마커 누적 규칙. 화면을 옮겨도 보고 있던 장소가 사라지지 않아야 하고,
 /// 검색으로 찾은 곳은 어떤 경우에도 남아야 한다.
+/// 정해진 추천 결과만 답하는 repository. 나머지 연산은 이 테스트가 건드리지 않는다.
+final class FakeMapRepository implements MapRepository {
+  FakeMapRepository(this.markers, {this.exhausted = false});
+
+  final List<MapMarker> markers;
+  final bool exhausted;
+
+  List<String>? lastExcluded;
+  int? lastFirst;
+  MapBounds? lastBbox;
+
+  @override
+  Future<MapRecommendationResult> fetchRecommendedSpots({
+    required MapBounds bbox,
+    required List<String> excludedIds,
+    int? first,
+  }) async {
+    lastBbox = bbox;
+    lastExcluded = excludedIds;
+    lastFirst = first;
+    return MapRecommendationResult(markers: markers, exhausted: exhausted);
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError(invocation.memberName.toString());
+}
+
 void main() {
   const MapBounds visible = MapBounds(
     minLat: 37.50,
@@ -127,7 +158,9 @@ void main() {
   test('같은 조건으로 두 번 계산하면 순서가 같다', () {
     List<String> pick() {
       final ProviderContainer c = container();
-      c.read(mapMarkerControllerProvider.notifier).absorb(resultOf(50), visible);
+      c
+          .read(mapMarkerControllerProvider.notifier)
+          .absorb(resultOf(50), visible);
       return c
           .read(mapMarkerControllerProvider)
           .map((MapMarker m) => m.id)
@@ -224,9 +257,9 @@ void main() {
       controller.absorb(eventResult(), visible);
 
       expect(
-        c.read(mapMarkerControllerProvider).where(
-          (MapMarker m) => m.id == 'e1',
-        ),
+        c
+            .read(mapMarkerControllerProvider)
+            .where((MapMarker m) => m.id == 'e1'),
         hasLength(1),
         reason: '같은 자리에 핀이 겹쳐 박힌다',
       );
@@ -250,9 +283,9 @@ void main() {
         reason: '행사가 제외 목록에 갇혔다',
       );
       expect(
-        c.read(mapMarkerControllerProvider).where(
-          (MapMarker m) => m.id == 'e1',
-        ),
+        c
+            .read(mapMarkerControllerProvider)
+            .where((MapMarker m) => m.id == 'e1'),
         hasLength(1),
       );
     });
@@ -271,6 +304,88 @@ void main() {
     final List<MapMarker> after = c.read(mapMarkerControllerProvider);
 
     expect(after.length, greaterThanOrEqualTo(before.length));
+  });
+
+  /// SPEC-0036 S4. 「다음 장소」는 이미 표시한 것을 서버에 제외 목록으로 보내
+  /// 받아 온다 — 커서도 오프셋도 없다(POL-037).
+  group('다음 묶음 조회 (loadNextBatch)', () {
+    const MapBounds bbox = MapBounds(
+      minLat: 37.49,
+      minLng: 126.99,
+      maxLat: 37.53,
+      maxLng: 127.03,
+    );
+
+    ProviderContainer withRepository(FakeMapRepository repository) {
+      final ProviderContainer c = ProviderContainer(
+        overrides: [mapRepositoryProvider.overrideWithValue(repository)],
+      );
+      addTearDown(c.dispose);
+      return c;
+    }
+
+    /// FR-004. 두 번째 요청에 첫 묶음이 제외로 실려야 「다음」이 된다.
+    test('앞서 표시한 장소를 제외 목록으로 보낸다', () async {
+      final FakeMapRepository repository = FakeMapRepository(<MapMarker>[
+        markerAt('a', 37.5025, 127.0025),
+        markerAt('b', 37.5175, 127.0175),
+      ]);
+      final MapMarkerController controller = withRepository(
+        repository,
+      ).read(mapMarkerControllerProvider.notifier);
+
+      await controller.loadNextBatch(
+        bbox: bbox,
+        visible: visible,
+        batchSize: 2,
+      );
+      expect(repository.lastExcluded, isEmpty, reason: '첫 요청은 제외가 없다');
+
+      await controller.loadNextBatch(
+        bbox: bbox,
+        visible: visible,
+        batchSize: 2,
+      );
+      expect(repository.lastExcluded, containsAll(<String>['a', 'b']));
+    });
+
+    /// FR-009. 판정은 서버가 준 수로 한다 — 격자에 솎여 못 그린 장소는 제외 목록에
+    /// 없어 다음 요청에 다시 오므로, 그린 수로 판정하면 가짜 소진이다.
+    test('소진 여부를 그대로 전한다', () async {
+      final FakeMapRepository exhausted = FakeMapRepository(<MapMarker>[
+        markerAt('a', 37.505, 127.005),
+      ], exhausted: true);
+      final MapMarkerController controller = withRepository(
+        exhausted,
+      ).read(mapMarkerControllerProvider.notifier);
+
+      expect(
+        await controller.loadNextBatch(
+          bbox: bbox,
+          visible: visible,
+          batchSize: 10,
+        ),
+        isTrue,
+      );
+    });
+
+    test('요청한 묶음 크기를 그대로 보낸다', () async {
+      final FakeMapRepository repository = FakeMapRepository(
+        const <MapMarker>[],
+      );
+      final MapMarkerController controller = withRepository(
+        repository,
+      ).read(mapMarkerControllerProvider.notifier);
+
+      await controller.loadNextBatch(
+        bbox: bbox,
+        visible: visible,
+        batchSize: 7,
+      );
+
+      expect(repository.lastFirst, 7);
+      expect(repository.lastBbox, bbox);
+    });
   });
 
   group('검색 결과 고정 (pin)', () {
