@@ -28,6 +28,10 @@ class MapMarkerController extends _$MapMarkerController {
     // 로그아웃하면 쌓인 마커를 버린다. 이 컨트롤러는 `add` 의미라 스스로
     // 비워지지 않는다.
     ref.watchSignedIn();
+    // 표시 기록도 함께 버린다 — 계정이 바뀌면 「이 세션에서 본 장소」의 주체가
+    // 달라진다.
+    _servedKeys.clear();
+    _pinnedKey = null;
     return const <MapMarker>[];
   }
 
@@ -38,101 +42,89 @@ class MapMarkerController extends _$MapMarkerController {
   /// 이동에 재조회가 걸리지 않도록), 마커를 고르고 격자를 나누는 기준은 화면이어야
   /// 한다 — 넓은 영역으로 격자를 나누면 칸 대부분이 화면 밖이라, 열 개를 뽑아도
   /// 화면에는 예닐곱만 남는다.
-  void absorb(
-    MapViewportResult result,
-    MapBounds visible, {
-    bool replaceShown = false,
-  }) {
+  ///
+  /// **한 번에 [MapTuning.markersPerBatch]개를 더한다**(SPEC-0036 FR-003). 「이 지역
+  /// 재검색」이 화면을 갈아 끼우던 동작은 없앴다 — 이제 누를 때마다 안 본 장소가
+  /// 더해져 10 → 20 → 30으로 쌓인다.
+  ///
+  /// 더한 장소는 [_servedKeys]에 남아 이 세션 동안 다시 후보가 되지 않는다(FR-004).
+  ///
+  /// 더할 새 장소가 하나도 없으면 `false`를 준다 — 호출자가 「더 보기」 수단을 거두는
+  /// 근거다(FR-008). **이것만으로 소진을 단정하지 않는다**: 서버가 준 후보 안에서
+  /// 새것이 없었다는 뜻일 뿐, 영역 안 후보가 모두 소진되었다는 뜻은 아니다(FR-009).
+  bool absorb(MapViewportResult result, MapBounds visible) {
     bool inView(MapMarker m) =>
         m.latitude >= visible.minLat &&
         m.latitude <= visible.maxLat &&
         m.longitude >= visible.minLng &&
         m.longitude <= visible.maxLng;
 
-    // **고정 마커는 상한 계산에서 아예 뺀다.**
+    // 이미 표시한 적 있는 장소는 후보에서 뺀다(FR-004).
     //
-    // 검색으로 찾은 곳은 항상 보여야 하는 것이라, 상한을 두고 예외를 다는 대신
-    // 처음부터 셈에서 제외한다 — 예외로 처리했더니 `room`이 0이 되어 조기 반환하는
-    // 경로에서 조용히 밀려났다. 상한은 **조회로 채우는 마커**에만 적용된다.
-    bool isPinned(MapMarker m) => _keyOf(m) == _pinnedKey;
-
-    final List<MapMarker> shown = state
-        .where((MapMarker m) => inView(m) && !isPinned(m))
-        .toList();
-
-    // 화면 밖으로 나간 마커는 자리를 차지하지 않지만 **버리지도 않는다** — 축소하면
-    // 다시 화면에 들어오기 때문이다. 이전에는 뷰포트 밖을 버렸더니 줌 아웃할 때마다
-    // 마커가 한꺼번에 사라져 지도가 텅 비었다.
+    // **[state]로 역산하지 않는다.** [_trim]이 화면 밖 오래된 마커를 버리므로,
+    // 지금 들고 있는 것만으로 판정하면 버려진 장소가 다시 후보로 살아난다.
+    // 기록과 표시는 수명이 다르다 — 기록은 세션이 끝날 때만 사라진다(FR-005).
     //
-    // [replaceShown]이면 자리가 없어도 **화면 안의 것을 비워 새 장소를 넣는다** —
-    // "이 지역 재검색"을 눌렀는데 아무것도 안 바뀌면 버튼이 동작하지 않는 것으로
-    // 보인다. 화면 밖의 것은 그대로 둔다.
-    final int room = replaceShown
-        ? MapTuning.maxDrawnMarkers
-        : MapTuning.maxDrawnMarkers - shown.length;
-    if (room <= 0) return;
-
-    // 교체할 때는 화면 안의 것을 후보에서 빼지 않는다 — 그래야 그 자리에 다른
-    // 장소가 들어올 수 있다. 대신 화면 밖의 것과는 여전히 중복을 피한다.
-    final Set<String> known = <String>{
-      ...replaceShown
-          ? state.where((MapMarker m) => !inView(m)).map(_keyOf)
-          : state.map(_keyOf),
-      // **고정 마커는 항상 후보에서 뺀다.** 재검색 때 화면 안의 것을 후보로 되돌리는데
-      // 거기 섞이면, 강조가 꺼진 같은 장소가 새로 들어와 빨간 테두리가 사라진다.
-      if (_pinnedKey case final String key) key,
-    };
-
-    // 화면 안에 있는 것만 후보다 — 화면 밖까지 고르면 사용자가 보고 있는 곳이 비고
-    // 가장자리 밖에만 마커가 찍힌다.
-    //
-    // **이미 가진 것을 격자에 넣기 전에 뺀다.** 순서가 반대면(격자 → 제외) 격자가
-    // 칸마다 늘 같은 첫 번째를 고르므로, 같은 자리에서 재검색해도 결과가 그대로였다 —
-    // 사용자가 "똑같은 데이터가 나온다"고 지적한 지점이다. 먼저 걸러 내면 두 번째
-    // 검색은 그 칸의 **다음** 장소를 고른다.
+    // **문화행사는 기록하지도 제외하지도 않는다**(FR-012). 이 변경의 대상이 아니라
+    // 기존대로 매번 전량 표시되어야 하는데, 제외 목록에 넣으면 재검색 한 번에
+    // 행사가 지도에서 영구히 사라진다.
     final List<MapMarker> unseen = result.markers
         .where(inView)
-        .where((MapMarker m) => !known.contains(_keyOf(m)))
+        .where((MapMarker m) => !_isServed(m))
         .toList();
 
-    // **재검색이면 순서를 섞는다**(사용자 요청, 2026-08-10).
-    //
-    // 서버는 관련도 순으로 늘 같은 500건을 주고 격자도 칸마다 첫 번째를 고르므로,
-    // 같은 자리에서 다시 눌러도 결과가 그대로였다. 섞으면 매번 다른 곳이 뽑혀
-    // "재검색"이 실제로 새로운 것을 보여 준다.
-    //
-    // 지도 이동으로 인한 흡수는 섞지 않는다 — 그때는 새 영역이라 이미 다른 후보이고,
-    // 섞으면 남아 있던 마커 옆에 엉뚱한 것이 끼어 화면이 어수선해진다.
-    if (replaceShown) unseen.shuffle();
-
-    // 격자로 솎아 골고루 퍼뜨린다. 상한을 넉넉히 주는 이유는 아래에서 남은 자리만큼만
+    // 격자로 솎아 골고루 퍼뜨린다. 상한을 넉넉히 주는 이유는 아래에서 한 묶음만큼만
     // 가져가기 때문이다.
+    //
+    // **받은 순서를 섞지 않는다**(SPEC-0036 BR-001·QR-001). 예전에는 재검색 때
+    // `shuffle()`을 걸었는데, 서버가 늘 같은 순서를 주어 같은 자리에서 다시 눌러도
+    // 화면이 그대로였기 때문이다. 이제는 이미 본 장소를 빼서 「다음」을 만들므로
+    // 섞을 이유가 없고, 섞으면 점수가 아닌 기준이 선택에 개입한다.
     final List<MapMarker> fresh = thinMarkers(
       markers: unseen,
       viewport: visible,
       columns: MapTuning.markerGridColumns,
-      maxCount: MapTuning.maxDrawnMarkers * 3,
+      maxCount: MapTuning.markersPerBatch * 3,
     );
 
-    if (fresh.isEmpty) return;
+    if (fresh.isEmpty) return false;
 
-    // 교체할 때는 화면 안의 이전 마커를 비우고 새것으로 채운다. 화면 밖의 것은
-    // 그대로 둔다 — 축소하면 다시 보여야 한다.
-    //
-    // **검색으로 고정한 마커는 예외다** — 화면 안에 있어도 지우지 않는다. 사용자가
-    // 방금 찾은 곳이 재검색 한 번에 사라지면 검색이 헛일이 된다.
-    final List<MapMarker> kept = replaceShown
-        ? state.where((MapMarker m) => !inView(m) || isPinned(m)).toList()
-        : state;
+    final List<MapMarker> added = fresh
+        .take(MapTuning.markersPerBatch)
+        .toList();
+    for (final MapMarker m in added) {
+      if (m.kind == MapMarkerKind.spot) _servedKeys.add(_keyOf(m));
+    }
 
-    final List<MapMarker> next = <MapMarker>[...kept, ...fresh.take(room)];
+    // 화면 밖으로 나간 마커는 **버리지 않는다** — 축소하면 다시 화면에 들어오기
+    // 때문이다. 이전에는 뷰포트 밖을 버렸더니 줌 아웃할 때마다 마커가 한꺼번에
+    // 사라져 지도가 텅 비었다.
+    final List<MapMarker> next = <MapMarker>[...state, ...added];
 
-    // 오래 돌아다니면 화면 밖 마커가 쌓이므로 보관량에 상한을 둔다. 화면 안의 것은
-    // 지키고, 넘치는 만큼 **가장 오래된 화면 밖 마커**부터 버린다.
+    // 오래 돌아다니면 마커가 무한히 쌓이므로 **보관량**에 상한을 둔다(표시 상한이
+    // 아니다 — [MapTuning.maxRetainedMarkers] 참조). 화면 안의 것은 지키고, 넘치는
+    // 만큼 가장 오래된 화면 밖 마커부터 버린다.
     state = next.length <= MapTuning.maxRetainedMarkers
         ? next
         : _trim(next, inView, MapTuning.maxRetainedMarkers);
+    return true;
   }
+
+  /// 이미 표시한 적 있는 장소인가. 고정한 마커도 후보에서 뺀다 — 재검색 때 강조가
+  /// 꺼진 같은 장소가 새로 들어오면 빨간 테두리가 사라진다.
+  bool _isServed(MapMarker m) {
+    final String key = _keyOf(m);
+    return key == _pinnedKey || _servedKeys.contains(key);
+  }
+
+  /// 이 세션에서 이미 표시한 장소의 키(FR-004).
+  ///
+  /// **세션 경계는 이 provider의 수명이다**(FR-005). `keepAlive`라 앱이 살아 있는
+  /// 동안 유지되고 프로세스가 끝나면 함께 사라진다 — 디스크에 남기지 않는다.
+  ///
+  /// **영역을 옮겨도 비우지 않는다**(FR-006). 앞 영역에서 본 장소가 새 영역에도
+  /// 있으면 다시 고르지 않는다.
+  final Set<String> _servedKeys = <String>{};
 
   /// 검색으로 찾은 장소를 **맨 앞에 고정한다**.
   ///
@@ -172,8 +164,12 @@ class MapMarkerController extends _$MapMarkerController {
   String? _pinnedKey;
 
   /// 지도를 벗어나거나 새로 시작할 때 비운다.
+  ///
+  /// **제외 목록도 함께 비운다** — 로그아웃으로 마커를 버리는 경로(→[build])에서
+  /// 기록만 남으면, 다음 사용자가 이 세션에서 본 적 없는 장소를 못 보게 된다.
   void clear() {
     _pinnedKey = null;
+    _servedKeys.clear();
     state = const <MapMarker>[];
   }
 

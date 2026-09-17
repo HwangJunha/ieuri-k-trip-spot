@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/map_bounds.dart';
@@ -40,13 +39,13 @@ void main() {
     return c;
   }
 
-  test('조회 결과를 흡수해 화면 상한까지 채운다', () {
+  test('한 번에 한 묶음만 더한다', () {
     final ProviderContainer c = container();
     c.read(mapMarkerControllerProvider.notifier).absorb(resultOf(40), visible);
 
     expect(
       c.read(mapMarkerControllerProvider).length,
-      MapTuning.maxDrawnMarkers,
+      MapTuning.markersPerBatch,
     );
   });
 
@@ -69,33 +68,160 @@ void main() {
     }
   });
 
-  /// 서버는 관련도 순으로 늘 같은 결과를 준다 — 섞지 않으면 같은 자리에서 재검색해도
-  /// 화면이 그대로다(사용자 지적).
-  test('재검색하면 다른 장소가 나온다', () {
+  /// SPEC-0036 AC-015. 「이 지역 재검색」은 화면을 갈아 끼우지 않고 **더한다** —
+  /// 10건이 표시되어 있었다면 20건이 된다.
+  test('다시 흡수하면 앞선 장소를 두고 다음 묶음이 더해진다', () {
     final ProviderContainer c = container();
     final MapMarkerController controller = c.read(
       mapMarkerControllerProvider.notifier,
     );
 
-    controller.absorb(resultOf(60), visible);
+    controller.absorb(resultOf(30), visible);
+    final List<String> first = c
+        .read(mapMarkerControllerProvider)
+        .map((MapMarker m) => m.id)
+        .toList();
+    expect(first, hasLength(MapTuning.markersPerBatch));
+
+    controller.absorb(resultOf(30), visible);
+    final List<String> second = c
+        .read(mapMarkerControllerProvider)
+        .map((MapMarker m) => m.id)
+        .toList();
+
+    expect(
+      second,
+      hasLength(MapTuning.markersPerBatch * 2),
+      reason: '교체가 아니라 누적이어야 한다',
+    );
+    expect(second.take(first.length), first, reason: '처음 10건이 그대로 남는다');
+  });
+
+  /// SPEC-0036 AC-004. 이 세션에서 이미 표시한 장소는 다시 후보가 되지 않는다.
+  test('이미 표시한 장소는 다음 묶음에 없다', () {
+    final ProviderContainer c = container();
+    final MapMarkerController controller = c.read(
+      mapMarkerControllerProvider.notifier,
+    );
+
+    controller.absorb(resultOf(30), visible);
     final Set<String> first = c
         .read(mapMarkerControllerProvider)
         .map((MapMarker m) => m.id)
         .toSet();
 
-    // 섞기는 무작위라 한 번은 우연히 같을 수 있다 — 여러 번 중 한 번이라도 달라지면
-    // 재검색이 새 결과를 준다는 뜻이다.
-    bool changed = false;
-    for (int i = 0; i < 10 && !changed; i++) {
-      controller.absorb(resultOf(60), visible, replaceShown: true);
-      final Set<String> next = c
+    controller.absorb(resultOf(30), visible);
+    final List<String> added = c
+        .read(mapMarkerControllerProvider)
+        .map((MapMarker m) => m.id)
+        .skip(first.length)
+        .toList();
+
+    expect(added, isNotEmpty);
+    for (final String id in added) {
+      expect(first.contains(id), isFalse, reason: '$id를 또 보여 줬다');
+    }
+  });
+
+  /// SPEC-0036 AC-002·QR-001. 셔플을 없앴으므로 같은 입력은 같은 결과를 준다.
+  test('같은 조건으로 두 번 계산하면 순서가 같다', () {
+    List<String> pick() {
+      final ProviderContainer c = container();
+      c.read(mapMarkerControllerProvider.notifier).absorb(resultOf(50), visible);
+      return c
           .read(mapMarkerControllerProvider)
           .map((MapMarker m) => m.id)
-          .toSet();
-      if (!setEquals(first, next)) changed = true;
+          .toList();
     }
 
-    expect(changed, isTrue, reason: '재검색해도 매번 같은 장소만 나온다');
+    expect(pick(), pick(), reason: '무작위 요소가 남아 있다');
+  });
+
+  /// SPEC-0036 AC-008. 더할 새 장소가 없으면 그 사실을 알린다 — 호출자가 「더 보기」
+  /// 수단을 거두는 근거다. 이미 표시된 것은 그대로 남는다.
+  test('더할 새 장소가 없으면 false를 주고 표시된 것은 남는다', () {
+    final ProviderContainer c = container();
+    final MapMarkerController controller = c.read(
+      mapMarkerControllerProvider.notifier,
+    );
+
+    // 후보를 다 소비할 때까지 흡수한다. 격자가 칸마다 하나만 남기므로 한 번에
+    // 몇 개가 들어갈지는 후보의 배치에 달렸다 — 「더 이상 안 들어간다」까지 민다.
+    final MapViewportResult candidates = resultOf(12);
+    while (controller.absorb(candidates, visible)) {}
+
+    final List<MapMarker> shown = c.read(mapMarkerControllerProvider);
+    expect(shown, isNotEmpty, reason: '후보를 하나도 못 넣었다');
+
+    expect(
+      controller.absorb(candidates, visible),
+      isFalse,
+      reason: '같은 후보를 또 더할 수 있다고 한다',
+    );
+    expect(c.read(mapMarkerControllerProvider), shown, reason: '표시가 지워졌다');
+  });
+
+  /// SPEC-0036 AC-006. 영역을 옮겨도 표시 기록은 유지된다 — 앞 영역에서 본 장소가
+  /// 새 영역에도 있으면 다시 고르지 않는다.
+  test('영역을 옮겨도 앞서 본 장소는 다시 나오지 않는다', () {
+    const MapBounds neighbour = MapBounds(
+      minLat: 37.51,
+      minLng: 127.01,
+      maxLat: 37.53,
+      maxLng: 127.03,
+    );
+
+    final ProviderContainer c = container();
+    final MapMarkerController controller = c.read(
+      mapMarkerControllerProvider.notifier,
+    );
+
+    controller.absorb(resultOf(30), visible);
+    final Set<String> seen = c
+        .read(mapMarkerControllerProvider)
+        .map((MapMarker m) => m.id)
+        .toSet();
+
+    // 겹치는 영역을 같은 후보로 조회한다.
+    controller.absorb(resultOf(30), neighbour);
+    final List<String> added = c
+        .read(mapMarkerControllerProvider)
+        .map((MapMarker m) => m.id)
+        .skip(seen.length)
+        .toList();
+
+    for (final String id in added) {
+      expect(seen.contains(id), isFalse, reason: '$id가 새 영역에서 또 나왔다');
+    }
+  });
+
+  /// SPEC-0036 FR-012. 문화행사는 이 변경의 대상이 아니라 기존대로 매번 표시된다 —
+  /// 제외 목록에 넣으면 재검색 한 번에 행사가 지도에서 영구히 사라진다.
+  test('문화행사는 제외 목록에 들어가지 않는다', () {
+    final MapViewportResult events = MapViewportResult(
+      markers: <MapMarker>[
+        MapMarker(
+          id: 'e1',
+          name: 'e1',
+          latitude: 37.51,
+          longitude: 127.01,
+          kind: MapMarkerKind.culturalEvent,
+        ),
+      ],
+      truncated: false,
+    );
+
+    final ProviderContainer c = container();
+    final MapMarkerController controller = c.read(
+      mapMarkerControllerProvider.notifier,
+    );
+
+    expect(controller.absorb(events, visible), isTrue);
+    expect(
+      controller.absorb(events, visible),
+      isTrue,
+      reason: '행사가 한 번 표시되고 나서 후보에서 빠졌다',
+    );
   });
 
   test('지도 이동으로 인한 흡수는 화면 안 마커를 지우지 않는다', () {

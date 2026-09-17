@@ -124,6 +124,15 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   /// 달라지면 서버가 고르는 spot도 달라진다.
   int? _lastMarkerZoom;
 
+  /// 이 영역의 후보가 모두 표시되었는가(SPEC-0036 FR-008).
+  ///
+  /// 참이면 「이 지역 재검색」을 다시 띄우지 않는다 — 안내를 띄우는 대신 요청할
+  /// **수단만** 사라진다. 누적된 마커는 그대로 남아 화면이 비지 않는다.
+  ///
+  /// **영역 단위이지 세션 단위가 아니다.** 지도를 옮겨 새 영역으로 판정되면 풀린다
+  /// (→[_queryViewport]) — 그 영역에는 아직 못 본 장소가 있을 수 있다.
+  bool _areaExhausted = false;
+
   /// 현재 위치를 얻는 중인가. 버튼이 진행 표시로 바뀌고 중복 요청을 막는다.
   bool _isLocating = false;
 
@@ -369,12 +378,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     MapBounds bbox,
     MapBounds visible,
     int zoomLevel,
-    int generation, {
-
-    /// "이 지역 재검색"으로 부른 것인가. 참이면 화면 안의 마커를 새 장소로 **교체**한다 —
-    /// 자리가 차 있다고 아무것도 안 바뀌면 버튼이 동작하지 않는 것으로 보인다.
-    bool replaceShown = false,
-  }) async {
+    int generation,
+  ) async {
     try {
       // **서버가 받는 줌으로 접어서 보낸다.** SDK 줌은 21까지 가지만 계약은 1~14라,
       // 그대로 보내면 확대할수록 `INVALID_ZOOM`으로 거절되어 마커가 하나도 안 온다.
@@ -392,9 +397,21 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       // **화면 영역을 넘긴다.** 조회는 그보다 넓게 하지만, 마커를 고르는 기준은
       // 사용자가 보고 있는 곳이어야 한다 — 조회 영역으로 격자를 나누면 칸 대부분이
       // 화면 밖이라 열 개를 뽑아도 화면에는 예닐곱만 남는다.
-      ref
+      final bool added = ref
           .read(mapMarkerControllerProvider.notifier)
-          .absorb(result, visible, replaceShown: replaceShown);
+          .absorb(result, visible);
+
+      // **소진 판정에는 두 조건이 함께 필요하다**(SPEC-0036 FR-009).
+      //
+      // 「제외한 뒤 새 장소가 0개」만으로 판정하면 안 된다 — SPEC-0035에서 실제로
+      // 터진 가짜 소진이다(요청 수와 표시 수를 같게 뒀더니 응답 전체가 이미 본 것과
+      // 겹쳐 열 장 만에 소진 화면이 떴다). 그래서 서버가 **가진 것을 다 줬는지**를
+      // 함께 본다: [MapViewportResult.truncated]가 참이면 상한에 걸려 일부만 온
+      // 것이므로 영역 안에 아직 못 본 후보가 있을 수 있고, 소진이 아니다.
+      //
+      // 조회가 실패하면 이 줄에 닿지 않으므로 소진으로 넘어가지 않는다 — 네트워크
+      // 오류를 「더 볼 것이 없음」으로 읽으면 버튼이 영영 사라진다.
+      _areaExhausted = !added && !result.truncated;
 
       // 여기까지 왔을 때만 "받아 뒀다"로 기록한다 — 실패했는데 기록하면 재조회가
       // 영영 막힌다.
@@ -533,6 +550,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       // 이동으로 이미 띄웠으면 대기 중인 재노출 타이머는 필요 없다 — 남겨 두면
       // 5초 뒤에 같은 상태를 한 번 더 덮어쓴다.
       _searchAgainTimer?.cancel();
+      // **새 영역이면 소진을 푼다**(FR-008은 영역 단위다). 앞 영역을 다 봤다고
+      // 다음 영역까지 막으면 지도를 옮겨도 버튼이 돌아오지 않는다.
+      _areaExhausted = false;
     }
     if (moved != _canSearchHere) {
       setState(() => _canSearchHere = moved);
@@ -677,19 +697,20 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     final CameraPosition position = await controller.getCameraPosition();
     if (!mounted) return;
 
-    await _searchMarkersHere(visible, position.zoomLevel, replaceShown: true);
+    await _searchMarkersHere(visible, position.zoomLevel);
   }
 
   /// 지금 보고 있는 지역의 마커를 받는다. 첫 진입과 "이 지역 재검색" 버튼이 부른다.
   ///
-  /// [replaceShown]은 버튼으로 부를 때만 참이다 — 같은 자리에서 눌렀는데 화면이
-  /// 그대로면 버튼이 동작하지 않는 것으로 보이므로, 그때는 화면 안의 마커를 다른
-  /// 장소로 갈아 준다.
-  Future<void> _searchMarkersHere(
-    MapBounds visible,
-    int zoomLevel, {
-    bool replaceShown = false,
-  }) async {
+  /// 버튼으로 부르든 자동으로 부르든 **동작이 같다**(SPEC-0036 FR-003). 화면을 갈아
+  /// 끼우던 경로는 없앴고, 양쪽 모두 안 본 장소를 한 묶음 더한다.
+  ///
+  /// **같은 영역이면 첫 조회에 쓴 bbox를 그대로 쓴다**(FR-010). 지도를 미세하게
+  /// 움직이면 [_visibleBounds]가 매번 조금씩 다른 사각형을 주므로, 매번 새로
+  /// 산출하면 같은 영역인데 다른 조건으로 조회하게 된다 — 스펙이 경고한 「보충
+  /// 조회가 조건을 빠뜨림」이 정확히 이 형태다. 영역은 바뀌었거나 아니거나 둘
+  /// 중 하나이며 그 사이는 없다.
+  Future<void> _searchMarkersHere(MapBounds visible, int zoomLevel) async {
     if (_isSearchingArea) return;
     // 조회를 시작하면 대기 중인 재노출 타이머는 의미가 없다.
     _searchAgainTimer?.cancel();
@@ -697,13 +718,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
     try {
       // 화면보다 조금 넓게 받아, 살짝 밀었을 때 가장자리가 비지 않게 한다(R20).
-      await _loadMarkers(
-        visible.expanded(),
-        visible,
-        zoomLevel,
-        ++_markerGeneration,
-        replaceShown: replaceShown,
-      );
+      //
+      // 영역이 바뀌지 않았다면 그때 쓴 것을 재사용한다 — 새 영역으로 판정될 때만
+      // 새로 산출한다(→[_queryViewport]의 `moved`와 같은 기준).
+      final MapBounds bbox = _sameAreaBbox(visible, zoomLevel) ?? visible.expanded();
+
+      await _loadMarkers(bbox, visible, zoomLevel, ++_markerGeneration);
     } finally {
       if (mounted) {
         setState(() {
@@ -711,15 +731,31 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           _canSearchHere = false;
         });
 
-        // 같은 자리에 머물러도 잠시 뒤 다시 눌러 볼 수 있게 한다(사용자 요청).
-        // 마커 상한에 걸려 못 들어온 장소가 그때 들어온다.
-        _searchAgainTimer = Timer(MapTuning.searchAgainDelay, () {
-          if (mounted && !_isSearchingArea) {
-            setState(() => _canSearchHere = true);
-          }
-        });
+        // 같은 자리에 머물러도 잠시 뒤 **다음 장소**를 받아 볼 수 있게 한다
+        // (사용자 요청 2026-08-10, SPEC-0036 FR-003).
+        //
+        // **후보가 소진되면 다시 띄우지 않는다**(FR-008). 안내를 띄우는 대신 요청할
+        // 수단만 사라진다 — 누적된 마커가 화면에 남아 있어 빈 화면이 되지 않는다.
+        if (!_areaExhausted) {
+          _searchAgainTimer = Timer(MapTuning.searchAgainDelay, () {
+            if (mounted && !_isSearchingArea) {
+              setState(() => _canSearchHere = true);
+            }
+          });
+        }
       }
     }
+  }
+
+  /// 영역이 바뀌지 않았으면 첫 조회에 쓴 bbox를, 바뀌었으면 `null`을 준다(FR-010).
+  ///
+  /// 판정 기준은 [_queryViewport]의 `moved`와 같다 — 한 화면에 두 기준이 있으면
+  /// 「버튼은 떴는데 조건은 새것」 같은 중간 상태가 생긴다.
+  MapBounds? _sameAreaBbox(MapBounds visible, int zoomLevel) {
+    final MapBounds? last = _lastMarkerArea;
+    if (last == null) return null;
+    if (_lastMarkerZoom != zoomLevel) return null;
+    return last.contains(visible) ? last : null;
   }
 
   /// 화면에 보이는 영역을 위경도 bbox로 되돌린다.
