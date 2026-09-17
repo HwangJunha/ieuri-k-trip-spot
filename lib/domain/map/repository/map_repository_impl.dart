@@ -14,6 +14,7 @@ import '../model/congestion_level.dart';
 import '../model/map_bounds.dart';
 import '../model/map_failure.dart';
 import '../model/map_marker.dart';
+import '../model/map_recommendation_result.dart';
 import '../model/map_viewport_result.dart';
 import '../model/region_recommendation.dart';
 import '../model/region_score.dart';
@@ -87,6 +88,55 @@ class MapRepositoryImpl implements MapRepository {
       ],
       // 서버가 클러스터를 없앴다(2026-08-10) — `map_schema.graphql` 주석 참조.
       truncated: result.truncated,
+    );
+  }
+
+  @override
+  Future<MapRecommendationResult> fetchRecommendedSpots({
+    required MapBounds bbox,
+    required List<String> excludedIds,
+    int? first,
+  }) async {
+    // **요청한 수를 여기서 알고 있어야 한다** — 소진 판정이 「요청한 수보다 적게
+    // 왔는가」이기 때문이다(FR-009). 서버 기본값(10)에 기대면 그 값이 바뀌었을 때
+    // 판정이 조용히 틀어지므로, 생략되면 계약의 기본값을 명시해 보낸다.
+    const int serverDefaultFirst = 10;
+    final int requested = first ?? serverDefaultFirst;
+
+    final Map<String, dynamic> data = await _query(
+      documentNodeQueryMapRecommendedSpots,
+      Variables$Query$MapRecommendedSpots(
+        bbox: _boundsInput(bbox),
+        // 빈 목록도 그대로 보낸다 — 계약이 「생략·빈 배열이면 제외 없음」으로 둘을
+        // 같게 정의하므로 접을 이유가 없다(카테고리의 EMPTY_CATEGORY_SET과 다르다).
+        excludedIds: excludedIds,
+        first: requested,
+      ).toJson(),
+      'mapRecommendedSpots',
+    );
+
+    final List<Query$MapRecommendedSpots$mapRecommendedSpots> spots =
+        Query$MapRecommendedSpots.fromJson(data).mapRecommendedSpots;
+
+    return MapRecommendationResult(
+      markers: <MapMarker>[
+        for (final Query$MapRecommendedSpots$mapRecommendedSpots s in spots)
+          MapMarker(
+            id: s.id,
+            name: s.title,
+            latitude: s.lat,
+            longitude: s.lng,
+            kind: MapMarkerKind.spot,
+            // 뷰포트 조회와 같은 규약 — 서버 `code`를 그대로 싣는다(SPEC-0020).
+            categoryName: s.category.code,
+            thumbnailUrl: s.thumbnailImageUrl.isEmpty
+                ? null
+                : s.thumbnailImageUrl,
+          ),
+      ],
+      // **받은 수로 판정한다.** 격자로 솎아 낸 뒤의 수로 판정하면 가짜 소진이다
+      // (FR-009) — 서버가 꽉 채워 줬다면 영역 안에 아직 후보가 있다.
+      exhausted: spots.length < requested,
     );
   }
 

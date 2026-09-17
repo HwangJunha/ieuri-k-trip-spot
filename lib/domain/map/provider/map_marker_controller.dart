@@ -2,9 +2,12 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../model/map_bounds.dart';
 import '../model/map_marker.dart';
+import '../model/map_recommendation_result.dart';
 import '../model/map_tuning.dart';
 import '../model/map_viewport_result.dart';
 import '../model/marker_thinning.dart';
+import '../repository/map_repository.dart';
+import 'map_providers.dart';
 import '../../auth/provider/session_scope.dart';
 
 part 'map_marker_controller.g.dart';
@@ -35,6 +38,43 @@ class MapMarkerController extends _$MapMarkerController {
     return const <MapMarker>[];
   }
 
+
+  /// 이 영역의 **다음 장소 한 묶음**을 받아 더한다(SPEC-0036 FR-001·FR-003).
+  ///
+  /// [bbox]는 조회할 영역, [visible]은 화면에 실제로 보이는 영역이다. 같은 영역에서
+  /// 다시 부를 때 [bbox]가 첫 조회와 같아야 한다(FR-010) — 그 판정은 화면이 한다.
+  ///
+  /// **제외 목록은 이 컨트롤러가 들고 서버에 보낸다**(FR-004). 세션을 클라이언트가
+  /// 쥐는 이유는 「봤다」가 *마커로 실제 그려졌는가*이기 때문이다 — 격자로 솎아
+  /// 그리므로 서버가 보낸 10건과 그려진 10건이 다르고, 서버가 세션을 들면 그리지
+  /// 않은 장소까지 「봤다」로 기록해 남은 후보를 잃는다(FR-009).
+  ///
+  /// 돌려주는 값은 **영역 안 후보가 소진되었는가**다(FR-008·FR-009). 서버가 요청한
+  /// 수보다 적게 준 것이 유일한 근거이며, 클라이언트가 격자로 솎아 낸 뒤의 수로
+  /// 판정하면 가짜 소진이 된다 — 솎여 못 그린 장소는 제외 목록에 없어 다음 요청에
+  /// 다시 온다.
+  ///
+  /// 실패는 그대로 던진다. 화면이 잡아 기록하고, 소진으로 넘어가지 않는다 —
+  /// 네트워크 오류를 「더 볼 것이 없음」으로 읽으면 버튼이 영영 사라진다.
+  Future<bool> loadNextBatch({
+    required MapBounds bbox,
+    required MapBounds visible,
+    required int batchSize,
+  }) async {
+    final MapRepository repository = ref.read(mapRepositoryProvider);
+    final MapRecommendationResult result = await repository
+        .fetchRecommendedSpots(
+          bbox: bbox,
+          excludedIds: servedSpotIds,
+          first: batchSize,
+        );
+
+    absorb(
+      MapViewportResult(markers: result.markers, truncated: false),
+      visible,
+    );
+    return result.exhausted;
+  }
 
   /// 새 조회 결과를 기존 마커에 **더한다**.
   ///
@@ -125,6 +165,15 @@ class MapMarkerController extends _$MapMarkerController {
     }
     return _servedKeys.contains(key);
   }
+
+  /// 이 세션에서 이미 표시한 **spot의 id**(FR-004). 서버에 제외 목록으로 보낸다.
+  ///
+  /// 키가 아니라 id를 준다 — 서버 계약의 `excludedIds`가 `[ID!]`이고, spot만 담기므로
+  /// `kind` 접두사가 필요 없다. 문화행사는 애초에 [_servedKeys]에 들어가지 않는다
+  /// (FR-012).
+  List<String> get servedSpotIds => _servedKeys
+      .map((String key) => key.substring(key.indexOf(':') + 1))
+      .toList();
 
   /// 이 세션에서 이미 표시한 장소의 키(FR-004).
   ///

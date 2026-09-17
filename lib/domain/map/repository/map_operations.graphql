@@ -43,6 +43,39 @@ query MapViewport(
   }
 }
 
+# SPEC-0036 지도 영역 기준 추천. 「이 지역 재검색」과 첫 진입이 부른다.
+#
+# **`MapViewport`를 대체하지 않는다.** 문화행사 마커는 그쪽 `events`가 계속 맡고
+# (FR-012), 이 쿼리는 spot만 준다.
+#
+# **커서도 오프셋도 없다**(POL-037). 「다음 장소」는 페이지 넘기기가 아니라 이미
+# 표시한 것을 `excludedIds`로 빼고 다시 받는 것이다 — 세션을 들고 있는 쪽이
+# 클라이언트이므로 서버에 전달해야 한다.
+#
+# `first`보다 적게 오면 영역 안 후보가 소진된 것이다(FR-009 판정 근거).
+query MapRecommendedSpots(
+  $bbox: MapBoundsInput!
+  $excludedIds: [ID!]
+  $first: Int
+) {
+  mapRecommendedSpots(
+    bbox: $bbox
+    excludedIds: $excludedIds
+    first: $first
+  ) {
+    id
+    title
+    thumbnailImageUrl
+    category {
+      code
+      label
+      iconUrl
+    }
+    lng
+    lat
+  }
+}
+
 # 뷰포트에 걸치는 구역의 실시간 혼잡도(R6~R11).
 #
 # **줌 게이트를 통과했을 때만 부른다**(R25, 설계 §5.1) — 이것이 일일 쿼터 1000건을

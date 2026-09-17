@@ -385,33 +385,49 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       // 그대로 보내면 확대할수록 `INVALID_ZOOM`으로 거절되어 마커가 하나도 안 온다.
       // 화면 판정(마커 게이트)은 접지 않은 실제 줌을 쓴다.
       final int serverZoom = MapTuning.clampForServer(zoomLevel);
-      // **조회는 한 번이다**(SPEC-0029). 서버가 활성 언어의 장소만 주므로 원문을
-      // 그린 뒤 번역본으로 자리를 채우던 두 번째 왕복이 사라졌다.
-      final MapViewportResult result = await ref.read(
-        mapViewportProvider(bbox, serverZoom).future,
+
+      // **두 조회를 함께 부른다**(SPEC-0036).
+      //
+      // spot은 추천 순서로(`loadNextBatch`, FR-001), 문화행사는 기존 뷰포트 조회로
+      // 받는다 — 행사는 이 변경의 대상이 아니라 그대로 표시되어야 하고(FR-012),
+      // 추천 쿼리는 spot만 준다. 순차로 부르면 왕복이 두 번이라 병렬로 둔다.
+      //
+      // **제외 목록은 컨트롤러가 들고 서버에 보낸다**(FR-004) — 화면은 관여하지
+      // 않는다.
+      final MapMarkerController controller = ref.read(
+        mapMarkerControllerProvider.notifier,
       );
+
+      final (bool exhausted, MapViewportResult viewport) = await (
+        controller.loadNextBatch(
+          bbox: bbox,
+          visible: visible,
+          batchSize: MapTuning.markersPerBatch,
+        ),
+        ref.read(mapViewportProvider(bbox, serverZoom).future),
+      ).wait;
       if (!mounted || generation != _markerGeneration) return;
 
-      // **마커는 controller가 소유한다.** 조회 결과로 통째로 갈아 끼우지 않고 보태는
-      // 방식이라, 지도를 옮겨도 보고 있던 장소가 사라졌다 나타나지 않는다.
-      // **화면 영역을 넘긴다.** 조회는 그보다 넓게 하지만, 마커를 고르는 기준은
-      // 사용자가 보고 있는 곳이어야 한다 — 조회 영역으로 격자를 나누면 칸 대부분이
-      // 화면 밖이라 열 개를 뽑아도 화면에는 예닐곱만 남는다.
-      final bool added = ref
-          .read(mapMarkerControllerProvider.notifier)
-          .absorb(result, visible);
+      // 문화행사만 따로 흡수한다. 추천 spot은 위에서 이미 들어갔다.
+      controller.absorb(
+        MapViewportResult(
+          markers: viewport.markers
+              .where((MapMarker m) => m.kind != MapMarkerKind.spot)
+              .toList(),
+          truncated: viewport.truncated,
+        ),
+        visible,
+      );
 
-      // **소진 판정에는 두 조건이 함께 필요하다**(SPEC-0036 FR-009).
+      // **소진은 서버가 말해 준다**(SPEC-0036 FR-009). 요청한 수보다 적게 왔을 때만
+      // 참이다.
       //
-      // 「제외한 뒤 새 장소가 0개」만으로 판정하면 안 된다 — SPEC-0035에서 실제로
-      // 터진 가짜 소진이다(요청 수와 표시 수를 같게 뒀더니 응답 전체가 이미 본 것과
-      // 겹쳐 열 장 만에 소진 화면이 떴다). 그래서 서버가 **가진 것을 다 줬는지**를
-      // 함께 본다: [MapViewportResult.truncated]가 참이면 상한에 걸려 일부만 온
-      // 것이므로 영역 안에 아직 못 본 후보가 있을 수 있고, 소진이 아니다.
+      // 「제외한 뒤 새 장소가 0개」로 판정하면 안 된다 — SPEC-0035에서 실제로 터진
+      // 가짜 소진이다(요청 수와 표시 수를 같게 뒀더니 응답 전체가 이미 본 것과 겹쳐
+      // 열 장 만에 소진 화면이 떴다).
       //
       // 조회가 실패하면 이 줄에 닿지 않으므로 소진으로 넘어가지 않는다 — 네트워크
       // 오류를 「더 볼 것이 없음」으로 읽으면 버튼이 영영 사라진다.
-      final bool exhausted = !added && !result.truncated;
       if (exhausted != _areaExhausted) {
         setState(() => _areaExhausted = exhausted);
       }

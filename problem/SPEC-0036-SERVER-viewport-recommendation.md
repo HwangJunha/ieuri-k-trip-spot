@@ -3,7 +3,20 @@
 **대상 operation**: `mapViewport` (또는 이를 대체할 새 operation)
 **검증 환경**: 미검증 — 라이브 서버(`http://localhost:8888/graphql`)가 내려가 있고 목 안내도
 아직 없다(2026-09-18 기준)
-**상태: 요청 중**
+**상태: 해소됨(2026-09-18, `ieuri-server#136` 서버 결정)**
+
+> **해소 요약.** 서버가 신규 루트 쿼리 `mapRecommendedSpots(bbox, excludedIds, categories,
+> first): [MapSpot!]!`으로 확정했다. 아래 제안과 다른 점 둘:
+>
+> 1. **`mapViewport`를 고치는 대신 새 쿼리로 뺐다.** 그쪽은 인증 없이 도는 계약이고
+>    `events`·`truncated`가 거기 묶여 있어, 추천을 넣으면 로그인 없이 못 쓰게 된다.
+>    타당한 반론이라 그대로 따랐다.
+> 2. **소진 판정은 `totalInBounds`가 아니라 「`first`보다 적게 왔는가」다.** 아래에서
+>    요청한 필드는 만들어지지 않았지만 목적은 달성된다 — `truncated`의 도심 문제가
+>    없고, 클라이언트가 세는 수가 아니라 서버가 준 수로 판정하므로 가짜 소진도 없다.
+>
+> T5(한 번에 점수를 계산하는 후보 수)는 **2,000건**으로 정해졌다. 아래 본문은 요청
+> 당시의 기록으로 남긴다.
 
 관련: `ieuri-server#136` · `k-trip-spot#110` · `Specs/SPEC-0036/spec.md` 미결 **T3·T5**
 
