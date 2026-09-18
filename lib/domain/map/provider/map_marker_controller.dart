@@ -63,6 +63,14 @@ class MapMarkerController extends _$MapMarkerController {
     required MapBounds visible,
     required int batchSize,
   }) async {
+    // **제외 목록을 화면에 떠 있는 것으로 맞춘다**(사용자 정정 2026-09-18).
+    //
+    // 「이미 봤다」의 범위는 사용자가 보고 있는 화면이다. 기록을 그냥 쌓아 두면
+    // 화면 밖으로 밀려나 더 이상 보이지 않는 장소까지 계속 제외되어, 화면에는
+    // 30개뿐인데 제외 목록만 48개로 자라고 새로고침해도 아무것도 안 바뀐다
+    // (실측: 후보 100곳인 화면이 6회차부터 고정됐다).
+    _syncServedToScreen(visible);
+
     final MapRepository repository = ref.read(mapRepositoryProvider);
     MapRecommendationResult result = await repository.fetchRecommendedSpots(
       bbox: bbox,
@@ -70,44 +78,56 @@ class MapMarkerController extends _$MapMarkerController {
       first: batchSize,
     );
 
-    // **영역을 다 돌았으면 처음부터 다시 순회한다**(사용자 결정 2026-09-18).
+    // **영역을 다 돌았으면 가장 오래된 것부터 교체한다**(사용자 결정 2026-09-18).
     //
     // 예전에는 여기서 끝이었다 — 소진 판정이 서면 재검색 수단이 사라지고, 지도를
     // 크게 움직이기 전까지 돌아오지 않았다. 한자리에서 계속 둘러보는 사용자에게는
     // 기능이 죽은 것으로 보인다.
     //
-    // 다시 돌 때 제외하는 것은 **지금 보고 있는 화면 안에 떠 있는 장소뿐이다**
-    // (사용자 정정 2026-09-18).
+    // **화면 안 후보가 상한보다 적으면 그냥 다시 조회해도 소용없다.** 그 후보가 전부
+    // 화면에 떠 있어 제외하고 나면 서버가 줄 것이 없다 — 강남 화면에서 새로고침을
+    // 눌러도 아무것도 안 바뀌던 이유다(실측: 후보 25곳이 25개로 고정).
     //
-    // 기록을 통째로 비우면 이미 떠 있는 마커가 한 번 더 들어와 같은 사진이 겹쳐
-    // 박힌다(실측: 고유 10곳이 30개로 쌓였다). 그렇다고 **들고 있는 것 전부**를
-    // 제외하면 반대 문제가 난다 — 다른 지역을 돌아다니며 쌓인 화면 밖 마커까지
-    // 제외 대상이 되어, 이 화면에서 새로고침해도 들어올 것이 없다(실측: 화면 안이
-    // 20개에서 더 안 바뀌었다).
+    // 그래서 **화면에서 가장 오래된 한 묶음을 먼저 비운다.** 그만큼 자리가 나므로
+    // 다음 추천이 그 자리에 들어오고, 화면은 서서히 돌아간다. 마커 수는 유지된다.
     //
-    // 「이미 봤다」의 범위는 **사용자가 보고 있는 화면**이다. 화면 밖 마커는 지금
-    // 눈에 없으므로 이 화면의 순회를 막을 이유가 없다.
-    if (result.exhausted && servedSpotIds.isNotEmpty) {
+    // 「이미 봤다」의 범위는 **사용자가 보고 있는 화면**이다(사용자 정정). 화면 밖
+    // 마커까지 제외하면 다른 지역을 돌아다닌 뒤 이 화면에서 아무것도 못 받는다.
+    if (result.exhausted) {
       final List<MapMarker> onScreen = state
           .where((MapMarker m) => m.kind == MapMarkerKind.spot)
           .where((MapMarker m) => _isInside(m, visible))
           .toList();
-      final List<String> onScreenIds = onScreen
-          .map((MapMarker m) => m.id)
-          .toList();
 
-      _servedKeys
-        ..clear()
-        ..addAll(onScreen.map(_keyOf));
-      _servedSpotIds
-        ..clear()
-        ..addAll(onScreenIds);
+      // 화면 안에 아무것도 없으면 비울 것도 없다 — 영역 자체가 빈 것이므로 그대로
+      // 소진이다.
+      if (onScreen.isNotEmpty) {
+        // **한 묶음을 통째로 비우지 않는다.** 화면에 딱 한 묶음만 있을 때 전부
+        // 치우면 제외 목록까지 비어, 서버가 맨 앞 열 개를 그대로 돌려준다 — 같은
+        // 열 곳이 영영 반복되고 나머지 후보는 못 본다(실측: 후보 12곳에서 2곳이
+        // 영영 안 나왔다).
+        //
+        // 화면의 절반까지만 비우면 남은 절반이 제외로 남아 서버가 **그 다음**을
+        // 준다. 적어도 하나는 비워야 자리가 생긴다.
+        final int retireCount = (onScreen.length ~/ 2).clamp(1, batchSize);
 
-      result = await repository.fetchRecommendedSpots(
-        bbox: bbox,
-        excludedIds: onScreenIds,
-        first: batchSize,
-      );
+        // 앞쪽이 오래된 것이다([absorb]가 뒤에 붙인다).
+        final Set<String> retired = onScreen
+            .take(retireCount)
+            .map(_keyOf)
+            .toSet();
+
+        state = state
+            .where((MapMarker m) => !retired.contains(_keyOf(m)))
+            .toList();
+        _syncServedToScreen(visible);
+
+        result = await repository.fetchRecommendedSpots(
+          bbox: bbox,
+          excludedIds: servedSpotIds,
+          first: batchSize,
+        );
+      }
     }
 
     absorb(
@@ -193,6 +213,25 @@ class MapMarkerController extends _$MapMarkerController {
         ? next
         : _trim(next, inView, MapTuning.maxRetainedMarkers);
     return true;
+  }
+
+  /// 표시 기록을 **지금 화면에 떠 있는 장소**로 맞춘다.
+  ///
+  /// 화면 밖으로 밀려났거나 보관 상한에 버려진 장소는 더 이상 눈에 없으므로 제외할
+  /// 이유가 없다 — 그것들을 계속 들고 있으면 서버가 줄 수 있는 후보가 말라, 화면이
+  /// 그대로인데 새로고침만 도는 상태가 된다.
+  void _syncServedToScreen(MapBounds visible) {
+    final List<MapMarker> onScreen = state
+        .where((MapMarker m) => m.kind == MapMarkerKind.spot)
+        .where((MapMarker m) => _isInside(m, visible))
+        .toList();
+
+    _servedKeys
+      ..clear()
+      ..addAll(onScreen.map(_keyOf));
+    _servedSpotIds
+      ..clear()
+      ..addAll(onScreen.map((MapMarker m) => m.id));
   }
 
   /// [bounds] 안에 있는가. 화면 기준 판정을 여러 곳에서 쓰므로 한 자리에 둔다.
