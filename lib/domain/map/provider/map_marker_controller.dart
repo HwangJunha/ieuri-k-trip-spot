@@ -65,8 +65,16 @@ class MapMarkerController extends _$MapMarkerController {
     required int batchSize,
   }) async {
     final MapRepository repository = ref.read(mapRepositoryProvider);
+    // **보고 있는 화면으로 조회한다**(사용자 결정 2026-09-18).
+    //
+    // [bbox]는 화면의 1.2배로 넓힌 영역이다(작은 이동에 재조회가 걸리지 않도록).
+    // 그런데 그리는 기준은 화면이라, 서버가 넓은 영역 기준으로 앞에서부터 주면
+    // **받은 추천이 전부 화면 밖이라 통째로 버려진다** — 확대할수록 화면이 좁아
+    // 심해진다(실측: 확대 후 보관 0개, 아무리 눌러도 안 들어옴).
+    //
+    // 화면으로 조회하면 받은 것이 전부 그릴 수 있는 추천이다.
     MapRecommendationResult result = await repository.fetchRecommendedSpots(
-      bbox: bbox,
+      bbox: visible,
       // 솎여서 못 그린 것도 함께 제외한다 — 그래야 서버가 **그 다음** 추천을
       // 준다. 안 그러면 같은 것을 계속 받아 또 솎아낸다.
       excludedIds: <String>[...servedSpotIds, ..._thinnedOut],
@@ -83,7 +91,7 @@ class MapMarkerController extends _$MapMarkerController {
     if (result.exhausted && _thinnedOut.isNotEmpty) {
       _thinnedOut.clear();
       result = await repository.fetchRecommendedSpots(
-        bbox: bbox,
+        bbox: visible,
         excludedIds: servedSpotIds,
         first: batchSize,
       );

@@ -82,6 +82,40 @@ final class FakeDenseRepository implements MapRepository {
       throw UnimplementedError(invocation.memberName.toString());
 }
 
+/// 요청한 bbox 안에 고르게 후보를 두는 서버. 조회 영역과 화면이 다르면 받은 것이
+/// 화면 밖일 수 있다는 점을 드러낸다.
+final class FakeBoundsRepository implements MapRepository {
+  @override
+  Future<MapRecommendationResult> fetchRecommendedSpots({
+    required MapBounds bbox,
+    required List<String> excludedIds,
+    int? first,
+  }) async {
+    final List<MapMarker> all = <MapMarker>[
+      for (int i = 0; i < 200; i++)
+        MapMarker(
+          id: '${bbox.minLat.toStringAsFixed(3)}_$i',
+          name: 'v$i',
+          latitude: bbox.minLat + (i % 20) * bbox.latSpan / 20,
+          longitude: bbox.minLng + (i ~/ 20) * bbox.lngSpan / 20,
+          kind: MapMarkerKind.spot,
+        ),
+    ];
+    final List<MapMarker> take = all
+        .where((MapMarker m) => !excludedIds.contains(m.id))
+        .take(first ?? 10)
+        .toList();
+    return MapRecommendationResult(
+      markers: take,
+      exhausted: take.length < (first ?? 10),
+    );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError(invocation.memberName.toString());
+}
+
 void main() {
   const MapBounds visible = MapBounds(
     minLat: 37.50,
@@ -453,7 +487,10 @@ void main() {
       expect(controller.servedSpotIds, isEmpty);
     });
 
-    test('요청한 묶음 크기를 그대로 보낸다', () async {
+    /// **보고 있는 화면으로 조회한다.** 넓은 조회 영역으로 물으면 서버가 그 기준
+    /// 앞에서부터 주어 받은 추천이 전부 화면 밖일 수 있다 — 확대할수록 심해져
+    /// 아무것도 안 들어왔다(실측: 확대 후 보관 0개).
+    test('화면 영역과 묶음 크기를 그대로 보낸다', () async {
       final FakeMapRepository repository = FakeMapRepository(
         const <MapMarker>[],
       );
@@ -468,7 +505,7 @@ void main() {
       );
 
       expect(repository.lastFirst, 7);
-      expect(repository.lastBbox, bbox);
+      expect(repository.lastBbox, visible, reason: '넓은 조회 영역으로 물었다');
     });
   });
 
@@ -541,6 +578,56 @@ void main() {
 
       expect(stuck, 0);
     });
+  });
+
+  /// 실기기 지적(2026-09-18): 「확대를 했으면 데이터를 끌고 와야 하는데 안 끌고 온다」.
+  ///
+  /// 조회 영역이 화면보다 넓으면 서버가 그 기준 앞에서부터 주므로, 확대해 화면이
+  /// 좁아질수록 받은 추천이 전부 화면 밖이라 버려진다(실측: 보관 0개).
+  test('확대해도 그 영역의 장소가 들어온다', () async {
+    const MapBounds zoomed = MapBounds(
+      minLat: 37.505,
+      minLng: 127.015,
+      maxLat: 37.512,
+      maxLng: 127.022,
+    );
+
+    final ProviderContainer c = ProviderContainer(
+      overrides: [
+        mapRepositoryProvider.overrideWithValue(FakeBoundsRepository()),
+      ],
+    );
+    addTearDown(c.dispose);
+    final MapMarkerController controller = c.read(
+      mapMarkerControllerProvider.notifier,
+    );
+
+    // 넓게 보다가
+    for (int r = 0; r < 4; r++) {
+      await controller.loadNextBatch(
+        bbox: visible.expanded(),
+        visible: visible,
+        batchSize: MapTuning.markersPerBatch,
+      );
+    }
+    // 확대한다
+    await controller.loadNextBatch(
+      bbox: zoomed.expanded(),
+      visible: zoomed,
+      batchSize: MapTuning.markersPerBatch,
+    );
+
+    final Iterable<MapMarker> inZoom = c
+        .read(mapMarkerControllerProvider)
+        .where(
+          (MapMarker m) =>
+              m.latitude >= zoomed.minLat &&
+              m.latitude <= zoomed.maxLat &&
+              m.longitude >= zoomed.minLng &&
+              m.longitude <= zoomed.maxLng,
+        );
+
+    expect(inZoom, isNotEmpty, reason: '확대했는데 아무것도 안 들어왔다');
   });
 
   group('검색 결과 고정 (pin)', () {
