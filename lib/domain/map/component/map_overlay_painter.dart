@@ -55,7 +55,16 @@ class MapOverlayPainter {
         strokeColor: Color(CongestionPalette.strokeOf(level)),
       );
 
-  final List<Poi> _markers = <Poi>[];
+  /// 만들어 둔 마커 풀. **키는 장소**(`MarkerAppearance.keyOf`)다.
+  ///
+  /// **인덱스로 잡으면 안 된다.** 예전에는 `List<Poi>`에 순서대로 담고 `_markers[i]`로
+  /// 재사용했는데, 보관 상한에 도달해 목록 앞이 잘려 나가면 남은 장소의 인덱스가
+  /// 전부 밀린다 — 같은 장소가 다른 POI에 다시 그려져 **사진이 지도 위에서 확 다른
+  /// 자리로 튀었다**(실기기 2026-09-18: 「웰니스 소셜링」이 아래에 있다가 위로).
+  ///
+  /// 장소를 키로 잡으면 그 장소는 언제나 자기 POI를 쓴다. 목록이 어떻게 잘리든
+  /// 남아 있는 마커는 제자리에 그대로 있다.
+  final Map<String, Poi> _markers = <String, Poi>{};
 
   /// 만들어 둔 폴리곤 풀. **지우지 않고 재사용한다**(→[drawCongestion]).
   ///
@@ -129,9 +138,13 @@ class MapOverlayPainter {
           MarkerAppearance.keyOf(marker),
         );
 
+        // **장소마다 자기 POI를 쓴다.** 같은 장소면 늘 같은 POI라, 목록이 잘리거나
+        // 순서가 바뀌어도 사진이 다른 자리로 옮겨가지 않는다.
+        final String key = MarkerAppearance.keyOf(marker);
         final Poi poi;
-        if (i < _markers.length) {
-          poi = _markers[i];
+        final Poi? held = _markers[key];
+        if (held != null) {
+          poi = held;
           await poi.changeStyles(PoiStyle(icon: icon));
           await poi.move(LatLng(marker.latitude, marker.longitude));
           // **탭 콜백은 스타일 교체와 무관하게 갈아 끼운다**(R12) — 아래 등장 연출은
@@ -144,7 +157,7 @@ class MapOverlayPainter {
             style: PoiStyle(icon: icon),
             onClick: () => onMarkerTap(marker),
           );
-          _markers.add(poi);
+          _markers[key] = poi;
         }
 
         if (isNewcomer) await _playAppearance(poi, token);
@@ -153,10 +166,12 @@ class MapOverlayPainter {
       }
     }
 
-    // 남는 것은 숨긴다 — 지우면 네이티브에 남아 새것을 가린다.
-    for (int i = markers.length; i < _markers.length; i++) {
+    // 이번에 그리지 않은 장소는 숨긴다 — 지우면 네이티브에 남아 새것을 가린다.
+    final Set<String> drawn = markers.map(MarkerAppearance.keyOf).toSet();
+    for (final MapEntry<String, Poi> entry in _markers.entries) {
+      if (drawn.contains(entry.key)) continue;
       try {
-        await _markers[i].hide();
+        await entry.value.hide();
       } on Object catch (error, stackTrace) {
         _log.w('마커 숨김 실패', error: error, stackTrace: stackTrace);
       }
@@ -490,7 +505,7 @@ class MapOverlayPainter {
 
   /// 폴리곤과 같은 이유로 하나가 실패해도 나머지를 계속 지운다.
   Future<void> _clearMarkers() async {
-    final List<Poi> targets = List<Poi>.of(_markers);
+    final List<Poi> targets = List<Poi>.of(_markers.values);
     _markers.clear();
     // 보이던 목록도 함께 비운다 — 남겨 두면 다시 그릴 때 그 마커들이 신규로 잡히지
     // 않아 등장 연출이 빠진다.

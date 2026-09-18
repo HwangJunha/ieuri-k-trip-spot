@@ -5,7 +5,6 @@ import '../model/map_marker.dart';
 import '../model/map_recommendation_result.dart';
 import '../model/map_tuning.dart';
 import '../model/map_viewport_result.dart';
-import '../model/marker_thinning.dart';
 import '../repository/map_repository.dart';
 import 'map_providers.dart';
 import '../../auth/provider/session_scope.dart';
@@ -112,23 +111,26 @@ class MapMarkerController extends _$MapMarkerController {
         .where((MapMarker m) => !_isServed(m))
         .toList();
 
-    // 격자로 솎아 골고루 퍼뜨린다. 상한을 넉넉히 주는 이유는 아래에서 한 묶음만큼만
-    // 가져가기 때문이다.
+    // **격자로 솎지 않는다**(사용자 결정 2026-09-18). 받은 추천은 전부 표시한다.
+    //
+    // 예전에는 4×4 격자로 칸마다 하나만 남겼다. 겹침을 막으려는 것이었는데 밀집
+    // 지역에서는 추천이 좌표상 가까워 같은 칸에 몰린다 — **10개 중 2개만 남았다**
+    // (실측). 칸을 늘려도 소용없었다(10×10에서도 4개). 버려진 장소는 표시 기록에
+    // 없어 다음 조회에 다시 오고 또 같은 칸에서 솎이므로, 같은 추천만 반복해서
+    // 보이고 새것은 영영 못 보는 상태가 됐다.
+    //
+    // **겹침은 격자가 아니라 보관 상한이 맡는다**([MapTuning.maxRetainedMarkers]).
+    // 한때 격자를 없앴다가 마커가 튀어 되돌린 적이 있는데, 원인은 격자가 아니라
+    // 렌더러가 목록 인덱스로 POI를 재사용하던 것이었다 — 그쪽을 고쳤으므로
+    // (`map_overlay_painter.dart`) 이제 각 장소는 제 POI에 고정된다.
     //
     // **받은 순서를 섞지 않는다**(SPEC-0036 BR-001·QR-001). 예전에는 재검색 때
     // `shuffle()`을 걸었는데, 서버가 늘 같은 순서를 주어 같은 자리에서 다시 눌러도
     // 화면이 그대로였기 때문이다. 이제는 이미 본 장소를 빼서 「다음」을 만들므로
     // 섞을 이유가 없고, 섞으면 점수가 아닌 기준이 선택에 개입한다.
-    final List<MapMarker> fresh = thinMarkers(
-      markers: unseen,
-      viewport: visible,
-      columns: MapTuning.markerGridColumns,
-      maxCount: MapTuning.markersPerBatch * 3,
-    );
+    if (unseen.isEmpty) return false;
 
-    if (fresh.isEmpty) return false;
-
-    final List<MapMarker> added = fresh
+    final List<MapMarker> added = unseen
         .take(MapTuning.markersPerBatch)
         .toList();
     for (final MapMarker m in added) {

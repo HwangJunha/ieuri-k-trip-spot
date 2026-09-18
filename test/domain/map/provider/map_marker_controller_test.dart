@@ -437,6 +437,32 @@ void main() {
   /// 사용자 요청(2026-09-18): 「한도에 도달했으면 새로운 데이터가 화면을 차지해야
   /// 한다. 기존 데이터는 사라지고.」 새것이 막혀 버려지면 추천하려다 추천하지 않는
   /// 것이 된다.
+  /// 실기기 지적(2026-09-18): 「왜 계속 같은 데이터만 보이는가」.
+  ///
+  /// 격자가 칸마다 하나만 남겨 밀집 지역에서 **추천 10개 중 2개만 표시**됐다. 버려진
+  /// 장소는 표시 기록에 없어 다음 조회에 다시 오고 또 같은 칸에서 솎이므로, 같은
+  /// 추천만 반복해 보이고 새것은 영영 못 보는 상태가 됐다.
+  test('밀집 지역에서도 받은 추천을 다 표시한다', () {
+    final ProviderContainer c = container();
+    // 좁은 범위에 몰린 한 묶음 — 예전 격자에서는 2개만 통과했다.
+    c.read(mapMarkerControllerProvider.notifier).absorb(
+      MapViewportResult(
+        markers: <MapMarker>[
+          for (int i = 0; i < MapTuning.markersPerBatch; i++)
+            markerAt('m$i', 37.5080 + i * 0.0004, 127.0080 + i * 0.0003),
+        ],
+        truncated: false,
+      ),
+      visible,
+    );
+
+    expect(
+      c.read(mapMarkerControllerProvider),
+      hasLength(MapTuning.markersPerBatch),
+      reason: '격자에 솎여 버려진 추천이 있다',
+    );
+  });
+
   group('보관 상한 (FIFO)', () {
     /// 격자 16칸에 골고루 퍼뜨린 한 배치 — 솎이지 않고 최대치가 들어간다.
     MapViewportResult spread(MapBounds area, String prefix, int start) =>
