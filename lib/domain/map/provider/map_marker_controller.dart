@@ -5,7 +5,6 @@ import '../model/map_marker.dart';
 import '../model/map_recommendation_result.dart';
 import '../model/map_tuning.dart';
 import '../model/map_viewport_result.dart';
-import '../model/marker_thinning.dart';
 import '../repository/map_repository.dart';
 import 'map_providers.dart';
 import '../../auth/provider/session_scope.dart';
@@ -112,23 +111,23 @@ class MapMarkerController extends _$MapMarkerController {
         .where((MapMarker m) => !_isServed(m))
         .toList();
 
-    // 격자로 솎아 골고루 퍼뜨린다. 상한을 넉넉히 주는 이유는 아래에서 한 묶음만큼만
-    // 가져가기 때문이다.
+    // **격자로 솎지 않는다**(사용자 결정 2026-09-18). 받은 추천은 전부 표시한다.
+    //
+    // 예전에는 4×4 격자로 칸마다 하나만 남겼다. 겹침을 막으려는 것이었는데, 추천이
+    // 좌표상 몰려 있으면 **서버가 준 10개 중 2개만 남고 나머지는 버려졌다**(실측).
+    // 버려진 장소는 표시 기록에도 없어 다음 조회에 다시 오고 또 같은 칸에서
+    // 솎이므로, 「추천하려다 추천하지 않는」 상태가 반복됐다.
+    //
+    // 겹침은 보관 상한([MapTuning.maxRetainedMarkers])으로 제어한다 — 그쪽은 오래된
+    // 것을 밀어내므로 새 추천이 자리를 잃지 않는다.
     //
     // **받은 순서를 섞지 않는다**(SPEC-0036 BR-001·QR-001). 예전에는 재검색 때
     // `shuffle()`을 걸었는데, 서버가 늘 같은 순서를 주어 같은 자리에서 다시 눌러도
     // 화면이 그대로였기 때문이다. 이제는 이미 본 장소를 빼서 「다음」을 만들므로
     // 섞을 이유가 없고, 섞으면 점수가 아닌 기준이 선택에 개입한다.
-    final List<MapMarker> fresh = thinMarkers(
-      markers: unseen,
-      viewport: visible,
-      columns: MapTuning.markerGridColumns,
-      maxCount: MapTuning.markersPerBatch * 3,
-    );
+    if (unseen.isEmpty) return false;
 
-    if (fresh.isEmpty) return false;
-
-    final List<MapMarker> added = fresh
+    final List<MapMarker> added = unseen
         .take(MapTuning.markersPerBatch)
         .toList();
     for (final MapMarker m in added) {

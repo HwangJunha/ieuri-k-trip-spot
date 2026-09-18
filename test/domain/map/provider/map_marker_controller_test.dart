@@ -434,6 +434,63 @@ void main() {
     });
   });
 
+  /// 실기기 지적(2026-09-18): 「새로운 게 뜰려다가 한도에 막혀서 버려지는 형식이라
+  /// 추천하려다 추천을 안 하는 UX가 되어 버렸다」.
+  group('상한과 버려짐', () {
+    /// 좌표상 몰려 있는 추천 한 묶음. 예전에는 4×4 격자가 칸마다 하나만 남겨
+    /// **10개 중 2개만 표시**됐다.
+    MapViewportResult clustered(int start) => MapViewportResult(
+      markers: <MapMarker>[
+        for (int i = 0; i < MapTuning.markersPerBatch; i++)
+          markerAt(
+            'm${start + i}',
+            37.5100 + i * 0.0002,
+            127.0100 + i * 0.0002,
+          ),
+      ],
+      truncated: false,
+    );
+
+    test('몰려 있어도 받은 추천을 다 표시한다', () {
+      final ProviderContainer c = container();
+      c.read(mapMarkerControllerProvider.notifier).absorb(clustered(0), visible);
+
+      expect(
+        c.read(mapMarkerControllerProvider),
+        hasLength(MapTuning.markersPerBatch),
+        reason: '격자에 솎여 버려진 추천이 있다',
+      );
+    });
+
+    /// 상한에 막혀 **새것이 버려지면** 추천이 화면에 닿지 못한다. 밀려나야 하는 것은
+    /// 오래된 쪽이다.
+    test('상한에 도달하면 오래된 것이 나가고 새것이 들어온다', () {
+      final ProviderContainer c = container();
+      final MapMarkerController controller = c.read(
+        mapMarkerControllerProvider.notifier,
+      );
+
+      // 상한을 넘기도록 충분히 넣는다.
+      final int rounds =
+          (MapTuning.maxRetainedMarkers ~/ MapTuning.markersPerBatch) + 2;
+      for (int r = 0; r < rounds; r++) {
+        controller.absorb(clustered(r * 100), visible);
+      }
+
+      final List<String> ids = c
+          .read(mapMarkerControllerProvider)
+          .map((MapMarker m) => m.id)
+          .toList();
+
+      expect(ids, hasLength(MapTuning.maxRetainedMarkers));
+      // 마지막 묶음은 통째로 남아 있어야 한다 — 새 추천이 버려지지 않는다.
+      final String newest = 'm${(rounds - 1) * 100}';
+      expect(ids, contains(newest), reason: '방금 받은 추천이 버려졌다');
+      // 첫 묶음은 밀려났어야 한다.
+      expect(ids, isNot(contains('m0')), reason: '오래된 것이 안 밀려났다');
+    });
+  });
+
   group('검색 결과 고정 (pin)', () {
     test('고정한 마커가 맨 앞에 온다', () {
       final ProviderContainer c = container();
