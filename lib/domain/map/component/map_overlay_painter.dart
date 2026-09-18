@@ -113,6 +113,8 @@ class MapOverlayPainter {
       final MapMarker marker = markers[i];
       // 색은 `MapMarkerPalette`가 정한다 — 테마에서 읽으면 브랜드 색이 혼잡도
       // 채색과 섞여 마커가 "붐빔"으로 읽힌다(실기기에서 실제로 났던 문제).
+      // 행사 쪽 분기는 지금 도달하지 않는다(FR-012 개정 2026-09-18) — repository가
+      // 그 종류의 마커를 만들지 않는다.
       final Color color = Color(
         marker.kind == MapMarkerKind.spot
             ? MapMarkerPalette.spot
