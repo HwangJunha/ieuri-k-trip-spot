@@ -2,9 +2,11 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../model/map_bounds.dart';
 import '../model/map_marker.dart';
+import '../model/map_recommendation_result.dart';
 import '../model/map_tuning.dart';
 import '../model/map_viewport_result.dart';
-import '../model/marker_thinning.dart';
+import '../repository/map_repository.dart';
+import 'map_providers.dart';
 import '../../auth/provider/session_scope.dart';
 
 part 'map_marker_controller.g.dart';
@@ -25,12 +27,74 @@ part 'map_marker_controller.g.dart';
 class MapMarkerController extends _$MapMarkerController {
   @override
   List<MapMarker> build() {
-    // 로그아웃하면 쌓인 마커를 버린다. 이 컨트롤러는 `add` 의미라 스스로
-    // 비워지지 않는다.
-    ref.watchSignedIn();
+    // **`watchSignedIn`이 아니라 `listenSignedOut`이다**(SPEC-0036).
+    //
+    // watch면 인증 판정이 `loading`에서 `data`로 자리잡는 것만으로도 build가 다시
+    // 돌아 **쌓아 둔 것이 지워진다.** 이 컨트롤러는 마커와 표시 기록을 관측해
+    // 쌓아 두는 쪽이라 그 대상이다 — 실제로 첫 조회 직후 기록이 통째로 날아가
+    // 제외 목록이 늘 비어 있었고, 「다음 장소」가 매번 같은 장소를 다시 줬다
+    // (FR-004·FR-005 위반).
+    //
+    // 로그아웃이라는 **사건**에만 반응하면 세션 경계는 지키면서 값이 살아남는다.
+    ref.listenSignedOut(clear);
     return const <MapMarker>[];
   }
 
+
+  /// 이 영역의 **다음 장소 한 묶음**을 받아 더한다(SPEC-0036 FR-001·FR-003).
+  ///
+  /// [bbox]는 조회할 영역, [visible]은 화면에 실제로 보이는 영역이다. 같은 영역에서
+  /// 다시 부를 때 [bbox]가 첫 조회와 같아야 한다(FR-010) — 그 판정은 화면이 한다.
+  ///
+  /// **제외 목록은 이 컨트롤러가 들고 서버에 보낸다**(FR-004). 세션을 클라이언트가
+  /// 쥐는 이유는 「봤다」가 *마커로 실제 그려졌는가*이기 때문이다 — 격자로 솎아
+  /// 그리므로 서버가 보낸 10건과 그려진 10건이 다르고, 서버가 세션을 들면 그리지
+  /// 않은 장소까지 「봤다」로 기록해 남은 후보를 잃는다(FR-009).
+  ///
+  /// 돌려주는 값은 **영역 안 후보가 소진되었는가**다(FR-008·FR-009). 서버가 요청한
+  /// 수보다 적게 준 것이 유일한 근거이며, 클라이언트가 격자로 솎아 낸 뒤의 수로
+  /// 판정하면 가짜 소진이 된다 — 솎여 못 그린 장소는 제외 목록에 없어 다음 요청에
+  /// 다시 온다.
+  ///
+  /// 실패는 그대로 던진다. 화면이 잡아 기록하고, 소진으로 넘어가지 않는다 —
+  /// 네트워크 오류를 「더 볼 것이 없음」으로 읽으면 버튼이 영영 사라진다.
+  Future<bool> loadNextBatch({
+    required MapBounds bbox,
+    required MapBounds visible,
+    required int batchSize,
+  }) async {
+    final MapRepository repository = ref.read(mapRepositoryProvider);
+    // **보고 있는 화면으로 조회한다**(사용자 결정 2026-09-18).
+    //
+    // [bbox]는 화면의 1.2배로 넓힌 영역이다(작은 이동에 재조회가 걸리지 않도록).
+    // 그런데 그리는 기준은 화면이라, 서버가 넓은 영역 기준으로 앞에서부터 주면
+    // **받은 추천이 전부 화면 밖이라 통째로 버려진다** — 확대할수록 화면이 좁아
+    // 심해진다(실측: 확대 후 보관 0개, 아무리 눌러도 안 들어옴).
+    //
+    // 화면으로 조회하면 받은 것이 전부 그릴 수 있는 추천이다.
+    // **제외는 지금 화면에 떠 있는 것만이다**(사용자 결정 2026-09-18).
+    //
+    // 표시 기록을 세션 내내 쌓으면, 화면 밖으로 나가 더는 보이지 않는 장소까지 계속
+    // 제외되어 **결국 서버가 줄 것이 없어진다** — 새로고침을 눌러도 아무것도 안
+    // 들어오던 원인이다. 「이미 봤다」의 범위는 사용자가 지금 보고 있는 화면이다.
+    final List<String> onScreen = state
+        .where((MapMarker m) => m.kind == MapMarkerKind.spot)
+        .where((MapMarker m) => _isInside(m, visible))
+        .map((MapMarker m) => m.id)
+        .toList();
+
+    final MapRecommendationResult result = await repository.fetchRecommendedSpots(
+      bbox: visible,
+      excludedIds: onScreen,
+      first: batchSize,
+    );
+
+    absorb(
+      MapViewportResult(markers: result.markers, truncated: false),
+      visible,
+    );
+    return result.exhausted;
+  }
 
   /// 새 조회 결과를 기존 마커에 **더한다**.
   ///
@@ -38,101 +102,95 @@ class MapMarkerController extends _$MapMarkerController {
   /// 이동에 재조회가 걸리지 않도록), 마커를 고르고 격자를 나누는 기준은 화면이어야
   /// 한다 — 넓은 영역으로 격자를 나누면 칸 대부분이 화면 밖이라, 열 개를 뽑아도
   /// 화면에는 예닐곱만 남는다.
-  void absorb(
-    MapViewportResult result,
-    MapBounds visible, {
-    bool replaceShown = false,
-  }) {
+  ///
+  /// **한 번에 [MapTuning.markersPerBatch]개를 더한다**(SPEC-0036 FR-003). 「이 지역
+  /// 재검색」이 화면을 갈아 끼우던 동작은 없앴다 — 이제 누를 때마다 안 본 장소가
+  /// 더해져 10 → 20 → 30으로 쌓인다.
+  ///
+  /// 이미 화면에 떠 있는 장소는 다시 더하지 않는다(FR-004).
+  ///
+  /// 더할 새 장소가 하나도 없으면 `false`를 준다 — 호출자가 「더 보기」 수단을 거두는
+  /// 근거다(FR-008). **이것만으로 소진을 단정하지 않는다**: 서버가 준 후보 안에서
+  /// 새것이 없었다는 뜻일 뿐, 영역 안 후보가 모두 소진되었다는 뜻은 아니다(FR-009).
+  bool absorb(MapViewportResult result, MapBounds visible) {
     bool inView(MapMarker m) =>
         m.latitude >= visible.minLat &&
         m.latitude <= visible.maxLat &&
         m.longitude >= visible.minLng &&
         m.longitude <= visible.maxLng;
 
-    // **고정 마커는 상한 계산에서 아예 뺀다.**
+    // 이미 표시한 적 있는 장소는 후보에서 뺀다(FR-004).
     //
-    // 검색으로 찾은 곳은 항상 보여야 하는 것이라, 상한을 두고 예외를 다는 대신
-    // 처음부터 셈에서 제외한다 — 예외로 처리했더니 `room`이 0이 되어 조기 반환하는
-    // 경로에서 조용히 밀려났다. 상한은 **조회로 채우는 마커**에만 적용된다.
-    bool isPinned(MapMarker m) => _keyOf(m) == _pinnedKey;
-
-    final List<MapMarker> shown = state
-        .where((MapMarker m) => inView(m) && !isPinned(m))
-        .toList();
-
-    // 화면 밖으로 나간 마커는 자리를 차지하지 않지만 **버리지도 않는다** — 축소하면
-    // 다시 화면에 들어오기 때문이다. 이전에는 뷰포트 밖을 버렸더니 줌 아웃할 때마다
-    // 마커가 한꺼번에 사라져 지도가 텅 비었다.
-    //
-    // [replaceShown]이면 자리가 없어도 **화면 안의 것을 비워 새 장소를 넣는다** —
-    // "이 지역 재검색"을 눌렀는데 아무것도 안 바뀌면 버튼이 동작하지 않는 것으로
-    // 보인다. 화면 밖의 것은 그대로 둔다.
-    final int room = replaceShown
-        ? MapTuning.maxDrawnMarkers
-        : MapTuning.maxDrawnMarkers - shown.length;
-    if (room <= 0) return;
-
-    // 교체할 때는 화면 안의 것을 후보에서 빼지 않는다 — 그래야 그 자리에 다른
-    // 장소가 들어올 수 있다. 대신 화면 밖의 것과는 여전히 중복을 피한다.
-    final Set<String> known = <String>{
-      ...replaceShown
-          ? state.where((MapMarker m) => !inView(m)).map(_keyOf)
-          : state.map(_keyOf),
-      // **고정 마커는 항상 후보에서 뺀다.** 재검색 때 화면 안의 것을 후보로 되돌리는데
-      // 거기 섞이면, 강조가 꺼진 같은 장소가 새로 들어와 빨간 테두리가 사라진다.
-      if (_pinnedKey case final String key) key,
-    };
-
-    // 화면 안에 있는 것만 후보다 — 화면 밖까지 고르면 사용자가 보고 있는 곳이 비고
-    // 가장자리 밖에만 마커가 찍힌다.
-    //
-    // **이미 가진 것을 격자에 넣기 전에 뺀다.** 순서가 반대면(격자 → 제외) 격자가
-    // 칸마다 늘 같은 첫 번째를 고르므로, 같은 자리에서 재검색해도 결과가 그대로였다 —
-    // 사용자가 "똑같은 데이터가 나온다"고 지적한 지점이다. 먼저 걸러 내면 두 번째
-    // 검색은 그 칸의 **다음** 장소를 고른다.
+    // **[state]로 역산하지 않는다.** [_trim]이 화면 밖 오래된 마커를 버리므로,
+    // 지금 들고 있는 것만으로 판정하면 버려진 장소가 다시 후보로 살아난다.
+    // 기록과 표시는 수명이 다르다 — 기록은 세션이 끝날 때만 사라진다(FR-005).
     final List<MapMarker> unseen = result.markers
         .where(inView)
-        .where((MapMarker m) => !known.contains(_keyOf(m)))
+        .where((MapMarker m) => !_isServed(m))
         .toList();
 
-    // **재검색이면 순서를 섞는다**(사용자 요청, 2026-08-10).
+    // **받은 추천을 그대로 더한다**(사용자 결정 2026-09-18).
     //
-    // 서버는 관련도 순으로 늘 같은 500건을 주고 격자도 칸마다 첫 번째를 고르므로,
-    // 같은 자리에서 다시 눌러도 결과가 그대로였다. 섞으면 매번 다른 곳이 뽑혀
-    // "재검색"이 실제로 새로운 것을 보여 준다.
+    // 예전에는 격자로 솎고 한 묶음만 잘라 넣었다. 겹침을 막으려던 것인데 **받은 10개
+    // 중 서너 개만 남았고**(실측: 확대한 화면에서 3~4개), 버려진 것은 표시 기록에도
+    // 없어 다음에 또 오고 또 솎였다 — 새로고침해도 같은 곳만 보였다.
     //
-    // 지도 이동으로 인한 흡수는 섞지 않는다 — 그때는 새 영역이라 이미 다른 후보이고,
-    // 섞으면 남아 있던 마커 옆에 엉뚱한 것이 끼어 화면이 어수선해진다.
-    if (replaceShown) unseen.shuffle();
-
-    // 격자로 솎아 골고루 퍼뜨린다. 상한을 넉넉히 주는 이유는 아래에서 남은 자리만큼만
-    // 가져가기 때문이다.
-    final List<MapMarker> fresh = thinMarkers(
-      markers: unseen,
-      viewport: visible,
-      columns: MapTuning.markerGridColumns,
-      maxCount: MapTuning.maxDrawnMarkers * 3,
-    );
-
-    if (fresh.isEmpty) return;
-
-    // 교체할 때는 화면 안의 이전 마커를 비우고 새것으로 채운다. 화면 밖의 것은
-    // 그대로 둔다 — 축소하면 다시 보여야 한다.
+    // 상한도 두지 않는다. 상한을 둘 때마다 「무엇을 버릴지」가 문제가 됐고, 그때마다
+    // 마커가 튀거나 화면이 굳었다. 추천은 이미 점수순이라 굳이 골라낼 이유가 없다.
     //
-    // **검색으로 고정한 마커는 예외다** — 화면 안에 있어도 지우지 않는다. 사용자가
-    // 방금 찾은 곳이 재검색 한 번에 사라지면 검색이 헛일이 된다.
-    final List<MapMarker> kept = replaceShown
-        ? state.where((MapMarker m) => !inView(m) || isPinned(m)).toList()
-        : state;
+    // **받은 순서를 섞지 않는다**(SPEC-0036 BR-001·QR-001). 예전에는 재검색 때
+    // `shuffle()`을 걸었는데, 서버가 늘 같은 순서를 주어 같은 자리에서 다시 눌러도
+    // 화면이 그대로였기 때문이다. 이제는 이미 본 장소를 빼서 「다음」을 만들므로
+    // 섞을 이유가 없고, 섞으면 점수가 아닌 기준이 선택에 개입한다.
+    if (unseen.isEmpty) return false;
 
-    final List<MapMarker> next = <MapMarker>[...kept, ...fresh.take(room)];
+    final List<MapMarker> added = unseen;
 
-    // 오래 돌아다니면 화면 밖 마커가 쌓이므로 보관량에 상한을 둔다. 화면 안의 것은
-    // 지키고, 넘치는 만큼 **가장 오래된 화면 밖 마커**부터 버린다.
-    state = next.length <= MapTuning.maxRetainedMarkers
-        ? next
-        : _trim(next, inView, MapTuning.maxRetainedMarkers);
+    // 화면 밖으로 나간 마커는 **버리지 않는다** — 축소하면 다시 화면에 들어오기
+    // 때문이다. 이전에는 뷰포트 밖을 버렸더니 줌 아웃할 때마다 마커가 한꺼번에
+    // 사라져 지도가 텅 비었다.
+    final List<MapMarker> next = <MapMarker>[...state, ...added];
+
+    // **상한을 두지 않는다**(사용자 결정 2026-09-18). 세션 동안 쌓인다.
+    //
+    // 상한을 둘 때마다 「무엇을 버릴지」가 문제가 됐다 — 오래된 것을 버리면 사용자가
+    // 아직 안 본 추천이 예고 없이 사라지고, 목록이 잘리면서 마커 사진이 다른 자리로
+    // 튀었다. 스펙도 누적 상한을 두지 않는다(§규모 가정).
+    state = next;
+    return true;
   }
+
+  /// **지금 화면 안에 있는 마커만.** 그리기 대상이다.
+  ///
+  /// 목록은 상한 없이 쌓이므로 그대로 그리면 지도를 돌아다닐수록 네이티브 왕복이
+  /// 수백 번이 되어 그리기가 끝나지 않는다 — 실기기에서 마커가 하나도 안 뜨던
+  /// 원인이다(2026-09-18). 화면 밖은 어차피 안 보이므로 그릴 이유가 없다.
+  List<MapMarker> visibleIn(MapBounds bounds) =>
+      state.where((MapMarker m) => _isInside(m, bounds)).toList();
+
+  /// [bounds] 안에 있는가.
+  static bool _isInside(MapMarker m, MapBounds bounds) =>
+      m.latitude >= bounds.minLat &&
+      m.latitude <= bounds.maxLat &&
+      m.longitude >= bounds.minLng &&
+      m.longitude <= bounds.maxLng;
+
+  /// 이미 표시한 적 있는 장소인가. 고정한 마커도 후보에서 뺀다 — 재검색 때 강조가
+  /// 꺼진 같은 장소가 새로 들어오면 빨간 테두리가 사라진다.
+  ///
+  /// 문화행사를 따로 판정하던 분기는 걷어냈다 — 그 마커를 더 이상 만들지 않는다
+  /// (사용자 결정 2026-09-18).
+  /// **지금 들고 있는 장소인가.**
+  ///
+  /// 세션 내내 쌓는 기록으로 판정하면, 화면에서 사라진 뒤에도 영원히 제외되어 그
+  /// 자리로 돌아와도 다시 뜨지 않는다 — 금천 화면에서 후보 6곳 중 4번째인
+  /// 롯데마트 맥스가 한 번도 안 뜨던 원인이다. 서버에 보내는 제외와 같은 기준
+  /// (화면에 떠 있는 것)을 쓴다.
+  bool _isServed(MapMarker m) {
+    final String key = _keyOf(m);
+    return key == _pinnedKey || state.any((MapMarker h) => _keyOf(h) == key);
+  }
+
 
   /// 검색으로 찾은 장소를 **맨 앞에 고정한다**.
   ///
@@ -172,41 +230,12 @@ class MapMarkerController extends _$MapMarkerController {
   String? _pinnedKey;
 
   /// 지도를 벗어나거나 새로 시작할 때 비운다.
+  ///
+  /// **제외 목록도 함께 비운다** — 로그아웃으로 마커를 버리는 경로(→[build])에서
+  /// 기록만 남으면, 다음 사용자가 이 세션에서 본 적 없는 장소를 못 보게 된다.
   void clear() {
     _pinnedKey = null;
     state = const <MapMarker>[];
-  }
-
-  /// [limit]개가 되도록 줄인다. **화면 안의 것을 지키고** 화면 밖에서 오래된 것부터
-  /// 버린다 — 보고 있는 마커가 사라지면 방금 나타난 것이 없어지는 것으로 보인다.
-  List<MapMarker> _trim(
-    List<MapMarker> markers,
-    bool Function(MapMarker) inView,
-    int limit,
-  ) {
-    // 검색으로 찾은 곳은 **어떤 경우에도 지키고** 나머지로 남은 자리를 채운다.
-    final List<MapMarker> pinned = markers
-        .where((MapMarker m) => _keyOf(m) == _pinnedKey)
-        .toList();
-    final List<MapMarker> rest = markers
-        .where((MapMarker m) => _keyOf(m) != _pinnedKey)
-        .toList();
-    final int room = (limit - pinned.length).clamp(0, limit);
-
-    final List<MapMarker> shown = rest.where(inView).toList();
-    if (shown.length >= room) {
-      return <MapMarker>[...pinned, ...shown.sublist(shown.length - room)];
-    }
-
-    final List<MapMarker> offscreen = rest
-        .where((MapMarker m) => !inView(m))
-        .toList();
-    final int spare = room - shown.length;
-    return <MapMarker>[
-      ...pinned,
-      ...offscreen.sublist(offscreen.length - spare.clamp(0, offscreen.length)),
-      ...shown,
-    ];
   }
 
   /// 종류가 다르면 같은 id라도 다른 마커다.

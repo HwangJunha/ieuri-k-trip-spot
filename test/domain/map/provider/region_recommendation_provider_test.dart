@@ -7,6 +7,7 @@ import 'package:ieuri_k_trip_spot/domain/map/model/congestion_area.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/map_bounds.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/map_viewport_result.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/region_recommendation.dart';
+import 'package:ieuri_k_trip_spot/domain/map/model/map_recommendation_result.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/region_score.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/seoul_congestion_result.dart';
 import 'package:ieuri_k_trip_spot/domain/map/provider/map_providers.dart';
@@ -41,6 +42,13 @@ final class FakeMapRepository implements MapRepository {
   @override
   Future<List<CongestionAreaBoundary>> fetchBoundaries() =>
       throw UnimplementedError();
+
+  @override
+  Future<MapRecommendationResult> fetchRecommendedSpots({
+    required MapBounds bbox,
+    required List<String> excludedIds,
+    int? first,
+  }) => throw UnimplementedError();
 
   @override
   Future<SeoulCongestionResult> fetchCongestion({required MapBounds bbox}) =>

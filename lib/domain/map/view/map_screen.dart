@@ -31,7 +31,6 @@ import '../model/congestion_overlay.dart';
 import '../model/map_bounds.dart';
 import '../model/map_marker.dart';
 import '../model/map_tuning.dart';
-import '../model/map_viewport_result.dart';
 import '../model/seoul_congestion_result.dart';
 import '../provider/map_marker_controller.dart';
 import '../provider/map_providers.dart';
@@ -104,8 +103,13 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   /// 마커를 받아 둔 영역. 여기를 벗어나면 "이 지역 재검색" 버튼이 뜬다.
   MapBounds? _lastMarkerArea;
 
-  /// "이 지역 재검색"을 띄울 것인가. 마커를 받아 둔 영역을 벗어났을 때 참이 된다.
-  bool _canSearchHere = false;
+  /// 마커를 받아 둘 때 **화면에 보이던** 영역(사용자 결정 2026-09-18).
+  ///
+  /// [_lastMarkerArea]는 화면의 1.2배로 넓힌 **조회** 영역이라 이동 판정에 쓸 수
+  /// 없다 — 그걸로 재면 각 변의 10% 여백만큼 밀어야 새 영역이 된다. 중심이 얼마나
+  /// 움직였는지는 화면 크기를 기준으로 재야 체감과 맞는다.
+  MapBounds? _lastVisibleArea;
+
 
   /// 그 버튼으로 조회하는 중인가. 연타로 요청이 겹치면 나중 응답이 먼저 온 것을
   /// 덮어 마커가 튄다.
@@ -123,6 +127,15 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   /// 마커를 받아 둔 줌. 영역이 같아도 줌이 바뀌면 다시 조회한다 — 보는 범위가
   /// 달라지면 서버가 고르는 spot도 달라진다.
   int? _lastMarkerZoom;
+
+  /// 이 영역의 후보가 모두 표시되었는가(SPEC-0036 FR-008).
+  ///
+  /// 참이면 「이 지역 재검색」을 다시 띄우지 않는다 — 안내를 띄우는 대신 요청할
+  /// **수단만** 사라진다. 누적된 마커는 그대로 남아 화면이 비지 않는다.
+  ///
+  /// **영역 단위이지 세션 단위가 아니다.** 지도를 옮겨 새 영역으로 판정되면 풀린다
+  /// (→[_queryViewport]) — 그 영역에는 아직 못 본 장소가 있을 수 있다.
+  bool _areaExhausted = false;
 
   /// 현재 위치를 얻는 중인가. 버튼이 진행 표시로 바뀌고 중복 요청을 막는다.
   bool _isLocating = false;
@@ -142,6 +155,17 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   /// 조회가 붙기 전까지는 줌 게이트만으로 정해진다. 서버가 오면 `CongestionShown`·
   /// `CongestionDegraded`가 이 자리에 들어간다.
   CongestionLayerState _congestionState = const CongestionHiddenByZoom();
+
+  /// 지금까지 받아 그려 둔 폴리곤(사용자 결정 2026-09-18).
+  ///
+  /// **조회 결과로 갈아 끼우지 않고 여기에 쌓는다.** 서버가 구역 중심점이 bbox에
+  /// 드는지로 거르므로, 지도를 옮기면 같은 자리가 보이는데도 빈 배열이 정상 응답으로
+  /// 온다 — 그걸 그대로 그리면 보이던 폴리곤이 사라진다. 마커를 누적하는 것과 같은
+  /// 이유다.
+  ///
+  /// 같은 구역이 다시 오면 새 값으로 교체되므로 혼잡도가 바뀌면 색이 갱신된다.
+  /// 줌 게이트 미만으로 내려갈 때만 비운다 — 그때는 조회 자체를 하지 않는다.
+  List<CongestionOverlay> _held = const <CongestionOverlay>[];
 
   /// 선택된 구역. null이면 말풍선을 띄우지 않는다.
   CongestionArea? _selectedArea;
@@ -278,16 +302,28 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     if (!shouldShowCongestion(zoomLevel)) {
       // 게이트 미만 — **조회하지 않고** 폴리곤도 지운다. 말풍선은 근거를 잃으므로
       // 함께 닫는다.
+      //
+      // **가드를 먼저 본다.** 예전에는 지우고 나서 세대를 확인했는데, 구세대 응답도
+      // 일단 지운 뒤 빠져나가므로 신세대가 방금 그린 폴리곤이 사라졌다.
+      if (!mounted || generation != _congestionGeneration) return;
       await _painter?.clearCongestion();
       if (!mounted || generation != _congestionGeneration) return;
       setState(() {
         _congestionState = const CongestionHiddenByZoom();
+        _held = const <CongestionOverlay>[];
         _selectedArea = null;
       });
       return;
     }
 
-    setState(() => _congestionState = const CongestionLoading());
+    // **들고 있는 것이 없을 때만 로딩으로 바꾼다.**
+    //
+    // 이미 그려 둔 폴리곤이 있는데 로딩으로 떨어뜨리면, 폴리곤은 남아 있는데 범례와
+    // 출처 표기만 사라져 사용자에게는 「레이어가 꺼졌다」로 보인다 — 지도를 옮길
+    // 때마다 반복되던 깜빡임의 정체다.
+    if (_held.isEmpty) {
+      setState(() => _congestionState = const CongestionLoading());
+    }
 
     try {
       // **경계와 혼잡도를 따로 기다린다.** `.wait`로 묶었더니 한쪽이 실패했을 때
@@ -304,17 +340,20 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       if (!mounted || generation != _congestionGeneration) return;
 
       if (live.degraded) {
-        // 업스트림 장애. **폴리곤만 지우고 마커는 건드리지 않는다**(R29).
-        await _painter?.clearCongestion();
-        if (!mounted || generation != _congestionGeneration) return;
-        setState(() {
-          _congestionState = const CongestionDegraded();
-          _selectedArea = null;
-        });
+        // 업스트림 장애. **이미 그려 둔 것은 지우지 않는다**(사용자 결정 2026-09-18).
+        //
+        // 값이 낡을 뿐 틀린 것은 아니고, 지우면 이동 한 번에 레이어가 통째로
+        // 사라진다. 새 값을 못 받았으니 더하지도 않는다.
+        if (_held.isEmpty) {
+          setState(() {
+            _congestionState = const CongestionDegraded();
+            _selectedArea = null;
+          });
+        }
         return;
       }
 
-      final List<CongestionOverlay> overlays = joinCongestionOverlays(
+      final List<CongestionOverlay> incoming = joinCongestionOverlays(
         areas: live.areas,
         boundaries: <String, CongestionAreaBoundary>{
           for (final CongestionAreaBoundary b in boundaries) b.id: b,
@@ -327,8 +366,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       // 남겼는데, 그러면 3곳 중 1곳이 조용히 사라지는 것을 알 수 없다(실기기
       // 2026-08-25: 서버가 3곳을 줬지만 2개만 그려졌고 로그는 조용했다). 어느
       // id가 경계 캐시에 없는지가 원인을 짚는 유일한 단서다.
-      if (live.areas.length != overlays.length) {
-        final Set<String> joined = overlays
+      if (live.areas.length != incoming.length) {
+        final Set<String> joined = incoming
             .map((CongestionOverlay o) => o.area.id)
             .toSet();
         final List<String> missing = live.areas
@@ -342,9 +381,25 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         );
       }
 
-      await _painter?.drawCongestion(overlays);
-      if (!mounted || generation != _congestionGeneration) return;
-      setState(() => _congestionState = CongestionShown(overlays));
+      // **한 번 받은 구역은 지우지 않고 더한다**(사용자 결정 2026-09-18).
+      //
+      // 서버가 구역 **중심점**이 bbox에 드는지로 거르므로, 지도를 옮기면 같은 자리가
+      // 보이는데도 빈 배열이 정상 응답으로 온다. 그걸 그대로 그리면 보이던 폴리곤이
+      // 사라진다 — 마커와 같은 이유로 누적한다. 같은 구역은 새 값으로 교체되므로
+      // 혼잡도가 바뀌면 색이 갱신된다.
+      final List<CongestionOverlay> merged = mergeCongestionOverlays(
+        held: _held,
+        incoming: incoming,
+      );
+
+      // 바뀐 것이 없으면 다시 그리지 않는다 — SDK 호출이 폴리곤 수만큼 나가므로
+      // 이동할 때마다 같은 값을 다시 밀어 넣을 이유가 없다.
+      if (!_sameOverlays(_held, merged)) {
+        await _painter?.drawCongestion(merged);
+        if (!mounted || generation != _congestionGeneration) return;
+      }
+      _held = merged;
+      setState(() => _congestionState = CongestionShown(merged));
       // **`Exception`이 아니라 `Object`를 받는다.** SDK는 오버레이 등록 실패를
       // `OverlayRegistrationFailedError`처럼 `Error` 계열로 던지는데, `on Exception`은
       // 그것을 놓친다. 이 조회는 `unawaited`로 띄우므로 받아 줄 곳이 여기뿐이고,
@@ -352,14 +407,29 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     } on Object catch (error, stackTrace) {
       // 혼잡도 실패는 지도 전체의 실패가 아니다 — 마커는 그대로 두고 이 레이어만
       // 안내로 대체한다(R29).
+      //
+      // **이미 그려 둔 폴리곤은 지키다**(사용자 결정 2026-09-18). 조회 한 번이
+      // 실패했다고 보이던 것을 치우면, 다음 카메라 정지까지 화면이 비어 있다.
       _log.w('혼잡도 레이어 실패', error: error, stackTrace: stackTrace);
-      await _painter?.clearCongestion();
       if (!mounted || generation != _congestionGeneration) return;
-      setState(() {
-        _congestionState = const CongestionDegraded();
-        _selectedArea = null;
-      });
+      if (_held.isEmpty) {
+        setState(() {
+          _congestionState = const CongestionDegraded();
+          _selectedArea = null;
+        });
+      }
     }
+  }
+
+  /// 그려 둔 것과 같은가. 구역 id와 혼잡도 수준이 모두 같으면 다시 그릴 이유가 없다 —
+  /// 경계는 정적이라 id가 같으면 좌표도 같다.
+  bool _sameOverlays(List<CongestionOverlay> a, List<CongestionOverlay> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i].area.id != b[i].area.id) return false;
+      if (a[i].area.congestion.level != b[i].area.congestion.level) return false;
+    }
+    return true;
   }
 
   /// 뷰포트 안의 마커를 조회해 그린다(R1·R2·R3·R12).
@@ -369,41 +439,48 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     MapBounds bbox,
     MapBounds visible,
     int zoomLevel,
-    int generation, {
-
-    /// "이 지역 재검색"으로 부른 것인가. 참이면 화면 안의 마커를 새 장소로 **교체**한다 —
-    /// 자리가 차 있다고 아무것도 안 바뀌면 버튼이 동작하지 않는 것으로 보인다.
-    bool replaceShown = false,
-  }) async {
+    int generation,
+  ) async {
     try {
-      // **서버가 받는 줌으로 접어서 보낸다.** SDK 줌은 21까지 가지만 계약은 1~14라,
-      // 그대로 보내면 확대할수록 `INVALID_ZOOM`으로 거절되어 마커가 하나도 안 온다.
-      // 화면 판정(마커 게이트)은 접지 않은 실제 줌을 쓴다.
-      final int serverZoom = MapTuning.clampForServer(zoomLevel);
-      // **조회는 한 번이다**(SPEC-0029). 서버가 활성 언어의 장소만 주므로 원문을
-      // 그린 뒤 번역본으로 자리를 채우던 두 번째 왕복이 사라졌다.
-      final MapViewportResult result = await ref.read(
-        mapViewportProvider(bbox, serverZoom).future,
+      // **추천 조회 하나만 부른다**(SPEC-0036, 사용자 결정 2026-09-18).
+      //
+      // 예전에는 `mapViewport`를 함께 불러 문화행사 마커를 받았다. 그 마커를
+      // 없애기로 하면서(FR-012 개정) 이 화면이 `mapViewport`에서 쓸 것이 없어졌다 —
+      // `spots`는 추천으로 대체되었고 `events`는 그리지 않는다.
+      //
+      // **제외 목록은 컨트롤러가 들고 서버에 보낸다**(FR-004) — 화면은 관여하지
+      // 않는다.
+      final MapMarkerController controller = ref.read(
+        mapMarkerControllerProvider.notifier,
+      );
+
+      final bool exhausted = await controller.loadNextBatch(
+        bbox: bbox,
+        visible: visible,
+        batchSize: MapTuning.markersPerBatch,
       );
       if (!mounted || generation != _markerGeneration) return;
 
-      // **마커는 controller가 소유한다.** 조회 결과로 통째로 갈아 끼우지 않고 보태는
-      // 방식이라, 지도를 옮겨도 보고 있던 장소가 사라졌다 나타나지 않는다.
-      // **화면 영역을 넘긴다.** 조회는 그보다 넓게 하지만, 마커를 고르는 기준은
-      // 사용자가 보고 있는 곳이어야 한다 — 조회 영역으로 격자를 나누면 칸 대부분이
-      // 화면 밖이라 열 개를 뽑아도 화면에는 예닐곱만 남는다.
-      ref
-          .read(mapMarkerControllerProvider.notifier)
-          .absorb(result, visible, replaceShown: replaceShown);
+      // **실패를 소진으로 읽지 않는다**(FR-009). 실패하면 여기 닿지 않으므로
+      // `_areaExhausted`가 그대로이고 재검색 버튼이 살아 있다 — 네트워크 오류를
+      // 「더 볼 것이 없음」으로 읽으면 버튼이 영영 사라진다.
+      if (exhausted != _areaExhausted) {
+        setState(() => _areaExhausted = exhausted);
+      }
 
       // 여기까지 왔을 때만 "받아 뒀다"로 기록한다 — 실패했는데 기록하면 재조회가
       // 영영 막힌다.
       _lastMarkerArea = bbox;
+      _lastVisibleArea = visible;
       _lastMarkerZoom = zoomLevel;
       if (!mounted || generation != _markerGeneration) return;
 
+      // **화면 안만 그린다.** 목록은 상한 없이 쌓이므로 전부 넘기면 네이티브 왕복이
+      // 수백 번이 되어 그리기가 끝나지 않는다(실기기 2026-09-18).
       await _painter?.drawMarkers(
-        markers: ref.read(mapMarkerControllerProvider),
+        markers: ref
+            .read(mapMarkerControllerProvider.notifier)
+            .visibleIn(visible),
         onMarkerTap: _onMarkerTap,
       );
       if (!mounted || generation != _markerGeneration) return;
@@ -495,48 +572,41 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       ),
     );
 
-    // **마커는 자동으로 갱신하지 않는다**(사용자 요청, 2026-08-10).
+    // **새 영역이면 자동으로 받는다**(사용자 결정 2026-09-18).
     //
-    // 지도를 멈출 때마다 조회했더니 조금만 움직여도 마커가 바뀌어, 보고 있던 장소가
-    // 사라지고 화면이 계속 흔들렸다. 언제 새로 받을지를 사용자가 정하게 두면 그
-    // 흔들림이 없어진다 — 카카오맵·구글맵이 쓰는 "이 지역 재검색"이다.
+    // 2026-08-10에는 그 반대로 정했다 — 지도를 멈출 때마다 조회했더니 조금만
+    // 움직여도 마커가 바뀌어 화면이 흔들렸기 때문이다. 그래서 「이 지역 재검색」
+    // 버튼을 뒀는데, 이번에는 반대 불만이 나왔다: 「조금 벗어난 정도로는 데이터를
+    // 안 끌고 온다」(실기기 2026-09-18).
     //
-    // **화면이 비어 있으면 자동으로 받는다.**
+    // **원인은 판정이 둔감해서가 아니었다.** 예전 기준(화면이 직전 조회 영역 안에
+    // 들어있는가)도 화면의 10%만 밀면 참이 됐다 — 참이어도 **버튼만 띄우고
+    // 받아오지 않은 것**이 문제였다. 그래서 자동으로 받되, 판정은 중심이 화면의
+    // [MapTuning.areaChangeFraction](15%)만큼 움직였을 때로 조금 둔감하게 잡아
+    // 지도를 다듬는 동안 계속 조회되는 것을 막는다.
+    final bool moved = _isNewArea(visible, zoomLevel);
+
+    // **화면이 비어 있어도 받는다.**
     //
     // 버튼으로만 받게 했더니, 멀리 이동하면 마커가 하나도 없는 채로 남아 기능이
-    // 죽은 것처럼 보였다(실기기 지적 — 반포까지 갔는데 화면이 텅 빔). 버튼의 취지는
-    // "보고 있던 마커가 갑자기 바뀌는 것"을 막는 것이라, **보이는 게 없을 때는 그
-    // 취지가 성립하지 않는다.**
-    //
-    // 첫 진입도 같은 경로를 탄다 — 그때도 화면이 비어 있다.
-    final bool nothingVisible = !ref
-        .read(mapMarkerControllerProvider)
-        .any(
-          (MapMarker m) =>
-              m.latitude >= visible.minLat &&
-              m.latitude <= visible.maxLat &&
-              m.longitude >= visible.minLng &&
-              m.longitude <= visible.maxLng,
-        );
-    if (nothingVisible) {
+    // 죽은 것처럼 보였다(실기기 지적 — 반포까지 갔는데 화면이 텅 빔). 첫 진입도
+    // 같은 경로를 탄다 — 그때도 화면이 비어 있다.
+    if (moved || _hasNoMarkerOnScreen(visible)) {
       await _searchMarkersHere(visible, zoomLevel);
-      return;
     }
+  }
 
-    // 옮기기 전 영역을 벗어났으면 버튼을 띄운다. 그 안이면 이미 보여 준 것으로
-    // 충분하다.
-    final bool moved =
-        _lastMarkerArea == null ||
-        !_lastMarkerArea!.contains(visible) ||
-        _lastMarkerZoom != zoomLevel;
-    if (moved) {
-      // 이동으로 이미 띄웠으면 대기 중인 재노출 타이머는 필요 없다 — 남겨 두면
-      // 5초 뒤에 같은 상태를 한 번 더 덮어쓴다.
-      _searchAgainTimer?.cancel();
-    }
-    if (moved != _canSearchHere) {
-      setState(() => _canSearchHere = moved);
-    }
+  /// 마지막으로 받아 둔 곳에서 **새 영역으로 볼 만큼** 움직였는가
+  /// (사용자 결정 2026-09-18).
+  ///
+  /// 중심이 화면 크기의 [MapTuning.areaChangeFraction] 이상 멀어졌거나 줌이 바뀌면
+  /// 새 영역이다. 줌 변경을 함께 보는 이유는, 제자리에서 확대·축소해도 보이는 범위가
+  /// 달라져 받아 둔 것이 그 화면에 맞지 않기 때문이다.
+  bool _isNewArea(MapBounds visible, int zoomLevel) {
+    final MapBounds? last = _lastVisibleArea;
+    if (last == null) return true;
+    if (_lastMarkerZoom != zoomLevel) return true;
+    return last.movedBeyond(visible, MapTuning.areaChangeFraction);
   }
 
   /// 검색창을 눌렀을 때. 기존 검색 화면을 열고, 고른 장소의 좌표로 지도를 옮긴다.
@@ -581,14 +651,18 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     // 옮긴 자리를 "받아 두지 않은 곳"으로 표시해, 이어지는 조회가 주변 장소를
     // 채우게 한다. 고정한 마커는 그 조회에서도 지워지지 않는다(`pin` 참조).
     _lastMarkerArea = null;
+    _lastVisibleArea = null;
 
     // **여기서 한 번 그린다.**
     //
     // 앞서 "곧 덮이니 그리지 말자"고 뺐는데, 그 결과 아무도 안 그려 검색 마커가
     // 영영 안 보였다. 덮이는 문제는 `drawMarkers`의 세대 토큰이 막으므로 — 나중
     // 호출이 이기고 그 호출도 같은 목록을 그린다 — 여기서 그리는 편이 맞다.
+    // 화면 안만 그린다(→[_loadMarkers]와 같은 이유). 옮긴 뒤의 화면을 산출해 쓴다.
+    final MapBounds? here = await _visibleBounds();
+    if (!mounted || here == null) return;
     await _painter?.drawMarkers(
-      markers: ref.read(mapMarkerControllerProvider),
+      markers: ref.read(mapMarkerControllerProvider.notifier).visibleIn(here),
       onMarkerTap: _onMarkerTap,
     );
   }
@@ -638,6 +712,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     // 옮긴 자리를 "받아 두지 않은 곳"으로 표시해, 이어지는 유휴 조회가 그 지역의
     // 장소를 채우게 한다 — 검색 이동과 같은 처리다.
     _lastMarkerArea = null;
+    _lastVisibleArea = null;
   }
 
   /// 검색 화면이 돌려준 값을 지도 마커로 옮긴다. 좌표가 없는 장소이거나 취소했으면
@@ -677,19 +752,20 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     final CameraPosition position = await controller.getCameraPosition();
     if (!mounted) return;
 
-    await _searchMarkersHere(visible, position.zoomLevel, replaceShown: true);
+    await _searchMarkersHere(visible, position.zoomLevel);
   }
 
   /// 지금 보고 있는 지역의 마커를 받는다. 첫 진입과 "이 지역 재검색" 버튼이 부른다.
   ///
-  /// [replaceShown]은 버튼으로 부를 때만 참이다 — 같은 자리에서 눌렀는데 화면이
-  /// 그대로면 버튼이 동작하지 않는 것으로 보이므로, 그때는 화면 안의 마커를 다른
-  /// 장소로 갈아 준다.
-  Future<void> _searchMarkersHere(
-    MapBounds visible,
-    int zoomLevel, {
-    bool replaceShown = false,
-  }) async {
+  /// 버튼으로 부르든 자동으로 부르든 **동작이 같다**(SPEC-0036 FR-003). 화면을 갈아
+  /// 끼우던 경로는 없앴고, 양쪽 모두 안 본 장소를 한 묶음 더한다.
+  ///
+  /// **같은 영역이면 첫 조회에 쓴 bbox를 그대로 쓴다**(FR-010). 지도를 미세하게
+  /// 움직이면 [_visibleBounds]가 매번 조금씩 다른 사각형을 주므로, 매번 새로
+  /// 산출하면 같은 영역인데 다른 조건으로 조회하게 된다 — 스펙이 경고한 「보충
+  /// 조회가 조건을 빠뜨림」이 정확히 이 형태다. 영역은 바뀌었거나 아니거나 둘
+  /// 중 하나이며 그 사이는 없다.
+  Future<void> _searchMarkersHere(MapBounds visible, int zoomLevel) async {
     if (_isSearchingArea) return;
     // 조회를 시작하면 대기 중인 재노출 타이머는 의미가 없다.
     _searchAgainTimer?.cancel();
@@ -697,29 +773,46 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
     try {
       // 화면보다 조금 넓게 받아, 살짝 밀었을 때 가장자리가 비지 않게 한다(R20).
-      await _loadMarkers(
-        visible.expanded(),
-        visible,
-        zoomLevel,
-        ++_markerGeneration,
-        replaceShown: replaceShown,
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSearchingArea = false;
-          _canSearchHere = false;
-        });
+      //
+      // 영역이 바뀌지 않았다면 그때 쓴 것을 재사용한다 — 새 영역으로 판정될 때만
+      // 새로 산출한다(→[_queryViewport]의 `moved`와 같은 기준).
+      final MapBounds bbox = _sameAreaBbox(visible, zoomLevel) ?? visible.expanded();
 
-        // 같은 자리에 머물러도 잠시 뒤 다시 눌러 볼 수 있게 한다(사용자 요청).
-        // 마커 상한에 걸려 못 들어온 장소가 그때 들어온다.
-        _searchAgainTimer = Timer(MapTuning.searchAgainDelay, () {
-          if (mounted && !_isSearchingArea) {
-            setState(() => _canSearchHere = true);
-          }
-        });
+      await _loadMarkers(bbox, visible, zoomLevel, ++_markerGeneration);
+    } finally {
+      // **버튼은 늘 살아 있다**(사용자 결정 2026-09-18).
+      //
+      // 예전에는 조회 뒤 3초 쿨다운을 두고, 후보가 소진되면 아예 띄우지 않았다.
+      // 그런데 「더 볼 것이 없다」는 판정이 실제와 자주 어긋나 버튼이 사라진 채
+      // 돌아오지 않았고, 사용자는 기능이 죽은 것으로 받아들였다. 눌러서 아무것도
+      // 안 들어오는 편이 눌러 볼 수단이 없는 것보다 낫다.
+      if (mounted) {
+        setState(() => _isSearchingArea = false);
       }
     }
+  }
+
+  /// 화면 안에 마커가 하나도 없는가. 소진이어도 버튼을 남길지 판정한다.
+  bool _hasNoMarkerOnScreen(MapBounds visible) => !ref
+      .read(mapMarkerControllerProvider)
+      .any(
+        (MapMarker m) =>
+            m.latitude >= visible.minLat &&
+            m.latitude <= visible.maxLat &&
+            m.longitude >= visible.minLng &&
+            m.longitude <= visible.maxLng,
+      );
+
+  /// 영역이 바뀌지 않았으면 첫 조회에 쓴 bbox를, 바뀌었으면 `null`을 준다(FR-010).
+  ///
+  /// 판정 기준은 [_queryViewport]의 `moved`와 같다 — 한 화면에 두 기준이 있으면
+  /// 「버튼은 떴는데 조건은 새것」 같은 중간 상태가 생긴다.
+  MapBounds? _sameAreaBbox(MapBounds visible, int zoomLevel) {
+    // **[_isNewArea]와 같은 기준을 쓴다.** 판정이 갈리면 「새 영역이라 조회했는데
+    // 조건은 옛 bbox」 같은 중간 상태가 생긴다 — 스펙이 금지한 것이다(FR-010:
+    // 영역은 바뀌었거나 아니거나 둘 중 하나이며 그 사이는 없다).
+    if (_isNewArea(visible, zoomLevel)) return null;
+    return _lastMarkerArea;
   }
 
   /// 화면에 보이는 영역을 위경도 bbox로 되돌린다.
@@ -973,8 +1066,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           //
           // 하단 중앙에 알약으로 띄웠더니 시선을 뺏고 지도를 가렸다. 우상단은 범례
           // (좌측)와 겹치지 않고, 새로고침이 널리 통하는 기호라 아이콘만으로 충분하다.
-          if (_canSearchHere || _isSearchingArea)
-            Positioned(
+          Positioned(
               right: 12,
               top: 0,
               child: RepaintBoundary(

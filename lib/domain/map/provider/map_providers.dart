@@ -33,6 +33,11 @@ MapRepository mapRepository(Ref ref) =>
 ///
 /// **카테고리 필터를 받지 않는다**(사용자 결정, 2026-08-16). 서버 인자는 있지만
 /// 지도는 오버레이가 가장 많은 화면이라 바를 하나 더 얹으면 가독성이 떨어진다.
+///
+/// **이제 여기서 쓰는 것은 문화행사뿐이다**(SPEC-0036). spot은 추천 순서로 받으므로
+/// (`MapMarkerController.loadNextBatch`) 이 조회의 `spots`는 화면이 걸러 버린다 —
+/// 행사는 이 변경의 대상이 아니라 기존대로 표시되어야 해서(FR-012) 조회 자체는
+/// 남는다.
 @Riverpod(retry: defaultNetworkRetry)
 Future<MapViewportResult> mapViewport(Ref ref, MapBounds bbox, int zoom) =>
     ref.watch(mapRepositoryProvider).fetchViewport(bbox: bbox, zoom: zoom);

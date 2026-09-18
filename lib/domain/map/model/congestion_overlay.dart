@@ -14,6 +14,47 @@ class CongestionOverlay {
   String get name => area.name;
 }
 
+/// 이미 그려 둔 폴리곤에 새 조회 결과를 **더한다**(사용자 결정 2026-09-18).
+///
+/// **한 번 받은 구역은 지우지 않는다.** 예전에는 조회할 때마다 결과로 통째로 갈아
+/// 끼웠는데, 지도를 옮겨 격자 칸을 넘어가면 새 조회가 나가고 그것이 빈 결과거나
+/// 실패이면 **보이던 폴리곤이 사라졌다**(실기기 2026-09-18). 서버가 구역 중심점이
+/// bbox에 드는지로 거르므로 빈 결과는 정상 응답이며, 그때 화면을 비울 이유가 없다.
+///
+/// **같은 구역은 새 값으로 교체한다** — 혼잡도는 실시간이라 색이 갱신되어야 한다.
+/// 경계는 정적이므로 좌표는 그대로다.
+///
+/// 순서는 **먼저 들어온 것이 앞**이다. 겹치는 폴리곤의 그리기 순서가 호출마다
+/// 달라지면 화면이 깜빡이고, [overlayAt]이 먼저 오는 것을 고르므로 구역 선택 결과도
+/// 흔들린다.
+List<CongestionOverlay> mergeCongestionOverlays({
+  required List<CongestionOverlay> held,
+  required List<CongestionOverlay> incoming,
+}) {
+  final Map<String, CongestionOverlay> byId = <String, CongestionOverlay>{
+    for (final CongestionOverlay o in held) o.area.id: o,
+  };
+
+  final List<CongestionOverlay> merged = <CongestionOverlay>[
+    // 들고 있던 것을 순서대로 두되, 새 값이 왔으면 그것으로 바꾼다.
+    for (final CongestionOverlay o in held)
+      byId[o.area.id] = incoming.firstWhere(
+        (CongestionOverlay n) => n.area.id == o.area.id,
+        orElse: () => o,
+      ),
+  ];
+
+  // 처음 보는 구역만 뒤에 붙인다.
+  final Set<String> known = held.map((CongestionOverlay o) => o.area.id).toSet();
+  for (final CongestionOverlay o in incoming) {
+    if (known.contains(o.area.id)) continue;
+    merged.add(o);
+    known.add(o.area.id);
+  }
+
+  return merged;
+}
+
 /// 좌표가 어느 구역 안인지 찾는다(R27 — 구역 선택).
 ///
 /// 겹치는 구역이 있으면 **먼저 오는 것을 고른다.** 서울시 구역은 대체로 겹치지 않지만

@@ -121,6 +121,36 @@ class MapBounds {
   ///
   /// 경계가 정확히 겹치는 경우도 포함으로 본다. 확장 영역의 가장자리에 딱 맞춘
   /// 뷰포트는 이미 가진 데이터로 그릴 수 있다.
+  /// [other]의 중심이 이 영역의 중심에서 **화면 크기의 [fraction]만큼** 이상
+  /// 멀어졌는가(사용자 결정 2026-09-18).
+  ///
+  /// **영역 포함 판정(`contains`)을 대신한다.** 그쪽은 「화면이 직전 조회 영역 안에
+  /// 완전히 들어있는가」를 물었는데, 조회 영역이 화면의 1.2배라 각 변에 10% 여백이
+  /// 생긴다 — 화면 폭의 10%(강남역에서 약 200m)를 밀어야 비로소 새 영역으로 쳤고,
+  /// 그보다 적게 움직이면 아무리 새 장소가 있어도 받아오지 않았다(실기기 지적).
+  ///
+  /// **비율로 재는 이유**: 절대 거리로 정하면 확대했을 때 화면이 좁아 500m가 화면
+  /// 여러 배가 되고, 축소하면 화면 안 움직임에도 기준을 넘는다. 화면 크기에 대한
+  /// 비율이면 어느 줌에서든 체감이 같다.
+  ///
+  /// 위도와 경도를 각각 자기 폭으로 나눠 비교한다 — 경도 1도의 실거리는 위도에 따라
+  /// 달라지지만, 같은 화면의 폭으로 나누면 그 왜곡이 약분된다.
+  bool movedBeyond(MapBounds other, double fraction) {
+    if (latSpan <= 0 || lngSpan <= 0) return true;
+
+    final double latShift = ((other.minLat + other.maxLat) / 2 -
+            (minLat + maxLat) / 2)
+        .abs();
+    final double lngShift = ((other.minLng + other.maxLng) / 2 -
+            (minLng + maxLng) / 2)
+        .abs();
+
+    return latShift >= latSpan * fraction || lngShift >= lngSpan * fraction;
+  }
+
+  /// **이동 판정에는 쓰지 않는다**(2026-09-18) — 그쪽은 [movedBeyond]가 맡는다.
+  /// 조회 영역이 화면의 1.2배라 이 함수로 재면 각 변의 10% 여백만큼 밀어야 새
+  /// 영역이 되어, 조금 움직인 정도로는 새 장소를 받지 못했다.
   bool contains(MapBounds other) {
     // **미세한 흔들림은 같은 영역으로 본다.**
     //
