@@ -160,6 +160,14 @@ class MapMarkerController extends _$MapMarkerController {
     return true;
   }
 
+  /// **지금 화면 안에 있는 마커만.** 그리기 대상이다.
+  ///
+  /// 목록은 상한 없이 쌓이므로 그대로 그리면 지도를 돌아다닐수록 네이티브 왕복이
+  /// 수백 번이 되어 그리기가 끝나지 않는다 — 실기기에서 마커가 하나도 안 뜨던
+  /// 원인이다(2026-09-18). 화면 밖은 어차피 안 보이므로 그릴 이유가 없다.
+  List<MapMarker> visibleIn(MapBounds bounds) =>
+      state.where((MapMarker m) => _isInside(m, bounds)).toList();
+
   /// [bounds] 안에 있는가.
   static bool _isInside(MapMarker m, MapBounds bounds) =>
       m.latitude >= bounds.minLat &&

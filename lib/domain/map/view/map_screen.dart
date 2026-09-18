@@ -475,8 +475,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       _lastMarkerZoom = zoomLevel;
       if (!mounted || generation != _markerGeneration) return;
 
+      // **화면 안만 그린다.** 목록은 상한 없이 쌓이므로 전부 넘기면 네이티브 왕복이
+      // 수백 번이 되어 그리기가 끝나지 않는다(실기기 2026-09-18).
       await _painter?.drawMarkers(
-        markers: ref.read(mapMarkerControllerProvider),
+        markers: ref
+            .read(mapMarkerControllerProvider.notifier)
+            .visibleIn(visible),
         onMarkerTap: _onMarkerTap,
       );
       if (!mounted || generation != _markerGeneration) return;
@@ -654,8 +658,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     // 앞서 "곧 덮이니 그리지 말자"고 뺐는데, 그 결과 아무도 안 그려 검색 마커가
     // 영영 안 보였다. 덮이는 문제는 `drawMarkers`의 세대 토큰이 막으므로 — 나중
     // 호출이 이기고 그 호출도 같은 목록을 그린다 — 여기서 그리는 편이 맞다.
+    // 화면 안만 그린다(→[_loadMarkers]와 같은 이유). 옮긴 뒤의 화면을 산출해 쓴다.
+    final MapBounds? here = await _visibleBounds();
+    if (!mounted || here == null) return;
     await _painter?.drawMarkers(
-      markers: ref.read(mapMarkerControllerProvider),
+      markers: ref.read(mapMarkerControllerProvider.notifier).visibleIn(here),
       onMarkerTap: _onMarkerTap,
     );
   }
