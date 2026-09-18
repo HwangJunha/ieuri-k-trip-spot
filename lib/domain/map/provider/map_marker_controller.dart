@@ -71,35 +71,23 @@ class MapMarkerController extends _$MapMarkerController {
     // (실측: 후보 100곳인 화면이 6회차부터 고정됐다).
     _syncServedToScreen(visible);
 
+    // **보고 있는 화면으로 조회한다**(사용자 결정 2026-09-18).
+    //
+    // 예전에는 화면의 1.2배로 넓혀 조회했다(작은 이동에 재조회가 걸리지 않도록).
+    // 그런데 서버는 그 넓은 영역 기준으로 점수순 앞에서부터 주므로, **받은 추천의
+    // 상당수가 화면 밖이라 버려졌다** — 화면 안 후보에 닿기 전에 왕복만 늘다 결국
+    // 막혔다(실측: 두어 번 바뀌고 고정). 화면으로 조회하면 받은 것이 전부 쓸 수
+    // 있는 추천이다.
+    //
+    // 가장자리가 잠시 빌 수 있지만, 중심이 화면의
+    // [MapTuning.areaChangeFraction]만큼 움직이면 자동으로 다시 받으므로
+    // (→`MapScreen`) 오래 가지 않는다.
     final MapRepository repository = ref.read(mapRepositoryProvider);
-
-    // **화면 안 후보가 나올 때까지 이어 받는다.**
-    //
-    // 조회 bbox는 화면보다 넓다(작은 이동에 재조회가 걸리지 않도록 1.2배). 그래서
-    // 서버가 앞에서부터 주는 한 묶음이 통째로 화면 밖일 수 있는데, [absorb]가 그것을
-    // 버리면서 표시 기록에도 남기지 않으니 **다음 조회에 같은 것이 또 오고 또
-    // 버려졌다** — 새로고침을 눌러도 화면이 영영 그대로였다(실측: 화면 0개로 고정).
-    //
-    // 그리지 못한 것을 [_skippedOffScreen]에 남겨 제외로 보내면 서버가 그 다음을
-    // 준다. 한 번에 그치지 않고 화면 안 후보를 찾을 때까지 몇 번 더 받는다 — 한 번만
-    // 받으면 첫 조회에서 빈 화면을 보게 된다.
-    //
-    // **왕복에 상한을 둔다.** 영역 안이 정말 화면 밖뿐이면 무한히 두드리게 된다.
-    const int maxHops = 3;
-    MapRecommendationResult result = const MapRecommendationResult.empty();
-    for (int hop = 0; hop < maxHops; hop++) {
-      result = await repository.fetchRecommendedSpots(
-        bbox: bbox,
-        excludedIds: <String>[...servedSpotIds, ..._skippedOffScreen],
-        first: batchSize,
-      );
-      _rememberSkipped(result.markers, visible);
-
-      final bool anyOnScreen = result.markers.any(
-        (MapMarker m) => _isInside(m, visible),
-      );
-      if (anyOnScreen || result.exhausted) break;
-    }
+    MapRecommendationResult result = await repository.fetchRecommendedSpots(
+      bbox: visible,
+      excludedIds: servedSpotIds,
+      first: batchSize,
+    );
 
     // **영역을 다 돌았으면 가장 오래된 것부터 교체한다**(사용자 결정 2026-09-18).
     //
@@ -146,11 +134,10 @@ class MapMarkerController extends _$MapMarkerController {
         _syncServedToScreen(visible);
 
         result = await repository.fetchRecommendedSpots(
-          bbox: bbox,
-          excludedIds: <String>[...servedSpotIds, ..._skippedOffScreen],
+          bbox: visible,
+          excludedIds: servedSpotIds,
           first: batchSize,
         );
-        _rememberSkipped(result.markers, visible);
       }
     }
 
@@ -237,22 +224,6 @@ class MapMarkerController extends _$MapMarkerController {
         ? next
         : _trim(next, inView, MapTuning.maxRetainedMarkers);
     return true;
-  }
-
-  /// 조회에는 왔지만 **화면 밖이라 그리지 못한** 장소.
-  ///
-  /// 조회 bbox가 화면보다 넓어서 생긴다. 표시 기록([_servedSpotIds])과 따로 두는
-  /// 이유는 수명이 다르기 때문이다 — 이쪽은 화면이 바뀌면 의미를 잃으므로
-  /// [_syncServedToScreen]이 함께 비운다.
-  final Set<String> _skippedOffScreen = <String>{};
-
-  /// 이번 응답 중 화면 밖이라 못 그린 것을 기억한다.
-  void _rememberSkipped(List<MapMarker> received, MapBounds visible) {
-    for (final MapMarker m in received) {
-      if (m.kind != MapMarkerKind.spot) continue;
-      if (_isInside(m, visible)) continue;
-      _skippedOffScreen.add(m.id);
-    }
   }
 
   /// 표시 기록을 **지금 화면에 떠 있는 장소**로 맞춘다.
@@ -358,7 +329,6 @@ class MapMarkerController extends _$MapMarkerController {
     _pinnedKey = null;
     _servedKeys.clear();
     _servedSpotIds.clear();
-    _skippedOffScreen.clear();
     state = const <MapMarker>[];
   }
 
