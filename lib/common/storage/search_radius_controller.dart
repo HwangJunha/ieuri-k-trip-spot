@@ -12,10 +12,9 @@ const double searchRadiusStepKm = 10;
 
 /// 설정의 km 값을 서버가 받는 미터로 바꾼다.
 ///
-/// **0km는 null이 된다**(R13 네 번째 기준 — "현재 위치만"). 서버의 `radiusMeters`는
-/// 선택 인자이고 0을 보내면 반경 0인 원이라 아무것도 걸리지 않는데, 사용자가 뜻한
-/// 것은 "가장 가까운 것부터"이지 "빈 결과"가 아니다. 인자를 빼면 서버 기본값으로
-/// 조회되고 결과는 거리순으로 온다.
+/// **0 이하는 null이 된다** — 반경 0인 원에는 아무것도 걸리지 않으므로 인자를 빼
+/// 서버 기본값으로 조회한다. 설정에서 고를 수 있는 최소는 1km이고
+/// ([AppPreferences.minSearchRadiusKm]) 이 경로는 낡은 저장값에 대한 방어다.
 int? radiusMetersOf(double km) => km <= 0 ? null : (km * 1000).round();
 
 /// 검색 반경(km) 설정을 들고 있는 컨트롤러(SPEC-0011 R13).
@@ -53,17 +52,15 @@ class SearchRadiusController extends _$SearchRadiusController {
   /// 같은 값을 다시 저장하면 상태가 안 바뀌어 피드도 다시 받지 않는데, 화면은
   /// 눌렀다고 생각한다 — 호출부가 "더 넓힐 수 없다"를 안내할 수 있게 결과를 준다.
   ///
-  /// **0km에서는 한 단계가 아니라 기본값으로 올린다.** 0은 "현재 위치만"이라
-  /// 여기서 10km로 가면 사용자가 의도한 좁힘을 한 번에 뒤집는 폭이 아니게 된다 —
-  /// 빈 상태에서 넓히려는 의도에는 기본값 복귀가 가장 예측 가능하다.
+  /// 한 단계([searchRadiusStepKm])씩 넓힌다. 상한에 닿아 있으면 `false`를 준다.
+  ///
+  /// 0km 전용 분기는 걷어냈다 — 최소가 1km라 그 상태가 생기지 않는다
+  /// ([AppPreferences.minSearchRadiusKm]).
   Future<bool> widen() async {
     final double current = state;
     if (current >= AppPreferences.maxSearchRadiusKm) return false;
 
-    final double next = current <= 0
-        ? AppPreferences.defaultSearchRadiusKm
-        : current + searchRadiusStepKm;
-    await select(next);
+    await select(current + searchRadiusStepKm);
     return true;
   }
 }
