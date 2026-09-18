@@ -44,6 +44,43 @@ final class FakeMapRepository implements MapRepository {
       throw UnimplementedError(invocation.memberName.toString());
 }
 
+/// 영역 안에 [total]곳이 있고 제외 목록을 존중하는 서버. 순환 동작을 본다.
+final class FakeCyclingRepository implements MapRepository {
+  FakeCyclingRepository(this.total);
+
+  final int total;
+
+  @override
+  Future<MapRecommendationResult> fetchRecommendedSpots({
+    required MapBounds bbox,
+    required List<String> excludedIds,
+    int? first,
+  }) async {
+    final List<MapMarker> all = <MapMarker>[
+      for (int i = 0; i < total; i++)
+        MapMarker(
+          id: 's$i',
+          name: 's$i',
+          latitude: 37.505 + i * 0.0008,
+          longitude: 127.005 + i * 0.0008,
+          kind: MapMarkerKind.spot,
+        ),
+    ];
+    final List<MapMarker> take = all
+        .where((MapMarker m) => !excludedIds.contains(m.id))
+        .take(first ?? 10)
+        .toList();
+    return MapRecommendationResult(
+      markers: take,
+      exhausted: take.length < (first ?? 10),
+    );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError(invocation.memberName.toString());
+}
+
 void main() {
   const MapBounds visible = MapBounds(
     minLat: 37.50,
@@ -313,6 +350,86 @@ void main() {
 
   /// SPEC-0036 S4. 「다음 장소」는 이미 표시한 것을 서버에 제외 목록으로 보내
   /// 받아 온다 — 커서도 오프셋도 없다(POL-037).
+  /// 실기기 지적(2026-09-18): 「끝에 도달했을 때는 처음부터 다시 순회해야 하는 것
+  /// 아닌가」. 예전에는 소진 판정이 한 번 서면 재검색 수단이 사라지고, 지도를 크게
+  /// 움직이기 전까지 돌아오지 않았다.
+  group('영역을 다 돌면 다시 순회한다', () {
+    const MapBounds wide = MapBounds(
+      minLat: 37.50,
+      minLng: 127.00,
+      maxLat: 37.56,
+      maxLng: 127.06,
+    );
+
+    ProviderContainer withRepo(FakeCyclingRepository r) {
+      final ProviderContainer c = ProviderContainer(
+        overrides: [mapRepositoryProvider.overrideWithValue(r)],
+      );
+      addTearDown(c.dispose);
+      return c;
+    }
+
+    /// 후보가 상한보다 많으면 순환이 계속된다 — 더 보기 수단이 사라지지 않는다.
+    test('후보가 상한보다 많으면 소진으로 보고하지 않는다', () async {
+      final FakeCyclingRepository repo = FakeCyclingRepository(50);
+      final MapMarkerController controller = withRepo(
+        repo,
+      ).read(mapMarkerControllerProvider.notifier);
+
+      bool exhausted = false;
+      for (int r = 0; r < 7; r++) {
+        exhausted = await controller.loadNextBatch(
+          bbox: wide,
+          visible: wide,
+          batchSize: MapTuning.markersPerBatch,
+        );
+      }
+
+      expect(exhausted, isFalse, reason: '더 볼 수 있는데 수단이 사라졌다');
+    });
+
+    /// 다시 돌 때 이미 떠 있는 장소를 또 받으면 같은 사진이 겹쳐 박힌다.
+    test('다시 순회해도 같은 마커가 겹쳐 쌓이지 않는다', () async {
+      final ProviderContainer c = withRepo(FakeCyclingRepository(50));
+      final MapMarkerController controller = c.read(
+        mapMarkerControllerProvider.notifier,
+      );
+
+      for (int r = 0; r < 7; r++) {
+        await controller.loadNextBatch(
+          bbox: wide,
+          visible: wide,
+          batchSize: MapTuning.markersPerBatch,
+        );
+      }
+
+      final List<String> ids = c
+          .read(mapMarkerControllerProvider)
+          .map((MapMarker m) => m.id)
+          .toList();
+      expect(ids.toSet(), hasLength(ids.length), reason: '같은 장소가 중복됐다');
+    });
+
+    /// 영역 안 장소가 상한보다 적으면 전부 화면에 떠 있으므로 더 줄 것이 없다 —
+    /// 그때는 진짜 소진이고 더 보기 수단을 거둔다(FR-008).
+    test('후보가 모두 표시되면 소진으로 보고한다', () async {
+      final MapMarkerController controller = withRepo(
+        FakeCyclingRepository(12),
+      ).read(mapMarkerControllerProvider.notifier);
+
+      bool exhausted = false;
+      for (int r = 0; r < 4; r++) {
+        exhausted = await controller.loadNextBatch(
+          bbox: wide,
+          visible: wide,
+          batchSize: MapTuning.markersPerBatch,
+        );
+      }
+
+      expect(exhausted, isTrue);
+    });
+  });
+
   group('다음 묶음 조회 (loadNextBatch)', () {
     const MapBounds bbox = MapBounds(
       minLat: 37.49,
@@ -356,12 +473,15 @@ void main() {
 
     /// FR-009. 판정은 서버가 준 수로 한다 — 격자에 솎여 못 그린 장소는 제외 목록에
     /// 없어 다음 요청에 다시 오므로, 그린 수로 판정하면 가짜 소진이다.
-    test('소진 여부를 그대로 전한다', () async {
-      final FakeMapRepository exhausted = FakeMapRepository(<MapMarker>[
-        markerAt('a', 37.505, 127.005),
-      ], exhausted: true);
+    /// 첫 조회부터 빈 결과면 영역 안에 후보가 없다 — 재순회할 것도 없으므로
+    /// 소진이다(FR-008).
+    test('영역이 비어 있으면 소진으로 전한다', () async {
+      final FakeMapRepository empty = FakeMapRepository(
+        const <MapMarker>[],
+        exhausted: true,
+      );
       final MapMarkerController controller = withRepository(
-        exhausted,
+        empty,
       ).read(mapMarkerControllerProvider.notifier);
 
       expect(
@@ -371,6 +491,25 @@ void main() {
           batchSize: 10,
         ),
         isTrue,
+      );
+    });
+
+    /// 적게라도 받았으면 보여 줄 것이 있다 — 더 보기 수단을 거둘 이유가 없다.
+    test('적게 왔어도 받은 것이 있으면 소진이 아니다', () async {
+      final FakeMapRepository few = FakeMapRepository(<MapMarker>[
+        markerAt('a', 37.505, 127.005),
+      ], exhausted: true);
+      final MapMarkerController controller = withRepository(
+        few,
+      ).read(mapMarkerControllerProvider.notifier);
+
+      expect(
+        await controller.loadNextBatch(
+          bbox: bbox,
+          visible: visible,
+          batchSize: 10,
+        ),
+        isFalse,
       );
     });
 

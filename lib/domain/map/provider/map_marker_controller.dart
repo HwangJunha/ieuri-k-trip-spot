@@ -64,18 +64,57 @@ class MapMarkerController extends _$MapMarkerController {
     required int batchSize,
   }) async {
     final MapRepository repository = ref.read(mapRepositoryProvider);
-    final MapRecommendationResult result = await repository
-        .fetchRecommendedSpots(
-          bbox: bbox,
-          excludedIds: servedSpotIds,
-          first: batchSize,
+    MapRecommendationResult result = await repository.fetchRecommendedSpots(
+      bbox: bbox,
+      excludedIds: servedSpotIds,
+      first: batchSize,
+    );
+
+    // **영역을 다 돌았으면 처음부터 다시 순회한다**(사용자 결정 2026-09-18).
+    //
+    // 예전에는 여기서 끝이었다 — 소진 판정이 서면 재검색 수단이 사라지고, 지도를
+    // 크게 움직이기 전까지 돌아오지 않았다. 한자리에서 계속 둘러보는 사용자에게는
+    // 기능이 죽은 것으로 보인다.
+    //
+    // 제외 목록을 비우면 맨 앞 추천부터 다시 온다. **지금 화면에 있는 장소는 그대로
+    // 제외한 채** 다시 받아야 한다 — 기록을 통째로 비우고 받으면 이미 떠 있는 마커가
+    // 한 번 더 들어와 같은 사진이 겹쳐 박힌다(실측: 고유 10곳이 30개로 쌓였다).
+    //
+    // 그래서 기록을 **화면에 남아 있는 것만으로 다시 세운다.** 보관 상한에 밀려
+    // 사라진 장소는 기록에서도 빠지므로 다음 바퀴에 돌아온다.
+    if (result.exhausted && servedSpotIds.isNotEmpty) {
+      final List<String> onScreen = state
+          .where((MapMarker m) => m.kind == MapMarkerKind.spot)
+          .map((MapMarker m) => m.id)
+          .toList();
+
+      _servedKeys
+        ..clear()
+        ..addAll(
+          state
+              .where((MapMarker m) => m.kind == MapMarkerKind.spot)
+              .map(_keyOf),
         );
+      _servedSpotIds
+        ..clear()
+        ..addAll(onScreen);
+
+      result = await repository.fetchRecommendedSpots(
+        bbox: bbox,
+        excludedIds: onScreen,
+        first: batchSize,
+      );
+    }
 
     absorb(
       MapViewportResult(markers: result.markers, truncated: false),
       visible,
     );
-    return result.exhausted;
+
+    // **재순회 뒤에는 소진으로 보고하지 않는다.** 한 바퀴를 다시 돌 수 있다는 뜻이라
+    // 더 보기 수단을 거둘 이유가 없다 — 영역 안에 후보가 정말 하나도 없을 때만
+    // (첫 조회부터 빈 결과) 참이 된다.
+    return result.exhausted && result.markers.isEmpty;
   }
 
   /// 새 조회 결과를 기존 마커에 **더한다**.
