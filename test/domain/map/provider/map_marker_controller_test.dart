@@ -95,6 +95,44 @@ final class FailingRepository implements MapRepository {
       throw UnimplementedError(invocation.memberName.toString());
 }
 
+/// 조회 bbox 전체에 고르게 퍼진 [total]곳. 화면보다 넓은 영역을 조회하면 상당수가
+/// 화면 밖이라, 화면 밖 후보를 건너뛰지 못하면 아무것도 못 그린다.
+final class FakeSpreadRepository implements MapRepository {
+  FakeSpreadRepository(this.total);
+
+  final int total;
+
+  @override
+  Future<MapRecommendationResult> fetchRecommendedSpots({
+    required MapBounds bbox,
+    required List<String> excludedIds,
+    int? first,
+  }) async {
+    final List<MapMarker> all = <MapMarker>[
+      for (int i = 0; i < total; i++)
+        MapMarker(
+          id: 'v$i',
+          name: 'v$i',
+          latitude: bbox.minLat + (i % 10) * bbox.latSpan / 10,
+          longitude: bbox.minLng + (i ~/ 10) * bbox.lngSpan / 10,
+          kind: MapMarkerKind.spot,
+        ),
+    ];
+    final List<MapMarker> take = all
+        .where((MapMarker m) => !excludedIds.contains(m.id))
+        .take(first ?? 10)
+        .toList();
+    return MapRecommendationResult(
+      markers: take,
+      exhausted: take.length < (first ?? 10),
+    );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError(invocation.memberName.toString());
+}
+
 void main() {
   const MapBounds visible = MapBounds(
     minLat: 37.50,
@@ -601,6 +639,76 @@ void main() {
       }
 
       expect(seen, hasLength(12), reason: '영영 안 나오는 장소가 있다');
+    });
+  });
+
+  /// 실기기 지적(2026-09-18): 화면에 마커가 있는데도 새로고침이 전혀 듣지 않았다.
+  ///
+  /// **조회 bbox는 화면보다 넓다**(1.2배). 서버가 앞에서부터 주는 한 묶음이 통째로
+  /// 화면 밖일 수 있는데, 화면 밖이라 그리지 못한 장소를 기록하지 않으면 다음 조회에
+  /// 같은 것이 또 오고 또 버려진다 — 실측으로 화면이 0개에 고정됐다.
+  ///
+  /// 앞의 테스트들은 조회 bbox와 화면을 같게 두어 이 경로를 못 잡았다.
+  group('조회 영역이 화면보다 넓을 때', () {
+    const MapBounds screen = MapBounds(
+      minLat: 37.50,
+      minLng: 127.00,
+      maxLat: 37.52,
+      maxLng: 127.02,
+    );
+
+    test('첫 조회가 화면 밖만 줘도 화면이 채워진다', () async {
+      final ProviderContainer c = ProviderContainer(
+        overrides: [
+          mapRepositoryProvider.overrideWithValue(FakeSpreadRepository(100)),
+        ],
+      );
+      addTearDown(c.dispose);
+
+      await c
+          .read(mapMarkerControllerProvider.notifier)
+          .loadNextBatch(
+            bbox: screen.expanded(),
+            visible: screen,
+            batchSize: MapTuning.markersPerBatch,
+          );
+
+      expect(
+        c.read(mapMarkerControllerProvider),
+        isNotEmpty,
+        reason: '화면 밖 후보에 막혀 아무것도 못 그렸다',
+      );
+    });
+
+    test('누를 때마다 화면이 바뀐다', () async {
+      final ProviderContainer c = ProviderContainer(
+        overrides: [
+          mapRepositoryProvider.overrideWithValue(FakeSpreadRepository(100)),
+        ],
+      );
+      addTearDown(c.dispose);
+      final MapMarkerController controller = c.read(
+        mapMarkerControllerProvider.notifier,
+      );
+
+      List<String> previous = const <String>[];
+      int stuck = 0;
+      for (int r = 0; r < 10; r++) {
+        await controller.loadNextBatch(
+          bbox: screen.expanded(),
+          visible: screen,
+          batchSize: MapTuning.markersPerBatch,
+        );
+        final List<String> ids = c
+            .read(mapMarkerControllerProvider)
+            .map((MapMarker m) => m.id)
+            .toList();
+        if (ids.join(',') == previous.join(',')) stuck++;
+        expect(ids.toSet(), hasLength(ids.length), reason: '중복됐다');
+        previous = ids;
+      }
+
+      expect(stuck, 0, reason: '새로고침이 듣지 않는 회차가 있다');
     });
   });
 
