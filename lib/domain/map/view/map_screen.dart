@@ -386,11 +386,18 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       // 화면 판정(마커 게이트)은 접지 않은 실제 줌을 쓴다.
       final int serverZoom = MapTuning.clampForServer(zoomLevel);
 
-      // **두 조회를 함께 부른다**(SPEC-0036).
+      // **두 조회를 함께 부르되, 서로의 실패에 끌려가지 않는다**(SPEC-0036).
       //
       // spot은 추천 순서로(`loadNextBatch`, FR-001), 문화행사는 기존 뷰포트 조회로
       // 받는다 — 행사는 이 변경의 대상이 아니라 그대로 표시되어야 하고(FR-012),
       // 추천 쿼리는 spot만 준다. 순차로 부르면 왕복이 두 번이라 병렬로 둔다.
+      //
+      // **`.wait`를 쓰지 않는다.** 그것은 한쪽이 실패하면 성공한 쪽의 결과까지
+      // 버리는데, 여기서는 추천이 실패했다고 행사 마커까지 사라진다는 뜻이 된다 —
+      // 실제로 서버에 `mapRecommendedSpots`가 배포되기 전 실기기에서 지도가 통째로
+      // 비었다(2026-09-18). 혼잡도가 죽어도 마커는 보여야 한다는 R29와 같은 원칙이며,
+      // 이쪽이 더 중요하다: 행사는 이 스펙의 **범위 밖**이라 추천의 사정으로 사라질
+      // 이유가 없다.
       //
       // **제외 목록은 컨트롤러가 들고 서버에 보낸다**(FR-004) — 화면은 관여하지
       // 않는다.
@@ -398,39 +405,62 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         mapMarkerControllerProvider.notifier,
       );
 
-      final (bool exhausted, MapViewportResult viewport) = await (
-        controller.loadNextBatch(
-          bbox: bbox,
-          visible: visible,
-          batchSize: MapTuning.markersPerBatch,
-        ),
-        ref.read(mapViewportProvider(bbox, serverZoom).future),
-      ).wait;
+      // **핸들러를 `await`보다 먼저 붙인다.** 두 Future를 만들어 두고 순차로
+      // 기다리면, 먼저 실패한 쪽의 오류를 아직 아무도 잡지 않은 상태가 생겨 zone으로
+      // 샌다(실측 확인). `catchError`로 그 자리에서 실패를 값으로 바꿔 둔다.
+      final Future<Object?> recommended = controller
+          .loadNextBatch(
+            bbox: bbox,
+            visible: visible,
+            batchSize: MapTuning.markersPerBatch,
+          )
+          .then<Object?>((bool exhausted) => exhausted)
+          .catchError((Object error, StackTrace stackTrace) {
+            _log.w('추천 조회 실패', error: error, stackTrace: stackTrace);
+            return null;
+          });
+      final Future<MapViewportResult?> events =
+          ref
+              .read(mapViewportProvider(bbox, serverZoom).future)
+              .then<MapViewportResult?>((MapViewportResult r) => r)
+              .catchError((Object error, StackTrace stackTrace) {
+                _log.w('문화행사 조회 실패', error: error, stackTrace: stackTrace);
+                return null;
+              });
+
+      final (Object? exhausted, MapViewportResult? viewport) = (
+        await recommended,
+        await events,
+      );
       if (!mounted || generation != _markerGeneration) return;
 
-      // 문화행사만 따로 흡수한다. 추천 spot은 위에서 이미 들어갔다.
-      controller.absorb(
-        MapViewportResult(
-          markers: viewport.markers
-              .where((MapMarker m) => m.kind != MapMarkerKind.spot)
-              .toList(),
-          truncated: viewport.truncated,
-        ),
-        visible,
-      );
+      // 문화행사. 추천이 실패해도 그대로 그린다 — 이 스펙의 범위 밖이라 추천의
+      // 사정으로 사라질 이유가 없다(FR-012).
+      if (viewport != null) {
+        controller.absorb(
+          MapViewportResult(
+            markers: viewport.markers
+                .where((MapMarker m) => m.kind != MapMarkerKind.spot)
+                .toList(),
+            truncated: viewport.truncated,
+          ),
+          visible,
+        );
+      }
 
-      // **소진은 서버가 말해 준다**(SPEC-0036 FR-009). 요청한 수보다 적게 왔을 때만
-      // 참이다.
-      //
-      // 「제외한 뒤 새 장소가 0개」로 판정하면 안 된다 — SPEC-0035에서 실제로 터진
-      // 가짜 소진이다(요청 수와 표시 수를 같게 뒀더니 응답 전체가 이미 본 것과 겹쳐
-      // 열 장 만에 소진 화면이 떴다).
-      //
-      // 조회가 실패하면 이 줄에 닿지 않으므로 소진으로 넘어가지 않는다 — 네트워크
-      // 오류를 「더 볼 것이 없음」으로 읽으면 버튼이 영영 사라진다.
-      if (exhausted != _areaExhausted) {
+      // **실패를 소진으로 읽지 않는다**(FR-009). 실패하면 `_areaExhausted`를 건드리지
+      // 않으므로 재검색 버튼이 살아 있다 — 네트워크 오류를 「더 볼 것이 없음」으로
+      // 읽으면 버튼이 영영 사라진다.
+      if (exhausted is bool && exhausted != _areaExhausted) {
         setState(() => _areaExhausted = exhausted);
       }
+
+      final bool anyLoaded = viewport != null || exhausted is bool;
+
+      if (!mounted || generation != _markerGeneration) return;
+      // 둘 다 실패했으면 받아 둔 것이 없다 — 아래에서 영역을 기록하지 않아야
+      // 재조회가 막히지 않는다.
+      if (!anyLoaded) return;
 
       // 여기까지 왔을 때만 "받아 뒀다"로 기록한다 — 실패했는데 기록하면 재조회가
       // 영영 막힌다.

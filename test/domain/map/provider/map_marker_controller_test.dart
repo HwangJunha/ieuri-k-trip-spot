@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/map_bounds.dart';
+import 'package:ieuri_k_trip_spot/domain/map/model/map_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/map_marker.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/map_tuning.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/map_recommendation_result.dart';
@@ -13,10 +14,13 @@ import 'package:ieuri_k_trip_spot/domain/map/repository/map_repository.dart';
 /// 검색으로 찾은 곳은 어떤 경우에도 남아야 한다.
 /// 정해진 추천 결과만 답하는 repository. 나머지 연산은 이 테스트가 건드리지 않는다.
 final class FakeMapRepository implements MapRepository {
-  FakeMapRepository(this.markers, {this.exhausted = false});
+  FakeMapRepository(this.markers, {this.exhausted = false, this.failure});
 
   final List<MapMarker> markers;
   final bool exhausted;
+
+  /// 던지게 할 오류. 서버에 아직 배포되지 않은 필드를 부르는 상황을 세운다.
+  final Object? failure;
 
   List<String>? lastExcluded;
   int? lastFirst;
@@ -31,6 +35,7 @@ final class FakeMapRepository implements MapRepository {
     lastBbox = bbox;
     lastExcluded = excludedIds;
     lastFirst = first;
+    if (failure != null) throw failure!;
     return MapRecommendationResult(markers: markers, exhausted: exhausted);
   }
 
@@ -367,6 +372,47 @@ void main() {
         ),
         isTrue,
       );
+    });
+
+    /// 서버에 `mapRecommendedSpots`가 아직 배포되지 않으면 이 조회가 실패한다
+    /// (실기기 2026-09-18, `FieldUndefined`). 그때 **실패를 그대로 던져야** 화면이
+    /// 문화행사를 따로 그리고 소진 판정을 건드리지 않을 수 있다 — 여기서 삼키고
+    /// 「소진」이나 「빈 결과」로 바꾸면 화면이 그 둘을 구분할 수 없다(FR-009).
+    test('조회가 실패하면 삼키지 않고 던진다', () async {
+      final FakeMapRepository repository = FakeMapRepository(
+        const <MapMarker>[],
+        failure: MapFailure.network,
+      );
+      final MapMarkerController controller = withRepository(
+        repository,
+      ).read(mapMarkerControllerProvider.notifier);
+
+      await expectLater(
+        () => controller.loadNextBatch(
+          bbox: bbox,
+          visible: visible,
+          batchSize: 10,
+        ),
+        throwsA(isA<MapFailure>()),
+      );
+    });
+
+    /// 실패한 조회가 표시 기록을 더럽히면, 서버가 복구된 뒤 그 장소들을 영영 못
+    /// 본다(FR-004).
+    test('실패한 조회는 표시 기록을 남기지 않는다', () async {
+      final FakeMapRepository repository = FakeMapRepository(
+        const <MapMarker>[],
+        failure: MapFailure.network,
+      );
+      final MapMarkerController controller = withRepository(
+        repository,
+      ).read(mapMarkerControllerProvider.notifier);
+
+      await controller
+          .loadNextBatch(bbox: bbox, visible: visible, batchSize: 10)
+          .onError((Object? error, StackTrace stack) => false);
+
+      expect(controller.servedSpotIds, isEmpty);
     });
 
     test('요청한 묶음 크기를 그대로 보낸다', () async {
