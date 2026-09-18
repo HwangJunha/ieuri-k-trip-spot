@@ -434,6 +434,81 @@ void main() {
     });
   });
 
+  /// 사용자 요청(2026-09-18): 「한도에 도달했으면 새로운 데이터가 화면을 차지해야
+  /// 한다. 기존 데이터는 사라지고.」 새것이 막혀 버려지면 추천하려다 추천하지 않는
+  /// 것이 된다.
+  group('보관 상한 (FIFO)', () {
+    /// 격자 16칸에 골고루 퍼뜨린 한 배치 — 솎이지 않고 최대치가 들어간다.
+    MapViewportResult spread(MapBounds area, String prefix, int start) =>
+        MapViewportResult(
+          markers: <MapMarker>[
+            for (int i = 0; i < 16; i++)
+              markerAt(
+                '$prefix${start + i}',
+                area.minLat + 0.0012 + (i % 4) * 0.0048,
+                area.minLng + 0.0012 + (i ~/ 4) * 0.0048,
+              ),
+          ],
+          truncated: false,
+        );
+
+    test('상한을 넘으면 오래된 것이 밀려나고 새것이 남는다', () {
+      final ProviderContainer c = container();
+      final MapMarkerController controller = c.read(
+        mapMarkerControllerProvider.notifier,
+      );
+
+      int id = 0;
+      for (int r = 0; r < 8; r++) {
+        controller.absorb(spread(visible, 'm', id), visible);
+        id += 100;
+      }
+
+      final List<String> ids = c
+          .read(mapMarkerControllerProvider)
+          .map((MapMarker m) => m.id)
+          .toList();
+
+      expect(ids, hasLength(MapTuning.maxRetainedMarkers));
+      expect(ids, contains('m700'), reason: '방금 받은 추천이 버려졌다');
+      expect(ids, isNot(contains('m0')), reason: '오래된 것이 안 밀려났다');
+    });
+
+    /// 이전 지역 마커가 상한을 채우고 있어도 새 지역 추천이 들어와야 한다.
+    test('다른 지역으로 옮겨도 새 추천이 자리를 차지한다', () {
+      const MapBounds elsewhere = MapBounds(
+        minLat: 38.00,
+        minLng: 128.00,
+        maxLat: 38.02,
+        maxLng: 128.02,
+      );
+
+      final ProviderContainer c = container();
+      final MapMarkerController controller = c.read(
+        mapMarkerControllerProvider.notifier,
+      );
+
+      int id = 0;
+      for (int r = 0; r < 6; r++) {
+        controller.absorb(spread(visible, 'a', id), visible);
+        id += 100;
+      }
+      controller.absorb(spread(elsewhere, 'b', 0), elsewhere);
+
+      final List<String> ids = c
+          .read(mapMarkerControllerProvider)
+          .map((MapMarker m) => m.id)
+          .toList();
+
+      expect(ids, hasLength(MapTuning.maxRetainedMarkers));
+      expect(
+        ids.where((String x) => x.startsWith('b')),
+        isNotEmpty,
+        reason: '새 지역 추천이 상한에 막혀 버려졌다',
+      );
+    });
+  });
+
   group('검색 결과 고정 (pin)', () {
     test('고정한 마커가 맨 앞에 온다', () {
       final ProviderContainer c = container();
