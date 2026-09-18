@@ -110,8 +110,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   /// 움직였는지는 화면 크기를 기준으로 재야 체감과 맞는다.
   MapBounds? _lastVisibleArea;
 
-  /// "이 지역 재검색"을 띄울 것인가. 마커를 받아 둔 영역을 벗어났을 때 참이 된다.
-  bool _canSearchHere = false;
 
   /// 그 버튼으로 조회하는 중인가. 연타로 요청이 겹치면 나중 응답이 먼저 온 것을
   /// 덮어 마커가 튄다.
@@ -590,16 +588,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     // 죽은 것처럼 보였다(실기기 지적 — 반포까지 갔는데 화면이 텅 빔). 첫 진입도
     // 같은 경로를 탄다 — 그때도 화면이 비어 있다.
     if (moved || _hasNoMarkerOnScreen(visible)) {
-      _searchAgainTimer?.cancel();
-      // **새 영역이면 소진을 푼다**(FR-008은 영역 단위다). 앞 영역을 다 봤다고
-      // 다음 영역까지 막으면 지도를 옮겨도 버튼이 돌아오지 않는다.
-      if (_areaExhausted) setState(() => _areaExhausted = false);
       await _searchMarkersHere(visible, zoomLevel);
-      return;
     }
-
-    // 같은 영역이다. 버튼은 조회 뒤 쿨다운이 지나면 스스로 뜬다
-    // (→[_searchMarkersHere]) — 여기서 억지로 띄우지 않는다.
   }
 
   /// 마지막으로 받아 둔 곳에서 **새 영역으로 볼 만큼** 움직였는가
@@ -783,30 +773,14 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
       await _loadMarkers(bbox, visible, zoomLevel, ++_markerGeneration);
     } finally {
+      // **버튼은 늘 살아 있다**(사용자 결정 2026-09-18).
+      //
+      // 예전에는 조회 뒤 3초 쿨다운을 두고, 후보가 소진되면 아예 띄우지 않았다.
+      // 그런데 「더 볼 것이 없다」는 판정이 실제와 자주 어긋나 버튼이 사라진 채
+      // 돌아오지 않았고, 사용자는 기능이 죽은 것으로 받아들였다. 눌러서 아무것도
+      // 안 들어오는 편이 눌러 볼 수단이 없는 것보다 낫다.
       if (mounted) {
-        setState(() {
-          _isSearchingArea = false;
-          _canSearchHere = false;
-        });
-
-        // 같은 자리에 머물러도 잠시 뒤 **다음 장소**를 받아 볼 수 있게 한다
-        // (사용자 요청 2026-08-10, SPEC-0036 FR-003).
-        //
-        // **후보가 소진되면 다시 띄우지 않는다**(FR-008). 안내를 띄우는 대신 요청할
-        // 수단만 사라진다 — 누적된 마커가 화면에 남아 있어 빈 화면이 되지 않는다.
-        //
-        // **화면에 아무것도 없으면 그 전제가 깨진다.** 스펙이 안내를 생략한 근거가
-        // 「이미 표시된 장소가 남아 있어 화면이 비지 않는다」이므로, 정말 비어 있다면
-        // 버튼까지 사라져 아무 수단도 없는 화면이 된다 — 멀리 이동했을 때 마커가
-        // 하나도 없어 기능이 죽은 것처럼 보이던 실기기 지적과 같은 모양이다.
-        // 그때는 소진이어도 버튼을 남긴다.
-        if (!_areaExhausted || _hasNoMarkerOnScreen(visible)) {
-          _searchAgainTimer = Timer(MapTuning.searchAgainDelay, () {
-            if (mounted && !_isSearchingArea) {
-              setState(() => _canSearchHere = true);
-            }
-          });
-        }
+        setState(() => _isSearchingArea = false);
       }
     }
   }
@@ -1085,8 +1059,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           //
           // 하단 중앙에 알약으로 띄웠더니 시선을 뺏고 지도를 가렸다. 우상단은 범례
           // (좌측)와 겹치지 않고, 새로고침이 널리 통하는 기호라 아이콘만으로 충분하다.
-          if (_canSearchHere || _isSearchingArea)
-            Positioned(
+          Positioned(
               right: 12,
               top: 0,
               child: RepaintBoundary(

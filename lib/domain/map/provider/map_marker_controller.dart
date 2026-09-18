@@ -72,9 +72,20 @@ class MapMarkerController extends _$MapMarkerController {
     // 심해진다(실측: 확대 후 보관 0개, 아무리 눌러도 안 들어옴).
     //
     // 화면으로 조회하면 받은 것이 전부 그릴 수 있는 추천이다.
+    // **제외는 지금 화면에 떠 있는 것만이다**(사용자 결정 2026-09-18).
+    //
+    // 표시 기록을 세션 내내 쌓으면, 화면 밖으로 나가 더는 보이지 않는 장소까지 계속
+    // 제외되어 **결국 서버가 줄 것이 없어진다** — 새로고침을 눌러도 아무것도 안
+    // 들어오던 원인이다. 「이미 봤다」의 범위는 사용자가 지금 보고 있는 화면이다.
+    final List<String> onScreen = state
+        .where((MapMarker m) => m.kind == MapMarkerKind.spot)
+        .where((MapMarker m) => _isInside(m, visible))
+        .map((MapMarker m) => m.id)
+        .toList();
+
     final MapRecommendationResult result = await repository.fetchRecommendedSpots(
       bbox: visible,
-      excludedIds: servedSpotIds,
+      excludedIds: onScreen,
       first: batchSize,
     );
 
@@ -153,6 +164,13 @@ class MapMarkerController extends _$MapMarkerController {
     state = next;
     return true;
   }
+
+  /// [bounds] 안에 있는가.
+  static bool _isInside(MapMarker m, MapBounds bounds) =>
+      m.latitude >= bounds.minLat &&
+      m.latitude <= bounds.maxLat &&
+      m.longitude >= bounds.minLng &&
+      m.longitude <= bounds.maxLng;
 
   /// 이미 표시한 적 있는 장소인가. 고정한 마커도 후보에서 뺀다 — 재검색 때 강조가
   /// 꺼진 같은 장소가 새로 들어오면 빨간 테두리가 사라진다.
