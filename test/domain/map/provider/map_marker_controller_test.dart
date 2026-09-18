@@ -44,95 +44,6 @@ final class FakeMapRepository implements MapRepository {
       throw UnimplementedError(invocation.memberName.toString());
 }
 
-/// 영역 안에 [total]곳이 있고 제외 목록을 존중하는 서버. 순환 동작을 본다.
-final class FakeCyclingRepository implements MapRepository {
-  FakeCyclingRepository(this.total);
-
-  final int total;
-
-  @override
-  Future<MapRecommendationResult> fetchRecommendedSpots({
-    required MapBounds bbox,
-    required List<String> excludedIds,
-    int? first,
-  }) async {
-    final List<MapMarker> all = <MapMarker>[
-      for (int i = 0; i < total; i++)
-        MapMarker(
-          id: 's$i',
-          name: 's$i',
-          latitude: 37.505 + i * 0.0008,
-          longitude: 127.005 + i * 0.0008,
-          kind: MapMarkerKind.spot,
-        ),
-    ];
-    final List<MapMarker> take = all
-        .where((MapMarker m) => !excludedIds.contains(m.id))
-        .take(first ?? 10)
-        .toList();
-    return MapRecommendationResult(
-      markers: take,
-      exhausted: take.length < (first ?? 10),
-    );
-  }
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) =>
-      throw UnimplementedError(invocation.memberName.toString());
-}
-
-/// 항상 실패하는 repository. 실패가 삼켜지지 않는지 본다.
-final class FailingRepository implements MapRepository {
-  @override
-  Future<MapRecommendationResult> fetchRecommendedSpots({
-    required MapBounds bbox,
-    required List<String> excludedIds,
-    int? first,
-  }) async => throw MapFailure.network;
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) =>
-      throw UnimplementedError(invocation.memberName.toString());
-}
-
-/// 조회 bbox 전체에 고르게 퍼진 [total]곳. 화면보다 넓은 영역을 조회하면 상당수가
-/// 화면 밖이라, 화면 밖 후보를 건너뛰지 못하면 아무것도 못 그린다.
-final class FakeSpreadRepository implements MapRepository {
-  FakeSpreadRepository(this.total);
-
-  final int total;
-
-  @override
-  Future<MapRecommendationResult> fetchRecommendedSpots({
-    required MapBounds bbox,
-    required List<String> excludedIds,
-    int? first,
-  }) async {
-    final List<MapMarker> all = <MapMarker>[
-      for (int i = 0; i < total; i++)
-        MapMarker(
-          id: 'v$i',
-          name: 'v$i',
-          latitude: bbox.minLat + (i % 10) * bbox.latSpan / 10,
-          longitude: bbox.minLng + (i ~/ 10) * bbox.lngSpan / 10,
-          kind: MapMarkerKind.spot,
-        ),
-    ];
-    final List<MapMarker> take = all
-        .where((MapMarker m) => !excludedIds.contains(m.id))
-        .take(first ?? 10)
-        .toList();
-    return MapRecommendationResult(
-      markers: take,
-      exhausted: take.length < (first ?? 10),
-    );
-  }
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) =>
-      throw UnimplementedError(invocation.memberName.toString());
-}
-
 void main() {
   const MapBounds visible = MapBounds(
     minLat: 37.50,
@@ -402,193 +313,86 @@ void main() {
 
   /// SPEC-0036 S4. 「다음 장소」는 이미 표시한 것을 서버에 제외 목록으로 보내
   /// 받아 온다 — 커서도 오프셋도 없다(POL-037).
-  /// 실기기 지적(2026-09-18): 「끝에 도달했을 때는 처음부터 다시 순회해야 하는 것
-  /// 아닌가」. 예전에는 소진 판정이 한 번 서면 재검색 수단이 사라지고, 지도를 크게
-  /// 움직이기 전까지 돌아오지 않았다.
-  group('영역을 다 돌면 다시 순회한다', () {
-    const MapBounds wide = MapBounds(
-      minLat: 37.50,
-      minLng: 127.00,
-      maxLat: 37.56,
-      maxLng: 127.06,
+  group('다음 묶음 조회 (loadNextBatch)', () {
+    const MapBounds bbox = MapBounds(
+      minLat: 37.49,
+      minLng: 126.99,
+      maxLat: 37.53,
+      maxLng: 127.03,
     );
 
-    ProviderContainer withRepo(FakeCyclingRepository r) {
+    ProviderContainer withRepository(FakeMapRepository repository) {
       final ProviderContainer c = ProviderContainer(
-        overrides: [mapRepositoryProvider.overrideWithValue(r)],
+        overrides: [mapRepositoryProvider.overrideWithValue(repository)],
       );
       addTearDown(c.dispose);
       return c;
     }
 
-    /// 후보가 상한보다 많으면 순환이 계속된다 — 더 보기 수단이 사라지지 않는다.
-    test('후보가 상한보다 많으면 소진으로 보고하지 않는다', () async {
-      final FakeCyclingRepository repo = FakeCyclingRepository(50);
-      final MapMarkerController controller = withRepo(
-        repo,
+    /// FR-004. 두 번째 요청에 첫 묶음이 제외로 실려야 「다음」이 된다.
+    test('앞서 표시한 장소를 제외 목록으로 보낸다', () async {
+      final FakeMapRepository repository = FakeMapRepository(<MapMarker>[
+        markerAt('a', 37.5025, 127.0025),
+        markerAt('b', 37.5175, 127.0175),
+      ]);
+      final MapMarkerController controller = withRepository(
+        repository,
       ).read(mapMarkerControllerProvider.notifier);
 
-      bool exhausted = false;
-      for (int r = 0; r < 7; r++) {
-        exhausted = await controller.loadNextBatch(
-          bbox: wide,
-          visible: wide,
-          batchSize: MapTuning.markersPerBatch,
-        );
-      }
+      await controller.loadNextBatch(
+        bbox: bbox,
+        visible: visible,
+        batchSize: 2,
+      );
+      expect(repository.lastExcluded, isEmpty, reason: '첫 요청은 제외가 없다');
 
-      expect(exhausted, isFalse, reason: '더 볼 수 있는데 수단이 사라졌다');
+      await controller.loadNextBatch(
+        bbox: bbox,
+        visible: visible,
+        batchSize: 2,
+      );
+      expect(repository.lastExcluded, containsAll(<String>['a', 'b']));
     });
 
-    /// 다시 돌 때 이미 떠 있는 장소를 또 받으면 같은 사진이 겹쳐 박힌다.
-    test('다시 순회해도 같은 마커가 겹쳐 쌓이지 않는다', () async {
-      final ProviderContainer c = withRepo(FakeCyclingRepository(50));
-      final MapMarkerController controller = c.read(
-        mapMarkerControllerProvider.notifier,
-      );
+    /// FR-009. 판정은 서버가 준 수로 한다 — 격자에 솎여 못 그린 장소는 제외 목록에
+    /// 없어 다음 요청에 다시 오므로, 그린 수로 판정하면 가짜 소진이다.
+    test('소진 여부를 그대로 전한다', () async {
+      final FakeMapRepository exhausted = FakeMapRepository(<MapMarker>[
+        markerAt('a', 37.505, 127.005),
+      ], exhausted: true);
+      final MapMarkerController controller = withRepository(
+        exhausted,
+      ).read(mapMarkerControllerProvider.notifier);
 
-      for (int r = 0; r < 7; r++) {
-        await controller.loadNextBatch(
-          bbox: wide,
-          visible: wide,
-          batchSize: MapTuning.markersPerBatch,
-        );
-      }
-
-      final List<String> ids = c
-          .read(mapMarkerControllerProvider)
-          .map((MapMarker m) => m.id)
-          .toList();
-      expect(ids.toSet(), hasLength(ids.length), reason: '같은 장소가 중복됐다');
-    });
-
-    /// 실기기 지적(2026-09-18): 「이게 빠지는 게 전체 지도에서야, 내가 보는 화면에서야?
-    /// 화면에서만으로 이야기한 건데」.
-    ///
-    /// 다른 지역을 돌아다니며 쌓인 **화면 밖** 마커까지 제외하면, 이 화면에서 아무리
-    /// 새로고침해도 들어올 것이 없다(실측: 화면 안이 20개에서 더 안 바뀌었다).
-    test('화면 밖 마커는 이 화면의 순회를 막지 않는다', () async {
-      const MapBounds elsewhere = MapBounds(
-        minLat: 38.00,
-        minLng: 128.00,
-        maxLat: 38.02,
-        maxLng: 128.02,
-      );
-
-      final ProviderContainer c = withRepo(FakeCyclingRepository(100));
-      final MapMarkerController controller = c.read(
-        mapMarkerControllerProvider.notifier,
-      );
-
-      // 다른 지역을 돌아다녀 화면 밖 마커를 쌓아 둔 상황.
-      controller.absorb(
-        MapViewportResult(
-          markers: <MapMarker>[
-            for (int i = 0; i < 10; i++)
-              markerAt('far$i', 38.002 + i * 0.0015, 128.002),
-          ],
-          truncated: false,
-        ),
-        elsewhere,
-      );
-
-      final Set<String> seen = <String>{};
-      for (int r = 0; r < 8; r++) {
-        await controller.loadNextBatch(
-          bbox: wide,
-          visible: wide,
-          batchSize: MapTuning.markersPerBatch,
-        );
-        seen.addAll(
-          c.read(mapMarkerControllerProvider).map((MapMarker m) => m.id),
-        );
-      }
-
-      // 여덟 번 눌렀으면 그만큼 새 장소를 봤어야 한다.
       expect(
-        seen.where((String id) => id.startsWith('s')),
-        hasLength(greaterThan(MapTuning.maxRetainedMarkers)),
-        reason: '화면 밖 마커에 막혀 새 장소가 안 들어온다',
-      );
-    });
-
-    /// 실기기 지적(2026-09-18): 「이 상태에서 계속 새로고침을 하는데 바뀌는 게
-    /// 하나도 없다」.
-    ///
-    /// 표시 기록을 쌓아 두기만 하면, 화면 밖으로 밀려나 더 보이지 않는 장소까지 계속
-    /// 제외되어 서버가 줄 후보가 마른다 — 화면에는 30개뿐인데 제외 목록이 48개로
-    /// 자라 새로고침만 돌고 화면은 고정됐다(실측).
-    test('누를 때마다 화면이 바뀐다', () async {
-      final ProviderContainer c = withRepo(FakeCyclingRepository(100));
-      final MapMarkerController controller = c.read(
-        mapMarkerControllerProvider.notifier,
-      );
-
-      List<String> previous = const <String>[];
-      int stuck = 0;
-      for (int r = 0; r < 12; r++) {
         await controller.loadNextBatch(
-          bbox: wide,
-          visible: wide,
-          batchSize: MapTuning.markersPerBatch,
-        );
-        final List<String> ids = c
-            .read(mapMarkerControllerProvider)
-            .map((MapMarker m) => m.id)
-            .toList();
-        if (ids.join(',') == previous.join(',')) stuck++;
-        previous = ids;
-      }
-
-      expect(stuck, 0, reason: '새로고침해도 화면이 그대로인 회차가 있다');
-    });
-
-    /// 화면 안 후보가 상한보다 적어도 가장 오래된 것부터 교체되어 계속 돈다.
-    test('후보가 상한보다 적어도 계속 바뀐다', () async {
-      final ProviderContainer c = withRepo(FakeCyclingRepository(25));
-      final MapMarkerController controller = c.read(
-        mapMarkerControllerProvider.notifier,
+          bbox: bbox,
+          visible: visible,
+          batchSize: 10,
+        ),
+        isTrue,
       );
-
-      List<String> previous = const <String>[];
-      int stuck = 0;
-      for (int r = 0; r < 10; r++) {
-        await controller.loadNextBatch(
-          bbox: wide,
-          visible: wide,
-          batchSize: MapTuning.markersPerBatch,
-        );
-        final List<String> ids = c
-            .read(mapMarkerControllerProvider)
-            .map((MapMarker m) => m.id)
-            .toList();
-        if (ids.join(',') == previous.join(',')) stuck++;
-        expect(ids.toSet(), hasLength(ids.length), reason: '같은 장소가 중복됐다');
-        previous = ids;
-      }
-
-      expect(stuck, 0);
     });
 
-    /// 서버에 필드가 아직 없거나 네트워크가 끊기면 이 조회가 실패한다. 그때
-    /// **실패를 그대로 던져야** 화면이 소진 판정을 건드리지 않는다 — 여기서 삼키고
+    /// 서버에 `mapRecommendedSpots`가 아직 배포되지 않으면 이 조회가 실패한다
+    /// (실기기 2026-09-18, `FieldUndefined`). 그때 **실패를 그대로 던져야** 화면이
+    /// 문화행사를 따로 그리고 소진 판정을 건드리지 않을 수 있다 — 여기서 삼키고
     /// 「소진」이나 「빈 결과」로 바꾸면 화면이 그 둘을 구분할 수 없다(FR-009).
     test('조회가 실패하면 삼키지 않고 던진다', () async {
-      final ProviderContainer c = ProviderContainer(
-        overrides: [
-          mapRepositoryProvider.overrideWithValue(FailingRepository()),
-        ],
+      final FakeMapRepository repository = FakeMapRepository(
+        const <MapMarker>[],
+        failure: MapFailure.network,
       );
-      addTearDown(c.dispose);
+      final MapMarkerController controller = withRepository(
+        repository,
+      ).read(mapMarkerControllerProvider.notifier);
 
       await expectLater(
-        () => c
-            .read(mapMarkerControllerProvider.notifier)
-            .loadNextBatch(
-              bbox: wide,
-              visible: wide,
-              batchSize: MapTuning.markersPerBatch,
-            ),
+        () => controller.loadNextBatch(
+          bbox: bbox,
+          visible: visible,
+          batchSize: 10,
+        ),
         throwsA(isA<MapFailure>()),
       );
     });
@@ -596,119 +400,37 @@ void main() {
     /// 실패한 조회가 표시 기록을 더럽히면, 서버가 복구된 뒤 그 장소들을 영영 못
     /// 본다(FR-004).
     test('실패한 조회는 표시 기록을 남기지 않는다', () async {
-      final ProviderContainer c = ProviderContainer(
-        overrides: [
-          mapRepositoryProvider.overrideWithValue(FailingRepository()),
-        ],
+      final FakeMapRepository repository = FakeMapRepository(
+        const <MapMarker>[],
+        failure: MapFailure.network,
       );
-      addTearDown(c.dispose);
-      final MapMarkerController controller = c.read(
-        mapMarkerControllerProvider.notifier,
-      );
+      final MapMarkerController controller = withRepository(
+        repository,
+      ).read(mapMarkerControllerProvider.notifier);
 
       await controller
-          .loadNextBatch(
-            bbox: wide,
-            visible: wide,
-            batchSize: MapTuning.markersPerBatch,
-          )
+          .loadNextBatch(bbox: bbox, visible: visible, batchSize: 10)
           .onError((Object? error, StackTrace stack) => false);
 
       expect(controller.servedSpotIds, isEmpty);
     });
 
-    /// 후보가 아주 적어도 가장 오래된 것부터 교체되어 계속 돈다 — 한 묶음을 통째로
-    /// 비우면 제외 목록까지 비어 서버가 맨 앞을 그대로 돌려주므로, 화면의 절반까지만
-    /// 비운다(실측: 후보 12곳에서 2곳이 영영 안 나왔다).
-    test('후보가 아주 적어도 전부 볼 수 있다', () async {
-      final ProviderContainer c = withRepo(FakeCyclingRepository(12));
-      final MapMarkerController controller = c.read(
-        mapMarkerControllerProvider.notifier,
+    test('요청한 묶음 크기를 그대로 보낸다', () async {
+      final FakeMapRepository repository = FakeMapRepository(
+        const <MapMarker>[],
+      );
+      final MapMarkerController controller = withRepository(
+        repository,
+      ).read(mapMarkerControllerProvider.notifier);
+
+      await controller.loadNextBatch(
+        bbox: bbox,
+        visible: visible,
+        batchSize: 7,
       );
 
-      final Set<String> seen = <String>{};
-      for (int r = 0; r < 8; r++) {
-        await controller.loadNextBatch(
-          bbox: wide,
-          visible: wide,
-          batchSize: MapTuning.markersPerBatch,
-        );
-        seen.addAll(
-          c.read(mapMarkerControllerProvider).map((MapMarker m) => m.id),
-        );
-      }
-
-      expect(seen, hasLength(12), reason: '영영 안 나오는 장소가 있다');
-    });
-  });
-
-  /// 실기기 지적(2026-09-18): 화면에 마커가 있는데도 새로고침이 전혀 듣지 않았다.
-  ///
-  /// **조회 bbox는 화면보다 넓다**(1.2배). 서버가 앞에서부터 주는 한 묶음이 통째로
-  /// 화면 밖일 수 있는데, 화면 밖이라 그리지 못한 장소를 기록하지 않으면 다음 조회에
-  /// 같은 것이 또 오고 또 버려진다 — 실측으로 화면이 0개에 고정됐다.
-  ///
-  /// 앞의 테스트들은 조회 bbox와 화면을 같게 두어 이 경로를 못 잡았다.
-  group('조회 영역이 화면보다 넓을 때', () {
-    const MapBounds screen = MapBounds(
-      minLat: 37.50,
-      minLng: 127.00,
-      maxLat: 37.52,
-      maxLng: 127.02,
-    );
-
-    test('첫 조회가 화면 밖만 줘도 화면이 채워진다', () async {
-      final ProviderContainer c = ProviderContainer(
-        overrides: [
-          mapRepositoryProvider.overrideWithValue(FakeSpreadRepository(100)),
-        ],
-      );
-      addTearDown(c.dispose);
-
-      await c
-          .read(mapMarkerControllerProvider.notifier)
-          .loadNextBatch(
-            bbox: screen.expanded(),
-            visible: screen,
-            batchSize: MapTuning.markersPerBatch,
-          );
-
-      expect(
-        c.read(mapMarkerControllerProvider),
-        isNotEmpty,
-        reason: '화면 밖 후보에 막혀 아무것도 못 그렸다',
-      );
-    });
-
-    test('누를 때마다 화면이 바뀐다', () async {
-      final ProviderContainer c = ProviderContainer(
-        overrides: [
-          mapRepositoryProvider.overrideWithValue(FakeSpreadRepository(100)),
-        ],
-      );
-      addTearDown(c.dispose);
-      final MapMarkerController controller = c.read(
-        mapMarkerControllerProvider.notifier,
-      );
-
-      List<String> previous = const <String>[];
-      int stuck = 0;
-      for (int r = 0; r < 10; r++) {
-        await controller.loadNextBatch(
-          bbox: screen.expanded(),
-          visible: screen,
-          batchSize: MapTuning.markersPerBatch,
-        );
-        final List<String> ids = c
-            .read(mapMarkerControllerProvider)
-            .map((MapMarker m) => m.id)
-            .toList();
-        if (ids.join(',') == previous.join(',')) stuck++;
-        expect(ids.toSet(), hasLength(ids.length), reason: '중복됐다');
-        previous = ids;
-      }
-
-      expect(stuck, 0, reason: '새로고침이 듣지 않는 회차가 있다');
+      expect(repository.lastFirst, 7);
+      expect(repository.lastBbox, bbox);
     });
   });
 

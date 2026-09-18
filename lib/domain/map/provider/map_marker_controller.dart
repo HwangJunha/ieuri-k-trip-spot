@@ -5,6 +5,7 @@ import '../model/map_marker.dart';
 import '../model/map_recommendation_result.dart';
 import '../model/map_tuning.dart';
 import '../model/map_viewport_result.dart';
+import '../model/marker_thinning.dart';
 import '../repository/map_repository.dart';
 import 'map_providers.dart';
 import '../../auth/provider/session_scope.dart';
@@ -63,93 +64,19 @@ class MapMarkerController extends _$MapMarkerController {
     required MapBounds visible,
     required int batchSize,
   }) async {
-    // **제외 목록을 화면에 떠 있는 것으로 맞춘다**(사용자 정정 2026-09-18).
-    //
-    // 「이미 봤다」의 범위는 사용자가 보고 있는 화면이다. 기록을 그냥 쌓아 두면
-    // 화면 밖으로 밀려나 더 이상 보이지 않는 장소까지 계속 제외되어, 화면에는
-    // 30개뿐인데 제외 목록만 48개로 자라고 새로고침해도 아무것도 안 바뀐다
-    // (실측: 후보 100곳인 화면이 6회차부터 고정됐다).
-    _syncServedToScreen(visible);
-
-    // **보고 있는 화면으로 조회한다**(사용자 결정 2026-09-18).
-    //
-    // 예전에는 화면의 1.2배로 넓혀 조회했다(작은 이동에 재조회가 걸리지 않도록).
-    // 그런데 서버는 그 넓은 영역 기준으로 점수순 앞에서부터 주므로, **받은 추천의
-    // 상당수가 화면 밖이라 버려졌다** — 화면 안 후보에 닿기 전에 왕복만 늘다 결국
-    // 막혔다(실측: 두어 번 바뀌고 고정). 화면으로 조회하면 받은 것이 전부 쓸 수
-    // 있는 추천이다.
-    //
-    // 가장자리가 잠시 빌 수 있지만, 중심이 화면의
-    // [MapTuning.areaChangeFraction]만큼 움직이면 자동으로 다시 받으므로
-    // (→`MapScreen`) 오래 가지 않는다.
     final MapRepository repository = ref.read(mapRepositoryProvider);
-    MapRecommendationResult result = await repository.fetchRecommendedSpots(
-      bbox: visible,
-      excludedIds: servedSpotIds,
-      first: batchSize,
-    );
-
-    // **영역을 다 돌았으면 가장 오래된 것부터 교체한다**(사용자 결정 2026-09-18).
-    //
-    // 예전에는 여기서 끝이었다 — 소진 판정이 서면 재검색 수단이 사라지고, 지도를
-    // 크게 움직이기 전까지 돌아오지 않았다. 한자리에서 계속 둘러보는 사용자에게는
-    // 기능이 죽은 것으로 보인다.
-    //
-    // **화면 안 후보가 상한보다 적으면 그냥 다시 조회해도 소용없다.** 그 후보가 전부
-    // 화면에 떠 있어 제외하고 나면 서버가 줄 것이 없다 — 강남 화면에서 새로고침을
-    // 눌러도 아무것도 안 바뀌던 이유다(실측: 후보 25곳이 25개로 고정).
-    //
-    // 그래서 **화면에서 가장 오래된 한 묶음을 먼저 비운다.** 그만큼 자리가 나므로
-    // 다음 추천이 그 자리에 들어오고, 화면은 서서히 돌아간다. 마커 수는 유지된다.
-    //
-    // 「이미 봤다」의 범위는 **사용자가 보고 있는 화면**이다(사용자 정정). 화면 밖
-    // 마커까지 제외하면 다른 지역을 돌아다닌 뒤 이 화면에서 아무것도 못 받는다.
-    if (result.exhausted) {
-      final List<MapMarker> onScreen = state
-          .where((MapMarker m) => m.kind == MapMarkerKind.spot)
-          .where((MapMarker m) => _isInside(m, visible))
-          .toList();
-
-      // 화면 안에 아무것도 없으면 비울 것도 없다 — 영역 자체가 빈 것이므로 그대로
-      // 소진이다.
-      if (onScreen.isNotEmpty) {
-        // **한 묶음을 통째로 비우지 않는다.** 화면에 딱 한 묶음만 있을 때 전부
-        // 치우면 제외 목록까지 비어, 서버가 맨 앞 열 개를 그대로 돌려준다 — 같은
-        // 열 곳이 영영 반복되고 나머지 후보는 못 본다(실측: 후보 12곳에서 2곳이
-        // 영영 안 나왔다).
-        //
-        // 화면의 절반까지만 비우면 남은 절반이 제외로 남아 서버가 **그 다음**을
-        // 준다. 적어도 하나는 비워야 자리가 생긴다.
-        final int retireCount = (onScreen.length ~/ 2).clamp(1, batchSize);
-
-        // 앞쪽이 오래된 것이다([absorb]가 뒤에 붙인다).
-        final Set<String> retired = onScreen
-            .take(retireCount)
-            .map(_keyOf)
-            .toSet();
-
-        state = state
-            .where((MapMarker m) => !retired.contains(_keyOf(m)))
-            .toList();
-        _syncServedToScreen(visible);
-
-        result = await repository.fetchRecommendedSpots(
-          bbox: visible,
+    final MapRecommendationResult result = await repository
+        .fetchRecommendedSpots(
+          bbox: bbox,
           excludedIds: servedSpotIds,
           first: batchSize,
         );
-      }
-    }
 
     absorb(
       MapViewportResult(markers: result.markers, truncated: false),
       visible,
     );
-
-    // **재순회 뒤에는 소진으로 보고하지 않는다.** 한 바퀴를 다시 돌 수 있다는 뜻이라
-    // 더 보기 수단을 거둘 이유가 없다 — 영역 안에 후보가 정말 하나도 없을 때만
-    // (첫 조회부터 빈 결과) 참이 된다.
-    return result.exhausted && result.markers.isEmpty;
+    return result.exhausted;
   }
 
   /// 새 조회 결과를 기존 마커에 **더한다**.
@@ -185,26 +112,23 @@ class MapMarkerController extends _$MapMarkerController {
         .where((MapMarker m) => !_isServed(m))
         .toList();
 
-    // **격자로 솎지 않는다**(사용자 결정 2026-09-18). 받은 추천은 전부 표시한다.
-    //
-    // 예전에는 4×4 격자로 칸마다 하나만 남겼다. 겹침을 막으려는 것이었는데 밀집
-    // 지역에서는 추천이 좌표상 가까워 같은 칸에 몰린다 — **10개 중 2개만 남았다**
-    // (실측). 칸을 늘려도 소용없었다(10×10에서도 4개). 버려진 장소는 표시 기록에
-    // 없어 다음 조회에 다시 오고 또 같은 칸에서 솎이므로, 같은 추천만 반복해서
-    // 보이고 새것은 영영 못 보는 상태가 됐다.
-    //
-    // **겹침은 격자가 아니라 보관 상한이 맡는다**([MapTuning.maxRetainedMarkers]).
-    // 한때 격자를 없앴다가 마커가 튀어 되돌린 적이 있는데, 원인은 격자가 아니라
-    // 렌더러가 목록 인덱스로 POI를 재사용하던 것이었다 — 그쪽을 고쳤으므로
-    // (`map_overlay_painter.dart`) 이제 각 장소는 제 POI에 고정된다.
+    // 격자로 솎아 골고루 퍼뜨린다. 상한을 넉넉히 주는 이유는 아래에서 한 묶음만큼만
+    // 가져가기 때문이다.
     //
     // **받은 순서를 섞지 않는다**(SPEC-0036 BR-001·QR-001). 예전에는 재검색 때
     // `shuffle()`을 걸었는데, 서버가 늘 같은 순서를 주어 같은 자리에서 다시 눌러도
     // 화면이 그대로였기 때문이다. 이제는 이미 본 장소를 빼서 「다음」을 만들므로
     // 섞을 이유가 없고, 섞으면 점수가 아닌 기준이 선택에 개입한다.
-    if (unseen.isEmpty) return false;
+    final List<MapMarker> fresh = thinMarkers(
+      markers: unseen,
+      viewport: visible,
+      columns: MapTuning.markerGridColumns,
+      maxCount: MapTuning.markersPerBatch * 3,
+    );
 
-    final List<MapMarker> added = unseen
+    if (fresh.isEmpty) return false;
+
+    final List<MapMarker> added = fresh
         .take(MapTuning.markersPerBatch)
         .toList();
     for (final MapMarker m in added) {
@@ -225,32 +149,6 @@ class MapMarkerController extends _$MapMarkerController {
         : _trim(next, inView, MapTuning.maxRetainedMarkers);
     return true;
   }
-
-  /// 표시 기록을 **지금 화면에 떠 있는 장소**로 맞춘다.
-  ///
-  /// 화면 밖으로 밀려났거나 보관 상한에 버려진 장소는 더 이상 눈에 없으므로 제외할
-  /// 이유가 없다 — 그것들을 계속 들고 있으면 서버가 줄 수 있는 후보가 말라, 화면이
-  /// 그대로인데 새로고침만 도는 상태가 된다.
-  void _syncServedToScreen(MapBounds visible) {
-    final List<MapMarker> onScreen = state
-        .where((MapMarker m) => m.kind == MapMarkerKind.spot)
-        .where((MapMarker m) => _isInside(m, visible))
-        .toList();
-
-    _servedKeys
-      ..clear()
-      ..addAll(onScreen.map(_keyOf));
-    _servedSpotIds
-      ..clear()
-      ..addAll(onScreen.map((MapMarker m) => m.id));
-  }
-
-  /// [bounds] 안에 있는가. 화면 기준 판정을 여러 곳에서 쓰므로 한 자리에 둔다.
-  static bool _isInside(MapMarker m, MapBounds bounds) =>
-      m.latitude >= bounds.minLat &&
-      m.latitude <= bounds.maxLat &&
-      m.longitude >= bounds.minLng &&
-      m.longitude <= bounds.maxLng;
 
   /// 이미 표시한 적 있는 장소인가. 고정한 마커도 후보에서 뺀다 — 재검색 때 강조가
   /// 꺼진 같은 장소가 새로 들어오면 빨간 테두리가 사라진다.
