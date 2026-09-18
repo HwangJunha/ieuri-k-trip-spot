@@ -39,14 +39,7 @@ List<MapMarker> thinMarkers({
     if (chosen.length >= maxCount) break;
   }
 
-  // **문화행사는 솎아내지 않는다** — 수가 적고(강남 한 화면에 0~2건) 관광지와 함께
-  // 보여야 한다(R21). 격자에서 밀려 사라지면 행사 레이어가 통째로 없는 것처럼 된다.
-  final List<MapMarker> result = chosen.values.toList();
-  for (final MapMarker marker in markers) {
-    if (marker.kind == MapMarkerKind.culturalEvent &&
-        !result.contains(marker)) {
-      result.add(marker);
-    }
-  }
-  return result;
+  // 문화행사를 격자 밖으로 통과시키던 예외는 걷어냈다 — 그 마커를 더 이상 만들지
+  // 않는다(사용자 결정 2026-09-18).
+  return chosen.values.toList();
 }

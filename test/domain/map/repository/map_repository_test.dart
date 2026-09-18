@@ -5,6 +5,7 @@ import 'package:ieuri_k_trip_spot/domain/map/model/map_bounds.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/map_failure.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/map_marker.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/map_recommendation_result.dart';
+import 'package:ieuri_k_trip_spot/domain/map/model/map_viewport_result.dart';
 import 'package:ieuri_k_trip_spot/domain/map/repository/map_repository_impl.dart';
 
 /// 지도 영역 기준 추천 조회(SPEC-0036)를 도메인 모델로 옮기는 규칙.
@@ -116,6 +117,30 @@ void main() {
       'maxLat': 37.52,
       'maxLng': 127.02,
     });
+  });
+
+  /// SPEC-0036 AC-014 (FR-012 개정 2026-09-18). 문화행사 마커를 없앴으므로 operation이
+  /// `events`를 아예 요청하지 않는다 — 받아서 거르는 것이 아니라 받지 않는다.
+  test('뷰포트 조회가 문화행사를 요청하지 않는다', () async {
+    final FakeClient client = FakeClient(
+      QueryResult<Object?>(
+        options: QueryOptions<Object?>(document: DocumentNode()),
+        data: <String, dynamic>{
+          'mapViewport': <String, dynamic>{
+            'spots': <Map<String, dynamic>>[],
+            'truncated': false,
+          },
+        },
+        source: QueryResultSource.network,
+      ),
+    );
+
+    final MapViewportResult result = await MapRepositoryImpl(
+      client,
+    ).fetchViewport(bbox: bbox, zoom: 13);
+
+    // `events` 없이도 응답이 파싱된다 — operation에 그 필드가 없다는 뜻이다.
+    expect(result.markers, isEmpty);
   });
 
   group('소진 판정 (FR-009)', () {

@@ -180,11 +180,14 @@ void main() {
 
   // ─── congestion_overlay ──────────────────────────────────────
 
-  CongestionArea areaOf(String id) => CongestionArea(
+  CongestionArea areaOf(
+    String id, {
+    CongestionLevel level = CongestionLevel.normal,
+  }) => CongestionArea(
     id: id,
     name: '구역 $id',
     congestion: CongestionSnapshot(
-      level: CongestionLevel.normal,
+      level: level,
       populationMin: 3000,
       populationMax: 3500,
       observedAt: DateTime.utc(2026, 8, 10, 3, 30),
@@ -277,6 +280,87 @@ void main() {
 
     test('임계값을 넘으면 표시한다', () {
       expect(shouldShowCongestion(MapTuning.polygonMinZoom + 1), isTrue);
+    });
+  });
+
+  /// 지도를 옮기면 서버가 「구역 중심점이 bbox 안」으로 거르므로 같은 자리가 보이는데도
+  /// 빈 배열이 정상 응답으로 온다. 그걸 그대로 그리면 보이던 폴리곤이 사라진다
+  /// (실기기 2026-09-18) — 그래서 지우지 않고 더한다(사용자 결정).
+  group('폴리곤 누적', () {
+    CongestionOverlay overlayOf(
+      String id, {
+      CongestionLevel level = CongestionLevel.normal,
+    }) => CongestionOverlay(
+      area: areaOf(id, level: level),
+      boundary: boundaryOf(id),
+    );
+
+    test('새 구역을 뒤에 더한다', () {
+      final List<CongestionOverlay> merged = mergeCongestionOverlays(
+        held: <CongestionOverlay>[overlayOf('A')],
+        incoming: <CongestionOverlay>[overlayOf('B')],
+      );
+
+      expect(
+        merged.map((CongestionOverlay o) => o.area.id),
+        <String>['A', 'B'],
+      );
+    });
+
+    /// 이것이 사용자가 겪은 증상이다 — 이동 한 번에 레이어가 통째로 사라졌다.
+    test('빈 응답이 와도 들고 있던 것을 지우지 않는다', () {
+      final List<CongestionOverlay> merged = mergeCongestionOverlays(
+        held: <CongestionOverlay>[overlayOf('A'), overlayOf('B')],
+        incoming: const <CongestionOverlay>[],
+      );
+
+      expect(
+        merged.map((CongestionOverlay o) => o.area.id),
+        <String>['A', 'B'],
+      );
+    });
+
+    /// 혼잡도는 실시간이라 같은 구역이 다시 오면 색이 갱신되어야 한다.
+    test('같은 구역은 새 값으로 바뀐다', () {
+      final List<CongestionOverlay> merged = mergeCongestionOverlays(
+        held: <CongestionOverlay>[overlayOf('A')],
+        incoming: <CongestionOverlay>[
+          overlayOf('A', level: CongestionLevel.crowded),
+        ],
+      );
+
+      expect(merged, hasLength(1));
+      expect(merged.single.area.congestion.level, CongestionLevel.crowded);
+    });
+
+    /// 겹치는 폴리곤의 그리기 순서가 호출마다 달라지면 화면이 깜빡이고, 구역 선택도
+    /// 먼저 오는 것을 고르므로 결과가 흔들린다.
+    test('갱신되어도 자리는 그대로다', () {
+      final List<CongestionOverlay> merged = mergeCongestionOverlays(
+        held: <CongestionOverlay>[
+          overlayOf('A'),
+          overlayOf('B'),
+          overlayOf('C'),
+        ],
+        incoming: <CongestionOverlay>[
+          overlayOf('B', level: CongestionLevel.crowded),
+        ],
+      );
+
+      expect(
+        merged.map((CongestionOverlay o) => o.area.id),
+        <String>['A', 'B', 'C'],
+      );
+      expect(merged[1].area.congestion.level, CongestionLevel.crowded);
+    });
+
+    test('같은 구역이 두 번 와도 하나만 남는다', () {
+      final List<CongestionOverlay> merged = mergeCongestionOverlays(
+        held: const <CongestionOverlay>[],
+        incoming: <CongestionOverlay>[overlayOf('A'), overlayOf('A')],
+      );
+
+      expect(merged, hasLength(1));
     });
   });
 
@@ -702,22 +786,20 @@ void main() {
     expect(thinned.length, lessThanOrEqualTo(20));
   });
 
-  /// 행사는 수가 적어 격자에서 밀리면 레이어가 통째로 없는 것처럼 된다(R21).
-  test('문화행사는 같은 칸이어도 솎이지 않는다', () {
+  /// 예전에는 문화행사를 격자 밖으로 통과시키는 예외가 있었다. 그 마커를 더 이상
+  /// 만들지 않으므로(사용자 결정 2026-09-18) 격자는 종류를 보지 않는다.
+  test('같은 칸이면 종류와 무관하게 하나만 남는다', () {
     final List<MapMarker> thinned = thinMarkers(
       markers: <MapMarker>[
-        markerAt('spot', 37.5005, 127.0005),
-        markerAt('event', 37.5006, 127.0006, kind: MapMarkerKind.culturalEvent),
+        markerAt('a', 37.5005, 127.0005),
+        markerAt('b', 37.5006, 127.0006, kind: MapMarkerKind.culturalEvent),
       ],
       viewport: viewport,
       columns: 5,
       maxCount: 20,
     );
 
-    expect(
-      thinned.where((MapMarker m) => m.kind == MapMarkerKind.culturalEvent),
-      hasLength(1),
-    );
+    expect(thinned, hasLength(1));
   });
 
   test('빈 입력은 빈 결과다', () {

@@ -31,7 +31,6 @@ import '../model/congestion_overlay.dart';
 import '../model/map_bounds.dart';
 import '../model/map_marker.dart';
 import '../model/map_tuning.dart';
-import '../model/map_viewport_result.dart';
 import '../model/seoul_congestion_result.dart';
 import '../provider/map_marker_controller.dart';
 import '../provider/map_providers.dart';
@@ -151,6 +150,17 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   /// 조회가 붙기 전까지는 줌 게이트만으로 정해진다. 서버가 오면 `CongestionShown`·
   /// `CongestionDegraded`가 이 자리에 들어간다.
   CongestionLayerState _congestionState = const CongestionHiddenByZoom();
+
+  /// 지금까지 받아 그려 둔 폴리곤(사용자 결정 2026-09-18).
+  ///
+  /// **조회 결과로 갈아 끼우지 않고 여기에 쌓는다.** 서버가 구역 중심점이 bbox에
+  /// 드는지로 거르므로, 지도를 옮기면 같은 자리가 보이는데도 빈 배열이 정상 응답으로
+  /// 온다 — 그걸 그대로 그리면 보이던 폴리곤이 사라진다. 마커를 누적하는 것과 같은
+  /// 이유다.
+  ///
+  /// 같은 구역이 다시 오면 새 값으로 교체되므로 혼잡도가 바뀌면 색이 갱신된다.
+  /// 줌 게이트 미만으로 내려갈 때만 비운다 — 그때는 조회 자체를 하지 않는다.
+  List<CongestionOverlay> _held = const <CongestionOverlay>[];
 
   /// 선택된 구역. null이면 말풍선을 띄우지 않는다.
   CongestionArea? _selectedArea;
@@ -287,16 +297,28 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     if (!shouldShowCongestion(zoomLevel)) {
       // 게이트 미만 — **조회하지 않고** 폴리곤도 지운다. 말풍선은 근거를 잃으므로
       // 함께 닫는다.
+      //
+      // **가드를 먼저 본다.** 예전에는 지우고 나서 세대를 확인했는데, 구세대 응답도
+      // 일단 지운 뒤 빠져나가므로 신세대가 방금 그린 폴리곤이 사라졌다.
+      if (!mounted || generation != _congestionGeneration) return;
       await _painter?.clearCongestion();
       if (!mounted || generation != _congestionGeneration) return;
       setState(() {
         _congestionState = const CongestionHiddenByZoom();
+        _held = const <CongestionOverlay>[];
         _selectedArea = null;
       });
       return;
     }
 
-    setState(() => _congestionState = const CongestionLoading());
+    // **들고 있는 것이 없을 때만 로딩으로 바꾼다.**
+    //
+    // 이미 그려 둔 폴리곤이 있는데 로딩으로 떨어뜨리면, 폴리곤은 남아 있는데 범례와
+    // 출처 표기만 사라져 사용자에게는 「레이어가 꺼졌다」로 보인다 — 지도를 옮길
+    // 때마다 반복되던 깜빡임의 정체다.
+    if (_held.isEmpty) {
+      setState(() => _congestionState = const CongestionLoading());
+    }
 
     try {
       // **경계와 혼잡도를 따로 기다린다.** `.wait`로 묶었더니 한쪽이 실패했을 때
@@ -313,17 +335,20 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       if (!mounted || generation != _congestionGeneration) return;
 
       if (live.degraded) {
-        // 업스트림 장애. **폴리곤만 지우고 마커는 건드리지 않는다**(R29).
-        await _painter?.clearCongestion();
-        if (!mounted || generation != _congestionGeneration) return;
-        setState(() {
-          _congestionState = const CongestionDegraded();
-          _selectedArea = null;
-        });
+        // 업스트림 장애. **이미 그려 둔 것은 지우지 않는다**(사용자 결정 2026-09-18).
+        //
+        // 값이 낡을 뿐 틀린 것은 아니고, 지우면 이동 한 번에 레이어가 통째로
+        // 사라진다. 새 값을 못 받았으니 더하지도 않는다.
+        if (_held.isEmpty) {
+          setState(() {
+            _congestionState = const CongestionDegraded();
+            _selectedArea = null;
+          });
+        }
         return;
       }
 
-      final List<CongestionOverlay> overlays = joinCongestionOverlays(
+      final List<CongestionOverlay> incoming = joinCongestionOverlays(
         areas: live.areas,
         boundaries: <String, CongestionAreaBoundary>{
           for (final CongestionAreaBoundary b in boundaries) b.id: b,
@@ -336,8 +361,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       // 남겼는데, 그러면 3곳 중 1곳이 조용히 사라지는 것을 알 수 없다(실기기
       // 2026-08-25: 서버가 3곳을 줬지만 2개만 그려졌고 로그는 조용했다). 어느
       // id가 경계 캐시에 없는지가 원인을 짚는 유일한 단서다.
-      if (live.areas.length != overlays.length) {
-        final Set<String> joined = overlays
+      if (live.areas.length != incoming.length) {
+        final Set<String> joined = incoming
             .map((CongestionOverlay o) => o.area.id)
             .toSet();
         final List<String> missing = live.areas
@@ -351,9 +376,25 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         );
       }
 
-      await _painter?.drawCongestion(overlays);
-      if (!mounted || generation != _congestionGeneration) return;
-      setState(() => _congestionState = CongestionShown(overlays));
+      // **한 번 받은 구역은 지우지 않고 더한다**(사용자 결정 2026-09-18).
+      //
+      // 서버가 구역 **중심점**이 bbox에 드는지로 거르므로, 지도를 옮기면 같은 자리가
+      // 보이는데도 빈 배열이 정상 응답으로 온다. 그걸 그대로 그리면 보이던 폴리곤이
+      // 사라진다 — 마커와 같은 이유로 누적한다. 같은 구역은 새 값으로 교체되므로
+      // 혼잡도가 바뀌면 색이 갱신된다.
+      final List<CongestionOverlay> merged = mergeCongestionOverlays(
+        held: _held,
+        incoming: incoming,
+      );
+
+      // 바뀐 것이 없으면 다시 그리지 않는다 — SDK 호출이 폴리곤 수만큼 나가므로
+      // 이동할 때마다 같은 값을 다시 밀어 넣을 이유가 없다.
+      if (!_sameOverlays(_held, merged)) {
+        await _painter?.drawCongestion(merged);
+        if (!mounted || generation != _congestionGeneration) return;
+      }
+      _held = merged;
+      setState(() => _congestionState = CongestionShown(merged));
       // **`Exception`이 아니라 `Object`를 받는다.** SDK는 오버레이 등록 실패를
       // `OverlayRegistrationFailedError`처럼 `Error` 계열로 던지는데, `on Exception`은
       // 그것을 놓친다. 이 조회는 `unawaited`로 띄우므로 받아 줄 곳이 여기뿐이고,
@@ -361,14 +402,29 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     } on Object catch (error, stackTrace) {
       // 혼잡도 실패는 지도 전체의 실패가 아니다 — 마커는 그대로 두고 이 레이어만
       // 안내로 대체한다(R29).
+      //
+      // **이미 그려 둔 폴리곤은 지키다**(사용자 결정 2026-09-18). 조회 한 번이
+      // 실패했다고 보이던 것을 치우면, 다음 카메라 정지까지 화면이 비어 있다.
       _log.w('혼잡도 레이어 실패', error: error, stackTrace: stackTrace);
-      await _painter?.clearCongestion();
       if (!mounted || generation != _congestionGeneration) return;
-      setState(() {
-        _congestionState = const CongestionDegraded();
-        _selectedArea = null;
-      });
+      if (_held.isEmpty) {
+        setState(() {
+          _congestionState = const CongestionDegraded();
+          _selectedArea = null;
+        });
+      }
     }
+  }
+
+  /// 그려 둔 것과 같은가. 구역 id와 혼잡도 수준이 모두 같으면 다시 그릴 이유가 없다 —
+  /// 경계는 정적이라 id가 같으면 좌표도 같다.
+  bool _sameOverlays(List<CongestionOverlay> a, List<CongestionOverlay> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i].area.id != b[i].area.id) return false;
+      if (a[i].area.congestion.level != b[i].area.congestion.level) return false;
+    }
+    return true;
   }
 
   /// 뷰포트 안의 마커를 조회해 그린다(R1·R2·R3·R12).
@@ -381,23 +437,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     int generation,
   ) async {
     try {
-      // **서버가 받는 줌으로 접어서 보낸다.** SDK 줌은 21까지 가지만 계약은 1~14라,
-      // 그대로 보내면 확대할수록 `INVALID_ZOOM`으로 거절되어 마커가 하나도 안 온다.
-      // 화면 판정(마커 게이트)은 접지 않은 실제 줌을 쓴다.
-      final int serverZoom = MapTuning.clampForServer(zoomLevel);
-
-      // **두 조회를 함께 부르되, 서로의 실패에 끌려가지 않는다**(SPEC-0036).
+      // **추천 조회 하나만 부른다**(SPEC-0036, 사용자 결정 2026-09-18).
       //
-      // spot은 추천 순서로(`loadNextBatch`, FR-001), 문화행사는 기존 뷰포트 조회로
-      // 받는다 — 행사는 이 변경의 대상이 아니라 그대로 표시되어야 하고(FR-012),
-      // 추천 쿼리는 spot만 준다. 순차로 부르면 왕복이 두 번이라 병렬로 둔다.
-      //
-      // **`.wait`를 쓰지 않는다.** 그것은 한쪽이 실패하면 성공한 쪽의 결과까지
-      // 버리는데, 여기서는 추천이 실패했다고 행사 마커까지 사라진다는 뜻이 된다 —
-      // 실제로 서버에 `mapRecommendedSpots`가 배포되기 전 실기기에서 지도가 통째로
-      // 비었다(2026-09-18). 혼잡도가 죽어도 마커는 보여야 한다는 R29와 같은 원칙이며,
-      // 이쪽이 더 중요하다: 행사는 이 스펙의 **범위 밖**이라 추천의 사정으로 사라질
-      // 이유가 없다.
+      // 예전에는 `mapViewport`를 함께 불러 문화행사 마커를 받았다. 그 마커를
+      // 없애기로 하면서(FR-012 개정) 이 화면이 `mapViewport`에서 쓸 것이 없어졌다 —
+      // `spots`는 추천으로 대체되었고 `events`는 그리지 않는다.
       //
       // **제외 목록은 컨트롤러가 들고 서버에 보낸다**(FR-004) — 화면은 관여하지
       // 않는다.
@@ -405,62 +449,19 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         mapMarkerControllerProvider.notifier,
       );
 
-      // **핸들러를 `await`보다 먼저 붙인다.** 두 Future를 만들어 두고 순차로
-      // 기다리면, 먼저 실패한 쪽의 오류를 아직 아무도 잡지 않은 상태가 생겨 zone으로
-      // 샌다(실측 확인). `catchError`로 그 자리에서 실패를 값으로 바꿔 둔다.
-      final Future<Object?> recommended = controller
-          .loadNextBatch(
-            bbox: bbox,
-            visible: visible,
-            batchSize: MapTuning.markersPerBatch,
-          )
-          .then<Object?>((bool exhausted) => exhausted)
-          .catchError((Object error, StackTrace stackTrace) {
-            _log.w('추천 조회 실패', error: error, stackTrace: stackTrace);
-            return null;
-          });
-      final Future<MapViewportResult?> events =
-          ref
-              .read(mapViewportProvider(bbox, serverZoom).future)
-              .then<MapViewportResult?>((MapViewportResult r) => r)
-              .catchError((Object error, StackTrace stackTrace) {
-                _log.w('문화행사 조회 실패', error: error, stackTrace: stackTrace);
-                return null;
-              });
-
-      final (Object? exhausted, MapViewportResult? viewport) = (
-        await recommended,
-        await events,
+      final bool exhausted = await controller.loadNextBatch(
+        bbox: bbox,
+        visible: visible,
+        batchSize: MapTuning.markersPerBatch,
       );
       if (!mounted || generation != _markerGeneration) return;
 
-      // 문화행사. 추천이 실패해도 그대로 그린다 — 이 스펙의 범위 밖이라 추천의
-      // 사정으로 사라질 이유가 없다(FR-012).
-      if (viewport != null) {
-        controller.absorb(
-          MapViewportResult(
-            markers: viewport.markers
-                .where((MapMarker m) => m.kind != MapMarkerKind.spot)
-                .toList(),
-            truncated: viewport.truncated,
-          ),
-          visible,
-        );
-      }
-
-      // **실패를 소진으로 읽지 않는다**(FR-009). 실패하면 `_areaExhausted`를 건드리지
-      // 않으므로 재검색 버튼이 살아 있다 — 네트워크 오류를 「더 볼 것이 없음」으로
-      // 읽으면 버튼이 영영 사라진다.
-      if (exhausted is bool && exhausted != _areaExhausted) {
+      // **실패를 소진으로 읽지 않는다**(FR-009). 실패하면 여기 닿지 않으므로
+      // `_areaExhausted`가 그대로이고 재검색 버튼이 살아 있다 — 네트워크 오류를
+      // 「더 볼 것이 없음」으로 읽으면 버튼이 영영 사라진다.
+      if (exhausted != _areaExhausted) {
         setState(() => _areaExhausted = exhausted);
       }
-
-      final bool anyLoaded = viewport != null || exhausted is bool;
-
-      if (!mounted || generation != _markerGeneration) return;
-      // 둘 다 실패했으면 받아 둔 것이 없다 — 아래에서 영역을 기록하지 않아야
-      // 재조회가 막히지 않는다.
-      if (!anyLoaded) return;
 
       // 여기까지 왔을 때만 "받아 뒀다"로 기록한다 — 실패했는데 기록하면 재조회가
       // 영영 막힌다.

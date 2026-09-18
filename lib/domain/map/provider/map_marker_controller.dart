@@ -107,10 +107,6 @@ class MapMarkerController extends _$MapMarkerController {
     // **[state]로 역산하지 않는다.** [_trim]이 화면 밖 오래된 마커를 버리므로,
     // 지금 들고 있는 것만으로 판정하면 버려진 장소가 다시 후보로 살아난다.
     // 기록과 표시는 수명이 다르다 — 기록은 세션이 끝날 때만 사라진다(FR-005).
-    //
-    // **문화행사는 기록하지도 제외하지도 않는다**(FR-012). 이 변경의 대상이 아니라
-    // 기존대로 매번 전량 표시되어야 하는데, 제외 목록에 넣으면 재검색 한 번에
-    // 행사가 지도에서 영구히 사라진다.
     final List<MapMarker> unseen = result.markers
         .where(inView)
         .where((MapMarker m) => !_isServed(m))
@@ -136,7 +132,6 @@ class MapMarkerController extends _$MapMarkerController {
         .take(MapTuning.markersPerBatch)
         .toList();
     for (final MapMarker m in added) {
-      if (m.kind != MapMarkerKind.spot) continue;
       _servedKeys.add(_keyOf(m));
       _servedSpotIds.add(m.id);
     }
@@ -158,17 +153,11 @@ class MapMarkerController extends _$MapMarkerController {
   /// 이미 표시한 적 있는 장소인가. 고정한 마커도 후보에서 뺀다 — 재검색 때 강조가
   /// 꺼진 같은 장소가 새로 들어오면 빨간 테두리가 사라진다.
   ///
-  /// **문화행사는 [_servedKeys]가 아니라 지금 들고 있는 것과만 견준다.** 기록에 넣으면
-  /// 한 번 표시된 행사가 이 세션 내내 후보에서 빠져 지도에서 영구히 사라지고(FR-012
-  /// 위반), 아무것도 안 견주면 재검색할 때마다 같은 행사가 [state]에 쌓여 같은 자리에
-  /// SDK 핀이 겹쳐 박힌다.
+  /// 문화행사를 따로 판정하던 분기는 걷어냈다 — 그 마커를 더 이상 만들지 않는다
+  /// (사용자 결정 2026-09-18).
   bool _isServed(MapMarker m) {
     final String key = _keyOf(m);
-    if (key == _pinnedKey) return true;
-    if (m.kind != MapMarkerKind.spot) {
-      return state.any((MapMarker held) => _keyOf(held) == key);
-    }
-    return _servedKeys.contains(key);
+    return key == _pinnedKey || _servedKeys.contains(key);
   }
 
   /// 이 세션에서 이미 표시한 **spot의 id**(FR-004). 서버에 제외 목록으로 보낸다.

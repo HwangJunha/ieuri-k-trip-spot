@@ -56,7 +56,11 @@ class MapRepositoryImpl implements MapRepository {
     ).mapViewport;
 
     return MapViewportResult(
-      // spot과 행사를 한 목록에 섞는다(R21) — 항상 함께 표시하므로 나눠 들 이유가 없다.
+      // **문화행사는 더 이상 마커로 만들지 않는다**(사용자 결정 2026-09-18).
+      //
+      // 사진 썸네일이 없어 혼자만 보라색 도형으로 그려졌고, 지도에서 두드러지는 데
+      // 비해 탭해도 상세 화면이 없었다(계약이 주는 것은 외부 링크뿐). operation에서
+      // `events` 필드 자체를 뺐으므로 여기 담을 것도 없다.
       markers: <MapMarker>[
         for (final Query$MapViewport$mapViewport$spots s in result.spots)
           MapMarker(
@@ -74,16 +78,6 @@ class MapRepositoryImpl implements MapRepository {
             thumbnailUrl: s.thumbnailImageUrl.isEmpty
                 ? null
                 : s.thumbnailImageUrl,
-          ),
-        for (final Query$MapViewport$mapViewport$events e in result.events)
-          MapMarker(
-            id: e.id,
-            name: e.title,
-            latitude: e.lat,
-            longitude: e.lng,
-            kind: MapMarkerKind.culturalEvent,
-            // 장소와 기간을 한 줄로 합친다 — 마커 말풍선이 좁아 두 줄을 쓰기 어렵다.
-            subtitle: '${e.place} · ${e.period}',
           ),
       ],
       // 서버가 클러스터를 없앴다(2026-08-10) — `map_schema.graphql` 주석 참조.
