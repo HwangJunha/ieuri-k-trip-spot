@@ -18,6 +18,16 @@ missing hook was watching your back is how two contract breaks reached `dev`.
 prefixes (`fix(auth):`) stay English; sentences addressed to the user are Korean, including every
 question and option in AskUserQuestion.
 
+**Harness files themselves are written in English** — this file, `.claude/agents/*.md`,
+`.claude/skills/**`, `.gitignore` comments, and the design-document template. That is the prose;
+it is separate from the rule above, which governs what you say to the user. The only Korean that
+belongs in a harness file is a **string that is quoted rather than written**: words the user
+actually types (`"작업 완료"`), values that literally appear in `spec.md` (`미정`,
+`상태: 요청 중`), and Korean UI labels you have to match on screen (`앱 무결성 → 앱 서명`).
+Translating one of those turns it into a string that matches nothing. Everything else is English,
+including headings — a document whose sections are named in Korean drags Korean into every file
+that references them.
+
 **Close with what needs checking, nothing else.** Three things belong in a final summary: choices
 you made unilaterally, things only the user can verify (on-device appearance), and what you left
 out of scope with a one-line why. **If there is nothing to check, say so and stop** — "완료했습니다"
@@ -32,27 +42,27 @@ runs; everything else waits for this list, and nothing here runs twice.
 
 1. `flutter analyze` — must be clean
 2. `dart run build_runner build` if any `.graphql`/`@riverpod` source changed (§11.5).
-   **생성물은 커밋되지 않으므로**(`.gitignore` — `*.g.dart`, `*.graphql.dart`)
-   빼먹어도 diff에는 아무것도 안 뜬다. 로컬 컴파일이 깨지는 것으로만 드러나니
-   provider나 오퍼레이션을 고쳤으면 **반드시 돌린다**
+   **Generated files are not committed** (`.gitignore` — `*.g.dart`, `*.graphql.dart`), so
+   skipping this shows up as nothing at all in the diff. It surfaces only as a broken local
+   compile, so if you touched a provider or an operation, **run it.**
 3. **Live-server operation sweep** if any `.graphql` operation changed (§13) — codegen passing
    proves nothing about the server
 4. `flutter test` — once (§8)
 5. Update `problem/SPEC-*.md` with what you decided and what you could not verify (§10)
 
-**CI가 이 목록을 대신하지 않는다.** `.github/workflows/`가 PR에서 codegen·analyze·
-테스트를 다시 돌리지만, 그건 **빠뜨렸을 때 잡는 그물**이지 로컬에서 안 돌려도 되는
-근거가 아니다 — private 저장소라 Actions 분이 과금되고, CI가 잡아 주기를 기다리는
-왕복이 로컬 실행보다 훨씬 비싸다.
+**CI does not stand in for this list.** `.github/workflows/` re-runs codegen, analyze and the
+tests on a PR, but that is **a net for what you forgot**, not a reason to skip running them
+locally — the repo is private so Actions minutes are billed, and waiting for CI to catch it is a
+far more expensive round trip than running it here.
 
-| 워크플로 | 언제 | 무엇을 |
+| Workflow | When | What |
 |---|---|---|
-| `dev-check` | **모든 PR → dev** | codegen · analyze · test |
-| `release-check` | **PR dev → master** | 위 + 다국어 키 정합성 · 출시 설정(앱 이름·권한 문구) · 생성 파일 미추적 |
+| `dev-check` | **every PR → dev** | codegen · analyze · test |
+| `release-check` | **PR dev → master** | the above + translation-key consistency · release settings (app name, permission strings) · generated files untracked |
 
-네이티브 빌드(apk/ipa)는 **CI에서 돌리지 않는다**(사용자 결정 2026-08-25) — iOS는
-macOS 러너가 분당 10배 과금이고, 서명 없는 CI 산출물은 어차피 스토어에 못 올린다.
-출시 빌드는 키를 가진 로컬에서 만든다(§12의 `key.properties`).
+Native builds (apk/ipa) are **not run in CI** (user decision, 2026-08-25) — macOS runners bill at
+10× per minute for iOS, and an unsigned CI artifact can't reach the store anyway. Release builds
+are made locally, where the keys are (§12, `key.properties`).
 
 If a step is skipped or fails, say which and why. "Couldn't check the contract, server was down"
 is a fine report; silence that lets a green build imply a checked contract is not.
@@ -162,7 +172,7 @@ lib/
 ├── router/                     # GoRouter configuration + route guards
 └── main.dart
 
-problem/                        # Feature specs as *.md (source of truth for implementation)
+problem/                        # Client design documents, written here. Requirements live in the Obsidian vault.
 ```
 - **One feature = one folder under `lib/domain/`.** Never split a feature across the top level.
 - A feature uses only the subfolders it needs; where present, they mean exactly what §3 says.
@@ -273,7 +283,7 @@ One behavior per test. Minimal mocks. Arrange–Act–Assert.
 | `model` | Pure unit: serialization round-trip, equality, value logic. No mocks. |
 | `repository` | Mocked GraphQL client/link. Assert the operation ran and mapped to the model. Include an `errors`-array case that surfaces as a failure. |
 | `provider` | `ProviderContainer` with an overridden repository; assert emitted `AsyncValue` states. |
-| `view` / `component` | Widget test with provider overrides; assert what the user sees, not internals. |
+| `view` / `component` | **Advisory.** Acceptance criteria are satisfiable at provider and below, so a widget test is required only for a failure path providers can't reproduce (`build()` throwing). When you write one: provider overrides, assert what the user sees. |
 
 - Don't test framework or generated code. Elaborate setup means the code under test is too
   complex — simplify the code first.
@@ -299,12 +309,59 @@ One behavior per test. Minimal mocks. Arrange–Act–Assert.
 
 ## 10. Specs & design
 
-Requirements originate in the planner harness (`ieuri-planner`).
+Requirements originate in the planner harness (`ieuri-planner`). **The planner supplies
+requirements only — screens, entry points and routing are this repo's to decide.** A requirement
+now arrives as one line ("the user can reach the booking screen"); how many screens that becomes
+and where they attach is a design decision you make and record.
 
-- **`problem/SPEC-XXXX-client.md`** (this repo) — the client design: screens, state transitions,
-  navigation, which repository consumes which operation. Start here; the acceptance criteria in
-  the linked spec are what provider and widget tests must satisfy. Meeting the design while
-  missing an acceptance criterion is not done.
+That is more freedom, so it needs more checking, not less. The server derives a schema, which is
+a contract and shows when it is wrong; a screen is not. **Screens nobody asked for is the failure
+mode this setup invites** — the reverse-mapping table in `architecture-reviewer` exists for it.
+
+### What you read before you start
+
+```
+GitHub issue (ieuri-k-trip-spot#NN)  ← the work request. Start here
+      ↓ the issue carries the spec path and the decision-report URL
+Specs/SPEC-XXXX/spec.md              ← requirements. The only source
+Decision report (HTML)               ← open items, and conflicts already resolved
+      ↓ written by this repo
+problem/SPEC-XXXX-client.md          ← screens and design decisions. This repo's output
+```
+
+The issue lists the FR/AC **numbers** it owns and nothing else — no sentences. **You cannot work
+from the issue alone; open `spec.md`.** Read it through the `obsidian` MCP server (project scope,
+`http://127.0.0.1:27123/mcp`). Its token lives in `.mcp.json`, which is **gitignored** — set it up
+locally, never commit it.
+
+**The decision report holds what the spec does not** — items still `미정`, which requirements they
+block, and where a user's answer conflicted with a statute or industry source. The spec keeps only
+settled values, so *why* a value is what it is exists only in the report.
+
+When a spec has two `targets`, each repo gets its own issue and reads only that one. **Don't read
+the server's design documents** — both repos design independently from the same `spec.md`.
+
+### Reachability is a requirement, and its absence is a defect
+
+| The planner gives | This repo decides |
+|---|---|
+| FR-012 the user can reach the booking screen | which screen, which widget, where the button goes |
+| AC-003 starting a booking reaches the session list | route path, transition, widget composition |
+| QR-001 within 500ms at 20,000 seats | rendering strategy, whether to virtualize |
+
+**If no FR requires reachability, that is a defect in the spec.** The planner used to spell out
+entry points in prose, so one could not go missing; now it arrives as a single FR, and if the
+planner drops it nothing else catches it. **Stop before implementing and ask the user.** A screen
+that is finished and that nobody can reach is this setup's signature failure.
+
+- **`problem/SPEC-XXXX-client.md`** (this repo) — the client design, **written here, not handed
+  down.** Entry points, screens, state transitions, routing, which repository consumes which
+  operation. The planner supplies requirements only; where the feature attaches in the app is
+  this repo's decision, and this document is where that decision is recorded. The acceptance
+  criteria in the linked spec are what provider tests must satisfy. Meeting the design while
+  missing an acceptance criterion is not done. **Start from
+  `problem/SPEC-XXXX-client-TEMPLATE.md`** — its "Entry points" and "Not in this scope" sections
+  are what the reviewer's reverse mapping is checked against.
 - **Commit it with the code.** The design is the entry point for implementation, so its history
   belongs beside the code's — including planner updates. A reviewer who can't see the file can't
   see the reasoning.
@@ -312,9 +369,10 @@ Requirements originate in the planner harness (`ieuri-planner`).
   `slice-builder` before it writes any `view/` or `component/`. Records layout, components (named
   to map onto `component/`), loading/empty/error states, and the Stitch screen id. It is a
   reference: where it conflicts with the spec's acceptance criteria, the spec wins.
-- **`Specs/SPEC-XXXX/contract.graphql` is the planner's proposal; the server owns the schema.**
-  Write operations against the live introspection snapshot (§13) — the proposal is what was
-  asked for, the snapshot is what exists.
+- **There is no contract proposal.** The server derives the schema from the same requirements
+  you are reading. Write operations against the live introspection snapshot (§13) — that is
+  what exists, and it is the only source. When a field you need is absent, ask the server
+  (§10 "Asking the server").
 - One issue per repo per spec, opened by the planner. Branch naming: §12.
 
 ### When requirements change
@@ -323,7 +381,110 @@ Edit `problem/SPEC-XXXX-client.md` directly and commit it with the code, recordi
 and why ("user decision", "server contract differed"). Patching code and leaving the doc stale is
 the worst outcome — the next person trusts the doc and reverts you.
 
-`Specs/SPEC-XXXX/spec.md` (Obsidian vault) stays read-only; a hook blocks it.
+`Specs/SPEC-XXXX/spec.md` is the requirements, and it is **not read-only.** When a requirement
+turns out to be wrong — not merely inconvenient — edit it there, record the date, what changed
+and why in its change history, and leave a line on the issue. The planner reads that when it
+plans the next feature.
+
+The distinction that matters: a **design** decision goes in `problem/SPEC-XXXX-client.md` and
+never touches the spec. A **requirement** being wrong goes in the spec. If you are unsure which
+you are holding, ask whether the user would notice — if yes it is a requirement.
+
+### When the server isn't ready yet
+
+The live snapshot is the only source for the schema (§13), so a slice can start before the server
+has one. **Wait for the server's mock, and build the screen side while you wait.** The wait is for
+the schema to be settled, not for the server to be built — the mock is announced as soon as the
+schema is fixed (see "How the mock reaches you" below).
+
+A mock the **server** generates from its own schema *is* the contract — its field names and types
+are what will deploy, so writing operations against it is not guessing. (A fake you write yourself
+is not: if you and the server misread the same requirement, your fake agrees with you and proves
+nothing. That is the `signUp`/`login` failure in §13, which no self-authored fake would have
+caught.)
+
+Waiting costs little because the split falls along the repository boundary:
+
+| | Depends on the schema? | Do it while waiting |
+|---|---|---|
+| Design document, entry points, state transitions, routing | No — it comes from `spec.md` | **Yes.** This is most of the slice's thinking |
+| component / view | No — they read domain models | **Yes** |
+| provider | Barely — it holds domain models | Mostly |
+| repository: operations, SDL fragment, mapping | **Yes** | Wait for the mock |
+
+So a mismatch rewrites one or two files inside `repository/`, not the slice — that is what the §3
+layer rules buy. **Never "skip the network layer and wire it up later":** an empty repository
+leaves the provider with nothing to hold and puts every layer above it on a guess, which is the
+whole slice, rebuilt twice.
+
+**Half a day is the threshold** (user decision, 2026-09-17). The announcement follows the schema
+being settled, so taking longer than that points at something stuck on the server side — ask
+rather than keep waiting. Past that, build the repository from `spec.md` and mark the contract
+unverified. Both repos derive from the same requirements, so the starting point is shared either
+way.
+
+**A mock passing is still not the live server passing.** Run the §13 sweep once after the server
+deploys — mock and live do drift apart occasionally.
+
+#### How the mock reaches you
+
+**A comment on this spec's GitHub issue** (`HwangJunha/ieuri-k-trip-spot`, one issue per spec)
+announces it. It arrives **as soon as the schema is settled, before the server implements
+anything** — so there is nothing to wait for beyond this comment. It carries the mock's URL, the
+server branch, and the schema delta: what was added, what changed, what was deleted.
+
+- **Read the URL from the comment; never hardcode the port.** Server worktrees run in parallel, so
+  several mocks are up at once and the port differs every time. §13's sweep already reads
+  `GRAPHQL_INTROSPECT_URL`; point it at the announced URL rather than editing a literal.
+- **The schema is real; every response is fake.** Values are generated from the types, so `title`
+  comes back "Hello World" and lists are always 2 items. **Arguments are ignored** —
+  `spotDetail(id: 42)` does not return 42. Use it to settle the screen's structure and the
+  operation's shape, never to verify data flow, filtering, paging, or anything a value drives. An
+  empty state or a 40-item list has to come from a fake repository in a test, not from here.
+- **Ids arrive as numeric strings** (`"8089"`), the same shape as the live server.
+- **The mock re-reads the schema by itself.** If the schema changes after the announcement, a
+  follow-up comment lands on the issue, with breaking changes in bold. Read the delta and touch
+  only the named fields — **no comment ever says "go re-check everything,"** so a full re-sweep of
+  operations nobody mentioned is wasted work.
+- **If the mock is down, ask the server.** This repo doesn't start it.
+
+**Poll for the announcement; don't idle and don't hand the wait back.** Waiting is not a reason to
+stop and ask the user to tell you when it lands. Work the screen side, and check the issue every
+~5 minutes (user decision, 2026-09-17) — the announcement carries everything needed to start the
+repository, so picking it up is immediate:
+
+```sh
+gh issue view <NN> --json comments \
+  --jq '[.comments[] | select(.body | test("localhost:[0-9]+/graphql"))] | last | .body'
+```
+
+Empty means it hasn't landed; a body means it has, and the URL is
+`grep -oE 'https?://localhost:[0-9]+/graphql'` of it. Take `last`, not the first — a follow-up
+comment supersedes the original announcement (breaking changes in bold).
+
+Polling is cheap, so the cost of waiting is the polling, not your attention: **keep building the
+screen side between checks** rather than blocking on the loop. If the half-day threshold passes
+with nothing on the issue, that is the signal to ask rather than keep polling.
+
+### When information is missing mid-implementation
+
+**Ask the user, right there. Don't route it through the planner.**
+
+Ask in service terms, not technical ones. The user is not there to decide your widget tree; they
+are there to know what the app needs.
+
+- ✗ "Should this list be infinite scroll or paginated?"
+- ✓ "How many entries should one screen show?"
+
+If the missing piece is a **scale assumption left undecided (`미정`) in `spec.md` that affects a
+screen** —
+how many per screen, a list ceiling, a rendering budget — ask the user and write the answer back
+into `spec.md`. **Don't wait for the server:** it fills in only what its own design needs, so the
+screen-side numbers can stay empty forever.
+
+**Check the field before writing it back.** The issues are split per repo, so the server may have
+filled the same field first. If a value is already there, follow it; if it doesn't work for the
+screen, **don't overwrite it — leave a line on the issue.**
 
 ### Asking the server or a policy for something
 
@@ -343,6 +504,9 @@ So while you are building, put every server-facing request in **this repo's `pro
 `SPEC-XXXX-SERVER-<topic>.md` (spec id first, so one spec's documents sort together). Commit it
 with the code like any other design doc (§10) — a reviewer who can't see the request can't see
 why the client works around something.
+
+**And leave a line on the issue.** A document alone gives the server no reason to read it — the
+issues are split per repo, so nobody looks in the other repo's `problem/`.
 
 Head the file with the target operations, the environment you verified against, and a status line
 (`상태: 요청 중` / `해소됨(날짜, 서버 PR)`). When the server resolves it, update that line in place
@@ -380,6 +544,17 @@ findings — and say to take them as given, or the agent re-runs the same intros
 **Never read generated files.** `*.graphql.dart` and `*.g.dart` are permission-blocked; one
 community operation is 500KB (~170k tokens). Read the operation source (`*.graphql`) and the
 committed SDL (`*_schema.graphql`) — codegen already validated the output against the schema (§13).
+
+**`architecture-reviewer` runs on every slice, and its reverse mapping comes first.** Before any
+Blocking/Advisory finding it maps every added route, screen, provider and repository method to a
+requirement id, and compares the build against the spec's scale assumptions. **Each `(none)` goes to the
+user** — it is either unrequested work or a requirement nobody wrote down, and neither is the
+reviewer's to settle. Run it on the `dev...HEAD` diff, which is why slices stay small.
+
+**No static analyzer enforces this — deliberately.** Flutter has no Konsist equivalent, and
+`architecture-reviewer` already covers layer boundaries, dependency direction and GraphQL
+isolation. Adding another checker would add checks without adding catches. Revisit once the
+reverse mapping has settled in.
 
 ---
 
@@ -494,6 +669,11 @@ git push -u origin feature/SPEC-0007-home-screen
 - Naming: `feature/SPEC-XXXX-<short-kebab>`; `fix/`, `hotfix/`, `chore/`, `refactor/` take the
   same shape. The spec id belongs in the branch name; a step number does not. Work with no spec
   uses `chore/<short-kebab>` — don't invent an id.
+- **One branch = one slice = one acceptance criterion** (the design document's "Slices" table). The reviewer reads
+  the `dev...HEAD` diff, so a smaller diff buys a better review. **Stop at the end of a slice and
+  hand back** — the point of cutting slices is to leave a place for a person to step in, and
+  running straight into the next one removes it. "Just keep going until it's all done" is not how
+  this repo works.
 - To build on an unmerged branch, branch from *it*, and note the base in the PR body.
 - `master`, `main`, `dev` are protected. `require-feature-branch.sh` *would* block `Edit`/`Write` and
   git-mutating Bash there; read-only git and branch creation stay open. Create the topic branch
@@ -534,7 +714,7 @@ Auth errors mean the shape passed. One sweep over every operation document takes
 
 ```sh
 URL="${GRAPHQL_INTROSPECT_URL:-http://localhost:8888/graphql}"
-# 서버 확인이 먼저다 — 죽어 있어도 아래 루프는 조용히 끝나 "불일치 0건"처럼 보인다.
+# Check the server first — if it is down the loop below still exits quietly, looking like "0 mismatches".
 curl -s -m 5 -o /dev/null "$URL" || { echo "server down — contract NOT verified"; exit 1; }
 for f in lib/domain/*/repository/*_operations.graphql; do
   op=$(grep -m1 -oE '^(query|mutation|subscription) [A-Za-z_]+' "$f" | awk '{print $2}')
@@ -547,6 +727,11 @@ done
 Run it **once, before the PR**, alongside the test suite (§8) — not per edit. If the server is
 down, say so and mark the contract as unverified in the spec doc; do not let a green build imply
 a checked contract.
+
+**Pointing it at a mock is a different claim.** `GRAPHQL_INTROSPECT_URL=<the announced mock URL>`
+runs the same sweep against the mock, which validates the operation against the settled schema —
+useful, and the earliest check available (§10, "When the server isn't ready yet"). It is not the
+live check: say "verified against the mock" and run it again once the server deploys.
 
 **The sweep does not catch a newly-required input field.** It sends `variables: {}`, so a missing
 required argument comes back as `coerced Null` — exactly what you are told to ignore as noise. A

@@ -13,9 +13,7 @@ import 'package:ieuri_k_trip_spot/domain/map/model/congestion_level.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/congestion_overlay.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/congestion_palette.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/map_bounds.dart';
-import 'package:ieuri_k_trip_spot/domain/map/model/map_marker.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/map_tuning.dart';
-import 'package:ieuri_k_trip_spot/domain/map/model/marker_thinning.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/region_recommendation.dart';
 import 'package:ieuri_k_trip_spot/domain/map/model/region_score.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -180,11 +178,14 @@ void main() {
 
   // ─── congestion_overlay ──────────────────────────────────────
 
-  CongestionArea areaOf(String id) => CongestionArea(
+  CongestionArea areaOf(
+    String id, {
+    CongestionLevel level = CongestionLevel.normal,
+  }) => CongestionArea(
     id: id,
     name: '구역 $id',
     congestion: CongestionSnapshot(
-      level: CongestionLevel.normal,
+      level: level,
       populationMin: 3000,
       populationMax: 3500,
       observedAt: DateTime.utc(2026, 8, 10, 3, 30),
@@ -277,6 +278,87 @@ void main() {
 
     test('임계값을 넘으면 표시한다', () {
       expect(shouldShowCongestion(MapTuning.polygonMinZoom + 1), isTrue);
+    });
+  });
+
+  /// 지도를 옮기면 서버가 「구역 중심점이 bbox 안」으로 거르므로 같은 자리가 보이는데도
+  /// 빈 배열이 정상 응답으로 온다. 그걸 그대로 그리면 보이던 폴리곤이 사라진다
+  /// (실기기 2026-09-18) — 그래서 지우지 않고 더한다(사용자 결정).
+  group('폴리곤 누적', () {
+    CongestionOverlay overlayOf(
+      String id, {
+      CongestionLevel level = CongestionLevel.normal,
+    }) => CongestionOverlay(
+      area: areaOf(id, level: level),
+      boundary: boundaryOf(id),
+    );
+
+    test('새 구역을 뒤에 더한다', () {
+      final List<CongestionOverlay> merged = mergeCongestionOverlays(
+        held: <CongestionOverlay>[overlayOf('A')],
+        incoming: <CongestionOverlay>[overlayOf('B')],
+      );
+
+      expect(
+        merged.map((CongestionOverlay o) => o.area.id),
+        <String>['A', 'B'],
+      );
+    });
+
+    /// 이것이 사용자가 겪은 증상이다 — 이동 한 번에 레이어가 통째로 사라졌다.
+    test('빈 응답이 와도 들고 있던 것을 지우지 않는다', () {
+      final List<CongestionOverlay> merged = mergeCongestionOverlays(
+        held: <CongestionOverlay>[overlayOf('A'), overlayOf('B')],
+        incoming: const <CongestionOverlay>[],
+      );
+
+      expect(
+        merged.map((CongestionOverlay o) => o.area.id),
+        <String>['A', 'B'],
+      );
+    });
+
+    /// 혼잡도는 실시간이라 같은 구역이 다시 오면 색이 갱신되어야 한다.
+    test('같은 구역은 새 값으로 바뀐다', () {
+      final List<CongestionOverlay> merged = mergeCongestionOverlays(
+        held: <CongestionOverlay>[overlayOf('A')],
+        incoming: <CongestionOverlay>[
+          overlayOf('A', level: CongestionLevel.crowded),
+        ],
+      );
+
+      expect(merged, hasLength(1));
+      expect(merged.single.area.congestion.level, CongestionLevel.crowded);
+    });
+
+    /// 겹치는 폴리곤의 그리기 순서가 호출마다 달라지면 화면이 깜빡이고, 구역 선택도
+    /// 먼저 오는 것을 고르므로 결과가 흔들린다.
+    test('갱신되어도 자리는 그대로다', () {
+      final List<CongestionOverlay> merged = mergeCongestionOverlays(
+        held: <CongestionOverlay>[
+          overlayOf('A'),
+          overlayOf('B'),
+          overlayOf('C'),
+        ],
+        incoming: <CongestionOverlay>[
+          overlayOf('B', level: CongestionLevel.crowded),
+        ],
+      );
+
+      expect(
+        merged.map((CongestionOverlay o) => o.area.id),
+        <String>['A', 'B', 'C'],
+      );
+      expect(merged[1].area.congestion.level, CongestionLevel.crowded);
+    });
+
+    test('같은 구역이 두 번 와도 하나만 남는다', () {
+      final List<CongestionOverlay> merged = mergeCongestionOverlays(
+        held: const <CongestionOverlay>[],
+        incoming: <CongestionOverlay>[overlayOf('A'), overlayOf('A')],
+      );
+
+      expect(merged, hasLength(1));
     });
   });
 
@@ -571,6 +653,77 @@ void main() {
     });
   });
 
+  /// 「조금 벗어난 정도로는 데이터를 안 끌고 온다」는 실기기 지적에서 나온 판정
+  /// (사용자 결정 2026-09-18). 중심이 화면 크기의 일정 비율 이상 움직여야 새 영역이다.
+  group('이동 판정', () {
+    // 폭·높이가 0.02도인 정사각 화면.
+    const MapBounds screen = MapBounds(
+      minLat: 37.50,
+      minLng: 127.00,
+      maxLat: 37.52,
+      maxLng: 127.02,
+    );
+
+    /// [screen]을 위도로 [dLat], 경도로 [dLng]만큼 옮긴 화면.
+    MapBounds shifted({double dLat = 0, double dLng = 0}) => MapBounds(
+      minLat: screen.minLat + dLat,
+      minLng: screen.minLng + dLng,
+      maxLat: screen.maxLat + dLat,
+      maxLng: screen.maxLng + dLng,
+    );
+
+    test('제자리면 새 영역이 아니다', () {
+      expect(screen.movedBeyond(screen, 0.25), isFalse);
+    });
+
+    test('기준보다 덜 움직이면 새 영역이 아니다', () {
+      // 화면 높이의 20% — 기준 25% 미만이다.
+      expect(screen.movedBeyond(shifted(dLat: 0.004), 0.25), isFalse);
+    });
+
+    /// 실제로 쓰는 값으로도 한 번 본다 — 상수가 바뀌면 여기서 걸린다.
+    test('설정값으로 화면 절반을 밀면 새 영역이다', () {
+      expect(
+        screen.movedBeyond(shifted(dLat: 0.01), MapTuning.areaChangeFraction),
+        isTrue,
+      );
+    });
+
+    // 정확히 기준값(화면의 25%)은 시험하지 않는다 — `0.52 - 0.50`이 `0.02`가 아닌
+    // 부동소수점 세계에서 그 한 점의 판정은 마이크로미터 단위 오차가 가르고, 지도
+    // 동작에는 아무 의미가 없다.
+    test('기준을 넘으면 새 영역이다', () {
+      expect(screen.movedBeyond(shifted(dLat: 0.006), 0.25), isTrue);
+    });
+
+    test('경도로 움직여도 판정한다', () {
+      expect(screen.movedBeyond(shifted(dLng: 0.006), 0.25), isTrue);
+    });
+
+    /// 예전 기준(영역 포함)이 놓치던 지점이다 — 조회 영역이 화면의 1.2배라 각 변에
+    /// 10% 여백이 있어, 화면의 15%를 밀어도 「안 움직였다」로 읽혔다.
+    test('조회 영역 안에 있어도 중심이 충분히 움직였으면 새 영역이다', () {
+      final MapBounds queried = screen.expanded();
+      // 화면 높이의 30% — 조회 영역(각 변 10% 여백)은 아직 벗어나지 않았지만
+      // 중심은 기준을 넘었다.
+      final MapBounds moved = shifted(dLat: 0.006);
+
+      expect(queried.contains(moved), isFalse);
+      expect(screen.movedBeyond(moved, 0.25), isTrue);
+    });
+
+    test('면적이 0이면 새 영역으로 본다 — 비교할 기준이 없다', () {
+      const MapBounds degenerate = MapBounds(
+        minLat: 37.5,
+        minLng: 127.0,
+        maxLat: 37.5,
+        maxLng: 127.0,
+      );
+
+      expect(degenerate.movedBeyond(screen, 0.25), isTrue);
+    });
+  });
+
   group('포함 판정 (R20)', () {
     test('안쪽 영역은 포함으로 본다 — 재조회하지 않는다', () {
       const MapBounds inner = MapBounds(
@@ -636,100 +789,6 @@ void main() {
     test('정상 bbox는 유효하다', () {
       expect(seoul.isValid, isTrue);
     });
-  });
-
-  // ─── marker_thinning ─────────────────────────────────────────
-
-  const MapBounds viewport = MapBounds(
-    minLat: 37.50,
-    minLng: 127.00,
-    maxLat: 37.52,
-    maxLng: 127.02,
-  );
-
-  MapMarker markerAt(
-    String id,
-    double lat,
-    double lng, {
-    MapMarkerKind kind = MapMarkerKind.spot,
-  }) => MapMarker(id: id, name: id, latitude: lat, longitude: lng, kind: kind);
-
-  test('같은 칸에 몰린 마커는 하나만 남는다', () {
-    // 셋 다 뷰포트 좌하단 칸 안이다.
-    final List<MapMarker> thinned = thinMarkers(
-      markers: <MapMarker>[
-        markerAt('a', 37.5005, 127.0005),
-        markerAt('b', 37.5006, 127.0006),
-        markerAt('c', 37.5007, 127.0007),
-      ],
-      viewport: viewport,
-      columns: 5,
-      maxCount: 20,
-    );
-
-    expect(thinned, hasLength(1));
-    expect(thinned.single.id, 'a', reason: '먼저 온 것이 칸을 차지한다');
-  });
-
-  test('떨어진 마커는 모두 남는다', () {
-    final List<MapMarker> thinned = thinMarkers(
-      markers: <MapMarker>[
-        markerAt('a', 37.502, 127.002),
-        markerAt('b', 37.510, 127.010),
-        markerAt('c', 37.518, 127.018),
-      ],
-      viewport: viewport,
-      columns: 5,
-      maxCount: 20,
-    );
-
-    expect(thinned, hasLength(3));
-  });
-
-  test('상한을 넘지 않는다', () {
-    final List<MapMarker> many = <MapMarker>[
-      for (int i = 0; i < 200; i++)
-        markerAt('m$i', 37.50 + i * 0.0001, 127.00 + i * 0.0001),
-    ];
-
-    final List<MapMarker> thinned = thinMarkers(
-      markers: many,
-      viewport: viewport,
-      columns: 5,
-      maxCount: 20,
-    );
-
-    expect(thinned.length, lessThanOrEqualTo(20));
-  });
-
-  /// 행사는 수가 적어 격자에서 밀리면 레이어가 통째로 없는 것처럼 된다(R21).
-  test('문화행사는 같은 칸이어도 솎이지 않는다', () {
-    final List<MapMarker> thinned = thinMarkers(
-      markers: <MapMarker>[
-        markerAt('spot', 37.5005, 127.0005),
-        markerAt('event', 37.5006, 127.0006, kind: MapMarkerKind.culturalEvent),
-      ],
-      viewport: viewport,
-      columns: 5,
-      maxCount: 20,
-    );
-
-    expect(
-      thinned.where((MapMarker m) => m.kind == MapMarkerKind.culturalEvent),
-      hasLength(1),
-    );
-  });
-
-  test('빈 입력은 빈 결과다', () {
-    expect(
-      thinMarkers(
-        markers: const <MapMarker>[],
-        viewport: viewport,
-        columns: 5,
-        maxCount: 20,
-      ),
-      isEmpty,
-    );
   });
 
   // ─── region_recommendation ───────────────────────────────────

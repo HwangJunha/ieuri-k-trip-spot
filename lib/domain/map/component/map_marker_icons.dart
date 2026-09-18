@@ -39,6 +39,9 @@ abstract final class MapMarkerIcons {
             canvas
               ..drawCircle(center, r, fill)
               ..drawCircle(center, r, stroke);
+          // **지금은 도달하지 않는다**(FR-012 개정 2026-09-18) — repository가 이
+          // 종류의 마커를 만들지 않는다. `switch`가 모든 case를 덮어야 하므로
+          // 남겨 둔다.
           case MapMarkerKind.culturalEvent:
             // 45도 돌린 사각형(다이아몬드). 원과 실루엣이 뚜렷이 달라 색을 못 봐도
             // 구분된다.

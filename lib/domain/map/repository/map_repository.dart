@@ -1,6 +1,7 @@
 import '../../../common/location/coordinates.dart';
 import '../model/congestion_area.dart';
 import '../model/map_bounds.dart';
+import '../model/map_recommendation_result.dart';
 import '../model/map_viewport_result.dart';
 import '../model/region_recommendation.dart';
 import '../model/seoul_congestion_result.dart';
@@ -28,6 +29,30 @@ abstract interface class MapRepository {
     required MapBounds bbox,
     required int zoom,
     List<String>? categoryCodes,
+  });
+
+  /// 지도 영역 안의 장소를 **추천 순서로** 조회한다(SPEC-0036 FR-001·FR-002).
+  ///
+  /// [fetchViewport]를 대체하지 않는다 — 문화행사 마커는 그쪽이 계속 맡고(FR-012)
+  /// 이 조회는 spot만 준다. **인증 필수**이며 미인증이면 `UNAUTHENTICATED`가
+  /// [MapFailure]로 온다.
+  ///
+  /// [excludedIds]는 이 세션에서 **이미 표시한** 장소다(FR-004). 세션을 들고 있는
+  /// 쪽이 클라이언트인 이유는 「봤다」의 판정이 *마커로 실제 그려졌는가*이기 때문이다
+  /// — 격자로 솎아 그리므로 서버가 보낸 10건과 그려진 10건이 다르고, 서버가 세션을
+  /// 들면 그리지 않은 장소까지 「봤다」로 기록해 남은 후보를 잃는다(FR-009).
+  ///
+  /// **커서도 오프셋도 없다**(POL-037). 「다음 장소」는 페이지 넘기기가 아니라
+  /// [excludedIds]를 빼고 같은 영역을 다시 받는 것이다 — 그래서 같은 영역에서 다시
+  /// 부를 때 [bbox]가 첫 조회와 같아야 한다(FR-010).
+  ///
+  /// 거리 요인은 [bbox] **중심점** 기준으로 계산되며 점수 계수는 SPEC-0035를
+  /// 승계한다. 후보 조달은 원이 아니라 사각형이라 화면 네 모서리가 빠지지 않는다
+  /// (서버 결정 2026-09-18, 미결 T3 해소).
+  Future<MapRecommendationResult> fetchRecommendedSpots({
+    required MapBounds bbox,
+    required List<String> excludedIds,
+    int? first,
   });
 
   /// 뷰포트에 걸치는 구역의 실시간 혼잡도를 조회한다(R6~R11).

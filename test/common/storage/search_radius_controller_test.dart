@@ -33,13 +33,17 @@ void main() {
     expect(container.read(searchRadiusControllerProvider), 45);
   });
 
-  test('0km는 유효값이라 기본값으로 되돌아가지 않는다', () async {
-    // R13 네 번째 기준 — 0은 "현재 위치만"을 뜻하며 미설정과 다르다.
+  /// 0km는 뜻이 서지 않는다(반경 0인 검색). 최소 1km로 잘린다
+  /// (사용자 지적 2026-09-19).
+  test('0km를 고르면 최소값으로 잘린다', () async {
     final ProviderContainer container = await _container();
 
     await container.read(searchRadiusControllerProvider.notifier).select(0);
 
-    expect(container.read(searchRadiusControllerProvider), 0);
+    expect(
+      container.read(searchRadiusControllerProvider),
+      AppPreferences.minSearchRadiusKm,
+    );
   });
 
   test('새 컨테이너에서도 저장된 값을 읽는다', () async {
@@ -74,7 +78,10 @@ void main() {
 
     await container.read(searchRadiusControllerProvider.notifier).select(-10);
 
-    expect(container.read(searchRadiusControllerProvider), 0);
+    expect(
+      container.read(searchRadiusControllerProvider),
+      AppPreferences.minSearchRadiusKm,
+    );
   });
 
   // Discover 빈 상태의 "반경 넓히기"가 쓰는 동작. 예전에는 이 버튼이 빈 콜백이라
@@ -104,14 +111,18 @@ void main() {
     });
 
     // 0km는 "현재 위치만"이라 한 단계(10km)보다 기본값 복귀가 예측 가능하다.
-    test('0km에서는 기본값으로 올린다', () async {
+    /// 낡은 저장값이 0이어도 읽을 때 최소값으로 잘리므로, 거기서 한 단계 넓힌다.
+    test('낡은 0km 저장값에서도 한 단계 넓힌다', () async {
       final ProviderContainer container = await _container(
         initial: <String, Object>{'search_radius_km': 0.0},
       );
 
       await container.read(searchRadiusControllerProvider.notifier).widen();
 
-      expect(container.read(searchRadiusControllerProvider), 20);
+      expect(
+        container.read(searchRadiusControllerProvider),
+        AppPreferences.minSearchRadiusKm + searchRadiusStepKm,
+      );
     });
 
     test('상한을 넘지 않는다', () async {
