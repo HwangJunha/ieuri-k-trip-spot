@@ -1,8 +1,8 @@
 # SPEC-0036 — 지도 영역 기준 추천 조회 요청
 
 **대상 operation**: `mapViewport` (또는 이를 대체할 새 operation)
-**검증 환경**: 미검증 — 라이브 서버(`http://localhost:8888/graphql`)가 내려가 있고 목 안내도
-아직 없다(2026-09-18 기준)
+**검증 환경**: `http://localhost:8888/graphql` — 2026-09-18 라이브 검증 완료. 스윕 통과,
+인트로스펙션 대조 일치, 실인자 호출은 `UNAUTHENTICATED`(형태 통과)
 **상태: 해소됨(2026-09-18, `ieuri-server#136` 서버 결정)**
 
 > **해소 요약.** 서버가 신규 루트 쿼리 `mapRecommendedSpots(bbox, excludedIds, categories,

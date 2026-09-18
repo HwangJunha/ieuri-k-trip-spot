@@ -76,22 +76,37 @@ FR-008은 「더 보기를 요청할 수단이 사라진다」이므로 **위젯
 | 항목 | 결과 |
 |---|---|
 | `flutter analyze` | 클린 |
-| `dart run build_runner build` | 통과 — operation이 커밋된 SDL과 맞는다 |
-| `flutter test` | 1,211건 전부 통과 (이 스펙이 더한 것 19건) |
-| **§13 라이브 오퍼레이션 스윕** | **실행하지 못함 — 계약 미검증** |
+| `dart run build_runner build` | 통과 |
+| `flutter test` | 전건 통과 |
+| **§13 라이브 오퍼레이션 스윕** | **통과 — `http://localhost:8888/graphql`, 2026-09-18** |
 
-**계약은 라이브로 검증되지 않았다.** `http://localhost:8888/graphql`이 내려가 있고 목 안내도
-오지 않았다. codegen이 통과한 것은 operation이 **손으로 적은 SDL**과 맞는다는 뜻일 뿐,
-서버가 이 문서를 받아들인다는 증거가 아니다 — 양쪽에 같은 오해를 적으면 빌드는 초록이고
-런타임은 전부 실패한다(CLAUDE.md §13).
+**계약을 라이브 서버로 검증했다.** 지도 operation 5건(`MapViewport` · `MapRecommendedSpots` ·
+`SeoulCongestion` · `SeoulCongestionAreas` · `RecommendedRegions`) 전부 `Validation error`
+없이 통과한다.
 
-특히 확인이 필요한 것:
+`mapRecommendedSpots`는 인트로스펙션으로 형태를 직접 대조했고 커밋된 SDL과 일치한다:
 
-- `mapRecommendedSpots`의 인자 이름과 타입 (`excludedIds: [ID!]`, `first: Int`)
-- 응답이 `[MapSpot!]!`인지 — 래퍼 타입이 아닌지
-- `first`보다 적게 오는 것이 실제 소진 신호로 동작하는지
+| | 커밋된 SDL | 라이브 |
+|---|---|---|
+| `bbox` | `MapBoundsInput!` | 일치 |
+| `excludedIds` | `[ID!]` | 일치 |
+| `categories` | `[String!]` | 일치 |
+| `first` | `Int = 10` | 일치 (기본값 10까지) |
+| 반환 | `[MapSpot!]!` | 일치 — 래퍼 타입이 아니다 |
+| `MapSpot` 필드 | `id` `title` `thumbnailImageUrl` `category` `lng` `lat` | 일치 |
+| `MapBoundsInput` | `minLat` `minLng` `maxLat` `maxLng` 전부 `Float!` | 일치 |
 
-**서버가 뜨면 스윕을 한 번 돌려야 한다.** 그 전까지 이 슬라이스의 계약 부분은 미검증이다.
+**실제 인자를 넣은 호출도 확인했다**(§13이 경고한 「스윕이 못 잡는 필수 인자 누락」).
+`bbox`·`excludedIds`·`first`에 값을 실어 보내면 `UNAUTHENTICATED`가 온다 — 형태가 통과해
+인증 단계까지 닿았다는 뜻이고, 인증 필수라는 서버 결정과도 맞는다.
+
+**관측하지 못한 것**: `INVALID_BBOX` · `BBOX_TOO_LARGE` · `EMPTY_CATEGORY_SET`. 인증이
+입력 검증보다 먼저 걸려, 토큰 없이는 어떤 입력을 넣어도 `UNAUTHENTICATED`가 먼저 온다.
+SDL 주석에 서버 결정에서 옮긴 값임을 명시해 두었다.
+
+**남은 미검증**: 실제 데이터가 추천 점수 순으로 오는지(FR-001), `first`보다 적게 오는 것이
+실제 소진과 일치하는지(FR-009)는 **로그인한 실기기에서만** 확인된다. 형태가 아니라 데이터의
+문제라 스윕의 범위 밖이다 — T4 실기기 확인과 함께 보는 것이 낫다.
 
 ## Slices
 
@@ -148,3 +163,4 @@ FR-008은 「더 보기를 요청할 수단이 사라진다」이므로 **위젯
 | 2026-09-18 | D-08을 `truncated` 기반에서 「요청한 수보다 적게 왔는가」로 교체하고 D-08a 폐기. D-10·D-11 추가 | 서버 계약이 소진 판정을 명시 |
 | 2026-09-18 | **D-12 추가 — 제외 목록이 비동기 경계마다 초기화되던 결함.** `watchSignedIn`이 `build()`를 다시 돌려 기록을 지웠고, 「다음 장소」가 매번 같은 장소를 주고 있었다. `listenSignedOut`으로 교체 | provider 테스트가 잡음 |
 | 2026-09-18 | `servedSpotIds`가 키를 문자열로 잘라 id를 복원하던 것을 id 집합을 따로 드는 방식으로 교체 | architecture-reviewer 지적 |
+| 2026-09-18 | **계약을 라이브 서버로 검증.** operation 5건 스윕 통과, `mapRecommendedSpots` 인자·반환·`MapSpot`·`MapBoundsInput`을 인트로스펙션으로 대조해 전부 일치. 실인자 호출은 `UNAUTHENTICATED`(형태 통과). 미검증 표기를 걷어냄 | 서버가 떠 있음을 확인 |
