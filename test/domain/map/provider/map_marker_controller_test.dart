@@ -147,14 +147,14 @@ void main() {
     return c;
   }
 
-  test('한 번에 한 묶음만 더한다', () {
+  /// 격자와 상한을 걷어냈다(사용자 결정 2026-09-18) — 받은 추천은 전부 그린다.
+  /// 골라내던 시절에는 10개를 받아 서너 개만 남아 화면이 비어 보였다.
+  test('받은 추천을 전부 더한다', () {
     final ProviderContainer c = container();
-    c.read(mapMarkerControllerProvider.notifier).absorb(resultOf(40), visible);
+    // 픽스처는 화면 안에 30개까지 놓는다 — 그 밖은 애초에 그릴 대상이 아니다.
+    c.read(mapMarkerControllerProvider.notifier).absorb(resultOf(30), visible);
 
-    expect(
-      c.read(mapMarkerControllerProvider).length,
-      MapTuning.markersPerBatch,
-    );
+    expect(c.read(mapMarkerControllerProvider), hasLength(30));
   });
 
   /// 지도를 옮길 때마다 통째로 갈아 끼우면 보고 있던 장소가 사라졌다 나타나 화면이
@@ -176,33 +176,28 @@ void main() {
     }
   });
 
-  /// SPEC-0036 AC-015. 「이 지역 재검색」은 화면을 갈아 끼우지 않고 **더한다** —
-  /// 10건이 표시되어 있었다면 20건이 된다.
-  test('다시 흡수하면 앞선 장소를 두고 다음 묶음이 더해진다', () {
+  /// SPEC-0036 AC-015. 「이 지역 재검색」은 화면을 갈아 끼우지 않고 **더한다**.
+  test('다시 흡수하면 앞선 장소를 두고 새 장소가 더해진다', () {
     final ProviderContainer c = container();
     final MapMarkerController controller = c.read(
       mapMarkerControllerProvider.notifier,
     );
 
-    controller.absorb(resultOf(30), visible);
+    controller.absorb(resultOf(10), visible);
     final List<String> first = c
         .read(mapMarkerControllerProvider)
         .map((MapMarker m) => m.id)
         .toList();
-    expect(first, hasLength(MapTuning.markersPerBatch));
+    expect(first, hasLength(10));
 
-    controller.absorb(resultOf(30), visible);
+    controller.absorb(resultOf(20), visible);
     final List<String> second = c
         .read(mapMarkerControllerProvider)
         .map((MapMarker m) => m.id)
         .toList();
 
-    expect(
-      second,
-      hasLength(MapTuning.markersPerBatch * 2),
-      reason: '교체가 아니라 누적이어야 한다',
-    );
-    expect(second.take(first.length), first, reason: '처음 10건이 그대로 남는다');
+    expect(second, hasLength(20), reason: '교체가 아니라 누적이어야 한다');
+    expect(second.take(first.length), first, reason: '처음 것이 그대로 남는다');
   });
 
   /// SPEC-0036 AC-004. 이 세션에서 이미 표시한 장소는 다시 후보가 되지 않는다.
@@ -212,13 +207,13 @@ void main() {
       mapMarkerControllerProvider.notifier,
     );
 
-    controller.absorb(resultOf(30), visible);
+    controller.absorb(resultOf(10), visible);
     final Set<String> first = c
         .read(mapMarkerControllerProvider)
         .map((MapMarker m) => m.id)
         .toSet();
 
-    controller.absorb(resultOf(30), visible);
+    controller.absorb(resultOf(20), visible);
     final List<String> added = c
         .read(mapMarkerControllerProvider)
         .map((MapMarker m) => m.id)
@@ -506,77 +501,6 @@ void main() {
 
       expect(repository.lastFirst, 7);
       expect(repository.lastBbox, visible, reason: '넓은 조회 영역으로 물었다');
-    });
-  });
-
-  /// 실기기 지적(2026-09-18): 「계속 같은 것만 뜬다」.
-  ///
-  /// 격자가 칸마다 하나만 남기는데, 밀집 지역에서는 추천이 좌표상 가까워 같은 칸에
-  /// 몰린다 — 받은 10개 중 두어 개만 살아남았다. 솎인 것은 표시 기록에 없어 다음
-  /// 조회에 서버가 또 보내고 또 솎였다.
-  group('솎인 추천을 다음에 쓴다', () {
-    /// 강남처럼 밀집한 영역. 추천이 좁은 범위에 몰려 있다.
-    ProviderContainer denseWith(int total) {
-      final ProviderContainer c = ProviderContainer(
-        overrides: [
-          mapRepositoryProvider.overrideWithValue(FakeDenseRepository(total)),
-        ],
-      );
-      addTearDown(c.dispose);
-      return c;
-    }
-
-    test('밀집 지역에서도 누를 때마다 화면이 바뀐다', () async {
-      final ProviderContainer c = denseWith(200);
-      final MapMarkerController controller = c.read(
-        mapMarkerControllerProvider.notifier,
-      );
-
-      List<String> previous = const <String>[];
-      int stuck = 0;
-      for (int r = 0; r < 10; r++) {
-        await controller.loadNextBatch(
-          bbox: visible.expanded(),
-          visible: visible,
-          batchSize: MapTuning.markersPerBatch,
-        );
-        final List<String> ids = c
-            .read(mapMarkerControllerProvider)
-            .map((MapMarker m) => m.id)
-            .toList();
-        if (ids.join(',') == previous.join(',')) stuck++;
-        expect(ids.toSet(), hasLength(ids.length), reason: '중복됐다');
-        previous = ids;
-      }
-
-      expect(stuck, 0, reason: '같은 것만 보이는 회차가 있다');
-    });
-
-    /// 솎인 장소는 「봤다」가 아니라 「그때 자리가 없었다」는 뜻이다. 후보를 다 돌면
-    /// 다시 기회를 줘야 화면이 굳지 않는다.
-    test('후보가 적어도 화면이 굳지 않는다', () async {
-      final ProviderContainer c = denseWith(25);
-      final MapMarkerController controller = c.read(
-        mapMarkerControllerProvider.notifier,
-      );
-
-      List<String> previous = const <String>[];
-      int stuck = 0;
-      for (int r = 0; r < 8; r++) {
-        await controller.loadNextBatch(
-          bbox: visible.expanded(),
-          visible: visible,
-          batchSize: MapTuning.markersPerBatch,
-        );
-        final List<String> ids = c
-            .read(mapMarkerControllerProvider)
-            .map((MapMarker m) => m.id)
-            .toList();
-        if (ids.join(',') == previous.join(',')) stuck++;
-        previous = ids;
-      }
-
-      expect(stuck, 0);
     });
   });
 

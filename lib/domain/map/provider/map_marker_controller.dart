@@ -5,7 +5,6 @@ import '../model/map_marker.dart';
 import '../model/map_recommendation_result.dart';
 import '../model/map_tuning.dart';
 import '../model/map_viewport_result.dart';
-import '../model/marker_thinning.dart';
 import '../repository/map_repository.dart';
 import 'map_providers.dart';
 import '../../auth/provider/session_scope.dart';
@@ -73,29 +72,11 @@ class MapMarkerController extends _$MapMarkerController {
     // 심해진다(실측: 확대 후 보관 0개, 아무리 눌러도 안 들어옴).
     //
     // 화면으로 조회하면 받은 것이 전부 그릴 수 있는 추천이다.
-    MapRecommendationResult result = await repository.fetchRecommendedSpots(
+    final MapRecommendationResult result = await repository.fetchRecommendedSpots(
       bbox: visible,
-      // 솎여서 못 그린 것도 함께 제외한다 — 그래야 서버가 **그 다음** 추천을
-      // 준다. 안 그러면 같은 것을 계속 받아 또 솎아낸다.
-      excludedIds: <String>[...servedSpotIds, ..._thinnedOut],
+      excludedIds: servedSpotIds,
       first: batchSize,
     );
-
-    // **후보가 떨어지면 솎인 기록을 푼다.**
-    //
-    // 솎인 장소는 「봤다」가 아니라 「그때 자리가 없었다」는 뜻이다. 영역 안 후보를
-    // 다 돌고 나면 그것들에게 다시 기회를 줘야 한다 — 그러지 않으면 화면이 그대로
-    // 굳는다(실측: 후보 25곳인 화면이 8회 중 5회 고정).
-    //
-    // 화면이 바뀌어 빈 칸이 생겼으면 이번에는 들어간다.
-    if (result.exhausted && _thinnedOut.isNotEmpty) {
-      _thinnedOut.clear();
-      result = await repository.fetchRecommendedSpots(
-        bbox: visible,
-        excludedIds: servedSpotIds,
-        first: batchSize,
-      );
-    }
 
     absorb(
       MapViewportResult(markers: result.markers, truncated: false),
@@ -137,41 +118,23 @@ class MapMarkerController extends _$MapMarkerController {
         .where((MapMarker m) => !_isServed(m))
         .toList();
 
-    // 격자로 솎아 골고루 퍼뜨린다. 상한을 넉넉히 주는 이유는 아래에서 한 묶음만큼만
-    // 가져가기 때문이다.
+    // **받은 추천을 그대로 더한다**(사용자 결정 2026-09-18).
+    //
+    // 예전에는 격자로 솎고 한 묶음만 잘라 넣었다. 겹침을 막으려던 것인데 **받은 10개
+    // 중 서너 개만 남았고**(실측: 확대한 화면에서 3~4개), 버려진 것은 표시 기록에도
+    // 없어 다음에 또 오고 또 솎였다 — 새로고침해도 같은 곳만 보였다.
+    //
+    // 상한도 두지 않는다. 상한을 둘 때마다 「무엇을 버릴지」가 문제가 됐고, 그때마다
+    // 마커가 튀거나 화면이 굳었다. 추천은 이미 점수순이라 굳이 골라낼 이유가 없다.
     //
     // **받은 순서를 섞지 않는다**(SPEC-0036 BR-001·QR-001). 예전에는 재검색 때
     // `shuffle()`을 걸었는데, 서버가 늘 같은 순서를 주어 같은 자리에서 다시 눌러도
     // 화면이 그대로였기 때문이다. 이제는 이미 본 장소를 빼서 「다음」을 만들므로
     // 섞을 이유가 없고, 섞으면 점수가 아닌 기준이 선택에 개입한다.
-    final List<MapMarker> fresh = thinMarkers(
-      markers: unseen,
-      viewport: visible,
-      columns: MapTuning.markerGridColumns,
-      maxCount: MapTuning.markersPerBatch * 3,
-    );
+    if (unseen.isEmpty) return false;
 
-    if (fresh.isEmpty) return false;
+    final List<MapMarker> added = unseen;
 
-    final List<MapMarker> added = fresh
-        .take(MapTuning.markersPerBatch)
-        .toList();
-
-    // **격자에 솎여 못 들어온 추천을 기억한다**(사용자 지적 2026-09-18).
-    //
-    // 격자는 칸마다 하나만 남긴다. 밀집 지역에서는 추천이 좌표상 가까워 같은 칸에
-    // 몰리므로 **받은 10개 중 두어 개만 살아남는다**(실측). 나머지는 표시 기록에도
-    // 남지 않아 다음 조회에 서버가 또 보내고 또 같은 칸에서 솎였다 — 새로고침해도
-    // 같은 곳만 보이던 이유다.
-    //
-    // 솎인 것을 기억해 **다음 번에 서버에도 제외로 보내면**, 서버가 그 다음 추천을
-    // 준다. 격자는 그대로라 마커가 뭉치지 않는다.
-    final Set<String> addedIds = added.map((MapMarker m) => m.id).toSet();
-    for (final MapMarker m in unseen) {
-      if (m.kind != MapMarkerKind.spot) continue;
-      if (addedIds.contains(m.id)) continue;
-      _thinnedOut.add(m.id);
-    }
     for (final MapMarker m in added) {
       _servedKeys.add(_keyOf(m));
       _servedSpotIds.add(m.id);
@@ -182,12 +145,12 @@ class MapMarkerController extends _$MapMarkerController {
     // 사라져 지도가 텅 비었다.
     final List<MapMarker> next = <MapMarker>[...state, ...added];
 
-    // 오래 돌아다니면 마커가 무한히 쌓이므로 **보관량**에 상한을 둔다(표시 상한이
-    // 아니다 — [MapTuning.maxRetainedMarkers] 참조). 화면 안의 것은 지키고, 넘치는
-    // 만큼 가장 오래된 화면 밖 마커부터 버린다.
-    state = next.length <= MapTuning.maxRetainedMarkers
-        ? next
-        : _trim(next, inView, MapTuning.maxRetainedMarkers);
+    // **상한을 두지 않는다**(사용자 결정 2026-09-18). 세션 동안 쌓인다.
+    //
+    // 상한을 둘 때마다 「무엇을 버릴지」가 문제가 됐다 — 오래된 것을 버리면 사용자가
+    // 아직 안 본 추천이 예고 없이 사라지고, 목록이 잘리면서 마커 사진이 다른 자리로
+    // 튀었다. 스펙도 누적 상한을 두지 않는다(§규모 가정).
+    state = next;
     return true;
   }
 
@@ -210,12 +173,6 @@ class MapMarkerController extends _$MapMarkerController {
   /// 들어가는 순간 조용히 틀린 값을 보내게 된다 — 지금은 숫자 문자열이지만 그것은
   /// 계약이 보장하는 바가 아니다.
   List<String> get servedSpotIds => _servedSpotIds.toList();
-
-  /// 격자에 솎여 **그리지 못한** 장소.
-  ///
-  /// 표시 기록([_servedSpotIds])과 따로 둔다 — 이쪽은 「봤다」가 아니라 「이번엔
-  /// 자리가 없었다」는 뜻이라, 화면이 바뀌면 다시 후보가 되어야 한다.
-  final Set<String> _thinnedOut = <String>{};
 
   /// 이 세션에서 이미 표시한 장소의 키(FR-004).
   ///
@@ -274,40 +231,7 @@ class MapMarkerController extends _$MapMarkerController {
     _pinnedKey = null;
     _servedKeys.clear();
     _servedSpotIds.clear();
-    _thinnedOut.clear();
     state = const <MapMarker>[];
-  }
-
-  /// [limit]개가 되도록 줄인다. **화면 안의 것을 지키고** 화면 밖에서 오래된 것부터
-  /// 버린다 — 보고 있는 마커가 사라지면 방금 나타난 것이 없어지는 것으로 보인다.
-  List<MapMarker> _trim(
-    List<MapMarker> markers,
-    bool Function(MapMarker) inView,
-    int limit,
-  ) {
-    // 검색으로 찾은 곳은 **어떤 경우에도 지키고** 나머지로 남은 자리를 채운다.
-    final List<MapMarker> pinned = markers
-        .where((MapMarker m) => _keyOf(m) == _pinnedKey)
-        .toList();
-    final List<MapMarker> rest = markers
-        .where((MapMarker m) => _keyOf(m) != _pinnedKey)
-        .toList();
-    final int room = (limit - pinned.length).clamp(0, limit);
-
-    final List<MapMarker> shown = rest.where(inView).toList();
-    if (shown.length >= room) {
-      return <MapMarker>[...pinned, ...shown.sublist(shown.length - room)];
-    }
-
-    final List<MapMarker> offscreen = rest
-        .where((MapMarker m) => !inView(m))
-        .toList();
-    final int spare = room - shown.length;
-    return <MapMarker>[
-      ...pinned,
-      ...offscreen.sublist(offscreen.length - spare.clamp(0, offscreen.length)),
-      ...shown,
-    ];
   }
 
   /// 종류가 다르면 같은 id라도 다른 마커다.
