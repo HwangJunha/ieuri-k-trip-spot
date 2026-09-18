@@ -464,22 +464,21 @@ void main() {
       );
     });
 
-    /// 실패한 조회가 표시 기록을 더럽히면, 서버가 복구된 뒤 그 장소들을 영영 못
-    /// 본다(FR-004).
-    test('실패한 조회는 표시 기록을 남기지 않는다', () async {
+    /// 실패한 조회가 마커를 남기면 다음 조회에서 그 장소가 제외되어 영영 못 본다
+    /// (FR-004).
+    test('실패한 조회는 마커를 남기지 않는다', () async {
       final FakeMapRepository repository = FakeMapRepository(
         const <MapMarker>[],
         failure: MapFailure.network,
       );
-      final MapMarkerController controller = withRepository(
-        repository,
-      ).read(mapMarkerControllerProvider.notifier);
+      final ProviderContainer c = withRepository(repository);
 
-      await controller
+      await c
+          .read(mapMarkerControllerProvider.notifier)
           .loadNextBatch(bbox: bbox, visible: visible, batchSize: 10)
           .onError((Object? error, StackTrace stack) => false);
 
-      expect(controller.servedSpotIds, isEmpty);
+      expect(c.read(mapMarkerControllerProvider), isEmpty);
     });
 
     /// **보고 있는 화면으로 조회한다.** 넓은 조회 영역으로 물으면 서버가 그 기준
@@ -552,6 +551,58 @@ void main() {
         );
 
     expect(inZoom, isNotEmpty, reason: '확대했는데 아무것도 안 들어왔다');
+  });
+
+  /// 실기기 지적(2026-09-18): 금천 화면에 후보가 6곳뿐이고 롯데마트 맥스가 그중
+  /// 4번째인데도 한 번도 뜨지 않았다.
+  ///
+  /// 표시 기록을 세션 내내 쌓으면 화면에서 사라진 뒤에도 영원히 제외되어, 그 자리로
+  /// 돌아와도 다시 뜨지 않는다. 「이미 봤다」의 범위는 **지금 화면에 떠 있는 것**이다.
+  test('다른 지역을 돌다 와도 그 화면의 장소가 전부 뜬다', () async {
+    const MapBounds elsewhere = MapBounds(
+      minLat: 38.00,
+      minLng: 128.00,
+      maxLat: 38.02,
+      maxLng: 128.02,
+    );
+
+    final ProviderContainer c = ProviderContainer(
+      overrides: [
+        mapRepositoryProvider.overrideWithValue(FakeBoundsRepository()),
+      ],
+    );
+    addTearDown(c.dispose);
+    final MapMarkerController controller = c.read(
+      mapMarkerControllerProvider.notifier,
+    );
+
+    // 다른 지역에서 한참 돌아다닌다.
+    for (int r = 0; r < 8; r++) {
+      await controller.loadNextBatch(
+        bbox: elsewhere.expanded(),
+        visible: elsewhere,
+        batchSize: MapTuning.markersPerBatch,
+      );
+    }
+
+    // 돌아온다.
+    await controller.loadNextBatch(
+      bbox: visible.expanded(),
+      visible: visible,
+      batchSize: MapTuning.markersPerBatch,
+    );
+
+    final Iterable<MapMarker> here = c
+        .read(mapMarkerControllerProvider)
+        .where(
+          (MapMarker m) =>
+              m.latitude >= visible.minLat &&
+              m.latitude <= visible.maxLat &&
+              m.longitude >= visible.minLng &&
+              m.longitude <= visible.maxLng,
+        );
+
+    expect(here, isNotEmpty, reason: '옛 기록에 막혀 이 화면 장소가 안 들어온다');
   });
 
   group('검색 결과 고정 (pin)', () {

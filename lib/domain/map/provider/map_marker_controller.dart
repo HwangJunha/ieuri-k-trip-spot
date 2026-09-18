@@ -107,7 +107,7 @@ class MapMarkerController extends _$MapMarkerController {
   /// 재검색」이 화면을 갈아 끼우던 동작은 없앴다 — 이제 누를 때마다 안 본 장소가
   /// 더해져 10 → 20 → 30으로 쌓인다.
   ///
-  /// 더한 장소는 [_servedKeys]에 남아 이 세션 동안 다시 후보가 되지 않는다(FR-004).
+  /// 이미 화면에 떠 있는 장소는 다시 더하지 않는다(FR-004).
   ///
   /// 더할 새 장소가 하나도 없으면 `false`를 준다 — 호출자가 「더 보기」 수단을 거두는
   /// 근거다(FR-008). **이것만으로 소진을 단정하지 않는다**: 서버가 준 후보 안에서
@@ -146,11 +146,6 @@ class MapMarkerController extends _$MapMarkerController {
 
     final List<MapMarker> added = unseen;
 
-    for (final MapMarker m in added) {
-      _servedKeys.add(_keyOf(m));
-      _servedSpotIds.add(m.id);
-    }
-
     // 화면 밖으로 나간 마커는 **버리지 않는다** — 축소하면 다시 화면에 들어오기
     // 때문이다. 이전에는 뷰포트 밖을 버렸더니 줌 아웃할 때마다 마커가 한꺼번에
     // 사라져 지도가 텅 비었다.
@@ -177,32 +172,17 @@ class MapMarkerController extends _$MapMarkerController {
   ///
   /// 문화행사를 따로 판정하던 분기는 걷어냈다 — 그 마커를 더 이상 만들지 않는다
   /// (사용자 결정 2026-09-18).
+  /// **지금 들고 있는 장소인가.**
+  ///
+  /// 세션 내내 쌓는 기록으로 판정하면, 화면에서 사라진 뒤에도 영원히 제외되어 그
+  /// 자리로 돌아와도 다시 뜨지 않는다 — 금천 화면에서 후보 6곳 중 4번째인
+  /// 롯데마트 맥스가 한 번도 안 뜨던 원인이다. 서버에 보내는 제외와 같은 기준
+  /// (화면에 떠 있는 것)을 쓴다.
   bool _isServed(MapMarker m) {
     final String key = _keyOf(m);
-    return key == _pinnedKey || _servedKeys.contains(key);
+    return key == _pinnedKey || state.any((MapMarker h) => _keyOf(h) == key);
   }
 
-  /// 이 세션에서 이미 표시한 **spot의 id**(FR-004). 서버에 제외 목록으로 보낸다.
-  ///
-  /// 계약의 `excludedIds`가 `[ID!]`라 키가 아니라 id다. 문화행사는 애초에 여기
-  /// 들어가지 않는다(FR-012).
-  ///
-  /// **키에서 잘라내지 않고 따로 든다.** `'kind:id'`를 파싱해 복원하면 id에 콜론이
-  /// 들어가는 순간 조용히 틀린 값을 보내게 된다 — 지금은 숫자 문자열이지만 그것은
-  /// 계약이 보장하는 바가 아니다.
-  List<String> get servedSpotIds => _servedSpotIds.toList();
-
-  /// 이 세션에서 이미 표시한 장소의 키(FR-004).
-  ///
-  /// **세션 경계는 이 provider의 수명이다**(FR-005). `keepAlive`라 앱이 살아 있는
-  /// 동안 유지되고 프로세스가 끝나면 함께 사라진다 — 디스크에 남기지 않는다.
-  ///
-  /// **영역을 옮겨도 비우지 않는다**(FR-006). 앞 영역에서 본 장소가 새 영역에도
-  /// 있으면 다시 고르지 않는다.
-  final Set<String> _servedKeys = <String>{};
-
-  /// [_servedKeys] 중 spot의 id만. 서버로 보낼 형태 그대로 든다.
-  final Set<String> _servedSpotIds = <String>{};
 
   /// 검색으로 찾은 장소를 **맨 앞에 고정한다**.
   ///
@@ -247,8 +227,6 @@ class MapMarkerController extends _$MapMarkerController {
   /// 기록만 남으면, 다음 사용자가 이 세션에서 본 적 없는 장소를 못 보게 된다.
   void clear() {
     _pinnedKey = null;
-    _servedKeys.clear();
-    _servedSpotIds.clear();
     state = const <MapMarker>[];
   }
 
