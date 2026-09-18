@@ -103,6 +103,13 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   /// 마커를 받아 둔 영역. 여기를 벗어나면 "이 지역 재검색" 버튼이 뜬다.
   MapBounds? _lastMarkerArea;
 
+  /// 마커를 받아 둘 때 **화면에 보이던** 영역(사용자 결정 2026-09-18).
+  ///
+  /// [_lastMarkerArea]는 화면의 1.2배로 넓힌 **조회** 영역이라 이동 판정에 쓸 수
+  /// 없다 — 그걸로 재면 각 변의 10% 여백만큼 밀어야 새 영역이 된다. 중심이 얼마나
+  /// 움직였는지는 화면 크기를 기준으로 재야 체감과 맞는다.
+  MapBounds? _lastVisibleArea;
+
   /// "이 지역 재검색"을 띄울 것인가. 마커를 받아 둔 영역을 벗어났을 때 참이 된다.
   bool _canSearchHere = false;
 
@@ -466,6 +473,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       // 여기까지 왔을 때만 "받아 뒀다"로 기록한다 — 실패했는데 기록하면 재조회가
       // 영영 막힌다.
       _lastMarkerArea = bbox;
+      _lastVisibleArea = visible;
       _lastMarkerZoom = zoomLevel;
       if (!mounted || generation != _markerGeneration) return;
 
@@ -562,44 +570,49 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       ),
     );
 
-    // **마커는 자동으로 갱신하지 않는다**(사용자 요청, 2026-08-10).
+    // **새 영역이면 자동으로 받는다**(사용자 결정 2026-09-18).
     //
-    // 지도를 멈출 때마다 조회했더니 조금만 움직여도 마커가 바뀌어, 보고 있던 장소가
-    // 사라지고 화면이 계속 흔들렸다. 언제 새로 받을지를 사용자가 정하게 두면 그
-    // 흔들림이 없어진다 — 카카오맵·구글맵이 쓰는 "이 지역 재검색"이다.
+    // 2026-08-10에는 그 반대로 정했다 — 지도를 멈출 때마다 조회했더니 조금만
+    // 움직여도 마커가 바뀌어 화면이 흔들렸기 때문이다. 그래서 「이 지역 재검색」
+    // 버튼을 뒀는데, 이번에는 반대 불만이 나왔다: 「조금 벗어난 정도로는 데이터를
+    // 안 끌고 온다」(실기기 2026-09-18).
     //
-    // **화면이 비어 있으면 자동으로 받는다.**
+    // **원인은 판정이 둔감해서가 아니었다.** 예전 기준(화면이 직전 조회 영역 안에
+    // 들어있는가)도 화면의 10%만 밀면 참이 됐다 — 참이어도 **버튼만 띄우고
+    // 받아오지 않은 것**이 문제였다. 그래서 자동으로 받되, 판정은 중심이 화면의
+    // [MapTuning.areaChangeFraction](15%)만큼 움직였을 때로 조금 둔감하게 잡아
+    // 지도를 다듬는 동안 계속 조회되는 것을 막는다.
+    final bool moved = _isNewArea(visible, zoomLevel);
+
+    // **화면이 비어 있어도 받는다.**
     //
     // 버튼으로만 받게 했더니, 멀리 이동하면 마커가 하나도 없는 채로 남아 기능이
-    // 죽은 것처럼 보였다(실기기 지적 — 반포까지 갔는데 화면이 텅 빔). 버튼의 취지는
-    // "보고 있던 마커가 갑자기 바뀌는 것"을 막는 것이라, **보이는 게 없을 때는 그
-    // 취지가 성립하지 않는다.**
-    //
-    // 첫 진입도 같은 경로를 탄다 — 그때도 화면이 비어 있다.
-    if (_hasNoMarkerOnScreen(visible)) {
+    // 죽은 것처럼 보였다(실기기 지적 — 반포까지 갔는데 화면이 텅 빔). 첫 진입도
+    // 같은 경로를 탄다 — 그때도 화면이 비어 있다.
+    if (moved || _hasNoMarkerOnScreen(visible)) {
+      _searchAgainTimer?.cancel();
+      // **새 영역이면 소진을 푼다**(FR-008은 영역 단위다). 앞 영역을 다 봤다고
+      // 다음 영역까지 막으면 지도를 옮겨도 버튼이 돌아오지 않는다.
+      if (_areaExhausted) setState(() => _areaExhausted = false);
       await _searchMarkersHere(visible, zoomLevel);
       return;
     }
 
-    // 옮기기 전 영역을 벗어났으면 버튼을 띄운다. 그 안이면 이미 보여 준 것으로
-    // 충분하다.
-    final bool moved =
-        _lastMarkerArea == null ||
-        !_lastMarkerArea!.contains(visible) ||
-        _lastMarkerZoom != zoomLevel;
-    if (moved) {
-      // 이동으로 이미 띄웠으면 대기 중인 재노출 타이머는 필요 없다 — 남겨 두면
-      // 5초 뒤에 같은 상태를 한 번 더 덮어쓴다.
-      _searchAgainTimer?.cancel();
-    }
-    // **새 영역이면 소진을 푼다**(FR-008은 영역 단위다). 앞 영역을 다 봤다고
-    // 다음 영역까지 막으면 지도를 옮겨도 버튼이 돌아오지 않는다.
-    if (moved != _canSearchHere || (moved && _areaExhausted)) {
-      setState(() {
-        _canSearchHere = moved;
-        if (moved) _areaExhausted = false;
-      });
-    }
+    // 같은 영역이다. 버튼은 조회 뒤 쿨다운이 지나면 스스로 뜬다
+    // (→[_searchMarkersHere]) — 여기서 억지로 띄우지 않는다.
+  }
+
+  /// 마지막으로 받아 둔 곳에서 **새 영역으로 볼 만큼** 움직였는가
+  /// (사용자 결정 2026-09-18).
+  ///
+  /// 중심이 화면 크기의 [MapTuning.areaChangeFraction] 이상 멀어졌거나 줌이 바뀌면
+  /// 새 영역이다. 줌 변경을 함께 보는 이유는, 제자리에서 확대·축소해도 보이는 범위가
+  /// 달라져 받아 둔 것이 그 화면에 맞지 않기 때문이다.
+  bool _isNewArea(MapBounds visible, int zoomLevel) {
+    final MapBounds? last = _lastVisibleArea;
+    if (last == null) return true;
+    if (_lastMarkerZoom != zoomLevel) return true;
+    return last.movedBeyond(visible, MapTuning.areaChangeFraction);
   }
 
   /// 검색창을 눌렀을 때. 기존 검색 화면을 열고, 고른 장소의 좌표로 지도를 옮긴다.
@@ -644,6 +657,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     // 옮긴 자리를 "받아 두지 않은 곳"으로 표시해, 이어지는 조회가 주변 장소를
     // 채우게 한다. 고정한 마커는 그 조회에서도 지워지지 않는다(`pin` 참조).
     _lastMarkerArea = null;
+    _lastVisibleArea = null;
 
     // **여기서 한 번 그린다.**
     //
@@ -701,6 +715,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     // 옮긴 자리를 "받아 두지 않은 곳"으로 표시해, 이어지는 유휴 조회가 그 지역의
     // 장소를 채우게 한다 — 검색 이동과 같은 처리다.
     _lastMarkerArea = null;
+    _lastVisibleArea = null;
   }
 
   /// 검색 화면이 돌려준 값을 지도 마커로 옮긴다. 좌표가 없는 장소이거나 취소했으면
@@ -812,10 +827,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   /// 판정 기준은 [_queryViewport]의 `moved`와 같다 — 한 화면에 두 기준이 있으면
   /// 「버튼은 떴는데 조건은 새것」 같은 중간 상태가 생긴다.
   MapBounds? _sameAreaBbox(MapBounds visible, int zoomLevel) {
-    final MapBounds? last = _lastMarkerArea;
-    if (last == null) return null;
-    if (_lastMarkerZoom != zoomLevel) return null;
-    return last.contains(visible) ? last : null;
+    // **[_isNewArea]와 같은 기준을 쓴다.** 판정이 갈리면 「새 영역이라 조회했는데
+    // 조건은 옛 bbox」 같은 중간 상태가 생긴다 — 스펙이 금지한 것이다(FR-010:
+    // 영역은 바뀌었거나 아니거나 둘 중 하나이며 그 사이는 없다).
+    if (_isNewArea(visible, zoomLevel)) return null;
+    return _lastMarkerArea;
   }
 
   /// 화면에 보이는 영역을 위경도 bbox로 되돌린다.

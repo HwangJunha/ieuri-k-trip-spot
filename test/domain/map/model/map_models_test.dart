@@ -655,6 +655,77 @@ void main() {
     });
   });
 
+  /// 「조금 벗어난 정도로는 데이터를 안 끌고 온다」는 실기기 지적에서 나온 판정
+  /// (사용자 결정 2026-09-18). 중심이 화면 크기의 일정 비율 이상 움직여야 새 영역이다.
+  group('이동 판정', () {
+    // 폭·높이가 0.02도인 정사각 화면.
+    const MapBounds screen = MapBounds(
+      minLat: 37.50,
+      minLng: 127.00,
+      maxLat: 37.52,
+      maxLng: 127.02,
+    );
+
+    /// [screen]을 위도로 [dLat], 경도로 [dLng]만큼 옮긴 화면.
+    MapBounds shifted({double dLat = 0, double dLng = 0}) => MapBounds(
+      minLat: screen.minLat + dLat,
+      minLng: screen.minLng + dLng,
+      maxLat: screen.maxLat + dLat,
+      maxLng: screen.maxLng + dLng,
+    );
+
+    test('제자리면 새 영역이 아니다', () {
+      expect(screen.movedBeyond(screen, 0.25), isFalse);
+    });
+
+    test('기준보다 덜 움직이면 새 영역이 아니다', () {
+      // 화면 높이의 20% — 기준 25% 미만이다.
+      expect(screen.movedBeyond(shifted(dLat: 0.004), 0.25), isFalse);
+    });
+
+    /// 실제로 쓰는 값으로도 한 번 본다 — 상수가 바뀌면 여기서 걸린다.
+    test('설정값으로 화면 절반을 밀면 새 영역이다', () {
+      expect(
+        screen.movedBeyond(shifted(dLat: 0.01), MapTuning.areaChangeFraction),
+        isTrue,
+      );
+    });
+
+    // 정확히 기준값(화면의 25%)은 시험하지 않는다 — `0.52 - 0.50`이 `0.02`가 아닌
+    // 부동소수점 세계에서 그 한 점의 판정은 마이크로미터 단위 오차가 가르고, 지도
+    // 동작에는 아무 의미가 없다.
+    test('기준을 넘으면 새 영역이다', () {
+      expect(screen.movedBeyond(shifted(dLat: 0.006), 0.25), isTrue);
+    });
+
+    test('경도로 움직여도 판정한다', () {
+      expect(screen.movedBeyond(shifted(dLng: 0.006), 0.25), isTrue);
+    });
+
+    /// 예전 기준(영역 포함)이 놓치던 지점이다 — 조회 영역이 화면의 1.2배라 각 변에
+    /// 10% 여백이 있어, 화면의 15%를 밀어도 「안 움직였다」로 읽혔다.
+    test('조회 영역 안에 있어도 중심이 충분히 움직였으면 새 영역이다', () {
+      final MapBounds queried = screen.expanded();
+      // 화면 높이의 30% — 조회 영역(각 변 10% 여백)은 아직 벗어나지 않았지만
+      // 중심은 기준을 넘었다.
+      final MapBounds moved = shifted(dLat: 0.006);
+
+      expect(queried.contains(moved), isFalse);
+      expect(screen.movedBeyond(moved, 0.25), isTrue);
+    });
+
+    test('면적이 0이면 새 영역으로 본다 — 비교할 기준이 없다', () {
+      const MapBounds degenerate = MapBounds(
+        minLat: 37.5,
+        minLng: 127.0,
+        maxLat: 37.5,
+        maxLng: 127.0,
+      );
+
+      expect(degenerate.movedBeyond(screen, 0.25), isTrue);
+    });
+  });
+
   group('포함 판정 (R20)', () {
     test('안쪽 영역은 포함으로 본다 — 재조회하지 않는다', () {
       const MapBounds inner = MapBounds(
