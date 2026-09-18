@@ -65,12 +65,29 @@ class MapMarkerController extends _$MapMarkerController {
     required int batchSize,
   }) async {
     final MapRepository repository = ref.read(mapRepositoryProvider);
-    final MapRecommendationResult result = await repository
-        .fetchRecommendedSpots(
-          bbox: bbox,
-          excludedIds: servedSpotIds,
-          first: batchSize,
-        );
+    MapRecommendationResult result = await repository.fetchRecommendedSpots(
+      bbox: bbox,
+      // 솎여서 못 그린 것도 함께 제외한다 — 그래야 서버가 **그 다음** 추천을
+      // 준다. 안 그러면 같은 것을 계속 받아 또 솎아낸다.
+      excludedIds: <String>[...servedSpotIds, ..._thinnedOut],
+      first: batchSize,
+    );
+
+    // **후보가 떨어지면 솎인 기록을 푼다.**
+    //
+    // 솎인 장소는 「봤다」가 아니라 「그때 자리가 없었다」는 뜻이다. 영역 안 후보를
+    // 다 돌고 나면 그것들에게 다시 기회를 줘야 한다 — 그러지 않으면 화면이 그대로
+    // 굳는다(실측: 후보 25곳인 화면이 8회 중 5회 고정).
+    //
+    // 화면이 바뀌어 빈 칸이 생겼으면 이번에는 들어간다.
+    if (result.exhausted && _thinnedOut.isNotEmpty) {
+      _thinnedOut.clear();
+      result = await repository.fetchRecommendedSpots(
+        bbox: bbox,
+        excludedIds: servedSpotIds,
+        first: batchSize,
+      );
+    }
 
     absorb(
       MapViewportResult(markers: result.markers, truncated: false),
@@ -131,6 +148,22 @@ class MapMarkerController extends _$MapMarkerController {
     final List<MapMarker> added = fresh
         .take(MapTuning.markersPerBatch)
         .toList();
+
+    // **격자에 솎여 못 들어온 추천을 기억한다**(사용자 지적 2026-09-18).
+    //
+    // 격자는 칸마다 하나만 남긴다. 밀집 지역에서는 추천이 좌표상 가까워 같은 칸에
+    // 몰리므로 **받은 10개 중 두어 개만 살아남는다**(실측). 나머지는 표시 기록에도
+    // 남지 않아 다음 조회에 서버가 또 보내고 또 같은 칸에서 솎였다 — 새로고침해도
+    // 같은 곳만 보이던 이유다.
+    //
+    // 솎인 것을 기억해 **다음 번에 서버에도 제외로 보내면**, 서버가 그 다음 추천을
+    // 준다. 격자는 그대로라 마커가 뭉치지 않는다.
+    final Set<String> addedIds = added.map((MapMarker m) => m.id).toSet();
+    for (final MapMarker m in unseen) {
+      if (m.kind != MapMarkerKind.spot) continue;
+      if (addedIds.contains(m.id)) continue;
+      _thinnedOut.add(m.id);
+    }
     for (final MapMarker m in added) {
       _servedKeys.add(_keyOf(m));
       _servedSpotIds.add(m.id);
@@ -169,6 +202,12 @@ class MapMarkerController extends _$MapMarkerController {
   /// 들어가는 순간 조용히 틀린 값을 보내게 된다 — 지금은 숫자 문자열이지만 그것은
   /// 계약이 보장하는 바가 아니다.
   List<String> get servedSpotIds => _servedSpotIds.toList();
+
+  /// 격자에 솎여 **그리지 못한** 장소.
+  ///
+  /// 표시 기록([_servedSpotIds])과 따로 둔다 — 이쪽은 「봤다」가 아니라 「이번엔
+  /// 자리가 없었다」는 뜻이라, 화면이 바뀌면 다시 후보가 되어야 한다.
+  final Set<String> _thinnedOut = <String>{};
 
   /// 이 세션에서 이미 표시한 장소의 키(FR-004).
   ///
@@ -227,6 +266,7 @@ class MapMarkerController extends _$MapMarkerController {
     _pinnedKey = null;
     _servedKeys.clear();
     _servedSpotIds.clear();
+    _thinnedOut.clear();
     state = const <MapMarker>[];
   }
 

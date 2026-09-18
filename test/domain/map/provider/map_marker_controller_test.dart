@@ -44,6 +44,44 @@ final class FakeMapRepository implements MapRepository {
       throw UnimplementedError(invocation.memberName.toString());
 }
 
+/// 좁은 범위에 몰린 [total]곳. 격자가 칸마다 하나만 남기므로, 솎인 것을 기억하지
+/// 않으면 같은 추천이 계속 되돌아온다.
+final class FakeDenseRepository implements MapRepository {
+  FakeDenseRepository(this.total);
+
+  final int total;
+
+  @override
+  Future<MapRecommendationResult> fetchRecommendedSpots({
+    required MapBounds bbox,
+    required List<String> excludedIds,
+    int? first,
+  }) async {
+    final List<MapMarker> all = <MapMarker>[
+      for (int i = 0; i < total; i++)
+        MapMarker(
+          id: 'v$i',
+          name: 'v$i',
+          latitude: 37.5060 + (i % 25) * 0.00035,
+          longitude: 127.0060 + (i ~/ 25) * 0.0011,
+          kind: MapMarkerKind.spot,
+        ),
+    ];
+    final List<MapMarker> take = all
+        .where((MapMarker m) => !excludedIds.contains(m.id))
+        .take(first ?? 10)
+        .toList();
+    return MapRecommendationResult(
+      markers: take,
+      exhausted: take.length < (first ?? 10),
+    );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError(invocation.memberName.toString());
+}
+
 void main() {
   const MapBounds visible = MapBounds(
     minLat: 37.50,
@@ -431,6 +469,77 @@ void main() {
 
       expect(repository.lastFirst, 7);
       expect(repository.lastBbox, bbox);
+    });
+  });
+
+  /// 실기기 지적(2026-09-18): 「계속 같은 것만 뜬다」.
+  ///
+  /// 격자가 칸마다 하나만 남기는데, 밀집 지역에서는 추천이 좌표상 가까워 같은 칸에
+  /// 몰린다 — 받은 10개 중 두어 개만 살아남았다. 솎인 것은 표시 기록에 없어 다음
+  /// 조회에 서버가 또 보내고 또 솎였다.
+  group('솎인 추천을 다음에 쓴다', () {
+    /// 강남처럼 밀집한 영역. 추천이 좁은 범위에 몰려 있다.
+    ProviderContainer denseWith(int total) {
+      final ProviderContainer c = ProviderContainer(
+        overrides: [
+          mapRepositoryProvider.overrideWithValue(FakeDenseRepository(total)),
+        ],
+      );
+      addTearDown(c.dispose);
+      return c;
+    }
+
+    test('밀집 지역에서도 누를 때마다 화면이 바뀐다', () async {
+      final ProviderContainer c = denseWith(200);
+      final MapMarkerController controller = c.read(
+        mapMarkerControllerProvider.notifier,
+      );
+
+      List<String> previous = const <String>[];
+      int stuck = 0;
+      for (int r = 0; r < 10; r++) {
+        await controller.loadNextBatch(
+          bbox: visible.expanded(),
+          visible: visible,
+          batchSize: MapTuning.markersPerBatch,
+        );
+        final List<String> ids = c
+            .read(mapMarkerControllerProvider)
+            .map((MapMarker m) => m.id)
+            .toList();
+        if (ids.join(',') == previous.join(',')) stuck++;
+        expect(ids.toSet(), hasLength(ids.length), reason: '중복됐다');
+        previous = ids;
+      }
+
+      expect(stuck, 0, reason: '같은 것만 보이는 회차가 있다');
+    });
+
+    /// 솎인 장소는 「봤다」가 아니라 「그때 자리가 없었다」는 뜻이다. 후보를 다 돌면
+    /// 다시 기회를 줘야 화면이 굳지 않는다.
+    test('후보가 적어도 화면이 굳지 않는다', () async {
+      final ProviderContainer c = denseWith(25);
+      final MapMarkerController controller = c.read(
+        mapMarkerControllerProvider.notifier,
+      );
+
+      List<String> previous = const <String>[];
+      int stuck = 0;
+      for (int r = 0; r < 8; r++) {
+        await controller.loadNextBatch(
+          bbox: visible.expanded(),
+          visible: visible,
+          batchSize: MapTuning.markersPerBatch,
+        );
+        final List<String> ids = c
+            .read(mapMarkerControllerProvider)
+            .map((MapMarker m) => m.id)
+            .toList();
+        if (ids.join(',') == previous.join(',')) stuck++;
+        previous = ids;
+      }
+
+      expect(stuck, 0);
     });
   });
 
