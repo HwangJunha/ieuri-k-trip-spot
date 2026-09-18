@@ -410,6 +410,56 @@ void main() {
       expect(ids.toSet(), hasLength(ids.length), reason: '같은 장소가 중복됐다');
     });
 
+    /// 실기기 지적(2026-09-18): 「이게 빠지는 게 전체 지도에서야, 내가 보는 화면에서야?
+    /// 화면에서만으로 이야기한 건데」.
+    ///
+    /// 다른 지역을 돌아다니며 쌓인 **화면 밖** 마커까지 제외하면, 이 화면에서 아무리
+    /// 새로고침해도 들어올 것이 없다(실측: 화면 안이 20개에서 더 안 바뀌었다).
+    test('화면 밖 마커는 이 화면의 순회를 막지 않는다', () async {
+      const MapBounds elsewhere = MapBounds(
+        minLat: 38.00,
+        minLng: 128.00,
+        maxLat: 38.02,
+        maxLng: 128.02,
+      );
+
+      final ProviderContainer c = withRepo(FakeCyclingRepository(100));
+      final MapMarkerController controller = c.read(
+        mapMarkerControllerProvider.notifier,
+      );
+
+      // 다른 지역을 돌아다녀 화면 밖 마커를 쌓아 둔 상황.
+      controller.absorb(
+        MapViewportResult(
+          markers: <MapMarker>[
+            for (int i = 0; i < 10; i++)
+              markerAt('far$i', 38.002 + i * 0.0015, 128.002),
+          ],
+          truncated: false,
+        ),
+        elsewhere,
+      );
+
+      final Set<String> seen = <String>{};
+      for (int r = 0; r < 8; r++) {
+        await controller.loadNextBatch(
+          bbox: wide,
+          visible: wide,
+          batchSize: MapTuning.markersPerBatch,
+        );
+        seen.addAll(
+          c.read(mapMarkerControllerProvider).map((MapMarker m) => m.id),
+        );
+      }
+
+      // 여덟 번 눌렀으면 그만큼 새 장소를 봤어야 한다.
+      expect(
+        seen.where((String id) => id.startsWith('s')),
+        hasLength(greaterThan(MapTuning.maxRetainedMarkers)),
+        reason: '화면 밖 마커에 막혀 새 장소가 안 들어온다',
+      );
+    });
+
     /// 영역 안 장소가 상한보다 적으면 전부 화면에 떠 있으므로 더 줄 것이 없다 —
     /// 그때는 진짜 소진이고 더 보기 수단을 거둔다(FR-008).
     test('후보가 모두 표시되면 소진으로 보고한다', () async {

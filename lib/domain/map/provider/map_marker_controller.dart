@@ -76,32 +76,36 @@ class MapMarkerController extends _$MapMarkerController {
     // 크게 움직이기 전까지 돌아오지 않았다. 한자리에서 계속 둘러보는 사용자에게는
     // 기능이 죽은 것으로 보인다.
     //
-    // 제외 목록을 비우면 맨 앞 추천부터 다시 온다. **지금 화면에 있는 장소는 그대로
-    // 제외한 채** 다시 받아야 한다 — 기록을 통째로 비우고 받으면 이미 떠 있는 마커가
-    // 한 번 더 들어와 같은 사진이 겹쳐 박힌다(실측: 고유 10곳이 30개로 쌓였다).
+    // 다시 돌 때 제외하는 것은 **지금 보고 있는 화면 안에 떠 있는 장소뿐이다**
+    // (사용자 정정 2026-09-18).
     //
-    // 그래서 기록을 **화면에 남아 있는 것만으로 다시 세운다.** 보관 상한에 밀려
-    // 사라진 장소는 기록에서도 빠지므로 다음 바퀴에 돌아온다.
+    // 기록을 통째로 비우면 이미 떠 있는 마커가 한 번 더 들어와 같은 사진이 겹쳐
+    // 박힌다(실측: 고유 10곳이 30개로 쌓였다). 그렇다고 **들고 있는 것 전부**를
+    // 제외하면 반대 문제가 난다 — 다른 지역을 돌아다니며 쌓인 화면 밖 마커까지
+    // 제외 대상이 되어, 이 화면에서 새로고침해도 들어올 것이 없다(실측: 화면 안이
+    // 20개에서 더 안 바뀌었다).
+    //
+    // 「이미 봤다」의 범위는 **사용자가 보고 있는 화면**이다. 화면 밖 마커는 지금
+    // 눈에 없으므로 이 화면의 순회를 막을 이유가 없다.
     if (result.exhausted && servedSpotIds.isNotEmpty) {
-      final List<String> onScreen = state
+      final List<MapMarker> onScreen = state
           .where((MapMarker m) => m.kind == MapMarkerKind.spot)
+          .where((MapMarker m) => _isInside(m, visible))
+          .toList();
+      final List<String> onScreenIds = onScreen
           .map((MapMarker m) => m.id)
           .toList();
 
       _servedKeys
         ..clear()
-        ..addAll(
-          state
-              .where((MapMarker m) => m.kind == MapMarkerKind.spot)
-              .map(_keyOf),
-        );
+        ..addAll(onScreen.map(_keyOf));
       _servedSpotIds
         ..clear()
-        ..addAll(onScreen);
+        ..addAll(onScreenIds);
 
       result = await repository.fetchRecommendedSpots(
         bbox: bbox,
-        excludedIds: onScreen,
+        excludedIds: onScreenIds,
         first: batchSize,
       );
     }
@@ -190,6 +194,13 @@ class MapMarkerController extends _$MapMarkerController {
         : _trim(next, inView, MapTuning.maxRetainedMarkers);
     return true;
   }
+
+  /// [bounds] 안에 있는가. 화면 기준 판정을 여러 곳에서 쓰므로 한 자리에 둔다.
+  static bool _isInside(MapMarker m, MapBounds bounds) =>
+      m.latitude >= bounds.minLat &&
+      m.latitude <= bounds.maxLat &&
+      m.longitude >= bounds.minLng &&
+      m.longitude <= bounds.maxLng;
 
   /// 이미 표시한 적 있는 장소인가. 고정한 마커도 후보에서 뺀다 — 재검색 때 강조가
   /// 꺼진 같은 장소가 새로 들어오면 빨간 테두리가 사라진다.
