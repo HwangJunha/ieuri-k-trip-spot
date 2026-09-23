@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -31,6 +32,7 @@ import '../model/congestion_overlay.dart';
 import '../model/map_bounds.dart';
 import '../model/map_marker.dart';
 import '../model/map_tuning.dart';
+import '../model/sdk_screen_scale.dart';
 import '../model/seoul_congestion_result.dart';
 import '../provider/map_marker_controller.dart';
 import '../provider/map_providers.dart';
@@ -826,11 +828,16 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     final RenderBox? box = context.findRenderObject() as RenderBox?;
     if (box == null || !box.hasSize) return null;
 
+    // **SDK 단위로 바꿔 넘긴다** — Android는 물리 픽셀을 받는다([sdkScreenScale]).
     final Size size = box.size;
+    final double scale = sdkScreenScale(
+      defaultTargetPlatform,
+      MediaQuery.devicePixelRatioOf(context),
+    );
     final LatLng? topLeft = await controller.fromScreenPoint(0, 0);
     final LatLng? bottomRight = await controller.fromScreenPoint(
-      size.width.round(),
-      size.height.round(),
+      (size.width * scale).round(),
+      (size.height * scale).round(),
     );
     if (topLeft == null || bottomRight == null) return null;
 
