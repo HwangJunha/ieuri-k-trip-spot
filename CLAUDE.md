@@ -637,7 +637,7 @@ false negative that reads like proof. Use the hash above, or check the running a
   Help](https://support.google.com/googleplay/android-developer/answer/9845334)) — pausing the
   track or deleting the email list does not do it. **Pausing a track also 404s the store URL.**
 - **Check the account is on the track's tester list before debugging anything else.** Half a day
-  went to "the new build won't install" when `tarot1415@gmail.com` was simply not on the closed
+  went to "the new build won't install" when the tester's address was simply not on the closed
   list, so the device could never be served that track.
 - Play re-signs and re-packages the upload, so a locally built APK is **not** the artifact users
   get. `com.pairip` (Automatic Integrity Protection) is injected there and its setting is

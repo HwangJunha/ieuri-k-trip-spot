@@ -56,7 +56,7 @@ class AgreementSelection {
   );
 }
 
-/// DANAWA-style inline consent checklist (spec §5.2): a master "agree to all"
+/// Inline consent checklist (spec §5.2): a master "agree to all"
 /// row that toggles every child and auto-checks when all children are on, plus
 /// individual rows with a required/optional badge and a link to the full text.
 ///
