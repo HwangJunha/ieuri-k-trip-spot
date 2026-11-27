@@ -215,7 +215,7 @@ withdrawMember → { success: true, userErrors: [] }
 | 주소 | EMAIL 계정 | 코드 발급 |
 |---|---|---|
 | 미가입 주소 | 없음 | **안 됨** (`INVALID_OR_EXPIRED`) |
-| `tarotaws001@gmail.com` | 없음 | **안 됨** (`INVALID_OR_EXPIRED`) |
+| `unregistered@example.com` | 없음 | **안 됨** (`INVALID_OR_EXPIRED`) |
 | `wnsgk7518@naver.com` | 있음 | 됨 (`CODE_MISMATCH`) |
 
 **EMAIL 회원에게만 발급됩니다.** 미가입자·SNS 회원에게 메일이 나가는 낭비는
