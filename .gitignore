@@ -436,3 +436,6 @@ hs_err_pid*
 #   claude mcp add --scope project --transport http obsidian http://127.0.0.1:27123/mcp \
 #     --header "Authorization: Bearer <token>"
 /.mcp.json
+
+# local-only
+.mcp.json
